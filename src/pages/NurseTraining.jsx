@@ -11,13 +11,15 @@ import {
   GraduationCap,
   Award,
   Sparkles,
-  Building2
+  Building2,
+  Brain
 } from "lucide-react";
 
 import SkillsTracker from "../components/training/SkillsTracker";
 import MyTrainingDashboard from "../components/training/MyTrainingDashboard";
 import TrainingRecommendations from "../components/training/TrainingRecommendations";
 import AgencyTrainingManager from "../components/training/AgencyTrainingManager";
+import SkillGapLearningHub from "../components/training/SkillGapLearningHub";
 
 export default function NurseTraining() {
   const { data: currentUser } = useQuery({
