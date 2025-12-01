@@ -164,6 +164,26 @@ Return JSON:
       "alert": "Urgent item requiring immediate attention",
       "action": "Recommended immediate action"
     }
+  ],
+  "incident_tasks": [
+    {
+      "type": "assessment" | "care_plan_update" | "referral" | "notify",
+      "title": "Incident-specific mandatory task",
+      "description": "Detailed description for incident follow-up",
+      "priority": "high",
+      "due_timeframe": "today" | "24_hours",
+      "auto_generated_reason": "Why this is required for this incident type"
+    }
+  ],
+  "skilled_need_tasks": [
+    {
+      "type": "followup" | "order" | "care_plan_update",
+      "title": "New skilled need task",
+      "description": "Description of skilled nursing follow-up needed",
+      "priority": "high" | "medium",
+      "due_timeframe": "24_hours" | "48_hours",
+      "auto_generated_reason": "Clinical rationale for new skilled need"
+    }
   ]
 }`,
         response_json_schema: {
