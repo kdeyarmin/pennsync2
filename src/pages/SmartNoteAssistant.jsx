@@ -533,59 +533,124 @@ The AI will transform this into professional, Medicare-compliant documentation!"
         </div>
 
         {/* Suggestions Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {/* AI Features Header */}
+          <Card className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white border-none">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Brain className="w-5 h-5" />
+                <span className="font-bold">AI Assistant Features</span>
+              </div>
+              <p className="text-sm text-purple-100">
+                7 AI-powered tools to enhance your documentation
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Real-Time Suggestions */}
+          <RealTimeSuggestions
+            currentText={roughNote}
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            careType={careType}
+            onInsertSuggestion={handleInsertSuggestion}
+          />
+
+          {/* Patient History Summary */}
+          {selectedPatientId && (
+            <PatientHistorySummary
+              patientId={selectedPatientId}
+              patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+              diagnosis={selectedPatient?.primary_diagnosis || diagnosis}
+              previousVisits={patientVisits}
+              carePlans={carePlans}
+              onInsertSummary={handleInsertSummary}
+            />
+          )}
+
+          {/* Data Extractor */}
+          <DataExtractor
+            narrativeText={enhancedNote || roughNote}
+            onExtractedData={handleExtractedData}
+            onCreateCarePlan={handleCreateCarePlan}
+            onCreateTask={(task) => console.log('Task:', task)}
+          />
+
+          {/* External Knowledge Search */}
+          <ExternalKnowledge
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            onInsertInformation={handleInsertInformation}
+          />
+
+          {/* Medication Adherence Insights */}
+          <MedicationAdherenceInsights
+            narrativeText={enhancedNote || roughNote}
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            onInsertIntervention={handleInsertInformation}
+          />
+
+          {/* Task Generator */}
+          <TaskGenerator
+            narrativeText={enhancedNote || roughNote}
+            patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            onTasksGenerated={handleTasksGenerated}
+          />
+
+          {/* Personalized Feedback */}
+          {auditResults && (
+            <PersonalizedFeedback
+              auditResults={auditResults}
+              userEmail={currentUser?.email}
+            />
+          )}
+
+          {/* Quick Tips */}
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-            <CardHeader>
-              <CardTitle className="text-lg">💡 Quick Tips</CardTitle>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm">💡 Quick Tips</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="bg-white p-3 rounded-lg border border-blue-200">
-                <p className="font-semibold text-blue-900 mb-1">1. Be Brief</p>
-                <p className="text-gray-700">Type quick, rough notes - the AI will expand and professionalize them</p>
+            <CardContent className="space-y-2 text-xs">
+              <div className="bg-white p-2 rounded-lg border border-blue-200">
+                <p className="font-semibold text-blue-900">Be Brief</p>
+                <p className="text-gray-600">AI expands rough notes</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-blue-200">
-                <p className="font-semibold text-blue-900 mb-1">2. Include Key Facts</p>
-                <p className="text-gray-700">Mention vital signs, assessments, interventions, and patient responses</p>
+              <div className="bg-white p-2 rounded-lg border border-blue-200">
+                <p className="font-semibold text-blue-900">Include Key Facts</p>
+                <p className="text-gray-600">Vitals, assessments, interventions</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-blue-200">
-                <p className="font-semibold text-blue-900 mb-1">3. Don't Worry About Grammar</p>
-                <p className="text-gray-700">Use abbreviations and fragments - AI will fix it</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg border border-blue-200">
-                <p className="font-semibold text-blue-900 mb-1">4. Review & Edit</p>
-                <p className="text-gray-700">Always review the enhanced note before copying to EHR</p>
+              <div className="bg-white p-2 rounded-lg border border-blue-200">
+                <p className="font-semibold text-blue-900">Review & Edit</p>
+                <p className="text-gray-600">Always verify before copying</p>
               </div>
             </CardContent>
           </Card>
 
+          {/* Original Suggestions */}
           {suggestions.length > 0 && (
             <Card className="border-yellow-200">
-              <CardHeader className="bg-yellow-50">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Lightbulb className="w-5 h-5 text-yellow-600" />
+              <CardHeader className="bg-yellow-50 py-3">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Lightbulb className="w-4 h-4 text-yellow-600" />
                   AI Suggestions ({suggestions.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-4 space-y-3">
+              <CardContent className="pt-3 space-y-2">
                 {suggestions.map((suggestion, index) => (
                   <Card key={index} className="border-l-4 border-l-yellow-500">
-                    <CardContent className="p-3 space-y-2">
+                    <CardContent className="p-2 space-y-1">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           {getCategoryIcon(suggestion.category)}
-                          <span className="font-semibold text-sm text-gray-900">
+                          <span className="font-semibold text-xs text-gray-900">
                             {suggestion.category}
                           </span>
                         </div>
-                        <Badge className={getPriorityColor(suggestion.priority)}>
+                        <Badge className={`${getPriorityColor(suggestion.priority)} text-xs`}>
                           {suggestion.priority}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-xs text-gray-700">
                         {suggestion.suggestion}
-                      </p>
-                      <p className="text-xs text-gray-500 italic">
-                        {suggestion.rationale}
                       </p>
                     </CardContent>
                   </Card>
