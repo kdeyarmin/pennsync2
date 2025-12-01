@@ -509,7 +509,7 @@ Return JSON:
             <div className="text-center py-4">
               <FileCheck className="w-10 h-10 text-blue-300 mx-auto mb-2" />
               <p className="text-sm text-gray-600 mb-3">
-                AI will review your completed note for missing follow-ups, compliance gaps, and safety concerns
+                AI will review your note against clinical protocols, compliance requirements, and safety standards
               </p>
               <Button
                 onClick={runReview}
@@ -517,11 +517,17 @@ Return JSON:
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 {isReviewing ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Reviewing...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing with Protocols...</>
                 ) : (
-                  <><FileCheck className="w-4 h-4 mr-2" /> Run AI Review</>
+                  <><FileCheck className="w-4 h-4 mr-2" /> Run Advanced AI Review</>
                 )}
               </Button>
+              {diagnosis && (
+                <p className="text-xs text-gray-400 mt-2">
+                  <Stethoscope className="w-3 h-3 inline mr-1" />
+                  Will cross-reference: {getClinicalProtocols(diagnosis).map(p => p.name).join(', ')}
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -539,118 +545,237 @@ Return JSON:
                 </div>
               </div>
 
-              {/* Submission Blockers */}
-              {!reviewResult.ready_to_submit && reviewResult.submission_blockers?.length > 0 && (
-                <Alert className="bg-red-50 border-red-200">
-                  <AlertTriangle className="w-4 h-4 text-red-600" />
-                  <AlertDescription className="text-sm text-red-800">
-                    <p className="font-semibold mb-1">Cannot Submit - Issues Found:</p>
-                    <ul className="list-disc list-inside">
-                      {reviewResult.submission_blockers.map((blocker, idx) => (
-                        <li key={idx}>{blocker}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
+              {/* Flagged Items Count */}
+              {Object.keys(flaggedItems).length > 0 && (
+                <div className="flex items-center gap-2 p-2 bg-orange-50 border border-orange-200 rounded">
+                  <Flag className="w-4 h-4 text-orange-600" />
+                  <span className="text-xs text-orange-800">
+                    {Object.keys(flaggedItems).length} item(s) flagged for supervisor review
+                  </span>
+                </div>
               )}
 
-              {/* Safety Alerts */}
-              {reviewResult.safety_alerts?.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-red-800 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" /> Safety Alerts
-                  </p>
-                  {reviewResult.safety_alerts.map((alert, idx) => (
-                    <Alert key={idx} className="py-2 bg-red-50 border-red-200">
-                      <AlertDescription className="text-xs">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge className={getUrgencyBadge(alert.priority)}>{alert.priority}</Badge>
-                          <span className="font-medium">{alert.concern}</span>
-                        </div>
-                        <p className="text-red-700">Action: {alert.action_needed}</p>
+              {/* Tabs for organized view */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 h-8">
+                  <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+                  <TabsTrigger value="protocols" className="text-xs">
+                    <BookOpen className="w-3 h-3 mr-1" />
+                    Protocols
+                  </TabsTrigger>
+                  <TabsTrigger value="actions" className="text-xs">Actions</TabsTrigger>
+                  <TabsTrigger value="training" className="text-xs">Training</TabsTrigger>
+                </TabsList>
+
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="space-y-3 mt-3">
+                  {/* Submission Blockers */}
+                  {!reviewResult.ready_to_submit && reviewResult.submission_blockers?.length > 0 && (
+                    <Alert className="bg-red-50 border-red-200">
+                      <AlertTriangle className="w-4 h-4 text-red-600" />
+                      <AlertDescription className="text-sm text-red-800">
+                        <p className="font-semibold mb-1">Cannot Submit - Issues Found:</p>
+                        <ul className="list-disc list-inside">
+                          {reviewResult.submission_blockers.map((blocker, idx) => (
+                            <li key={idx}>{blocker}</li>
+                          ))}
+                        </ul>
                       </AlertDescription>
                     </Alert>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              {/* Missing Follow-ups */}
-              {reviewResult.missing_followups?.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-orange-800 flex items-center gap-1">
-                    <ListTodo className="w-3 h-3" /> Missing Follow-up Actions
-                  </p>
-                  {reviewResult.missing_followups.map((followup, idx) => (
-                    <div key={idx} className="p-2 bg-orange-50 border border-orange-200 rounded">
-                      <div className="flex items-center justify-between mb-1">
-                        <Badge className={getUrgencyBadge(followup.urgency)}>{followup.urgency}</Badge>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 text-xs"
-                          onClick={() => handleCreateTask(followup)}
-                        >
-                          Create Task
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-700 mb-1">{followup.issue}</p>
-                      <p className="text-xs text-orange-700">
-                        → {followup.suggested_task.title}
+                  {/* Safety Alerts */}
+                  {reviewResult.safety_alerts?.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-red-800 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Safety Alerts
                       </p>
+                      {reviewResult.safety_alerts.map((alert, idx) => (
+                        <Alert key={idx} className="py-2 bg-red-50 border-red-200">
+                          <AlertDescription className="text-xs">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <Badge className={getUrgencyBadge(alert.priority)}>{alert.priority}</Badge>
+                                <span className="font-medium">{alert.concern}</span>
+                              </div>
+                              <FlagButton itemType="safety" itemId={idx} content={alert.concern} />
+                            </div>
+                            <p className="text-red-700">Action: {alert.action_needed}</p>
+                            {alert.clinical_rationale && (
+                              <p className="text-gray-500 mt-1 italic">Rationale: {alert.clinical_rationale}</p>
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              {/* Documentation Gaps */}
-              {reviewResult.documentation_gaps?.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-yellow-800">Documentation Gaps</p>
-                  {reviewResult.documentation_gaps.map((gap, idx) => (
-                    <div key={idx} className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={gap.importance === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
-                          {gap.importance}
-                        </Badge>
-                        <span className="font-medium">{gap.element}</span>
+                  {/* Strengths */}
+                  {reviewResult.strengths?.length > 0 && (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded">
+                      <p className="text-xs font-semibold text-green-800 mb-1 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Strengths
+                      </p>
+                      <p className="text-xs text-green-700">{reviewResult.strengths.join(', ')}</p>
+                    </div>
+                  )}
+
+                  {/* Documentation Gaps */}
+                  {reviewResult.documentation_gaps?.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-yellow-800">Documentation Gaps</p>
+                      {reviewResult.documentation_gaps.map((gap, idx) => (
+                        <div key={idx} className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <Badge className={gap.importance === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
+                                {gap.importance}
+                              </Badge>
+                              <span className="font-medium">{gap.element}</span>
+                            </div>
+                            <FlagButton itemType="gap" itemId={idx} content={`${gap.element}: ${gap.suggestion}`} />
+                          </div>
+                          <p className="text-gray-600">{gap.suggestion}</p>
+                          {gap.guideline_reference && (
+                            <p className="text-gray-400 mt-1 text-xs italic">
+                              <BookOpen className="w-3 h-3 inline mr-1" />
+                              Ref: {gap.guideline_reference}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Protocols Tab */}
+                <TabsContent value="protocols" className="space-y-3 mt-3">
+                  {reviewResult.protocol_compliance?.length > 0 ? (
+                    reviewResult.protocol_compliance.map((protocol, pIdx) => (
+                      <div key={pIdx} className="border rounded-lg overflow-hidden">
+                        <div className="flex items-center justify-between p-2 bg-indigo-50">
+                          <div className="flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4 text-indigo-600" />
+                            <span className="text-sm font-semibold text-indigo-900">{protocol.protocol_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={protocol.compliance_score >= 80 ? 'bg-green-100 text-green-800' : protocol.compliance_score >= 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
+                              {protocol.compliance_score}%
+                            </Badge>
+                            <FlagButton itemType="protocol" itemId={pIdx} content={`${protocol.protocol_name}: ${protocol.compliance_score}% compliance`} />
+                          </div>
+                        </div>
+                        <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
+                          {protocol.elements_checked?.map((element, eIdx) => (
+                            <div 
+                              key={eIdx} 
+                              className={`flex items-start gap-2 p-1.5 rounded text-xs ${
+                                element.status === 'met' ? 'bg-green-50' :
+                                element.status === 'partial' ? 'bg-yellow-50' :
+                                element.status === 'not_applicable' ? 'bg-gray-50' : 'bg-red-50'
+                              }`}
+                            >
+                              {element.status === 'met' ? (
+                                <CheckCircle2 className="w-3 h-3 text-green-600 shrink-0 mt-0.5" />
+                              ) : element.status === 'partial' ? (
+                                <Clock className="w-3 h-3 text-yellow-600 shrink-0 mt-0.5" />
+                              ) : element.status === 'not_applicable' ? (
+                                <span className="w-3 h-3 text-gray-400 shrink-0">—</span>
+                              ) : (
+                                <AlertTriangle className="w-3 h-3 text-red-600 shrink-0 mt-0.5" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium">{element.element}</p>
+                                {element.found_text && (
+                                  <p className="text-gray-500 italic truncate">"{element.found_text}"</p>
+                                )}
+                                {element.status !== 'met' && element.status !== 'not_applicable' && element.recommendation && (
+                                  <p className="text-orange-700 mt-0.5">→ {element.recommendation}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-gray-600">{gap.suggestion}</p>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      <BookOpen className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      No protocol data available
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
+                </TabsContent>
 
-              {/* Skill Gaps - Link to Training */}
-              {reviewResult.skill_gaps?.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-purple-800 flex items-center gap-1">
-                    <GraduationCap className="w-3 h-3" /> Training Recommendations
-                  </p>
-                  {reviewResult.skill_gaps.map((gap, idx) => (
-                    <div key={idx} className="p-2 bg-purple-50 border border-purple-200 rounded text-xs">
-                      <p className="font-medium text-purple-900">{gap.area}</p>
-                      <p className="text-gray-600 mb-1">{gap.evidence}</p>
-                      <Link to={`${createPageUrl("NurseTraining")}?topic=${encodeURIComponent(gap.recommended_training)}`}>
-                        <Button size="sm" variant="link" className="h-5 p-0 text-xs text-purple-600">
-                          <GraduationCap className="w-3 h-3 mr-1" />
-                          {gap.recommended_training}
-                          <ExternalLink className="w-3 h-3 ml-1" />
-                        </Button>
-                      </Link>
+                {/* Actions Tab */}
+                <TabsContent value="actions" className="space-y-3 mt-3">
+                  {reviewResult.missing_followups?.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-orange-800 flex items-center gap-1">
+                        <ListTodo className="w-3 h-3" /> Missing Follow-up Actions
+                      </p>
+                      {reviewResult.missing_followups.map((followup, idx) => (
+                        <div key={idx} className="p-2 bg-orange-50 border border-orange-200 rounded">
+                          <div className="flex items-center justify-between mb-1">
+                            <Badge className={getUrgencyBadge(followup.urgency)}>{followup.urgency}</Badge>
+                            <div className="flex items-center gap-1">
+                              <FlagButton itemType="followup" itemId={idx} content={followup.issue} />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-xs"
+                                onClick={() => handleCreateTask(followup)}
+                              >
+                                Create Task
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-700 mb-1">{followup.issue}</p>
+                          <p className="text-xs text-orange-700">
+                            → {followup.suggested_task.title}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  ) : (
+                    <div className="text-center py-4 text-green-600 text-sm">
+                      <CheckCircle2 className="w-8 h-8 mx-auto mb-2" />
+                      All follow-up actions documented!
+                    </div>
+                  )}
+                </TabsContent>
 
-              {/* Strengths */}
-              {reviewResult.strengths?.length > 0 && (
-                <div className="p-2 bg-green-50 border border-green-200 rounded">
-                  <p className="text-xs font-semibold text-green-800 mb-1 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Strengths
-                  </p>
-                  <p className="text-xs text-green-700">{reviewResult.strengths.join(', ')}</p>
-                </div>
-              )}
+                {/* Training Tab */}
+                <TabsContent value="training" className="space-y-3 mt-3">
+                  {reviewResult.skill_gaps?.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-purple-800 flex items-center gap-1">
+                        <GraduationCap className="w-3 h-3" /> Training Recommendations
+                      </p>
+                      {reviewResult.skill_gaps.map((gap, idx) => (
+                        <div key={idx} className="p-2 bg-purple-50 border border-purple-200 rounded text-xs">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-purple-900">{gap.area}</p>
+                            <FlagButton itemType="training" itemId={idx} content={`Training: ${gap.recommended_training}`} />
+                          </div>
+                          <p className="text-gray-600 mb-1">{gap.evidence}</p>
+                          <Link to={`${createPageUrl("NurseTraining")}?topic=${encodeURIComponent(gap.recommended_training)}`}>
+                            <Button size="sm" variant="link" className="h-5 p-0 text-xs text-purple-600">
+                              <GraduationCap className="w-3 h-3 mr-1" />
+                              {gap.recommended_training}
+                              <ExternalLink className="w-3 h-3 ml-1" />
+                            </Button>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-green-600 text-sm">
+                      <CheckCircle2 className="w-8 h-8 mx-auto mb-2" />
+                      No training gaps identified!
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
 
               <Button variant="outline" size="sm" className="w-full" onClick={() => setReviewResult(null)}>
                 Run New Review
@@ -659,6 +784,43 @@ Return JSON:
           )}
         </CardContent>
       )}
+
+      {/* Flag Dialog */}
+      <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Flag className="w-5 h-5 text-orange-600" />
+              Flag for Supervisor Review
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-gray-50 rounded-lg text-sm">
+              <p className="font-medium text-gray-700">Flagging:</p>
+              <p className="text-gray-600">{currentFlagItem?.content}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Add a note (optional):</label>
+              <Textarea
+                placeholder="Why are you flagging this? Any concerns or questions for the supervisor..."
+                value={flagNote}
+                onChange={(e) => setFlagNote(e.target.value)}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFlagDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitFlag} className="bg-orange-600 hover:bg-orange-700">
+              <Send className="w-4 h-4 mr-2" />
+              Submit Flag
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
