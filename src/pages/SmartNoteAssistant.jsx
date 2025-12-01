@@ -590,9 +590,11 @@ The AI will transform this into professional, Medicare-compliant documentation!"
           {/* Data Extractor */}
           <DataExtractor
             narrativeText={enhancedNote || roughNote}
+            patientId={selectedPatientId}
             onExtractedData={handleExtractedData}
             onCreateCarePlan={handleCreateCarePlan}
             onCreateTask={(task) => console.log('Task:', task)}
+            onCarePlansCreated={(plans) => console.log('Care plans created:', plans)}
           />
 
           {/* External Knowledge Search */}
