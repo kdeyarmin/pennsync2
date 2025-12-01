@@ -35,6 +35,7 @@ import ExternalKnowledge from "../components/smartNote/ExternalKnowledge";
 import PersonalizedFeedback from "../components/smartNote/PersonalizedFeedback";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
 import MedicationAdherenceInsights from "../components/smartNote/MedicationAdherenceInsights";
+import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -55,6 +56,7 @@ export default function SmartNoteAssistant() {
   const [copied, setCopied] = useState(false);
   const [auditResults, setAuditResults] = useState(null);
   const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [extractedDataState, setExtractedDataState] = useState(null);
 
   // Fetch current user for personalized feedback
   const { data: currentUser } = useQuery({
@@ -98,6 +100,7 @@ export default function SmartNoteAssistant() {
   };
 
   const handleExtractedData = (data) => {
+    setExtractedDataState(data);
     // Auto-fill vitals if extracted
     if (data.vital_signs) {
       const vs = data.vital_signs;
@@ -586,6 +589,16 @@ The AI will transform this into professional, Medicare-compliant documentation!"
               onInsertSummary={handleInsertSummary}
             />
           )}
+
+          {/* Clinical Decision Support */}
+          <ClinicalDecisionSupport
+            enhancedNote={enhancedNote}
+            extractedData={extractedDataState}
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            careType={careType}
+            vitalSigns={vitalSigns}
+            onInsertRecommendation={handleInsertInformation}
+          />
 
           {/* Data Extractor */}
           <DataExtractor
