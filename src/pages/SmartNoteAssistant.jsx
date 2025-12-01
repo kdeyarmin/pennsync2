@@ -853,13 +853,14 @@ Return your response as JSON with this structure:
             {/* Guided Incident Reporting */}
             {selectedPatientId && (
               <div data-incident-reporter>
-              <GuidedIncidentReporting
-                patientId={selectedPatientId}
-                patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-                physicianEmail={selectedPatient?.physician_email}
-                caregiverEmail={selectedPatient?.caregiver_email}
-                onIncidentCreated={(incident) => console.log('Incident created:', incident)}
-              />
+                <GuidedIncidentReporting
+                  patientId={selectedPatientId}
+                  patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+                  physicianEmail={selectedPatient?.physician_email}
+                  caregiverEmail={selectedPatient?.caregiver_email}
+                  onIncidentCreated={(incident) => console.log('Incident created:', incident)}
+                />
+              </div>
             )}
 
           {/* Voice Command Listener */}
