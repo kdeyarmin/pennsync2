@@ -14,6 +14,7 @@ export default function VoiceVitalsEntry({ onVitalsRecognized, onPhraseRecognize
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastRecognized, setLastRecognized] = useState(null);
+  const [recentEntries, setRecentEntries] = useState([]);
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -117,6 +118,14 @@ Return JSON:
       });
 
       setLastRecognized(result);
+      
+      // Track recent entries
+      const entry = result.type === 'vitals' 
+        ? Object.entries(result.vitals).filter(([k,v]) => v).map(([k,v]) => `${k.toUpperCase()}: ${v}`).join(', ')
+        : result.phrase;
+      if (entry) {
+        setRecentEntries(prev => [entry, ...prev.slice(0, 4)]);
+      }
 
       if (result.type === 'vitals' && result.vitals) {
         onVitalsRecognized && onVitalsRecognized(result.vitals);
@@ -164,8 +173,22 @@ Return JSON:
               {lastRecognized.type === 'vitals' ? 'Vitals added' : 'Phrase added'}
             </Badge>
           )}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+
+          {/* Recent entries history */}
+          {recentEntries.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-indigo-200">
+            <p className="text-xs text-gray-500 mb-1">Recent voice entries:</p>
+            <div className="flex flex-wrap gap-1">
+              {recentEntries.map((entry, idx) => (
+                <Badge key={idx} variant="outline" className="text-xs bg-white">
+                  {entry}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          )}
+          </CardContent>
+          </Card>
   );
 }

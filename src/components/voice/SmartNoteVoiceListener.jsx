@@ -1,128 +1,94 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Mic, MicOff, HelpCircle, CheckCircle2, Volume2, Activity, Zap } from "lucide-react";
-import { smartNoteCommands, parseVitalFromSpeech } from "./voiceCommands";
+  Mic,
+  MicOff,
+  Loader2,
+  CheckCircle2,
+  Volume2,
+  Command
+} from "lucide-react";
+
+// Voice command patterns for Smart Note Assistant
+const VOICE_COMMANDS = {
+  vitals: {
+    patterns: [
+      /(?:blood pressure|bp)\s*(?:is\s*)?(\d{2,3})\s*(?:over|\/)\s*(\d{2,3})/i,
+      /(?:heart rate|pulse|hr)\s*(?:is\s*)?(\d{2,3})/i,
+      /(?:temp(?:erature)?)\s*(?:is\s*)?(\d{2,3}(?:\.\d)?)/i,
+      /(?:o2|oxygen|sat(?:uration)?)\s*(?:is\s*)?(\d{2,3})/i,
+      /(?:pain)\s*(?:level\s*)?(?:is\s*)?(\d{1,2})\s*(?:out of|\/)\s*10/i,
+      /(?:resp(?:iratory)?(?:\s*rate)?|rr)\s*(?:is\s*)?(\d{1,2})/i,
+      /(?:weight)\s*(?:is\s*)?(\d{2,3})/i
+    ],
+    handler: 'vital'
+  },
+  actions: {
+    patterns: [
+      /start\s*(?:dictation|recording)/i,
+      /stop\s*(?:dictation|recording)/i,
+      /enhance\s*(?:the\s*)?note/i,
+      /save\s*(?:the\s*)?note/i,
+      /copy\s*(?:the\s*)?note/i,
+      /clear\s*(?:the\s*)?note/i,
+      /generate\s*(?:care\s*)?plan/i,
+      /report\s*(?:an\s*)?incident/i
+    ],
+    handler: 'action'
+  }
+};
 
 export default function SmartNoteVoiceListener({ 
-  onVitalChange,
-  onPhraseInsert,
+  onVitalChange, 
+  onPhraseInsert, 
   onAction,
-  isActive = false 
+  isEnabled = true 
 }) {
   const [isListening, setIsListening] = useState(false);
-  const [recognizedCommand, setRecognizedCommand] = useState(null);
-  const [transcript, setTranscript] = useState("");
-  const [showHelp, setShowHelp] = useState(false);
-  const [error, setError] = useState(null);
-  const [lastAction, setLastAction] = useState(null);
+  const [lastCommand, setLastCommand] = useState(null);
+  const [audioLevel, setAudioLevel] = useState(0);
   const recognitionRef = useRef(null);
-
-  const processCommand = useCallback((spokenText) => {
-    const text = spokenText.toLowerCase().trim();
-    
-    // Find matching command
-    for (const cmd of smartNoteCommands) {
-      const matched = cmd.triggers.some(trigger => text.includes(trigger.toLowerCase()));
-
-      if (matched) {
-        setRecognizedCommand(cmd);
-        
-        // Handle vital sign extraction
-        if (cmd.action.startsWith('vital_')) {
-          const value = parseVitalFromSpeech(cmd.action, text);
-          if (value && onVitalChange) {
-            const vitalType = cmd.action.replace('vital_', '');
-            onVitalChange(vitalType, value);
-            setLastAction({ type: 'vital', name: cmd.name, value });
-          }
-        }
-        // Handle phrase insertion
-        else if (cmd.action.startsWith('phrase_') && cmd.insertText) {
-          if (onPhraseInsert) {
-            onPhraseInsert(cmd.insertText);
-            setLastAction({ type: 'phrase', name: cmd.name });
-          }
-        }
-        // Handle compliance insertions
-        else if (cmd.action.startsWith('compliance_') && cmd.insertText) {
-          if (onPhraseInsert) {
-            onPhraseInsert(cmd.insertText);
-            setLastAction({ type: 'compliance', name: cmd.name });
-          }
-        }
-        // Handle actions
-        else if (cmd.action.startsWith('action_')) {
-          if (onAction) {
-            onAction(cmd.action.replace('action_', ''));
-            setLastAction({ type: 'action', name: cmd.name });
-          }
-        }
-
-        // Show feedback
-        setTimeout(() => {
-          setRecognizedCommand(null);
-          setTranscript("");
-        }, 2500);
-
-        return;
-      }
-    }
-  }, [onVitalChange, onPhraseInsert, onAction]);
+  const analyserRef = useRef(null);
+  const animationRef = useRef(null);
 
   useEffect(() => {
+    // Check for Web Speech API support
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setError("Voice commands not supported. Use Chrome, Edge, or Safari.");
+      console.log('Speech recognition not supported');
       return;
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => {
-      setIsListening(true);
-      setError(null);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
+    recognition.onresult = (event) => {
+      const lastResult = event.results[event.results.length - 1];
+      if (lastResult.isFinal) {
+        const transcript = lastResult[0].transcript.toLowerCase().trim();
+        processCommand(transcript);
+      }
     };
 
     recognition.onerror = (event) => {
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        setError(`Voice error: ${event.error}`);
+      console.log('Speech recognition error:', event.error);
+      if (event.error !== 'no-speech') {
+        setIsListening(false);
       }
     };
 
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
+    recognition.onend = () => {
+      // Restart if still meant to be listening
+      if (isListening && recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          console.log('Recognition restart failed:', e);
         }
-      }
-
-      setTranscript(finalTranscript || interimTranscript);
-
-      if (finalTranscript) {
-        processCommand(finalTranscript);
       }
     };
 
@@ -130,172 +96,217 @@ export default function SmartNoteVoiceListener({
 
     return () => {
       if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {}
+        recognitionRef.current.stop();
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [processCommand]);
+  }, []);
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) return;
+  const processCommand = (transcript) => {
+    // Check for vital signs
+    const bpMatch = transcript.match(/(?:blood pressure|bp)\s*(?:is\s*)?(\d{2,3})\s*(?:over|\/)\s*(\d{2,3})/i);
+    if (bpMatch) {
+      const bp = `${bpMatch[1]}/${bpMatch[2]}`;
+      setLastCommand({ type: 'vital', value: `BP: ${bp}` });
+      onVitalChange && onVitalChange('bp', bp);
+      return;
+    }
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-      } catch (error) {
-        // Might already be started
+    const hrMatch = transcript.match(/(?:heart rate|pulse|hr)\s*(?:is\s*)?(\d{2,3})/i);
+    if (hrMatch) {
+      setLastCommand({ type: 'vital', value: `HR: ${hrMatch[1]}` });
+      onVitalChange && onVitalChange('hr', hrMatch[1]);
+      return;
+    }
+
+    const tempMatch = transcript.match(/(?:temp(?:erature)?)\s*(?:is\s*)?(\d{2,3}(?:\.\d)?)/i);
+    if (tempMatch) {
+      setLastCommand({ type: 'vital', value: `Temp: ${tempMatch[1]}` });
+      onVitalChange && onVitalChange('temp', tempMatch[1]);
+      return;
+    }
+
+    const o2Match = transcript.match(/(?:o2|oxygen|sat(?:uration)?)\s*(?:is\s*)?(\d{2,3})/i);
+    if (o2Match) {
+      setLastCommand({ type: 'vital', value: `O2: ${o2Match[1]}%` });
+      onVitalChange && onVitalChange('o2', o2Match[1]);
+      return;
+    }
+
+    const painMatch = transcript.match(/(?:pain)\s*(?:level\s*)?(?:is\s*)?(\d{1,2})/i);
+    if (painMatch) {
+      setLastCommand({ type: 'vital', value: `Pain: ${painMatch[1]}/10` });
+      onVitalChange && onVitalChange('pain', painMatch[1]);
+      return;
+    }
+
+    const rrMatch = transcript.match(/(?:resp(?:iratory)?(?:\s*rate)?|rr)\s*(?:is\s*)?(\d{1,2})/i);
+    if (rrMatch) {
+      setLastCommand({ type: 'vital', value: `RR: ${rrMatch[1]}` });
+      onVitalChange && onVitalChange('rr', rrMatch[1]);
+      return;
+    }
+
+    const weightMatch = transcript.match(/(?:weight)\s*(?:is\s*)?(\d{2,3})/i);
+    if (weightMatch) {
+      setLastCommand({ type: 'vital', value: `Weight: ${weightMatch[1]}` });
+      onVitalChange && onVitalChange('weight', weightMatch[1]);
+      return;
+    }
+
+    // Check for actions
+    if (/start\s*(?:dictation|recording)/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Start Dictation' });
+      onAction && onAction('start_dictation');
+      return;
+    }
+    if (/stop\s*(?:dictation|recording)/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Stop Dictation' });
+      onAction && onAction('stop_dictation');
+      return;
+    }
+    if (/enhance\s*(?:the\s*)?note/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Enhance Note' });
+      onAction && onAction('enhance_note');
+      return;
+    }
+    if (/save\s*(?:the\s*)?note/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Save Note' });
+      onAction && onAction('save_note');
+      return;
+    }
+    if (/copy\s*(?:the\s*)?note/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Copy Note' });
+      onAction && onAction('copy_note');
+      return;
+    }
+    if (/clear\s*(?:the\s*)?note/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Clear Note' });
+      onAction && onAction('clear_note');
+      return;
+    }
+    if (/generate\s*(?:care\s*)?plan/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Generate Care Plan' });
+      onAction && onAction('generate_care_plan');
+      return;
+    }
+    if (/report\s*(?:an\s*)?incident/i.test(transcript)) {
+      setLastCommand({ type: 'action', value: 'Report Incident' });
+      onAction && onAction('report_incident');
+      return;
+    }
+
+    // Common clinical phrases - insert as text
+    const phrases = {
+      'lungs clear': 'Lungs clear to auscultation bilaterally. ',
+      'no edema': 'No peripheral edema noted. ',
+      'alert and oriented': 'Patient alert and oriented x4. ',
+      'wound healing': 'Wound healing well with no signs of infection. ',
+      'med compliant': 'Patient reports medication compliance. ',
+      'denies pain': 'Patient denies pain at this time. ',
+      'tolerating diet': 'Patient tolerating diet well. ',
+      'homebound': 'Patient remains homebound due to medical condition. ',
+      'skilled need': 'Skilled nursing required for assessment and teaching. '
+    };
+
+    for (const [trigger, phrase] of Object.entries(phrases)) {
+      if (transcript.includes(trigger)) {
+        setLastCommand({ type: 'phrase', value: trigger });
+        onPhraseInsert && onPhraseInsert(phrase);
+        return;
       }
     }
   };
 
-  // Group commands by category
-  const commandsByCategory = smartNoteCommands.reduce((acc, cmd) => {
-    if (!acc[cmd.category]) acc[cmd.category] = [];
-    acc[cmd.category].push(cmd);
-    return acc;
-  }, {});
+  const toggleListening = async () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    } else {
+      try {
+        // Get audio for visual feedback
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyserRef.current = analyser;
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const updateLevel = () => {
+          if (analyserRef.current) {
+            analyserRef.current.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            setAudioLevel(average / 255);
+          }
+          animationRef.current = requestAnimationFrame(updateLevel);
+        };
+        updateLevel();
+
+        recognitionRef.current?.start();
+        setIsListening(true);
+      } catch (e) {
+        console.error('Error starting voice listener:', e);
+        alert('Could not access microphone. Please grant permission.');
+      }
+    }
+  };
+
+  if (!isEnabled) return null;
 
   return (
-    <>
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-        {/* Listening feedback */}
-        {isListening && (
-          <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm border-2 border-purple-400 animate-in fade-in slide-in-from-bottom-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="relative">
-                <Mic className="w-5 h-5 text-purple-600" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-              </div>
-              <span className="text-sm font-semibold text-gray-900">Listening for commands...</span>
-            </div>
+    <div className="fixed bottom-4 right-4 z-50">
+      <Card className={`shadow-lg transition-all ${isListening ? 'border-green-400 bg-green-50' : 'border-gray-200'}`}>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              onClick={toggleListening}
+              className={`rounded-full w-10 h-10 ${isListening ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'}`}
+            >
+              {isListening ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+            </Button>
             
-            {transcript && (
-              <p className="text-sm text-gray-600 italic mb-2">"{transcript}"</p>
-            )}
-            
-            {recognizedCommand && (
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded">
-                <CheckCircle2 className="w-4 h-4" />
-                <span className="text-sm font-medium">✓ {recognizedCommand.name}</span>
-                {lastAction?.value && (
-                  <Badge className="bg-green-600 text-white ml-auto">{lastAction.value}</Badge>
-                )}
-              </div>
-            )}
-
-            <div className="mt-2 text-xs text-gray-500">
-              Try: "BP 120 over 80" • "Lungs clear" • "Save note"
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <Alert className="max-w-sm bg-red-50 border-red-300">
-            <AlertDescription className="text-red-900 text-sm">{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Control buttons */}
-        <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => setShowHelp(true)}
-            className="rounded-full shadow-lg"
-            title="View voice commands"
-          >
-            <HelpCircle className="w-5 h-5" />
-          </Button>
-
-          <Button
-            size="lg"
-            onClick={toggleListening}
-            className={`rounded-full shadow-lg ${
-              isListening 
-                ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
-                : 'bg-purple-600 hover:bg-purple-700'
-            }`}
-            title={isListening ? 'Stop listening' : 'Start voice commands'}
-          >
-            {isListening ? (
-              <>
-                <MicOff className="w-5 h-5 mr-2" />
-                Stop
-              </>
-            ) : (
-              <>
-                <Mic className="w-5 h-5 mr-2" />
-                Voice
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Help Dialog */}
-      <Dialog open={showHelp} onOpenChange={setShowHelp}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Volume2 className="w-6 h-6 text-purple-600" />
-              Smart Note Voice Commands
-            </DialogTitle>
-            <DialogDescription>
-              Speak these commands while voice mode is active to control documentation.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            {Object.entries(commandsByCategory).map(([category, commands]) => (
-              <div key={category}>
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  {category === 'Vital Signs' && <Activity className="w-4 h-4 text-red-500" />}
-                  {category === 'Clinical Phrases' && <Zap className="w-4 h-4 text-blue-500" />}
-                  {category === 'Actions' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                  {category}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {commands.map((cmd, idx) => (
-                    <div key={idx} className="p-3 bg-gray-50 rounded-lg border">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm">{cmd.name}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mb-1">
-                        {cmd.triggers.slice(0, 2).map((trigger, tIdx) => (
-                          <Badge key={tIdx} variant="secondary" className="font-mono text-xs">
-                            "{trigger}"
-                          </Badge>
-                        ))}
-                      </div>
-                      {cmd.example && (
-                        <p className="text-xs text-gray-500">{cmd.example}</p>
-                      )}
+            <div className="min-w-[140px]">
+              {isListening ? (
+                <>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge className="bg-green-600 text-xs animate-pulse">Listening</Badge>
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1 bg-green-500 rounded-full transition-all"
+                          style={{ height: `${Math.max(4, audioLevel * 20 * (i + 1))}px` }}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+                  </div>
+                  <p className="text-xs text-gray-600">Say vitals or commands</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-medium text-gray-700">Voice Commands</p>
+                  <p className="text-xs text-gray-500">Click to activate</p>
+                </>
+              )}
+            </div>
 
-          <div className="border-t pt-4">
-            <Alert className="bg-purple-50 border-purple-200">
-              <AlertDescription className="text-purple-900 text-sm">
-                <strong>💡 Tips:</strong>
-                <ul className="list-disc ml-5 mt-2 space-y-1">
-                  <li><strong>Vitals:</strong> Say the value after the vital type (e.g., "BP 120 over 80")</li>
-                  <li><strong>Phrases:</strong> Just say the phrase name to insert standard text</li>
-                  <li><strong>Actions:</strong> Commands like "save note" trigger specific functions</li>
-                  <li>Speak clearly at normal pace in a quiet environment</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
+            {lastCommand && (
+              <Badge className="bg-blue-100 text-blue-800 text-xs">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                {lastCommand.value}
+              </Badge>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
