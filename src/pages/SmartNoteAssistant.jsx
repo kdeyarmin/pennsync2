@@ -44,6 +44,9 @@ import InlineSuggestions from "../components/smartNote/InlineSuggestions";
 import QuickCarePlanUpdater from "../components/smartNote/QuickCarePlanUpdater";
 import VoiceDictation from "../components/smartNote/VoiceDictation";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
+import VoiceVitalsEntry from "../components/smartNote/VoiceVitalsEntry";
+import GuidedIncidentReporting from "../components/incident/GuidedIncidentReporting";
+import PersonalizedSkillBuilder from "../components/training/PersonalizedSkillBuilder";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -113,6 +116,22 @@ export default function SmartNoteAssistant() {
   // Handle voice transcription
   const handleTranscriptionComplete = (transcription) => {
     setRoughNote(prev => prev ? prev + '\n\n' + transcription : transcription);
+  };
+
+  // Handle voice vitals entry
+  const handleVoiceVitals = (vitals) => {
+    setVitalSigns(prev => ({
+      bp: vitals.bp || prev.bp,
+      hr: vitals.hr || prev.hr,
+      temp: vitals.temp || prev.temp,
+      o2: vitals.o2 || prev.o2,
+      pain: vitals.pain || prev.pain
+    }));
+  };
+
+  // Handle voice phrase entry
+  const handleVoicePhrase = (phrase) => {
+    setRoughNote(prev => prev + ' ' + phrase);
   };
 
   // Handle inserting suggestions
@@ -527,6 +546,12 @@ Return your response as JSON with this structure:
           {/* Voice Dictation */}
           <VoiceDictation onTranscriptionComplete={handleTranscriptionComplete} />
 
+          {/* Quick Voice Vitals Entry */}
+          <VoiceVitalsEntry 
+            onVitalsRecognized={handleVoiceVitals}
+            onPhraseRecognized={handleVoicePhrase}
+          />
+
           {/* Documentation Input - Freeform or Guided */}
           {documentationMode === 'freeform' ? (
             <Card className="border-2 border-purple-200">
@@ -767,6 +792,20 @@ Return your response as JSON with this structure:
               <PersonalizedFeedback
                 auditResults={auditResults}
                 userEmail={currentUser?.email}
+              />
+            )}
+
+            {/* Personalized Skill Builder */}
+            <PersonalizedSkillBuilder userEmail={currentUser?.email} />
+
+            {/* Guided Incident Reporting */}
+            {selectedPatientId && (
+              <GuidedIncidentReporting
+                patientId={selectedPatientId}
+                patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+                physicianEmail={selectedPatient?.physician_email}
+                caregiverEmail={selectedPatient?.caregiver_email}
+                onIncidentCreated={(incident) => console.log('Incident created:', incident)}
               />
             )}
 

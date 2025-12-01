@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
+import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -28,6 +29,18 @@ export default function Dashboard() {
   const { data: patients, error: patientsError } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list(),
+    initialData: [],
+  });
+
+  const { data: carePlans = [] } = useQuery({
+    queryKey: ['allCarePlans'],
+    queryFn: () => base44.entities.CarePlan.list(),
+    initialData: [],
+  });
+
+  const { data: incidents = [] } = useQuery({
+    queryKey: ['recentIncidents'],
+    queryFn: () => base44.entities.Incident.filter({}, '-incident_date', 50),
     initialData: [],
   });
 
@@ -132,6 +145,16 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Real-time Patient Alerts */}
+      <div className="mb-6">
+        <RealTimePatientAlerts
+          patients={patients}
+          visits={visits}
+          carePlans={carePlans}
+          incidents={incidents}
+        />
       </div>
 
       {/* Add Compliance Widget before Visit Schedule */}
