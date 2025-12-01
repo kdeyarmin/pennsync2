@@ -49,6 +49,8 @@ import GuidedIncidentReporting from "../components/incident/GuidedIncidentReport
 import PersonalizedSkillBuilder from "../components/training/PersonalizedSkillBuilder";
 import SmartNoteVoiceListener from "../components/voice/SmartNoteVoiceListener";
 import NoteSummaryGenerator from "../components/smartNote/NoteSummaryGenerator";
+import ProactiveComplianceChecker from "../components/smartNote/ProactiveComplianceChecker";
+import DocumentationAssistantPopup from "../components/smartNote/DocumentationAssistantPopup";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -192,6 +194,12 @@ export default function SmartNoteAssistant() {
     } else {
       setRoughNote(prev => prev + '\n\n' + text);
     }
+  };
+
+  // Handle training recommendation from compliance checker
+  const handleTrainingRecommended = (trainingTopic) => {
+    // Navigate to training page with the recommended topic
+    window.location.href = `/NurseTraining?topic=${encodeURIComponent(trainingTopic)}`;
   };
 
   const handleInsertSummary = (text) => {
@@ -585,13 +593,15 @@ Return your response as JSON with this structure:
             </Button>
           </div>
 
-          {/* Real-time Compliance Score */}
-          <ComplianceScoreIndicator
-            roughNote={roughNote}
+          {/* Proactive Compliance Checker with Checklist */}
+          <ProactiveComplianceChecker
+            noteText={roughNote}
             careType={careType}
             visitType={visitType}
             diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            nurseEmail={currentUser?.email}
             onInsertElement={handleInsertComplianceElement}
+            onTrainingRecommended={handleTrainingRecommended}
           />
 
           {/* Voice Dictation */}
@@ -626,12 +636,20 @@ Return your response as JSON with this structure:
                 />
 
                 {/* Inline AI Suggestions */}
-                <InlineSuggestions
-                  currentText={roughNote}
-                  diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-                  careType={careType}
-                  onAcceptSuggestion={handleAcceptInlineSuggestion}
-                />
+                <div className="flex items-center gap-2 mt-2">
+                  <InlineSuggestions
+                    currentText={roughNote}
+                    diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                    careType={careType}
+                    onAcceptSuggestion={handleAcceptInlineSuggestion}
+                  />
+                  <DocumentationAssistantPopup
+                    noteText={roughNote}
+                    careType={careType}
+                    diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                    onInsert={(text) => setRoughNote(prev => prev + ' ' + text)}
+                  />
+                </div>
 
                 <div className="mt-4 flex justify-end">
                   <Button
@@ -822,7 +840,9 @@ Return your response as JSON with this structure:
             diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
             missingCriticalElements={auditResults?.missing_critical_elements}
             auditResults={auditResults}
+            nurseEmail={currentUser?.email}
             onTasksGenerated={handleTasksGenerated}
+            onTrainingRecommended={(recs) => console.log('Training recommended:', recs)}
           />
 
           {/* AI Care Plan Generator */}

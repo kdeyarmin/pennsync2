@@ -40,7 +40,9 @@ export default function TaskGenerator({
   missingCriticalElements = [],
   auditResults = null,
   incidentData = null,
-  onTasksGenerated
+  nurseEmail = null,
+  onTasksGenerated,
+  onTrainingRecommended
 }) {
   const [tasks, setTasks] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -144,8 +146,11 @@ Generate follow-up tasks considering:
           - "Skilled Nursing Follow-up for [condition]"
           - "Obtain Physician Orders for [intervention]"
           - "Update Care Plan with New Problem"
+      12. DOCUMENTATION TRAINING NEEDS: If the documentation shows patterns of missing elements, suggest training tasks
 
 Be specific and actionable. Each task should be clear enough to be completed by any nurse.
+
+Also identify if there are documentation skill gaps that suggest training would be helpful.
 
 Return JSON:
 {
@@ -218,12 +223,21 @@ Return JSON:
               items: { type: "object" }
             },
             skilled_need_tasks: {
-              type: "array",
-              items: { type: "object" }
+                  type: "array",
+                  items: { type: "object" }
+                },
+                training_recommendations: {
+                  type: "array",
+                  items: { type: "object" }
+                }
+              }
             }
-          }
-        }
-        });
+            });
+
+            // Handle training recommendations
+            if (result.training_recommendations?.length > 0 && onTrainingRecommended) {
+            onTrainingRecommended(result.training_recommendations);
+            }
 
         // Combine all tasks, prioritizing incident and skilled need tasks
         const allTasks = [
