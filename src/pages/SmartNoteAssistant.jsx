@@ -24,7 +24,8 @@ import {
   Wand2,
   AlertCircle,
   Zap,
-  Brain
+  Brain,
+  LayoutList
 } from "lucide-react";
 
 import RealTimeSuggestions from "../components/smartNote/RealTimeSuggestions";
