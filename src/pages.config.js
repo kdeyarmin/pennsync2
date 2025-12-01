@@ -16,6 +16,7 @@ import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import SecurityPolicy from './pages/SecurityPolicy';
 import PatientTriage from './pages/PatientTriage';
 import TemplateLibrary from './pages/TemplateLibrary';
+import ComplianceDashboard from './pages/ComplianceDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "SecurityPolicy": SecurityPolicy,
     "PatientTriage": PatientTriage,
     "TemplateLibrary": TemplateLibrary,
+    "ComplianceDashboard": ComplianceDashboard,
 }
 
 export const pagesConfig = {
