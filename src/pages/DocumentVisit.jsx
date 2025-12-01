@@ -46,6 +46,7 @@ import EnhancedOASISScrubber from "../components/visit/EnhancedOASISScrubber";
 import AIDocumentationAssistant from "../components/visit/AIDocumentationAssistant";
 import AIDocumentationAutomation from "../components/visit/AIDocumentationAutomation";
 import RealTimeClinicalDecisionSupport from "../components/clinical/RealTimeClinicalDecisionSupport";
+import AIDocumentationAudit from "../components/audit/AIDocumentationAudit";
 
 import { 
   canAccessVisit, 
@@ -1112,6 +1113,14 @@ Generate the complete clinical narrative based on the audio and context:`;
                 narrativeText={narrativeText}
                 vitalSigns={vitalSigns}
                 onFixIssue={handleQAFix}
+              />
+
+              <AIDocumentationAudit
+                patient={patient}
+                visit={visit}
+                narrativeText={narrativeText}
+                vitalSigns={vitalSigns}
+                onInsertText={handleAddSuggestion}
               />
 
               <NoteScrubber
