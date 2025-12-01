@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Lightbulb,
   TrendingUp,
-  Star
+  Star,
+  RefreshCw
 } from "lucide-react";
 
 export default function PersonalizedSkillBuilder({ userEmail }) {
