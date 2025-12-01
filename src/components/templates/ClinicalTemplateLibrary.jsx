@@ -163,7 +163,12 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
     t.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSelectTemplate = async (template, type) => {
+  const handleSelectTemplate = useCallback(async (template, type) => {
+    if (!onSelectTemplate) {
+      console.warn('No onSelectTemplate handler provided');
+      return;
+    }
+    
     setSelectedTemplate({ ...template, type });
     setIsGenerating(true);
 
@@ -180,7 +185,7 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
     }
 
     setIsGenerating(false);
-  };
+  }, [onSelectTemplate]);
 
   return (
     <Card className="border-2 border-blue-200">

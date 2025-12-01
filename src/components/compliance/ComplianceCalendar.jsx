@@ -492,9 +492,9 @@ export default function ComplianceCalendar() {
                                   {key.replace(/_/g, ' ')}: {
                                     value instanceof Date 
                                       ? format(value, 'MMM d, yyyy')
-                                      : typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)
+                                      : typeof value === 'string' && value.match && value.match(/^\d{4}-\d{2}-\d{2}/)
                                       ? format(parseISO(value), 'MMM d, yyyy')
-                                      : value
+                                      : String(value)
                                   }
                                 </li>
                               ))}

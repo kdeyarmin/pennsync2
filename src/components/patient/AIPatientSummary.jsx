@@ -46,6 +46,11 @@ export default function AIPatientSummary({ patient }) {
   });
 
   const generateSummary = async () => {
+    if (!patient) {
+      alert('No patient selected');
+      return;
+    }
+    
     setIsGenerating(true);
     try {
       const recentVisits = visits.slice(0, 5);
