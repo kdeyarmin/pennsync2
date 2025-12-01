@@ -396,10 +396,12 @@ export default function NoteReviewEngine({
       const skillsList = nurseSkills.map(s => `${s.skill_name} (${s.proficiency_level})`).join(', ');
       const existingTasksList = existingTasks.map(t => t.title).join(', ');
       
-      // Get applicable clinical protocols
-      const applicableProtocols = getClinicalProtocols(diagnosis);
+      // Get applicable clinical protocols based on diagnosis AND note content
+      const applicableProtocols = getClinicalProtocols(diagnosis, noteText);
       const protocolPrompt = applicableProtocols.map(p => 
-        `\n${p.name}:\n${p.elements.map(e => `  - ${e}`).join('\n')}`
+        `\n${p.name} (${p.category}) - Source: ${p.guideline_source}:\n${p.elements.map(e => 
+          typeof e === 'object' ? `  - [${e.category}] ${e.item}` : `  - ${e}`
+        ).join('\n')}`
       ).join('\n');
 
       const result = await base44.integrations.Core.InvokeLLM({
@@ -457,7 +459,16 @@ Perform a thorough review checking for:
    - Vague or non-specific documentation
    - Missing evidence-based language
 
-5. PROTOCOL COMPLIANCE - Check each applicable clinical protocol element
+5. PROTOCOL COMPLIANCE - Check each applicable clinical protocol element thoroughly
+   - For each protocol, evaluate EVERY element listed
+   - Provide specific quotes from the note where elements are addressed
+   - Give actionable recommendations for missing elements
+   - Calculate accurate compliance scores based on elements met
+
+6. CROSS-REFERENCE ANALYSIS - Correlate patient history with current symptoms
+   - If symptoms are mentioned, check if appropriate protocol elements are addressed
+   - Flag when symptoms suggest a condition but related documentation is missing
+   - Example: SOB in COPD patient should trigger all respiratory assessment elements
 
 Return JSON:
 {
@@ -466,15 +477,37 @@ Return JSON:
   "protocol_compliance": [
     {
       "protocol_name": "Protocol name",
+      "category": "Protocol category",
+      "guideline_source": "Source guideline reference",
       "elements_checked": [
         {
           "element": "Protocol element",
+          "element_category": "Category within protocol",
           "status": "met" | "partial" | "not_addressed" | "not_applicable",
-          "found_text": "Quote from note if found, null if not",
-          "recommendation": "What to add if not met"
+          "found_text": "Exact quote from note if found, null if not",
+          "recommendation": "Specific actionable recommendation if not met",
+          "clinical_importance": "Why this element matters clinically"
         }
       ],
-      "compliance_score": 0-100
+      "compliance_score": 0-100,
+      "compliance_breakdown": {
+        "met_count": 0,
+        "partial_count": 0,
+        "not_addressed_count": 0,
+        "not_applicable_count": 0
+      },
+      "priority_gaps": ["Top 3 most critical missing elements"],
+      "improvement_summary": "Specific guidance to improve this protocol's score"
+    }
+  ],
+  "cross_reference_findings": [
+    {
+      "finding": "What was identified from cross-referencing",
+      "patient_history_factor": "Relevant history element",
+      "current_symptom": "Current symptom noted",
+      "expected_documentation": "What should be documented based on this correlation",
+      "status": "documented" | "missing" | "incomplete",
+      "clinical_rationale": "Why this cross-reference matters"
     }
   ],
   "missing_followups": [
@@ -522,6 +555,7 @@ Return JSON:
             overall_score: { type: "number" },
             review_summary: { type: "string" },
             protocol_compliance: { type: "array", items: { type: "object" } },
+            cross_reference_findings: { type: "array", items: { type: "object" } },
             missing_followups: { type: "array", items: { type: "object" } },
             documentation_gaps: { type: "array", items: { type: "object" } },
             safety_alerts: { type: "array", items: { type: "object" } },
