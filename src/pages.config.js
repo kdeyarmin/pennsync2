@@ -19,6 +19,7 @@ import TemplateLibrary from './pages/TemplateLibrary';
 import ComplianceDashboard from './pages/ComplianceDashboard';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import StaffTraining from './pages/StaffTraining';
+import PatientEducation from './pages/PatientEducation';
 import __Layout from './Layout.jsx';
 
 
@@ -44,6 +45,7 @@ export const PAGES = {
     "ComplianceDashboard": ComplianceDashboard,
     "PredictiveAnalytics": PredictiveAnalytics,
     "StaffTraining": StaffTraining,
+    "PatientEducation": PatientEducation,
 }
 
 export const pagesConfig = {
