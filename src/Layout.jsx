@@ -146,11 +146,6 @@ export default function Layout({ children }) {
       url: createPageUrl("StaffTraining"),
       icon: GraduationCap,
     },
-    {
-      title: "Patient Comms",
-      url: createPageUrl("PatientCommunication"),
-      icon: MessageSquare,
-    },
   ];
 
   if (isAdmin) {
