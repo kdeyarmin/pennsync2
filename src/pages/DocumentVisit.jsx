@@ -45,6 +45,7 @@ import PatientResponsePrompter from "../components/visit/PatientResponsePrompter
 import EnhancedOASISScrubber from "../components/visit/EnhancedOASISScrubber";
 import AIDocumentationAssistant from "../components/visit/AIDocumentationAssistant";
 import AIDocumentationAutomation from "../components/visit/AIDocumentationAutomation";
+import RealTimeClinicalDecisionSupport from "../components/clinical/RealTimeClinicalDecisionSupport";
 
 import { 
   canAccessVisit, 
@@ -1390,6 +1391,18 @@ Generate the complete clinical narrative based on the audio and context:`;
         </div>
 
         <div className="space-y-6">
+          {/* Real-Time Clinical Decision Support */}
+          {patient && visit && (
+            <RealTimeClinicalDecisionSupport
+              patient={patient}
+              visit={visit}
+              vitalSigns={vitalSigns}
+              narrativeText={narrativeText}
+              carePlans={carePlans}
+              onInsertText={handleAddSuggestion}
+            />
+          )}
+
           {/* AI Documentation Automation - Auto-populate & follow-ups */}
           {patient && visit && (
             <AIDocumentationAutomation
