@@ -70,13 +70,15 @@ export default function CarePlanManagement() {
   };
 
   // Filter care plans
-  const filteredCarePlans = carePlans.filter(plan => {
+  const filteredCarePlans = (carePlans || []).filter(plan => {
+    if (!plan) return false;
     const patient = getPatient(plan.patient_id);
+    const searchLower = (searchTerm || '').toLowerCase();
     const matchesSearch = !searchTerm || 
-      plan.problem?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.goal?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient?.last_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      (plan.problem || '').toLowerCase().includes(searchLower) ||
+      (plan.goal || '').toLowerCase().includes(searchLower) ||
+      (patient?.first_name || '').toLowerCase().includes(searchLower) ||
+      (patient?.last_name || '').toLowerCase().includes(searchLower);
     
     const matchesStatus = statusFilter === "all" || plan.status === statusFilter;
     

@@ -23,11 +23,16 @@ export default function Patients() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false); // Added for delete functionality
   const [patientToDelete, setPatientToDelete] = useState(null); // Added for delete functionality
 
-  const { data: patients, isLoading } = useQuery({
+  const { data: patients, isLoading, error: patientsError } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list('-created_date'),
     initialData: [],
   });
+
+  // Handle query errors gracefully
+  if (patientsError) {
+    console.error('Error loading patients:', patientsError);
+  }
 
   const createPatientMutation = useMutation({
     mutationFn: (patientData) => base44.entities.Patient.create(patientData),
@@ -99,12 +104,13 @@ export default function Patients() {
     { type: 'recertification', label: 'Recertification', icon: '📝' },
   ];
 
-  const filteredPatients = patients.filter(patient => {
-    const searchLower = searchTerm.toLowerCase();
+  const filteredPatients = (patients || []).filter(patient => {
+    if (!patient) return false;
+    const searchLower = (searchTerm || '').toLowerCase();
     return (
-      patient.first_name?.toLowerCase().includes(searchLower) ||
-      patient.last_name?.toLowerCase().includes(searchLower) ||
-      patient.medical_record_number?.toLowerCase().includes(searchLower)
+      (patient.first_name || '').toLowerCase().includes(searchLower) ||
+      (patient.last_name || '').toLowerCase().includes(searchLower) ||
+      (patient.medical_record_number || '').toLowerCase().includes(searchLower)
     );
   });
 

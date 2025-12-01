@@ -119,9 +119,11 @@ export default function Admin() {
     }, 0) / (completedVisits || 1);
 
   // Filter users by search
-  const filteredUsers = users.filter(user =>
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = (users || []).filter(user =>
+    user && (
+      (user.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+      (user.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase())
+    )
   );
 
   // Security events by type
