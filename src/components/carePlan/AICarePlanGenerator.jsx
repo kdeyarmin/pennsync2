@@ -1,22 +1,12 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -26,244 +16,117 @@ import {
 } from "@/components/ui/select";
 import {
   Sparkles,
+  Loader2,
   Target,
   CheckCircle2,
-  Edit,
-  Trash2,
+  Edit2,
+  X,
   Plus,
-  TrendingUp,
   AlertCircle,
-  Brain,
-  RefreshCw,
-  Zap
+  ClipboardList,
+  Calendar
 } from "lucide-react";
+import { format, addDays } from "date-fns";
 
-export default function AICarePlanGenerator({ patient, visit, vitalSigns, narrativeText }) {
-  const queryClient = useQueryClient();
-  const [showDialog, setShowDialog] = useState(false);
+export default function AICarePlanGenerator({
+  patientId,
+  patientName,
+  diagnosis,
+  careType = "home_health",
+  extractedData = null,
+  existingCarePlans = [],
+  onCarePlansCreated
+}) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [suggestedPlans, setSuggestedPlans] = useState([]);
+  const [generatedPlans, setGeneratedPlans] = useState([]);
+  const [selectedPlans, setSelectedPlans] = useState({});
   const [editingPlan, setEditingPlan] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createdCount, setCreatedCount] = useState(0);
 
-  // Fetch existing care plans
-  const { data: existingCarePlans = [] } = useQuery({
-    queryKey: ['carePlans', patient?.id],
-    queryFn: () => base44.entities.CarePlan.filter({ patient_id: patient.id }),
-    enabled: !!patient?.id,
-    initialData: [],
-  });
-
-  // Fetch all visits for trend analysis
-  const { data: allVisits = [] } = useQuery({
-    queryKey: ['patientVisits', patient?.id],
-    queryFn: () => base44.entities.Visit.filter({ patient_id: patient.id, status: 'completed' }, '-visit_date'),
-    enabled: !!patient?.id,
-    initialData: [],
-  });
-
-  // Fetch automatic care plan triggers
-  const { data: automaticTriggers = [] } = useQuery({
-    queryKey: ['automaticCarePlanTriggers'],
-    queryFn: () => base44.entities.AutomaticCarePlanTrigger.list(),
-    initialData: [],
-  });
-
-  // Create care plan mutation
-  const createCarePlanMutation = useMutation({
-    mutationFn: (carePlanData) => base44.entities.CarePlan.create(carePlanData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['carePlans', patient.id] });
-    },
-  });
-
-  // Update care plan mutation
-  const updateCarePlanMutation = useMutation({
-    mutationFn: ({ id, updates }) => base44.entities.CarePlan.update(id, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['carePlans', patient.id] });
-    },
-  });
-
-  // Generate AI care plans
   const generateCarePlans = async () => {
+    if (!diagnosis) {
+      alert("Please provide a diagnosis to generate care plans.");
+      return;
+    }
+
     setIsGenerating(true);
-    setShowDialog(true);
-    
+    setGeneratedPlans([]);
+    setCreatedCount(0);
+
     try {
-      const careType = patient.care_type === 'hospice' ? 'HOSPICE' : 'HOME HEALTH';
-      
-      // Check for automatic triggers
-      const matchedTriggers = automaticTriggers.filter(trigger => {
-        if (!trigger.is_active) return false;
-        if (trigger.care_type !== 'both' && trigger.care_type !== patient.care_type) return false;
-        
-        if (trigger.trigger_type === 'diagnosis') {
-          const allDiagnoses = [
-            patient.primary_diagnosis,
-            ...(patient.secondary_diagnoses || [])
-          ].filter(Boolean).map(d => d.toLowerCase());
-          
-          return allDiagnoses.some(d => d.includes(trigger.trigger_value.toLowerCase()));
+      // Build context from extracted data
+      let additionalContext = "";
+      if (extractedData) {
+        if (extractedData.symptoms?.length > 0) {
+          additionalContext += `\nIDENTIFIED SYMPTOMS:\n${extractedData.symptoms.map(s => `- ${s.symptom} (${s.severity})`).join('\n')}`;
         }
-        
-        // For medications, we'll check the narrative text
-        if (trigger.trigger_type === 'medication' && narrativeText) {
-          return narrativeText.toLowerCase().includes(trigger.trigger_value.toLowerCase());
+        if (extractedData.vital_signs) {
+          const vitals = Object.entries(extractedData.vital_signs)
+            .filter(([_, v]) => v)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(', ');
+          if (vitals) additionalContext += `\nVITAL SIGNS: ${vitals}`;
         }
-        
-        return false;
-      });
-
-      // Start with automatic triggered care plans
-      let initialSuggestions = matchedTriggers.map(trigger => {
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + trigger.days_until_target);
-        
-        return {
-          problem: trigger.problem,
-          goal: trigger.goal,
-          baseline_measurement: trigger.baseline_measurement || '',
-          interventions: trigger.interventions,
-          frequency: trigger.frequency,
-          target_date: targetDate.toISOString().split('T')[0],
-          priority: trigger.priority,
-          update_type: 'new',
-          existing_plan_id: null,
-          rationale: `Automatically triggered by ${trigger.trigger_type}: ${trigger.trigger_value}`,
-          is_automatic: true
-        };
-      });
-      
-      // Build comprehensive prompt for AI to generate additional plans
-      let prompt = `You are an expert ${careType} nurse care planner. Based on the patient data provided, generate a comprehensive individualized care plan with nursing diagnoses, measurable goals, and evidence-based interventions.
-
-PATIENT INFORMATION:
-- Care Type: ${careType}
-- Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
-- Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
-- Allergies: ${patient.allergies || 'NKDA'}
-
-`;
-
-      // Add current visit data
-      if (visit) {
-        prompt += `CURRENT VISIT (${visit.visit_date}):
-Visit Type: ${visit.visit_type.replace(/_/g, ' ')}
-`;
-      }
-
-      // Add vital signs
-      if (Object.keys(vitalSigns).length > 0) {
-        prompt += `\nCURRENT VITAL SIGNS:
-`;
-        if (vitalSigns.blood_pressure_systolic) {
-          prompt += `- Blood Pressure: ${vitalSigns.blood_pressure_systolic}/${vitalSigns.blood_pressure_diastolic} mmHg\n`;
+        if (extractedData.medications?.length > 0) {
+          additionalContext += `\nMEDICATIONS:\n${extractedData.medications.map(m => `- ${m.name}`).join('\n')}`;
         }
-        if (vitalSigns.heart_rate) prompt += `- Heart Rate: ${vitalSigns.heart_rate} bpm\n`;
-        if (vitalSigns.respiratory_rate) prompt += `- Respiratory Rate: ${vitalSigns.respiratory_rate} /min\n`;
-        if (vitalSigns.oxygen_saturation) prompt += `- O2 Saturation: ${vitalSigns.oxygen_saturation}%\n`;
-        if (vitalSigns.temperature) prompt += `- Temperature: ${vitalSigns.temperature}°F\n`;
-        if (vitalSigns.pain_level !== undefined) prompt += `- Pain Level: ${vitalSigns.pain_level}/10\n`;
-        if (vitalSigns.weight) prompt += `- Weight: ${vitalSigns.weight} lbs\n`;
       }
 
-      // Add clinical narrative
-      if (narrativeText && narrativeText.length > 0) {
-        prompt += `\nCLINICAL ASSESSMENT FROM CURRENT VISIT:
-${narrativeText.substring(0, 1000)}${narrativeText.length > 1000 ? '...' : ''}
-`;
-      }
+      // Get existing care plan problems to avoid duplicates
+      const existingProblems = existingCarePlans.map(cp => cp.problem?.toLowerCase()).filter(Boolean);
 
-      // Add historical trends
-      if (allVisits.length > 0) {
-        prompt += `\nHISTORICAL TRENDS (last ${Math.min(allVisits.length, 3)} visits):
-`;
-        allVisits.slice(0, 3).forEach((v, idx) => {
-          prompt += `\nVisit ${idx + 1} (${v.visit_date}):`;
-          if (v.vital_signs) {
-            if (v.vital_signs.blood_pressure_systolic) {
-              prompt += ` BP: ${v.vital_signs.blood_pressure_systolic}/${v.vital_signs.blood_pressure_diastolic}`;
-            }
-            if (v.vital_signs.weight) prompt += ` | Weight: ${v.vital_signs.weight} lbs`;
-            if (v.vital_signs.pain_level !== undefined) prompt += ` | Pain: ${v.vital_signs.pain_level}/10`;
-          }
-          prompt += '\n';
-        });
-      }
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are an expert home health/hospice clinical documentation specialist. Generate comprehensive, Medicare-compliant care plans for this patient.
 
-      // Add existing care plans for update suggestions
-      if (existingCarePlans.length > 0) {
-        prompt += `\nEXISTING CARE PLANS:
-`;
-        existingCarePlans.forEach((plan, idx) => {
-          prompt += `${idx + 1}. ${plan.problem} - Goal: ${plan.goal} (Status: ${plan.status})
-`;
-        });
-      }
+PATIENT: ${patientName || 'Patient'}
+PRIMARY DIAGNOSIS: ${diagnosis}
+CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
+${additionalContext}
 
-      // Care type specific focus
-      if (patient.care_type === 'hospice') {
-        prompt += `\nHOSPICE CARE FOCUS:
-- Prioritize comfort care and symptom management
-- Focus on quality of life and dignity
-- Include psychosocial and spiritual needs
-- Address caregiver support and anticipatory grief
-- Ensure pain and symptom control goals
-`;
-      } else {
-        prompt += `\nHOME HEALTH CARE FOCUS:
-- Focus on functional improvement and independence
-- Include safety and fall prevention
-- Address medication management and adherence
-- Focus on disease-specific self-management
-- Include patient/caregiver education needs
-`;
-      }
+EXISTING CARE PLANS (avoid duplicating these):
+${existingProblems.length > 0 ? existingProblems.join('\n') : 'None'}
 
-      if (matchedTriggers.length > 0) {
-        prompt += `\nAUTOMATIC CARE PLANS ALREADY IDENTIFIED:
-The following care plans have been automatically triggered based on diagnosis/medication:
-${matchedTriggers.map(t => `- ${t.problem} (triggered by ${t.trigger_type}: ${t.trigger_value})`).join('\n')}
+Generate 3-5 appropriate care plans based on the diagnosis and any extracted clinical data. Each care plan MUST be:
 
-DO NOT duplicate these. Focus on identifying ADDITIONAL problems not covered by the automatic triggers.
-`;
-      }
+1. MEDICARE COMPLIANT:
+   - Problem statement must be a nursing diagnosis, not a medical diagnosis
+   - Goals must be SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
+   - Interventions must require skilled nursing judgment
+   ${careType === 'home_health' ? '- Must support homebound status and skilled need' : '- Must focus on comfort and symptom management'}
 
-      prompt += `\nTASK:
-Generate ${existingCarePlans.length > 0 ? '2-4' : '3-5'} ADDITIONAL care plan problems (beyond any automatic triggers) with corresponding goals and interventions.
+2. EVIDENCE-BASED:
+   - Use current clinical guidelines
+   - Include appropriate assessment frequencies
+   - Specify measurable outcomes
 
-${existingCarePlans.length > 0 ? `IMPORTANT: Review existing care plans above. For any that are still relevant, suggest updates to goals or interventions based on current status. For new problems identified, create new care plans.` : ''}
+3. PATIENT-CENTERED:
+   - Consider functional limitations
+   - Include patient/caregiver education
+   - Address quality of life
 
-For EACH care plan, provide:
-1. **Problem/Nursing Diagnosis**: Use NANDA-approved nursing diagnoses when possible (e.g., "Impaired Gas Exchange", "Acute Pain", "Risk for Falls")
-2. **Goal**: Specific, Measurable, Achievable, Relevant, Time-bound (SMART) goal
-3. **Baseline**: Current measurement or status to track from
-4. **Interventions**: 3-5 specific, evidence-based nursing interventions
-5. **Frequency**: How often to assess/intervene (e.g., "Each visit", "Weekly", "PRN")
-6. **Target Date**: Realistic date to achieve goal (typically 30-90 days)
-7. **Priority**: high, medium, or low
-8. **Update Type**: "new" for new problems, or "update" if modifying an existing care plan (include existing_plan_id if update)
-
-Return a JSON array of care plan objects with this exact structure:
-[
-  {
-    "problem": "string",
-    "goal": "string",
-    "baseline_measurement": "string",
-    "interventions": ["string", "string", "string"],
-    "frequency": "string",
-    "target_date": "YYYY-MM-DD",
-    "priority": "high" | "medium" | "low",
-    "update_type": "new" | "update",
-    "existing_plan_id": "string or null",
-    "rationale": "brief clinical rationale for this care plan"
-  }
-]
-
-Make goals SMART and interventions specific and actionable.`;
-
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
+Return JSON:
+{
+  "care_plans": [
+    {
+      "problem": "Nursing diagnosis statement (e.g., 'Risk for falls related to...')",
+      "goal": "SMART goal with specific measurable outcome and timeframe",
+      "interventions": [
+        "Specific skilled nursing intervention 1",
+        "Specific skilled nursing intervention 2",
+        "Patient/caregiver education intervention",
+        "Coordination/communication intervention"
+      ],
+      "baseline_measurement": "What to measure at baseline",
+      "frequency": "Assessment frequency (e.g., 'Each visit', 'Weekly')",
+      "target_days": 30 or 60,
+      "priority": "high" | "medium" | "low",
+      "rationale": "Clinical rationale for this care plan",
+      "expected_outcome": "What success looks like"
+    }
+  ],
+  "clinical_notes": "Any additional clinical considerations for the clinician"
+}`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -274,433 +137,438 @@ Make goals SMART and interventions specific and actionable.`;
                 properties: {
                   problem: { type: "string" },
                   goal: { type: "string" },
-                  baseline_measurement: { type: "string" },
                   interventions: { type: "array", items: { type: "string" } },
+                  baseline_measurement: { type: "string" },
                   frequency: { type: "string" },
-                  target_date: { type: "string" },
+                  target_days: { type: "number" },
                   priority: { type: "string" },
-                  update_type: { type: "string" },
-                  existing_plan_id: { type: ["string", "null"] },
-                  rationale: { type: "string" }
+                  rationale: { type: "string" },
+                  expected_outcome: { type: "string" }
                 }
               }
-            }
+            },
+            clinical_notes: { type: "string" }
           }
         }
       });
 
-      // Combine automatic triggers with AI-generated plans
-      const allPlans = [
-        ...initialSuggestions,
-        ...(response.care_plans || [])
-      ];
-
-      setSuggestedPlans(allPlans);
+      setGeneratedPlans(result.care_plans || []);
       
+      // Auto-select high priority plans
+      const autoSelected = {};
+      result.care_plans?.forEach((plan, idx) => {
+        if (plan.priority === 'high') {
+          autoSelected[idx] = true;
+        }
+      });
+      setSelectedPlans(autoSelected);
+
     } catch (error) {
       console.error("Error generating care plans:", error);
       alert("Error generating care plans. Please try again.");
     }
-    
     setIsGenerating(false);
   };
 
-  // Accept a suggested care plan
-  const acceptCarePlan = async (plan) => {
+  const togglePlanSelection = (idx) => {
+    setSelectedPlans(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
+
+  const selectAllPlans = () => {
+    const allSelected = {};
+    generatedPlans.forEach((_, idx) => {
+      allSelected[idx] = true;
+    });
+    setSelectedPlans(allSelected);
+  };
+
+  const handleEditPlan = (idx) => {
+    setEditingPlan({ idx, ...generatedPlans[idx] });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingPlan) {
+      const updated = [...generatedPlans];
+      updated[editingPlan.idx] = {
+        problem: editingPlan.problem,
+        goal: editingPlan.goal,
+        interventions: editingPlan.interventions,
+        baseline_measurement: editingPlan.baseline_measurement,
+        frequency: editingPlan.frequency,
+        target_days: editingPlan.target_days,
+        priority: editingPlan.priority,
+        rationale: editingPlan.rationale,
+        expected_outcome: editingPlan.expected_outcome
+      };
+      setGeneratedPlans(updated);
+      setEditingPlan(null);
+    }
+  };
+
+  const handleAddIntervention = () => {
+    if (editingPlan) {
+      setEditingPlan({
+        ...editingPlan,
+        interventions: [...editingPlan.interventions, ""]
+      });
+    }
+  };
+
+  const handleRemoveIntervention = (interventionIdx) => {
+    if (editingPlan) {
+      setEditingPlan({
+        ...editingPlan,
+        interventions: editingPlan.interventions.filter((_, i) => i !== interventionIdx)
+      });
+    }
+  };
+
+  const handleInterventionChange = (interventionIdx, value) => {
+    if (editingPlan) {
+      const updated = [...editingPlan.interventions];
+      updated[interventionIdx] = value;
+      setEditingPlan({ ...editingPlan, interventions: updated });
+    }
+  };
+
+  const createSelectedCarePlans = async () => {
+    if (!patientId) {
+      alert("Please select a patient first.");
+      return;
+    }
+
+    const selected = generatedPlans.filter((_, idx) => selectedPlans[idx]);
+    if (selected.length === 0) {
+      alert("Please select at least one care plan to create.");
+      return;
+    }
+
+    setIsCreating(true);
     try {
-      if (plan.update_type === 'update' && plan.existing_plan_id) {
-        // Update existing care plan
-        await updateCarePlanMutation.mutateAsync({
-          id: plan.existing_plan_id,
-          updates: {
-            goal: plan.goal,
-            interventions: plan.interventions,
-            target_date: plan.target_date,
-            frequency: plan.frequency,
-            baseline_measurement: plan.baseline_measurement,
-          }
-        });
-      } else {
-        // Create new care plan
-        await createCarePlanMutation.mutateAsync({
-          patient_id: patient.id,
+      const createdPlans = [];
+      for (const plan of selected) {
+        const targetDate = format(addDays(new Date(), plan.target_days || 60), 'yyyy-MM-dd');
+        
+        const carePlan = await base44.entities.CarePlan.create({
+          patient_id: patientId,
           problem: plan.problem,
           goal: plan.goal,
           interventions: plan.interventions,
-          target_date: plan.target_date,
-          status: 'active',
           baseline_measurement: plan.baseline_measurement,
           frequency: plan.frequency,
-          rationale: plan.rationale // Include rationale for new plans
+          target_date: targetDate,
+          status: 'active'
         });
+        createdPlans.push(carePlan);
       }
 
-      // Remove from suggestions
-      setSuggestedPlans(prev => prev.filter(p => p !== plan));
+      setCreatedCount(createdPlans.length);
+      setSelectedPlans({});
       
+      if (onCarePlansCreated) {
+        onCarePlansCreated(createdPlans);
+      }
+
     } catch (error) {
-      console.error("Error accepting care plan:", error);
-      alert("Error saving care plan. Please try again.");
+      console.error("Error creating care plans:", error);
+      alert("Error creating care plans. Please try again.");
     }
-  };
-
-  // Accept all suggested care plans
-  const acceptAllCarePlans = async () => {
-    for (const plan of suggestedPlans) {
-      await acceptCarePlan(plan);
-    }
-    setShowDialog(false);
-  };
-
-  // Edit a suggested care plan before accepting
-  const editSuggestedPlan = (plan) => {
-    setEditingPlan({ ...plan });
-  };
-
-  // Save edited plan
-  const saveEditedPlan = () => {
-    if (!editingPlan) return;
-    
-    setSuggestedPlans(prev => 
-      prev.map(p => p === suggestedPlans.find(sp => sp.problem === editingPlan.problem) ? editingPlan : p)
-    );
-    setEditingPlan(null);
-  };
-
-  // Remove a suggestion
-  const removeSuggestion = (plan) => {
-    setSuggestedPlans(prev => prev.filter(p => p !== plan));
+    setIsCreating(false);
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+    const colors = {
+      high: "bg-red-100 text-red-800 border-red-300",
+      medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      low: "bg-blue-100 text-blue-800 border-blue-300"
+    };
+    return colors[priority] || "bg-gray-100 text-gray-800";
   };
 
-  const getUpdateTypeIcon = (type) => {
-    return type === 'update' ? <RefreshCw className="w-4 h-4" /> : <Plus className="w-4 h-4" />;
-  };
+  const selectedCount = Object.values(selectedPlans).filter(Boolean).length;
 
   return (
-    <>
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
-              AI Care Plan Generator
-            </CardTitle>
+    <Card className="border-2 border-green-200">
+      <CardHeader className="py-4 bg-gradient-to-r from-green-50 to-emerald-50">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-green-600" />
+            AI Care Plan Generator
+          </div>
+          {diagnosis && (
+            <Badge variant="outline" className="text-xs">
+              {diagnosis}
+            </Badge>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        {generatedPlans.length === 0 ? (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Generate Medicare-compliant care plans based on the patient's diagnosis and clinical data.
+              The AI will create SMART goals, evidence-based interventions, and measurable outcomes.
+            </p>
             <Button
-              data-care-plan-generator="true"
               onClick={generateCarePlans}
-              disabled={isGenerating}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              disabled={isGenerating || !diagnosis}
+              className="w-full bg-green-600 hover:bg-green-700"
             >
               {isGenerating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Care Plans...</>
               ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate AI Care Plans
-                </>
+                <><Sparkles className="w-4 h-4 mr-2" /> Generate Care Plans from Diagnosis</>
               )}
             </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Alert className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-            <Brain className="w-4 h-4 text-purple-600" />
-            <AlertDescription className="text-purple-900">
-              <p className="font-semibold mb-2">Intelligent Care Planning with Automatic Triggers</p>
-              <p className="text-sm mb-2">
-                AI analyzes patient diagnosis, medications, vital signs, clinical narrative, and historical trends to generate evidence-based care plans.
+            {!diagnosis && (
+              <p className="text-xs text-orange-600 text-center">
+                Select a diagnosis to generate care plans
               </p>
-              <ul className="list-disc ml-5 text-sm space-y-1">
-                <li><strong>Automatic triggers:</strong> Pre-configured care plans based on diagnosis/medication</li>
-                <li>Identifies key problems based on current assessment</li>
-                <li>Creates measurable, time-bound goals</li>
-                <li>Suggests evidence-based nursing interventions</li>
-                <li>Updates existing plans with progress recommendations</li>
-                <li>Ensures {patient?.care_type === 'hospice' ? 'hospice' : 'home health'} compliance</li>
-              </ul>
-            </AlertDescription>
-          </Alert>
-
-          {existingCarePlans.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                <Target className="w-4 h-4" />
-                Current Care Plans ({existingCarePlans.length})
-              </h4>
-              <div className="grid gap-2">
-                {existingCarePlans.map((plan) => (
-                  <div key={plan.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{plan.problem}</p>
-                        <p className="text-sm text-gray-600 mt-1">{plan.goal}</p>
-                      </div>
-                      <Badge className={
-                        plan.status === 'active' ? 'bg-green-500' :
-                        plan.status === 'met' ? 'bg-blue-500' :
-                        plan.status === 'not_met' ? 'bg-red-500' : 'bg-gray-500'
-                      }>
-                        {plan.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-purple-600" />
-              AI-Generated Care Plan Suggestions
-            </DialogTitle>
-            <DialogDescription>
-              Review and customize these care plans before adding them to the patient's record.
-              {suggestedPlans.filter(p => p.is_automatic).length > 0 && (
-                <span className="block mt-2 text-blue-600 font-medium">
-                  ⚡ {suggestedPlans.filter(p => p.is_automatic).length} care plan(s) automatically triggered by diagnosis/medication
-                </span>
-              )}
-              {suggestedPlans.filter(p => p.update_type === 'update').length > 0 && (
-                <span className="block mt-2 text-orange-600 font-medium">
-                  ⚠️ {suggestedPlans.filter(p => p.update_type === 'update').length} existing care plan(s) have suggested updates
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {suggestedPlans.length === 0 && !isGenerating && (
-              <Alert>
-                <AlertCircle className="w-4 h-4" />
-                <AlertDescription>
-                  No care plan suggestions generated. Try clicking "Generate AI Care Plans" again.
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Success Message */}
+            {createdCount > 0 && (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Successfully created {createdCount} care plan(s)!
                 </AlertDescription>
               </Alert>
             )}
 
-            {suggestedPlans.map((plan, index) => (
-              <Card key={index} className={`border-l-4 ${plan.is_automatic ? 'border-l-blue-500 bg-blue-50' : 'border-l-purple-500'}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        {getUpdateTypeIcon(plan.update_type)}
-                        <h3 className="font-bold text-gray-900">{plan.problem}</h3>
-                        <Badge className={getPriorityColor(plan.priority)}>
-                          {plan.priority} priority
-                        </Badge>
-                        {plan.is_automatic && (
-                          <Badge className="bg-blue-500">
-                            <Zap className="w-3 h-3 mr-1" />
-                            Automatic Trigger
-                          </Badge>
-                        )}
-                        {plan.update_type === 'update' && (
-                          <Badge variant="outline" className="border-orange-300 text-orange-700">
-                            Update to Existing Plan
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="font-semibold text-gray-700">Goal:</span>
-                          <p className="text-gray-600 mt-1">{plan.goal}</p>
-                        </div>
-
-                        {plan.baseline_measurement && (
-                          <div>
-                            <span className="font-semibold text-gray-700">Baseline:</span>
-                            <p className="text-gray-600 mt-1">{plan.baseline_measurement}</p>
-                          </div>
-                        )}
-
-                        <div>
-                          <span className="font-semibold text-gray-700">Interventions:</span>
-                          <ul className="list-disc ml-5 mt-1 space-y-1">
-                            {plan.interventions.map((intervention, idx) => (
-                              <li key={idx} className="text-gray-600">{intervention}</li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="flex gap-4 text-xs text-gray-500">
-                          <span><strong>Frequency:</strong> {plan.frequency}</span>
-                          <span><strong>Target Date:</strong> {plan.target_date}</span>
-                        </div>
-
-                        {plan.rationale && (
-                          <div className="mt-2 p-2 bg-purple-50 rounded border border-purple-200">
-                            <p className="text-xs text-purple-900">
-                              <strong>Clinical Rationale:</strong> {plan.rationale}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 mt-3 pt-3 border-t">
-                    <Button
-                      size="sm"
-                      onClick={() => acceptCarePlan(plan)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-1" />
-                      {plan.update_type === 'update' ? 'Apply Update' : 'Accept'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => editSuggestedPlan(plan)}
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => removeSuggestion(plan)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Remove
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Close
-            </Button>
-            {suggestedPlans.length > 0 && (
-              <Button
-                onClick={acceptAllCarePlans}
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Accept All ({suggestedPlans.length})
+            {/* Selection Controls */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {generatedPlans.length} care plan(s) generated
+              </span>
+              <Button size="sm" variant="outline" onClick={selectAllPlans}>
+                Select All
               </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!editingPlan} onOpenChange={() => setEditingPlan(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Care Plan</DialogTitle>
-            <DialogDescription>
-              Customize this care plan before adding it to the patient's record.
-            </DialogDescription>
-          </DialogHeader>
-
-          {editingPlan && (
-            <div className="space-y-4 py-4">
-              <div>
-                <Label>Problem/Nursing Diagnosis</Label>
-                <Input
-                  value={editingPlan.problem}
-                  onChange={(e) => setEditingPlan({...editingPlan, problem: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <Label>Goal (SMART)</Label>
-                <Textarea
-                  value={editingPlan.goal}
-                  onChange={(e) => setEditingPlan({...editingPlan, goal: e.target.value})}
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <Label>Baseline Measurement</Label>
-                <Input
-                  value={editingPlan.baseline_measurement}
-                  onChange={(e) => setEditingPlan({...editingPlan, baseline_measurement: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <Label>Interventions (one per line)</Label>
-                <Textarea
-                  value={editingPlan.interventions.join('\n')}
-                  onChange={(e) => setEditingPlan({
-                    ...editingPlan,
-                    interventions: e.target.value.split('\n').filter(i => i.trim())
-                  })}
-                  rows={5}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Frequency</Label>
-                  <Input
-                    value={editingPlan.frequency}
-                    onChange={(e) => setEditingPlan({...editingPlan, frequency: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>Target Date</Label>
-                  <Input
-                    type="date"
-                    value={editingPlan.target_date}
-                    onChange={(e) => setEditingPlan({...editingPlan, target_date: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label>Priority</Label>
-                <Select
-                  value={editingPlan.priority}
-                  onValueChange={(value) => setEditingPlan({...editingPlan, priority: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="high">High Priority</SelectItem>
-                    <SelectItem value="medium">Medium Priority</SelectItem>
-                    <SelectItem value="low">Low Priority</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-          )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPlan(null)}>
-              Cancel
-            </Button>
-            <Button onClick={saveEditedPlan} className="bg-blue-600 hover:bg-blue-700">
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+            {/* Generated Plans List */}
+            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+              {generatedPlans.map((plan, idx) => (
+                <Card 
+                  key={idx} 
+                  className={`border transition-all ${
+                    selectedPlans[idx] 
+                      ? 'border-green-400 bg-green-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    {editingPlan?.idx === idx ? (
+                      /* Edit Mode */
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Problem/Nursing Diagnosis</label>
+                          <Textarea
+                            value={editingPlan.problem}
+                            onChange={(e) => setEditingPlan({...editingPlan, problem: e.target.value})}
+                            className="mt-1 text-sm"
+                            rows={2}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">SMART Goal</label>
+                          <Textarea
+                            value={editingPlan.goal}
+                            onChange={(e) => setEditingPlan({...editingPlan, goal: e.target.value})}
+                            className="mt-1 text-sm"
+                            rows={2}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600 flex items-center justify-between">
+                            Interventions
+                            <Button size="sm" variant="ghost" className="h-6" onClick={handleAddIntervention}>
+                              <Plus className="w-3 h-3 mr-1" /> Add
+                            </Button>
+                          </label>
+                          <div className="space-y-2 mt-1">
+                            {editingPlan.interventions.map((intervention, iIdx) => (
+                              <div key={iIdx} className="flex gap-2">
+                                <Input
+                                  value={intervention}
+                                  onChange={(e) => handleInterventionChange(iIdx, e.target.value)}
+                                  className="text-sm flex-1"
+                                  placeholder="Intervention..."
+                                />
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-9 w-9 p-0 text-red-500"
+                                  onClick={() => handleRemoveIntervention(iIdx)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-600">Baseline Measurement</label>
+                            <Input
+                              value={editingPlan.baseline_measurement}
+                              onChange={(e) => setEditingPlan({...editingPlan, baseline_measurement: e.target.value})}
+                              className="mt-1 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-600">Frequency</label>
+                            <Input
+                              value={editingPlan.frequency}
+                              onChange={(e) => setEditingPlan({...editingPlan, frequency: e.target.value})}
+                              className="mt-1 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-600">Target Days</label>
+                            <Input
+                              type="number"
+                              value={editingPlan.target_days}
+                              onChange={(e) => setEditingPlan({...editingPlan, target_days: parseInt(e.target.value)})}
+                              className="mt-1 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-600">Priority</label>
+                            <Select 
+                              value={editingPlan.priority} 
+                              onValueChange={(v) => setEditingPlan({...editingPlan, priority: v})}
+                            >
+                              <SelectTrigger className="mt-1">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="high">High</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="low">Low</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2 border-t">
+                          <Button size="sm" variant="outline" onClick={() => setEditingPlan(null)}>
+                            Cancel
+                          </Button>
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={handleSaveEdit}>
+                            <CheckCircle2 className="w-4 h-4 mr-1" /> Save Changes
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* View Mode */
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={selectedPlans[idx] || false}
+                            onCheckedChange={() => togglePlanSelection(idx)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge className={getPriorityColor(plan.priority)}>
+                                {plan.priority}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                {plan.target_days} days
+                              </Badge>
+                            </div>
+                            <h4 className="font-semibold text-gray-900">{plan.problem}</h4>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="shrink-0"
+                            onClick={() => handleEditPlan(idx)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        <div className="pl-7 space-y-2">
+                          <div>
+                            <p className="text-xs font-medium text-gray-500">SMART Goal:</p>
+                            <p className="text-sm text-gray-700">{plan.goal}</p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-medium text-gray-500">Interventions:</p>
+                            <ul className="text-sm text-gray-700 list-disc list-inside">
+                              {plan.interventions.map((int, iIdx) => (
+                                <li key={iIdx}>{int}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="flex gap-4 text-xs text-gray-500">
+                            <span><strong>Baseline:</strong> {plan.baseline_measurement}</span>
+                            <span><strong>Frequency:</strong> {plan.frequency}</span>
+                          </div>
+
+                          {plan.expected_outcome && (
+                            <div className="bg-blue-50 p-2 rounded text-xs text-blue-800">
+                              <strong>Expected Outcome:</strong> {plan.expected_outcome}
+                            </div>
+                          )}
+
+                          {plan.rationale && (
+                            <p className="text-xs text-gray-500 italic">
+                              💡 {plan.rationale}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-4 border-t">
+              <Button
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                onClick={createSelectedCarePlans}
+                disabled={selectedCount === 0 || isCreating || !patientId}
+              >
+                {isCreating ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4 mr-2" /> Create {selectedCount} Care Plan(s)</>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setGeneratedPlans([]);
+                  setCreatedCount(0);
+                }}
+              >
+                Reset
+              </Button>
+            </div>
+
+            {!patientId && selectedCount > 0 && (
+              <p className="text-xs text-orange-600 text-center">
+                <AlertCircle className="w-3 h-3 inline mr-1" />
+                Select a patient to create care plans
+              </p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

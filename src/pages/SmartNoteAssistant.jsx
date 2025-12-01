@@ -43,6 +43,7 @@ import PatientContextBar from "../components/smartNote/PatientContextBar";
 import InlineSuggestions from "../components/smartNote/InlineSuggestions";
 import QuickCarePlanUpdater from "../components/smartNote/QuickCarePlanUpdater";
 import VoiceDictation from "../components/smartNote/VoiceDictation";
+import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -741,7 +742,18 @@ Return your response as JSON with this structure:
             onTasksGenerated={handleTasksGenerated}
           />
 
-          {/* Quick Care Plan Updater */}
+          {/* AI Care Plan Generator */}
+            <AICarePlanGenerator
+              patientId={selectedPatientId}
+              patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+              diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+              careType={careType}
+              extractedData={extractedDataState}
+              existingCarePlans={carePlans}
+              onCarePlansCreated={(plans) => console.log('Care plans created:', plans)}
+            />
+
+            {/* Quick Care Plan Updater */}
             {selectedPatientId && (
               <QuickCarePlanUpdater
                 patientId={selectedPatientId}
