@@ -265,6 +265,7 @@ Return your response as JSON with this structure:
 
       setEnhancedNote(result.enhanced_note);
       setSuggestions(result.suggestions || []);
+      setAuditResults(result);
 
     } catch (error) {
       console.error("Error enhancing note:", error);
