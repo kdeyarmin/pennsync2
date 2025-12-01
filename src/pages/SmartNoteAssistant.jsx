@@ -42,6 +42,7 @@ import GuidedDocumentationFlow from "../components/smartNote/GuidedDocumentation
 import PatientContextBar from "../components/smartNote/PatientContextBar";
 import InlineSuggestions from "../components/smartNote/InlineSuggestions";
 import QuickCarePlanUpdater from "../components/smartNote/QuickCarePlanUpdater";
+import VoiceDictation from "../components/smartNote/VoiceDictation";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -106,6 +107,11 @@ export default function SmartNoteAssistant() {
   // Handle guided note change
   const handleGuidedNoteChange = (combinedNote) => {
     setRoughNote(combinedNote);
+  };
+
+  // Handle voice transcription
+  const handleTranscriptionComplete = (transcription) => {
+    setRoughNote(prev => prev ? prev + '\n\n' + transcription : transcription);
   };
 
   // Handle inserting suggestions
@@ -516,6 +522,9 @@ Return your response as JSON with this structure:
             diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
             onInsertElement={handleInsertComplianceElement}
           />
+
+          {/* Voice Dictation */}
+          <VoiceDictation onTranscriptionComplete={handleTranscriptionComplete} />
 
           {/* Documentation Input - Freeform or Guided */}
           {documentationMode === 'freeform' ? (
