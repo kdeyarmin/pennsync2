@@ -20,6 +20,7 @@ import ComplianceDashboard from './pages/ComplianceDashboard';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import StaffTraining from './pages/StaffTraining';
 import PatientEducation from './pages/PatientEducation';
+import ScheduleOptimizer from './pages/ScheduleOptimizer';
 import __Layout from './Layout.jsx';
 
 
@@ -46,6 +47,7 @@ export const PAGES = {
     "PredictiveAnalytics": PredictiveAnalytics,
     "StaffTraining": StaffTraining,
     "PatientEducation": PatientEducation,
+    "ScheduleOptimizer": ScheduleOptimizer,
 }
 
 export const pagesConfig = {
