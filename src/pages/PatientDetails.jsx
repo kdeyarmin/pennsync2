@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +17,7 @@ import { canAccessPatient, logSecurityEvent, sanitizeInput } from "@/components/
 
 import HospitalReadmissionRisk from "../components/patient/HospitalReadmissionRisk";
 import ClinicalBestPracticeAlerts from "../components/quality/ClinicalBestPracticeAlerts";
+import AIPatientSummary from "../components/patient/AIPatientSummary";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -194,6 +194,13 @@ export default function PatientDetails() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Patient Summary */}
+      {patient && (
+        <div className="mb-6">
+          <AIPatientSummary patient={patient} />
+        </div>
+      )}
 
       {/* Add Hospital Readmission Risk Score */}
       {patient && (
