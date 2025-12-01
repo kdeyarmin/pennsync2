@@ -47,6 +47,7 @@ import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 import VoiceVitalsEntry from "../components/smartNote/VoiceVitalsEntry";
 import GuidedIncidentReporting from "../components/incident/GuidedIncidentReporting";
 import PersonalizedSkillBuilder from "../components/training/PersonalizedSkillBuilder";
+import SmartNoteVoiceListener from "../components/voice/SmartNoteVoiceListener";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -132,6 +133,55 @@ export default function SmartNoteAssistant() {
   // Handle voice phrase entry
   const handleVoicePhrase = (phrase) => {
     setRoughNote(prev => prev + ' ' + phrase);
+  };
+
+  // Handle voice command vital change
+  const handleVoiceVitalChange = (vitalType, value) => {
+    setVitalSigns(prev => {
+      switch (vitalType) {
+        case 'bp': return { ...prev, bp: value };
+        case 'hr': return { ...prev, hr: value };
+        case 'temp': return { ...prev, temp: value };
+        case 'o2': return { ...prev, o2: value };
+        case 'pain': return { ...prev, pain: value };
+        case 'rr': return { ...prev, rr: value || prev.rr };
+        case 'weight': return { ...prev, weight: value || prev.weight };
+        default: return prev;
+      }
+    });
+  };
+
+  // Handle voice command actions
+  const handleVoiceAction = (action) => {
+    switch (action) {
+      case 'start_dictation':
+        // Trigger dictation component
+        document.querySelector('[data-dictation-start]')?.click();
+        break;
+      case 'stop_dictation':
+        document.querySelector('[data-dictation-stop]')?.click();
+        break;
+      case 'enhance_note':
+        handleEnhanceNote();
+        break;
+      case 'save_note':
+        handleCopyToClipboard();
+        break;
+      case 'copy_note':
+        handleCopyToClipboard();
+        break;
+      case 'clear_note':
+        setRoughNote('');
+        setEnhancedNote('');
+        break;
+      case 'generate_care_plan':
+        // Scroll to care plan generator
+        document.querySelector('[data-care-plan-generator]')?.scrollIntoView({ behavior: 'smooth' });
+        break;
+      case 'report_incident':
+        document.querySelector('[data-incident-reporter]')?.scrollIntoView({ behavior: 'smooth' });
+        break;
+    }
   };
 
   // Handle inserting suggestions
@@ -768,7 +818,8 @@ Return your response as JSON with this structure:
           />
 
           {/* AI Care Plan Generator */}
-            <AICarePlanGenerator
+          <div data-care-plan-generator>
+          <AICarePlanGenerator
               patientId={selectedPatientId}
               patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
               diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
@@ -776,9 +827,10 @@ Return your response as JSON with this structure:
               extractedData={extractedDataState}
               existingCarePlans={carePlans}
               onCarePlansCreated={(plans) => console.log('Care plans created:', plans)}
-            />
+              />
+              </div>
 
-            {/* Quick Care Plan Updater */}
+              {/* Quick Care Plan Updater */}
             {selectedPatientId && (
               <QuickCarePlanUpdater
                 patientId={selectedPatientId}
@@ -800,6 +852,7 @@ Return your response as JSON with this structure:
 
             {/* Guided Incident Reporting */}
             {selectedPatientId && (
+              <div data-incident-reporter>
               <GuidedIncidentReporting
                 patientId={selectedPatientId}
                 patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
@@ -808,6 +861,13 @@ Return your response as JSON with this structure:
                 onIncidentCreated={(incident) => console.log('Incident created:', incident)}
               />
             )}
+
+          {/* Voice Command Listener */}
+          <SmartNoteVoiceListener
+            onVitalChange={handleVoiceVitalChange}
+            onPhraseInsert={handleVoicePhrase}
+            onAction={handleVoiceAction}
+          />
 
           {/* Quick Tips */}
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">

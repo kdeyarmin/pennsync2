@@ -1,4 +1,3 @@
-
 /**
  * Voice Command Registry
  * Defines all available voice commands for different contexts
@@ -36,6 +35,231 @@ export const dashboardCommands = [
     action: "search",
     description: "Activate search functionality",
     example: "Say 'search for John Smith' to find a patient"
+  }
+];
+
+export const smartNoteCommands = [
+  // Vital Signs - Direct Data Entry
+  {
+    name: "Blood Pressure",
+    category: "Vital Signs",
+    triggers: ["blood pressure", "bp is", "bp"],
+    action: "vital_bp",
+    description: "Enter blood pressure reading",
+    example: "Say 'blood pressure 120 over 80'",
+    extractData: true
+  },
+  {
+    name: "Heart Rate",
+    category: "Vital Signs",
+    triggers: ["heart rate", "pulse", "hr is"],
+    action: "vital_hr",
+    description: "Enter heart rate reading",
+    example: "Say 'heart rate 72' or 'pulse 80'",
+    extractData: true
+  },
+  {
+    name: "Temperature",
+    category: "Vital Signs",
+    triggers: ["temperature", "temp is", "temp"],
+    action: "vital_temp",
+    description: "Enter temperature reading",
+    example: "Say 'temperature 98.6'",
+    extractData: true
+  },
+  {
+    name: "Oxygen Saturation",
+    category: "Vital Signs",
+    triggers: ["oxygen", "o2 sat", "o2 is", "sat is", "oxygen saturation"],
+    action: "vital_o2",
+    description: "Enter oxygen saturation reading",
+    example: "Say 'oxygen 97 percent' or 'o2 sat 98'",
+    extractData: true
+  },
+  {
+    name: "Pain Level",
+    category: "Vital Signs",
+    triggers: ["pain level", "pain is", "pain"],
+    action: "vital_pain",
+    description: "Enter pain level (0-10)",
+    example: "Say 'pain level 5 out of 10'",
+    extractData: true
+  },
+  {
+    name: "Respiratory Rate",
+    category: "Vital Signs",
+    triggers: ["respiratory rate", "respirations", "rr is"],
+    action: "vital_rr",
+    description: "Enter respiratory rate",
+    example: "Say 'respiratory rate 18'",
+    extractData: true
+  },
+  {
+    name: "Weight",
+    category: "Vital Signs",
+    triggers: ["weight is", "patient weighs", "weight"],
+    action: "vital_weight",
+    description: "Enter patient weight",
+    example: "Say 'weight 165 pounds'",
+    extractData: true
+  },
+
+  // Clinical Phrases - Quick Insert
+  {
+    name: "Lungs Clear",
+    category: "Clinical Phrases",
+    triggers: ["lungs clear", "clear lungs", "lung sounds clear"],
+    action: "phrase_lungs_clear",
+    insertText: "Lungs clear to auscultation bilaterally, no adventitious sounds noted.",
+    description: "Insert normal lung assessment"
+  },
+  {
+    name: "No Edema",
+    category: "Clinical Phrases",
+    triggers: ["no edema", "no swelling", "no peripheral edema"],
+    action: "phrase_no_edema",
+    insertText: "No peripheral edema noted in bilateral lower extremities.",
+    description: "Insert no edema finding"
+  },
+  {
+    name: "Alert and Oriented",
+    category: "Clinical Phrases",
+    triggers: ["alert and oriented", "oriented times four", "a and o"],
+    action: "phrase_oriented",
+    insertText: "Patient alert and oriented x4 (person, place, time, situation).",
+    description: "Insert orientation status"
+  },
+  {
+    name: "Medication Compliant",
+    category: "Clinical Phrases",
+    triggers: ["med compliant", "medication compliant", "taking medications"],
+    action: "phrase_med_compliant",
+    insertText: "Patient reports compliance with prescribed medication regimen.",
+    description: "Insert medication compliance"
+  },
+  {
+    name: "Denies Pain",
+    category: "Clinical Phrases",
+    triggers: ["denies pain", "no pain", "pain free"],
+    action: "phrase_denies_pain",
+    insertText: "Patient denies pain at this time.",
+    description: "Insert pain denial"
+  },
+  {
+    name: "Wound Healing",
+    category: "Clinical Phrases",
+    triggers: ["wound healing", "healing well", "wound looks good"],
+    action: "phrase_wound_healing",
+    insertText: "Wound healing well with no signs of infection. Wound bed pink with granulation tissue.",
+    description: "Insert wound healing status"
+  },
+  {
+    name: "Tolerating Diet",
+    category: "Clinical Phrases",
+    triggers: ["tolerating diet", "eating well", "good appetite"],
+    action: "phrase_diet",
+    insertText: "Patient tolerating diet well with no nausea, vomiting, or difficulty swallowing.",
+    description: "Insert diet tolerance"
+  },
+  {
+    name: "Skin Intact",
+    category: "Clinical Phrases",
+    triggers: ["skin intact", "no skin breakdown", "skin normal"],
+    action: "phrase_skin_intact",
+    insertText: "Skin warm, dry, and intact with no signs of breakdown or pressure injuries.",
+    description: "Insert skin assessment"
+  },
+  {
+    name: "Bowel Sounds Normal",
+    category: "Clinical Phrases",
+    triggers: ["bowel sounds normal", "normal bowel sounds", "bowel sounds present"],
+    action: "phrase_bowel_sounds",
+    insertText: "Bowel sounds present and active in all four quadrants.",
+    description: "Insert bowel sounds assessment"
+  },
+  {
+    name: "Heart Sounds Normal",
+    category: "Clinical Phrases",
+    triggers: ["heart sounds normal", "regular heart rhythm", "normal cardiac"],
+    action: "phrase_heart_normal",
+    insertText: "Heart sounds S1/S2 regular rate and rhythm, no murmurs, rubs, or gallops.",
+    description: "Insert cardiac assessment"
+  },
+
+  // Actions
+  {
+    name: "Start Dictation",
+    category: "Actions",
+    triggers: ["start dictation", "begin dictation", "dictate note"],
+    action: "action_start_dictation",
+    description: "Start voice dictation for notes"
+  },
+  {
+    name: "Stop Dictation",
+    category: "Actions",
+    triggers: ["stop dictation", "end dictation", "done dictating"],
+    action: "action_stop_dictation",
+    description: "Stop voice dictation"
+  },
+  {
+    name: "Enhance Note",
+    category: "Actions",
+    triggers: ["enhance note", "process note", "ai enhance"],
+    action: "action_enhance_note",
+    description: "Trigger AI note enhancement"
+  },
+  {
+    name: "Save Note",
+    category: "Actions",
+    triggers: ["save note", "save documentation", "save visit"],
+    action: "action_save_note",
+    description: "Save the current documentation"
+  },
+  {
+    name: "Copy Note",
+    category: "Actions",
+    triggers: ["copy note", "copy to clipboard", "copy documentation"],
+    action: "action_copy_note",
+    description: "Copy enhanced note to clipboard"
+  },
+  {
+    name: "Clear Note",
+    category: "Actions",
+    triggers: ["clear note", "start over", "new note"],
+    action: "action_clear_note",
+    description: "Clear current note content"
+  },
+  {
+    name: "Generate Care Plan",
+    category: "Actions",
+    triggers: ["generate care plan", "create care plan", "ai care plan"],
+    action: "action_generate_care_plan",
+    description: "Generate AI care plans"
+  },
+  {
+    name: "Report Incident",
+    category: "Actions",
+    triggers: ["report incident", "incident report", "document incident"],
+    action: "action_report_incident",
+    description: "Open incident reporting"
+  },
+
+  // Medicare Compliance
+  {
+    name: "Add Homebound Status",
+    category: "Compliance",
+    triggers: ["add homebound", "homebound status", "document homebound"],
+    action: "compliance_homebound",
+    insertText: "Patient remains homebound due to [condition/mobility limitation]. Leaving home requires considerable and taxing effort.",
+    description: "Insert homebound status"
+  },
+  {
+    name: "Add Skilled Need",
+    category: "Compliance",
+    triggers: ["add skilled need", "skilled nursing", "document skilled"],
+    action: "compliance_skilled",
+    insertText: "Skilled nursing required for [assessment/teaching/treatment] that requires the knowledge and judgment of a licensed nurse.",
+    description: "Insert skilled need justification"
   }
 ];
 
@@ -268,6 +492,8 @@ export function getCommandsForContext(context) {
       return dashboardCommands;
     case 'documentation':
       return documentationCommands;
+    case 'smartnote':
+      return smartNoteCommands;
     case 'patients':
       return patientCommands;
     case 'admin':
@@ -275,4 +501,56 @@ export function getCommandsForContext(context) {
     default:
       return [...dashboardCommands, ...documentationCommands, ...patientCommands];
   }
+}
+
+// Parse vital signs from spoken text
+export function parseVitalFromSpeech(action, spokenText) {
+  const text = spokenText.toLowerCase();
+  
+  switch (action) {
+    case 'vital_bp': {
+      // Match patterns like "120 over 80", "120/80", "one twenty over eighty"
+      const bpMatch = text.match(/(\d+)\s*(?:over|\/)\s*(\d+)/);
+      if (bpMatch) {
+        return `${bpMatch[1]}/${bpMatch[2]}`;
+      }
+      break;
+    }
+    case 'vital_hr': {
+      const hrMatch = text.match(/(?:heart rate|pulse|hr)\s*(?:is|of)?\s*(\d+)/);
+      if (hrMatch) return hrMatch[1];
+      // Just extract any number
+      const numMatch = text.match(/(\d+)/);
+      if (numMatch) return numMatch[1];
+      break;
+    }
+    case 'vital_temp': {
+      const tempMatch = text.match(/(\d+\.?\d*)/);
+      if (tempMatch) return tempMatch[1];
+      break;
+    }
+    case 'vital_o2': {
+      const o2Match = text.match(/(\d+)\s*(?:percent|%)?/);
+      if (o2Match) return o2Match[1];
+      break;
+    }
+    case 'vital_pain': {
+      const painMatch = text.match(/(\d+)\s*(?:out of|\/)\s*\d+/);
+      if (painMatch) return painMatch[1];
+      const simpleMatch = text.match(/pain\s*(?:level|is|of)?\s*(\d+)/);
+      if (simpleMatch) return simpleMatch[1];
+      break;
+    }
+    case 'vital_rr': {
+      const rrMatch = text.match(/(\d+)/);
+      if (rrMatch) return rrMatch[1];
+      break;
+    }
+    case 'vital_weight': {
+      const weightMatch = text.match(/(\d+\.?\d*)\s*(?:pounds|lbs|kilograms|kg)?/);
+      if (weightMatch) return weightMatch[1];
+      break;
+    }
+  }
+  return null;
 }
