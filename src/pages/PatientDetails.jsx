@@ -18,6 +18,9 @@ import { canAccessPatient, logSecurityEvent, sanitizeInput } from "@/components/
 import HospitalReadmissionRisk from "../components/patient/HospitalReadmissionRisk";
 import ClinicalBestPracticeAlerts from "../components/quality/ClinicalBestPracticeAlerts";
 import AIPatientSummary from "../components/patient/AIPatientSummary";
+import AICarePlanSuggestions from "../components/carePlan/AICarePlanSuggestions";
+import CarePlanTimelinePredictor from "../components/carePlan/CarePlanTimelinePredictor";
+import PatientFriendlyCarePlanSummary from "../components/carePlan/PatientFriendlyCarePlanSummary";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -67,6 +70,20 @@ export default function PatientDetails() {
     queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date'),
     initialData: [],
     enabled: !!patientId && hasAccess === true,
+  });
+
+  const { data: carePlans } = useQuery({
+    queryKey: ['patientCarePlans', patientId],
+    queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
+    initialData: [],
+    enabled: !!patientId && hasAccess === true,
+  });
+
+  const createCarePlanMutation = useMutation({
+    mutationFn: (carePlanData) => base44.entities.CarePlan.create({ ...carePlanData, patient_id: patientId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patientCarePlans', patientId] });
+    },
   });
 
   const createVisitMutation = useMutation({
@@ -204,8 +221,23 @@ export default function PatientDetails() {
 
       {/* Add Hospital Readmission Risk Score */}
       {patient && (
-        <div className="mb-8">
+        <div className="mb-6">
           <HospitalReadmissionRisk patient={patient} />
+        </div>
+      )}
+
+      {/* AI Care Plan Tools */}
+      {patient && (
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          <AICarePlanSuggestions 
+            patient={patient} 
+            existingCarePlans={carePlans}
+            onAddCarePlan={(data) => createCarePlanMutation.mutate(data)}
+          />
+          <div className="space-y-6">
+            <CarePlanTimelinePredictor patient={patient} carePlans={carePlans} />
+            <PatientFriendlyCarePlanSummary patient={patient} carePlans={carePlans} />
+          </div>
         </div>
       )}
 
