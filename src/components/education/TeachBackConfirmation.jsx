@@ -75,6 +75,7 @@ export default function TeachBackConfirmation({ material, patient, onRecorded })
       if (onRecorded) {
         onRecorded({
           topic: material.title,
+          patientId: patient?.id,
           patientName: patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient',
           responses: updatedResponses,
           understandingLevel: overallLevel,

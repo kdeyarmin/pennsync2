@@ -55,6 +55,11 @@ export default function PatientEducation() {
     setTeachBackRecords(prev => [...prev, record]);
   };
 
+  // Get teach-back history for selected patient
+  const patientTeachBackHistory = selectedPatientId 
+    ? teachBackRecords.filter(r => r.patientId === selectedPatientId)
+    : teachBackRecords;
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -125,6 +130,7 @@ export default function PatientEducation() {
             <div className="lg:col-span-2">
               <EducationMaterialGenerator
                 patient={selectedPatient}
+                teachBackHistory={patientTeachBackHistory}
                 onMaterialGenerated={handleMaterialGenerated}
               />
             </div>
