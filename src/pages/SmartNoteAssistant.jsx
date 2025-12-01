@@ -30,6 +30,7 @@ import {
 import RealTimeSuggestions from "../components/smartNote/RealTimeSuggestions";
 import PatientHistorySummary from "../components/smartNote/PatientHistorySummary";
 import DataExtractor from "../components/smartNote/DataExtractor";
+import InlineDataExtractor from "../components/smartNote/InlineDataExtractor";
 import ExternalKnowledge from "../components/smartNote/ExternalKnowledge";
 import PersonalizedFeedback from "../components/smartNote/PersonalizedFeedback";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
@@ -106,6 +107,19 @@ export default function SmartNoteAssistant() {
         temp: vs.temperature || prev.temp,
         o2: vs.oxygen_saturation || prev.o2,
         pain: vs.pain_level || prev.pain
+      }));
+    }
+  };
+
+  // Handle inline vitals extraction
+  const handleInlineVitalsExtracted = (vitals) => {
+    if (vitals) {
+      setVitalSigns(prev => ({
+        bp: vitals.blood_pressure || prev.bp,
+        hr: vitals.heart_rate?.toString() || prev.hr,
+        temp: vitals.temperature?.toString() || prev.temp,
+        o2: vitals.oxygen_saturation?.toString() || prev.o2,
+        pain: vitals.pain_level?.toString() || prev.pain
       }));
     }
   };
@@ -484,6 +498,12 @@ The AI will transform this into professional, Medicare-compliant documentation!"
               </div>
             </CardContent>
           </Card>
+
+          {/* Inline Data Extractor - Shows extracted data as user types */}
+          <InlineDataExtractor
+            currentText={roughNote}
+            onVitalsExtracted={handleInlineVitalsExtracted}
+          />
 
           {/* Enhanced Note Output */}
           {enhancedNote && (
