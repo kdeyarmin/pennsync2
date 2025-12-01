@@ -390,6 +390,24 @@ Return your response as JSON with this structure:
                 </div>
               )}
 
+              {/* Patient Selection for History */}
+              <div>
+                <Label htmlFor="patient_select">Link to Patient (Optional - enables history summary)</Label>
+                <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+                  <SelectTrigger id="patient_select">
+                    <SelectValue placeholder="Select patient for history..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>No patient selected</SelectItem>
+                    {patients.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.first_name} {p.last_name} - {p.primary_diagnosis || 'No diagnosis'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <Label className="mb-2 block">Quick Vital Signs (Optional)</Label>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
