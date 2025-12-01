@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
-import { LayoutDashboard, Users, FileText, Menu, TrendingUp, Shield, Sparkles, Target, BarChart3, Award, Wand2, LogOut, AlertCircle, Brain } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Menu, TrendingUp, Shield, Sparkles, Target, BarChart3, Award, Wand2, LogOut, AlertCircle, Brain, ClipboardCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "./api/base44Client";
 import {
@@ -103,8 +103,8 @@ export default function Layout({ children }) {
     },
     {
       title: "Compliance",
-      url: createPageUrl("ComplianceCenter"),
-      icon: Shield,
+      url: createPageUrl("ComplianceDashboard"),
+      icon: ClipboardCheck,
     },
     {
       title: "Analytics",
