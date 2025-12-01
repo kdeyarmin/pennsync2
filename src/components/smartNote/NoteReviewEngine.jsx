@@ -873,22 +873,105 @@ Return JSON:
 
                 {/* Protocols Tab */}
                 <TabsContent value="protocols" className="space-y-3 mt-3">
+                  {/* Cross-Reference Findings */}
+                  {reviewResult.cross_reference_findings?.length > 0 && (
+                    <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <p className="text-xs font-semibold text-purple-800 mb-2 flex items-center gap-1">
+                        <Stethoscope className="w-3 h-3" /> Cross-Reference Analysis
+                      </p>
+                      <div className="space-y-2">
+                        {reviewResult.cross_reference_findings.map((finding, idx) => (
+                          <div key={idx} className={`p-2 rounded text-xs ${
+                            finding.status === 'documented' ? 'bg-green-50 border border-green-200' :
+                            finding.status === 'incomplete' ? 'bg-yellow-50 border border-yellow-200' :
+                            'bg-red-50 border border-red-200'
+                          }`}>
+                            <div className="flex items-start gap-2">
+                              {finding.status === 'documented' ? (
+                                <CheckCircle2 className="w-3 h-3 text-green-600 mt-0.5 shrink-0" />
+                              ) : (
+                                <AlertTriangle className="w-3 h-3 text-red-600 mt-0.5 shrink-0" />
+                              )}
+                              <div>
+                                <p className="font-medium">{finding.finding}</p>
+                                <p className="text-gray-600">
+                                  <span className="font-medium">History:</span> {finding.patient_history_factor} → 
+                                  <span className="font-medium"> Symptom:</span> {finding.current_symptom}
+                                </p>
+                                {finding.status !== 'documented' && (
+                                  <p className="text-orange-700 mt-1">→ Expected: {finding.expected_documentation}</p>
+                                )}
+                                {finding.clinical_rationale && (
+                                  <p className="text-purple-700 mt-1 italic text-xs">{finding.clinical_rationale}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {reviewResult.protocol_compliance?.length > 0 ? (
                     reviewResult.protocol_compliance.map((protocol, pIdx) => (
                       <div key={pIdx} className="border rounded-lg overflow-hidden">
-                        <div className="flex items-center justify-between p-2 bg-indigo-50">
-                          <div className="flex items-center gap-2">
-                            <Stethoscope className="w-4 h-4 text-indigo-600" />
-                            <span className="text-sm font-semibold text-indigo-900">{protocol.protocol_name}</span>
+                        <div className="p-2 bg-indigo-50">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <Stethoscope className="w-4 h-4 text-indigo-600" />
+                              <span className="text-sm font-semibold text-indigo-900">{protocol.protocol_name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className={protocol.compliance_score >= 80 ? 'bg-green-100 text-green-800' : protocol.compliance_score >= 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
+                                {protocol.compliance_score}%
+                              </Badge>
+                              <FlagButton itemType="protocol" itemId={pIdx} content={`${protocol.protocol_name}: ${protocol.compliance_score}% compliance`} />
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={protocol.compliance_score >= 80 ? 'bg-green-100 text-green-800' : protocol.compliance_score >= 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
-                              {protocol.compliance_score}%
-                            </Badge>
-                            <FlagButton itemType="protocol" itemId={pIdx} content={`${protocol.protocol_name}: ${protocol.compliance_score}% compliance`} />
+                          <div className="flex items-center gap-3 text-xs text-indigo-700">
+                            {protocol.category && <span className="bg-indigo-100 px-1.5 py-0.5 rounded">{protocol.category}</span>}
+                            {protocol.guideline_source && <span className="italic">{protocol.guideline_source}</span>}
                           </div>
+                          {/* Compliance Breakdown */}
+                          {protocol.compliance_breakdown && (
+                            <div className="flex gap-2 mt-2 text-xs">
+                              <span className="flex items-center gap-1 text-green-700">
+                                <CheckCircle2 className="w-3 h-3" /> {protocol.compliance_breakdown.met_count} met
+                              </span>
+                              <span className="flex items-center gap-1 text-yellow-700">
+                                <Clock className="w-3 h-3" /> {protocol.compliance_breakdown.partial_count} partial
+                              </span>
+                              <span className="flex items-center gap-1 text-red-700">
+                                <AlertTriangle className="w-3 h-3" /> {protocol.compliance_breakdown.not_addressed_count} missing
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
+
+                        {/* Priority Gaps */}
+                        {protocol.priority_gaps?.length > 0 && (
+                          <div className="p-2 bg-red-50 border-t border-red-200">
+                            <p className="text-xs font-semibold text-red-800 mb-1">Priority Gaps:</p>
+                            <ul className="text-xs text-red-700 space-y-0.5">
+                              {protocol.priority_gaps.map((gap, gIdx) => (
+                                <li key={gIdx} className="flex items-start gap-1">
+                                  <span className="text-red-400">•</span> {gap}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Improvement Summary */}
+                        {protocol.improvement_summary && (
+                          <div className="p-2 bg-blue-50 border-t border-blue-200">
+                            <p className="text-xs text-blue-800">
+                              <span className="font-semibold">How to Improve:</span> {protocol.improvement_summary}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="p-2 space-y-1 max-h-64 overflow-y-auto border-t">
                           {protocol.elements_checked?.map((element, eIdx) => (
                             <div 
                               key={eIdx} 
@@ -908,12 +991,20 @@ Return JSON:
                                 <AlertTriangle className="w-3 h-3 text-red-600 shrink-0 mt-0.5" />
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium">{element.element}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{element.element}</p>
+                                  {element.element_category && (
+                                    <Badge variant="outline" className="text-xs h-4 px-1">{element.element_category}</Badge>
+                                  )}
+                                </div>
                                 {element.found_text && (
                                   <p className="text-gray-500 italic truncate">"{element.found_text}"</p>
                                 )}
                                 {element.status !== 'met' && element.status !== 'not_applicable' && element.recommendation && (
                                   <p className="text-orange-700 mt-0.5">→ {element.recommendation}</p>
+                                )}
+                                {element.clinical_importance && (
+                                  <p className="text-purple-600 mt-0.5 text-xs italic">{element.clinical_importance}</p>
                                 )}
                               </div>
                             </div>
