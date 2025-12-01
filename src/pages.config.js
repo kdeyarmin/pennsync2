@@ -21,6 +21,7 @@ import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import StaffTraining from './pages/StaffTraining';
 import PatientEducation from './pages/PatientEducation';
 import ScheduleOptimizer from './pages/ScheduleOptimizer';
+import NurseTraining from './pages/NurseTraining';
 import __Layout from './Layout.jsx';
 
 
@@ -48,6 +49,7 @@ export const PAGES = {
     "StaffTraining": StaffTraining,
     "PatientEducation": PatientEducation,
     "ScheduleOptimizer": ScheduleOptimizer,
+    "NurseTraining": NurseTraining,
 }
 
 export const pagesConfig = {

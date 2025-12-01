@@ -142,10 +142,10 @@ export default function Layout({ children }) {
       icon: FileText,
     },
     {
-      title: "Staff Training",
-      url: createPageUrl("StaffTraining"),
-      icon: GraduationCap,
-    },
+            title: "Skills & Training",
+            url: createPageUrl("NurseTraining"),
+            icon: GraduationCap,
+          },
     {
             title: "Patient Education",
             url: createPageUrl("PatientEducation"),
