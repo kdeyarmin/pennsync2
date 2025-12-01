@@ -17,6 +17,7 @@ import SecurityPolicy from './pages/SecurityPolicy';
 import PatientTriage from './pages/PatientTriage';
 import TemplateLibrary from './pages/TemplateLibrary';
 import ComplianceDashboard from './pages/ComplianceDashboard';
+import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "PatientTriage": PatientTriage,
     "TemplateLibrary": TemplateLibrary,
     "ComplianceDashboard": ComplianceDashboard,
+    "PredictiveAnalytics": PredictiveAnalytics,
 }
 
 export const pagesConfig = {
