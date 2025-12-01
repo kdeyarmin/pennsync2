@@ -54,6 +54,12 @@ export default function NoteReviewEngine({
   const [reviewResult, setReviewResult] = useState(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [flaggedItems, setFlaggedItems] = useState({});
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [currentFlagItem, setCurrentFlagItem] = useState(null);
+  const [flagNote, setFlagNote] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
+  const queryClient = useQueryClient();
 
   // Fetch nurse skills for gap analysis
   const { data: nurseSkills = [] } = useQuery({
