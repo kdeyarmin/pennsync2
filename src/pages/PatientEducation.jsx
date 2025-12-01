@@ -81,12 +81,12 @@ export default function PatientEducation() {
               <label className="text-sm font-medium text-gray-700 mb-1 block">
                 Select Patient (Optional)
               </label>
-              <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+              <Select value={selectedPatientId || "none"} onValueChange={(val) => setSelectedPatientId(val === "none" ? "" : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a patient..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>No patient selected</SelectItem>
+                  <SelectItem value="none">No patient selected</SelectItem>
                   {patients.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.first_name} {p.last_name} - {p.primary_diagnosis || 'No diagnosis'}
