@@ -26,7 +26,9 @@ import {
   Edit2,
   X,
   Users,
-  User
+  User,
+  ClipboardCheck,
+  Zap
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 
@@ -37,6 +39,7 @@ export default function TaskGenerator({
   diagnosis,
   missingCriticalElements = [],
   auditResults = null,
+  incidentData = null,
   onTasksGenerated
 }) {
   const [tasks, setTasks] = useState([]);
@@ -94,6 +97,22 @@ export default function TaskGenerator({
         }
       }
 
+      // Add incident data context for automatic task generation
+      if (incidentData) {
+        additionalContext += `\nINCIDENT REPORTED:\n`;
+        additionalContext += `- Type: ${incidentData.incident_type}\n`;
+        additionalContext += `- Severity: ${incidentData.severity || 'Not specified'}\n`;
+        additionalContext += `- Details: ${JSON.stringify(incidentData.details || {})}\n`;
+        additionalContext += `- Report: ${incidentData.report || 'No report'}\n`;
+        additionalContext += `\nCRITICAL: Generate specific follow-up tasks based on this incident type:\n`;
+        additionalContext += `- Fall incident → Fall Risk Assessment, Care Plan Update for Fall Prevention, PT/OT referral consideration\n`;
+        additionalContext += `- Hospitalization → Transition of Care assessment, Medication Reconciliation, Physician notification\n`;
+        additionalContext += `- Medication error → Medication review, Pharmacy consultation, Patient/caregiver re-education\n`;
+        additionalContext += `- Behavioral change → Mental status assessment, Physician notification, Safety evaluation\n`;
+        additionalContext += `- Infection suspected → Wound culture if applicable, Physician notification, Infection control measures\n`;
+        additionalContext += `- Pressure injury → Wound care protocol, Nutrition assessment, Repositioning schedule\n`;
+      }
+
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `You are a clinical workflow AI for home health/hospice. Analyze this nursing documentation and generate context-aware follow-up tasks.
 
@@ -105,15 +124,26 @@ NURSING DOCUMENTATION:
 ${narrativeText}
 
 Generate follow-up tasks considering:
-1. Clinical interventions mentioned that need follow-up
-2. Physician notifications needed (vital sign changes, symptom changes, medication issues)
-3. Follow-up calls to patient/caregiver for teaching reinforcement
-4. Appointment scheduling needs
-5. Supply/equipment orders
-6. Care coordination with other disciplines
-7. Documentation completion tasks (especially for missing critical elements)
-8. Safety follow-ups (fall risk, medication safety, etc.)
-9. Tasks to address any missing critical documentation elements
+      1. Clinical interventions mentioned that need follow-up
+      2. Physician notifications needed (vital sign changes, symptom changes, medication issues)
+      3. Follow-up calls to patient/caregiver for teaching reinforcement
+      4. Appointment scheduling needs
+      5. Supply/equipment orders
+      6. Care coordination with other disciplines
+      7. Documentation completion tasks (especially for missing critical elements)
+      8. Safety follow-ups (fall risk, medication safety, etc.)
+      9. Tasks to address any missing critical documentation elements
+      10. INCIDENT-SPECIFIC TASKS: If an incident is reported, create mandatory follow-up tasks:
+          - Fall: "Complete Fall Risk Assessment", "Update Care Plan - Fall Prevention", "Consider PT/OT Referral"
+          - Hospitalization: "Complete Transition of Care Assessment", "Medication Reconciliation Required", "Notify Physician of Discharge"
+          - Medication Error: "Complete Medication Review", "Re-educate Patient on Medications", "Notify Pharmacy"
+          - Behavioral Change: "Complete Mental Status Assessment", "Notify Physician", "Safety Evaluation"
+          - Infection: "Obtain Wound Culture if applicable", "Implement Infection Control Measures", "Notify Physician"
+          - Pressure Injury: "Initiate Wound Care Protocol", "Complete Nutrition Assessment", "Establish Repositioning Schedule"
+      11. NEW SKILLED NEEDS: If notes mention new symptoms, conditions, or skilled interventions needed, create tasks for:
+          - "Skilled Nursing Follow-up for [condition]"
+          - "Obtain Physician Orders for [intervention]"
+          - "Update Care Plan with New Problem"
 
 Be specific and actionable. Each task should be clear enough to be completed by any nurse.
 
@@ -121,7 +151,7 @@ Return JSON:
 {
   "tasks": [
     {
-      "type": "call" | "notify" | "schedule" | "order" | "coordinate" | "document" | "safety" | "followup",
+      "type": "call" | "notify" | "schedule" | "order" | "coordinate" | "document" | "safety" | "followup" | "assessment" | "care_plan_update" | "referral",
       "title": "Concise task title",
       "description": "Detailed task description with specific actions",
       "priority": "high" | "medium" | "low",
@@ -162,17 +192,32 @@ Return JSON:
                   action: { type: "string" }
                 }
               }
+            },
+            incident_tasks: {
+              type: "array",
+              items: { type: "object" }
+            },
+            skilled_need_tasks: {
+              type: "array",
+              items: { type: "object" }
             }
           }
         }
-      });
+        });
 
-      setTasks(result.tasks || []);
-      
-      // Auto-select high priority tasks
+        // Combine all tasks, prioritizing incident and skilled need tasks
+        const allTasks = [
+        ...(result.incident_tasks || []).map(t => ({ ...t, source: 'incident' })),
+        ...(result.skilled_need_tasks || []).map(t => ({ ...t, source: 'skilled_need' })),
+        ...(result.tasks || [])
+        ];
+
+      setTasks(allTasks);
+
+      // Auto-select high priority tasks and all incident/skilled need tasks
       const autoSelected = {};
-      result.tasks?.forEach((task, idx) => {
-        if (task.priority === 'high') {
+      allTasks.forEach((task, idx) => {
+        if (task.priority === 'high' || task.source === 'incident' || task.source === 'skilled_need') {
           autoSelected[idx] = true;
         }
       });
@@ -197,9 +242,23 @@ Return JSON:
       order: <ListTodo className="w-3 h-3" />,
       coordinate: <FileText className="w-3 h-3" />,
       document: <FileText className="w-3 h-3" />,
-      safety: <AlertTriangle className="w-3 h-3" />
+      safety: <AlertTriangle className="w-3 h-3" />,
+      assessment: <ClipboardCheck className="w-3 h-3" />,
+      care_plan_update: <FileText className="w-3 h-3" />,
+      referral: <Users className="w-3 h-3" />,
+      followup: <Clock className="w-3 h-3" />
     };
     return icons[type] || <ListTodo className="w-3 h-3" />;
+  };
+
+  const getSourceBadge = (source) => {
+    if (source === 'incident') {
+      return <Badge className="bg-red-100 text-red-800 text-xs ml-1">Incident</Badge>;
+    }
+    if (source === 'skilled_need') {
+      return <Badge className="bg-purple-100 text-purple-800 text-xs ml-1">Skilled Need</Badge>;
+    }
+    return null;
   };
 
   const getPriorityColor = (priority) => {
@@ -422,14 +481,15 @@ Return JSON:
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-1">
-                            {getTypeIcon(task.type)}
-                            <span className="text-xs font-semibold">{task.title}</span>
-                          </div>
-                          <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => handleEditTask(idx)}>
-                            <Edit2 className="w-3 h-3 text-gray-400" />
-                          </Button>
-                        </div>
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {getTypeIcon(task.type)}
+                                <span className="text-xs font-semibold">{task.title}</span>
+                                {getSourceBadge(task.source)}
+                              </div>
+                              <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => handleEditTask(idx)}>
+                                <Edit2 className="w-3 h-3 text-gray-400" />
+                              </Button>
+                            </div>
                         <p className="text-xs text-gray-600 mb-1">{task.description}</p>
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge className={`${getPriorityColor(task.priority)} text-xs`}>
