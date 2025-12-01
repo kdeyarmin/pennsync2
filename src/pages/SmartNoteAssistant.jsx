@@ -863,69 +863,69 @@ Return your response as JSON with this structure:
               </div>
             )}
 
-          {/* Voice Command Listener */}
-          <SmartNoteVoiceListener
-            onVitalChange={handleVoiceVitalChange}
-            onPhraseInsert={handleVoicePhrase}
-            onAction={handleVoiceAction}
-          />
-
-          {/* Quick Tips */}
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm">💡 Quick Tips</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-xs">
-              <div className="bg-white p-2 rounded-lg border border-blue-200">
-                <p className="font-semibold text-blue-900">Be Brief</p>
-                <p className="text-gray-600">AI expands rough notes</p>
-              </div>
-              <div className="bg-white p-2 rounded-lg border border-blue-200">
-                <p className="font-semibold text-blue-900">Include Key Facts</p>
-                <p className="text-gray-600">Vitals, assessments, interventions</p>
-              </div>
-              <div className="bg-white p-2 rounded-lg border border-blue-200">
-                <p className="font-semibold text-blue-900">Review & Edit</p>
-                <p className="text-gray-600">Always verify before copying</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Original Suggestions */}
-          {suggestions.length > 0 && (
-            <Card className="border-yellow-200">
-              <CardHeader className="bg-yellow-50 py-3">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Lightbulb className="w-4 h-4 text-yellow-600" />
-                  AI Suggestions ({suggestions.length})
-                </CardTitle>
+            {/* Quick Tips */}
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm">💡 Quick Tips</CardTitle>
               </CardHeader>
-              <CardContent className="pt-3 space-y-2">
-                {suggestions.map((suggestion, index) => (
-                  <Card key={index} className="border-l-4 border-l-yellow-500">
-                    <CardContent className="p-2 space-y-1">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-1">
-                          {getCategoryIcon(suggestion.category)}
-                          <span className="font-semibold text-xs text-gray-900">
-                            {suggestion.category}
-                          </span>
-                        </div>
-                        <Badge className={`${getPriorityColor(suggestion.priority)} text-xs`}>
-                          {suggestion.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-gray-700">
-                        {suggestion.suggestion}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
+              <CardContent className="space-y-2 text-xs">
+                <div className="bg-white p-2 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-900">Be Brief</p>
+                  <p className="text-gray-600">AI expands rough notes</p>
+                </div>
+                <div className="bg-white p-2 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-900">Include Key Facts</p>
+                  <p className="text-gray-600">Vitals, assessments, interventions</p>
+                </div>
+                <div className="bg-white p-2 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-900">Review & Edit</p>
+                  <p className="text-gray-600">Always verify before copying</p>
+                </div>
               </CardContent>
             </Card>
-          )}
+
+            {/* Original Suggestions */}
+            {suggestions.length > 0 && (
+              <Card className="border-yellow-200">
+                <CardHeader className="bg-yellow-50 py-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Lightbulb className="w-4 h-4 text-yellow-600" />
+                    AI Suggestions ({suggestions.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-3 space-y-2">
+                  {suggestions.map((suggestion, index) => (
+                    <Card key={index} className="border-l-4 border-l-yellow-500">
+                      <CardContent className="p-2 space-y-1">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-1">
+                            {getCategoryIcon(suggestion.category)}
+                            <span className="font-semibold text-xs text-gray-900">
+                              {suggestion.category}
+                            </span>
+                          </div>
+                          <Badge className={`${getPriorityColor(suggestion.priority)} text-xs`}>
+                            {suggestion.priority}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-700">
+                          {suggestion.suggestion}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
+
+        {/* Voice Command Listener - Fixed position, outside grid */}
+        <SmartNoteVoiceListener
+          onVitalChange={handleVoiceVitalChange}
+          onPhraseInsert={handleVoicePhrase}
+          onAction={handleVoiceAction}
+        />
       </div>
-    </div>
-  );
+    );
 }
