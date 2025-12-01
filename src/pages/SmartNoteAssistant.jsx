@@ -36,6 +36,11 @@ import PersonalizedFeedback from "../components/smartNote/PersonalizedFeedback";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
 import MedicationAdherenceInsights from "../components/smartNote/MedicationAdherenceInsights";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
+import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
+import GuidedDocumentationFlow from "../components/smartNote/GuidedDocumentationFlow";
+import PatientContextBar from "../components/smartNote/PatientContextBar";
+import InlineSuggestions from "../components/smartNote/InlineSuggestions";
+import QuickCarePlanUpdater from "../components/smartNote/QuickCarePlanUpdater";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -57,6 +62,7 @@ export default function SmartNoteAssistant() {
   const [auditResults, setAuditResults] = useState(null);
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [extractedDataState, setExtractedDataState] = useState(null);
+  const [documentationMode, setDocumentationMode] = useState("freeform"); // "freeform" or "guided"
 
   // Fetch current user for personalized feedback
   const { data: currentUser } = useQuery({
@@ -85,6 +91,21 @@ export default function SmartNoteAssistant() {
   });
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
+
+  // Handle inline suggestion acceptance
+  const handleAcceptInlineSuggestion = (text) => {
+    setRoughNote(prev => prev + ' ' + text);
+  };
+
+  // Handle compliance element insertion
+  const handleInsertComplianceElement = (text) => {
+    setRoughNote(prev => prev + '\n\n' + text);
+  };
+
+  // Handle guided note change
+  const handleGuidedNoteChange = (combinedNote) => {
+    setRoughNote(combinedNote);
+  };
 
   // Handle inserting suggestions
   const handleInsertSuggestion = (text, position) => {
@@ -348,82 +369,90 @@ Return your response as JSON with this structure:
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="care_type">Care Type</Label>
-                  <Select value={careType} onValueChange={setCareType}>
-                    <SelectTrigger id="care_type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="home_health">Home Health</SelectItem>
-                      <SelectItem value="hospice">Hospice</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Patient Selection First */}
+                      <div>
+                        <Label htmlFor="patient_select">Select Patient</Label>
+                        <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+                          <SelectTrigger id="patient_select">
+                            <SelectValue placeholder="Select patient..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={null}>No patient selected</SelectItem>
+                            {patients.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.first_name} {p.last_name} - {p.primary_diagnosis || 'No diagnosis'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                <div>
-                  <Label htmlFor="visit_type">Visit Type</Label>
-                  <Select value={visitType} onValueChange={setVisitType}>
-                    <SelectTrigger id="visit_type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admission">Admission/Start of Care</SelectItem>
-                      <SelectItem value="routine_visit">Routine Visit</SelectItem>
-                      <SelectItem value="recertification">Recertification</SelectItem>
-                      <SelectItem value="discharge">Discharge</SelectItem>
-                      <SelectItem value="prn">PRN Visit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      {/* Patient Context Bar */}
+                      {selectedPatient && (
+                        <PatientContextBar 
+                          patient={selectedPatient} 
+                          carePlans={carePlans}
+                        />
+                      )}
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="diagnosis">Primary Diagnosis</Label>
-                  <Select value={diagnosis} onValueChange={setDiagnosis}>
-                    <SelectTrigger id="diagnosis">
-                      <SelectValue placeholder="Select diagnosis" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {commonDiagnoses.map((dx) => (
-                        <SelectItem key={dx} value={dx}>
-                          {dx}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="care_type">Care Type</Label>
+                          <Select value={careType} onValueChange={setCareType}>
+                            <SelectTrigger id="care_type">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="home_health">Home Health</SelectItem>
+                              <SelectItem value="hospice">Hospice</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-              {diagnosis === "Custom (type below)" && (
-                <div>
-                  <Label htmlFor="custom_diagnosis">Custom Diagnosis</Label>
-                  <Input
-                    id="custom_diagnosis"
-                    placeholder="Enter diagnosis"
-                    value={customDiagnosis}
-                    onChange={(e) => setCustomDiagnosis(e.target.value)}
-                  />
-                </div>
-              )}
+                        <div>
+                          <Label htmlFor="visit_type">Visit Type</Label>
+                          <Select value={visitType} onValueChange={setVisitType}>
+                            <SelectTrigger id="visit_type">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admission">Admission/Start of Care</SelectItem>
+                              <SelectItem value="routine_visit">Routine Visit</SelectItem>
+                              <SelectItem value="recertification">Recertification</SelectItem>
+                              <SelectItem value="discharge">Discharge</SelectItem>
+                              <SelectItem value="prn">PRN Visit</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-              {/* Patient Selection for History */}
-              <div>
-                <Label htmlFor="patient_select">Link to Patient (Optional - enables history summary)</Label>
-                <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-                  <SelectTrigger id="patient_select">
-                    <SelectValue placeholder="Select patient for history..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={null}>No patient selected</SelectItem>
-                    {patients.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.first_name} {p.last_name} - {p.primary_diagnosis || 'No diagnosis'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                        <div>
+                          <Label htmlFor="diagnosis">Primary Diagnosis</Label>
+                          <Select value={diagnosis} onValueChange={setDiagnosis}>
+                            <SelectTrigger id="diagnosis">
+                              <SelectValue placeholder="Select diagnosis" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {commonDiagnoses.map((dx) => (
+                                <SelectItem key={dx} value={dx}>
+                                  {dx}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {diagnosis === "Custom (type below)" && (
+                        <div>
+                          <Label htmlFor="custom_diagnosis">Custom Diagnosis</Label>
+                          <Input
+                            id="custom_diagnosis"
+                            placeholder="Enter diagnosis"
+                            value={customDiagnosis}
+                            onChange={(e) => setCustomDiagnosis(e.target.value)}
+                          />
+                        </div>
+                      )}
 
               <div>
                 <Label className="mb-2 block">Quick Vital Signs (Optional)</Label>
@@ -458,28 +487,96 @@ Return your response as JSON with this structure:
             </CardContent>
           </Card>
 
-          {/* Rough Notes Input */}
-          <Card className="border-2 border-purple-200">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
-              <CardTitle className="flex items-center gap-2">
-                <Wand2 className="w-5 h-5 text-purple-600" />
-                Your Rough Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <Textarea
-                placeholder="Type your rough notes here... For example:
+          {/* Documentation Mode Toggle */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={documentationMode === 'freeform' ? 'default' : 'outline'}
+              onClick={() => setDocumentationMode('freeform')}
+              className={documentationMode === 'freeform' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+            >
+              <Wand2 className="w-4 h-4 mr-2" />
+              Freeform Notes
+            </Button>
+            <Button
+              variant={documentationMode === 'guided' ? 'default' : 'outline'}
+              onClick={() => setDocumentationMode('guided')}
+              className={documentationMode === 'guided' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Guided SOAP
+            </Button>
+          </div>
 
-pt stable, lungs clear, no sob. checked wound on left leg, looks good, 3x4cm, clean. changed dressing. taught pt about meds, understands. reviewed diet. will come back friday.
+          {/* Real-time Compliance Score */}
+          <ComplianceScoreIndicator
+            roughNote={roughNote}
+            careType={careType}
+            visitType={visitType}
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            onInsertElement={handleInsertComplianceElement}
+          />
 
-The AI will transform this into professional, Medicare-compliant documentation!"
-                value={roughNote}
-                onChange={(e) => setRoughNote(e.target.value)}
-                rows={12}
-                className="font-mono text-sm"
+          {/* Documentation Input - Freeform or Guided */}
+          {documentationMode === 'freeform' ? (
+            <Card className="border-2 border-purple-200">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Wand2 className="w-5 h-5 text-purple-600" />
+                  Your Rough Notes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <Textarea
+                  placeholder="Type your rough notes here... For example:
+
+          pt stable, lungs clear, no sob. checked wound on left leg, looks good, 3x4cm, clean. changed dressing. taught pt about meds, understands. reviewed diet. will come back friday.
+
+          The AI will transform this into professional, Medicare-compliant documentation!"
+                  value={roughNote}
+                  onChange={(e) => setRoughNote(e.target.value)}
+                  rows={10}
+                  className="font-mono text-sm"
+                />
+
+                {/* Inline AI Suggestions */}
+                <InlineSuggestions
+                  currentText={roughNote}
+                  diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                  careType={careType}
+                  onAcceptSuggestion={handleAcceptInlineSuggestion}
+                />
+
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={handleEnhanceNote}
+                    disabled={isProcessing || !roughNote.trim()}
+                    size="lg"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                        Enhancing Note...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        Enhance Note with AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <GuidedDocumentationFlow
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                careType={careType}
+                visitType={visitType}
+                onNoteChange={handleGuidedNoteChange}
               />
-
-              <div className="mt-4 flex justify-end">
+              <div className="flex justify-end">
                 <Button
                   onClick={handleEnhanceNote}
                   disabled={isProcessing || !roughNote.trim()}
@@ -494,13 +591,13 @@ The AI will transform this into professional, Medicare-compliant documentation!"
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5 mr-2" />
-                      Enhance Note with AI
+                      Enhance SOAP Note with AI
                     </>
                   )}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
 
           {/* Inline Data Extractor - Shows extracted data as user types */}
           <InlineDataExtractor
@@ -634,13 +731,22 @@ The AI will transform this into professional, Medicare-compliant documentation!"
             onTasksGenerated={handleTasksGenerated}
           />
 
-          {/* Personalized Feedback */}
-          {auditResults && (
-            <PersonalizedFeedback
-              auditResults={auditResults}
-              userEmail={currentUser?.email}
-            />
-          )}
+          {/* Quick Care Plan Updater */}
+            {selectedPatientId && (
+              <QuickCarePlanUpdater
+                patientId={selectedPatientId}
+                carePlans={carePlans}
+                onCarePlanUpdated={() => {}}
+              />
+            )}
+
+            {/* Personalized Feedback */}
+            {auditResults && (
+              <PersonalizedFeedback
+                auditResults={auditResults}
+                userEmail={currentUser?.email}
+              />
+            )}
 
           {/* Quick Tips */}
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
