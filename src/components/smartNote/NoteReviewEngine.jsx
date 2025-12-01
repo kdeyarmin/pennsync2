@@ -75,112 +75,288 @@ export default function NoteReviewEngine({
     enabled: !!patientId
   });
 
-  // Clinical protocol definitions based on diagnosis
-  const getClinicalProtocols = (diagnosisText) => {
+  // Comprehensive clinical protocol definitions based on diagnosis and symptoms
+  const getClinicalProtocols = (diagnosisText, noteContent = '') => {
     const protocols = [];
     const diagLower = (diagnosisText || '').toLowerCase();
+    const noteLower = (noteContent || '').toLowerCase();
     
-    if (diagLower.includes('sepsis') || diagLower.includes('infection')) {
+    // Sepsis/Infection Protocol
+    if (diagLower.includes('sepsis') || diagLower.includes('infection') || diagLower.includes('uti') || 
+        diagLower.includes('pneumonia') || diagLower.includes('cellulitis') ||
+        noteLower.includes('fever') || noteLower.includes('chills') || noteLower.includes('infection')) {
       protocols.push({
-        name: 'Sepsis Screening Protocol',
+        name: 'Sepsis Screening Protocol (qSOFA/SIRS)',
+        category: 'Critical',
+        guideline_source: 'Surviving Sepsis Campaign 2021',
         elements: [
-          'Temperature documented (fever >38°C or hypothermia <36°C)',
-          'Heart rate documented (tachycardia >90 bpm)',
-          'Respiratory rate documented (tachypnea >20/min)',
-          'Mental status assessment (confusion, altered LOC)',
-          'Blood pressure documented (hypotension SBP <90)',
-          'Signs of infection source identified',
-          'Physician notification if 2+ SIRS criteria met'
+          { item: 'Temperature documented (fever >38°C or hypothermia <36°C)', category: 'SIRS Criteria' },
+          { item: 'Heart rate documented (tachycardia >90 bpm)', category: 'SIRS Criteria' },
+          { item: 'Respiratory rate documented (tachypnea >20/min)', category: 'SIRS Criteria' },
+          { item: 'Mental status assessment (confusion, altered LOC, GCS)', category: 'qSOFA Criteria' },
+          { item: 'Blood pressure documented (hypotension SBP <100 mmHg)', category: 'qSOFA Criteria' },
+          { item: 'Signs of infection source identified and documented', category: 'Source Control' },
+          { item: 'WBC count referenced if available', category: 'SIRS Criteria' },
+          { item: 'Lactate level discussed if recent labs', category: 'Severity Markers' },
+          { item: 'Urine output/hydration status assessed', category: 'Organ Function' },
+          { item: 'Physician notification documented if 2+ criteria met', category: 'Escalation' }
         ]
       });
     }
     
-    if (diagLower.includes('chf') || diagLower.includes('heart failure') || diagLower.includes('cardiac')) {
+    // CHF/Heart Failure Protocol
+    if (diagLower.includes('chf') || diagLower.includes('heart failure') || diagLower.includes('cardiac') ||
+        diagLower.includes('cardiomyopathy') || diagLower.includes('lvef') ||
+        noteLower.includes('edema') || noteLower.includes('dyspnea') || noteLower.includes('weight gain')) {
       protocols.push({
         name: 'Heart Failure Management Protocol',
+        category: 'Chronic Disease',
+        guideline_source: 'ACC/AHA Heart Failure Guidelines 2022',
         elements: [
-          'Daily weight documented and compared to baseline',
-          'Edema assessment (location, severity, pitting)',
-          'Dyspnea assessment (at rest, exertion, orthopnea)',
-          'Lung sounds (crackles, wheezes)',
-          'Medication compliance (diuretics, ACE inhibitors)',
-          'Sodium/fluid restriction education',
-          'Activity tolerance documented'
+          { item: 'Daily weight documented and compared to dry weight baseline', category: 'Fluid Status' },
+          { item: 'Weight change trend analysis (gain >2-3 lbs warrants action)', category: 'Fluid Status' },
+          { item: 'Edema assessment with grading (1+ to 4+, location, pitting)', category: 'Fluid Status' },
+          { item: 'JVD assessment documented', category: 'Fluid Status' },
+          { item: 'Dyspnea assessment (NYHA class, at rest vs exertion, orthopnea, PND)', category: 'Symptoms' },
+          { item: 'Lung sounds bilateral (crackles location and extent, wheezes)', category: 'Cardiopulmonary' },
+          { item: 'Oxygen saturation on room air and with supplementation', category: 'Cardiopulmonary' },
+          { item: 'Heart rate and rhythm documented', category: 'Cardiac' },
+          { item: 'Blood pressure (both arms if indicated)', category: 'Cardiac' },
+          { item: 'Medication compliance verified (diuretics, ACE/ARB, beta blockers)', category: 'Medication' },
+          { item: 'Sodium/fluid restriction education and compliance assessed', category: 'Education' },
+          { item: 'Activity tolerance and fatigue level documented', category: 'Functional' },
+          { item: 'Signs of decompensation checklist reviewed', category: 'Monitoring' },
+          { item: 'When to call doctor/911 education reinforced', category: 'Education' }
         ]
       });
     }
     
-    if (diagLower.includes('diabetes') || diagLower.includes('dm')) {
+    // Diabetes Protocol
+    if (diagLower.includes('diabetes') || diagLower.includes('dm') || diagLower.includes('diabetic') ||
+        diagLower.includes('hyperglycemia') || diagLower.includes('a1c') ||
+        noteLower.includes('blood sugar') || noteLower.includes('glucose') || noteLower.includes('insulin')) {
       protocols.push({
         name: 'Diabetes Management Protocol',
+        category: 'Chronic Disease',
+        guideline_source: 'ADA Standards of Care 2024',
         elements: [
-          'Blood glucose level documented',
-          'Hypoglycemia/hyperglycemia signs assessed',
-          'Foot inspection performed',
-          'Medication/insulin compliance verified',
-          'Diet compliance assessed',
-          'Signs of neuropathy evaluated',
-          'A1C discussion if applicable'
+          { item: 'Blood glucose level documented with time of reading', category: 'Glycemic Control' },
+          { item: 'Glucose trend analysis (pattern of highs/lows)', category: 'Glycemic Control' },
+          { item: 'Hypoglycemia signs/symptoms assessed and history', category: 'Safety' },
+          { item: 'Hyperglycemia signs/symptoms assessed', category: 'Safety' },
+          { item: 'Comprehensive foot inspection performed (pulses, sensation, skin)', category: 'Complication Prevention' },
+          { item: 'Signs of neuropathy evaluated (numbness, tingling, pain)', category: 'Complications' },
+          { item: 'Skin integrity assessment (especially extremities)', category: 'Complications' },
+          { item: 'Medication/insulin compliance and technique verified', category: 'Medication' },
+          { item: 'Insulin storage and rotation site education', category: 'Medication' },
+          { item: 'Diet compliance and carbohydrate awareness assessed', category: 'Nutrition' },
+          { item: 'A1C level discussed if recent (goal typically <7%)', category: 'Monitoring' },
+          { item: 'Vision changes assessed (retinopathy screening)', category: 'Complications' },
+          { item: 'Hypoglycemia treatment plan reviewed (Rule of 15)', category: 'Education' },
+          { item: 'Sick day management education provided', category: 'Education' }
         ]
       });
     }
     
-    if (diagLower.includes('copd') || diagLower.includes('pulmonary')) {
+    // COPD Protocol - Enhanced
+    if (diagLower.includes('copd') || diagLower.includes('emphysema') || diagLower.includes('chronic bronchitis') ||
+        diagLower.includes('pulmonary') || diagLower.includes('respiratory') ||
+        noteLower.includes('shortness of breath') || noteLower.includes('sob') || noteLower.includes('wheezing') ||
+        noteLower.includes('dyspnea') || noteLower.includes('oxygen')) {
       protocols.push({
-        name: 'COPD Management Protocol',
+        name: 'COPD/Respiratory Management Protocol',
+        category: 'Chronic Disease',
+        guideline_source: 'GOLD Guidelines 2024',
         elements: [
-          'Oxygen saturation documented',
-          'Respiratory rate and effort assessed',
-          'Lung sounds bilateral assessment',
-          'Inhaler technique reviewed',
-          'Signs of exacerbation (increased dyspnea, sputum)',
-          'Smoking cessation addressed if applicable',
-          'Activity tolerance documented'
+          { item: 'Oxygen saturation documented (at rest and with activity)', category: 'Oxygenation' },
+          { item: 'Oxygen requirements documented (liters, delivery method)', category: 'Oxygenation' },
+          { item: 'Respiratory rate and pattern assessed', category: 'Respiratory Status' },
+          { item: 'Work of breathing evaluated (accessory muscle use, retractions)', category: 'Respiratory Status' },
+          { item: 'Lung sounds bilateral assessment (wheezes, rhonchi, diminished)', category: 'Respiratory Status' },
+          { item: 'Cough assessment (productive vs dry, sputum color/amount)', category: 'Symptoms' },
+          { item: 'Sputum characteristics if productive (color, consistency, blood)', category: 'Symptoms' },
+          { item: 'Inhaler/nebulizer technique observed and corrected', category: 'Medication' },
+          { item: 'Medication compliance (bronchodilators, steroids, antibiotics)', category: 'Medication' },
+          { item: 'PFT results referenced if available (FEV1, FVC)', category: 'Baseline Data' },
+          { item: 'COPD exacerbation history documented', category: 'History' },
+          { item: 'Signs of acute exacerbation assessed (increased dyspnea, sputum, fever)', category: 'Monitoring' },
+          { item: 'Activity tolerance and ADL impact documented', category: 'Functional' },
+          { item: 'Smoking status and cessation support addressed', category: 'Risk Reduction' },
+          { item: 'Trigger avoidance education (allergens, irritants)', category: 'Education' },
+          { item: 'COPD action plan reviewed (when to escalate)', category: 'Education' },
+          { item: 'Vaccination status (flu, pneumonia, COVID)', category: 'Prevention' }
         ]
       });
     }
     
-    if (diagLower.includes('wound') || diagLower.includes('ulcer') || diagLower.includes('surgical')) {
+    // Wound Care Protocol - Enhanced
+    if (diagLower.includes('wound') || diagLower.includes('ulcer') || diagLower.includes('surgical') ||
+        diagLower.includes('pressure injury') || diagLower.includes('debridement') || diagLower.includes('amputation') ||
+        noteLower.includes('dressing') || noteLower.includes('wound') || noteLower.includes('incision')) {
       protocols.push({
         name: 'Wound Care Protocol',
+        category: 'Specialized Care',
+        guideline_source: 'WOCN Clinical Practice Guidelines',
         elements: [
-          'Wound measurements (L x W x D)',
-          'Wound bed description (granulation, slough, necrotic)',
-          'Exudate amount and characteristics',
-          'Periwound skin assessment',
-          'Signs of infection (erythema, warmth, odor)',
-          'Dressing change performed with technique',
-          'Pain assessment during procedure'
+          { item: 'Wound measurements documented (L x W x D in cm)', category: 'Assessment' },
+          { item: 'Wound location precisely documented (anatomical terms)', category: 'Assessment' },
+          { item: 'Wound bed description (% granulation, slough, necrotic, epithelial)', category: 'Assessment' },
+          { item: 'Wound edges described (attached, rolled, macerated)', category: 'Assessment' },
+          { item: 'Undermining/tunneling measured if present (clock position, depth)', category: 'Assessment' },
+          { item: 'Exudate amount documented (none, scant, small, moderate, large)', category: 'Assessment' },
+          { item: 'Exudate characteristics (serous, sanguineous, purulent, odor)', category: 'Assessment' },
+          { item: 'Periwound skin assessment (intact, macerated, erythema, induration)', category: 'Assessment' },
+          { item: 'Signs of infection (erythema, warmth, odor, increased drainage, fever)', category: 'Infection Monitoring' },
+          { item: 'Pain assessment before, during, after procedure', category: 'Pain Management' },
+          { item: 'Dressing change performed with sterile/clean technique noted', category: 'Intervention' },
+          { item: 'Dressing type and materials documented', category: 'Intervention' },
+          { item: 'Wound progress compared to last visit', category: 'Trend Analysis' },
+          { item: 'Nutritional status for wound healing assessed', category: 'Healing Factors' },
+          { item: 'Pressure redistribution/offloading addressed', category: 'Prevention' },
+          { item: 'Patient/caregiver wound care education', category: 'Education' }
         ]
       });
     }
     
-    if (diagLower.includes('fall') || diagLower.includes('fracture')) {
+    // Fall Risk Protocol
+    if (diagLower.includes('fall') || diagLower.includes('fracture') || diagLower.includes('hip') ||
+        diagLower.includes('balance') || diagLower.includes('vertigo') ||
+        noteLower.includes('fall') || noteLower.includes('unsteady') || noteLower.includes('dizziness')) {
       protocols.push({
-        name: 'Fall Risk Protocol',
+        name: 'Fall Prevention Protocol',
+        category: 'Safety',
+        guideline_source: 'CDC STEADI Guidelines',
         elements: [
-          'Fall risk assessment completed',
-          'Environmental hazards assessed',
-          'Gait and balance evaluation',
-          'Medication review for fall risk meds',
-          'Assistive device use evaluated',
-          'Home safety modifications discussed',
-          'Patient/caregiver education on fall prevention'
+          { item: 'Fall risk assessment tool completed (Morse, Hendrich, TUG)', category: 'Assessment' },
+          { item: 'Fall history documented (when, where, circumstances)', category: 'History' },
+          { item: 'Gait assessment performed (steady, unsteady, shuffling)', category: 'Mobility' },
+          { item: 'Balance evaluation documented (Romberg, tandem stance)', category: 'Mobility' },
+          { item: 'Lower extremity strength assessed', category: 'Mobility' },
+          { item: 'Environmental hazard assessment completed', category: 'Safety' },
+          { item: 'Medication review for fall-risk medications (sedatives, antihypertensives)', category: 'Medication' },
+          { item: 'Orthostatic blood pressure measured', category: 'Assessment' },
+          { item: 'Vision and hearing status assessed', category: 'Sensory' },
+          { item: 'Footwear evaluation (appropriate, non-slip)', category: 'Safety' },
+          { item: 'Assistive device use and appropriateness evaluated', category: 'Equipment' },
+          { item: 'Home safety modifications discussed/implemented', category: 'Intervention' },
+          { item: 'PT/OT referral consideration documented', category: 'Referral' },
+          { item: 'Patient/caregiver education on fall prevention strategies', category: 'Education' }
         ]
       });
     }
     
-    if (diagLower.includes('stroke') || diagLower.includes('cva')) {
+    // Stroke/CVA Protocol
+    if (diagLower.includes('stroke') || diagLower.includes('cva') || diagLower.includes('tia') ||
+        diagLower.includes('cerebrovascular') || diagLower.includes('hemiparesis') ||
+        noteLower.includes('weakness') || noteLower.includes('speech') || noteLower.includes('facial droop')) {
       protocols.push({
-        name: 'Stroke/CVA Protocol',
+        name: 'Stroke/CVA Management Protocol',
+        category: 'Neurological',
+        guideline_source: 'AHA/ASA Stroke Guidelines 2024',
         elements: [
-          'Neurological assessment (speech, facial droop, arm drift)',
-          'Vital signs including BP',
-          'Swallowing assessment/precautions',
-          'Mobility and transfer status',
-          'Safety awareness evaluation',
-          'Medication compliance (anticoagulants if applicable)',
-          'Signs of depression screened'
+          { item: 'Neurological assessment documented (NIH Stroke Scale elements)', category: 'Neuro Assessment' },
+          { item: 'Level of consciousness (alert, oriented x3)', category: 'Neuro Assessment' },
+          { item: 'Speech assessment (clear, slurred, aphasia type)', category: 'Neuro Assessment' },
+          { item: 'Facial symmetry evaluated', category: 'Neuro Assessment' },
+          { item: 'Motor strength bilateral upper and lower extremities', category: 'Neuro Assessment' },
+          { item: 'Sensation assessment bilateral', category: 'Neuro Assessment' },
+          { item: 'Blood pressure documented (per post-stroke parameters)', category: 'Cardiovascular' },
+          { item: 'Swallowing assessment/aspiration precautions', category: 'Safety' },
+          { item: 'Mobility and transfer status documented', category: 'Functional' },
+          { item: 'Safety awareness and judgment evaluated', category: 'Cognitive' },
+          { item: 'Skin integrity (especially affected side)', category: 'Integumentary' },
+          { item: 'Medication compliance (anticoagulants, antihypertensives, statins)', category: 'Medication' },
+          { item: 'Depression/mood screening (PHQ-2 or PHQ-9)', category: 'Psychosocial' },
+          { item: 'Caregiver burden assessed', category: 'Psychosocial' },
+          { item: 'Stroke warning signs education (FAST)', category: 'Education' },
+          { item: 'Secondary prevention measures addressed', category: 'Prevention' }
+        ]
+      });
+    }
+
+    // Hypertension Protocol
+    if (diagLower.includes('hypertension') || diagLower.includes('htn') || diagLower.includes('high blood pressure') ||
+        noteLower.includes('blood pressure') || noteLower.includes('bp elevated')) {
+      protocols.push({
+        name: 'Hypertension Management Protocol',
+        category: 'Chronic Disease',
+        guideline_source: 'ACC/AHA Hypertension Guidelines 2017',
+        elements: [
+          { item: 'Blood pressure documented (both arms if initial or discrepancy)', category: 'Vital Signs' },
+          { item: 'BP compared to target goal (<130/80 for most patients)', category: 'Goal Tracking' },
+          { item: 'BP trend analysis from previous visits', category: 'Trend Analysis' },
+          { item: 'Symptoms of uncontrolled HTN assessed (headache, visual changes)', category: 'Symptoms' },
+          { item: 'Medication compliance verified', category: 'Medication' },
+          { item: 'Side effects of antihypertensives assessed', category: 'Medication' },
+          { item: 'Lifestyle modifications discussed (diet, exercise, sodium, alcohol)', category: 'Education' },
+          { item: 'Home BP monitoring technique reviewed if applicable', category: 'Self-Management' },
+          { item: 'End-organ damage signs assessed (vision, kidney function)', category: 'Complications' }
+        ]
+      });
+    }
+
+    // Pain Management Protocol
+    if (diagLower.includes('pain') || diagLower.includes('chronic pain') || diagLower.includes('cancer') ||
+        diagLower.includes('palliative') || diagLower.includes('hospice') ||
+        noteLower.includes('pain') || noteLower.includes('discomfort') || noteLower.includes('opioid')) {
+      protocols.push({
+        name: 'Pain Management Protocol',
+        category: 'Symptom Management',
+        guideline_source: 'NCCN Cancer Pain Guidelines',
+        elements: [
+          { item: 'Pain level documented using validated scale (0-10, FACES)', category: 'Assessment' },
+          { item: 'Pain characteristics (location, quality, radiation)', category: 'Assessment' },
+          { item: 'Pain triggers and alleviating factors identified', category: 'Assessment' },
+          { item: 'Impact on function and quality of life documented', category: 'Functional' },
+          { item: 'Current pain regimen effectiveness evaluated', category: 'Medication' },
+          { item: 'Breakthrough pain medication use and effectiveness', category: 'Medication' },
+          { item: 'Side effects of pain medications assessed (constipation, sedation)', category: 'Medication' },
+          { item: 'Non-pharmacological pain interventions discussed', category: 'Intervention' },
+          { item: 'Pain goals discussed with patient', category: 'Goals' }
+        ]
+      });
+    }
+
+    // Anticoagulation Protocol
+    if (diagLower.includes('anticoagul') || diagLower.includes('warfarin') || diagLower.includes('coumadin') ||
+        diagLower.includes('dvt') || diagLower.includes('pe') || diagLower.includes('afib') ||
+        noteLower.includes('inr') || noteLower.includes('blood thinner') || noteLower.includes('bleeding')) {
+      protocols.push({
+        name: 'Anticoagulation Management Protocol',
+        category: 'Medication Safety',
+        guideline_source: 'CHEST Antithrombotic Guidelines',
+        elements: [
+          { item: 'Current anticoagulant regimen documented', category: 'Medication' },
+          { item: 'INR result documented if on warfarin (with date)', category: 'Monitoring' },
+          { item: 'INR therapeutic range and target documented', category: 'Monitoring' },
+          { item: 'Signs of bleeding assessed (bruising, gum bleeding, blood in stool/urine)', category: 'Safety' },
+          { item: 'Signs of clotting assessed (leg swelling, pain, SOB)', category: 'Safety' },
+          { item: 'Medication compliance verified', category: 'Medication' },
+          { item: 'Drug-drug and drug-food interactions reviewed', category: 'Safety' },
+          { item: 'Fall risk addressed (bleeding risk with falls)', category: 'Safety' },
+          { item: 'Patient education on anticoagulation safety', category: 'Education' }
+        ]
+      });
+    }
+
+    // Dementia/Cognitive Protocol
+    if (diagLower.includes('dementia') || diagLower.includes('alzheimer') || diagLower.includes('cognitive') ||
+        diagLower.includes('memory') || noteLower.includes('confusion') || noteLower.includes('wandering')) {
+      protocols.push({
+        name: 'Cognitive/Dementia Care Protocol',
+        category: 'Neurological',
+        guideline_source: 'Alzheimer\'s Association Care Guidelines',
+        elements: [
+          { item: 'Cognitive status assessed (orientation, memory, attention)', category: 'Assessment' },
+          { item: 'Baseline cognition compared to current status', category: 'Trend Analysis' },
+          { item: 'Behavioral symptoms assessed (agitation, wandering, sundowning)', category: 'Behavioral' },
+          { item: 'Safety assessment completed (wandering risk, stove, driving)', category: 'Safety' },
+          { item: 'Medication management safety evaluated', category: 'Safety' },
+          { item: 'Caregiver stress and coping assessed', category: 'Caregiver Support' },
+          { item: 'Nutrition and hydration status', category: 'Basic Needs' },
+          { item: 'Sleep pattern documented', category: 'Basic Needs' },
+          { item: 'Communication strategies utilized and documented', category: 'Care Approach' },
+          { item: 'Advance care planning discussed', category: 'Planning' }
         ]
       });
     }
@@ -189,14 +365,18 @@ export default function NoteReviewEngine({
     if (protocols.length === 0) {
       protocols.push({
         name: 'General Clinical Assessment Protocol',
+        category: 'Standard',
+        guideline_source: 'Home Health Conditions of Participation',
         elements: [
-          'Complete vital signs assessment',
-          'Pain assessment using scale',
-          'Medication review and compliance',
-          'Functional status evaluation',
-          'Safety assessment',
-          'Patient/caregiver education provided',
-          'Care plan goals addressed'
+          { item: 'Complete vital signs assessment documented', category: 'Vital Signs' },
+          { item: 'Pain assessment using validated scale', category: 'Pain' },
+          { item: 'Medication review and compliance verified', category: 'Medication' },
+          { item: 'Functional status evaluation (ADLs, IADLs)', category: 'Functional' },
+          { item: 'Safety assessment completed', category: 'Safety' },
+          { item: 'Cognitive/mental status noted', category: 'Cognitive' },
+          { item: 'Patient/caregiver education provided and documented', category: 'Education' },
+          { item: 'Care plan goals addressed and progress noted', category: 'Goals' },
+          { item: 'Changes since last visit documented', category: 'Monitoring' }
         ]
       });
     }
