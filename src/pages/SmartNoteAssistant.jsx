@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -21,8 +22,18 @@ import {
   Lightbulb,
   FileText,
   Wand2,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  Brain
 } from "lucide-react";
+
+import RealTimeSuggestions from "../components/smartNote/RealTimeSuggestions";
+import PatientHistorySummary from "../components/smartNote/PatientHistorySummary";
+import DataExtractor from "../components/smartNote/DataExtractor";
+import ExternalKnowledge from "../components/smartNote/ExternalKnowledge";
+import PersonalizedFeedback from "../components/smartNote/PersonalizedFeedback";
+import TaskGenerator from "../components/smartNote/TaskGenerator";
+import MedicationAdherenceInsights from "../components/smartNote/MedicationAdherenceInsights";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
