@@ -29,14 +29,45 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-export default function EducationMaterialGenerator({ patient, onMaterialGenerated }) {
+export default function EducationMaterialGenerator({ patient, teachBackHistory = [], onMaterialGenerated }) {
   const [searchTopic, setSearchTopic] = useState("");
   const [category, setCategory] = useState("");
   const [readingLevel, setReadingLevel] = useState("simple");
   const [language, setLanguage] = useState("english");
+  const [culturalBackground, setCulturalBackground] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [learningProfile, setLearningProfile] = useState(null);
+
+  // Analyze teach-back history to determine learning profile
+  React.useEffect(() => {
+    if (teachBackHistory.length > 0) {
+      const levels = teachBackHistory.map(t => t.understandingLevel);
+      const goodCount = levels.filter(l => l === 'good').length;
+      const fairCount = levels.filter(l => l === 'fair').length;
+      const poorCount = levels.filter(l => l === 'poor').length;
+      
+      let recommendedLevel = 'simple';
+      let learningStyle = 'visual';
+      
+      if (goodCount > levels.length * 0.7) {
+        recommendedLevel = 'moderate';
+      } else if (poorCount > levels.length * 0.3) {
+        recommendedLevel = 'simple';
+        learningStyle = 'repetitive';
+      }
+      
+      setLearningProfile({
+        recommendedLevel,
+        learningStyle,
+        successRate: Math.round((goodCount / levels.length) * 100),
+        totalSessions: levels.length
+      });
+      
+      setReadingLevel(recommendedLevel);
+    }
+  }, [teachBackHistory]);
 
   const categories = [
     { value: "disease_management", label: "Disease Management", icon: Heart },
@@ -61,6 +92,18 @@ export default function EducationMaterialGenerator({ patient, onMaterialGenerate
     "Caregiver Self-Care"
   ];
 
+  const culturalOptions = [
+    { value: "", label: "Not specified" },
+    { value: "hispanic_latino", label: "Hispanic/Latino" },
+    { value: "african_american", label: "African American" },
+    { value: "asian", label: "Asian" },
+    { value: "native_american", label: "Native American" },
+    { value: "middle_eastern", label: "Middle Eastern" },
+    { value: "european", label: "European" },
+    { value: "caribbean", label: "Caribbean" },
+    { value: "south_asian", label: "South Asian" }
+  ];
+
   const generateMaterial = async () => {
     const topic = searchTopic || (patient?.primary_diagnosis);
     if (!topic) {
@@ -70,14 +113,47 @@ export default function EducationMaterialGenerator({ patient, onMaterialGenerate
 
     setIsGenerating(true);
     try {
+      // Build personalization context
+      let personalizationContext = '';
+      
+      if (learningProfile) {
+        personalizationContext += `
+LEARNING PROFILE (from previous teach-back sessions):
+- Understanding success rate: ${learningProfile.successRate}%
+- Recommended complexity: ${learningProfile.recommendedLevel}
+- Learning style: ${learningProfile.learningStyle}
+- Total education sessions: ${learningProfile.totalSessions}
+${learningProfile.successRate < 50 ? '- IMPORTANT: Patient has struggled with understanding. Use extra simple language, more repetition, and visual descriptions.' : ''}
+${learningProfile.successRate > 80 ? '- Patient learns well. Can use slightly more detailed explanations.' : ''}
+`;
+      }
+
+      if (culturalBackground) {
+        personalizationContext += `
+CULTURAL CONSIDERATIONS (${culturalBackground.replace(/_/g, ' ')}):
+- Use culturally appropriate examples and analogies
+- Consider dietary preferences and traditional practices when relevant
+- Be sensitive to cultural health beliefs and practices
+- Include family/community involvement where culturally appropriate
+`;
+      }
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a patient education specialist creating easy-to-understand health education materials for home health and hospice patients.
+        prompt: `You are a patient education specialist creating PERSONALIZED, easy-to-understand health education materials for home health and hospice patients.
 
 TOPIC: ${topic}
 CATEGORY: ${category || 'General'}
-READING LEVEL: ${readingLevel === 'simple' ? '5th grade reading level - very simple words' : readingLevel === 'moderate' ? '8th grade reading level' : 'Standard adult reading level'}
+READING LEVEL: ${readingLevel === 'simple' ? '5th grade reading level - very simple words, short sentences' : readingLevel === 'moderate' ? '8th grade reading level' : 'Standard adult reading level'}
 LANGUAGE: ${language}
-${patient ? `PATIENT CONTEXT: ${patient.first_name} ${patient.last_name}, ${patient.primary_diagnosis}, ${patient.care_type}` : ''}
+${patient ? `PATIENT CONTEXT: ${patient.first_name} ${patient.last_name}, Diagnosis: ${patient.primary_diagnosis}, Care Type: ${patient.care_type}` : ''}
+${personalizationContext}
+
+PERSONALIZATION REQUIREMENTS:
+1. Tailor examples and analogies to be relatable to the patient's background
+2. Adjust complexity based on their learning profile
+3. If patient has low understanding scores, use more repetition, bullet points, and simple analogies
+4. Include culturally appropriate food examples, family dynamics, and health practices
+5. Use encouraging, supportive language
 
 Create comprehensive patient education material that includes:
 1. Simple explanation of the topic
@@ -312,6 +388,47 @@ Return JSON:
               </Select>
             </div>
           </div>
+
+          {/* Cultural Background */}
+          <div>
+            <Label>Cultural Background (for personalized examples)</Label>
+            <Select value={culturalBackground} onValueChange={setCulturalBackground}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select cultural background..." />
+              </SelectTrigger>
+              <SelectContent>
+                {culturalOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Learning Profile Display */}
+          {learningProfile && (
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <p className="text-sm font-semibold text-blue-900 mb-2">📊 Patient Learning Profile</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-white p-2 rounded">
+                  <span className="text-gray-600">Success Rate:</span>
+                  <span className={`ml-1 font-semibold ${learningProfile.successRate >= 70 ? 'text-green-600' : learningProfile.successRate >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {learningProfile.successRate}%
+                  </span>
+                </div>
+                <div className="bg-white p-2 rounded">
+                  <span className="text-gray-600">Sessions:</span>
+                  <span className="ml-1 font-semibold">{learningProfile.totalSessions}</span>
+                </div>
+                <div className="bg-white p-2 rounded col-span-2">
+                  <span className="text-gray-600">Recommended Level:</span>
+                  <span className="ml-1 font-semibold capitalize">{learningProfile.recommendedLevel}</span>
+                  <span className="text-gray-500 ml-1">(auto-selected)</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {patient && (
             <Button
