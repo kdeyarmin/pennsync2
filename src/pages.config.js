@@ -1,0 +1,47 @@
+import Dashboard from './pages/Dashboard';
+import DocumentVisit from './pages/DocumentVisit';
+import Patients from './pages/Patients';
+import PatientDetails from './pages/PatientDetails';
+import ProductivityDashboard from './pages/ProductivityDashboard';
+import Admin from './pages/Admin';
+import AdminDashboard from './pages/AdminDashboard';
+import Features from './pages/Features';
+import CarePlanManagement from './pages/CarePlanManagement';
+import AutomaticCarePlans from './pages/AutomaticCarePlans';
+import ComplianceCenter from './pages/ComplianceCenter';
+import SurveyPreparation from './pages/SurveyPreparation';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import QualityDashboard from './pages/QualityDashboard';
+import SmartNoteAssistant from './pages/SmartNoteAssistant';
+import SecurityPolicy from './pages/SecurityPolicy';
+import PatientTriage from './pages/PatientTriage';
+import TemplateLibrary from './pages/TemplateLibrary';
+import __Layout from './Layout.jsx';
+
+
+export const PAGES = {
+    "Dashboard": Dashboard,
+    "DocumentVisit": DocumentVisit,
+    "Patients": Patients,
+    "PatientDetails": PatientDetails,
+    "ProductivityDashboard": ProductivityDashboard,
+    "Admin": Admin,
+    "AdminDashboard": AdminDashboard,
+    "Features": Features,
+    "CarePlanManagement": CarePlanManagement,
+    "AutomaticCarePlans": AutomaticCarePlans,
+    "ComplianceCenter": ComplianceCenter,
+    "SurveyPreparation": SurveyPreparation,
+    "AnalyticsDashboard": AnalyticsDashboard,
+    "QualityDashboard": QualityDashboard,
+    "SmartNoteAssistant": SmartNoteAssistant,
+    "SecurityPolicy": SecurityPolicy,
+    "PatientTriage": PatientTriage,
+    "TemplateLibrary": TemplateLibrary,
+}
+
+export const pagesConfig = {
+    mainPage: "Dashboard",
+    Pages: PAGES,
+    Layout: __Layout,
+};

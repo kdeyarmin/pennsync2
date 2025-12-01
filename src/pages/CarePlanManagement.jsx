@@ -1,0 +1,348 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import {
+  Target,
+  Search,
+  TrendingUp,
+  CheckCircle2,
+  XCircle,
+  Edit,
+  Trash2,
+  User,
+  Calendar,
+  ArrowLeft
+} from "lucide-react";
+import { format } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export default function CarePlanManagement() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Fetch all patients
+  const { data: patients = [] } = useQuery({
+    queryKey: ['allPatients'],
+    queryFn: () => base44.entities.Patient.list(),
+    initialData: [],
+  });
+
+  // Fetch all care plans
+  const { data: carePlans = [], isLoading } = useQuery({
+    queryKey: ['allCarePlans'],
+    queryFn: () => base44.entities.CarePlan.list('-created_date', 500),
+    initialData: [],
+  });
+
+  // Update care plan status
+  const updateCarePlanMutation = useMutation({
+    mutationFn: ({ id, updates }) => base44.entities.CarePlan.update(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+    },
+  });
+
+  // Delete care plan
+  const deleteCarePlanMutation = useMutation({
+    mutationFn: (id) => base44.entities.CarePlan.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+    },
+  });
+
+  // Get patient by ID
+  const getPatient = (patientId) => {
+    return patients.find(p => p.id === patientId);
+  };
+
+  // Filter care plans
+  const filteredCarePlans = carePlans.filter(plan => {
+    const patient = getPatient(plan.patient_id);
+    const matchesSearch = !searchTerm || 
+      plan.problem?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plan.goal?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient?.last_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || plan.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Group by patient
+  const groupedByPatient = filteredCarePlans.reduce((acc, plan) => {
+    const patientId = plan.patient_id;
+    if (!acc[patientId]) {
+      acc[patientId] = [];
+    }
+    acc[patientId].push(plan);
+    return acc;
+  }, {});
+
+  const handleStatusChange = (planId, newStatus) => {
+    updateCarePlanMutation.mutate({
+      id: planId,
+      updates: { status: newStatus }
+    });
+  };
+
+  const handleDelete = (planId) => {
+    if (confirm('Are you sure you want to delete this care plan?')) {
+      deleteCarePlanMutation.mutate(planId);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-500';
+      case 'met': return 'bg-blue-500';
+      case 'not_met': return 'bg-red-500';
+      case 'revised': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  // Calculate statistics
+  const totalPlans = carePlans.length;
+  const activePlans = carePlans.filter(p => p.status === 'active').length;
+  const metGoals = carePlans.filter(p => p.status === 'met').length;
+  const activePatients = Object.keys(groupedByPatient).length;
+
+  return (
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <Button
+        variant="outline"
+        onClick={() => navigate(createPageUrl("Dashboard"))}
+        className="mb-6"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Dashboard
+      </Button>
+
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+            <Target className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Care Plan Management</h1>
+            <p className="text-gray-600">Manage and track patient care plans</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium mb-1">Total Plans</p>
+                <p className="text-4xl font-bold">{totalPlans}</p>
+              </div>
+              <Target className="w-12 h-12 text-blue-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium mb-1">Active Plans</p>
+                <p className="text-4xl font-bold">{activePlans}</p>
+              </div>
+              <TrendingUp className="w-12 h-12 text-green-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium mb-1">Goals Met</p>
+                <p className="text-4xl font-bold">{metGoals}</p>
+              </div>
+              <CheckCircle2 className="w-12 h-12 text-purple-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium mb-1">Patients</p>
+                <p className="text-4xl font-bold">{activePatients}</p>
+              </div>
+              <User className="w-12 h-12 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search care plans or patients..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="met">Goal Met</SelectItem>
+                <SelectItem value="not_met">Not Met</SelectItem>
+                <SelectItem value="revised">Revised</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Care Plans by Patient */}
+      <div className="space-y-6">
+        {isLoading ? (
+          <Card>
+            <CardContent className="p-12 text-center text-gray-500">
+              Loading care plans...
+            </CardContent>
+          </Card>
+        ) : filteredCarePlans.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No care plans found</h3>
+              <p className="text-gray-500">Try adjusting your search or filters.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          Object.entries(groupedByPatient).map(([patientId, plans]) => {
+            const patient = getPatient(patientId);
+            if (!patient) return null;
+
+            return (
+              <Card key={patientId} className="border-l-4 border-l-blue-500">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {patient.first_name} {patient.last_name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {patient.primary_diagnosis} • {plans.length} active care plan{plans.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`${createPageUrl("PatientDetails")}?patientId=${patientId}`)}
+                      variant="outline"
+                    >
+                      View Patient
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {plans.map((plan) => (
+                      <Card key={plan.id} className="bg-gray-50">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-gray-900">{plan.problem}</h4>
+                                <Badge className={getStatusColor(plan.status)}>
+                                  {plan.status.replace('_', ' ')}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-2">{plan.goal}</p>
+                              
+                              {plan.interventions && plan.interventions.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-xs font-medium text-gray-700 mb-1">Interventions:</p>
+                                  <ul className="list-disc ml-5 text-xs text-gray-600 space-y-0.5">
+                                    {plan.interventions.map((intervention, idx) => (
+                                      <li key={idx}>{intervention}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                                {plan.frequency && <span><strong>Frequency:</strong> {plan.frequency}</span>}
+                                {plan.target_date && (
+                                  <span>
+                                    <strong>Target:</strong> {format(new Date(plan.target_date), 'MMM d, yyyy')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-3 border-t">
+                            <Select
+                              value={plan.status}
+                              onValueChange={(newStatus) => handleStatusChange(plan.id, newStatus)}
+                            >
+                              <SelectTrigger className="w-36">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="met">Goal Met</SelectItem>
+                                <SelectItem value="not_met">Not Met</SelectItem>
+                                <SelectItem value="revised">Revised</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(plan.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

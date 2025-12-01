@@ -1,0 +1,236 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Link, useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
+import VoiceCommandListener from "../components/voice/VoiceCommandListener";
+import { getCommandsForContext } from "../components/voice/voiceCommands";
+import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: visits, isLoading } = useQuery({
+    queryKey: ['todayVisits'],
+    queryFn: async () => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
+    },
+    initialData: [],
+  });
+
+  const { data: patients } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.list(),
+    initialData: [],
+  });
+
+  const getPatient = (patientId) => {
+    return patients.find(p => p.id === patientId);
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      scheduled: "bg-blue-100 text-blue-800 border-blue-200",
+      in_progress: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      completed: "bg-green-100 text-green-800 border-green-200",
+      cancelled: "bg-gray-100 text-gray-800 border-gray-200"
+    };
+    return colors[status] || colors.scheduled;
+  };
+
+  const getVisitTypeLabel = (type) => {
+    const labels = {
+      skilled_nursing: "Skilled Nursing",
+      admission: "Admission",
+      recertification: "Recertification",
+      discharge: "Discharge",
+      routine_visit: "Routine Visit",
+      prn: "PRN Visit"
+    };
+    return labels[type] || type;
+  };
+
+  // Voice command handler
+  const handleVoiceCommand = (action, spokenText) => {
+    switch (action) {
+      case 'navigate_patients':
+        navigate(createPageUrl("Patients"));
+        break;
+      case 'refresh_data':
+        queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
+        break;
+      case 'search':
+        // Extract search term from spoken text
+        const searchTerm = spokenText.replace(/search for|find patient|look for/gi, '').trim();
+        if (searchTerm) {
+          navigate(`${createPageUrl("Patients")}?search=${encodeURIComponent(searchTerm)}`);
+        }
+        break;
+      case 'navigate_dashboard':
+        window.location.reload();
+        break;
+      default:
+        console.log('Unhandled voice command:', action);
+    }
+  };
+
+  const completedVisits = visits.filter(v => v.status === 'completed').length;
+  const pendingVisits = visits.filter(v => v.status === 'scheduled').length;
+
+  return (
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Today's Visits</h1>
+        <p className="text-gray-600">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium mb-1">Total Visits</p>
+                <p className="text-4xl font-bold">{visits.length}</p>
+              </div>
+              <Calendar className="w-12 h-12 text-blue-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium mb-1">Completed</p>
+                <p className="text-4xl font-bold">{completedVisits}</p>
+              </div>
+              <CheckCircle2 className="w-12 h-12 text-green-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium mb-1">Pending</p>
+                <p className="text-4xl font-bold">{pendingVisits}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Add Compliance Widget before Visit Schedule */}
+      <ComplianceDashboardWidget />
+
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Visit Schedule</h2>
+        <Link to={createPageUrl("Patients")}>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            New Visit
+          </Button>
+        </Link>
+      </div>
+
+      <div className="space-y-4">
+        {isLoading ? (
+          <Card>
+            <CardContent className="p-8 text-center text-gray-500">
+              Loading visits...
+            </CardContent>
+          </Card>
+        ) : visits.length === 0 ? (
+          <Card className="border-2 border-dashed border-gray-200">
+            <CardContent className="p-12 text-center">
+              <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No visits scheduled</h3>
+              <p className="text-gray-500 mb-6">You don't have any visits scheduled for today.</p>
+              <Link to={createPageUrl("Patients")}>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Schedule a Visit
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          visits.map((visit) => {
+            const patient = getPatient(visit.patient_id);
+            return (
+              <Card key={visit.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
+                <CardContent className="p-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl font-bold text-gray-900 mb-1">
+                            {patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient'}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span>{visit.visit_time || 'Time TBD'}</span>
+                            </div>
+                            {patient?.address && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4" />
+                                <span className="truncate max-w-xs">{patient.address}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            <Badge className={getStatusColor(visit.status)}>
+                              {visit.status.replace('_', ' ')}
+                            </Badge>
+                            <Badge variant="outline" className="border-blue-200 text-blue-700">
+                              {getVisitTypeLabel(visit.visit_type)}
+                            </Badge>
+                            {patient?.care_type && (
+                              <Badge variant="outline" className="border-purple-200 text-purple-700">
+                                {patient.care_type === 'home_health' ? 'Home Health' : 'Hospice'}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link to={`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`}>
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-700"
+                          disabled={visit.status === 'completed'}
+                        >
+                          {visit.status === 'completed' ? 'View Documentation' : 'Start Documentation'}
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
+
+      {/* Voice Commands */}
+      <VoiceCommandListener
+        onCommand={handleVoiceCommand}
+        commands={getCommandsForContext('dashboard')}
+        context="dashboard"
+      />
+    </div>
+  );
+}
