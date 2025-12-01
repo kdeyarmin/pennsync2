@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,11 +36,17 @@ import {
   Eye,
   ClipboardList,
   Stethoscope,
-  Lightbulb
+  Lightbulb,
+  Download,
+  GraduationCap,
+  Pill,
+  BookOpen,
+  ClipboardCheck
 } from "lucide-react";
 
 export default function FeaturesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const features = [
     {
@@ -54,15 +60,17 @@ export default function FeaturesPage() {
           description: "Record clinical observations and AI automatically transcribes, formats, and merges into Medicare-compliant narrative",
           timeSaved: "15-20 min/visit",
           impact: "high",
-          details: "Eliminates typing, auto-formats medical terminology, integrates with existing templates"
+          details: "Eliminates typing, auto-formats medical terminology, integrates with existing templates",
+          howToUse: "1. Click the microphone icon in the documentation screen. 2. Speak your observations naturally. 3. AI will transcribe and format into professional clinical language. 4. Review and edit as needed."
         },
         {
           name: "Voice-Driven Data Entry",
           icon: Volume2,
-          description: "Speak vital signs and structured data directly - AI extracts and populates fields automatically. Say 'blood pressure one twenty over eighty' and it fills in the form.",
+          description: "Speak vital signs and structured data directly - AI extracts and populates fields automatically.",
           timeSaved: "10-15 min/visit",
           impact: "critical",
-          details: "Hands-free structured data entry, natural language processing, auto-converts spoken numbers to proper format"
+          details: "Hands-free structured data entry, natural language processing, auto-converts spoken numbers",
+          howToUse: "1. Enable Voice Data Entry on the visit screen. 2. Say 'blood pressure one twenty over eighty' or 'heart rate 72'. 3. AI automatically fills the corresponding fields. 4. Confirm the values are correct."
         },
         {
           name: "Smart Template Generator",
@@ -70,39 +78,78 @@ export default function FeaturesPage() {
           description: "AI generates pre-filled, diagnosis-specific templates based on visit type, patient history, and care plan goals",
           timeSaved: "10-15 min/visit",
           impact: "high",
-          details: "Prioritizes sections by diagnosis, includes Medicare requirements, compares to previous visits"
+          details: "Prioritizes sections by diagnosis, includes Medicare requirements, compares to previous visits",
+          howToUse: "1. Start a new visit documentation. 2. Click 'Generate Smart Template'. 3. AI creates a customized template based on patient diagnosis and visit type. 4. Fill in specific observations."
         },
         {
-          name: "AI Documentation Polish",
-          icon: Sparkles,
-          description: "Automatically improves grammar, medical terminology, and ensures professional formatting",
-          timeSaved: "5-8 min/visit",
-          impact: "medium",
-          details: "Fixes errors, removes filler words, maintains clinical accuracy, ensures consistency"
+          name: "AI Documentation Audit",
+          icon: ClipboardCheck,
+          description: "Comprehensive audit of completed notes for Medicare compliance, accuracy, and completeness with one-click fixes",
+          timeSaved: "15-20 min/visit",
+          impact: "critical",
+          details: "Scores compliance, accuracy, completeness; identifies missing elements; provides fix suggestions",
+          howToUse: "1. Complete your documentation. 2. Click 'Run Audit' in the AI Audit panel. 3. Review scores and issues. 4. Click 'Fix' or 'Add' buttons to apply suggested corrections."
         },
         {
           name: "Medicare Compliance Scrubber",
           icon: ShieldCheck,
-          description: "Comprehensive audit tool that checks note against all Medicare requirements before submission",
+          description: "Checks note against all Medicare requirements before submission",
           timeSaved: "10-15 min/visit",
           impact: "critical",
-          details: "Identifies missing elements, suggests improvements, prevents denials, ensures reimbursement"
+          details: "Identifies missing elements, suggests improvements, prevents denials",
+          howToUse: "1. After completing documentation, the scrubber runs automatically. 2. Review flagged issues. 3. Click suggested fixes to add required elements. 4. Re-run to verify compliance."
         },
         {
           name: "OASIS Scrubber & Guidance",
           icon: FileCheck,
-          description: "Automated OASIS data completeness checker for SOC/ROC/DC visits. Identifies missing data elements, provides specific guidance, and calculates case-mix weight impact.",
+          description: "Automated OASIS data completeness checker for SOC/ROC/DC visits with reimbursement impact analysis",
           timeSaved: "20-30 min/OASIS visit",
           impact: "critical",
-          details: "Comprehensive OASIS validation, reimbursement impact analysis, guided data collection, prevents survey deficiencies"
+          details: "Comprehensive OASIS validation, case-mix weight impact, guided data collection",
+          howToUse: "1. On admission/recertification visits, access the OASIS Scrubber panel. 2. Review missing or incomplete items. 3. Follow guided prompts to complete each section. 4. Check reimbursement impact score."
+        }
+      ]
+    },
+    {
+      category: "Clinical Decision Support",
+      icon: Brain,
+      color: "indigo",
+      items: [
+        {
+          name: "Real-Time Clinical Decision Support",
+          icon: Stethoscope,
+          description: "AI analyzes patient data to suggest diagnoses, flag drug interactions, recommend treatments, and suggest patient education",
+          timeSaved: "10-15 min/visit",
+          impact: "critical",
+          details: "Differential diagnoses, drug interaction alerts, evidence-based recommendations, education materials",
+          howToUse: "1. Enter vitals and begin documentation. 2. The Clinical Decision Support panel auto-analyzes data. 3. Review tabs: Diagnoses, Drugs, Treatment, Education. 4. Click 'Add' to insert suggestions into notes."
         },
         {
-          name: "AI Quality Assurance",
-          icon: Shield,
-          description: "Real-time quality checking with scoring, critical issue alerts, and auto-fix suggestions",
-          timeSaved: "8-12 min/visit",
+          name: "AI Early Warning System",
+          icon: Bell,
+          description: "Monitors patient data for deterioration patterns with predictive alerts",
+          timeSaved: "Prevents hospitalizations",
+          impact: "critical",
+          details: "Real-time risk scoring, trend analysis, automated alerts",
+          howToUse: "1. System continuously monitors all patient data. 2. Alerts appear on patient details and visit screens. 3. Review risk factors and recommended interventions. 4. Document actions taken."
+        },
+        {
+          name: "Predictive Analytics",
+          icon: TrendingUp,
+          description: "AI forecasts hospital readmission risks, care plan goal timelines, and appointment compliance",
+          timeSaved: "Prevents adverse events",
+          impact: "critical",
+          details: "30-day readmission prediction, goal achievement forecasting, proactive outreach strategies",
+          howToUse: "1. Navigate to Predictive AI page. 2. Click 'Run Predictive Analysis'. 3. Review patient risk rankings. 4. Expand each patient for detailed predictions and recommended actions."
+        },
+        {
+          name: "Smart Assessment Suggestions",
+          icon: Lightbulb,
+          description: "AI suggests missing assessments based on diagnosis and documented content",
+          timeSaved: "5-8 min/visit",
           impact: "high",
-          details: "Prevents errors, ensures compliance, provides actionable feedback"
+          details: "Context-aware suggestions, prevents missed documentation",
+          howToUse: "1. As you document, AI analyzes content. 2. Suggestions appear in the sidebar. 3. Click to insert recommended assessment sections."
         }
       ]
     },
@@ -114,89 +161,20 @@ export default function FeaturesPage() {
         {
           name: "Global Voice Commands",
           icon: Volume2,
-          description: "Navigate app, insert templates, save documentation, and trigger actions completely hands-free throughout the entire app",
+          description: "Navigate app, insert templates, save documentation hands-free",
           timeSaved: "5-10 min/visit",
           impact: "high",
-          details: "Over 30 voice commands for common tasks, works on every page, context-aware suggestions"
+          details: "Over 30 voice commands, works on every page, context-aware",
+          howToUse: "1. Click the microphone icon in the bottom corner. 2. Speak commands like 'insert cardiovascular', 'save documentation', or 'add homebound status'. 3. AI executes the command immediately."
         },
         {
           name: "Quick Section Insertion",
           icon: Zap,
-          description: "Say 'cardiovascular section' or 'normal findings' to instantly insert pre-written content",
+          description: "Say 'cardiovascular section' or 'normal findings' to insert content",
           timeSaved: "3-5 min/visit",
           impact: "medium",
-          details: "Includes Medicare-required sections, normal findings, patient education templates"
-        }
-      ]
-    },
-    {
-      category: "Clinical Intelligence",
-      icon: Brain,
-      color: "indigo",
-      items: [
-        {
-          name: "AI Early Warning System",
-          icon: Bell,
-          description: "Continuously monitors patient data for deterioration patterns. Detects vital sign trends, visit patterns, and incident clusters. Provides immediate alerts with specific interventions.",
-          timeSaved: "Prevents hospitalizations",
-          impact: "critical",
-          details: "Real-time risk scoring, predictive analytics, automated physician notifications, diagnosis-specific algorithms, trend analysis across all visits"
-        },
-        {
-          name: "Clinical Decision Support",
-          icon: Activity,
-          description: "AI analyzes vitals and narrative to provide red flags, trending concerns, and clinical recommendations",
-          timeSaved: "5-7 min/visit",
-          impact: "critical",
-          details: "Identifies critical values, suggests interventions, supports clinical judgment"
-        },
-        {
-          name: "Smart Assessment Suggestions",
-          icon: Lightbulb,
-          description: "AI analyzes your note in real-time and suggests missing assessments based on diagnosis and what you've already documented",
-          timeSaved: "5-8 min/visit",
-          impact: "high",
-          details: "Context-aware suggestions, prevents missed documentation, ensures comprehensive assessments"
-        },
-        {
-          name: "Smart Vitals Predictor",
-          icon: Stethoscope,
-          description: "AI predicts expected vital sign ranges based on patient history and suggests auto-fill for stable patients",
-          timeSaved: "3-5 min/visit",
-          impact: "medium",
-          details: "Machine learning predictions, anomaly detection, one-click auto-fill for stable vitals"
-        },
-        {
-          name: "Predictive Monitoring",
-          icon: TrendingUp,
-          description: "Analyzes trends across visits to predict hospitalizations, falls, and deterioration before they occur",
-          timeSaved: "Prevents adverse events",
-          impact: "critical",
-          details: "Early warning system, proactive care, reduces hospital readmissions"
-        },
-        {
-          name: "Vital Signs Comparison",
-          icon: BarChart3,
-          description: "Automatic side-by-side comparison with previous visit, trend analysis, and clinical interpretation",
-          timeSaved: "3-5 min/visit",
-          impact: "medium",
-          details: "Visualizes trends, highlights concerning changes, aids assessment"
-        },
-        {
-          name: "Care Plan Progress Tracker",
-          icon: Target,
-          description: "Auto-generates progress notes for each care plan goal, with measurements and next steps",
-          timeSaved: "8-10 min/visit",
-          impact: "high",
-          details: "Tracks all goals, documents progress, ensures continuity of care"
-        },
-        {
-          name: "Automatic Care Plan Triggers",
-          icon: Layers,
-          description: "Admin-configured automatic care plan generation based on diagnosis or medication. When system detects trigger (e.g., CHF diagnosis), automatically creates appropriate care plans.",
-          timeSaved: "15-20 min/admission",
-          impact: "critical",
-          details: "Reduces manual care plan creation, ensures evidence-based care, standardizes documentation, improves compliance"
+          details: "Medicare-required sections, normal findings, patient education templates",
+          howToUse: "1. While documenting, say 'insert [section name]'. 2. Available sections: cardiovascular, respiratory, medication, education, homebound status, skilled need. 3. Content is inserted at cursor position."
         }
       ]
     },
@@ -206,199 +184,338 @@ export default function FeaturesPage() {
       color: "green",
       items: [
         {
-          name: "Pre-Visit Prep Brief",
-          icon: FileText,
-          description: "AI generates a focused brief before each visit with priority areas, red flags, and questions to ask",
-          timeSaved: "5-10 min prep time",
-          impact: "high",
-          details: "Review patient history, identify concerns, prepare supplies list"
-        },
-        {
           name: "Same As Last Visit",
           icon: Copy,
-          description: "Copy stable sections from previous visit (environment, equipment, medications) in one click",
+          description: "Copy stable sections from previous visit in one click",
           timeSaved: "15-20 min/visit",
           impact: "high",
-          details: "Selectively copy unchanged content, maintain accuracy, reduce redundancy"
+          details: "Selectively copy unchanged content, maintain accuracy",
+          howToUse: "1. When previous visit exists, the 'Same As Last Visit' panel appears. 2. Review what can be copied (environment, medications, equipment). 3. Click to copy specific sections or all stable content."
         },
         {
           name: "Quick Templates Library",
           icon: Package,
-          description: "100+ pre-written templates for common scenarios, organized by category",
+          description: "100+ pre-written templates for common scenarios",
           timeSaved: "5-10 min/visit",
           impact: "medium",
-          details: "Normal findings, education templates, interventions, assessments"
+          details: "Normal findings, education templates, interventions, assessments",
+          howToUse: "1. Click 'Quick Templates' in documentation. 2. Browse categories or search. 3. Click a template to insert into your note."
         },
         {
-          name: "Text Expander Macros",
-          icon: Zap,
-          description: "Type shortcuts like 'wnl' to auto-expand to 'within normal limits' - 25+ medical abbreviations",
-          timeSaved: "3-5 min/visit",
-          impact: "low",
-          details: "Common medical terms, assessments, findings"
-        },
-        {
-          name: "One-Click Actions",
-          icon: CheckCircle2,
-          description: "Mark urgent, schedule follow-up, request supplies, or print summary in one click",
-          timeSaved: "2-3 min/visit",
-          impact: "medium",
-          details: "Streamlined workflows, reduces administrative tasks"
+          name: "Pre-Visit Prep Brief",
+          icon: FileText,
+          description: "AI generates focused brief with priority areas and red flags",
+          timeSaved: "5-10 min prep time",
+          impact: "high",
+          details: "Review patient history, identify concerns, prepare supplies",
+          howToUse: "1. Before starting a visit, review the Pre-Visit Prep panel. 2. Note priority assessment areas. 3. Check supplies needed. 4. Review recent incidents or concerns."
         },
         {
           name: "Auto-Save",
           icon: RefreshCw,
-          description: "Documentation auto-saves every 30 seconds, never lose work",
+          description: "Documentation auto-saves every 30 seconds",
           timeSaved: "Prevents data loss",
           impact: "critical",
-          details: "Background saving, version history, peace of mind"
+          details: "Background saving, never lose work",
+          howToUse: "Automatic - documentation saves every 30 seconds. Look for 'Last saved' timestamp at top of screen."
+        }
+      ]
+    },
+    {
+      category: "Care Plan Management",
+      icon: Target,
+      color: "cyan",
+      items: [
+        {
+          name: "AI Care Plan Suggestions",
+          icon: Brain,
+          description: "AI generates evidence-based care plans based on diagnoses",
+          timeSaved: "15-20 min/admission",
+          impact: "critical",
+          details: "Diagnosis-specific problems, goals, interventions",
+          howToUse: "1. On patient details page, click 'Generate Care Plan Suggestions'. 2. Review AI-generated care plans. 3. Click 'Add' to create each care plan."
+        },
+        {
+          name: "Care Plan Timeline Predictor",
+          icon: Calendar,
+          description: "AI predicts goal achievement timelines dynamically",
+          timeSaved: "Improves outcomes",
+          impact: "high",
+          details: "Progress tracking, barrier identification, adjustment recommendations",
+          howToUse: "1. View patient's care plans. 2. Click 'Analyze Timelines'. 3. Review predicted achievement dates and likelihood. 4. Follow recommendations to accelerate progress."
+        },
+        {
+          name: "Automatic Care Plan Triggers",
+          icon: Layers,
+          description: "Admin-configured automatic care plan generation based on diagnosis or medication",
+          timeSaved: "15-20 min/admission",
+          impact: "critical",
+          details: "Standardized evidence-based care, ensures compliance",
+          howToUse: "Admin: 1. Go to Auto Care Plans page. 2. Create triggers for diagnoses/medications. 3. System auto-generates care plans on admission. Staff: Care plans appear automatically."
+        }
+      ]
+    },
+    {
+      category: "Training & Education",
+      icon: GraduationCap,
+      color: "purple",
+      items: [
+        {
+          name: "Interactive Training Scenarios",
+          icon: Brain,
+          description: "Practice with realistic patient situations and get AI feedback",
+          timeSaved: "Improves competency",
+          impact: "high",
+          details: "Multiple scenario types, step-by-step guidance, performance scoring",
+          howToUse: "1. Go to Staff Training page. 2. Select a scenario type (CHF, COPD, Wound Care, etc.). 3. Respond to each clinical situation. 4. Receive AI feedback on your decisions."
+        },
+        {
+          name: "Personalized Learning Path",
+          icon: Target,
+          description: "AI creates custom learning plans based on performance gaps",
+          timeSaved: "Targeted improvement",
+          impact: "high",
+          details: "Skill assessment, prioritized modules, progress tracking",
+          howToUse: "1. Complete training scenarios. 2. Go to Learning Path tab. 3. Click 'Generate Learning Path'. 4. Follow recommended modules in order."
         }
       ]
     },
     {
       category: "Communication",
       icon: MessageSquare,
-      color: "cyan",
-      items: [
-        {
-          name: "Family Communication Auto-Updates",
-          icon: Users,
-          description: "AI generates warm, family-friendly visit summaries and sends them automatically",
-          timeSaved: "10-15 min/visit",
-          impact: "high",
-          details: "Plain language, customizable content, email or SMS, improves satisfaction"
-        },
-        {
-          name: "Team Notes & Collaboration",
-          icon: MessageSquare,
-          description: "Internal notes for care team, alerts, and coordination - separate from clinical documentation",
-          timeSaved: "5-7 min/visit",
-          impact: "medium",
-          details: "Team communication, handoffs, coordination"
-        },
-        {
-          name: "Smart Reminders",
-          icon: AlertTriangle,
-          description: "Context-aware reminders for visit-specific tasks, recertification dates, follow-ups",
-          timeSaved: "3-5 min/visit",
-          impact: "medium",
-          details: "Never miss critical tasks, proactive alerts"
-        }
-      ]
-    },
-    {
-      category: "Medication Management",
-      icon: Activity,
       color: "orange",
       items: [
         {
-          name: "Medication Reconciliation",
-          icon: Activity,
-          description: "Track medication changes, compare to previous visits, identify discrepancies",
-          timeSaved: "8-12 min/visit",
+          name: "Family Communication",
+          icon: Users,
+          description: "AI generates family-friendly visit summaries",
+          timeSaved: "10-15 min/visit",
           impact: "high",
-          details: "Ensures accuracy, documents changes, reduces med errors"
+          details: "Plain language, customizable, email delivery",
+          howToUse: "1. After completing visit, find Family Communication panel. 2. Click 'Generate Summary'. 3. Review and edit as needed. 4. Click 'Send to Family'."
         },
         {
-          name: "Barcode Scanner",
-          icon: Scan,
-          description: "Scan medication barcodes to auto-populate drug name, dose, strength, and common instructions",
-          timeSaved: "5-8 min/visit",
+          name: "Team Notes",
+          icon: MessageSquare,
+          description: "Internal notes for care team coordination",
+          timeSaved: "5-7 min/visit",
           impact: "medium",
-          details: "Reduces errors, speeds documentation, ensures accuracy"
+          details: "Separate from clinical documentation, team visibility",
+          howToUse: "1. In documentation screen, scroll to Team Notes section. 2. Add notes for other team members. 3. Flag urgency if needed. 4. Notes visible to all care team."
         }
       ]
     },
     {
-      category: "Incident Reporting",
+      category: "Incident & Compliance",
       icon: AlertTriangle,
       color: "red",
       items: [
         {
           name: "Quick Incident Reporting",
           icon: AlertTriangle,
-          description: "Guided forms for falls, hospitalizations, med errors - AI generates complete incident reports",
+          description: "Guided forms for falls, hospitalizations, med errors with AI reports",
           timeSaved: "15-20 min/incident",
           impact: "critical",
-          details: "Ensures compliance, proper notifications, complete documentation"
+          details: "Ensures compliance, proper notifications, complete documentation",
+          howToUse: "1. Click incident type button (Fall, Hospitalization, etc.). 2. Complete guided form. 3. AI generates comprehensive report. 4. Notifications sent automatically."
         },
         {
-          name: "Auto-Notifications",
-          icon: Phone,
-          description: "Automatically notify physician, office, and family when incidents occur",
-          timeSaved: "5-10 min/incident",
-          impact: "high",
-          details: "Timely communication, documentation of notifications"
+          name: "Compliance Dashboard",
+          icon: ClipboardCheck,
+          description: "Aggregated compliance alerts, deadlines, and proactive notifications",
+          timeSaved: "30 min/day",
+          impact: "critical",
+          details: "Visit deadlines, recertifications, quality measures, security",
+          howToUse: "1. Navigate to Compliance Dashboard. 2. Review alerts by category. 3. Click items to navigate to related pages. 4. Use filters to focus on specific areas."
         }
       ]
     },
     {
-      category: "Analytics & Insights",
-      icon: TrendingUp,
-      color: "purple",
+      category: "Analytics & Security",
+      icon: BarChart3,
+      color: "gray",
       items: [
         {
           name: "Productivity Dashboard",
-          icon: BarChart3,
-          description: "Track completion rates, documentation time, efficiency scores, and achievements",
+          icon: TrendingUp,
+          description: "Track completion rates, documentation time, efficiency scores",
           timeSaved: "Visibility & motivation",
           impact: "medium",
-          details: "Personal metrics, time saved by AI, goal tracking"
-        },
-        {
-          name: "Admin Analytics",
-          icon: Shield,
-          description: "Agency-wide metrics, user activity, security logs, compliance monitoring",
-          timeSaved: "30-60 min/week",
-          impact: "high",
-          details: "Team oversight, audit readiness, security monitoring"
+          details: "Personal metrics, AI time savings, goal tracking",
+          howToUse: "1. Go to Productivity Dashboard. 2. View your metrics and trends. 3. Track AI-assisted time savings. 4. Set and monitor goals."
         },
         {
           name: "Quality Metrics Dashboard",
           icon: ClipboardList,
-          description: "Track OASIS accuracy, documentation quality scores, compliance rates, and benchmarking",
+          description: "OASIS accuracy, documentation quality scores, compliance rates",
           timeSaved: "Improves outcomes",
           impact: "high",
-          details: "Quality monitoring, performance tracking, regulatory compliance"
-        }
-      ]
-    },
-    {
-      category: "Security & Compliance",
-      icon: Shield,
-      color: "gray",
-      items: [
-        {
-          name: "Role-Based Access Control",
-          icon: ShieldCheck,
-          description: "Granular permissions ensure users only access appropriate patient data",
-          timeSaved: "HIPAA Compliance",
-          impact: "critical",
-          details: "Audit trails, access logging, security monitoring"
+          details: "Quality monitoring, performance tracking, benchmarking",
+          howToUse: "Admin only: 1. Navigate to Quality Dashboard. 2. Review star ratings and metrics. 3. Identify improvement opportunities. 4. Run simulations for quality scenarios."
         },
         {
           name: "Security Audit Logs",
           icon: Eye,
-          description: "Complete audit trail of all user actions, data access, and system events",
+          description: "Complete audit trail of all user actions and data access",
           timeSaved: "Regulatory compliance",
           impact: "critical",
-          details: "Forensic analysis, compliance reporting, incident investigation"
-        },
-        {
-          name: "AI Rate Limiting",
-          icon: Shield,
-          description: "Prevents abuse of AI features with intelligent rate limiting per user",
-          timeSaved: "System protection",
-          impact: "high",
-          details: "Resource management, cost control, security protection"
+          details: "HIPAA compliance, forensic analysis, incident investigation",
+          howToUse: "Admin only: 1. Go to Admin Dashboard > Security tab. 2. Review recent security events. 3. Filter by user, action type, or date. 4. Export logs for audits."
         }
       ]
     }
   ];
 
+  const generateFeaturesPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      let pdfContent = `PENN SYNC FEATURES GUIDE
+=====================================
+AI-Powered Home Health Documentation System
+
+Generated: ${new Date().toLocaleDateString()}
+
+TABLE OF CONTENTS
+-----------------
+`;
+      
+      features.forEach((category, idx) => {
+        pdfContent += `${idx + 1}. ${category.category}\n`;
+      });
+
+      pdfContent += `\n\n`;
+
+      features.forEach((category, catIdx) => {
+        pdfContent += `\n${'='.repeat(50)}
+SECTION ${catIdx + 1}: ${category.category.toUpperCase()}
+${'='.repeat(50)}\n\n`;
+
+        category.items.forEach((feature, idx) => {
+          pdfContent += `${catIdx + 1}.${idx + 1} ${feature.name}
+${'-'.repeat(40)}
+Impact: ${feature.impact.toUpperCase()}
+Time Saved: ${feature.timeSaved}
+
+DESCRIPTION:
+${feature.description}
+
+DETAILS:
+${feature.details}
+
+HOW TO USE:
+${feature.howToUse}
+
+\n`;
+        });
+      });
+
+      pdfContent += `\n${'='.repeat(50)}
+QUICK REFERENCE: VOICE COMMANDS
+${'='.repeat(50)}
+
+Documentation Commands:
+- "Insert cardiovascular" - Adds cardiovascular assessment section
+- "Insert respiratory" - Adds respiratory assessment section  
+- "Insert medication" - Adds medication management section
+- "Insert education" - Adds patient education section
+- "Add normal findings" - Inserts standard normal findings
+- "Add homebound status" - Adds homebound justification
+- "Add skilled need" - Adds skilled nursing necessity
+- "Insert vital signs" - Adds current vitals to narrative
+- "Copy from last visit" - Copies previous visit content
+
+Action Commands:
+- "Save documentation" - Saves current note
+- "Generate template" - Creates smart template
+- "Report fall" - Opens fall incident form
+- "Report hospitalization" - Opens hospitalization form
+
+Navigation Commands:
+- "Go to patients" - Opens patient list
+- "Go to dashboard" - Opens main dashboard
+- "Refresh data" - Refreshes current page
+
+
+${'='.repeat(50)}
+KEYBOARD SHORTCUTS
+${'='.repeat(50)}
+
+Text Expanders (type and press space):
+- wnl → within normal limits
+- nka → no known allergies
+- sob → shortness of breath
+- rom → range of motion
+- adl → activities of daily living
+- bp → blood pressure
+- hr → heart rate
+- rr → respiratory rate
+- o2 → oxygen saturation
+- pt → patient
+- hx → history
+
+
+${'='.repeat(50)}
+BEST PRACTICES
+${'='.repeat(50)}
+
+1. START WITH VITALS
+   Enter vital signs first - AI uses them to generate better templates and suggestions.
+
+2. USE VOICE DICTATION
+   Speak naturally and let AI format your observations professionally.
+
+3. RUN COMPLIANCE AUDIT
+   Always run the AI audit before completing a visit to catch missing elements.
+
+4. REVIEW AI SUGGESTIONS
+   Check the Clinical Decision Support panel for important alerts and recommendations.
+
+5. DOCUMENT PATIENT RESPONSE
+   Always include how the patient responded to teaching and interventions.
+
+6. USE TEMPLATES
+   Start with smart templates and customize rather than typing from scratch.
+
+
+${'='.repeat(50)}
+SUPPORT & TRAINING
+${'='.repeat(50)}
+
+For additional training:
+- Visit the Staff Training page for interactive scenarios
+- Complete your Personalized Learning Path
+- Contact your administrator for questions
+
+For technical support:
+- Check the Compliance Dashboard for system alerts
+- Review Security Documentation for HIPAA guidelines
+- Contact your IT administrator for access issues
+
+
+© Penn Sync - AI-Powered Home Health Documentation
+`;
+
+      // Create and download the file
+      const blob = new Blob([pdfContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Penn_Sync_Features_Guide.txt';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating guide. Please try again.');
+    }
+    setIsGeneratingPDF(false);
+  };
+
   // Calculate totals
-  const totalTimeSavedPerVisit = 110; // Updated conservative estimate in minutes
-  const totalTimeSavedPerWeek = totalTimeSavedPerVisit * 5; // 5 visits/day
+  const totalTimeSavedPerVisit = 110;
+  const totalTimeSavedPerWeek = totalTimeSavedPerVisit * 5;
   const totalTimeSavedPerMonth = totalTimeSavedPerWeek * 4;
   const totalTimeSavedPerYear = totalTimeSavedPerMonth * 12;
 
@@ -439,9 +556,22 @@ export default function FeaturesPage() {
             Penn Sync Features
           </span>
         </h1>
-        <p className="text-xl text-gray-600 mb-6">
+        <p className="text-xl text-gray-600 mb-4">
           Intelligent home health documentation that saves time and ensures compliance
         </p>
+        
+        {/* Download Button */}
+        <Button 
+          onClick={generateFeaturesPDF}
+          disabled={isGeneratingPDF}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 mb-6"
+        >
+          {isGeneratingPDF ? (
+            <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+          ) : (
+            <><Download className="w-4 h-4 mr-2" /> Download Features Guide</>
+          )}
+        </Button>
         
         {/* Time Saved Hero Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
@@ -547,7 +677,10 @@ export default function FeaturesPage() {
                           </span>
                         </div>
                         
-                        <p className="text-xs text-gray-500">{feature.details}</p>
+                        <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-xs font-semibold text-blue-800 mb-1">How to Use:</p>
+                          <p className="text-xs text-blue-700">{feature.howToUse}</p>
+                        </div>
                       </CardContent>
                     </Card>
                   );
