@@ -48,6 +48,7 @@ import VoiceVitalsEntry from "../components/smartNote/VoiceVitalsEntry";
 import GuidedIncidentReporting from "../components/incident/GuidedIncidentReporting";
 import PersonalizedSkillBuilder from "../components/training/PersonalizedSkillBuilder";
 import SmartNoteVoiceListener from "../components/voice/SmartNoteVoiceListener";
+import NoteSummaryGenerator from "../components/smartNote/NoteSummaryGenerator";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -804,6 +805,13 @@ Return your response as JSON with this structure:
             narrativeText={enhancedNote || roughNote}
             diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
             onInsertIntervention={handleInsertInformation}
+          />
+
+          {/* AI Note Summary */}
+          <NoteSummaryGenerator
+            noteText={enhancedNote || roughNote}
+            patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
           />
 
           {/* Task Generator */}
