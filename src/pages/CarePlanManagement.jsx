@@ -101,7 +101,7 @@ export default function CarePlanManagement() {
   };
 
   const handleDelete = (planId) => {
-    if (confirm('Are you sure you want to delete this care plan?')) {
+    if (window.confirm('Are you sure you want to delete this care plan?')) {
       deleteCarePlanMutation.mutate(planId);
     }
   };

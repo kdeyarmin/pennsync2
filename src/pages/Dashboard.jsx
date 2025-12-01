@@ -16,7 +16,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: visits, isLoading } = useQuery({
+  const { data: visits, isLoading, error: visitsError } = useQuery({
     queryKey: ['todayVisits'],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
@@ -25,11 +25,16 @@ export default function Dashboard() {
     initialData: [],
   });
 
-  const { data: patients } = useQuery({
+  const { data: patients, error: patientsError } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list(),
     initialData: [],
   });
+
+  // Handle errors gracefully
+  if (visitsError || patientsError) {
+    console.error('Dashboard data loading error:', visitsError || patientsError);
+  }
 
   const getPatient = (patientId) => {
     return patients.find(p => p.id === patientId);

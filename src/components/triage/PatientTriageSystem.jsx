@@ -63,6 +63,11 @@ export default function PatientTriageSystem() {
   });
 
   const runTriageAnalysis = async () => {
+    if (!patients || patients.length === 0) {
+      alert('No patients available for triage analysis.');
+      return;
+    }
+    
     setIsAnalyzing(true);
     const results = [];
 
