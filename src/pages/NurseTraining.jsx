@@ -40,8 +40,12 @@ export default function NurseTraining() {
         </p>
       </div>
 
-      <Tabs defaultValue="my-training" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+      <Tabs defaultValue="skill-gaps" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="skill-gaps" className="gap-2">
+            <Brain className="w-4 h-4" />
+            <span className="hidden sm:inline">Skill Gaps</span>
+          </TabsTrigger>
           <TabsTrigger value="my-training" className="gap-2">
             <GraduationCap className="w-4 h-4" />
             <span className="hidden sm:inline">My Training</span>
@@ -61,6 +65,10 @@ export default function NurseTraining() {
             </TabsTrigger>
           )}
         </TabsList>
+
+        <TabsContent value="skill-gaps">
+          <SkillGapLearningHub nurseEmail={currentUser?.email} />
+        </TabsContent>
 
         <TabsContent value="my-training">
           <MyTrainingDashboard nurseEmail={currentUser?.email} />
