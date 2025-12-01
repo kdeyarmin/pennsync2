@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Database, 
   Loader2, 
@@ -11,18 +12,25 @@ import {
   AlertCircle,
   Target,
   Pill,
-  Activity
+  Activity,
+  Sparkles,
+  Plus
 } from "lucide-react";
 
 export default function DataExtractor({ 
   narrativeText, 
+  patientId,
   onExtractedData,
   onCreateCarePlan,
-  onCreateTask
+  onCreateTask,
+  onCarePlansCreated
 }) {
   const [extractedData, setExtractedData] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [selectedItems, setSelectedItems] = useState({});
+  const [isCreatingCarePlans, setIsCreatingCarePlans] = useState(false);
+  const [createdCarePlans, setCreatedCarePlans] = useState([]);
+  const [selectedCarePlans, setSelectedCarePlans] = useState({});
 
   const extractData = async () => {
     if (!narrativeText || narrativeText.length < 100) {
@@ -143,6 +151,121 @@ Return JSON:
     return colors[priority] || "bg-gray-100 text-gray-800";
   };
 
+  // Toggle care plan selection
+  const toggleCarePlanSelection = (idx) => {
+    setSelectedCarePlans(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
+
+  // Select all care plans
+  const selectAllCarePlans = () => {
+    const allSelected = {};
+    extractedData?.suggested_care_plans?.forEach((_, idx) => {
+      allSelected[idx] = true;
+    });
+    setSelectedCarePlans(allSelected);
+  };
+
+  // Create all selected care plans with AI enhancement
+  const createSelectedCarePlans = async () => {
+    if (!patientId) {
+      alert("Please select a patient to create care plans.");
+      return;
+    }
+
+    const selectedPlans = extractedData?.suggested_care_plans?.filter((_, idx) => selectedCarePlans[idx]) || [];
+    if (selectedPlans.length === 0) {
+      alert("Please select at least one care plan to create.");
+      return;
+    }
+
+    setIsCreatingCarePlans(true);
+    try {
+      // Enhance care plans with AI for compliance
+      const enhancedResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a clinical documentation specialist. Enhance these care plan suggestions to ensure they are compliant with Medicare documentation standards and include measurable goals.
+
+SUGGESTED CARE PLANS:
+${JSON.stringify(selectedPlans, null, 2)}
+
+For each care plan, enhance it to include:
+1. A clear, specific nursing problem statement
+2. A SMART goal (Specific, Measurable, Achievable, Relevant, Time-bound)
+3. Evidence-based interventions (3-5 specific interventions)
+4. A baseline measurement placeholder
+5. Appropriate frequency of assessment
+6. Target date (calculate from today: ${new Date().toISOString().split('T')[0]})
+
+Return JSON:
+{
+  "enhanced_care_plans": [
+    {
+      "problem": "Enhanced problem statement",
+      "goal": "SMART goal with measurable outcome",
+      "interventions": ["Intervention 1", "Intervention 2", "Intervention 3"],
+      "baseline_measurement": "What to measure at baseline",
+      "frequency": "How often to assess (e.g., 'Each visit', 'Weekly')",
+      "target_date": "YYYY-MM-DD format, typically 30-60 days from today",
+      "rationale": "Clinical rationale for this care plan",
+      "priority": "high" | "medium" | "low"
+    }
+  ]
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            enhanced_care_plans: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  problem: { type: "string" },
+                  goal: { type: "string" },
+                  interventions: { type: "array", items: { type: "string" } },
+                  baseline_measurement: { type: "string" },
+                  frequency: { type: "string" },
+                  target_date: { type: "string" },
+                  rationale: { type: "string" },
+                  priority: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Create care plans in the database
+      const createdPlans = [];
+      for (const plan of enhancedResult.enhanced_care_plans) {
+        const carePlan = await base44.entities.CarePlan.create({
+          patient_id: patientId,
+          problem: plan.problem,
+          goal: plan.goal,
+          interventions: plan.interventions,
+          baseline_measurement: plan.baseline_measurement,
+          frequency: plan.frequency,
+          target_date: plan.target_date,
+          status: 'active'
+        });
+        createdPlans.push({ ...carePlan, ...plan });
+      }
+
+      setCreatedCarePlans(createdPlans);
+      setSelectedCarePlans({});
+
+      if (onCarePlansCreated) {
+        onCarePlansCreated(createdPlans);
+      }
+
+    } catch (error) {
+      console.error("Error creating care plans:", error);
+      alert("Error creating care plans. Please try again.");
+    }
+    setIsCreatingCarePlans(false);
+  };
+
   return (
     <Card className="border-cyan-200">
       <CardHeader className="py-3 bg-gradient-to-r from-cyan-50 to-teal-50">
@@ -221,26 +344,84 @@ Return JSON:
             {/* Suggested Care Plans */}
             {extractedData.suggested_care_plans?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
-                  <Target className="w-3 h-3" /> Suggested Care Plans
-                </p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                    <Target className="w-3 h-3" /> Suggested Care Plans ({extractedData.suggested_care_plans.length})
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-5 text-xs px-1"
+                    onClick={selectAllCarePlans}
+                  >
+                    Select All
+                  </Button>
+                </div>
                 <div className="space-y-2">
                   {extractedData.suggested_care_plans.map((cp, idx) => (
-                    <div key={idx} className="bg-green-50 p-2 rounded border border-green-200">
-                      <p className="text-xs font-medium">{cp.problem}</p>
-                      <p className="text-xs text-gray-600">Goal: {cp.goal}</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-1 h-6 text-xs"
-                        onClick={() => onCreateCarePlan && onCreateCarePlan(cp)}
-                      >
-                        <CheckCircle2 className="w-3 h-3 mr-1" /> Add Care Plan
-                      </Button>
+                    <div 
+                      key={idx} 
+                      className={`p-2 rounded border cursor-pointer transition-colors ${
+                        selectedCarePlans[idx] 
+                          ? 'bg-green-100 border-green-400' 
+                          : 'bg-green-50 border-green-200 hover:bg-green-100'
+                      }`}
+                      onClick={() => toggleCarePlanSelection(idx)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <Checkbox 
+                          checked={selectedCarePlans[idx] || false}
+                          className="mt-0.5"
+                        />
+                        <div className="flex-1">
+                          <p className="text-xs font-medium">{cp.problem}</p>
+                          <p className="text-xs text-gray-600">Goal: {cp.goal}</p>
+                          {cp.rationale && (
+                            <p className="text-xs text-gray-500 italic mt-1">{cp.rationale}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
+
+                {/* Bulk Create Button */}
+                {Object.values(selectedCarePlans).some(v => v) && (
+                  <Button
+                    size="sm"
+                    className="w-full mt-2 bg-green-600 hover:bg-green-700"
+                    onClick={createSelectedCarePlans}
+                    disabled={isCreatingCarePlans || !patientId}
+                  >
+                    {isCreatingCarePlans ? (
+                      <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Creating Care Plans...</>
+                    ) : (
+                      <><Sparkles className="w-3 h-3 mr-1" /> AI Create {Object.values(selectedCarePlans).filter(v => v).length} Care Plan(s)</>
+                    )}
+                  </Button>
+                )}
+
+                {!patientId && Object.values(selectedCarePlans).some(v => v) && (
+                  <p className="text-xs text-orange-600 mt-1">
+                    ⚠️ Select a patient to create care plans
+                  </p>
+                )}
               </div>
+            )}
+
+            {/* Created Care Plans Success */}
+            {createdCarePlans.length > 0 && (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <AlertDescription className="text-xs text-green-800">
+                  <strong>{createdCarePlans.length} care plan(s) created successfully!</strong>
+                  <ul className="mt-1 space-y-0.5">
+                    {createdCarePlans.map((cp, idx) => (
+                      <li key={idx}>• {cp.problem}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
             )}
 
             {/* Follow-up Tasks */}
