@@ -146,7 +146,12 @@ export default function Layout({ children }) {
       url: createPageUrl("StaffTraining"),
       icon: GraduationCap,
     },
-  ];
+    {
+      title: "Patient Education",
+      url: createPageUrl("PatientEducation"),
+      icon: BookOpen,
+    },
+    ];
 
   if (isAdmin) {
     navigationItems.push({
