@@ -52,6 +52,84 @@ export default function SmartNoteAssistant() {
   const [suggestions, setSuggestions] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [auditResults, setAuditResults] = useState(null);
+  const [selectedPatientId, setSelectedPatientId] = useState("");
+
+  // Fetch current user for personalized feedback
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  // Fetch patients for history summary
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.list(),
+  });
+
+  // Fetch visits for selected patient
+  const { data: patientVisits = [] } = useQuery({
+    queryKey: ['patientVisits', selectedPatientId],
+    queryFn: () => base44.entities.Visit.filter({ patient_id: selectedPatientId, status: 'completed' }, '-visit_date'),
+    enabled: !!selectedPatientId,
+  });
+
+  // Fetch care plans for selected patient
+  const { data: carePlans = [] } = useQuery({
+    queryKey: ['patientCarePlans', selectedPatientId],
+    queryFn: () => base44.entities.CarePlan.filter({ patient_id: selectedPatientId }),
+    enabled: !!selectedPatientId,
+  });
+
+  const selectedPatient = patients.find(p => p.id === selectedPatientId);
+
+  // Handle inserting suggestions
+  const handleInsertSuggestion = (text, position) => {
+    if (position === 'inline') {
+      setRoughNote(prev => prev + ' ' + text);
+    } else {
+      setRoughNote(prev => prev + '\n\n' + text);
+    }
+  };
+
+  const handleInsertSummary = (text) => {
+    setRoughNote(prev => text + '\n\n' + prev);
+  };
+
+  const handleExtractedData = (data) => {
+    // Auto-fill vitals if extracted
+    if (data.vital_signs) {
+      const vs = data.vital_signs;
+      setVitalSigns(prev => ({
+        bp: vs.blood_pressure || prev.bp,
+        hr: vs.heart_rate || prev.hr,
+        temp: vs.temperature || prev.temp,
+        o2: vs.oxygen_saturation || prev.o2,
+        pain: vs.pain_level || prev.pain
+      }));
+    }
+  };
+
+  const handleInsertInformation = (text) => {
+    setEnhancedNote(prev => prev + text);
+  };
+
+  const handleTasksGenerated = (tasks) => {
+    console.log('Tasks generated:', tasks);
+    // Could integrate with a task management system
+  };
+
+  const handleCreateCarePlan = (carePlanData) => {
+    if (selectedPatientId) {
+      base44.entities.CarePlan.create({
+        patient_id: selectedPatientId,
+        problem: carePlanData.problem,
+        goal: carePlanData.goal,
+        status: 'active'
+      });
+      alert('Care plan created!');
+    }
+  };
 
   const commonDiagnoses = [
     "CHF (Congestive Heart Failure)",
