@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -44,6 +43,7 @@ import ClinicalBestPracticeAlerts from "../components/quality/ClinicalBestPracti
 import SkilledNeedJustificationAssistant from "../components/visit/SkilledNeedJustificationAssistant";
 import PatientResponsePrompter from "../components/visit/PatientResponsePrompter";
 import EnhancedOASISScrubber from "../components/visit/EnhancedOASISScrubber";
+import AIDocumentationAssistant from "../components/visit/AIDocumentationAssistant";
 
 import { 
   canAccessVisit, 
@@ -1389,6 +1389,18 @@ Generate the complete clinical narrative based on the audio and context:`;
         </div>
 
         <div className="space-y-6">
+          {/* AI Documentation Assistant - Context-aware help */}
+          {patient && visit && (
+            <AIDocumentationAssistant
+              patient={patient}
+              visit={visit}
+              vitalSigns={vitalSigns}
+              narrativeText={narrativeText}
+              carePlans={carePlans}
+              onInsertText={handleAddSuggestion}
+            />
+          )}
+
           {patient && (
             <ClinicalBestPracticeAlerts
               patient={patient}
