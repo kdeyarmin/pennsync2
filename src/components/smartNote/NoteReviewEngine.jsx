@@ -75,6 +75,135 @@ export default function NoteReviewEngine({
     enabled: !!patientId
   });
 
+  // Clinical protocol definitions based on diagnosis
+  const getClinicalProtocols = (diagnosisText) => {
+    const protocols = [];
+    const diagLower = (diagnosisText || '').toLowerCase();
+    
+    if (diagLower.includes('sepsis') || diagLower.includes('infection')) {
+      protocols.push({
+        name: 'Sepsis Screening Protocol',
+        elements: [
+          'Temperature documented (fever >38°C or hypothermia <36°C)',
+          'Heart rate documented (tachycardia >90 bpm)',
+          'Respiratory rate documented (tachypnea >20/min)',
+          'Mental status assessment (confusion, altered LOC)',
+          'Blood pressure documented (hypotension SBP <90)',
+          'Signs of infection source identified',
+          'Physician notification if 2+ SIRS criteria met'
+        ]
+      });
+    }
+    
+    if (diagLower.includes('chf') || diagLower.includes('heart failure') || diagLower.includes('cardiac')) {
+      protocols.push({
+        name: 'Heart Failure Management Protocol',
+        elements: [
+          'Daily weight documented and compared to baseline',
+          'Edema assessment (location, severity, pitting)',
+          'Dyspnea assessment (at rest, exertion, orthopnea)',
+          'Lung sounds (crackles, wheezes)',
+          'Medication compliance (diuretics, ACE inhibitors)',
+          'Sodium/fluid restriction education',
+          'Activity tolerance documented'
+        ]
+      });
+    }
+    
+    if (diagLower.includes('diabetes') || diagLower.includes('dm')) {
+      protocols.push({
+        name: 'Diabetes Management Protocol',
+        elements: [
+          'Blood glucose level documented',
+          'Hypoglycemia/hyperglycemia signs assessed',
+          'Foot inspection performed',
+          'Medication/insulin compliance verified',
+          'Diet compliance assessed',
+          'Signs of neuropathy evaluated',
+          'A1C discussion if applicable'
+        ]
+      });
+    }
+    
+    if (diagLower.includes('copd') || diagLower.includes('pulmonary')) {
+      protocols.push({
+        name: 'COPD Management Protocol',
+        elements: [
+          'Oxygen saturation documented',
+          'Respiratory rate and effort assessed',
+          'Lung sounds bilateral assessment',
+          'Inhaler technique reviewed',
+          'Signs of exacerbation (increased dyspnea, sputum)',
+          'Smoking cessation addressed if applicable',
+          'Activity tolerance documented'
+        ]
+      });
+    }
+    
+    if (diagLower.includes('wound') || diagLower.includes('ulcer') || diagLower.includes('surgical')) {
+      protocols.push({
+        name: 'Wound Care Protocol',
+        elements: [
+          'Wound measurements (L x W x D)',
+          'Wound bed description (granulation, slough, necrotic)',
+          'Exudate amount and characteristics',
+          'Periwound skin assessment',
+          'Signs of infection (erythema, warmth, odor)',
+          'Dressing change performed with technique',
+          'Pain assessment during procedure'
+        ]
+      });
+    }
+    
+    if (diagLower.includes('fall') || diagLower.includes('fracture')) {
+      protocols.push({
+        name: 'Fall Risk Protocol',
+        elements: [
+          'Fall risk assessment completed',
+          'Environmental hazards assessed',
+          'Gait and balance evaluation',
+          'Medication review for fall risk meds',
+          'Assistive device use evaluated',
+          'Home safety modifications discussed',
+          'Patient/caregiver education on fall prevention'
+        ]
+      });
+    }
+    
+    if (diagLower.includes('stroke') || diagLower.includes('cva')) {
+      protocols.push({
+        name: 'Stroke/CVA Protocol',
+        elements: [
+          'Neurological assessment (speech, facial droop, arm drift)',
+          'Vital signs including BP',
+          'Swallowing assessment/precautions',
+          'Mobility and transfer status',
+          'Safety awareness evaluation',
+          'Medication compliance (anticoagulants if applicable)',
+          'Signs of depression screened'
+        ]
+      });
+    }
+
+    // Default general protocol if no specific match
+    if (protocols.length === 0) {
+      protocols.push({
+        name: 'General Clinical Assessment Protocol',
+        elements: [
+          'Complete vital signs assessment',
+          'Pain assessment using scale',
+          'Medication review and compliance',
+          'Functional status evaluation',
+          'Safety assessment',
+          'Patient/caregiver education provided',
+          'Care plan goals addressed'
+        ]
+      });
+    }
+    
+    return protocols;
+  };
+
   const runReview = async () => {
     if (!noteText || noteText.length < 100) {
       alert("Please complete your documentation before running the review.");
@@ -82,9 +211,16 @@ export default function NoteReviewEngine({
     }
 
     setIsReviewing(true);
+    setFlaggedItems({});
     try {
       const skillsList = nurseSkills.map(s => `${s.skill_name} (${s.proficiency_level})`).join(', ');
       const existingTasksList = existingTasks.map(t => t.title).join(', ');
+      
+      // Get applicable clinical protocols
+      const applicableProtocols = getClinicalProtocols(diagnosis);
+      const protocolPrompt = applicableProtocols.map(p => 
+        `\n${p.name}:\n${p.elements.map(e => `  - ${e}`).join('\n')}`
+      ).join('\n');
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an expert clinical documentation auditor for ${careType === 'hospice' ? 'hospice' : 'home health'}. Perform a comprehensive review of this completed note.
@@ -97,6 +233,12 @@ EXISTING PENDING TASKS: ${existingTasksList || 'None'}
 
 COMPLETED NOTE:
 ${noteText}
+
+===== CLINICAL PROTOCOL CROSS-REFERENCE =====
+Based on the patient's diagnosis, check documentation against these specific clinical protocols:
+${protocolPrompt}
+
+For EACH protocol element, determine if it was addressed in the note.
 
 Perform a thorough review checking for:
 
@@ -135,10 +277,26 @@ Perform a thorough review checking for:
    - Vague or non-specific documentation
    - Missing evidence-based language
 
+5. PROTOCOL COMPLIANCE - Check each applicable clinical protocol element
+
 Return JSON:
 {
   "overall_score": 0-100,
   "review_summary": "Brief summary of findings",
+  "protocol_compliance": [
+    {
+      "protocol_name": "Protocol name",
+      "elements_checked": [
+        {
+          "element": "Protocol element",
+          "status": "met" | "partial" | "not_addressed" | "not_applicable",
+          "found_text": "Quote from note if found, null if not",
+          "recommendation": "What to add if not met"
+        }
+      ],
+      "compliance_score": 0-100
+    }
+  ],
   "missing_followups": [
     {
       "issue": "What was documented that needs follow-up",
@@ -155,14 +313,16 @@ Return JSON:
     {
       "element": "Missing element",
       "importance": "critical" | "important" | "recommended",
-      "suggestion": "How to fix it"
+      "suggestion": "How to fix it",
+      "guideline_reference": "Clinical guideline this relates to"
     }
   ],
   "safety_alerts": [
     {
       "concern": "Safety concern identified",
       "action_needed": "What should be done",
-      "priority": "urgent" | "high" | "medium"
+      "priority": "urgent" | "high" | "medium",
+      "clinical_rationale": "Why this is a concern"
     }
   ],
   "skill_gaps": [
@@ -181,6 +341,7 @@ Return JSON:
           properties: {
             overall_score: { type: "number" },
             review_summary: { type: "string" },
+            protocol_compliance: { type: "array", items: { type: "object" } },
             missing_followups: { type: "array", items: { type: "object" } },
             documentation_gaps: { type: "array", items: { type: "object" } },
             safety_alerts: { type: "array", items: { type: "object" } },
@@ -203,6 +364,75 @@ Return JSON:
       alert("Error reviewing note. Please try again.");
     }
     setIsReviewing(false);
+  };
+
+  // Flagging functions
+  const openFlagDialog = (itemType, itemId, itemContent) => {
+    setCurrentFlagItem({ type: itemType, id: itemId, content: itemContent });
+    setFlagNote("");
+    setFlagDialogOpen(true);
+  };
+
+  const submitFlag = async () => {
+    if (!currentFlagItem) return;
+    
+    const flagKey = `${currentFlagItem.type}_${currentFlagItem.id}`;
+    const flagData = {
+      type: currentFlagItem.type,
+      content: currentFlagItem.content,
+      note: flagNote,
+      flaggedBy: nurseEmail,
+      flaggedAt: new Date().toISOString(),
+      status: 'pending_review'
+    };
+    
+    setFlaggedItems(prev => ({
+      ...prev,
+      [flagKey]: flagData
+    }));
+    
+    // Create a task for supervisor review
+    try {
+      await base44.entities.Task.create({
+        patient_id: patientId,
+        title: `Review Flagged Finding: ${currentFlagItem.type}`,
+        description: `Flagged by ${nurseEmail}:\n\nFinding: ${currentFlagItem.content}\n\nNurse Note: ${flagNote || 'No additional notes'}`,
+        priority: 'medium',
+        type: 'document',
+        status: 'pending',
+        source: 'ai_generated',
+        ai_reason: 'Flagged for supervisor review from AI Note Review'
+      });
+    } catch (error) {
+      console.error("Error creating flag task:", error);
+    }
+    
+    setFlagDialogOpen(false);
+    setCurrentFlagItem(null);
+  };
+
+  const isFlagged = (itemType, itemId) => {
+    return !!flaggedItems[`${itemType}_${itemId}`];
+  };
+
+  const FlagButton = ({ itemType, itemId, content }) => {
+    const flagged = isFlagged(itemType, itemId);
+    return (
+      <Button
+        size="sm"
+        variant="ghost"
+        className={`h-6 px-2 ${flagged ? 'text-orange-600' : 'text-gray-400 hover:text-orange-600'}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!flagged) {
+            openFlagDialog(itemType, itemId, content);
+          }
+        }}
+        title={flagged ? "Flagged for review" : "Flag for supervisor review"}
+      >
+        <Flag className={`w-3 h-3 ${flagged ? 'fill-orange-600' : ''}`} />
+      </Button>
+    );
   };
 
   const handleCreateTask = async (followup) => {
