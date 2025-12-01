@@ -613,8 +613,11 @@ The AI will transform this into professional, Medicare-compliant documentation!"
           {/* Task Generator */}
           <TaskGenerator
             narrativeText={enhancedNote || roughNote}
+            patientId={selectedPatientId}
             patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
             diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            missingCriticalElements={auditResults?.missing_critical_elements}
+            auditResults={auditResults}
             onTasksGenerated={handleTasksGenerated}
           />
 
