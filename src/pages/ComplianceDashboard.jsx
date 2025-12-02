@@ -341,7 +341,6 @@ export default function ComplianceDashboard() {
     { name: 'Care Plans', url: createPageUrl('CarePlanManagement'), icon: Target, color: 'bg-green-500' },
     { name: 'Security Logs', url: createPageUrl('AdminDashboard'), icon: Shield, color: 'bg-orange-500' },
     { name: 'Patients', url: createPageUrl('Patients'), icon: User, color: 'bg-teal-500' },
-    { name: 'Productivity', url: createPageUrl('ProductivityDashboard'), icon: TrendingUp, color: 'bg-blue-500' },
   ];
 
   const exportComplianceReport = () => {

@@ -106,12 +106,6 @@ export default function Layout({ children }) {
       url: createPageUrl("ComplianceDashboard"),
       icon: ClipboardCheck,
     },
-
-    {
-      title: "Productivity",
-      url: createPageUrl("ProductivityDashboard"),
-      icon: TrendingUp,
-    },
     {
       title: "Patients",
       url: createPageUrl("Patients"),

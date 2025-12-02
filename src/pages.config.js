@@ -2,7 +2,6 @@ import Dashboard from './pages/Dashboard';
 import DocumentVisit from './pages/DocumentVisit';
 import Patients from './pages/Patients';
 import PatientDetails from './pages/PatientDetails';
-import ProductivityDashboard from './pages/ProductivityDashboard';
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import Features from './pages/Features';
@@ -29,7 +28,6 @@ export const PAGES = {
     "DocumentVisit": DocumentVisit,
     "Patients": Patients,
     "PatientDetails": PatientDetails,
-    "ProductivityDashboard": ProductivityDashboard,
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "Features": Features,
