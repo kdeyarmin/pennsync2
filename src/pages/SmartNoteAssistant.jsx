@@ -835,6 +835,18 @@ Return your response as JSON with this structure:
 
             {/* Assist Tab - Real-time help while writing */}
             <TabsContent value="assist" className="space-y-4 mt-4">
+              <AIDrivenDocumentationPrompts
+                noteText={roughNote}
+                patient={selectedPatient}
+                visitType={visitType}
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                vitalSigns={vitalSigns}
+                carePlans={carePlans}
+                previousVisits={patientVisits}
+                extractedData={extractedDataState}
+                onInsertPromptResponse={(text) => setRoughNote(prev => prev + '\n\n' + text)}
+              />
+
               <RealTimeSuggestions
                 currentText={roughNote}
                 diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
