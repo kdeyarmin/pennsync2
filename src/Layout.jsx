@@ -49,6 +49,125 @@ export default function Layout({ children }) {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  // Role-based navigation items
+  const nurseNavigationItems = [
+    {
+      title: "Today's Visits",
+      url: createPageUrl("Dashboard"),
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Smart Note Assistant",
+      url: createPageUrl("SmartNoteAssistant"),
+      icon: Wand2,
+    },
+    {
+      title: "Patients",
+      url: createPageUrl("Patients"),
+      icon: Users,
+    },
+    {
+      title: "Compliance",
+      url: createPageUrl("ComplianceDashboard"),
+      icon: ClipboardCheck,
+    },
+    {
+      title: "Patient Alerts",
+      url: createPageUrl("PatientAlerts"),
+      icon: Bell,
+    },
+    {
+      title: "Schedule Optimizer",
+      url: createPageUrl("ScheduleOptimizer"),
+      icon: Route,
+    },
+    {
+      title: "Skills & Training",
+      url: createPageUrl("NurseTraining"),
+      icon: GraduationCap,
+    },
+    {
+      title: "Patient Education",
+      url: createPageUrl("PatientEducation"),
+      icon: BookOpen,
+    },
+    {
+      title: "Template Library",
+      url: createPageUrl("TemplateLibrary"),
+      icon: FileText,
+    },
+    {
+      title: "Features",
+      url: createPageUrl("Features"),
+      icon: Sparkles,
+    },
+  ];
+
+  const adminNavigationItems = [
+    {
+      title: "Admin Dashboard",
+      url: createPageUrl("AdminDashboard"),
+      icon: Shield,
+    },
+    {
+      title: "Today's Visits",
+      url: createPageUrl("Dashboard"),
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Patients",
+      url: createPageUrl("Patients"),
+      icon: Users,
+    },
+    {
+      title: "Compliance Center",
+      url: createPageUrl("ComplianceDashboard"),
+      icon: ClipboardCheck,
+    },
+    {
+      title: "Regulatory Center",
+      url: createPageUrl("RegulatoryCompliance"),
+      icon: Shield,
+    },
+    {
+      title: "Auto Care Plans",
+      url: createPageUrl("AutomaticCarePlans"),
+      icon: Target,
+    },
+    {
+      title: "Predictive AI",
+      url: createPageUrl("PredictiveAnalytics"),
+      icon: Activity,
+    },
+    {
+      title: "Patient Alerts",
+      url: createPageUrl("PatientAlerts"),
+      icon: Bell,
+    },
+    {
+      title: "Smart Note Assistant",
+      url: createPageUrl("SmartNoteAssistant"),
+      icon: Wand2,
+    },
+    {
+      title: "Template Library",
+      url: createPageUrl("TemplateLibrary"),
+      icon: FileText,
+    },
+    {
+      title: "Skills & Training",
+      url: createPageUrl("NurseTraining"),
+      icon: GraduationCap,
+    },
+    {
+      title: "Features",
+      url: createPageUrl("Features"),
+      icon: Sparkles,
+    },
+  ];
+
+  const navigationItems = isAdmin ? adminNavigationItems : nurseNavigationItems;
+
   // Session timeout management
   useEffect(() => {
     if (!currentUser) return;
