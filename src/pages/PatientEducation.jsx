@@ -27,12 +27,18 @@ import {
   CheckCircle2,
   Copy,
   Printer,
-  Plus
+  Plus,
+  Sparkles,
+  ListChecks,
+  MessageSquare
 } from "lucide-react";
 
 import EducationMaterialGenerator from "../components/education/EducationMaterialGenerator";
 import TeachBackConfirmation from "../components/education/TeachBackConfirmation";
 import EducationLibrary from "../components/education/EducationLibrary";
+import SimplifiedExplanationGenerator from "../components/education/SimplifiedExplanationGenerator";
+import NextStepsSummaryGenerator from "../components/education/NextStepsSummaryGenerator";
+import TeachBackPromptsGenerator from "../components/education/TeachBackPromptsGenerator";
 
 export default function PatientEducation() {
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -110,18 +116,30 @@ export default function PatientEducation() {
       </Card>
 
       <Tabs defaultValue="generate" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="generate" className="gap-2">
             <Brain className="w-4 h-4" />
-            Generate Materials
+            <span className="hidden sm:inline">Materials</span>
+          </TabsTrigger>
+          <TabsTrigger value="simplify" className="gap-2">
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden sm:inline">Simplify</span>
+          </TabsTrigger>
+          <TabsTrigger value="nextsteps" className="gap-2">
+            <ListChecks className="w-4 h-4" />
+            <span className="hidden sm:inline">Next Steps</span>
+          </TabsTrigger>
+          <TabsTrigger value="prompts" className="gap-2">
+            <MessageSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">Teach-Back</span>
           </TabsTrigger>
           <TabsTrigger value="library" className="gap-2">
             <BookOpen className="w-4 h-4" />
-            Education Library
+            <span className="hidden sm:inline">Library</span>
           </TabsTrigger>
-          <TabsTrigger value="teachback" className="gap-2">
+          <TabsTrigger value="records" className="gap-2">
             <CheckCircle2 className="w-4 h-4" />
-            Teach-Back Records
+            <span className="hidden sm:inline">Records</span>
           </TabsTrigger>
         </TabsList>
 
@@ -146,6 +164,100 @@ export default function PatientEducation() {
           </div>
         </TabsContent>
 
+        {/* Simplified Explanation Tab */}
+        <TabsContent value="simplify">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <SimplifiedExplanationGenerator
+              patient={selectedPatient}
+              diagnosis={selectedPatient?.primary_diagnosis}
+            />
+            <div className="space-y-4">
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-purple-900 mb-2">💡 How to Use</h3>
+                  <ul className="text-sm text-purple-800 space-y-2">
+                    <li>1. Enter complex medical information</li>
+                    <li>2. AI transforms it into simple language</li>
+                    <li>3. Get analogies, FAQs, and speaking scripts</li>
+                    <li>4. Copy the script to use with patients</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              {generatedMaterial && (
+                <TeachBackConfirmation
+                  material={generatedMaterial}
+                  patient={selectedPatient}
+                  onRecorded={handleTeachBackRecorded}
+                />
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Next Steps Summary Tab */}
+        <TabsContent value="nextsteps">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <NextStepsSummaryGenerator
+              patient={selectedPatient}
+              educationMaterial={generatedMaterial}
+              diagnosis={selectedPatient?.primary_diagnosis}
+            />
+            <div className="space-y-4">
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-green-900 mb-2">📋 Patient Take-Home Summary</h3>
+                  <p className="text-sm text-green-800 mb-3">
+                    Generate personalized "what to watch for" and "next steps" summaries for patients after education sessions.
+                  </p>
+                  <ul className="text-sm text-green-700 space-y-1">
+                    <li>• Immediate action items</li>
+                    <li>• Daily checklists</li>
+                    <li>• Warning signs to watch</li>
+                    <li>• When to call nurse vs 911</li>
+                    <li>• Medication reminders</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* AI Teach-Back Prompts Tab */}
+        <TabsContent value="prompts">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <TeachBackPromptsGenerator
+              patient={selectedPatient}
+              educationMaterial={generatedMaterial}
+              diagnosis={selectedPatient?.primary_diagnosis}
+              onTeachBackComplete={handleTeachBackRecorded}
+            />
+            <div className="space-y-4">
+              <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-indigo-900 mb-2">🎯 AI-Assisted Teach-Back</h3>
+                  <p className="text-sm text-indigo-800 mb-3">
+                    Get tailored questions to ask patients based on their condition and literacy level.
+                  </p>
+                  <ul className="text-sm text-indigo-700 space-y-1">
+                    <li>• Open-ended questions (not yes/no)</li>
+                    <li>• Alternative phrasings if patient struggles</li>
+                    <li>• What to listen for in responses</li>
+                    <li>• AI-generated follow-ups for clarification</li>
+                    <li>• Automatic documentation</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              {generatedMaterial && (
+                <TeachBackConfirmation
+                  material={generatedMaterial}
+                  patient={selectedPatient}
+                  onRecorded={handleTeachBackRecorded}
+                />
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
         <TabsContent value="library">
           <EducationLibrary
             patient={selectedPatient}
@@ -153,7 +265,7 @@ export default function PatientEducation() {
           />
         </TabsContent>
 
-        <TabsContent value="teachback">
+        <TabsContent value="records">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
