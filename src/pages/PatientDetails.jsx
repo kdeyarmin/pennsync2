@@ -21,6 +21,7 @@ import AIPatientSummary from "../components/patient/AIPatientSummary";
 import AICarePlanSuggestions from "../components/carePlan/AICarePlanSuggestions";
 import CarePlanTimelinePredictor from "../components/carePlan/CarePlanTimelinePredictor";
 import PatientFriendlyCarePlanSummary from "../components/carePlan/PatientFriendlyCarePlanSummary";
+import CarePlanEvolution from "../components/carePlan/CarePlanEvolution";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
