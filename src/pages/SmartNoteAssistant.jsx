@@ -67,6 +67,10 @@ import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryRepo
 import MandatoryComplianceGate from "../components/compliance/MandatoryComplianceGate";
 import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClinicalDecisionSupport";
 import AIDrivenDocumentationPrompts from "../components/smartNote/AIDrivenDocumentationPrompts";
+import DocumentationWorkflowGuide from "../components/smartNote/DocumentationWorkflowGuide";
+import UnifiedActionCenter from "../components/smartNote/UnifiedActionCenter";
+import PersistentPatientHeader from "../components/smartNote/PersistentPatientHeader";
+import QuickEditPreview from "../components/smartNote/QuickEditPreview";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -89,8 +93,13 @@ export default function SmartNoteAssistant() {
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [extractedDataState, setExtractedDataState] = useState(null);
   const [documentationMode, setDocumentationMode] = useState("freeform"); // "freeform" or "guided"
-  const [prefillData, setPrefillData] = useState(null);
-  const [compliancePassed, setCompliancePassed] = useState(false);
+      const [prefillData, setPrefillData] = useState(null);
+      const [compliancePassed, setCompliancePassed] = useState(false);
+      const [showEditPreview, setShowEditPreview] = useState(false);
+      const [editPreviewContent, setEditPreviewContent] = useState("");
+      const [editPreviewTitle, setEditPreviewTitle] = useState("");
+      const [aiPrompts, setAiPrompts] = useState(null);
+      const [templateUsed, setTemplateUsed] = useState(false);
 
   // Fetch current user for personalized feedback
   const { data: currentUser } = useQuery({
@@ -227,10 +236,56 @@ export default function SmartNoteAssistant() {
   };
 
   // Handle training recommendation from compliance checker
-  const handleTrainingRecommended = (trainingTopic) => {
-    // Navigate to training page with the recommended topic
-    window.location.href = `/NurseTraining?topic=${encodeURIComponent(trainingTopic)}`;
-  };
+      const handleTrainingRecommended = (trainingTopic) => {
+        // Navigate to training page with the recommended topic
+        window.location.href = `/NurseTraining?topic=${encodeURIComponent(trainingTopic)}`;
+      };
+
+      // Handle edit preview before inserting AI content
+      const handleEditBeforeInsert = (content, title = "AI Generated Content") => {
+        setEditPreviewContent(content);
+        setEditPreviewTitle(title);
+        setShowEditPreview(true);
+      };
+
+      const handleConfirmEditPreview = (editedContent) => {
+        setRoughNote(prev => prev ? prev + '\n\n' + editedContent : editedContent);
+        setShowEditPreview(false);
+      };
+
+      // Workflow step click handler
+      const handleWorkflowStepClick = (stepId) => {
+        switch (stepId) {
+          case 'patient':
+            document.getElementById('patient_select')?.focus();
+            break;
+          case 'vitals':
+            document.querySelector('input[placeholder="BP: 120/80"]')?.focus();
+            break;
+          case 'template':
+            setTemplateUsed(true);
+            break;
+          case 'enhance':
+            handleEnhanceNote();
+            break;
+          default:
+            break;
+        }
+      };
+
+      // Collect all action items for unified action center
+      const collectActionItems = () => {
+        const items = {
+          critical: aiPrompts?.critical_missing || [],
+          suggestions: suggestions || [],
+          compliance: auditResults?.missing_critical_elements?.map(el => ({
+            title: el,
+            message: `Missing: ${el}`,
+            category: 'compliance'
+          })) || []
+        };
+        return items;
+      };
 
   const handleInsertSummary = (text) => {
     setRoughNote(prev => text + '\n\n' + prev);
@@ -465,14 +520,38 @@ Return your response as JSON with this structure:
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-          Smart Note Assistant
-        </h1>
-        <p className="text-gray-600">
-          Transform your rough notes into polished, Medicare-compliant documentation ready for your EHR
-        </p>
-      </div>
+      {/* Persistent Patient Header */}
+              {selectedPatient && (
+                <PersistentPatientHeader
+                  patient={selectedPatient}
+                  vitalSigns={vitalSigns}
+                  carePlansCount={carePlans.length}
+                />
+              )}
+
+              <div className="mb-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                      Smart Note Assistant
+                    </h1>
+                    <p className="text-sm text-gray-600">
+                      Transform rough notes into Medicare-compliant documentation
+                    </p>
+                  </div>
+                </div>
+
+                {/* Workflow Progress Guide */}
+                <DocumentationWorkflowGuide
+                  patientSelected={!!selectedPatientId}
+                  vitalsEntered={!!(vitalSigns.bp || vitalSigns.hr || vitalSigns.temp)}
+                  templateUsed={templateUsed}
+                  notesEntered={roughNote.length > 50}
+                  noteEnhanced={!!enhancedNote}
+                  compliancePassed={compliancePassed}
+                  onStepClick={handleWorkflowStepClick}
+                />
+              </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -812,26 +891,41 @@ Return your response as JSON with this structure:
         </div>
 
         {/* AI Tools Sidebar - Organized in Tabs */}
-        <div className="space-y-4">
-          <Tabs defaultValue="assist" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto">
-              <TabsTrigger value="assist" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
-                <MessageSquare className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="text-[10px] md:text-xs">Assist</span>
-              </TabsTrigger>
-              <TabsTrigger value="clinical" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
-                <Stethoscope className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="text-[10px] md:text-xs">Clinical</span>
-              </TabsTrigger>
-              <TabsTrigger value="compliance" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
-                <Shield className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="text-[10px] md:text-xs">Comply</span>
-              </TabsTrigger>
-              <TabsTrigger value="actions" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
-                <ClipboardList className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="text-[10px] md:text-xs">Actions</span>
-              </TabsTrigger>
-            </TabsList>
+                    <div className="space-y-4">
+                      {/* Unified Action Center - Always visible when there are actions */}
+                      {(aiPrompts?.critical_missing?.length > 0 || suggestions.length > 0 || auditResults?.missing_critical_elements?.length > 0) && (
+                        <UnifiedActionCenter
+                          criticalItems={aiPrompts?.critical_missing || []}
+                          suggestions={suggestions}
+                          complianceAlerts={auditResults?.missing_critical_elements?.map(el => ({
+                            title: el,
+                            message: `Missing required element: ${el}`,
+                            fix: `[Document ${el} here]`
+                          })) || []}
+                          onApplyAction={(text) => setRoughNote(prev => prev + '\n\n' + text)}
+                          onDismiss={(id) => console.log('Dismissed:', id)}
+                        />
+                      )}
+
+                      <Tabs defaultValue="assist" className="w-full">
+                        <TabsList className="grid w-full grid-cols-4 h-auto">
+                          <TabsTrigger value="assist" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                            <MessageSquare className="w-3 h-3 md:w-4 md:h-4" />
+                            <span className="text-[10px] md:text-xs">Assist</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="clinical" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                            <Stethoscope className="w-3 h-3 md:w-4 md:h-4" />
+                            <span className="text-[10px] md:text-xs">Clinical</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="compliance" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                            <Shield className="w-3 h-3 md:w-4 md:h-4" />
+                            <span className="text-[10px] md:text-xs">Comply</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="actions" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                            <ClipboardList className="w-3 h-3 md:w-4 md:h-4" />
+                            <span className="text-[10px] md:text-xs">Actions</span>
+                          </TabsTrigger>
+                        </TabsList>
 
             {/* Assist Tab - Real-time help while writing */}
             <TabsContent value="assist" className="space-y-4 mt-4">
@@ -844,7 +938,7 @@ Return your response as JSON with this structure:
                 carePlans={carePlans}
                 previousVisits={patientVisits}
                 extractedData={extractedDataState}
-                onInsertPromptResponse={(text) => setRoughNote(prev => prev + '\n\n' + text)}
+                onInsertPromptResponse={(text) => handleEditBeforeInsert(text, "AI Suggested Documentation")}
               />
 
               <RealTimeSuggestions
@@ -1022,11 +1116,21 @@ Return your response as JSON with this structure:
       </div>
 
         {/* Voice Command Listener - Fixed position, outside grid */}
-        <SmartNoteVoiceListener
-          onVitalChange={handleVoiceVitalChange}
-          onPhraseInsert={handleVoicePhrase}
-          onAction={handleVoiceAction}
-        />
-      </div>
-    );
+                    <SmartNoteVoiceListener
+                      onVitalChange={handleVoiceVitalChange}
+                      onPhraseInsert={handleVoicePhrase}
+                      onAction={handleVoiceAction}
+                    />
+
+                    {/* Quick Edit Preview Dialog */}
+                    <QuickEditPreview
+                      open={showEditPreview}
+                      onOpenChange={setShowEditPreview}
+                      title={editPreviewTitle}
+                      content={editPreviewContent}
+                      onConfirm={handleConfirmEditPreview}
+                      onCancel={() => setShowEditPreview(false)}
+                    />
+                  </div>
+                );
 }
