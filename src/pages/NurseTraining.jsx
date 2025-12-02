@@ -12,7 +12,8 @@ import {
   Award,
   Sparkles,
   Building2,
-  Brain
+  Brain,
+  Trophy
 } from "lucide-react";
 
 import SkillsTracker from "../components/training/SkillsTracker";
@@ -20,6 +21,7 @@ import MyTrainingDashboard from "../components/training/MyTrainingDashboard";
 import TrainingRecommendations from "../components/training/TrainingRecommendations";
 import AgencyTrainingManager from "../components/training/AgencyTrainingManager";
 import SkillGapLearningHub from "../components/training/SkillGapLearningHub";
+import GamificationDashboard from "../components/gamification/GamificationDashboard";
 
 export default function NurseTraining() {
   const { data: currentUser } = useQuery({
