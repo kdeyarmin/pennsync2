@@ -35,7 +35,10 @@ import {
   Stethoscope,
   Send,
   MessageSquare,
-  Clock
+  Clock,
+  Brain,
+  FileCode,
+  Code
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -460,12 +463,24 @@ Perform a thorough review checking for:
    - Missing evidence-based language
 
 5. PROTOCOL COMPLIANCE - Check each applicable clinical protocol element thoroughly
-   - For each protocol, evaluate EVERY element listed
-   - Provide specific quotes from the note where elements are addressed
-   - Give actionable recommendations for missing elements
-   - Calculate accurate compliance scores based on elements met
+         - For each protocol, evaluate EVERY element listed
+         - Provide specific quotes from the note where elements are addressed
+         - Give actionable recommendations for missing elements
+         - Calculate accurate compliance scores based on elements met
 
-6. CROSS-REFERENCE ANALYSIS - Correlate patient history with current symptoms
+      6. CLINICAL REASONING QUALITY - Assess whether documentation shows the "WHY" not just "WHAT"
+         - Look for cause-and-effect statements
+         - Check for nursing judgment documentation
+         - Identify areas where facts are stated without clinical reasoning
+         - Provide specific examples of how to add clinical reasoning with "because", "therefore", "indicating", "requires" language
+
+      7. CODING ACCURACY - Analyze for ICD-10 and CPT code support
+         - Identify primary and secondary diagnoses supported by documentation
+         - Check if symptom codes are supported
+         - Evaluate CPT code documentation requirements
+         - Note any coding opportunities or risks
+
+      8. CROSS-REFERENCE ANALYSIS - Correlate patient history with current symptoms
    - If symptoms are mentioned, check if appropriate protocol elements are addressed
    - Flag when symptoms suggest a condition but related documentation is missing
    - Example: SOB in COPD patient should trigger all respiratory assessment elements
@@ -562,7 +577,9 @@ Return JSON:
             skill_gaps: { type: "array", items: { type: "object" } },
             strengths: { type: "array", items: { type: "string" } },
             ready_to_submit: { type: "boolean" },
-            submission_blockers: { type: "array", items: { type: "string" } }
+            submission_blockers: { type: "array", items: { type: "string" } },
+            clinical_reasoning_analysis: { type: "object" },
+            coding_recommendations: { type: "object" }
           }
         }
       });
@@ -780,7 +797,7 @@ Return JSON:
 
               {/* Tabs for organized view */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 h-8">
+                <TabsList className="grid w-full grid-cols-6 h-8">
                   <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                   <TabsTrigger value="protocols" className="text-xs">
                     <BookOpen className="w-3 h-3 mr-1" />
@@ -788,7 +805,15 @@ Return JSON:
                   </TabsTrigger>
                   <TabsTrigger value="actions" className="text-xs">Actions</TabsTrigger>
                   <TabsTrigger value="training" className="text-xs">Training</TabsTrigger>
-                </TabsList>
+                      <TabsTrigger value="reasoning" className="text-xs">
+                        <Brain className="w-3 h-3 mr-1" />
+                        Reasoning
+                      </TabsTrigger>
+                      <TabsTrigger value="coding" className="text-xs">
+                        <FileCode className="w-3 h-3 mr-1" />
+                        Codes
+                      </TabsTrigger>
+                    </TabsList>
 
                 {/* Overview Tab */}
                 <TabsContent value="overview" className="space-y-3 mt-3">
@@ -1089,7 +1114,171 @@ Return JSON:
                     </div>
                   )}
                 </TabsContent>
-              </Tabs>
+
+                {/* Clinical Reasoning Tab */}
+                <TabsContent value="reasoning" className="space-y-3 mt-3">
+                  {reviewResult.clinical_reasoning_analysis ? (
+                    <div className="space-y-3">
+                      {/* Reasoning Score */}
+                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-purple-900">Clinical Reasoning Quality</span>
+                          <span className={`text-xl font-bold ${reviewResult.clinical_reasoning_analysis.reasoning_score >= 70 ? 'text-green-600' : reviewResult.clinical_reasoning_analysis.reasoning_score >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {reviewResult.clinical_reasoning_analysis.reasoning_score}%
+                          </span>
+                        </div>
+                        <Progress value={reviewResult.clinical_reasoning_analysis.reasoning_score} className="h-2" />
+                      </div>
+
+                      {/* Good Examples */}
+                      {reviewResult.clinical_reasoning_analysis.examples_of_good_reasoning?.length > 0 && (
+                        <div className="p-2 bg-green-50 rounded border border-green-200">
+                          <p className="text-xs font-semibold text-green-800 mb-1">✓ Good Clinical Reasoning Found:</p>
+                          {reviewResult.clinical_reasoning_analysis.examples_of_good_reasoning.map((example, idx) => (
+                            <p key={idx} className="text-xs text-green-700 italic">"{example}"</p>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Reasoning Gaps */}
+                      {reviewResult.clinical_reasoning_analysis.reasoning_gaps?.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-orange-800">Areas Needing Clinical Reasoning:</p>
+                          {reviewResult.clinical_reasoning_analysis.reasoning_gaps.map((gap, idx) => (
+                            <div key={idx} className="p-2 bg-orange-50 rounded border border-orange-200">
+                              <p className="text-xs font-medium text-orange-900">{gap.area}</p>
+                              <div className="mt-1 p-1.5 bg-white rounded">
+                                <p className="text-xs text-gray-500 line-through">{gap.current_text}</p>
+                                <p className="text-xs text-green-700 mt-1 font-medium">→ {gap.improved_text}</p>
+                              </div>
+                              <p className="text-xs text-orange-700 mt-1">{gap.explanation}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Reasoning Templates */}
+                      {reviewResult.clinical_reasoning_analysis.reasoning_templates?.length > 0 && (
+                        <div className="p-2 bg-indigo-50 rounded border border-indigo-200">
+                          <p className="text-xs font-semibold text-indigo-800 mb-2">📝 Clinical Reasoning Templates:</p>
+                          {reviewResult.clinical_reasoning_analysis.reasoning_templates.map((template, idx) => (
+                            <div key={idx} className="p-2 bg-white rounded border border-indigo-100 mb-1">
+                              <p className="text-xs font-medium text-indigo-900">{template.scenario}</p>
+                              <p className="text-xs text-indigo-700 font-mono mt-1">{template.template}</p>
+                              <p className="text-xs text-indigo-600 italic mt-1">Example: "{template.example}"</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      <Brain className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      No clinical reasoning analysis available
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Coding Tab */}
+                <TabsContent value="coding" className="space-y-3 mt-3">
+                  {reviewResult.coding_recommendations ? (
+                    <div className="space-y-3">
+                      {/* Primary ICD-10 */}
+                      {reviewResult.coding_recommendations.primary_icd10 && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className="bg-blue-600 text-white font-mono text-sm">
+                              {reviewResult.coding_recommendations.primary_icd10.code}
+                            </Badge>
+                            <span className="text-sm font-semibold text-blue-900">Primary Diagnosis</span>
+                          </div>
+                          <p className="text-xs text-blue-800">{reviewResult.coding_recommendations.primary_icd10.description}</p>
+                          {reviewResult.coding_recommendations.primary_icd10.supporting_documentation && (
+                            <p className="text-xs text-blue-600 mt-1 italic">
+                              Support: "{reviewResult.coding_recommendations.primary_icd10.supporting_documentation}"
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Secondary ICD-10 */}
+                      {reviewResult.coding_recommendations.secondary_icd10?.length > 0 && (
+                        <div className="p-2 bg-gray-50 rounded border">
+                          <p className="text-xs font-semibold text-gray-700 mb-2">Secondary Diagnoses:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {reviewResult.coding_recommendations.secondary_icd10.map((code, idx) => (
+                              <Badge key={idx} variant="outline" className="font-mono text-xs">
+                                {code.code} - {code.description}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* CPT Codes */}
+                      {reviewResult.coding_recommendations.cpt_codes?.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-gray-700">CPT Codes:</p>
+                          {reviewResult.coding_recommendations.cpt_codes.map((cpt, idx) => (
+                            <div key={idx} className={`p-2 rounded border ${cpt.documentation_adequate ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Badge className={`font-mono ${cpt.documentation_adequate ? 'bg-green-600' : 'bg-yellow-600'} text-white`}>
+                                    {cpt.code}
+                                  </Badge>
+                                  <span className="text-xs font-medium">{cpt.description}</span>
+                                </div>
+                                {cpt.documentation_adequate ? (
+                                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                ) : (
+                                  <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                                )}
+                              </div>
+                              {cpt.time_requirement && (
+                                <p className="text-xs text-gray-600 mt-1">Time requirement: {cpt.time_requirement}</p>
+                              )}
+                              {!cpt.documentation_adequate && cpt.missing_for_billing?.length > 0 && (
+                                <p className="text-xs text-yellow-700 mt-1">
+                                  Missing: {cpt.missing_for_billing.join(', ')}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Coding Opportunities */}
+                      {reviewResult.coding_recommendations.coding_opportunities?.length > 0 && (
+                        <div className="p-2 bg-green-50 rounded border border-green-200">
+                          <p className="text-xs font-semibold text-green-800 mb-1">💡 Coding Opportunities:</p>
+                          <ul className="text-xs text-green-700 space-y-0.5">
+                            {reviewResult.coding_recommendations.coding_opportunities.map((opp, idx) => (
+                              <li key={idx}>• {opp}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Coding Risks */}
+                      {reviewResult.coding_recommendations.coding_risks?.length > 0 && (
+                        <div className="p-2 bg-red-50 rounded border border-red-200">
+                          <p className="text-xs font-semibold text-red-800 mb-1">⚠️ Coding Risks:</p>
+                          <ul className="text-xs text-red-700 space-y-0.5">
+                            {reviewResult.coding_recommendations.coding_risks.map((risk, idx) => (
+                              <li key={idx}>• {risk}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      <FileCode className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      No coding recommendations available
+                    </div>
+                  )}
+                </TabsContent>
+                </Tabs>
 
               <Button variant="outline" size="sm" className="w-full" onClick={() => setReviewResult(null)}>
                 Run New Review
