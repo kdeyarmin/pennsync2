@@ -125,7 +125,7 @@ Return JSON:
       
     } catch (error) {
       console.error("Error processing recording:", error);
-      alert("Error transcribing audio. Please try again or type your notes manually.");
+      // Don't show alert for transcription errors, just log it
     }
     setIsProcessing(false);
     setRecordingTime(0);
