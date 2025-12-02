@@ -663,16 +663,8 @@ Return your response as JSON with this structure:
                         </div>
                       )}
 
-              {/* Enhanced Voice Vitals Entry */}
-                  <EnhancedVoiceVitalsEntry
-                    onVitalsRecognized={(vitals) => {
-                      setVitalSigns(prev => ({ ...prev, ...vitals }));
-                    }}
-                    currentVitals={vitalSigns}
-                  />
-
-                  <div>
-                    <Label className="mb-2 block">Quick Vital Signs (Optional)</Label>
+              <div>
+                <Label className="mb-2 block">Quick Vital Signs (Optional)</Label>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <Input
                         placeholder="BP: 120/80"
@@ -735,15 +727,6 @@ Return your response as JSON with this structure:
             onTrainingRecommended={handleTrainingRecommended}
           />
 
-          {/* Voice Dictation */}
-          <VoiceDictation onTranscriptionComplete={handleTranscriptionComplete} />
-
-          {/* Quick Voice Vitals Entry */}
-          <VoiceVitalsEntry 
-            onVitalsRecognized={handleVoiceVitals}
-            onPhraseRecognized={handleVoicePhrase}
-          />
-
           {/* Documentation Input - Freeform or Guided */}
           {documentationMode === 'freeform' ? (
             <Card className="border-2 border-purple-200">
@@ -782,6 +765,29 @@ Return your response as JSON with this structure:
                   />
                 </div>
 
+                {/* Voice Dictation */}
+                <div className="mt-4">
+                  <VoiceDictation onTranscriptionComplete={handleTranscriptionComplete} />
+                </div>
+
+                {/* Enhanced Voice Vitals Entry */}
+                <div className="mt-4">
+                  <EnhancedVoiceVitalsEntry
+                    onVitalsRecognized={(vitals) => {
+                      setVitalSigns(prev => ({ ...prev, ...vitals }));
+                    }}
+                    currentVitals={vitalSigns}
+                  />
+                </div>
+
+                {/* Quick Voice Vitals Entry */}
+                <div className="mt-4">
+                  <VoiceVitalsEntry 
+                    onVitalsRecognized={handleVoiceVitals}
+                    onPhraseRecognized={handleVoicePhrase}
+                  />
+                </div>
+
                 <div className="mt-4 flex justify-end">
                   <Button
                     onClick={handleEnhanceNote}
@@ -802,9 +808,9 @@ Return your response as JSON with this structure:
                     )}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
+                </CardContent>
+                </Card>
+                ) : (
             <div className="space-y-4">
               <GuidedDocumentationFlow
                 diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
