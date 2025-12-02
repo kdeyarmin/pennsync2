@@ -51,7 +51,11 @@ export default function GuidedDocumentationFlow({
   careType,
   visitType,
   onNoteChange,
-  initialNote = ""
+  initialNote = "",
+  patient = null,
+  previousVisits = [],
+  carePlans = [],
+  prefillData = null
 }) {
   const [activeSection, setActiveSection] = useState('subjective');
   const [sections, setSections] = useState({
@@ -62,6 +66,7 @@ export default function GuidedDocumentationFlow({
   });
   const [contextualPrompts, setContextualPrompts] = useState([]);
   const [isLoadingPrompts, setIsLoadingPrompts] = useState(false);
+  const [hasAppliedPrefill, setHasAppliedPrefill] = useState(false);
 
   // Load contextual prompts when diagnosis/visit type changes
   useEffect(() => {
@@ -69,6 +74,17 @@ export default function GuidedDocumentationFlow({
       loadContextualPrompts();
     }
   }, [diagnosis, visitType, careType]);
+
+  // Apply prefill data from IntelligentPatientContext
+  useEffect(() => {
+    if (prefillData && !hasAppliedPrefill) {
+      setSections(prev => ({
+        ...prev,
+        ...prefillData
+      }));
+      setHasAppliedPrefill(true);
+    }
+  }, [prefillData, hasAppliedPrefill]);
 
   // Combine sections and notify parent
   useEffect(() => {
@@ -79,13 +95,31 @@ export default function GuidedDocumentationFlow({
     onNoteChange && onNoteChange(combinedNote);
   }, [sections]);
 
+  // Get last visit summary for context
+  const getLastVisitContext = () => {
+    if (!previousVisits || previousVisits.length === 0) return '';
+    const lastVisit = previousVisits[0];
+    return `
+LAST VISIT NOTES: ${lastVisit.nurse_notes?.substring(0, 500) || 'None'}
+LAST VITAL SIGNS: ${lastVisit.vital_signs ? JSON.stringify(lastVisit.vital_signs) : 'None'}`;
+  };
+
   const loadContextualPrompts = async () => {
     setIsLoadingPrompts(true);
     try {
+      const lastVisitContext = getLastVisitContext();
+      const activeGoals = carePlans.filter(cp => cp.status === 'active').map(cp => cp.problem).join(', ');
+      
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate contextual documentation prompts for a ${careType} ${visitType} visit for a patient with ${diagnosis}.
 
-For each SOAP section, provide 2-3 specific questions/prompts the nurse should document.
+PATIENT CONTEXT:
+${patient ? `Name: ${patient.first_name} ${patient.last_name}` : ''}
+${patient?.allergies ? `Allergies: ${patient.allergies}` : ''}
+${activeGoals ? `Active Care Plan Goals: ${activeGoals}` : ''}
+${lastVisitContext}
+
+For each SOAP section, provide 2-3 SPECIFIC questions/prompts based on this patient's history and diagnosis. Make them actionable and relevant to their condition.
 
 Return JSON:
 {
