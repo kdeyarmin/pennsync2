@@ -338,12 +338,10 @@ export default function ComplianceDashboard() {
   };
 
   const quickLinks = [
-    { name: 'Quality Dashboard', url: createPageUrl('QualityDashboard'), icon: TrendingUp, color: 'bg-blue-500' },
     { name: 'Care Plans', url: createPageUrl('CarePlanManagement'), icon: Target, color: 'bg-green-500' },
-    { name: 'Survey Prep', url: createPageUrl('SurveyPreparation'), icon: FileText, color: 'bg-purple-500' },
     { name: 'Security Logs', url: createPageUrl('AdminDashboard'), icon: Shield, color: 'bg-orange-500' },
     { name: 'Patients', url: createPageUrl('Patients'), icon: User, color: 'bg-teal-500' },
-    { name: 'Analytics', url: createPageUrl('AnalyticsDashboard'), icon: BarChart3, color: 'bg-indigo-500' },
+    { name: 'Productivity', url: createPageUrl('ProductivityDashboard'), icon: TrendingUp, color: 'bg-blue-500' },
   ];
 
   const exportComplianceReport = () => {
