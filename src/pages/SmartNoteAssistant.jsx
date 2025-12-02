@@ -372,6 +372,8 @@ export default function SmartNoteAssistant() {
 
       const prompt = `You are an expert clinical documentation specialist for ${careType === 'hospice' ? 'hospice' : 'home health'} nursing. Your task is to transform rough nursing notes into a polished, Medicare-compliant clinical narrative that can be copied directly into an EHR system.
 
+IMPORTANT: Do NOT include the patient's name anywhere in the narrative. Use "Patient" or "Pt" instead of any proper names.
+
 PATIENT CONTEXT:
 - Diagnosis: ${finalDiagnosis || 'Not specified'}
 - Care Type: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
