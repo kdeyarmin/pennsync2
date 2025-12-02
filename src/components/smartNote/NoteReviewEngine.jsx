@@ -562,7 +562,59 @@ Return JSON:
   ],
   "strengths": ["Well-documented elements"],
   "ready_to_submit": true | false,
-  "submission_blockers": ["Critical issues preventing submission"]
+  "submission_blockers": ["Critical issues preventing submission"],
+  "clinical_reasoning_analysis": {
+    "reasoning_present": true | false,
+    "reasoning_score": 0-100,
+    "examples_of_good_reasoning": ["Quotes from note showing good clinical reasoning with 'because', 'therefore', 'indicating' language"],
+    "reasoning_gaps": [
+      {
+        "area": "Area lacking clinical reasoning",
+        "current_text": "What was written (just stating facts)",
+        "improved_text": "How to rewrite WITH clinical reasoning - must include 'because', 'therefore', 'indicating', 'requires', 'consistent with' language",
+        "explanation": "Why documenting clinical reasoning matters for Medicare"
+      }
+    ],
+    "reasoning_templates": [
+      {
+        "scenario": "Clinical situation relevant to this note",
+        "template": "[Finding] + because/therefore/indicating + [Clinical reasoning] + requires + [Intervention/Action]",
+        "example": "Specific filled example for this diagnosis"
+      }
+    ]
+  },
+  "coding_recommendations": {
+    "primary_icd10": {
+      "code": "ICD-10 code based on documented diagnosis",
+      "description": "Full code description",
+      "supporting_documentation": "Quote from note that supports this code"
+    },
+    "secondary_icd10": [
+      {
+        "code": "Secondary ICD-10 code",
+        "description": "Description",
+        "supporting_documentation": "Supporting text from note"
+      }
+    ],
+    "symptom_codes": [
+      {
+        "code": "Symptom-specific ICD-10 code (e.g., R codes)",
+        "description": "Symptom description",
+        "documentation_support": "Text from note supporting this symptom code"
+      }
+    ],
+    "cpt_codes": [
+      {
+        "code": "CPT code for service",
+        "description": "Service description",
+        "time_requirement": "Time documentation needed if applicable",
+        "documentation_adequate": true | false,
+        "missing_for_billing": ["Specific elements needed to bill this code"]
+      }
+    ],
+    "coding_opportunities": ["Additional codes that could be supported with better documentation - explain what to add"],
+    "coding_risks": ["Potential coding/billing issues or audit risks based on current documentation"]
+  }
 }`,
         response_json_schema: {
           type: "object",
