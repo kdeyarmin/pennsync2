@@ -10,7 +10,6 @@ import CarePlanManagement from './pages/CarePlanManagement';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import ComplianceCenter from './pages/ComplianceCenter';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
-import QualityDashboard from './pages/QualityDashboard';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import SecurityPolicy from './pages/SecurityPolicy';
 import PatientTriage from './pages/PatientTriage';
@@ -39,7 +38,6 @@ export const PAGES = {
     "AutomaticCarePlans": AutomaticCarePlans,
     "ComplianceCenter": ComplianceCenter,
     "AnalyticsDashboard": AnalyticsDashboard,
-    "QualityDashboard": QualityDashboard,
     "SmartNoteAssistant": SmartNoteAssistant,
     "SecurityPolicy": SecurityPolicy,
     "PatientTriage": PatientTriage,

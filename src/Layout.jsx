@@ -170,11 +170,6 @@ export default function Layout({ children }) {
 
   if (isAdmin) {
     navigationItems.push({
-      title: "Quality & Stars",
-      url: createPageUrl("QualityDashboard"),
-      icon: Award,
-    });
-    navigationItems.push({
       title: "Admin",
       url: createPageUrl("AdminDashboard"),
       icon: Shield,
