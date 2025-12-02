@@ -77,6 +77,7 @@ import CollapsibleAIPanel from "../components/smartNote/CollapsibleAIPanel";
 import EnhancedVoiceVitalsEntry from "../components/smartNote/EnhancedVoiceVitalsEntry";
 import InteractiveWorkflowGuide from "../components/smartNote/InteractiveWorkflowGuide";
 import ConsolidatedFeedbackCenter from "../components/smartNote/ConsolidatedFeedbackCenter";
+import AINarrativeReviewer from "../components/smartNote/AINarrativeReviewer";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -107,6 +108,7 @@ export default function SmartNoteAssistant() {
       const [aiPrompts, setAiPrompts] = useState(null);
       const [templateUsed, setTemplateUsed] = useState(false);
       const [complianceIssuesCount, setComplianceIssuesCount] = useState(0);
+      const [narrativeReviewResults, setNarrativeReviewResults] = useState(null);
 
   // Fetch current user for personalized feedback
   const { data: currentUser } = useQuery({
@@ -859,37 +861,92 @@ Return your response as JSON with this structure:
                     </AlertDescription>
                   </Alert>
                 )}
-              </CardContent>
-            </Card>
-          )}
+
+                {/* AI Narrative Reviewer */}
+                <div className="mt-4">
+                  <AINarrativeReviewer
+                    enhancedNote={enhancedNote}
+                    diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                    visitType={visitType}
+                    careType={careType}
+                    vitalSigns={vitalSigns}
+                    patient={selectedPatient}
+                    onReviewComplete={setNarrativeReviewResults}
+                  />
+                </div>
+                </CardContent>
+                </Card>
+                )}
         </div>
 
         {/* AI Tools Sidebar - Organized in Tabs */}
                     <div className="space-y-4">
                       {/* Consolidated Feedback Center - Always visible when there are actions */}
                                   <ConsolidatedFeedbackCenter
-                                    complianceAlerts={auditResults?.missing_critical_elements?.map((el, idx) => ({
-                                      id: `compliance-${idx}`,
-                                      title: el,
-                                      description: `Missing required element for Medicare compliance`,
-                                      priority: 'high',
-                                      fix: `[Document ${el} here]`
+                                    complianceAlerts={[
+                                      ...(auditResults?.missing_critical_elements?.map((el, idx) => ({
+                                        id: `compliance-${idx}`,
+                                        title: el,
+                                        description: `Missing required element for Medicare compliance`,
+                                        priority: 'high',
+                                        fix: `[Document ${el} here]`
+                                      })) || []),
+                                      ...(narrativeReviewResults?.compliance_issues?.map((issue, idx) => ({
+                                        id: `review-compliance-${idx}`,
+                                        title: issue.issue,
+                                        description: issue.rationale,
+                                        priority: issue.severity,
+                                        fix: issue.fix
+                                      })) || [])
+                                    ]}
+                                    aiSuggestions={[
+                                      ...(suggestions.map((s, idx) => ({
+                                        id: `suggestion-${idx}`,
+                                        title: s.suggestion,
+                                        description: s.rationale,
+                                        priority: s.priority,
+                                        type: s.category
+                                      }))),
+                                      ...(narrativeReviewResults?.terminology_suggestions?.map((term, idx) => ({
+                                        id: `terminology-${idx}`,
+                                        title: `Replace: "${term.current_text}"`,
+                                        description: `Use: "${term.suggested_text}" - ${term.reason}`,
+                                        priority: 'medium',
+                                        type: 'Terminology',
+                                        fix: term.suggested_text
+                                      })) || []),
+                                      ...(narrativeReviewResults?.clarity_improvements?.map((clarity, idx) => ({
+                                        id: `clarity-${idx}`,
+                                        title: clarity.issue,
+                                        description: `Current: "${clarity.current_text}" → Suggested: "${clarity.suggested_text}"`,
+                                        priority: 'low',
+                                        type: 'Clarity',
+                                        fix: clarity.suggested_text
+                                      })) || [])
+                                    ]}
+                                    riskAlerts={[
+                                      ...(aiPrompts?.critical_missing?.map((item, idx) => ({
+                                        id: `risk-${idx}`,
+                                        title: item.title || item,
+                                        description: item.message || 'Critical documentation gap',
+                                        priority: 'critical',
+                                        fix: item.fix || `[Add ${item.title || item}]`
+                                      })) || []),
+                                      ...(narrativeReviewResults?.risk_flags?.map((risk, idx) => ({
+                                        id: `review-risk-${idx}`,
+                                        title: risk.risk,
+                                        description: risk.recommendation,
+                                        priority: risk.severity,
+                                        fix: null
+                                      })) || [])
+                                    ]}
+                                    missingElements={narrativeReviewResults?.missing_elements?.map((el, idx) => ({
+                                      id: `missing-${idx}`,
+                                      title: el.element,
+                                      description: el.reason,
+                                      priority: el.importance === 'required' ? 'high' : 'medium',
+                                      fix: el.suggested_text
                                     })) || []}
-                                    aiSuggestions={suggestions.map((s, idx) => ({
-                                      id: `suggestion-${idx}`,
-                                      title: s.suggestion,
-                                      description: s.rationale,
-                                      priority: s.priority,
-                                      type: s.category
-                                    }))}
-                                    riskAlerts={aiPrompts?.critical_missing?.map((item, idx) => ({
-                                      id: `risk-${idx}`,
-                                      title: item.title || item,
-                                      description: item.message || 'Critical documentation gap',
-                                      priority: 'critical',
-                                      fix: item.fix || `[Add ${item.title || item}]`
-                                    })) || []}
-                                    missingElements={[]}
                                     onApplyFix={(fix, id) => {
                                       setRoughNote(prev => prev + '\n\n' + fix);
                                     }}
