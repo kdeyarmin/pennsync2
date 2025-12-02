@@ -181,28 +181,28 @@ export default function PatientDetails() {
       </Button>
 
       <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-              <User className="w-8 h-8 text-white" />
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+              <User className="w-6 h-6 md:w-8 md:h-8 text-white" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 truncate">
                     {sanitizeInput(patient.first_name)} {sanitizeInput(patient.last_name)}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-600">
                     <span>MRN: {sanitizeInput(patient.medical_record_number) || 'N/A'}</span>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>DOB: {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
                   </div>
                 </div>
                 <Badge 
-                  className={patient.care_type === 'hospice' 
+                  className={`flex-shrink-0 ${patient.care_type === 'hospice' 
                     ? 'bg-purple-100 text-purple-800 border-purple-200' 
                     : 'bg-blue-100 text-blue-800 border-blue-200'
-                  }
+                  }`}
                 >
                   {patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
                 </Badge>
@@ -228,13 +228,13 @@ export default function PatientDetails() {
 
       {/* AI Care Plan Tools */}
       {patient && (
-        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
           <AICarePlanSuggestions 
             patient={patient} 
             existingCarePlans={carePlans}
             onAddCarePlan={(data) => createCarePlanMutation.mutate(data)}
           />
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <CarePlanTimelinePredictor patient={patient} carePlans={carePlans} />
             <PatientFriendlyCarePlanSummary patient={patient} carePlans={carePlans} />
           </div>

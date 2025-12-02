@@ -178,10 +178,10 @@ export default function Patients() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Patient Management</h1>
-          <p className="text-gray-600 mt-1">Manage your patient roster</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Patient Management</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1">Manage your patient roster</p>
         </div>
         <Button
           onClick={() => {
@@ -220,7 +220,7 @@ export default function Patients() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {isLoading ? (
           <Card>
             <CardContent className="p-8 text-center text-gray-500">

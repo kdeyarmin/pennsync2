@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -394,20 +393,20 @@ Return JSON format:
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-              <BarChart3 className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+              <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Penn Sync Analytics & Benchmarking</h1>
-              <p className="text-gray-600">Advanced insights and performance analysis</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics & Benchmarking</h1>
+              <p className="text-sm md:text-base text-gray-600">Advanced insights and performance analysis</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-32 md:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -423,16 +422,18 @@ Return JSON format:
               onClick={generateAnalyticsReport}
               disabled={isGeneratingReport}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              size="sm"
             >
               {isGeneratingReport ? (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
+                  <RefreshCw className="w-4 h-4 mr-1 md:mr-2 animate-spin" />
+                  <span className="hidden sm:inline">Generating...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate AI Report
+                  <Sparkles className="w-4 h-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Generate AI Report</span>
+                  <span className="sm:hidden">Report</span>
                 </>
               )}
             </Button>
@@ -506,12 +507,12 @@ Return JSON format:
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="benchmarking">Benchmarking</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="staff">Staff Productivity</TabsTrigger>
-          <TabsTrigger value="quality">Quality Metrics</TabsTrigger>
+        <TabsList className="flex flex-wrap h-auto gap-1 md:grid md:grid-cols-5 w-full">
+          <TabsTrigger value="overview" className="flex-1 min-w-[80px] text-xs md:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="benchmarking" className="flex-1 min-w-[80px] text-xs md:text-sm">Benchmarks</TabsTrigger>
+          <TabsTrigger value="revenue" className="flex-1 min-w-[80px] text-xs md:text-sm">Revenue</TabsTrigger>
+          <TabsTrigger value="staff" className="flex-1 min-w-[80px] text-xs md:text-sm">Staff</TabsTrigger>
+          <TabsTrigger value="quality" className="flex-1 min-w-[80px] text-xs md:text-sm">Quality</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}

@@ -61,7 +61,7 @@ export default function ScheduleOptimizer() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -112,20 +112,20 @@ export default function ScheduleOptimizer() {
       </div>
 
       {/* Date Navigation */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => navigateDate('prev')}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="icon" onClick={() => navigateDate('prev')} className="flex-shrink-0">
             <ChevronLeft className="w-4 h-4" />
           </Button>
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="min-w-[200px]">
-                <CalendarIcon className="w-4 h-4 mr-2" />
-                {format(new Date(selectedDate), 'EEEE, MMMM d, yyyy')}
+              <Button variant="outline" className="flex-1 sm:min-w-[200px] justify-start sm:justify-center">
+                <CalendarIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">{format(new Date(selectedDate), 'EEE, MMM d, yyyy')}</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={new Date(selectedDate)}
@@ -134,7 +134,7 @@ export default function ScheduleOptimizer() {
             </PopoverContent>
           </Popover>
           
-          <Button variant="outline" size="icon" onClick={() => navigateDate('next')}>
+          <Button variant="outline" size="icon" onClick={() => navigateDate('next')} className="flex-shrink-0">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -142,6 +142,7 @@ export default function ScheduleOptimizer() {
         <Button
           variant="outline"
           onClick={() => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))}
+          className="w-full sm:w-auto"
         >
           Today
         </Button>

@@ -793,21 +793,21 @@ Return your response as JSON with this structure:
         <div className="space-y-4">
           <Tabs defaultValue="assist" className="w-full">
             <TabsList className="grid w-full grid-cols-4 h-auto">
-              <TabsTrigger value="assist" className="flex flex-col gap-1 py-2 px-1">
-                <MessageSquare className="w-4 h-4" />
-                <span className="text-xs">Assist</span>
+              <TabsTrigger value="assist" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                <MessageSquare className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-[10px] md:text-xs">Assist</span>
               </TabsTrigger>
-              <TabsTrigger value="clinical" className="flex flex-col gap-1 py-2 px-1">
-                <Stethoscope className="w-4 h-4" />
-                <span className="text-xs">Clinical</span>
+              <TabsTrigger value="clinical" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                <Stethoscope className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-[10px] md:text-xs">Clinical</span>
               </TabsTrigger>
-              <TabsTrigger value="compliance" className="flex flex-col gap-1 py-2 px-1">
-                <Shield className="w-4 h-4" />
-                <span className="text-xs">Compliance</span>
+              <TabsTrigger value="compliance" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                <Shield className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-[10px] md:text-xs">Comply</span>
               </TabsTrigger>
-              <TabsTrigger value="actions" className="flex flex-col gap-1 py-2 px-1">
-                <ClipboardList className="w-4 h-4" />
-                <span className="text-xs">Actions</span>
+              <TabsTrigger value="actions" className="flex flex-col gap-0.5 py-1.5 md:py-2 px-1">
+                <ClipboardList className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-[10px] md:text-xs">Actions</span>
               </TabsTrigger>
             </TabsList>
 

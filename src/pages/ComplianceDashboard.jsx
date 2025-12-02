@@ -381,33 +381,33 @@ export default function ComplianceDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
         <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className="p-4 text-center">
-            <XCircle className="w-8 h-8 mx-auto mb-2 opacity-80" />
-            <p className="text-3xl font-bold">{alertCounts.critical}</p>
-            <p className="text-sm opacity-90">Critical</p>
+          <CardContent className="p-3 md:p-4 text-center">
+            <XCircle className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 opacity-80" />
+            <p className="text-2xl md:text-3xl font-bold">{alertCounts.critical}</p>
+            <p className="text-xs md:text-sm opacity-90">Critical</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-4 text-center">
-            <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-80" />
-            <p className="text-3xl font-bold">{alertCounts.warning}</p>
-            <p className="text-sm opacity-90">Warnings</p>
+          <CardContent className="p-3 md:p-4 text-center">
+            <AlertTriangle className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 opacity-80" />
+            <p className="text-2xl md:text-3xl font-bold">{alertCounts.warning}</p>
+            <p className="text-xs md:text-sm opacity-90">Warnings</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-4 text-center">
-            <Bell className="w-8 h-8 mx-auto mb-2 opacity-80" />
-            <p className="text-3xl font-bold">{alertCounts.info}</p>
-            <p className="text-sm opacity-90">Info</p>
+          <CardContent className="p-3 md:p-4 text-center">
+            <Bell className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 opacity-80" />
+            <p className="text-2xl md:text-3xl font-bold">{alertCounts.info}</p>
+            <p className="text-xs md:text-sm opacity-90">Info</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className="p-4 text-center">
-            <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-80" />
-            <p className="text-3xl font-bold">{Math.max(0, 100 - alertCounts.total * 2)}%</p>
-            <p className="text-sm opacity-90">Compliance Score</p>
+          <CardContent className="p-3 md:p-4 text-center">
+            <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 opacity-80" />
+            <p className="text-2xl md:text-3xl font-bold">{Math.max(0, 100 - alertCounts.total * 2)}%</p>
+            <p className="text-xs md:text-sm opacity-90">Score</p>
           </CardContent>
         </Card>
       </div>
@@ -426,20 +426,20 @@ export default function ComplianceDashboard() {
       {/* Quick Links */}
       <Card className="mb-6">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
+          <CardTitle className="text-base md:text-lg flex items-center gap-2">
+            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-indigo-600" />
             Quick Access
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        <CardContent className="p-3 md:p-6">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
             {quickLinks.map((link, idx) => (
               <Link key={idx} to={link.url}>
-                <div className="p-3 rounded-lg border hover:shadow-md transition-all text-center cursor-pointer">
-                  <div className={`w-10 h-10 ${link.color} rounded-lg flex items-center justify-center mx-auto mb-2`}>
-                    <link.icon className="w-5 h-5 text-white" />
+                <div className="p-2 md:p-3 rounded-lg border hover:shadow-md transition-all text-center cursor-pointer">
+                  <div className={`w-8 h-8 md:w-10 md:h-10 ${link.color} rounded-lg flex items-center justify-center mx-auto mb-1 md:mb-2`}>
+                    <link.icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
                   </div>
-                  <p className="text-xs font-medium text-gray-700">{link.name}</p>
+                  <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">{link.name}</p>
                 </div>
               </Link>
             ))}
@@ -447,9 +447,9 @@ export default function ComplianceDashboard() {
         </CardContent>
       </Card>
 
-      <div className="grid lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
         {/* Main Alerts List */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
           {/* Filters */}
           <Card>
             <CardContent className="p-4">
@@ -554,7 +554,7 @@ export default function ComplianceDashboard() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
+        <div className="space-y-4 order-1 lg:order-2">
           {/* Category Breakdown */}
           <Card>
             <CardHeader className="pb-2">
