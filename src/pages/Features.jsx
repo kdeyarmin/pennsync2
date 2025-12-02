@@ -331,28 +331,10 @@ export default function FeaturesPage() {
       ]
     },
     {
-      category: "Analytics & Security",
-      icon: BarChart3,
+      category: "Security & Admin",
+      icon: Shield,
       color: "gray",
       items: [
-        {
-          name: "Productivity Dashboard",
-          icon: TrendingUp,
-          description: "Track completion rates, documentation time, efficiency scores",
-          timeSaved: "Visibility & motivation",
-          impact: "medium",
-          details: "Personal metrics, AI time savings, goal tracking",
-          howToUse: "1. Go to Productivity Dashboard. 2. View your metrics and trends. 3. Track AI-assisted time savings. 4. Set and monitor goals."
-        },
-        {
-          name: "Quality Metrics Dashboard",
-          icon: ClipboardList,
-          description: "OASIS accuracy, documentation quality scores, compliance rates",
-          timeSaved: "Improves outcomes",
-          impact: "high",
-          details: "Quality monitoring, performance tracking, benchmarking",
-          howToUse: "Admin only: 1. Navigate to Quality Dashboard. 2. Review star ratings and metrics. 3. Identify improvement opportunities. 4. Run simulations for quality scenarios."
-        },
         {
           name: "Security Audit Logs",
           icon: Eye,
@@ -361,6 +343,24 @@ export default function FeaturesPage() {
           impact: "critical",
           details: "HIPAA compliance, forensic analysis, incident investigation",
           howToUse: "Admin only: 1. Go to Admin Dashboard > Security tab. 2. Review recent security events. 3. Filter by user, action type, or date. 4. Export logs for audits."
+        },
+        {
+          name: "Enhanced Clinical Decision Support",
+          icon: Stethoscope,
+          description: "AI-powered real-time clinical analysis with drug interactions, vital trends, and evidence-based recommendations",
+          timeSaved: "15-20 min/visit",
+          impact: "critical",
+          details: "Drug safety alerts, differential diagnoses, vital sign trend analysis, preventive risk scoring",
+          howToUse: "1. Open patient visit or Smart Note Assistant. 2. Enhanced CDS panel auto-analyzes patient data. 3. Review tabs for alerts, drugs, vitals, recommendations. 4. Click to insert suggestions into notes."
+        },
+        {
+          name: "Regulatory Compliance Center",
+          icon: Shield,
+          description: "Monitor healthcare regulations and manage compliance updates with AI scanning",
+          timeSaved: "30 min/week",
+          impact: "high",
+          details: "Automated regulatory scanning, compliance tracking, training recommendations",
+          howToUse: "1. Navigate to Regulatory Center. 2. Review pending updates. 3. Admins can scan for new regulations. 4. Implement updates and assign training."
         }
       ]
     }
