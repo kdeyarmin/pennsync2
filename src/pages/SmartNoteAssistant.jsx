@@ -71,6 +71,12 @@ import DocumentationWorkflowGuide from "../components/smartNote/DocumentationWor
 import UnifiedActionCenter from "../components/smartNote/UnifiedActionCenter";
 import PersistentPatientHeader from "../components/smartNote/PersistentPatientHeader";
 import QuickEditPreview from "../components/smartNote/QuickEditPreview";
+import QuickActionsBar from "../components/smartNote/QuickActionsBar";
+import CollapsibleAIPanel from "../components/smartNote/CollapsibleAIPanel";
+import SmartFillSuggestions from "../components/smartNote/SmartFillSuggestions";
+import EnhancedVoiceVitalsEntry from "../components/smartNote/EnhancedVoiceVitalsEntry";
+import InteractiveWorkflowGuide from "../components/smartNote/InteractiveWorkflowGuide";
+import ConsolidatedFeedbackCenter from "../components/smartNote/ConsolidatedFeedbackCenter";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -100,6 +106,9 @@ export default function SmartNoteAssistant() {
       const [editPreviewTitle, setEditPreviewTitle] = useState("");
       const [aiPrompts, setAiPrompts] = useState(null);
       const [templateUsed, setTemplateUsed] = useState(false);
+      const [guidedSectionContent, setGuidedSectionContent] = useState({});
+      const [currentGuidedSection, setCurrentGuidedSection] = useState("subjective");
+      const [complianceIssuesCount, setComplianceIssuesCount] = useState(0);
 
   // Fetch current user for personalized feedback
   const { data: currentUser } = useQuery({
@@ -543,8 +552,8 @@ Return your response as JSON with this structure:
                   </div>
                 </div>
 
-                {/* Workflow Progress Guide */}
-                <DocumentationWorkflowGuide
+                {/* Interactive Workflow Progress Guide */}
+                <InteractiveWorkflowGuide
                   patientSelected={!!selectedPatientId}
                   vitalsEntered={!!(vitalSigns.bp || vitalSigns.hr || vitalSigns.temp)}
                   templateUsed={templateUsed}
@@ -552,8 +561,9 @@ Return your response as JSON with this structure:
                   noteEnhanced={!!enhancedNote}
                   compliancePassed={compliancePassed}
                   onStepClick={handleWorkflowStepClick}
+                  currentActiveStep={currentGuidedSection}
                 />
-              </div>
+                </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -653,36 +663,44 @@ Return your response as JSON with this structure:
                         </div>
                       )}
 
-              <div>
-                <Label className="mb-2 block">Quick Vital Signs (Optional)</Label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <Input
-                    placeholder="BP: 120/80"
-                    value={vitalSigns.bp}
-                    onChange={(e) => setVitalSigns({...vitalSigns, bp: e.target.value})}
+              {/* Enhanced Voice Vitals Entry */}
+                  <EnhancedVoiceVitalsEntry
+                    onVitalsRecognized={(vitals) => {
+                      setVitalSigns(prev => ({ ...prev, ...vitals }));
+                    }}
+                    currentVitals={vitalSigns}
                   />
-                  <Input
-                    placeholder="HR: 72"
-                    value={vitalSigns.hr}
-                    onChange={(e) => setVitalSigns({...vitalSigns, hr: e.target.value})}
-                  />
-                  <Input
-                    placeholder="Temp: 98.6"
-                    value={vitalSigns.temp}
-                    onChange={(e) => setVitalSigns({...vitalSigns, temp: e.target.value})}
-                  />
-                  <Input
-                    placeholder="O2: 98%"
-                    value={vitalSigns.o2}
-                    onChange={(e) => setVitalSigns({...vitalSigns, o2: e.target.value})}
-                  />
-                  <Input
-                    placeholder="Pain: 3/10"
-                    value={vitalSigns.pain}
-                    onChange={(e) => setVitalSigns({...vitalSigns, pain: e.target.value})}
-                  />
-                </div>
-              </div>
+
+                  <div>
+                    <Label className="mb-2 block">Quick Vital Signs (Optional)</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <Input
+                        placeholder="BP: 120/80"
+                        value={vitalSigns.bp}
+                        onChange={(e) => setVitalSigns({...vitalSigns, bp: e.target.value})}
+                      />
+                      <Input
+                        placeholder="HR: 72"
+                        value={vitalSigns.hr}
+                        onChange={(e) => setVitalSigns({...vitalSigns, hr: e.target.value})}
+                      />
+                      <Input
+                        placeholder="Temp: 98.6"
+                        value={vitalSigns.temp}
+                        onChange={(e) => setVitalSigns({...vitalSigns, temp: e.target.value})}
+                      />
+                      <Input
+                        placeholder="O2: 98%"
+                        value={vitalSigns.o2}
+                        onChange={(e) => setVitalSigns({...vitalSigns, o2: e.target.value})}
+                      />
+                      <Input
+                        placeholder="Pain: 3/10"
+                        value={vitalSigns.pain}
+                        onChange={(e) => setVitalSigns({...vitalSigns, pain: e.target.value})}
+                      />
+                    </div>
+                  </div>
             </CardContent>
           </Card>
 
@@ -864,20 +882,23 @@ Return your response as JSON with this structure:
                 </div>
 
                 {/* Mandatory Compliance Gate */}
-                <MandatoryComplianceGate
-                  noteText={enhancedNote}
-                  careType={careType}
-                  visitType={visitType}
-                  diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-                  vitalSigns={vitalSigns}
-                  onCompliancePassed={(passed, override) => {
-                    setCompliancePassed(passed);
-                    if (override) {
-                      console.log('Compliance overridden:', override.reason);
-                    }
-                  }}
-                  onInsertFix={(fix) => setRoughNote(prev => prev + '\n\n' + fix)}
-                />
+                <div data-compliance-checker>
+                  <MandatoryComplianceGate
+                    noteText={enhancedNote}
+                    careType={careType}
+                    visitType={visitType}
+                    diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                    vitalSigns={vitalSigns}
+                    onCompliancePassed={(passed, override, issueCount) => {
+                      setCompliancePassed(passed);
+                      setComplianceIssuesCount(issueCount || 0);
+                      if (override) {
+                        console.log('Compliance overridden:', override.reason);
+                      }
+                    }}
+                    onInsertFix={(fix) => setRoughNote(prev => prev + '\n\n' + fix)}
+                  />
+                </div>
 
                 {compliancePassed && (
                   <Alert className="mt-4 bg-green-50 border-green-200">
@@ -894,20 +915,36 @@ Return your response as JSON with this structure:
 
         {/* AI Tools Sidebar - Organized in Tabs */}
                     <div className="space-y-4">
-                      {/* Unified Action Center - Always visible when there are actions */}
-                      {(aiPrompts?.critical_missing?.length > 0 || suggestions.length > 0 || auditResults?.missing_critical_elements?.length > 0) && (
-                        <UnifiedActionCenter
-                          criticalItems={aiPrompts?.critical_missing || []}
-                          suggestions={suggestions}
-                          complianceAlerts={auditResults?.missing_critical_elements?.map(el => ({
-                            title: el,
-                            message: `Missing required element: ${el}`,
-                            fix: `[Document ${el} here]`
-                          })) || []}
-                          onApplyAction={(text) => setRoughNote(prev => prev + '\n\n' + text)}
-                          onDismiss={(id) => console.log('Dismissed:', id)}
-                        />
-                      )}
+                      {/* Consolidated Feedback Center - Always visible when there are actions */}
+                                  <ConsolidatedFeedbackCenter
+                                    complianceAlerts={auditResults?.missing_critical_elements?.map((el, idx) => ({
+                                      id: `compliance-${idx}`,
+                                      title: el,
+                                      description: `Missing required element for Medicare compliance`,
+                                      priority: 'high',
+                                      fix: `[Document ${el} here]`
+                                    })) || []}
+                                    aiSuggestions={suggestions.map((s, idx) => ({
+                                      id: `suggestion-${idx}`,
+                                      title: s.suggestion,
+                                      description: s.rationale,
+                                      priority: s.priority,
+                                      type: s.category
+                                    }))}
+                                    riskAlerts={aiPrompts?.critical_missing?.map((item, idx) => ({
+                                      id: `risk-${idx}`,
+                                      title: item.title || item,
+                                      description: item.message || 'Critical documentation gap',
+                                      priority: 'critical',
+                                      fix: item.fix || `[Add ${item.title || item}]`
+                                    })) || []}
+                                    missingElements={[]}
+                                    onApplyFix={(fix, id) => {
+                                      setRoughNote(prev => prev + '\n\n' + fix);
+                                    }}
+                                    onDismiss={(id) => console.log('Dismissed:', id)}
+                                    onViewDetails={(item) => console.log('View details:', item)}
+                                  />
 
                       <Tabs defaultValue="assist" className="w-full">
                         <TabsList className="grid w-full grid-cols-4 h-auto">
@@ -931,6 +968,22 @@ Return your response as JSON with this structure:
 
             {/* Assist Tab - Real-time help while writing */}
             <TabsContent value="assist" className="space-y-4 mt-4">
+              {/* Smart Fill Suggestions for Guided Mode */}
+              {documentationMode === 'guided' && (
+                <SmartFillSuggestions
+                  currentSection={currentGuidedSection}
+                  sectionContent={guidedSectionContent[currentGuidedSection]}
+                  diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                  previousSections={guidedSectionContent}
+                  onInsertSuggestion={(section, text) => {
+                    setGuidedSectionContent(prev => ({
+                      ...prev,
+                      [section]: (prev[section] || '') + '\n' + text
+                    }));
+                  }}
+                />
+              )}
+
               <AIDrivenDocumentationPrompts
                 noteText={roughNote}
                 patient={selectedPatient}
@@ -1133,6 +1186,28 @@ Return your response as JSON with this structure:
                       onConfirm={handleConfirmEditPreview}
                       onCancel={() => setShowEditPreview(false)}
                     />
-                  </div>
-                );
+
+                    {/* Quick Actions Bar - Fixed at bottom */}
+                    <QuickActionsBar
+                      currentStep={!selectedPatientId ? 'patient' : !roughNote ? 'notes' : !enhancedNote ? 'enhance' : 'copy'}
+                      hasRoughNotes={roughNote.length > 20}
+                      hasEnhancedNote={!!enhancedNote}
+                      isProcessing={isProcessing}
+                      compliancePassed={compliancePassed}
+                      complianceIssuesCount={complianceIssuesCount}
+                      onEnhance={handleEnhanceNote}
+                      onCopy={handleCopyToClipboard}
+                      onStartDictation={() => {
+                        document.querySelector('[data-dictation-start]')?.click();
+                      }}
+                      onRunCompliance={() => {
+                        document.querySelector('[data-compliance-checker]')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      copied={copied}
+                    />
+
+                    {/* Add bottom padding for the fixed action bar */}
+                    <div className="h-20" />
+                    </div>
+                    );
 }
