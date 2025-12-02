@@ -337,22 +337,22 @@ Return JSON:
 
       {/* Updates Tabs */}
       <Tabs defaultValue="pending" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pending" className="gap-1">
-            <Clock className="w-4 h-4" />
-            Pending ({pendingUpdates.length})
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-1">
+          <TabsTrigger value="pending" className="flex flex-col md:flex-row gap-1 py-2 px-2 text-xs md:text-sm">
+            <Clock className="w-3 h-3 md:w-4 md:h-4" />
+            <span>Pending ({pendingUpdates.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="approved" className="gap-1">
-            <CheckCircle2 className="w-4 h-4" />
-            Approved ({approvedUpdates.length})
+          <TabsTrigger value="approved" className="flex flex-col md:flex-row gap-1 py-2 px-2 text-xs md:text-sm">
+            <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" />
+            <span>Approved ({approvedUpdates.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="implemented" className="gap-1">
-            <Settings className="w-4 h-4" />
-            Implemented ({implementedUpdates.length})
+          <TabsTrigger value="implemented" className="flex flex-col md:flex-row gap-1 py-2 px-2 text-xs md:text-sm">
+            <Settings className="w-3 h-3 md:w-4 md:h-4" />
+            <span>Implemented ({implementedUpdates.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="all" className="gap-1">
-            <FileText className="w-4 h-4" />
-            All ({updates.length})
+          <TabsTrigger value="all" className="flex flex-col md:flex-row gap-1 py-2 px-2 text-xs md:text-sm">
+            <FileText className="w-3 h-3 md:w-4 md:h-4" />
+            <span>All ({updates.length})</span>
           </TabsTrigger>
         </TabsList>
 
