@@ -267,8 +267,8 @@ export default function Layout({ children }) {
                     {currentUser?.full_name || 'Registered Nurse'}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
-                                            {isAdmin ? 'Administrator' : 'Home Health'}
-                                          </p>
+                    {isAdmin ? 'Administrator' : 'Home Health Nurse'}
+                  </p>
                 </div>
               </div>
               
