@@ -51,6 +51,7 @@ import SmartNoteVoiceListener from "../components/voice/SmartNoteVoiceListener";
 import NoteSummaryGenerator from "../components/smartNote/NoteSummaryGenerator";
 import ProactiveComplianceChecker from "../components/smartNote/ProactiveComplianceChecker";
 import DocumentationAssistantPopup from "../components/smartNote/DocumentationAssistantPopup";
+import MedicareComplianceAssistant from "../components/smartNote/MedicareComplianceAssistant";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -821,6 +822,15 @@ Return your response as JSON with this structure:
             narrativeText={enhancedNote || roughNote}
             diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
             onInsertIntervention={handleInsertInformation}
+          />
+
+          {/* Medicare Compliance Assistant */}
+          <MedicareComplianceAssistant
+            noteText={enhancedNote || roughNote}
+            careType={careType}
+            visitType={visitType}
+            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+            onInsertText={(text) => setRoughNote(prev => prev + '\n\n' + text)}
           />
 
           {/* AI Note Summary */}
