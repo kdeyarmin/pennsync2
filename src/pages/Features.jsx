@@ -467,8 +467,8 @@ ${'='.repeat(50)}
 3. RUN COMPLIANCE AUDIT
    Always run the AI audit before completing a visit to catch missing elements.
 
-4. REVIEW AI SUGGESTIONS
-   Check the Clinical Decision Support panel for important alerts and recommendations.
+4. REVIEW ENHANCED CLINICAL DECISION SUPPORT
+   Check the Enhanced CDS panel for drug interactions, vital trends, and AI recommendations.
 
 5. DOCUMENT PATIENT RESPONSE
    Always include how the patient responded to teaching and interventions.
@@ -482,7 +482,7 @@ SUPPORT & TRAINING
 ${'='.repeat(50)}
 
 For additional training:
-- Visit the Staff Training page for interactive scenarios
+- Visit the Skills & Training page for interactive scenarios
 - Complete your Personalized Learning Path
 - Contact your administrator for questions
 
