@@ -13,12 +13,19 @@ import { getCommandsForContext } from "../components/voice/voiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
 import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
 import PredictiveRiskScoring from "../components/predictive/PredictiveRiskScoring";
+import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
+import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
-  const { data: visits, isLoading, error: visitsError } = useQuery({
+    const { data: currentUser } = useQuery({
+      queryKey: ['currentUser'],
+      queryFn: () => base44.auth.me(),
+    });
+
+    const { data: visits, isLoading, error: visitsError } = useQuery({
     queryKey: ['todayVisits'],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
@@ -146,6 +153,20 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Smart Route Optimizer & Task Prioritization */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <SmartRouteOptimizer
+          visits={visits.filter(v => v.status === 'scheduled')}
+          patients={patients}
+          onOptimizedSchedule={(order) => console.log('Optimized:', order)}
+        />
+        <IntelligentTaskPrioritization
+          nurseEmail={currentUser?.email}
+          patients={patients}
+          onTaskCompleted={() => queryClient.invalidateQueries({ queryKey: ['nurseTasks'] })}
+        />
       </div>
 
       {/* Predictive Risk Scoring Widget */}
