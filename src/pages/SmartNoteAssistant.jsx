@@ -65,6 +65,7 @@ import MedicareComplianceAssistant from "../components/smartNote/MedicareComplia
 import IntelligentPatientContext from "../components/smartNote/IntelligentPatientContext";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import MandatoryComplianceGate from "../components/compliance/MandatoryComplianceGate";
+import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClinicalDecisionSupport";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -884,6 +885,17 @@ Return your response as JSON with this structure:
 
             {/* Clinical Tab - Decision support & medications */}
             <TabsContent value="clinical" className="space-y-4 mt-4">
+              <EnhancedClinicalDecisionSupport
+                patient={selectedPatient}
+                currentNoteText={roughNote || enhancedNote}
+                vitalSigns={vitalSigns}
+                previousVisits={patientVisits}
+                carePlans={carePlans}
+                onInsertRecommendation={handleInsertInformation}
+                onAlertAcknowledged={(alertId) => console.log('Alert acknowledged:', alertId)}
+                autoAnalyze={true}
+              />
+
               <ClinicalDecisionSupport
                 enhancedNote={enhancedNote}
                 extractedData={extractedDataState}
