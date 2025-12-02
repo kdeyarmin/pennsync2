@@ -62,6 +62,7 @@ import NoteSummaryGenerator from "../components/smartNote/NoteSummaryGenerator";
 import ProactiveComplianceChecker from "../components/smartNote/ProactiveComplianceChecker";
 import DocumentationAssistantPopup from "../components/smartNote/DocumentationAssistantPopup";
 import MedicareComplianceAssistant from "../components/smartNote/MedicareComplianceAssistant";
+import IntelligentPatientContext from "../components/smartNote/IntelligentPatientContext";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -84,6 +85,7 @@ export default function SmartNoteAssistant() {
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [extractedDataState, setExtractedDataState] = useState(null);
   const [documentationMode, setDocumentationMode] = useState("freeform"); // "freeform" or "guided"
+  const [prefillData, setPrefillData] = useState(null);
 
   // Fetch current user for personalized feedback
   const { data: currentUser } = useQuery({
@@ -203,6 +205,20 @@ export default function SmartNoteAssistant() {
     } else {
       setRoughNote(prev => prev + '\n\n' + text);
     }
+  };
+
+  // Handle prefill from IntelligentPatientContext
+  const handlePrefillSuggestion = (section, text) => {
+    if (documentationMode === 'guided') {
+      setPrefillData(prev => ({ ...prev, [section]: text }));
+    } else {
+      setRoughNote(prev => prev ? prev + '\n\n' + text : text);
+    }
+  };
+
+  // Handle context insertion from IntelligentPatientContext
+  const handleInsertContext = (text) => {
+    setRoughNote(prev => prev + text);
   };
 
   // Handle training recommendation from compliance checker
@@ -482,13 +498,18 @@ Return your response as JSON with this structure:
                         </Select>
                       </div>
 
-                      {/* Patient Context Bar */}
+                      {/* Intelligent Patient Context - replaces simple PatientContextBar */}
                       {selectedPatient && (
-                        <PatientContextBar 
-                          patient={selectedPatient} 
-                          carePlans={carePlans}
-                        />
-                      )}
+                            <IntelligentPatientContext 
+                              patient={selectedPatient} 
+                              carePlans={carePlans}
+                              previousVisits={patientVisits}
+                              currentNoteText={roughNote}
+                              visitType={visitType}
+                              onInsertContext={handleInsertContext}
+                              onPrefillSuggestion={handlePrefillSuggestion}
+                            />
+                          )}
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -676,6 +697,10 @@ Return your response as JSON with this structure:
                 careType={careType}
                 visitType={visitType}
                 onNoteChange={handleGuidedNoteChange}
+                patient={selectedPatient}
+                previousVisits={patientVisits}
+                carePlans={carePlans}
+                prefillData={prefillData}
               />
               <div className="flex justify-end">
                 <Button
