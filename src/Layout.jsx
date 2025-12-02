@@ -161,6 +161,11 @@ export default function Layout({ children }) {
                   url: createPageUrl("PatientAlerts"),
                   icon: Bell,
                 },
+                {
+                  title: "Regulatory Center",
+                  url: createPageUrl("RegulatoryCompliance"),
+                  icon: Shield,
+                },
                 ];
 
   if (isAdmin) {

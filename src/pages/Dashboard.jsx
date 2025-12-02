@@ -15,6 +15,7 @@ import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts
 import PredictiveRiskScoring from "../components/predictive/PredictiveRiskScoring";
 import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
+import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -188,6 +189,11 @@ export default function Dashboard() {
           carePlans={carePlans}
           incidents={incidents}
         />
+      </div>
+
+      {/* Regulatory Alerts for Nurses */}
+      <div className="mb-6">
+        <NurseRegulatoryAlerts nurseEmail={currentUser?.email} compact={true} />
       </div>
 
       {/* Add Compliance Widget before Visit Schedule */}
