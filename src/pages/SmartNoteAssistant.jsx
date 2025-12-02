@@ -63,6 +63,7 @@ import ProactiveComplianceChecker from "../components/smartNote/ProactiveComplia
 import DocumentationAssistantPopup from "../components/smartNote/DocumentationAssistantPopup";
 import MedicareComplianceAssistant from "../components/smartNote/MedicareComplianceAssistant";
 import IntelligentPatientContext from "../components/smartNote/IntelligentPatientContext";
+import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -498,7 +499,17 @@ Return your response as JSON with this structure:
                         </Select>
                       </div>
 
-                      {/* Intelligent Patient Context - replaces simple PatientContextBar */}
+                      {/* AI Patient Summary Report */}
+                      {selectedPatient && (
+                        <AIPatientSummaryReport
+                          patient={selectedPatient}
+                          previousVisits={patientVisits}
+                          carePlans={carePlans}
+                          onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
+                        />
+                      )}
+
+                      {/* Intelligent Patient Context */}
                       {selectedPatient && (
                             <IntelligentPatientContext 
                               patient={selectedPatient} 
