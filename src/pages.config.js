@@ -19,6 +19,7 @@ import ScheduleOptimizer from './pages/ScheduleOptimizer';
 import NurseTraining from './pages/NurseTraining';
 import PatientAlerts from './pages/PatientAlerts';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -48,4 +49,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Dashboard",
     Pages: PAGES,
+    Layout: __Layout,
 };
