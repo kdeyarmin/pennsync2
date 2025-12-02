@@ -12,6 +12,7 @@ import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
 import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
+import PredictiveRiskScoring from "../components/predictive/PredictiveRiskScoring";
 
 export default function Dashboard() {
   const navigate = useNavigate();
