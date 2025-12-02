@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import {
   Brain,
   Loader2,
@@ -25,9 +26,11 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
-  History
+  History,
+  Shield
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
+import PatientRiskStratification from "./PatientRiskStratification";
 
 export default function AIPatientHistorySummary({
   patient,
@@ -437,6 +440,16 @@ Return JSON:
                 </div>
               </div>
             )}
+
+            {/* AI Risk Stratification - Compact */}
+            <PatientRiskStratification
+              patient={patient}
+              visits={visits}
+              carePlans={carePlans}
+              incidents={incidents}
+              compact={true}
+              autoCalculate={true}
+            />
 
             {/* Risk Factors */}
             {summary.risk_factors?.length > 0 && (

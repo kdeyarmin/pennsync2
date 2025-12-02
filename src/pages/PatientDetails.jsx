@@ -23,6 +23,7 @@ import AICarePlanSuggestions from "../components/carePlan/AICarePlanSuggestions"
 import CarePlanTimelinePredictor from "../components/carePlan/CarePlanTimelinePredictor";
 import PatientFriendlyCarePlanSummary from "../components/carePlan/PatientFriendlyCarePlanSummary";
 import CarePlanEvolution from "../components/carePlan/CarePlanEvolution";
+import PatientRiskStratification from "../components/patient/PatientRiskStratification";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -77,6 +78,13 @@ export default function PatientDetails() {
   const { data: carePlans } = useQuery({
     queryKey: ['patientCarePlans', patientId],
     queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
+    initialData: [],
+    enabled: !!patientId && hasAccess === true,
+  });
+
+  const { data: incidents } = useQuery({
+    queryKey: ['patientIncidents', patientId],
+    queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date'),
     initialData: [],
     enabled: !!patientId && hasAccess === true,
   });
@@ -214,6 +222,19 @@ export default function PatientDetails() {
         </CardContent>
       </Card>
 
+      {/* AI Risk Stratification - Prominent */}
+      {patient && (
+        <div className="mb-6">
+          <PatientRiskStratification
+            patient={patient}
+            visits={visits}
+            carePlans={carePlans}
+            incidents={incidents}
+            autoCalculate={true}
+          />
+        </div>
+      )}
+
       {/* AI Patient History Summary - Prominent */}
       {patient && (
         <div className="mb-6">
@@ -221,16 +242,10 @@ export default function PatientDetails() {
             patient={patient}
             visits={visits}
             carePlans={carePlans}
+            incidents={incidents}
             autoGenerate={true}
             prominent={true}
           />
-        </div>
-      )}
-
-      {/* Add Hospital Readmission Risk Score */}
-      {patient && (
-        <div className="mb-6">
-          <HospitalReadmissionRisk patient={patient} />
         </div>
       )}
 
