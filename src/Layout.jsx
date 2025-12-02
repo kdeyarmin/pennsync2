@@ -106,11 +106,7 @@ export default function Layout({ children }) {
       url: createPageUrl("ComplianceDashboard"),
       icon: ClipboardCheck,
     },
-    {
-      title: "Analytics",
-      url: createPageUrl("AnalyticsDashboard"),
-      icon: BarChart3,
-    },
+
     {
       title: "Productivity",
       url: createPageUrl("ProductivityDashboard"),
