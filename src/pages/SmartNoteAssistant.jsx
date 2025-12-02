@@ -16,6 +16,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
   Sparkles,
   Copy,
   CheckCircle2,
@@ -25,7 +31,11 @@ import {
   AlertCircle,
   Zap,
   Brain,
-  LayoutList
+  LayoutList,
+  Shield,
+  ClipboardList,
+  Stethoscope,
+  MessageSquare
 } from "lucide-react";
 
 import RealTimeSuggestions from "../components/smartNote/RealTimeSuggestions";
@@ -756,205 +766,192 @@ Return your response as JSON with this structure:
           )}
         </div>
 
-        {/* Suggestions Sidebar */}
+        {/* AI Tools Sidebar - Organized in Tabs */}
         <div className="space-y-4">
-          {/* AI Features Header */}
-          <Card className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white border-none">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Brain className="w-5 h-5" />
-                <span className="font-bold">AI Assistant Features</span>
-              </div>
-              <p className="text-sm text-purple-100">
-                7 AI-powered tools to enhance your documentation
-              </p>
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="assist" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 h-auto">
+              <TabsTrigger value="assist" className="flex flex-col gap-1 py-2 px-1">
+                <MessageSquare className="w-4 h-4" />
+                <span className="text-xs">Assist</span>
+              </TabsTrigger>
+              <TabsTrigger value="clinical" className="flex flex-col gap-1 py-2 px-1">
+                <Stethoscope className="w-4 h-4" />
+                <span className="text-xs">Clinical</span>
+              </TabsTrigger>
+              <TabsTrigger value="compliance" className="flex flex-col gap-1 py-2 px-1">
+                <Shield className="w-4 h-4" />
+                <span className="text-xs">Compliance</span>
+              </TabsTrigger>
+              <TabsTrigger value="actions" className="flex flex-col gap-1 py-2 px-1">
+                <ClipboardList className="w-4 h-4" />
+                <span className="text-xs">Actions</span>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Real-Time Suggestions */}
-          <RealTimeSuggestions
-            currentText={roughNote}
-            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-            careType={careType}
-            onInsertSuggestion={handleInsertSuggestion}
-          />
-
-          {/* Patient History Summary */}
-          {selectedPatientId && (
-            <PatientHistorySummary
-              patientId={selectedPatientId}
-              patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-              diagnosis={selectedPatient?.primary_diagnosis || diagnosis}
-              previousVisits={patientVisits}
-              carePlans={carePlans}
-              onInsertSummary={handleInsertSummary}
-            />
-          )}
-
-          {/* Clinical Decision Support */}
-          <ClinicalDecisionSupport
-            enhancedNote={enhancedNote}
-            extractedData={extractedDataState}
-            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-            careType={careType}
-            vitalSigns={vitalSigns}
-            onInsertRecommendation={handleInsertInformation}
-          />
-
-          {/* Data Extractor */}
-          <DataExtractor
-            narrativeText={enhancedNote || roughNote}
-            patientId={selectedPatientId}
-            onExtractedData={handleExtractedData}
-            onCreateCarePlan={handleCreateCarePlan}
-            onCreateTask={(task) => console.log('Task:', task)}
-            onCarePlansCreated={(plans) => console.log('Care plans created:', plans)}
-          />
-
-          {/* External Knowledge Search */}
-          <ExternalKnowledge
-            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-            onInsertInformation={handleInsertInformation}
-          />
-
-          {/* Medication Adherence Insights */}
-          <MedicationAdherenceInsights
-            narrativeText={enhancedNote || roughNote}
-            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-            onInsertIntervention={handleInsertInformation}
-          />
-
-          {/* Medicare Compliance Assistant */}
-          <MedicareComplianceAssistant
-            noteText={enhancedNote || roughNote}
-            careType={careType}
-            visitType={visitType}
-            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-            onInsertText={(text) => setRoughNote(prev => prev + '\n\n' + text)}
-          />
-
-          {/* AI Note Summary */}
-          <NoteSummaryGenerator
-            noteText={enhancedNote || roughNote}
-            patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-          />
-
-          {/* Task Generator */}
-          <TaskGenerator
-            narrativeText={enhancedNote || roughNote}
-            patientId={selectedPatientId}
-            patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-            diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-            missingCriticalElements={auditResults?.missing_critical_elements}
-            auditResults={auditResults}
-            nurseEmail={currentUser?.email}
-            onTasksGenerated={handleTasksGenerated}
-            onTrainingRecommended={(recs) => console.log('Training recommended:', recs)}
-          />
-
-          {/* AI Care Plan Generator */}
-          <div data-care-plan-generator>
-          <AICarePlanGenerator
-              patientId={selectedPatientId}
-              patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-              diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-              careType={careType}
-              extractedData={extractedDataState}
-              existingCarePlans={carePlans}
-              onCarePlansCreated={(plans) => console.log('Care plans created:', plans)}
+            {/* Assist Tab - Real-time help while writing */}
+            <TabsContent value="assist" className="space-y-4 mt-4">
+              <RealTimeSuggestions
+                currentText={roughNote}
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                careType={careType}
+                onInsertSuggestion={handleInsertSuggestion}
               />
-              </div>
 
-              {/* Quick Care Plan Updater */}
-            {selectedPatientId && (
-              <QuickCarePlanUpdater
-                patientId={selectedPatientId}
-                carePlans={carePlans}
-                onCarePlanUpdated={() => {}}
-              />
-            )}
-
-            {/* Personalized Feedback */}
-            {auditResults && (
-              <PersonalizedFeedback
-                auditResults={auditResults}
-                userEmail={currentUser?.email}
-              />
-            )}
-
-            {/* Personalized Skill Builder */}
-            <PersonalizedSkillBuilder userEmail={currentUser?.email} />
-
-            {/* Guided Incident Reporting */}
-            {selectedPatientId && (
-              <div data-incident-reporter>
-                <GuidedIncidentReporting
+              {selectedPatientId && (
+                <PatientHistorySummary
                   patientId={selectedPatientId}
                   patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-                  physicianEmail={selectedPatient?.physician_email}
-                  caregiverEmail={selectedPatient?.caregiver_email}
-                  onIncidentCreated={(incident) => console.log('Incident created:', incident)}
+                  diagnosis={selectedPatient?.primary_diagnosis || diagnosis}
+                  previousVisits={patientVisits}
+                  carePlans={carePlans}
+                  onInsertSummary={handleInsertSummary}
                 />
-              </div>
-            )}
+              )}
 
-            {/* Quick Tips */}
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm">💡 Quick Tips</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-xs">
-                <div className="bg-white p-2 rounded-lg border border-blue-200">
-                  <p className="font-semibold text-blue-900">Be Brief</p>
-                  <p className="text-gray-600">AI expands rough notes</p>
-                </div>
-                <div className="bg-white p-2 rounded-lg border border-blue-200">
-                  <p className="font-semibold text-blue-900">Include Key Facts</p>
-                  <p className="text-gray-600">Vitals, assessments, interventions</p>
-                </div>
-                <div className="bg-white p-2 rounded-lg border border-blue-200">
-                  <p className="font-semibold text-blue-900">Review & Edit</p>
-                  <p className="text-gray-600">Always verify before copying</p>
-                </div>
-              </CardContent>
-            </Card>
+              <NoteSummaryGenerator
+                noteText={enhancedNote || roughNote}
+                patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+              />
 
-            {/* Original Suggestions */}
-            {suggestions.length > 0 && (
-              <Card className="border-yellow-200">
-                <CardHeader className="bg-yellow-50 py-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Lightbulb className="w-4 h-4 text-yellow-600" />
-                    AI Suggestions ({suggestions.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-3 space-y-2">
-                  {suggestions.map((suggestion, index) => (
-                    <Card key={index} className="border-l-4 border-l-yellow-500">
-                      <CardContent className="p-2 space-y-1">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-1">
-                            {getCategoryIcon(suggestion.category)}
-                            <span className="font-semibold text-xs text-gray-900">
-                              {suggestion.category}
-                            </span>
-                          </div>
+              {suggestions.length > 0 && (
+                <Card className="border-yellow-200">
+                  <CardHeader className="bg-yellow-50 py-3">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Lightbulb className="w-4 h-4 text-yellow-600" />
+                      Suggestions ({suggestions.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-3 space-y-2">
+                    {suggestions.slice(0, 3).map((suggestion, index) => (
+                      <div key={index} className="p-2 bg-yellow-50 rounded border-l-2 border-yellow-500">
+                        <div className="flex items-center gap-2 mb-1">
                           <Badge className={`${getPriorityColor(suggestion.priority)} text-xs`}>
                             {suggestion.priority}
                           </Badge>
+                          <span className="text-xs font-medium">{suggestion.category}</span>
                         </div>
-                        <p className="text-xs text-gray-700">
-                          {suggestion.suggestion}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                        <p className="text-xs text-gray-700">{suggestion.suggestion}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Clinical Tab - Decision support & medications */}
+            <TabsContent value="clinical" className="space-y-4 mt-4">
+              <ClinicalDecisionSupport
+                enhancedNote={enhancedNote}
+                extractedData={extractedDataState}
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                careType={careType}
+                vitalSigns={vitalSigns}
+                onInsertRecommendation={handleInsertInformation}
+              />
+
+              <MedicationAdherenceInsights
+                narrativeText={enhancedNote || roughNote}
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                onInsertIntervention={handleInsertInformation}
+              />
+
+              <ExternalKnowledge
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                onInsertInformation={handleInsertInformation}
+              />
+
+              <DataExtractor
+                narrativeText={enhancedNote || roughNote}
+                patientId={selectedPatientId}
+                onExtractedData={handleExtractedData}
+                onCreateCarePlan={handleCreateCarePlan}
+                onCreateTask={(task) => console.log('Task:', task)}
+                onCarePlansCreated={(plans) => console.log('Care plans created:', plans)}
+              />
+            </TabsContent>
+
+            {/* Compliance Tab - Medicare & documentation quality */}
+            <TabsContent value="compliance" className="space-y-4 mt-4">
+              <MedicareComplianceAssistant
+                noteText={enhancedNote || roughNote}
+                careType={careType}
+                visitType={visitType}
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                onInsertText={(text) => setRoughNote(prev => prev + '\n\n' + text)}
+              />
+
+              {auditResults && (
+                <PersonalizedFeedback
+                  auditResults={auditResults}
+                  userEmail={currentUser?.email}
+                />
+              )}
+
+              <PersonalizedSkillBuilder userEmail={currentUser?.email} />
+            </TabsContent>
+
+            {/* Actions Tab - Tasks, care plans, incidents */}
+            <TabsContent value="actions" className="space-y-4 mt-4">
+              <TaskGenerator
+                narrativeText={enhancedNote || roughNote}
+                patientId={selectedPatientId}
+                patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                missingCriticalElements={auditResults?.missing_critical_elements}
+                auditResults={auditResults}
+                nurseEmail={currentUser?.email}
+                onTasksGenerated={handleTasksGenerated}
+                onTrainingRecommended={(recs) => console.log('Training recommended:', recs)}
+              />
+
+              <div data-care-plan-generator>
+                <AICarePlanGenerator
+                  patientId={selectedPatientId}
+                  patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+                  diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                  careType={careType}
+                  extractedData={extractedDataState}
+                  existingCarePlans={carePlans}
+                  onCarePlansCreated={(plans) => console.log('Care plans created:', plans)}
+                />
+              </div>
+
+              {selectedPatientId && (
+                <QuickCarePlanUpdater
+                  patientId={selectedPatientId}
+                  carePlans={carePlans}
+                  onCarePlanUpdated={() => {}}
+                />
+              )}
+
+              {selectedPatientId && (
+                <div data-incident-reporter>
+                  <GuidedIncidentReporting
+                    patientId={selectedPatientId}
+                    patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+                    physicianEmail={selectedPatient?.physician_email}
+                    caregiverEmail={selectedPatient?.caregiver_email}
+                    onIncidentCreated={(incident) => console.log('Incident created:', incident)}
+                  />
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          {/* Quick Tips - Always visible */}
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <CardContent className="p-3">
+              <p className="text-xs font-semibold text-blue-900 mb-2">💡 Quick Tips</p>
+              <div className="space-y-1 text-xs text-gray-600">
+                <p>• Be brief - AI expands your notes</p>
+                <p>• Include vitals & key findings</p>
+                <p>• Always review before copying</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
 
         {/* Voice Command Listener - Fixed position, outside grid */}
         <SmartNoteVoiceListener
