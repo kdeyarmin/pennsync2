@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
-import { LayoutDashboard, Users, FileText, Menu, TrendingUp, Shield, Sparkles, Target, BarChart3, Award, Wand2, LogOut, AlertCircle, Brain, ClipboardCheck, Activity, GraduationCap, BookOpen, Route } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Menu, TrendingUp, Shield, Sparkles, Target, BarChart3, Award, Wand2, LogOut, AlertCircle, Brain, ClipboardCheck, Activity, GraduationCap, BookOpen, Route, Bell } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "./api/base44Client";
 import {
@@ -152,11 +152,16 @@ export default function Layout({ children }) {
             icon: BookOpen,
           },
           {
-            title: "Schedule Optimizer",
-            url: createPageUrl("ScheduleOptimizer"),
-            icon: Route,
-          },
-          ];
+                  title: "Schedule Optimizer",
+                  url: createPageUrl("ScheduleOptimizer"),
+                  icon: Route,
+                },
+                {
+                  title: "Patient Alerts",
+                  url: createPageUrl("PatientAlerts"),
+                  icon: Bell,
+                },
+                ];
 
   if (isAdmin) {
     navigationItems.push({
