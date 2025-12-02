@@ -5,29 +5,56 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, User, Phone, MapPin } from "lucide-react";
+import { Plus, Search, User, Phone, MapPin, FileText, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { format } from 'date-fns'; // Import format from date-fns
+import { format } from 'date-fns';
 import { secureDelete, handleSecureError, logSecurityEvent } from "../components/utils/security";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import PatientForm from "../components/patient/PatientForm";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
+import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 
 export default function Patients() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPatient, setEditingPatient] = useState(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false); // Added for delete functionality
-  const [patientToDelete, setPatientToDelete] = useState(null); // Added for delete functionality
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [patientToDelete, setPatientToDelete] = useState(null);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [summaryPatient, setSummaryPatient] = useState(null);
 
   const { data: patients, isLoading, error: patientsError } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list('-created_date'),
     initialData: [],
   });
+
+  // Fetch visits and care plans for summary dialog
+  const { data: summaryVisits = [] } = useQuery({
+    queryKey: ['summaryVisits', summaryPatient?.id],
+    queryFn: () => base44.entities.Visit.filter({ patient_id: summaryPatient.id, status: 'completed' }, '-visit_date', 10),
+    enabled: !!summaryPatient?.id,
+  });
+
+  const { data: summaryCarePlans = [] } = useQuery({
+    queryKey: ['summaryCarePlans', summaryPatient?.id],
+    queryFn: () => base44.entities.CarePlan.filter({ patient_id: summaryPatient.id }),
+    enabled: !!summaryPatient?.id,
+  });
+
+  const handleShowSummary = (patient) => {
+    setSummaryPatient(patient);
+    setShowSummaryDialog(true);
+  };
 
   // Handle query errors gracefully
   if (patientsError) {
@@ -273,11 +300,20 @@ export default function Patients() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => handleShowSummary(patient)}
+                    className="gap-1"
+                    title="View AI Summary"
+                  >
+                    <FileText className="w-3 h-3" />
+                    Summary
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setEditingPatient(patient);
                       setShowForm(true);
                     }}
-                    className="flex-1"
                   >
                     Edit
                   </Button>
@@ -325,6 +361,26 @@ export default function Patients() {
         commands={getCommandsForContext('patients')}
         context="patients"
       />
+
+      {/* Patient Summary Dialog */}
+      <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-indigo-600" />
+              Patient Summary: {summaryPatient?.first_name} {summaryPatient?.last_name}
+            </DialogTitle>
+          </DialogHeader>
+          {summaryPatient && (
+            <AIPatientSummaryReport
+              patient={summaryPatient}
+              previousVisits={summaryVisits}
+              carePlans={summaryCarePlans}
+              compact={false}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
