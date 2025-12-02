@@ -174,11 +174,7 @@ export default function Layout({ children }) {
       url: createPageUrl("AdminDashboard"),
       icon: Shield,
     });
-    navigationItems.push({
-      title: "Survey Prep",
-      url: createPageUrl("SurveyPreparation"),
-      icon: FileText,
-    });
+
     navigationItems.push({
       title: "Auto Care Plans",
       url: createPageUrl("AutomaticCarePlans"),
