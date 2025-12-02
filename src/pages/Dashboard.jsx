@@ -148,6 +148,17 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Predictive Risk Scoring Widget */}
+      <div className="mb-6">
+        <PredictiveRiskScoring
+          patients={patients}
+          visits={visits}
+          carePlans={carePlans}
+          incidents={incidents}
+          compact={true}
+        />
+      </div>
+
       {/* Real-time Patient Alerts */}
       <div className="mb-6">
         <RealTimePatientAlerts
