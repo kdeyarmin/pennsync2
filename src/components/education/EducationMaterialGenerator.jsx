@@ -34,7 +34,7 @@ export default function EducationMaterialGenerator({ patient, teachBackHistory =
   const [category, setCategory] = useState("");
   const [readingLevel, setReadingLevel] = useState("simple");
   const [language, setLanguage] = useState("english");
-  const [culturalBackground, setCulturalBackground] = useState("");
+  const [culturalBackground, setCulturalBackground] = useState("not_specified");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -93,7 +93,7 @@ export default function EducationMaterialGenerator({ patient, teachBackHistory =
   ];
 
   const culturalOptions = [
-    { value: "", label: "Not specified" },
+    { value: "not_specified", label: "Not specified" },
     { value: "hispanic_latino", label: "Hispanic/Latino" },
     { value: "african_american", label: "African American" },
     { value: "asian", label: "Asian" },
@@ -128,7 +128,7 @@ ${learningProfile.successRate > 80 ? '- Patient learns well. Can use slightly mo
 `;
       }
 
-      if (culturalBackground) {
+      if (culturalBackground && culturalBackground !== "not_specified") {
         personalizationContext += `
 CULTURAL CONSIDERATIONS (${culturalBackground.replace(/_/g, ' ')}):
 - Use culturally appropriate examples and analogies
