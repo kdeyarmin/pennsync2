@@ -26,6 +26,7 @@ import {
   Plus
 } from "lucide-react";
 import { debounce } from "lodash";
+import PatientRiskPrediction from "./PatientRiskPrediction";
 
 export default function EnhancedClinicalDecisionSupport({
   patient,
@@ -34,6 +35,7 @@ export default function EnhancedClinicalDecisionSupport({
   previousVisits = [],
   carePlans = [],
   medications = [],
+  incidents = [],
   onInsertRecommendation,
   onAlertAcknowledged,
   autoAnalyze = true
@@ -386,7 +388,7 @@ Return comprehensive JSON:
 
           {cdsResults && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-8 mb-3">
+              <TabsList className="grid w-full grid-cols-6 h-8 mb-3">
                 <TabsTrigger value="alerts" className="text-xs px-1 relative">
                   <AlertTriangle className="w-3 h-3 mr-1" />
                   Alerts
@@ -395,6 +397,10 @@ Return comprehensive JSON:
                       {unacknowledgedCritical.length}
                     </span>
                   )}
+                </TabsTrigger>
+                <TabsTrigger value="predict" className="text-xs px-1">
+                  <Brain className="w-3 h-3 mr-1" />
+                  Predict
                 </TabsTrigger>
                 <TabsTrigger value="drugs" className="text-xs px-1">
                   <Pill className="w-3 h-3 mr-1" />
@@ -413,6 +419,20 @@ Return comprehensive JSON:
                   Risks
                 </TabsTrigger>
               </TabsList>
+
+              {/* Risk Prediction Tab */}
+              <TabsContent value="predict" className="mt-0">
+                <PatientRiskPrediction
+                  patient={patient}
+                  currentVitals={vitalSigns}
+                  previousVisits={previousVisits}
+                  carePlans={carePlans}
+                  incidents={incidents}
+                  onInsertRecommendation={onInsertRecommendation}
+                  onAlertGenerated={(alert) => console.log('Risk alert:', alert)}
+                  compact={true}
+                />
+              </TabsContent>
 
               {/* Critical Alerts Tab */}
               <TabsContent value="alerts" className="space-y-2 mt-0">
