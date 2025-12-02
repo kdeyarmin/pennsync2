@@ -66,6 +66,7 @@ import IntelligentPatientContext from "../components/smartNote/IntelligentPatien
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import MandatoryComplianceGate from "../components/compliance/MandatoryComplianceGate";
 import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClinicalDecisionSupport";
+import AIDrivenDocumentationPrompts from "../components/smartNote/AIDrivenDocumentationPrompts";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
