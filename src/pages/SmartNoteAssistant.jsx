@@ -64,6 +64,7 @@ import DocumentationAssistantPopup from "../components/smartNote/DocumentationAs
 import MedicareComplianceAssistant from "../components/smartNote/MedicareComplianceAssistant";
 import IntelligentPatientContext from "../components/smartNote/IntelligentPatientContext";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
+import AIPatientHistorySummary from "../components/patient/AIPatientHistorySummary";
 import MandatoryComplianceGate from "../components/compliance/MandatoryComplianceGate";
 import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClinicalDecisionSupport";
 import AIDrivenDocumentationPrompts from "../components/smartNote/AIDrivenDocumentationPrompts";
@@ -594,13 +595,15 @@ Return your response as JSON with this structure:
                         </Select>
                       </div>
 
-                      {/* AI Patient Summary Report */}
+                      {/* AI Patient History Summary - Prominent */}
                       {selectedPatient && (
-                        <AIPatientSummaryReport
+                        <AIPatientHistorySummary
                           patient={selectedPatient}
-                          previousVisits={patientVisits}
+                          visits={patientVisits}
                           carePlans={carePlans}
                           onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
+                          autoGenerate={true}
+                          prominent={true}
                         />
                       )}
 
