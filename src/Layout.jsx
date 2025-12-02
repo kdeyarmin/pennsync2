@@ -116,11 +116,7 @@ export default function Layout({ children }) {
       url: createPageUrl("Features"),
       icon: Sparkles,
     },
-    {
-      title: "Patient Triage",
-      url: createPageUrl("PatientTriage"),
-      icon: Brain,
-    },
+
     {
       title: "Predictive AI",
       url: createPageUrl("PredictiveAnalytics"),
