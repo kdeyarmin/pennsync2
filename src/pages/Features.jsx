@@ -369,142 +369,113 @@ export default function FeaturesPage() {
   const generateFeaturesPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      let pdfContent = `PENN SYNC FEATURES GUIDE
-=====================================
-AI-Powered Home Health Documentation System
+      // Use LLM to generate a nicely formatted PDF via HTML
+      const featuresList = features.map(cat => ({
+        category: cat.category,
+        items: cat.items.map(f => ({
+          name: f.name,
+          description: f.description,
+          timeSaved: f.timeSaved,
+          impact: f.impact,
+          howToUse: f.howToUse,
+          details: f.details
+        }))
+      }));
 
-Generated: ${new Date().toLocaleDateString()}
+      // Create HTML content for PDF
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Penn Sync Features Guide</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+    h1 { color: #4F46E5; text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 10px; }
+    h2 { color: #6366F1; margin-top: 30px; border-left: 4px solid #6366F1; padding-left: 10px; }
+    h3 { color: #1F2937; margin-top: 20px; }
+    .feature { background: #F9FAFB; border-radius: 8px; padding: 15px; margin: 15px 0; border: 1px solid #E5E7EB; }
+    .feature-name { font-weight: bold; font-size: 16px; color: #1F2937; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 8px; }
+    .critical { background: #FEE2E2; color: #DC2626; }
+    .high { background: #FED7AA; color: #EA580C; }
+    .medium { background: #DBEAFE; color: #2563EB; }
+    .time-saved { color: #059669; font-weight: bold; }
+    .how-to { background: #EFF6FF; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
+    .section { page-break-inside: avoid; }
+    .toc { background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .toc-item { margin: 5px 0; }
+    .header-info { text-align: center; color: #6B7280; margin-bottom: 30px; }
+    .commands-section { background: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    .commands-section h3 { color: #92400E; margin-top: 0; }
+    .command { font-family: monospace; background: #FEF9C3; padding: 2px 6px; border-radius: 3px; }
+    .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB; color: #6B7280; }
+  </style>
+</head>
+<body>
+  <h1>🏥 Penn Sync Features Guide</h1>
+  <p class="header-info">AI-Powered Home Health Documentation System<br>Generated: ${new Date().toLocaleDateString()}</p>
+  
+  <div class="toc">
+    <h3>📑 Table of Contents</h3>
+    ${features.map((cat, idx) => `<div class="toc-item">${idx + 1}. ${cat.category} (${cat.items.length} features)</div>`).join('')}
+  </div>
 
-TABLE OF CONTENTS
------------------
-`;
-      
-      features.forEach((category, idx) => {
-        pdfContent += `${idx + 1}. ${category.category}\n`;
-      });
+  ${features.map((category, catIdx) => `
+    <div class="section">
+      <h2>${catIdx + 1}. ${category.category}</h2>
+      ${category.items.map((feature, idx) => `
+        <div class="feature">
+          <div class="feature-name">
+            ${catIdx + 1}.${idx + 1} ${feature.name}
+            <span class="badge ${feature.impact}">${feature.impact.toUpperCase()}</span>
+          </div>
+          <p>${feature.description}</p>
+          <p class="time-saved">⏱️ Time Saved: ${feature.timeSaved}</p>
+          <p><strong>Details:</strong> ${feature.details}</p>
+          <div class="how-to">
+            <strong>📋 How to Use:</strong><br>
+            ${feature.howToUse}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('')}
 
-      pdfContent += `\n\n`;
+  <div class="commands-section">
+    <h3>🎤 Voice Commands Quick Reference</h3>
+    <p><span class="command">"Insert cardiovascular"</span> - Adds cardiovascular assessment</p>
+    <p><span class="command">"Insert respiratory"</span> - Adds respiratory assessment</p>
+    <p><span class="command">"Add homebound status"</span> - Adds homebound justification</p>
+    <p><span class="command">"Add skilled need"</span> - Adds skilled nursing necessity</p>
+    <p><span class="command">"Save documentation"</span> - Saves current note</p>
+    <p><span class="command">"Generate template"</span> - Creates smart template</p>
+    <p><span class="command">"Report fall"</span> - Opens fall incident form</p>
+  </div>
 
-      features.forEach((category, catIdx) => {
-        pdfContent += `\n${'='.repeat(50)}
-SECTION ${catIdx + 1}: ${category.category.toUpperCase()}
-${'='.repeat(50)}\n\n`;
+  <div class="commands-section" style="background: #DCFCE7;">
+    <h3 style="color: #166534;">⌨️ Text Expanders</h3>
+    <p><span class="command">wnl</span> → within normal limits</p>
+    <p><span class="command">nka</span> → no known allergies</p>
+    <p><span class="command">sob</span> → shortness of breath</p>
+    <p><span class="command">adl</span> → activities of daily living</p>
+    <p><span class="command">pt</span> → patient</p>
+  </div>
 
-        category.items.forEach((feature, idx) => {
-          pdfContent += `${catIdx + 1}.${idx + 1} ${feature.name}
-${'-'.repeat(40)}
-Impact: ${feature.impact.toUpperCase()}
-Time Saved: ${feature.timeSaved}
+  <div class="footer">
+    <p>© Penn Sync - AI-Powered Home Health Documentation</p>
+    <p>For support, contact your administrator</p>
+  </div>
+</body>
+</html>`;
 
-DESCRIPTION:
-${feature.description}
-
-DETAILS:
-${feature.details}
-
-HOW TO USE:
-${feature.howToUse}
-
-\n`;
-        });
-      });
-
-      pdfContent += `\n${'='.repeat(50)}
-QUICK REFERENCE: VOICE COMMANDS
-${'='.repeat(50)}
-
-Documentation Commands:
-- "Insert cardiovascular" - Adds cardiovascular assessment section
-- "Insert respiratory" - Adds respiratory assessment section  
-- "Insert medication" - Adds medication management section
-- "Insert education" - Adds patient education section
-- "Add normal findings" - Inserts standard normal findings
-- "Add homebound status" - Adds homebound justification
-- "Add skilled need" - Adds skilled nursing necessity
-- "Insert vital signs" - Adds current vitals to narrative
-- "Copy from last visit" - Copies previous visit content
-
-Action Commands:
-- "Save documentation" - Saves current note
-- "Generate template" - Creates smart template
-- "Report fall" - Opens fall incident form
-- "Report hospitalization" - Opens hospitalization form
-
-Navigation Commands:
-- "Go to patients" - Opens patient list
-- "Go to dashboard" - Opens main dashboard
-- "Refresh data" - Refreshes current page
-
-
-${'='.repeat(50)}
-KEYBOARD SHORTCUTS
-${'='.repeat(50)}
-
-Text Expanders (type and press space):
-- wnl → within normal limits
-- nka → no known allergies
-- sob → shortness of breath
-- rom → range of motion
-- adl → activities of daily living
-- bp → blood pressure
-- hr → heart rate
-- rr → respiratory rate
-- o2 → oxygen saturation
-- pt → patient
-- hx → history
-
-
-${'='.repeat(50)}
-BEST PRACTICES
-${'='.repeat(50)}
-
-1. START WITH VITALS
-   Enter vital signs first - AI uses them to generate better templates and suggestions.
-
-2. USE VOICE DICTATION
-   Speak naturally and let AI format your observations professionally.
-
-3. RUN COMPLIANCE AUDIT
-   Always run the AI audit before completing a visit to catch missing elements.
-
-4. REVIEW ENHANCED CLINICAL DECISION SUPPORT
-   Check the Enhanced CDS panel for drug interactions, vital trends, and AI recommendations.
-
-5. DOCUMENT PATIENT RESPONSE
-   Always include how the patient responded to teaching and interventions.
-
-6. USE TEMPLATES
-   Start with smart templates and customize rather than typing from scratch.
-
-
-${'='.repeat(50)}
-SUPPORT & TRAINING
-${'='.repeat(50)}
-
-For additional training:
-- Visit the Skills & Training page for interactive scenarios
-- Complete your Personalized Learning Path
-- Contact your administrator for questions
-
-For technical support:
-- Check the Compliance Dashboard for system alerts
-- Review Security Documentation for HIPAA guidelines
-- Contact your IT administrator for access issues
-
-
-© Penn Sync - AI-Powered Home Health Documentation
-`;
-
-      // Create and download the file
-      const blob = new Blob([pdfContent], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Penn_Sync_Features_Guide.txt';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
+      // Open print dialog which allows saving as PDF
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
 
     } catch (error) {
       console.error('Error generating PDF:', error);
