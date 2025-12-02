@@ -64,6 +64,7 @@ import DocumentationAssistantPopup from "../components/smartNote/DocumentationAs
 import MedicareComplianceAssistant from "../components/smartNote/MedicareComplianceAssistant";
 import IntelligentPatientContext from "../components/smartNote/IntelligentPatientContext";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
+import MandatoryComplianceGate from "../components/compliance/MandatoryComplianceGate";
 
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
@@ -87,6 +88,7 @@ export default function SmartNoteAssistant() {
   const [extractedDataState, setExtractedDataState] = useState(null);
   const [documentationMode, setDocumentationMode] = useState("freeform"); // "freeform" or "guided"
   const [prefillData, setPrefillData] = useState(null);
+  const [compliancePassed, setCompliancePassed] = useState(false);
 
   // Fetch current user for personalized feedback
   const { data: currentUser } = useQuery({
@@ -778,12 +780,30 @@ Return your response as JSON with this structure:
                   </pre>
                 </div>
 
-                <Alert className="mt-4 bg-green-50 border-green-200">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <AlertDescription className="text-green-900">
-                    Your note has been enhanced and is ready to copy into your EHR system!
-                  </AlertDescription>
-                </Alert>
+                {/* Mandatory Compliance Gate */}
+                <MandatoryComplianceGate
+                  noteText={enhancedNote}
+                  careType={careType}
+                  visitType={visitType}
+                  diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
+                  vitalSigns={vitalSigns}
+                  onCompliancePassed={(passed, override) => {
+                    setCompliancePassed(passed);
+                    if (override) {
+                      console.log('Compliance overridden:', override.reason);
+                    }
+                  }}
+                  onInsertFix={(fix) => setRoughNote(prev => prev + '\n\n' + fix)}
+                />
+
+                {compliancePassed && (
+                  <Alert className="mt-4 bg-green-50 border-green-200">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <AlertDescription className="text-green-900">
+                      Your note has passed compliance checks and is ready to copy into your EHR system!
+                    </AlertDescription>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
           )}
