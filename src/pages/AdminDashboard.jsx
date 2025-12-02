@@ -354,30 +354,30 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="users">
-            <Users className="w-4 h-4 mr-2" />
-            Users
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-6 w-full">
+          <TabsTrigger value="users" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Users className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Users</span>
           </TabsTrigger>
-          <TabsTrigger value="reports">
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Reports
+          <TabsTrigger value="reports" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <BarChart3 className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Reports</span>
           </TabsTrigger>
-          <TabsTrigger value="quality">
-            <Award className="w-4 h-4 mr-2" />
-            Quality
+          <TabsTrigger value="quality" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Award className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Quality</span>
           </TabsTrigger>
-          <TabsTrigger value="security">
-            <Shield className="w-4 h-4 mr-2" />
-            Security
+          <TabsTrigger value="security" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Shield className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="encryption">
-            <Lock className="w-4 h-4 mr-2" />
-            Encryption
+          <TabsTrigger value="encryption" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Lock className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Encrypt</span>
           </TabsTrigger>
-          <TabsTrigger value="settings">
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
+          <TabsTrigger value="settings" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Settings className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Settings</span>
           </TabsTrigger>
         </TabsList>
 
