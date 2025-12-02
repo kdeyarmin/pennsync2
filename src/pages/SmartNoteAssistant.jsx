@@ -48,7 +48,7 @@ import TaskGenerator from "../components/smartNote/TaskGenerator";
 import MedicationAdherenceInsights from "../components/smartNote/MedicationAdherenceInsights";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
-import GuidedDocumentationFlow from "../components/smartNote/GuidedDocumentationFlow";
+
 import PatientContextBar from "../components/smartNote/PatientContextBar";
 import InlineSuggestions from "../components/smartNote/InlineSuggestions";
 import QuickCarePlanUpdater from "../components/smartNote/QuickCarePlanUpdater";
@@ -73,7 +73,7 @@ import PersistentPatientHeader from "../components/smartNote/PersistentPatientHe
 import QuickEditPreview from "../components/smartNote/QuickEditPreview";
 import QuickActionsBar from "../components/smartNote/QuickActionsBar";
 import CollapsibleAIPanel from "../components/smartNote/CollapsibleAIPanel";
-import SmartFillSuggestions from "../components/smartNote/SmartFillSuggestions";
+
 import EnhancedVoiceVitalsEntry from "../components/smartNote/EnhancedVoiceVitalsEntry";
 import InteractiveWorkflowGuide from "../components/smartNote/InteractiveWorkflowGuide";
 import ConsolidatedFeedbackCenter from "../components/smartNote/ConsolidatedFeedbackCenter";
@@ -98,7 +98,7 @@ export default function SmartNoteAssistant() {
   const [auditResults, setAuditResults] = useState(null);
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [extractedDataState, setExtractedDataState] = useState(null);
-  const [documentationMode, setDocumentationMode] = useState("freeform"); // "freeform" or "guided"
+
       const [prefillData, setPrefillData] = useState(null);
       const [compliancePassed, setCompliancePassed] = useState(false);
       const [showEditPreview, setShowEditPreview] = useState(false);
@@ -106,8 +106,6 @@ export default function SmartNoteAssistant() {
       const [editPreviewTitle, setEditPreviewTitle] = useState("");
       const [aiPrompts, setAiPrompts] = useState(null);
       const [templateUsed, setTemplateUsed] = useState(false);
-      const [guidedSectionContent, setGuidedSectionContent] = useState({});
-      const [currentGuidedSection, setCurrentGuidedSection] = useState("subjective");
       const [complianceIssuesCount, setComplianceIssuesCount] = useState(0);
 
   // Fetch current user for personalized feedback
@@ -561,7 +559,7 @@ Return your response as JSON with this structure:
                   noteEnhanced={!!enhancedNote}
                   compliancePassed={compliancePassed}
                   onStepClick={handleWorkflowStepClick}
-                  currentActiveStep={currentGuidedSection}
+                  currentActiveStep="document"
                 />
                 </div>
 
@@ -696,25 +694,7 @@ Return your response as JSON with this structure:
             </CardContent>
           </Card>
 
-          {/* Documentation Mode Toggle */}
-          <div className="flex gap-2 mb-4">
-            <Button
-              variant={documentationMode === 'freeform' ? 'default' : 'outline'}
-              onClick={() => setDocumentationMode('freeform')}
-              className={documentationMode === 'freeform' ? 'bg-purple-600 hover:bg-purple-700' : ''}
-            >
-              <Wand2 className="w-4 h-4 mr-2" />
-              Freeform Notes
-            </Button>
-            <Button
-              variant={documentationMode === 'guided' ? 'default' : 'outline'}
-              onClick={() => setDocumentationMode('guided')}
-              className={documentationMode === 'guided' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Guided SOAP
-            </Button>
-          </div>
+
 
           {/* Proactive Compliance Checker with Checklist */}
           <ProactiveComplianceChecker
@@ -727,9 +707,8 @@ Return your response as JSON with this structure:
             onTrainingRecommended={handleTrainingRecommended}
           />
 
-          {/* Documentation Input - Freeform or Guided */}
-          {documentationMode === 'freeform' ? (
-            <Card className="border-2 border-purple-200">
+          {/* Documentation Input - Freeform Notes */}
+          <Card className="border-2 border-purple-200">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
                 <CardTitle className="flex items-center gap-2">
                   <Wand2 className="w-5 h-5 text-purple-600" />
@@ -810,40 +789,6 @@ Return your response as JSON with this structure:
                 </div>
                 </CardContent>
                 </Card>
-                ) : (
-            <div className="space-y-4">
-              <GuidedDocumentationFlow
-                diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-                careType={careType}
-                visitType={visitType}
-                onNoteChange={handleGuidedNoteChange}
-                patient={selectedPatient}
-                previousVisits={patientVisits}
-                carePlans={carePlans}
-                prefillData={prefillData}
-              />
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleEnhanceNote}
-                  disabled={isProcessing || !roughNote.trim()}
-                  size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      Enhancing Note...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 mr-2" />
-                      Enhance SOAP Note with AI
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Inline Data Extractor - Shows extracted data as user types */}
           <InlineDataExtractor
@@ -974,22 +919,6 @@ Return your response as JSON with this structure:
 
             {/* Assist Tab - Real-time help while writing */}
             <TabsContent value="assist" className="space-y-4 mt-4">
-              {/* Smart Fill Suggestions for Guided Mode */}
-              {documentationMode === 'guided' && (
-                <SmartFillSuggestions
-                  currentSection={currentGuidedSection}
-                  sectionContent={guidedSectionContent[currentGuidedSection]}
-                  diagnosis={diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis}
-                  previousSections={guidedSectionContent}
-                  onInsertSuggestion={(section, text) => {
-                    setGuidedSectionContent(prev => ({
-                      ...prev,
-                      [section]: (prev[section] || '') + '\n' + text
-                    }));
-                  }}
-                />
-              )}
-
               <AIDrivenDocumentationPrompts
                 noteText={roughNote}
                 patient={selectedPatient}
