@@ -66,7 +66,7 @@ import MedicareComplianceAssistant from "../components/smartNote/MedicareComplia
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
-  const [careType, setCareType] = useState("home_health");
+  const careType = "home_health";
   const [visitType, setVisitType] = useState("routine_visit");
   const [vitalSigns, setVitalSigns] = useState({
     bp: "",
@@ -490,20 +490,7 @@ Return your response as JSON with this structure:
                         />
                       )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <Label htmlFor="care_type">Care Type</Label>
-                          <Select value={careType} onValueChange={setCareType}>
-                            <SelectTrigger id="care_type">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="home_health">Home Health</SelectItem>
-                              <SelectItem value="hospice">Hospice</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="visit_type">Visit Type</Label>
                           <Select value={visitType} onValueChange={setVisitType}>
