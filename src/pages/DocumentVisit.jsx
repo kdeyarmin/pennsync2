@@ -46,6 +46,7 @@ import EnhancedOASISScrubber from "../components/visit/EnhancedOASISScrubber";
 import AIDocumentationAssistant from "../components/visit/AIDocumentationAssistant";
 import AIDocumentationAutomation from "../components/visit/AIDocumentationAutomation";
 import RealTimeClinicalDecisionSupport from "../components/clinical/RealTimeClinicalDecisionSupport";
+import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClinicalDecisionSupport";
 import AIDocumentationAudit from "../components/audit/AIDocumentationAudit";
 
 import { 
@@ -1400,6 +1401,20 @@ Generate the complete clinical narrative based on the audio and context:`;
         </div>
 
         <div className="space-y-6">
+          {/* Enhanced AI Clinical Decision Support */}
+          {patient && (
+            <EnhancedClinicalDecisionSupport
+              patient={patient}
+              currentNoteText={narrativeText}
+              vitalSigns={vitalSigns}
+              previousVisits={allVisits}
+              carePlans={carePlans}
+              onInsertRecommendation={handleAddSuggestion}
+              onAlertAcknowledged={(alertId) => console.log('Alert acknowledged:', alertId)}
+              autoAnalyze={true}
+            />
+          )}
+
           {/* Real-Time Clinical Decision Support */}
           {patient && visit && (
             <RealTimeClinicalDecisionSupport
