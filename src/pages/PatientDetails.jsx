@@ -18,6 +18,7 @@ import { canAccessPatient, logSecurityEvent, sanitizeInput } from "@/components/
 import HospitalReadmissionRisk from "../components/patient/HospitalReadmissionRisk";
 import ClinicalBestPracticeAlerts from "../components/quality/ClinicalBestPracticeAlerts";
 import AIPatientSummary from "../components/patient/AIPatientSummary";
+import AIPatientHistorySummary from "../components/patient/AIPatientHistorySummary";
 import AICarePlanSuggestions from "../components/carePlan/AICarePlanSuggestions";
 import CarePlanTimelinePredictor from "../components/carePlan/CarePlanTimelinePredictor";
 import PatientFriendlyCarePlanSummary from "../components/carePlan/PatientFriendlyCarePlanSummary";
@@ -213,10 +214,16 @@ export default function PatientDetails() {
         </CardContent>
       </Card>
 
-      {/* AI Patient Summary */}
+      {/* AI Patient History Summary - Prominent */}
       {patient && (
         <div className="mb-6">
-          <AIPatientSummary patient={patient} />
+          <AIPatientHistorySummary
+            patient={patient}
+            visits={visits}
+            carePlans={carePlans}
+            autoGenerate={true}
+            prominent={true}
+          />
         </div>
       )}
 
