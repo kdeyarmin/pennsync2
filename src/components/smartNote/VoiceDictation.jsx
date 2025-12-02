@@ -121,15 +121,79 @@ Return JSON:
         }
       });
 
-      onTranscriptionComplete(result.transcription);
+      if (result?.transcription) {
+        onTranscriptionComplete(result.transcription);
+      }
       
     } catch (error) {
       console.error("Error processing recording:", error);
-      // Don't show alert for transcription errors, just log it
+      // Fallback: Try using Web Speech API for transcription
+      tryWebSpeechFallback();
     }
     setIsProcessing(false);
     setRecordingTime(0);
   };
+
+  const tryWebSpeechFallback = () => {
+    // If LLM transcription fails, show a message to use browser speech recognition
+    setUseWebSpeech(true);
+  };
+
+  const [useWebSpeech, setUseWebSpeech] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const startWebSpeechRecording = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Speech recognition not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let finalTranscript = '';
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      setCurrentTranscript(finalTranscript + interimTranscript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      if (finalTranscript.trim()) {
+        onTranscriptionComplete(finalTranscript.trim());
+      }
+      setIsRecording(false);
+      setCurrentTranscript('');
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  };
+
+  const stopWebSpeechRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  };
+
+  const [currentTranscript, setCurrentTranscript] = useState('');
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -144,7 +208,7 @@ Return JSON:
           {/* Recording Button */}
           <Button
             size="lg"
-            onClick={isRecording ? stopRecording : startRecording}
+            onClick={isRecording ? (useWebSpeech ? stopWebSpeechRecording : stopRecording) : (useWebSpeech ? startWebSpeechRecording : startWebSpeechRecording)}
             disabled={isProcessing}
             className={`rounded-full w-14 h-14 ${
               isRecording 
@@ -189,9 +253,15 @@ Return JSON:
               </div>
             )}
 
+            {currentTranscript && (
+              <p className="text-sm text-gray-700 mt-2 p-2 bg-white rounded border">
+                {currentTranscript}
+              </p>
+            )}
+
             {!isRecording && !isProcessing && (
               <p className="text-xs text-gray-500">
-                Speak your clinical notes naturally. The AI will transcribe them for review.
+                Speak your clinical notes naturally. They will be transcribed in real-time.
               </p>
             )}
           </div>
