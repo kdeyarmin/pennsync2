@@ -227,6 +227,19 @@ export default function PatientDetails() {
         </div>
       )}
 
+      {/* AI Care Plan Evolution */}
+      {patient && carePlans.length > 0 && (
+        <div className="mb-6">
+          <CarePlanEvolution
+            patientId={patientId}
+            patientName={`${patient.first_name} ${patient.last_name}`}
+            carePlans={carePlans}
+            visits={visits}
+            onCarePlanUpdated={() => queryClient.invalidateQueries({ queryKey: ['patientCarePlans', patientId] })}
+          />
+        </div>
+      )}
+
       {/* AI Care Plan Tools */}
       {patient && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
