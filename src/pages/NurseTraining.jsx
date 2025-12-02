@@ -42,31 +42,42 @@ export default function NurseTraining() {
         </p>
       </div>
 
-      <Tabs defaultValue="skill-gaps" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="skill-gaps" className="gap-2">
-            <Brain className="w-4 h-4" />
+      {/* Gamification Header */}
+      <GamificationDashboard userEmail={currentUser?.email} compact={true} />
+
+      <Tabs defaultValue="achievements" className="space-y-6">
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-6 w-full">
+          <TabsTrigger value="achievements" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Trophy className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Achievements</span>
+          </TabsTrigger>
+          <TabsTrigger value="skill-gaps" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Brain className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Skill Gaps</span>
           </TabsTrigger>
-          <TabsTrigger value="my-training" className="gap-2">
-            <GraduationCap className="w-4 h-4" />
-            <span className="hidden sm:inline">My Training</span>
+          <TabsTrigger value="my-training" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <GraduationCap className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Training</span>
           </TabsTrigger>
-          <TabsTrigger value="skills" className="gap-2">
-            <Award className="w-4 h-4" />
+          <TabsTrigger value="skills" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Award className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Skills</span>
           </TabsTrigger>
-          <TabsTrigger value="recommendations" className="gap-2">
-            <Sparkles className="w-4 h-4" />
-            <span className="hidden sm:inline">AI Recommendations</span>
+          <TabsTrigger value="recommendations" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">AI Recs</span>
           </TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="admin" className="gap-2">
-              <Building2 className="w-4 h-4" />
+            <TabsTrigger value="admin" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+              <Building2 className="w-3 h-3 md:w-4 md:h-4" />
               <span className="hidden sm:inline">Admin</span>
             </TabsTrigger>
           )}
         </TabsList>
+
+        <TabsContent value="achievements">
+          <GamificationDashboard userEmail={currentUser?.email} />
+        </TabsContent>
 
         <TabsContent value="skill-gaps">
           <SkillGapLearningHub nurseEmail={currentUser?.email} />
