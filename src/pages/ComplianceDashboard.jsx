@@ -33,11 +33,19 @@ import {
 } from "lucide-react";
 import { format, differenceInDays, addDays, subDays } from "date-fns";
 
+import PolicyGuidelineMonitor from "../components/compliance/PolicyGuidelineMonitor";
+import AutomatedComplianceReporting from "../components/compliance/AutomatedComplianceReporting";
+
 export default function ComplianceDashboard() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterSeverity, setFilterSeverity] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: patients } = useQuery({
     queryKey: ['compliancePatients'],
@@ -608,6 +616,18 @@ export default function ComplianceDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Policy & Guideline Monitor */}
+          <PolicyGuidelineMonitor 
+            nurseEmail={currentUser?.email}
+            onTrainingRecommended={(topics) => console.log('Training recommended:', topics)}
+          />
+
+          {/* Automated Compliance Reporting */}
+          <AutomatedComplianceReporting 
+            nurseEmail={currentUser?.email}
+            isAdmin={currentUser?.role === 'admin'}
+          />
 
           {/* Compliance Tips */}
           <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
