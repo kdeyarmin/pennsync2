@@ -265,11 +265,7 @@ export default function Dashboard() {
                             <Badge variant="outline" className="border-blue-200 text-blue-700">
                               {getVisitTypeLabel(visit.visit_type)}
                             </Badge>
-                            {patient?.care_type && (
-                              <Badge variant="outline" className="border-purple-200 text-purple-700">
-                                {patient.care_type === 'home_health' ? 'Home Health' : 'Hospice'}
-                              </Badge>
-                            )}
+
                           </div>
                         </div>
                       </div>

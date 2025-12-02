@@ -250,8 +250,7 @@ export default function Patients() {
           filteredPatients.map((patient) => (
             <Card 
               key={patient.id} 
-              className="hover:shadow-lg transition-all duration-200 border-l-4"
-              style={{ borderLeftColor: patient.care_type === 'hospice' ? '#9333ea' : '#3b82f6' }}
+              className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500"
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -266,13 +265,8 @@ export default function Patients() {
                       <p className="text-sm text-gray-500">MRN: {patient.medical_record_number || 'N/A'}</p>
                     </div>
                   </div>
-                  <Badge 
-                    className={patient.care_type === 'hospice' 
-                      ? 'bg-purple-100 text-purple-800 border-purple-200' 
-                      : 'bg-blue-100 text-blue-800 border-blue-200'
-                    }
-                  >
-                    {patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                    Home Health
                   </Badge>
                 </div>
 

@@ -69,7 +69,7 @@ import MandatoryComplianceGate from "../components/compliance/MandatoryComplianc
 export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
-  const careType = "home_health";
+  const careType = "home_health"; // Fixed for home health only
   const [visitType, setVisitType] = useState("routine_visit");
   const [vitalSigns, setVitalSigns] = useState({
     bp: "",

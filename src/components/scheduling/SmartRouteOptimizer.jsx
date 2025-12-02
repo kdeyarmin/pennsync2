@@ -154,7 +154,6 @@ Return JSON:
 
   const getVisitPriority = (visit, patient) => {
     if (visit.visit_type === 'admission' || visit.visit_type === 'prn') return 'high';
-    if (patient?.care_type === 'hospice') return 'high';
     if (visit.visit_type === 'recertification' || visit.visit_type === 'discharge') return 'medium';
     return 'low';
   };
