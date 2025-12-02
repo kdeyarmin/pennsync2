@@ -456,12 +456,12 @@ Return your response as JSON with this structure:
               {/* Patient Selection First */}
                       <div>
                         <Label htmlFor="patient_select">Select Patient</Label>
-                        <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+                        <Select value={selectedPatientId || "none"} onValueChange={(val) => setSelectedPatientId(val === "none" ? "" : val)}>
                           <SelectTrigger id="patient_select">
                             <SelectValue placeholder="Select patient..." />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={null}>No patient selected</SelectItem>
+                            <SelectItem value="none">No patient selected</SelectItem>
                             {patients.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
                                 {p.first_name} {p.last_name} - {p.primary_diagnosis || 'No diagnosis'}
