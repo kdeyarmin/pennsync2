@@ -26,7 +26,10 @@ import {
   ChevronUp,
   Sparkles,
   Plus,
-  Lightbulb
+  Lightbulb,
+  Code,
+  Brain,
+  FileCode
 } from "lucide-react";
 
 export default function MedicareComplianceAssistant({
@@ -98,7 +101,7 @@ export default function MedicareComplianceAssistant({
     setIsAnalyzing(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a Medicare compliance documentation expert for ${careType === 'hospice' ? 'hospice' : 'home health'} nursing. Analyze this clinical note and provide detailed feedback on Medicare compliance.
+        prompt: `You are a Medicare compliance documentation expert and certified coder for ${careType === 'hospice' ? 'hospice' : 'home health'} nursing. Analyze this clinical note and provide detailed feedback on Medicare compliance WITH emphasis on documenting CLINICAL REASONING, not just facts.
 
 VISIT TYPE: ${visitType?.replace(/_/g, ' ') || 'Routine visit'}
 DIAGNOSIS: ${diagnosis || 'Not specified'}
@@ -106,6 +109,9 @@ CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
 
 CLINICAL NOTE TO ANALYZE:
 ${noteText}
+
+CRITICAL CONCEPT - CLINICAL REASONING DOCUMENTATION:
+Medicare auditors look for documentation that shows WHY skilled nursing is needed, not just WHAT was done. Each compliance area should demonstrate the nurse's clinical judgment and decision-making process.
 
 Analyze the note for these 5 critical Medicare compliance areas:
 
@@ -135,6 +141,16 @@ Analyze the note for these 5 critical Medicare compliance areas:
    - Are medication safety issues documented?
    - Is caregiver capability assessed?
 
+FOR EACH CATEGORY, FOCUS ON CLINICAL REASONING:
+- Don't just suggest stating facts - show HOW to document the underlying clinical thinking
+- Include "because" statements that connect observations to nursing judgment
+- Show cause-and-effect relationships between patient condition and skilled need
+- Demonstrate how the nurse's assessment led to specific interventions
+
+EXAMPLE OF CLINICAL REASONING DOCUMENTATION:
+BAD: "Patient has edema in bilateral lower extremities."
+GOOD: "Patient has 2+ pitting edema in bilateral lower extremities, increased from 1+ last visit, indicating potential fluid retention related to CHF exacerbation. This requires skilled nursing assessment to evaluate effectiveness of current diuretic therapy and need for medication adjustment."
+
 For each category, provide:
 - Current status (compliant, partial, non-compliant)
 - What was found in the note (if anything)
@@ -153,18 +169,20 @@ Return JSON:
       "score": 0-100,
       "found_elements": ["What was documented"],
       "deficiencies": ["What's missing"],
+      "clinical_reasoning_gap": "Specific explanation of what clinical reasoning is missing",
       "priority": "critical" | "important" | "recommended",
       "suggestions": [
         {
           "type": "add" | "rephrase",
           "original_text": "Original text if rephrasing, null if adding",
-          "suggested_text": "The exact text to add or use as replacement",
+          "suggested_text": "The exact text to add or use as replacement - MUST include clinical reasoning with 'because', 'therefore', 'requires', 'indicating' language",
           "rationale": "Why this improves compliance",
+          "clinical_reasoning_example": "Specific example of how to document the WHY, not just the WHAT",
           "example_placement": "Where in the note this should go"
         }
       ]
     },
-    "homebound_status": { ... same structure ... },
+    "homebound_status": { ... same structure with clinical_reasoning_gap and clinical_reasoning_example ... },
     "patient_response": { ... same structure ... },
     "goal_progress": { ... same structure ... },
     "safety_assessment": { ... same structure ... }
@@ -172,17 +190,62 @@ Return JSON:
   "quick_wins": [
     {
       "suggestion": "Simple addition that would boost compliance",
-      "text_to_add": "Exact text to add",
+      "text_to_add": "Exact text to add WITH clinical reasoning",
       "impact": "high" | "medium"
     }
   ],
   "critical_fixes": ["Most urgent items to address"],
+  "clinical_reasoning_templates": {
+    "skilled_need": [
+      {
+        "scenario": "When documenting this type of situation",
+        "template": "Template with [placeholders] showing clinical reasoning structure",
+        "example": "Filled-in example for this diagnosis"
+      }
+    ],
+    "homebound_status": [...],
+    "patient_response": [...],
+    "goal_progress": [...],
+    "safety_assessment": [...]
+  },
+  "coding_suggestions": {
+    "primary_icd10": {
+      "code": "ICD-10 code",
+      "description": "Code description",
+      "rationale": "Why this code applies based on documentation"
+    },
+    "secondary_icd10": [
+      {
+        "code": "ICD-10 code",
+        "description": "Description",
+        "rationale": "Why applicable"
+      }
+    ],
+    "symptom_codes": [
+      {
+        "code": "ICD-10 symptom code",
+        "description": "Description",
+        "documentation_support": "Text in note that supports this code"
+      }
+    ],
+    "cpt_codes": [
+      {
+        "code": "CPT code",
+        "description": "Service description",
+        "documentation_requirements": "What must be documented to bill this code",
+        "documentation_present": true | false,
+        "missing_elements": ["What's needed to support this code"]
+      }
+    ],
+    "coding_tips": ["Suggestions to improve coding accuracy"],
+    "documentation_gaps_for_coding": ["What's missing that would support additional/better codes"]
+  },
   "model_phrases": {
-    "skilled_need": ["Example compliant phrases for this diagnosis"],
-    "homebound_status": ["Example homebound justifications"],
-    "patient_response": ["Example patient response documentation"],
-    "goal_progress": ["Example goal progress statements"],
-    "safety_assessment": ["Example safety documentation"]
+    "skilled_need": ["Example compliant phrases WITH clinical reasoning for this diagnosis"],
+    "homebound_status": ["Example homebound justifications WITH reasoning"],
+    "patient_response": ["Example patient response documentation WITH assessment"],
+    "goal_progress": ["Example goal progress statements WITH analysis"],
+    "safety_assessment": ["Example safety documentation WITH rationale"]
   }
 }`,
         response_json_schema: {
@@ -194,9 +257,11 @@ Return JSON:
             categories: { type: "object" },
             quick_wins: { type: "array", items: { type: "object" } },
             critical_fixes: { type: "array", items: { type: "string" } },
+            clinical_reasoning_templates: { type: "object" },
+            coding_suggestions: { type: "object" },
             model_phrases: { type: "object" }
           }
-        }
+          }
       });
 
       setAnalysis(result);
@@ -412,6 +477,16 @@ Return JSON:
                           </div>
                         )}
 
+                        {/* Clinical Reasoning Gap */}
+                        {categoryData.clinical_reasoning_gap && (
+                          <div className="mb-3 p-2 bg-purple-50 rounded border border-purple-200">
+                            <p className="text-xs font-semibold text-purple-800 mb-1 flex items-center gap-1">
+                              <Brain className="w-3 h-3" /> Clinical Reasoning Gap:
+                            </p>
+                            <p className="text-xs text-purple-700">{categoryData.clinical_reasoning_gap}</p>
+                          </div>
+                        )}
+
                         {/* Suggestions */}
                         {categoryData.suggestions?.length > 0 && (
                           <div className="space-y-2">
@@ -432,6 +507,14 @@ Return JSON:
                                       "{suggestion.suggested_text}"
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">{suggestion.rationale}</p>
+                                    {suggestion.clinical_reasoning_example && (
+                                      <div className="mt-1 p-1.5 bg-purple-50 rounded border border-purple-100">
+                                        <p className="text-xs text-purple-700">
+                                          <Brain className="w-3 h-3 inline mr-1" />
+                                          <span className="font-medium">Clinical Reasoning:</span> {suggestion.clinical_reasoning_example}
+                                        </p>
+                                      </div>
+                                    )}
                                     {suggestion.example_placement && (
                                       <p className="text-xs text-gray-400 italic">→ {suggestion.example_placement}</p>
                                     )}
@@ -486,6 +569,145 @@ Return JSON:
                   );
                 })}
               </Accordion>
+
+              {/* Clinical Reasoning Templates */}
+              {analysis.clinical_reasoning_templates && Object.keys(analysis.clinical_reasoning_templates).length > 0 && (
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <p className="text-xs font-semibold text-purple-800 mb-2 flex items-center gap-1">
+                    <Brain className="w-3 h-3" /> Clinical Reasoning Templates
+                  </p>
+                  <Accordion type="single" collapsible className="space-y-1">
+                    {Object.entries(analysis.clinical_reasoning_templates).map(([category, templates]) => (
+                      templates?.length > 0 && (
+                        <AccordionItem key={category} value={category} className="border border-purple-100 rounded bg-white">
+                          <AccordionTrigger className="px-2 py-1 text-xs hover:no-underline">
+                            {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </AccordionTrigger>
+                          <AccordionContent className="px-2 pb-2">
+                            {templates.map((template, idx) => (
+                              <div key={idx} className="p-2 bg-purple-50 rounded mt-1 text-xs">
+                                <p className="font-medium text-purple-900">{template.scenario}</p>
+                                <p className="text-purple-700 font-mono mt-1">{template.template}</p>
+                                <p className="text-purple-600 italic mt-1">Example: "{template.example}"</p>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 px-1 mt-1 text-purple-600"
+                                  onClick={() => handleInsertSuggestion(template.example)}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" /> Use Example
+                                </Button>
+                              </div>
+                            ))}
+                          </AccordionContent>
+                        </AccordionItem>
+                      )
+                    ))}
+                  </Accordion>
+                </div>
+              )}
+
+              {/* Coding Suggestions */}
+              {analysis.coding_suggestions && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs font-semibold text-blue-800 mb-2 flex items-center gap-1">
+                    <FileCode className="w-3 h-3" /> ICD-10 & CPT Code Suggestions
+                  </p>
+                  
+                  {/* Primary ICD-10 */}
+                  {analysis.coding_suggestions.primary_icd10 && (
+                    <div className="p-2 bg-white rounded border border-blue-100 mb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-blue-600 text-white font-mono">
+                            {analysis.coding_suggestions.primary_icd10.code}
+                          </Badge>
+                          <span className="text-xs font-medium">Primary Dx</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 px-1"
+                          onClick={() => handleCopyText(analysis.coding_suggestions.primary_icd10.code, 'primary-icd')}
+                        >
+                          {copiedIndex === 'primary-icd' ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-700 mt-1">{analysis.coding_suggestions.primary_icd10.description}</p>
+                      <p className="text-xs text-blue-600 mt-1">{analysis.coding_suggestions.primary_icd10.rationale}</p>
+                    </div>
+                  )}
+
+                  {/* Secondary ICD-10 */}
+                  {analysis.coding_suggestions.secondary_icd10?.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-600 mb-1">Secondary Diagnoses:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {analysis.coding_suggestions.secondary_icd10.map((code, idx) => (
+                          <div key={idx} className="p-1.5 bg-white rounded border border-blue-100 text-xs">
+                            <Badge variant="outline" className="font-mono mr-1">{code.code}</Badge>
+                            <span className="text-gray-600">{code.description}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CPT Codes */}
+                  {analysis.coding_suggestions.cpt_codes?.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-600 mb-1">CPT Codes:</p>
+                      {analysis.coding_suggestions.cpt_codes.map((cpt, idx) => (
+                        <div key={idx} className={`p-2 rounded border text-xs mb-1 ${cpt.documentation_present ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge className={`font-mono ${cpt.documentation_present ? 'bg-green-600' : 'bg-yellow-600'} text-white`}>
+                                {cpt.code}
+                              </Badge>
+                              <span className="font-medium">{cpt.description}</span>
+                            </div>
+                            {cpt.documentation_present ? (
+                              <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                            )}
+                          </div>
+                          {!cpt.documentation_present && cpt.missing_elements?.length > 0 && (
+                            <div className="mt-1 text-yellow-700">
+                              <span className="font-medium">Missing: </span>
+                              {cpt.missing_elements.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Coding Tips */}
+                  {analysis.coding_suggestions.coding_tips?.length > 0 && (
+                    <div className="p-2 bg-white rounded border border-blue-100">
+                      <p className="text-xs font-medium text-blue-800 mb-1">💡 Coding Tips:</p>
+                      <ul className="text-xs text-blue-700 space-y-0.5">
+                        {analysis.coding_suggestions.coding_tips.map((tip, idx) => (
+                          <li key={idx}>• {tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Documentation Gaps for Coding */}
+                  {analysis.coding_suggestions.documentation_gaps_for_coding?.length > 0 && (
+                    <div className="p-2 bg-yellow-50 rounded border border-yellow-200 mt-2">
+                      <p className="text-xs font-medium text-yellow-800 mb-1">⚠️ Documentation Gaps Affecting Coding:</p>
+                      <ul className="text-xs text-yellow-700 space-y-0.5">
+                        {analysis.coding_suggestions.documentation_gaps_for_coding.map((gap, idx) => (
+                          <li key={idx}>• {gap}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Button variant="outline" size="sm" className="w-full" onClick={() => setAnalysis(null)}>
                 Re-analyze Note
