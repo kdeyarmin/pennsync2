@@ -664,6 +664,8 @@ export default function ComplianceDashboard() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
