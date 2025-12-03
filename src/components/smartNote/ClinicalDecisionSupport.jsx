@@ -24,17 +24,31 @@ export default function ClinicalDecisionSupport({
   diagnosis,
   careType,
   vitalSigns,
+  roughNote,
   onInsertRecommendation
 }) {
   const [cdsAlerts, setCdsAlerts] = useState(null);
+  const [proactiveAlerts, setProactiveAlerts] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isProactiveAnalyzing, setIsProactiveAnalyzing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [lastAnalyzedText, setLastAnalyzedText] = useState("");
+  const [lastProactiveContext, setLastProactiveContext] = useState("");
+
+  // Proactive analysis based on vitals, diagnosis, and rough note (before enhancement)
+  useEffect(() => {
+    const contextKey = `${diagnosis}-${JSON.stringify(vitalSigns)}-${roughNote?.slice(0, 100)}`;
+    if (contextKey !== lastProactiveContext && (diagnosis || vitalSigns?.bp || vitalSigns?.hr || (roughNote && roughNote.length > 30))) {
+      const timer = setTimeout(() => {
+        runProactiveAnalysis();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [diagnosis, vitalSigns, roughNote]);
 
   // Auto-analyze when enhanced note changes significantly
   useEffect(() => {
     if (enhancedNote && enhancedNote.length > 100 && enhancedNote !== lastAnalyzedText) {
-      // Debounce to avoid too many calls
       const timer = setTimeout(() => {
         if (enhancedNote.length > lastAnalyzedText.length + 50) {
           analyzeForCDS();
@@ -43,6 +57,165 @@ export default function ClinicalDecisionSupport({
       return () => clearTimeout(timer);
     }
   }, [enhancedNote]);
+
+  const runProactiveAnalysis = async () => {
+    if (!diagnosis && !vitalSigns?.bp && !vitalSigns?.hr && (!roughNote || roughNote.length < 30)) return;
+    
+    setIsProactiveAnalyzing(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a proactive Clinical Decision Support AI for home health nursing. Based on the EARLY information available (before full documentation), identify potential issues and suggest assessments/interventions the nurse should consider.
+
+AVAILABLE INFORMATION:
+- Diagnosis: ${diagnosis || 'Not yet specified'}
+- Vital Signs: 
+  ${vitalSigns?.bp ? `Blood Pressure: ${vitalSigns.bp}` : 'BP: Not entered'}
+  ${vitalSigns?.hr ? `Heart Rate: ${vitalSigns.hr}` : 'HR: Not entered'}
+  ${vitalSigns?.temp ? `Temperature: ${vitalSigns.temp}` : 'Temp: Not entered'}
+  ${vitalSigns?.o2 ? `O2 Saturation: ${vitalSigns.o2}` : 'O2: Not entered'}
+  ${vitalSigns?.pain ? `Pain Level: ${vitalSigns.pain}` : 'Pain: Not entered'}
+- Care Type: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
+- Initial Notes: ${roughNote || 'None yet'}
+
+PROACTIVELY IDENTIFY:
+1. VITAL SIGN CONCERNS: Flag abnormal vitals and what to watch for
+2. DIAGNOSIS-SPECIFIC ASSESSMENTS: What assessments should definitely be done for this diagnosis?
+3. POTENTIAL MISSED ELEMENTS: Based on notes so far, what might the nurse be forgetting to document/assess?
+4. PATIENT EDUCATION OPPORTUNITIES: What education points are critical for this diagnosis?
+5. SAFETY CONSIDERATIONS: Any safety checks that should be performed?
+6. RECOMMENDED INTERVENTIONS: What interventions should be considered based on what we know?
+
+Be helpful and proactive - catch issues BEFORE they become problems. Keep suggestions practical for home health setting.
+
+Return JSON:
+{
+  "vital_concerns": [
+    {
+      "vital": "Which vital",
+      "value": "The value if abnormal",
+      "concern": "Why this is concerning",
+      "action": "What to do",
+      "severity": "high" | "medium" | "low"
+    }
+  ],
+  "required_assessments": [
+    {
+      "assessment": "Assessment name",
+      "rationale": "Why this is important for this patient",
+      "priority": "high" | "medium" | "low"
+    }
+  ],
+  "potentially_missed": [
+    {
+      "element": "What might be missed",
+      "why_important": "Why this matters",
+      "suggested_text": "Example text to add to notes"
+    }
+  ],
+  "education_points": [
+    {
+      "topic": "Education topic",
+      "key_points": "Key points to cover",
+      "teach_back": "Suggested teach-back question"
+    }
+  ],
+  "safety_checks": [
+    {
+      "check": "Safety check to perform",
+      "rationale": "Why this is important"
+    }
+  ],
+  "suggested_interventions": [
+    {
+      "intervention": "Intervention name",
+      "rationale": "Why recommended",
+      "priority": "high" | "medium" | "low"
+    }
+  ],
+  "quick_summary": "One sentence summary of key proactive alerts"
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            vital_concerns: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  vital: { type: "string" },
+                  value: { type: "string" },
+                  concern: { type: "string" },
+                  action: { type: "string" },
+                  severity: { type: "string" }
+                }
+              }
+            },
+            required_assessments: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  assessment: { type: "string" },
+                  rationale: { type: "string" },
+                  priority: { type: "string" }
+                }
+              }
+            },
+            potentially_missed: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  element: { type: "string" },
+                  why_important: { type: "string" },
+                  suggested_text: { type: "string" }
+                }
+              }
+            },
+            education_points: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  topic: { type: "string" },
+                  key_points: { type: "string" },
+                  teach_back: { type: "string" }
+                }
+              }
+            },
+            safety_checks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  check: { type: "string" },
+                  rationale: { type: "string" }
+                }
+              }
+            },
+            suggested_interventions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  intervention: { type: "string" },
+                  rationale: { type: "string" },
+                  priority: { type: "string" }
+                }
+              }
+            },
+            quick_summary: { type: "string" }
+          }
+        }
+      });
+      
+      setProactiveAlerts(result);
+      setLastProactiveContext(`${diagnosis}-${JSON.stringify(vitalSigns)}-${roughNote?.slice(0, 100)}`);
+    } catch (error) {
+      console.error("Error in proactive CDS analysis:", error);
+    }
+    setIsProactiveAnalyzing(false);
+  };
 
   const analyzeForCDS = async () => {
     if (!enhancedNote || enhancedNote.length < 50) return;
