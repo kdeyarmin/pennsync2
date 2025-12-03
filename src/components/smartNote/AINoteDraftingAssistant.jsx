@@ -269,18 +269,22 @@ Generate professional, Medicare-compliant clinical documentation based on the re
       </CardHeader>
       <CardContent className="p-3">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 mb-3">
-            <TabsTrigger value="assessment" className="text-xs">
-              <Stethoscope className="w-3 h-3 mr-1" /> Assessment
+          <TabsList className="grid grid-cols-4 mb-3 h-auto">
+            <TabsTrigger value="assessment" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
+              <Stethoscope className="w-3 h-3" />
+              <span className="hidden sm:inline">Assess</span>
             </TabsTrigger>
-            <TabsTrigger value="interventions" className="text-xs">
-              <Activity className="w-3 h-3 mr-1" /> Interventions
+            <TabsTrigger value="interventions" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
+              <Activity className="w-3 h-3" />
+              <span className="hidden sm:inline">Intervene</span>
             </TabsTrigger>
-            <TabsTrigger value="patientResponse" className="text-xs">
-              <BookOpen className="w-3 h-3 mr-1" /> Response
+            <TabsTrigger value="patientResponse" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
+              <BookOpen className="w-3 h-3" />
+              <span className="hidden sm:inline">Response</span>
             </TabsTrigger>
-            <TabsTrigger value="custom" className="text-xs">
-              <MessageSquare className="w-3 h-3 mr-1" /> Custom
+            <TabsTrigger value="custom" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
+              <MessageSquare className="w-3 h-3" />
+              <span className="hidden sm:inline">Custom</span>
             </TabsTrigger>
           </TabsList>
 
