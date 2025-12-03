@@ -111,11 +111,35 @@ export default function Dashboard() {
   const completedVisits = visits.filter(v => v.status === 'completed').length;
   const pendingVisits = visits.filter(v => v.status === 'scheduled').length;
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  const firstName = currentUser?.full_name?.split(' ')[0] || 'there';
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Today's Visits</h1>
-        <p className="text-gray-600">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+      {/* Welcome Banner */}
+      <Card className="mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white border-none shadow-xl overflow-hidden">
+        <CardContent className="p-6 md:p-8 relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <div className="relative z-10">
+            <h1 className="text-2xl md:text-4xl font-bold mb-2">
+              {getGreeting()}, {firstName}! 👋
+            </h1>
+            <p className="text-white/80 text-sm md:text-base">
+              {format(new Date(), 'EEEE, MMMM d, yyyy')} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Today's Visits</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
