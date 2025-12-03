@@ -21,6 +21,7 @@ import PatientForm from "../components/patient/PatientForm";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
+import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
 
 export default function Patients() {
   const queryClient = useQueryClient();
@@ -206,7 +207,10 @@ export default function Patients() {
         />
       )}
 
-      <Card className="mb-6">
+      {/* Duplicate Detection Alert */}
+      <DuplicatePatientManager />
+
+      <Card className="mb-6 mt-4">
         <CardContent className="p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
