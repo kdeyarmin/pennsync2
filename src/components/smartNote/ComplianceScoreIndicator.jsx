@@ -29,6 +29,7 @@ export default function ComplianceScoreIndicator({
   visitType,
   diagnosis,
   vitalSigns,
+  patientContext,
   onInsertElement,
   onUpdateEnhancedNote,
   onFlaggedIssues
@@ -125,14 +126,26 @@ export default function ComplianceScoreIndicator({
         return `${k.toUpperCase()}: ${v}`;
       }).join(', ') : '';
 
+      // Build patient context string
+      const patientContextStr = patientContext ? `
+PATIENT MEDICAL HISTORY & CONTEXT:
+- Name: ${patientContext.name || 'Not specified'}
+- Primary Diagnosis: ${patientContext.primaryDiagnosis || diagnosis || 'Not specified'}
+- Secondary Diagnoses: ${patientContext.secondaryDiagnoses?.join(', ') || 'None listed'}
+- Allergies: ${patientContext.allergies || 'None documented'}
+- Recent Conditions/Concerns: ${patientContext.recentConditions || 'None noted'}
+- Previous Visit Summary: ${patientContext.previousVisitSummary || 'No previous visit data'}
+- Active Care Plan Goals: ${patientContext.carePlanGoals?.join('; ') || 'None specified'}
+` : '';
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this nursing note for Medicare compliance elements. Generate PERSONALIZED suggestions based on the actual note content.
+        prompt: `Analyze this nursing note for Medicare compliance elements. Generate PERSONALIZED suggestions based on the actual note content AND the patient's medical history.
 
 CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
 VISIT TYPE: ${visitType}
 DIAGNOSIS: ${diagnosis || 'Not specified'}
 VITAL SIGNS ENTERED: ${vitalsString || 'None entered'}
-
+${patientContextStr}
 ROUGH NOTE:
 ${roughNote}
 
@@ -165,6 +178,14 @@ CRITICAL INSTRUCTIONS FOR SUGGESTIONS:
 4. If the note mentions teaching/education, reference it in patient response suggestions
 5. Use the actual diagnosis "${diagnosis || 'the patient\'s condition'}" in relevant suggestions
 6. Include the vital signs "${vitalsString || 'documented values'}" where appropriate
+7. CRITICAL: Use the PATIENT'S MEDICAL HISTORY to personalize suggestions:
+   - If patient has COPD, mention monitoring for COPD exacerbation signs in respiratory assessments
+   - If patient has CHF, include fluid status, weight monitoring, and edema assessment
+   - If patient has Diabetes, reference blood glucose monitoring and diabetic foot care
+   - If patient has wound history, include wound assessment specifics
+   - Reference any active care plan goals in the plan/goals section
+   - Mention any allergies when discussing medications
+   - Build on previous visit findings if available
 
 For EACH element, provide:
 - suggested_addition: Personalized clinical text incorporating note details
@@ -238,14 +259,24 @@ Return JSON:
       
       const hasVitalsEntered = vitalsString.length > 0;
       
+      // Build patient context string for enhanced note analysis
+      const patientContextStr = patientContext ? `
+PATIENT MEDICAL HISTORY & CONTEXT:
+- Name: ${patientContext.name || 'Not specified'}
+- Primary Diagnosis: ${patientContext.primaryDiagnosis || diagnosis || 'Not specified'}
+- Secondary Diagnoses: ${patientContext.secondaryDiagnoses?.join(', ') || 'None listed'}
+- Allergies: ${patientContext.allergies || 'None documented'}
+- Active Care Plan Goals: ${patientContext.carePlanGoals?.join('; ') || 'None specified'}
+` : '';
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this ENHANCED nursing note for Medicare compliance. Be ACCURATE - only flag elements that are truly missing or weak.
+        prompt: `Analyze this ENHANCED nursing note for Medicare compliance. Be ACCURATE - only flag elements that are truly missing or weak. Use patient history to identify missing condition-specific assessments.
 
 CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
 VISIT TYPE: ${visitType}
 DIAGNOSIS: ${diagnosis || 'Not specified'}
 VITAL SIGNS ENTERED BY USER: ${hasVitalsEntered ? vitalsString : 'None entered'}
-
+${patientContextStr}
 ENHANCED NOTE TO ANALYZE:
 ${enhancedNote}
 
@@ -283,6 +314,13 @@ ${careType === 'home_health' ? `
 `}
 
 ONLY flag issues that are TRULY missing or weak. Do NOT flag elements that ARE present in the note.
+
+PATIENT-SPECIFIC CHECKS:
+- If patient has COPD: Flag if no mention of respiratory status, O2 use, or COPD exacerbation signs
+- If patient has CHF: Flag if no mention of edema assessment, weight, or fluid status
+- If patient has Diabetes: Flag if no mention of blood glucose or diabetic-specific assessments
+- If patient has wounds: Flag if wound not specifically assessed
+- Check if active care plan goals are addressed in the note
 
 Return JSON:
 {
