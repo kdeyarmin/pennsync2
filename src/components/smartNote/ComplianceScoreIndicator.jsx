@@ -19,8 +19,21 @@ import {
   Loader2,
   Lightbulb,
   X,
-  Ban
+  Ban,
+  Copy,
+  Check,
+  Pencil,
+  History,
+  RotateCcw
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function ComplianceScoreIndicator({
   roughNote,
@@ -43,6 +56,11 @@ export default function ComplianceScoreIndicator({
   const [isReadyToPaste, setIsReadyToPaste] = useState(false);
   const [selectedSuggestions, setSelectedSuggestions] = useState(new Set());
   const [dismissedElements, setDismissedElements] = useState(new Set());
+  const [editingSuggestion, setEditingSuggestion] = useState(null);
+  const [editedTexts, setEditedTexts] = useState({});
+  const [copiedIdx, setCopiedIdx] = useState(null);
+  const [enhancedNoteHistory, setEnhancedNoteHistory] = useState([]);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
 
   // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
   const getDefaultSuggestion = (elementName, type) => {
@@ -95,15 +113,45 @@ export default function ComplianceScoreIndicator({
     }
   }, [roughNote, careType, visitType]);
 
-  // Auto-analyze enhanced note when it changes
+  // Auto-analyze enhanced note when it changes and track history
   useEffect(() => {
     if (enhancedNote && enhancedNote.length > 50) {
+      // Add to history if it's a new version
+      setEnhancedNoteHistory(prev => {
+        if (prev.length === 0 || prev[prev.length - 1].content !== enhancedNote) {
+          return [...prev.slice(-9), { content: enhancedNote, timestamp: new Date() }];
+        }
+        return prev;
+      });
+      
       const timer = setTimeout(() => {
         analyzeEnhancedNote();
       }, 1000);
       return () => clearTimeout(timer);
     }
   }, [enhancedNote]);
+
+  const handleCopySuggestion = (text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  const handleEditSuggestion = (idx, newText) => {
+    setEditedTexts(prev => ({ ...prev, [idx]: newText }));
+  };
+
+  const getSuggestionText = (element, idx) => {
+    if (editedTexts[idx] !== undefined) return editedTexts[idx];
+    return element.suggested_addition || getDefaultSuggestion(element.name, careType);
+  };
+
+  const restoreEnhancedNoteVersion = (version) => {
+    if (onUpdateEnhancedNote) {
+      onUpdateEnhancedNote(version.content);
+    }
+    setShowHistoryDialog(false);
+  };
 
   const analyzeCompliance = async () => {
     setIsAnalyzing(true);
@@ -528,7 +576,8 @@ Return JSON:
             )}
             {complianceData.elements?.filter((_, idx) => !dismissedElements.has(idx)).map((element, idx) => {
               const isSelected = selectedSuggestions.has(idx);
-              const suggestion = element.suggested_addition || getDefaultSuggestion(element.name, careType);
+              const suggestion = getSuggestionText(element, idx);
+              const isEditing = editingSuggestion === idx;
               
               return (
                 <div 
@@ -619,8 +668,45 @@ Return JSON:
                         </div>
                       )}
                       <div className="bg-white/70 p-2 rounded text-xs text-gray-700 border border-gray-200">
-                        <p className="font-medium text-gray-500 mb-1">Suggested text:</p>
-                        <p className="whitespace-pre-wrap">{suggestion}</p>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-medium text-gray-500">Suggested text:</p>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 w-5 p-0 text-gray-400 hover:text-blue-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopySuggestion(suggestion, idx);
+                              }}
+                              title="Copy to clipboard"
+                            >
+                              {copiedIdx === idx ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className={`h-5 w-5 p-0 ${isEditing ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingSuggestion(isEditing ? null : idx);
+                              }}
+                              title="Edit suggestion"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        {isEditing ? (
+                          <Textarea
+                            value={suggestion}
+                            onChange={(e) => handleEditSuggestion(idx, e.target.value)}
+                            className="text-xs min-h-[80px] mt-1"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <p className="whitespace-pre-wrap">{suggestion}</p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -791,6 +877,48 @@ Return JSON:
                   </Badge>
                 ))}
               </div>
+            )}
+
+            {/* Version History Button */}
+            {enhancedNoteHistory.length > 1 && (
+              <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full mb-2">
+                    <History className="w-3 h-3 mr-2" />
+                    Version History ({enhancedNoteHistory.length} versions)
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Enhanced Note History</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 mt-4">
+                    {enhancedNoteHistory.slice().reverse().map((version, idx) => (
+                      <div key={idx} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-gray-500">
+                            {idx === 0 ? 'Current' : `Version ${enhancedNoteHistory.length - idx}`} - {version.timestamp.toLocaleTimeString()}
+                          </span>
+                          {idx !== 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 text-xs"
+                              onClick={() => restoreEnhancedNoteVersion(version)}
+                            >
+                              <RotateCcw className="w-3 h-3 mr-1" />
+                              Restore
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-700 whitespace-pre-wrap line-clamp-4">
+                          {version.content.substring(0, 300)}...
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
 
             {/* Ready to Paste Indicator */}
