@@ -510,6 +510,7 @@ Return JSON:
               careType="home_health"
               visitType={visitType}
               diagnosis={finalDiagnosis}
+              vitalSigns={vitalSigns}
               onInsertElement={(text) => {
                 setRoughNote(prev => prev + '\n\n' + text.trim());
                 setEnhancedNote('');
