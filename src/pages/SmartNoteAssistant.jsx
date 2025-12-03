@@ -213,7 +213,7 @@ export default function SmartNoteAssistant() {
   const [visitType, setVisitType] = useState("routine_visit");
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
-  const [vitalSigns, setVitalSigns] = useState({ bp: "", hr: "", temp: "", o2: "", pain: "" });
+  const [vitalSigns, setVitalSigns] = useState({ bp: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
   const [roughNote, setRoughNote] = useState("");
   const [enhancedNote, setEnhancedNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
