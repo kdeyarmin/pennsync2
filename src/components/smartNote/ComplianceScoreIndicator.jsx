@@ -27,6 +27,7 @@ export default function ComplianceScoreIndicator({
   visitType,
   diagnosis,
   onInsertElement,
+  onUpdateEnhancedNote,
   onFlaggedIssues
 }) {
   const [complianceData, setComplianceData] = useState(null);
@@ -34,6 +35,8 @@ export default function ComplianceScoreIndicator({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [enhancedComplianceData, setEnhancedComplianceData] = useState(null);
   const [isAnalyzingEnhanced, setIsAnalyzingEnhanced] = useState(false);
+  const [insertedIssues, setInsertedIssues] = useState(new Set());
+  const [isReadyToPaste, setIsReadyToPaste] = useState(false);
 
   // Debounced analysis for rough note
   useEffect(() => {
@@ -157,6 +160,10 @@ ${careType === 'home_health' ? `
 
 IMPORTANT: Find specific text passages that are weak or missing required elements.
 
+For each issue, provide:
+1. A ready-to-insert text that can be directly added to the note
+2. The best placement location (beginning, after_assessment, after_vitals, after_interventions, before_plan, end)
+
 Return JSON:
 {
   "overall_score": 0-100,
@@ -166,7 +173,8 @@ Return JSON:
       "element": "Which compliance element (e.g., Homebound Status, Skilled Need)",
       "location_hint": "Brief quote or description of where in note this applies",
       "problem": "What's wrong or missing",
-      "suggestion": "Specific text to add or replace",
+      "suggestion": "Complete, ready-to-insert clinical text that requires no editing",
+      "insert_location": "beginning" | "after_assessment" | "after_vitals" | "after_interventions" | "before_plan" | "end",
       "severity": "high" | "medium" | "low"
     }
   ],
@@ -177,7 +185,8 @@ Return JSON:
       "improved_text": "Better version of the text",
       "reason": "Why this is better"
     }
-  ]
+  ],
+  "ready_to_paste": true or false (true if score >= 85 and no high/critical severity issues)
 }`,
         response_json_schema: {
           type: "object",
@@ -208,12 +217,15 @@ Return JSON:
                   reason: { type: "string" }
                 }
               }
-            }
+            },
+            ready_to_paste: { type: "boolean" }
           }
         }
       });
       
       setEnhancedComplianceData(result);
+      setIsReadyToPaste(result.ready_to_paste || result.overall_score >= 85);
+      setInsertedIssues(new Set());
       if (onFlaggedIssues) {
         onFlaggedIssues(result);
       }
@@ -260,6 +272,97 @@ Return JSON:
       case 'non_compliant': return <AlertCircle className="w-4 h-4 text-orange-500" />;
       default: return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
+  };
+
+  const insertAtLocation = (suggestion, location, issueIdx) => {
+    if (!enhancedNote || !onUpdateEnhancedNote) return;
+    
+    const formattedText = '\n\n' + suggestion.trim();
+    let updatedNote = enhancedNote;
+    
+    // Find insertion points based on location
+    const lowerNote = enhancedNote.toLowerCase();
+    
+    switch (location) {
+      case 'beginning':
+        updatedNote = suggestion.trim() + '\n\n' + enhancedNote;
+        break;
+      case 'after_assessment':
+        const assessmentIdx = Math.max(
+          lowerNote.indexOf('assessment:'),
+          lowerNote.indexOf('physical exam'),
+          lowerNote.indexOf('examination')
+        );
+        if (assessmentIdx > -1) {
+          const nextParagraph = enhancedNote.indexOf('\n\n', assessmentIdx);
+          if (nextParagraph > -1) {
+            updatedNote = enhancedNote.slice(0, nextParagraph) + formattedText + enhancedNote.slice(nextParagraph);
+          } else {
+            updatedNote = enhancedNote + formattedText;
+          }
+        } else {
+          updatedNote = enhancedNote + formattedText;
+        }
+        break;
+      case 'after_vitals':
+        const vitalsIdx = Math.max(
+          lowerNote.indexOf('vital signs'),
+          lowerNote.indexOf('vitals:'),
+          lowerNote.indexOf('blood pressure')
+        );
+        if (vitalsIdx > -1) {
+          const nextParagraph = enhancedNote.indexOf('\n\n', vitalsIdx);
+          if (nextParagraph > -1) {
+            updatedNote = enhancedNote.slice(0, nextParagraph) + formattedText + enhancedNote.slice(nextParagraph);
+          } else {
+            updatedNote = enhancedNote + formattedText;
+          }
+        } else {
+          updatedNote = enhancedNote + formattedText;
+        }
+        break;
+      case 'after_interventions':
+        const interventionIdx = Math.max(
+          lowerNote.indexOf('intervention'),
+          lowerNote.indexOf('nursing care'),
+          lowerNote.indexOf('treatment')
+        );
+        if (interventionIdx > -1) {
+          const nextParagraph = enhancedNote.indexOf('\n\n', interventionIdx);
+          if (nextParagraph > -1) {
+            updatedNote = enhancedNote.slice(0, nextParagraph) + formattedText + enhancedNote.slice(nextParagraph);
+          } else {
+            updatedNote = enhancedNote + formattedText;
+          }
+        } else {
+          updatedNote = enhancedNote + formattedText;
+        }
+        break;
+      case 'before_plan':
+        const planIdx = Math.max(
+          lowerNote.indexOf('plan:'),
+          lowerNote.indexOf('plan of care'),
+          lowerNote.indexOf('next visit')
+        );
+        if (planIdx > -1) {
+          updatedNote = enhancedNote.slice(0, planIdx) + suggestion.trim() + '\n\n' + enhancedNote.slice(planIdx);
+        } else {
+          updatedNote = enhancedNote + formattedText;
+        }
+        break;
+      case 'end':
+      default:
+        updatedNote = enhancedNote + formattedText;
+        break;
+    }
+    
+    onUpdateEnhancedNote(updatedNote);
+    setInsertedIssues(prev => new Set([...prev, issueIdx]));
+    
+    // Re-analyze after a short delay
+    setTimeout(() => {
+      analyzeEnhancedNote();
+    }, 1000);
   };
 
   // Don't render if no note content
@@ -370,51 +473,68 @@ Return JSON:
             {/* Flagged Issues with Clickable Suggestions */}
             {enhancedComplianceData?.flagged_issues?.length > 0 && (
               <div className="space-y-2">
-                {enhancedComplianceData.flagged_issues.map((issue, idx) => (
-                  <Popover key={idx}>
-                    <PopoverTrigger asChild>
-                      <div className={`flex items-start gap-2 p-2 rounded cursor-pointer hover:shadow-sm transition-shadow ${getSeverityColor(issue.severity)}`}>
-                        {getIssueTypeIcon(issue.issue_type)}
+                {enhancedComplianceData.flagged_issues.map((issue, idx) => {
+                  const isInserted = insertedIssues.has(idx);
+                  return (
+                    <div key={idx} className={`rounded border ${isInserted ? 'bg-green-50 border-green-300 opacity-60' : getSeverityColor(issue.severity)}`}>
+                      <div className="flex items-start gap-2 p-2">
+                        {isInserted ? (
+                          <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          getIssueTypeIcon(issue.issue_type)
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="text-xs font-semibold">{issue.element}</p>
-                            <Badge variant="outline" className="text-xs capitalize">{issue.issue_type}</Badge>
+                            {isInserted ? (
+                              <Badge className="bg-green-100 text-green-800 text-xs">Added</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs capitalize">{issue.issue_type}</Badge>
+                            )}
                           </div>
                           <p className="text-xs text-gray-700 mt-0.5">{issue.problem}</p>
                         </div>
-                        <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80" align="end">
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 mb-1">Problem</p>
-                          <p className="text-sm">{issue.problem}</p>
-                        </div>
-                        {issue.location_hint && (
-                          <div>
-                            <p className="text-xs font-semibold text-gray-500 mb-1">Location</p>
-                            <p className="text-xs italic text-gray-600">"{issue.location_hint}"</p>
-                          </div>
+                        {!isInserted && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-6 px-2">
+                                <Lightbulb className="w-3 h-3 mr-1 text-yellow-600" />
+                                <span className="text-xs">Fix</span>
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-96" align="end">
+                              <div className="space-y-3">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500 mb-1">Problem</p>
+                                  <p className="text-sm">{issue.problem}</p>
+                                </div>
+                                <div>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <p className="text-xs font-semibold text-gray-500">Ready-to-Insert Text</p>
+                                    <Badge variant="outline" className="text-xs">
+                                      Insert: {issue.insert_location?.replace('_', ' ') || 'end'}
+                                    </Badge>
+                                  </div>
+                                  <div className="bg-green-50 p-3 rounded border border-green-200">
+                                    <p className="text-sm text-green-900 whitespace-pre-wrap">{issue.suggestion}</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  className="w-full bg-green-600 hover:bg-green-700"
+                                  onClick={() => insertAtLocation(issue.suggestion, issue.insert_location || 'end', idx)}
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Insert into Note & Re-analyze
+                                </Button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                         )}
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 mb-1">Suggested Addition</p>
-                          <div className="bg-green-50 p-2 rounded border border-green-200">
-                            <p className="text-sm text-green-800">{issue.suggestion}</p>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={() => onInsertElement && onInsertElement('\n\n' + issue.suggestion)}
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Add to Note
-                        </Button>
                       </div>
-                    </PopoverContent>
-                  </Popover>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -470,11 +590,40 @@ Return JSON:
               </div>
             )}
 
-            {/* No Issues */}
-            {enhancedComplianceData && enhancedComplianceData.flagged_issues?.length === 0 && (
-              <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <p className="text-sm text-green-800">Note is Medicare compliant!</p>
+            {/* Ready to Paste Indicator */}
+            {enhancedComplianceData && (
+              <div className={`flex items-center gap-2 p-3 rounded border ${
+                isReadyToPaste || enhancedComplianceData.overall_score >= 85
+                  ? 'bg-green-100 border-green-300'
+                  : enhancedComplianceData.overall_score >= 70
+                  ? 'bg-yellow-50 border-yellow-300'
+                  : 'bg-orange-50 border-orange-300'
+              }`}>
+                {isReadyToPaste || enhancedComplianceData.overall_score >= 85 ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">Ready to paste into EHR!</p>
+                      <p className="text-xs text-green-700">All critical compliance elements are documented.</p>
+                    </div>
+                  </>
+                ) : enhancedComplianceData.overall_score >= 70 ? (
+                  <>
+                    <AlertCircle className="w-5 h-5 text-yellow-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-yellow-800">Almost ready - review suggested fixes above</p>
+                      <p className="text-xs text-yellow-700">Add {enhancedComplianceData.flagged_issues?.filter(i => i.severity === 'high').length || 0} high-priority items for full compliance.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-5 h-5 text-orange-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-orange-800">Needs improvement before pasting</p>
+                      <p className="text-xs text-orange-700">Click "Fix" on issues above to add required elements.</p>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

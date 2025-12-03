@@ -492,6 +492,7 @@ Return JSON:
                   setRoughNote(prev => prev + '\n' + text);
                 }
               }}
+              onUpdateEnhancedNote={(updatedNote) => setEnhancedNote(updatedNote)}
             />
           )}
 
