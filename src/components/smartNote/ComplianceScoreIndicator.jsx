@@ -61,6 +61,7 @@ export default function ComplianceScoreIndicator({
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [enhancedNoteHistory, setEnhancedNoteHistory] = useState([]);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [selectedEnhancedIssues, setSelectedEnhancedIssues] = useState(new Set());
 
   // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
   const getDefaultSuggestion = (elementName, type) => {
@@ -759,11 +760,77 @@ Return JSON:
             {/* Flagged Issues with Clickable Suggestions */}
             {enhancedComplianceData?.flagged_issues?.length > 0 && (
               <div className="space-y-2">
+                {/* Multi-select controls */}
+                {enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length > 1 && (
+                  <div className="flex justify-between items-center mb-2 p-2 bg-white rounded border">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedEnhancedIssues.size === enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length && selectedEnhancedIssues.size > 0}
+                        onChange={(e) => {
+                          if (selectedEnhancedIssues.size === enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length) {
+                            setSelectedEnhancedIssues(new Set());
+                          } else {
+                            const allIndices = enhancedComplianceData.flagged_issues
+                              .map((_, i) => i)
+                              .filter(i => !insertedIssues.has(i));
+                            setSelectedEnhancedIssues(new Set(allIndices));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-xs text-gray-600">Select All</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="text-xs bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        const selectedIndices = Array.from(selectedEnhancedIssues);
+                        const textsToAdd = selectedIndices
+                          .map(i => enhancedComplianceData.flagged_issues[i])
+                          .filter(issue => issue)
+                          .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType));
+                        if (textsToAdd.length > 0) {
+                          onInsertElement && onInsertElement(textsToAdd.join('\n\n'));
+                          selectedIndices.forEach(idx => setInsertedIssues(prev => new Set([...prev, idx])));
+                          setSelectedEnhancedIssues(new Set());
+                        }
+                      }}
+                      disabled={selectedEnhancedIssues.size === 0}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add Selected ({selectedEnhancedIssues.size})
+                    </Button>
+                  </div>
+                )}
+
                 {enhancedComplianceData.flagged_issues.map((issue, idx) => {
                   const isInserted = insertedIssues.has(idx);
+                  const isSelected = selectedEnhancedIssues.has(idx);
+                  const suggestionText = issue.suggestion || getDefaultSuggestion(issue.element, careType);
+
                   return (
                     <div key={idx} className={`rounded border ${isInserted ? 'bg-green-50 border-green-300 opacity-60' : getSeverityColor(issue.severity)}`}>
                       <div className="flex items-start gap-2 p-2">
+                        {!isInserted && (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              setSelectedEnhancedIssues(prev => {
+                                const next = new Set(prev);
+                                if (isSelected) {
+                                  next.delete(idx);
+                                } else {
+                                  next.add(idx);
+                                }
+                                return next;
+                              });
+                            }}
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        )}
                         {isInserted ? (
                           <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                         ) : (
@@ -779,46 +846,27 @@ Return JSON:
                             )}
                           </div>
                           <p className="text-xs text-gray-700 mt-0.5">{issue.problem}</p>
+
+                          {/* Show suggestion preview */}
+                          {!isInserted && (
+                            <div className="mt-2 bg-green-50 p-2 rounded border border-green-200">
+                              <p className="text-xs font-medium text-green-800 mb-1">AI Suggestion:</p>
+                              <p className="text-xs text-green-900 whitespace-pre-wrap line-clamp-3">{suggestionText}</p>
+                            </div>
+                          )}
                         </div>
                         {!isInserted && (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button size="sm" variant="ghost" className="h-6 px-2">
-                                <Lightbulb className="w-3 h-3 mr-1 text-yellow-600" />
-                                <span className="text-xs">Fix</span>
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-96" align="end">
-                              <div className="space-y-3">
-                                <div>
-                                  <p className="text-xs font-semibold text-gray-500 mb-1">Problem</p>
-                                  <p className="text-sm">{issue.problem}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-semibold text-gray-500 mb-1">Suggested Text to Add</p>
-                                  <div className="bg-green-50 p-3 rounded border border-green-200">
-                                    <p className="text-sm text-green-900 whitespace-pre-wrap">{issue.suggestion || getDefaultSuggestion(issue.element, careType)}</p>
-                                  </div>
-                                </div>
-                                <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                                  <p className="text-xs text-blue-800">
-                                    This will be added to your rough notes. Edit as needed, then click "Enhance with AI" to re-check compliance.
-                                  </p>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  className="w-full bg-green-600 hover:bg-green-700"
-                                  onClick={() => {
-                                    const suggestion = issue.suggestion || getDefaultSuggestion(issue.element, careType);
-                                    insertToRoughNote(suggestion, idx);
-                                  }}
-                                >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Add to Rough Notes
-                                </Button>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 shrink-0"
+                            onClick={() => {
+                              insertToRoughNote(suggestionText, idx);
+                            }}
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            <span className="text-xs">Add</span>
+                          </Button>
                         )}
                       </div>
                     </div>
