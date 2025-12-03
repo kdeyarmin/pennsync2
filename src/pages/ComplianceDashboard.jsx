@@ -447,8 +447,8 @@ export default function ComplianceDashboard() {
         </TabsContent>
 
         <TabsContent value="alerts">
-      {/* Quick Links */}
-      <Card className="mb-6">
+          {/* Quick Links */}
+          <Card className="mb-6">
         <CardHeader className="pb-2">
           <CardTitle className="text-base md:text-lg flex items-center gap-2">
             <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-indigo-600" />
