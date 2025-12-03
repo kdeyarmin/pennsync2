@@ -18,6 +18,7 @@ import ScheduleOptimizer from './pages/ScheduleOptimizer';
 import NurseTraining from './pages/NurseTraining';
 import PatientAlerts from './pages/PatientAlerts';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
+import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "NurseTraining": NurseTraining,
     "PatientAlerts": PatientAlerts,
     "RegulatoryCompliance": RegulatoryCompliance,
+    "SmartNoteAssistant": SmartNoteAssistant,
 }
 
 export const pagesConfig = {
