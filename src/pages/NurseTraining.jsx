@@ -22,6 +22,7 @@ import TrainingRecommendations from "../components/training/TrainingRecommendati
 import AgencyTrainingManager from "../components/training/AgencyTrainingManager";
 import SkillGapLearningHub from "../components/training/SkillGapLearningHub";
 import GamificationDashboard from "../components/gamification/GamificationDashboard";
+import NurseTrainingSuggestions from "../components/training/NurseTrainingSuggestions";
 
 export default function NurseTraining() {
   const { data: currentUser } = useQuery({
@@ -92,7 +93,10 @@ export default function NurseTraining() {
         </TabsContent>
 
         <TabsContent value="recommendations">
-          <TrainingRecommendations nurseEmail={currentUser?.email} />
+          <div className="space-y-6">
+            <NurseTrainingSuggestions nurseEmail={currentUser?.email} />
+            <TrainingRecommendations nurseEmail={currentUser?.email} />
+          </div>
         </TabsContent>
 
         {isAdmin && (
