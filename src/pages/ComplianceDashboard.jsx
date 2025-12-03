@@ -449,221 +449,221 @@ export default function ComplianceDashboard() {
         <TabsContent value="alerts">
           {/* Quick Links */}
           <Card className="mb-6">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base md:text-lg flex items-center gap-2">
-            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-indigo-600" />
-            Quick Access
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 md:p-6">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
-            {quickLinks.map((link, idx) => (
-              <Link key={idx} to={link.url}>
-                <div className="p-2 md:p-3 rounded-lg border hover:shadow-md transition-all text-center cursor-pointer">
-                  <div className={`w-8 h-8 md:w-10 md:h-10 ${link.color} rounded-lg flex items-center justify-center mx-auto mb-1 md:mb-2`}>
-                    <link.icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                  </div>
-                  <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">{link.name}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-        {/* Main Alerts List */}
-        <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
-          {/* Filters */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-3">
-                <div className="flex-1 min-w-[200px]">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      placeholder="Search alerts..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="Documentation">Documentation</SelectItem>
-                    <SelectItem value="Recertification">Recertification</SelectItem>
-                    <SelectItem value="Care Plans">Care Plans</SelectItem>
-                    <SelectItem value="Incidents">Incidents</SelectItem>
-                    <SelectItem value="Security">Security</SelectItem>
-                    <SelectItem value="Quality Measures">Quality Measures</SelectItem>
-                    <SelectItem value="OASIS">OASIS</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterSeverity} onValueChange={setFilterSeverity}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Severity" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Severities</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
-                    <SelectItem value="warning">Warning</SelectItem>
-                    <SelectItem value="info">Info</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Alerts */}
-          <div className="space-y-3">
-            {filteredAlerts.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">All Clear!</h3>
-                  <p className="text-gray-500">No compliance alerts match your current filters.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              filteredAlerts.map((alert) => (
-                <Card key={alert.id} className={`${getSeverityStyle(alert.severity)} border`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        {getSeverityIcon(alert.severity)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">{alert.title}</h4>
-                          <Badge variant="outline" className="text-xs">
-                            {getCategoryIcon(alert.category)}
-                            <span className="ml-1">{alert.category}</span>
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-700 mb-3">{alert.message}</p>
-                        <div className="flex items-center gap-3">
-                          <Link to={alert.link}>
-                            <Button size="sm" className="gap-1">
-                              {alert.linkText}
-                              <ExternalLink className="w-3 h-3" />
-                            </Button>
-                          </Link>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDismiss(alert.id)}
-                            className="text-gray-500"
-                          >
-                            Dismiss
-                          </Button>
-                          {alert.timestamp && (
-                            <span className="text-xs text-gray-400 ml-auto">
-                              <Clock className="w-3 h-3 inline mr-1" />
-                              {format(new Date(alert.timestamp), 'MMM d, yyyy')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4 order-1 lg:order-2">
-          {/* Category Breakdown */}
-          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">By Category</CardTitle>
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-indigo-600" />
+                Quick Access
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {Object.entries(categoryBreakdown).map(([category, count]) => (
-                  <div 
-                    key={category} 
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => setFilterCategory(category)}
-                  >
-                    <div className="flex items-center gap-2">
-                      {getCategoryIcon(category)}
-                      <span className="text-sm">{category}</span>
+            <CardContent className="p-3 md:p-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
+                {quickLinks.map((link, idx) => (
+                  <Link key={idx} to={link.url}>
+                    <div className="p-2 md:p-3 rounded-lg border hover:shadow-md transition-all text-center cursor-pointer">
+                      <div className={`w-8 h-8 md:w-10 md:h-10 ${link.color} rounded-lg flex items-center justify-center mx-auto mb-1 md:mb-2`}>
+                        <link.icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                      </div>
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">{link.name}</p>
                     </div>
-                    <Badge variant="outline">{count}</Badge>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Upcoming Deadlines */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Upcoming
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {aggregatedAlerts
-                  .filter(a => a.dueDate || a.daysRemaining)
-                  .slice(0, 5)
-                  .map((alert, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <span className="truncate flex-1">{alert.title.substring(0, 20)}...</span>
-                      <Badge variant="outline" className={
-                        alert.severity === 'critical' ? 'bg-red-100 text-red-800' : 
-                        alert.severity === 'warning' ? 'bg-orange-100 text-orange-800' : 
-                        'bg-blue-100 text-blue-800'
-                      }>
-                        {alert.daysRemaining ? `${alert.daysRemaining}d` : 
-                         alert.dueDate ? format(new Date(alert.dueDate), 'MMM d') : ''}
-                      </Badge>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+            {/* Main Alerts List */}
+            <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
+              {/* Filters */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          placeholder="Search alerts..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
-                  ))}
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="Documentation">Documentation</SelectItem>
+                        <SelectItem value="Recertification">Recertification</SelectItem>
+                        <SelectItem value="Care Plans">Care Plans</SelectItem>
+                        <SelectItem value="Incidents">Incidents</SelectItem>
+                        <SelectItem value="Security">Security</SelectItem>
+                        <SelectItem value="Quality Measures">Quality Measures</SelectItem>
+                        <SelectItem value="OASIS">OASIS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Severity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Severities</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                        <SelectItem value="warning">Warning</SelectItem>
+                        <SelectItem value="info">Info</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Alerts */}
+              <div className="space-y-3">
+                {filteredAlerts.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">All Clear!</h3>
+                      <p className="text-gray-500">No compliance alerts match your current filters.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredAlerts.map((alert) => (
+                    <Card key={alert.id} className={`${getSeverityStyle(alert.severity)} border`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 mt-1">
+                            {getSeverityIcon(alert.severity)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900">{alert.title}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                {getCategoryIcon(alert.category)}
+                                <span className="ml-1">{alert.category}</span>
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-700 mb-3">{alert.message}</p>
+                            <div className="flex items-center gap-3">
+                              <Link to={alert.link}>
+                                <Button size="sm" className="gap-1">
+                                  {alert.linkText}
+                                  <ExternalLink className="w-3 h-3" />
+                                </Button>
+                              </Link>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDismiss(alert.id)}
+                                className="text-gray-500"
+                              >
+                                Dismiss
+                              </Button>
+                              {alert.timestamp && (
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  <Clock className="w-3 h-3 inline mr-1" />
+                                  {format(new Date(alert.timestamp), 'MMM d, yyyy')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Policy & Guideline Monitor */}
-          <PolicyGuidelineMonitor 
-            nurseEmail={currentUser?.email}
-            onTrainingRecommended={(topics) => console.log('Training recommended:', topics)}
-          />
+            {/* Sidebar */}
+            <div className="space-y-4 order-1 lg:order-2">
+              {/* Category Breakdown */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">By Category</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Object.entries(categoryBreakdown).map(([category, count]) => (
+                      <div 
+                        key={category} 
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                        onClick={() => setFilterCategory(category)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(category)}
+                          <span className="text-sm">{category}</span>
+                        </div>
+                        <Badge variant="outline">{count}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Automated Compliance Reporting */}
-          <AutomatedComplianceReporting 
-            nurseEmail={currentUser?.email}
-            isAdmin={currentUser?.role === 'admin'}
-          />
+              {/* Upcoming Deadlines */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Upcoming
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {aggregatedAlerts
+                      .filter(a => a.dueDate || a.daysRemaining)
+                      .slice(0, 5)
+                      .map((alert, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-sm">
+                          <span className="truncate flex-1">{alert.title.substring(0, 20)}...</span>
+                          <Badge variant="outline" className={
+                            alert.severity === 'critical' ? 'bg-red-100 text-red-800' : 
+                            alert.severity === 'warning' ? 'bg-orange-100 text-orange-800' : 
+                            'bg-blue-100 text-blue-800'
+                          }>
+                            {alert.daysRemaining ? `${alert.daysRemaining}d` : 
+                             alert.dueDate ? format(new Date(alert.dueDate), 'MMM d') : ''}
+                          </Badge>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Compliance Tips */}
-          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2 text-indigo-900">
-                <Sparkles className="w-5 h-5" />
-                Pro Tips
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-indigo-800">
-                <li>• Complete documentation within 24 hours</li>
-                <li>• Schedule recerts 2 weeks before due date</li>
-                <li>• Review care plans at each visit</li>
-                <li>• Document homebound status every visit</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              {/* Policy & Guideline Monitor */}
+              <PolicyGuidelineMonitor 
+                nurseEmail={currentUser?.email}
+                onTrainingRecommended={(topics) => console.log('Training recommended:', topics)}
+              />
+
+              {/* Automated Compliance Reporting */}
+              <AutomatedComplianceReporting 
+                nurseEmail={currentUser?.email}
+                isAdmin={currentUser?.role === 'admin'}
+              />
+
+              {/* Compliance Tips */}
+              <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2 text-indigo-900">
+                    <Sparkles className="w-5 h-5" />
+                    Pro Tips
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm text-indigo-800">
+                    <li>• Complete documentation within 24 hours</li>
+                    <li>• Schedule recerts 2 weeks before due date</li>
+                    <li>• Review care plans at each visit</li>
+                    <li>• Document homebound status every visit</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
