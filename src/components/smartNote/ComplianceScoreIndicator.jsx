@@ -519,7 +519,13 @@ Return JSON:
                     )}
                   </div>
                   {element.status !== 'present' && (
-                    <div className="px-2 pb-2">
+                    <div className="px-2 pb-2 space-y-2">
+                      {element.why_needed && (
+                        <div className="bg-blue-50 p-2 rounded text-xs text-blue-800 border border-blue-200 flex items-start gap-1.5">
+                          <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <span>{element.why_needed}</span>
+                        </div>
+                      )}
                       <div className="bg-white/70 p-2 rounded text-xs text-gray-700 border border-gray-200">
                         <p className="font-medium text-gray-500 mb-1">Suggested text:</p>
                         <p className="whitespace-pre-wrap">{suggestion}</p>
