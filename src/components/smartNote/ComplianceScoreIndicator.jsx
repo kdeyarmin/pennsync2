@@ -5,26 +5,37 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   CheckCircle2,
   AlertCircle,
   XCircle,
   Plus,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Loader2,
+  Lightbulb
 } from "lucide-react";
 
 export default function ComplianceScoreIndicator({
   roughNote,
+  enhancedNote,
   careType,
   visitType,
   diagnosis,
-  onInsertElement
+  onInsertElement,
+  onFlaggedIssues
 }) {
   const [complianceData, setComplianceData] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [enhancedComplianceData, setEnhancedComplianceData] = useState(null);
+  const [isAnalyzingEnhanced, setIsAnalyzingEnhanced] = useState(false);
 
-  // Debounced analysis
+  // Debounced analysis for rough note
   useEffect(() => {
     if (roughNote && roughNote.length > 30) {
       const timer = setTimeout(() => {
@@ -33,6 +44,16 @@ export default function ComplianceScoreIndicator({
       return () => clearTimeout(timer);
     }
   }, [roughNote, careType, visitType]);
+
+  // Auto-analyze enhanced note when it changes
+  useEffect(() => {
+    if (enhancedNote && enhancedNote.length > 50) {
+      const timer = setTimeout(() => {
+        analyzeEnhancedNote();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [enhancedNote]);
 
   const analyzeCompliance = async () => {
     setIsAnalyzing(true);
@@ -107,6 +128,101 @@ Return JSON:
     setIsAnalyzing(false);
   };
 
+  const analyzeEnhancedNote = async () => {
+    if (!enhancedNote || enhancedNote.length < 50) return;
+    
+    setIsAnalyzingEnhanced(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this ENHANCED nursing note for Medicare compliance. Identify specific phrases or sections that need improvement.
+
+CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
+VISIT TYPE: ${visitType}
+DIAGNOSIS: ${diagnosis || 'Not specified'}
+
+ENHANCED NOTE:
+${enhancedNote}
+
+For ${careType === 'hospice' ? 'HOSPICE' : 'HOME HEALTH'} documentation, check:
+${careType === 'home_health' ? `
+- HOMEBOUND STATUS: Must clearly state why patient cannot leave home safely
+- SKILLED NEED: Must justify why RN skill/judgment is required (not just tasks an aide could do)
+- PATIENT RESPONSE: Must document how patient responded to teaching/interventions
+- MEASURABLE GOALS: Should reference progress toward specific, measurable goals
+` : `
+- TERMINAL PROGNOSIS: Evidence of disease progression toward end of life
+- COMFORT FOCUS: Quality of life and symptom management emphasis
+- FAMILY SUPPORT: Documentation of emotional/spiritual support provided
+`}
+
+IMPORTANT: Find specific text passages that are weak or missing required elements.
+
+Return JSON:
+{
+  "overall_score": 0-100,
+  "flagged_issues": [
+    {
+      "issue_type": "missing" | "weak" | "non_compliant",
+      "element": "Which compliance element (e.g., Homebound Status, Skilled Need)",
+      "location_hint": "Brief quote or description of where in note this applies",
+      "problem": "What's wrong or missing",
+      "suggestion": "Specific text to add or replace",
+      "severity": "high" | "medium" | "low"
+    }
+  ],
+  "compliant_elements": ["List of elements that are well documented"],
+  "quick_fixes": [
+    {
+      "original_text": "Text that could be improved (exact quote if possible)",
+      "improved_text": "Better version of the text",
+      "reason": "Why this is better"
+    }
+  ]
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            overall_score: { type: "number" },
+            flagged_issues: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  issue_type: { type: "string" },
+                  element: { type: "string" },
+                  location_hint: { type: "string" },
+                  problem: { type: "string" },
+                  suggestion: { type: "string" },
+                  severity: { type: "string" }
+                }
+              }
+            },
+            compliant_elements: { type: "array", items: { type: "string" } },
+            quick_fixes: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  original_text: { type: "string" },
+                  improved_text: { type: "string" },
+                  reason: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      setEnhancedComplianceData(result);
+      if (onFlaggedIssues) {
+        onFlaggedIssues(result);
+      }
+    } catch (error) {
+      console.error("Enhanced compliance analysis error:", error);
+    }
+    setIsAnalyzingEnhanced(false);
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'present': return <CheckCircle2 className="w-4 h-4 text-green-600" />;
@@ -128,48 +244,70 @@ Return JSON:
     return 'bg-red-500';
   };
 
-  if (!roughNote || roughNote.length < 30) {
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getIssueTypeIcon = (type) => {
+    switch (type) {
+      case 'missing': return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'weak': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case 'non_compliant': return <AlertCircle className="w-4 h-4 text-orange-500" />;
+      default: return <AlertCircle className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  // Don't render if no note content
+  if ((!roughNote || roughNote.length < 30) && !enhancedNote) {
     return null;
   }
 
   return (
     <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
       <CardContent className="p-3">
-        <div 
-          className="flex items-center justify-between cursor-pointer"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          <div className="flex items-center gap-3">
-            <div className="text-center">
-              <span className={`text-2xl font-bold ${complianceData ? getScoreColor(complianceData.score) : 'text-gray-400'}`}>
-                {isAnalyzing ? '...' : complianceData?.score || '--'}
-              </span>
-              <p className="text-xs text-gray-500">Compliance</p>
+        {/* Rough Note Analysis */}
+        {roughNote && roughNote.length >= 30 && (
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="text-center">
+                <span className={`text-2xl font-bold ${complianceData ? getScoreColor(complianceData.score) : 'text-gray-400'}`}>
+                  {isAnalyzing ? '...' : complianceData?.score || '--'}
+                </span>
+                <p className="text-xs text-gray-500">Compliance</p>
+              </div>
+              {complianceData && (
+                <div className="flex-1 max-w-32">
+                  <Progress 
+                    value={complianceData.score} 
+                    className="h-2"
+                    style={{ '--progress-foreground': getProgressColor(complianceData.score) }}
+                  />
+                </div>
+              )}
             </div>
-            {complianceData && (
-              <div className="flex-1 max-w-32">
-                <Progress 
-                  value={complianceData.score} 
-                  className="h-2"
-                  style={{ '--progress-foreground': getProgressColor(complianceData.score) }}
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {complianceData && (
+                <div className="flex gap-1">
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    {complianceData.elements?.filter(e => e.status === 'present').length || 0} ✓
+                  </Badge>
+                  <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                    {complianceData.elements?.filter(e => e.status === 'missing').length || 0} ✗
+                  </Badge>
+                </div>
+              )}
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {complianceData && (
-              <div className="flex gap-1">
-                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                  {complianceData.elements?.filter(e => e.status === 'present').length || 0} ✓
-                </Badge>
-                <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
-                  {complianceData.elements?.filter(e => e.status === 'missing').length || 0} ✗
-                </Badge>
-              </div>
-            )}
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </div>
-        </div>
+        )}
 
         {isExpanded && complianceData && (
           <div className="mt-3 space-y-2 border-t pt-3">
@@ -204,6 +342,141 @@ Return JSON:
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Enhanced Note Compliance Analysis */}
+        {enhancedNote && (
+          <div className={`${roughNote && roughNote.length >= 30 ? 'mt-3 pt-3 border-t' : ''}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-indigo-800">Enhanced Note Compliance</span>
+                {isAnalyzingEnhanced && <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />}
+              </div>
+              {enhancedComplianceData && (
+                <div className="flex items-center gap-2">
+                  <span className={`text-lg font-bold ${getScoreColor(enhancedComplianceData.overall_score)}`}>
+                    {enhancedComplianceData.overall_score}%
+                  </span>
+                  {enhancedComplianceData.flagged_issues?.length > 0 && (
+                    <Badge className="bg-orange-100 text-orange-800 text-xs">
+                      {enhancedComplianceData.flagged_issues.length} issues
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Flagged Issues with Clickable Suggestions */}
+            {enhancedComplianceData?.flagged_issues?.length > 0 && (
+              <div className="space-y-2">
+                {enhancedComplianceData.flagged_issues.map((issue, idx) => (
+                  <Popover key={idx}>
+                    <PopoverTrigger asChild>
+                      <div className={`flex items-start gap-2 p-2 rounded cursor-pointer hover:shadow-sm transition-shadow ${getSeverityColor(issue.severity)}`}>
+                        {getIssueTypeIcon(issue.issue_type)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-semibold">{issue.element}</p>
+                            <Badge variant="outline" className="text-xs capitalize">{issue.issue_type}</Badge>
+                          </div>
+                          <p className="text-xs text-gray-700 mt-0.5">{issue.problem}</p>
+                        </div>
+                        <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80" align="end">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 mb-1">Problem</p>
+                          <p className="text-sm">{issue.problem}</p>
+                        </div>
+                        {issue.location_hint && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 mb-1">Location</p>
+                            <p className="text-xs italic text-gray-600">"{issue.location_hint}"</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 mb-1">Suggested Addition</p>
+                          <div className="bg-green-50 p-2 rounded border border-green-200">
+                            <p className="text-sm text-green-800">{issue.suggestion}</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => onInsertElement && onInsertElement('\n\n' + issue.suggestion)}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add to Note
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ))}
+              </div>
+            )}
+
+            {/* Quick Fixes */}
+            {enhancedComplianceData?.quick_fixes?.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-indigo-800 mb-2">Quick Fixes</p>
+                <div className="space-y-2">
+                  {enhancedComplianceData.quick_fixes.slice(0, 3).map((fix, idx) => (
+                    <Popover key={idx}>
+                      <PopoverTrigger asChild>
+                        <div className="flex items-center gap-2 p-2 bg-indigo-50 rounded cursor-pointer hover:bg-indigo-100 transition-colors">
+                          <Lightbulb className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                          <p className="text-xs text-indigo-800 flex-1 truncate">{fix.reason}</p>
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80" align="end">
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 mb-1">Current Text</p>
+                            <p className="text-sm bg-red-50 p-2 rounded text-red-800 line-through">{fix.original_text}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 mb-1">Improved Text</p>
+                            <p className="text-sm bg-green-50 p-2 rounded text-green-800">{fix.improved_text}</p>
+                          </div>
+                          <p className="text-xs text-gray-600">{fix.reason}</p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => onInsertElement && onInsertElement(fix.improved_text)}
+                          >
+                            Apply Fix
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Compliant Elements */}
+            {enhancedComplianceData?.compliant_elements?.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1">
+                {enhancedComplianceData.compliant_elements.map((element, idx) => (
+                  <Badge key={idx} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {element}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* No Issues */}
+            {enhancedComplianceData && enhancedComplianceData.flagged_issues?.length === 0 && (
+              <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <p className="text-sm text-green-800">Note is Medicare compliant!</p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

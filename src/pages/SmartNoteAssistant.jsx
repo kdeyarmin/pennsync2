@@ -475,13 +475,20 @@ Return JSON:
           </Card>
 
           {/* Medicare Compliance Checker */}
-          {roughNote.length >= 30 && (
+          {(roughNote.length >= 30 || enhancedNote) && (
             <ComplianceScoreIndicator
               roughNote={roughNote}
+              enhancedNote={enhancedNote}
               careType="home_health"
               visitType={visitType}
               diagnosis={finalDiagnosis}
-              onInsertElement={(text) => setRoughNote(prev => prev + '\n' + text)}
+              onInsertElement={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n' + text);
+                }
+              }}
             />
           )}
 
