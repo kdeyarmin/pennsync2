@@ -117,8 +117,8 @@ export default function DuplicatePatientManager() {
           matchReasons.push("Same phone");
         }
 
-        return score >= 40 ? { patient: other, score, matchReasons } : false;
-      }).filter(Boolean);
+        return score >= 40 ? { patient: other, score, matchReasons } : null;
+      }).filter(d => d && d.patient);
 
       if (duplicates.length > 0) {
         const group = {
