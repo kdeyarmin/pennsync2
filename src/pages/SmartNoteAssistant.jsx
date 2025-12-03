@@ -273,6 +273,8 @@ ${roughNote}
 
 Transform into professional EHR-ready narrative with proper medical terminology, Medicare compliance, and integrated vital signs.
 
+IMPORTANT: Do NOT include any meta-commentary or closing statements about Medicare compliance standards or documentation adherence at the end. Just provide the clinical narrative itself.
+
 Return JSON:
 {
   "enhanced_note": "The complete clinical narrative",
