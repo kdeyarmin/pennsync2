@@ -35,6 +35,8 @@ import { format, differenceInDays, addDays, subDays } from "date-fns";
 
 import PolicyGuidelineMonitor from "../components/compliance/PolicyGuidelineMonitor";
 import AutomatedComplianceReporting from "../components/compliance/AutomatedComplianceReporting";
+import ComplianceRuleManager from "../components/compliance/ComplianceRuleManager";
+import EnhancedComplianceAuditor from "../components/compliance/EnhancedComplianceAuditor";
 
 export default function ComplianceDashboard() {
   const [filterCategory, setFilterCategory] = useState("all");
