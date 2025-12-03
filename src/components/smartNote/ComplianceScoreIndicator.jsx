@@ -26,6 +26,7 @@ export default function ComplianceScoreIndicator({
   careType,
   visitType,
   diagnosis,
+  vitalSigns,
   onInsertElement,
   onUpdateEnhancedNote,
   onFlaggedIssues
