@@ -269,22 +269,18 @@ Generate professional, Medicare-compliant clinical documentation based on the re
       </CardHeader>
       <CardContent className="p-3">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 mb-3 h-auto">
-            <TabsTrigger value="assessment" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
-              <Stethoscope className="w-3 h-3" />
-              <span className="hidden sm:inline">Assess</span>
+          <TabsList className="flex flex-wrap gap-1 mb-3 h-auto w-full">
+            <TabsTrigger value="assessment" className="text-xs px-2 py-1.5 flex-1 min-w-0">
+              <Stethoscope className="w-3 h-3 flex-shrink-0" />
             </TabsTrigger>
-            <TabsTrigger value="interventions" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
-              <Activity className="w-3 h-3" />
-              <span className="hidden sm:inline">Intervene</span>
+            <TabsTrigger value="interventions" className="text-xs px-2 py-1.5 flex-1 min-w-0">
+              <Activity className="w-3 h-3 flex-shrink-0" />
             </TabsTrigger>
-            <TabsTrigger value="patientResponse" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
-              <BookOpen className="w-3 h-3" />
-              <span className="hidden sm:inline">Response</span>
+            <TabsTrigger value="patientResponse" className="text-xs px-2 py-1.5 flex-1 min-w-0">
+              <BookOpen className="w-3 h-3 flex-shrink-0" />
             </TabsTrigger>
-            <TabsTrigger value="custom" className="text-xs px-1 py-1.5 flex flex-col gap-0.5">
-              <MessageSquare className="w-3 h-3" />
-              <span className="hidden sm:inline">Custom</span>
+            <TabsTrigger value="custom" className="text-xs px-2 py-1.5 flex-1 min-w-0">
+              <MessageSquare className="w-3 h-3 flex-shrink-0" />
             </TabsTrigger>
           </TabsList>
 
