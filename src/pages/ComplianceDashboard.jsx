@@ -430,6 +430,23 @@ export default function ComplianceDashboard() {
         </Alert>
       )}
 
+      {/* Tabs for Compliance Sections */}
+      <Tabs defaultValue="alerts" className="mb-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="alerts">Compliance Alerts</TabsTrigger>
+          <TabsTrigger value="auditor">Audit Documentation</TabsTrigger>
+          <TabsTrigger value="rules">Configure Rules</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="auditor">
+          <EnhancedComplianceAuditor />
+        </TabsContent>
+
+        <TabsContent value="rules">
+          <ComplianceRuleManager />
+        </TabsContent>
+
+        <TabsContent value="alerts">
       {/* Quick Links */}
       <Card className="mb-6">
         <CardHeader className="pb-2">
