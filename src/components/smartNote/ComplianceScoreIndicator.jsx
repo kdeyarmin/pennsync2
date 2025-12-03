@@ -48,7 +48,8 @@ export default function ComplianceScoreIndicator({
   onFlaggedIssues,
   onRoughNoteCompliance,
   onEnhancedNoteCompliance,
-  onDismissedElements
+  onDismissedElements,
+  onFixAllAndReEnhance
 }) {
   const [complianceData, setComplianceData] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -65,6 +66,7 @@ export default function ComplianceScoreIndicator({
   const [enhancedNoteHistory, setEnhancedNoteHistory] = useState([]);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [selectedEnhancedIssues, setSelectedEnhancedIssues] = useState(new Set());
+  const [isFixingAll, setIsFixingAll] = useState(false);
 
   // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
   const getDefaultSuggestion = (elementName, type) => {
@@ -502,6 +504,23 @@ Return JSON:
     setInsertedIssues(prev => new Set([...prev, issueIdx]));
   };
 
+  const handleFixAllAndReEnhance = async () => {
+    if (!enhancedComplianceData?.flagged_issues?.length) return;
+    
+    setIsFixingAll(true);
+    
+    // Collect all suggestions from flagged issues
+    const allSuggestions = enhancedComplianceData.flagged_issues
+      .filter((_, idx) => !insertedIssues.has(idx))
+      .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType));
+    
+    if (allSuggestions.length > 0 && onFixAllAndReEnhance) {
+      await onFixAllAndReEnhance(allSuggestions);
+    }
+    
+    setIsFixingAll(false);
+  };
+
   // Don't render if no note content
   if ((!roughNote || roughNote.length < 30) && !enhancedNote) {
     return null;
@@ -784,6 +803,21 @@ Return JSON:
                 </div>
               )}
             </div>
+
+            {/* Fix All Button */}
+            {enhancedComplianceData?.flagged_issues?.filter((_, idx) => !insertedIssues.has(idx)).length > 0 && (
+              <Button
+                onClick={handleFixAllAndReEnhance}
+                disabled={isFixingAll}
+                className="w-full mb-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+              >
+                {isFixingAll ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fixing & Re-Enhancing...</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4 mr-2" /> Fix All Deficiencies & Re-Enhance ({enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length})</>
+                )}
+              </Button>
+            )}
 
             {/* Flagged Issues with Clickable Suggestions */}
             {enhancedComplianceData?.flagged_issues?.length > 0 && (

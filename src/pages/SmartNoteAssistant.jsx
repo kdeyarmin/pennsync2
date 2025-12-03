@@ -547,6 +547,66 @@ Return JSON:
               onRoughNoteCompliance={(data) => setRoughNoteCompliance(data)}
               onEnhancedNoteCompliance={(data) => setEnhancedNoteCompliance(data)}
               onDismissedElements={(names) => setDismissedElementNames(names)}
+              onFixAllAndReEnhance={async (suggestions) => {
+                // Add all suggestions to rough note
+                const combinedText = suggestions.join('\n\n');
+                const newRoughNote = roughNote + '\n\n' + combinedText;
+                setRoughNote(newRoughNote);
+                setAppliedFixes(prev => [...prev, ...suggestions.map(s => s.split(':')[0].trim())]);
+
+                // Clear enhanced note and auto-re-enhance
+                setEnhancedNote('');
+                setIsProcessing(true);
+
+                try {
+                  const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
+
+            PATIENT CONTEXT:
+            - Diagnosis: ${finalDiagnosis || 'Not specified'}
+            - Visit Type: ${visitType.replace(/_/g, ' ')}
+            - Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
+                    if (k === 'o2') {
+                      const o2Text = `O2 Sat: ${v}`;
+                      if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
+                        return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
+                      } else if (vitalSigns.o2Source === 'on_oxygen') {
+                        return `${o2Text} on supplemental O2`;
+                      }
+                      return `${o2Text} on room air`;
+                    }
+                    return `${k}: ${v}`;
+                  }).join(', ') || 'None provided'}
+
+            ROUGH NOTES:
+            ${newRoughNote}
+
+            Transform into professional EHR-ready narrative with proper medical terminology, Medicare compliance, and integrated vital signs.
+
+            IMPORTANT: Do NOT include any meta-commentary or closing statements about Medicare compliance standards or documentation adherence at the end. Just provide the clinical narrative itself.
+
+            Return JSON:
+            {
+            "enhanced_note": "The complete clinical narrative",
+            "quality_score": 0-100
+            }`;
+
+                  const result = await base44.integrations.Core.InvokeLLM({
+                    prompt,
+                    response_json_schema: {
+                      type: "object",
+                      properties: {
+                        enhanced_note: { type: "string" },
+                        quality_score: { type: "number" }
+                      }
+                    }
+                  });
+                  setEnhancedNote(result.enhanced_note);
+                  setAuditResults(result);
+                } catch (error) {
+                  console.error("Error re-enhancing note:", error);
+                }
+                setIsProcessing(false);
+              }}
             />
           )}
 
