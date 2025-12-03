@@ -274,95 +274,12 @@ Return JSON:
     }
   };
 
-  const insertAtLocation = (suggestion, location, issueIdx) => {
-    if (!enhancedNote || !onUpdateEnhancedNote) return;
+  const insertToRoughNote = (suggestion, issueIdx) => {
+    if (!onInsertElement) return;
     
-    const formattedText = '\n\n' + suggestion.trim();
-    let updatedNote = enhancedNote;
-    
-    // Find insertion points based on location
-    const lowerNote = enhancedNote.toLowerCase();
-    
-    switch (location) {
-      case 'beginning':
-        updatedNote = suggestion.trim() + '\n\n' + enhancedNote;
-        break;
-      case 'after_assessment':
-        const assessmentIdx = Math.max(
-          lowerNote.indexOf('assessment:'),
-          lowerNote.indexOf('physical exam'),
-          lowerNote.indexOf('examination')
-        );
-        if (assessmentIdx > -1) {
-          const nextParagraph = enhancedNote.indexOf('\n\n', assessmentIdx);
-          if (nextParagraph > -1) {
-            updatedNote = enhancedNote.slice(0, nextParagraph) + formattedText + enhancedNote.slice(nextParagraph);
-          } else {
-            updatedNote = enhancedNote + formattedText;
-          }
-        } else {
-          updatedNote = enhancedNote + formattedText;
-        }
-        break;
-      case 'after_vitals':
-        const vitalsIdx = Math.max(
-          lowerNote.indexOf('vital signs'),
-          lowerNote.indexOf('vitals:'),
-          lowerNote.indexOf('blood pressure')
-        );
-        if (vitalsIdx > -1) {
-          const nextParagraph = enhancedNote.indexOf('\n\n', vitalsIdx);
-          if (nextParagraph > -1) {
-            updatedNote = enhancedNote.slice(0, nextParagraph) + formattedText + enhancedNote.slice(nextParagraph);
-          } else {
-            updatedNote = enhancedNote + formattedText;
-          }
-        } else {
-          updatedNote = enhancedNote + formattedText;
-        }
-        break;
-      case 'after_interventions':
-        const interventionIdx = Math.max(
-          lowerNote.indexOf('intervention'),
-          lowerNote.indexOf('nursing care'),
-          lowerNote.indexOf('treatment')
-        );
-        if (interventionIdx > -1) {
-          const nextParagraph = enhancedNote.indexOf('\n\n', interventionIdx);
-          if (nextParagraph > -1) {
-            updatedNote = enhancedNote.slice(0, nextParagraph) + formattedText + enhancedNote.slice(nextParagraph);
-          } else {
-            updatedNote = enhancedNote + formattedText;
-          }
-        } else {
-          updatedNote = enhancedNote + formattedText;
-        }
-        break;
-      case 'before_plan':
-        const planIdx = Math.max(
-          lowerNote.indexOf('plan:'),
-          lowerNote.indexOf('plan of care'),
-          lowerNote.indexOf('next visit')
-        );
-        if (planIdx > -1) {
-          updatedNote = enhancedNote.slice(0, planIdx) + suggestion.trim() + '\n\n' + enhancedNote.slice(planIdx);
-        } else {
-          updatedNote = enhancedNote + formattedText;
-        }
-        break;
-      case 'end':
-      default:
-        updatedNote = enhancedNote + formattedText;
-        break;
-    }
-    
-    onUpdateEnhancedNote(updatedNote);
+    // Add the suggestion to the rough note for nurse to edit
+    onInsertElement('\n\n' + suggestion.trim());
     setInsertedIssues(prev => new Set([...prev, issueIdx]));
-    
-    // Re-analyze after a short delay
-    setTimeout(() => {
-      analyzeEnhancedNote();
-    }, 1000);
   };
 
   // Don't render if no note content
