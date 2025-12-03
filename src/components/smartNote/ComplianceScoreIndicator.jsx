@@ -423,29 +423,78 @@ Return JSON:
 
         {isExpanded && complianceData && (
           <div className="mt-3 space-y-2 border-t pt-3">
-            {complianceData.elements?.map((element, idx) => (
-              <div 
-                key={idx} 
-                className={`flex items-start gap-2 p-2 rounded ${
-                  element.status === 'present' ? 'bg-green-50' : 
-                  element.status === 'partial' ? 'bg-yellow-50' : 'bg-red-50'
-                }`}
-              >
-                {getStatusIcon(element.status)}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold">{element.name}</p>
-                  {element.found_text && (
-                    <p className="text-xs text-gray-600 italic truncate">"{element.found_text}"</p>
-                  )}
-                </div>
-                {element.status !== 'present' && (
+            {complianceData.elements?.filter(e => e.status !== 'present').length > 1 && (
+              <div className="flex justify-end mb-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const missingElements = complianceData.elements.filter(el => el.status !== 'present' && selectedSuggestions.has(idx => complianceData.elements.indexOf(el)));
+                    const selectedIndices = Array.from(selectedSuggestions);
+                    const textsToAdd = selectedIndices
+                      .map(i => complianceData.elements[i])
+                      .filter(el => el && el.status !== 'present')
+                      .map(el => el.suggested_addition || getDefaultSuggestion(el.name, careType));
+                    if (textsToAdd.length > 0) {
+                      onInsertElement && onInsertElement(textsToAdd.join('\n\n'));
+                      setSelectedSuggestions(new Set());
+                    }
+                  }}
+                  disabled={selectedSuggestions.size === 0}
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Selected ({selectedSuggestions.size})
+                </Button>
+              </div>
+            )}
+            {complianceData.elements?.map((element, idx) => {
+              const isSelected = selectedSuggestions.has(idx);
+              const suggestion = element.suggested_addition || getDefaultSuggestion(element.name, careType);
+              
+              return (
+                <div 
+                  key={idx} 
+                  className={`rounded border ${
+                    element.status === 'present' ? 'bg-green-50 border-green-200' : 
+                    element.status === 'partial' ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-2 p-2">
+                    {element.status !== 'present' && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSelectedSuggestions(prev => {
+                            const next = new Set(prev);
+                            if (isSelected) {
+                              next.delete(idx);
+                            } else {
+                              next.add(idx);
+                            }
+                            return next;
+                          });
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    )}
+                    {getStatusIcon(element.status)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold">{element.name}</p>
+                      {element.found_text && (
+                        <p className="text-xs text-gray-600 italic truncate">"{element.found_text}"</p>
+                      )}
+                    </div>
+                    {element.status !== 'present' && (
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-6 text-xs px-2 shrink-0"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const suggestion = element.suggested_addition || getDefaultSuggestion(element.name, careType);
                           onInsertElement && onInsertElement(suggestion);
                         }}
                       >
@@ -453,8 +502,18 @@ Return JSON:
                         Add
                       </Button>
                     )}
-              </div>
-            ))}
+                  </div>
+                  {element.status !== 'present' && (
+                    <div className="px-2 pb-2">
+                      <div className="bg-white/70 p-2 rounded text-xs text-gray-700 border border-gray-200">
+                        <p className="font-medium text-gray-500 mb-1">Suggested text:</p>
+                        <p className="whitespace-pre-wrap">{suggestion}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
