@@ -17,7 +17,9 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  Lightbulb
+  Lightbulb,
+  X,
+  Ban
 } from "lucide-react";
 
 export default function ComplianceScoreIndicator({
@@ -39,6 +41,7 @@ export default function ComplianceScoreIndicator({
   const [insertedIssues, setInsertedIssues] = useState(new Set());
   const [isReadyToPaste, setIsReadyToPaste] = useState(false);
   const [selectedSuggestions, setSelectedSuggestions] = useState(new Set());
+  const [dismissedElements, setDismissedElements] = useState(new Set());
 
   // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
   const getDefaultSuggestion = (elementName, type) => {
@@ -166,6 +169,7 @@ CRITICAL INSTRUCTIONS FOR SUGGESTIONS:
 For EACH element, provide:
 - suggested_addition: Personalized clinical text incorporating note details
 - why_needed: Brief Medicare/compliance reason (1 sentence)
+- problematic_phrasing: If partial/weak, quote the EXACT problematic text from the note and explain why it's insufficient
 
 Return JSON:
 {
@@ -176,7 +180,8 @@ Return JSON:
       "status": "present" | "partial" | "missing",
       "found_text": "Quote from note if present, empty string if missing",
       "suggested_addition": "PERSONALIZED clinical text incorporating details from the rough note - REQUIRED for missing/partial",
-      "why_needed": "Brief explanation of why Medicare requires this element (e.g., 'Medicare requires homebound documentation to justify skilled home health services')"
+      "why_needed": "Brief explanation of why Medicare requires this element (e.g., 'Medicare requires homebound documentation to justify skilled home health services')",
+      "problematic_phrasing": "For partial elements: quote the exact weak/non-compliant text and explain the issue (e.g., 'pt at home' - too vague, doesn't explain WHY patient is homebound or taxing effort required)"
     }
   ]
 }`,
@@ -193,7 +198,8 @@ Return JSON:
                   status: { type: "string" },
                   found_text: { type: "string" },
                   suggested_addition: { type: "string" },
-                  why_needed: { type: "string" }
+                  why_needed: { type: "string" },
+                  problematic_phrasing: { type: "string" }
                 }
               }
             }
@@ -482,7 +488,7 @@ Return JSON:
                 </Button>
               </div>
             )}
-            {complianceData.elements?.map((element, idx) => {
+            {complianceData.elements?.filter((_, idx) => !dismissedElements.has(idx)).map((element, idx) => {
               const isSelected = selectedSuggestions.has(idx);
               const suggestion = element.suggested_addition || getDefaultSuggestion(element.name, careType);
               
@@ -521,23 +527,53 @@ Return JSON:
                         <p className="text-xs text-gray-600 italic truncate">"{element.found_text}"</p>
                       )}
                     </div>
-                    {element.status !== 'present' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 text-xs px-2 shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onInsertElement && onInsertElement(suggestion);
-                        }}
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {element.status !== 'present' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 text-xs px-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onInsertElement && onInsertElement(suggestion);
+                            }}
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDismissedElements(prev => new Set([...prev, idx]));
+                              setSelectedSuggestions(prev => {
+                                const next = new Set(prev);
+                                next.delete(idx);
+                                return next;
+                              });
+                            }}
+                            title="Not applicable - dismiss this suggestion"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   {element.status !== 'present' && (
                     <div className="px-2 pb-2 space-y-2">
+                      {/* Problematic phrasing callout */}
+                      {element.problematic_phrasing && (
+                        <div className="bg-red-50 p-2 rounded text-xs border border-red-200">
+                          <p className="font-medium text-red-800 mb-1 flex items-center gap-1">
+                            <Ban className="w-3 h-3" /> Non-compliant phrasing found:
+                          </p>
+                          <p className="text-red-700 italic">"{element.problematic_phrasing}"</p>
+                        </div>
+                      )}
                       {element.why_needed && (
                         <div className="bg-blue-50 p-2 rounded text-xs text-blue-800 border border-blue-200 flex items-start gap-1.5">
                           <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
@@ -553,6 +589,24 @@ Return JSON:
                 </div>
               );
             })}
+            
+            {/* Show dismissed count with restore option */}
+            {dismissedElements.size > 0 && (
+              <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 text-xs text-gray-500">
+                <span>{dismissedElements.size} suggestion{dismissedElements.size > 1 ? 's' : ''} marked as not applicable</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-5 text-xs text-blue-600 hover:text-blue-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDismissedElements(new Set());
+                  }}
+                >
+                  Restore all
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
