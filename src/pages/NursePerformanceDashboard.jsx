@@ -49,6 +49,7 @@ import TrainingCompletionTracker from "../components/training/TrainingCompletion
 import AutomatedComplianceAuditor from "../components/compliance/AutomatedComplianceAuditor";
 import ComplianceAuditResults from "../components/compliance/ComplianceAuditResults";
 import NurseComplianceRiskIndicator from "../components/compliance/NurseComplianceRiskIndicator";
+import ProactiveRiskAnalyzer from "../components/analytics/ProactiveRiskAnalyzer";
 
 const COLORS = {
   documentation: "#8b5cf6",
@@ -244,6 +245,13 @@ export default function NursePerformanceDashboard() {
           )}
         </div>
       </div>
+
+      {/* Proactive Risk Analysis - Admin Only */}
+      {isAdmin && (
+        <div className="mb-6">
+          <ProactiveRiskAnalyzer users={users} />
+        </div>
+      )}
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
