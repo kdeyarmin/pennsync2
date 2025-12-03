@@ -46,6 +46,7 @@ import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSup
 import TaskGenerator from "../components/smartNote/TaskGenerator";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 import AINoteDraftingAssistant from "../components/smartNote/AINoteDraftingAssistant";
+import ComplianceSummaryReport from "../components/smartNote/ComplianceSummaryReport";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -220,6 +221,10 @@ export default function SmartNoteAssistant() {
   const [copied, setCopied] = useState(false);
   const [auditResults, setAuditResults] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState("");
+  const [roughNoteCompliance, setRoughNoteCompliance] = useState(null);
+  const [enhancedNoteCompliance, setEnhancedNoteCompliance] = useState(null);
+  const [appliedFixes, setAppliedFixes] = useState([]);
+  const [dismissedElementNames, setDismissedElementNames] = useState([]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -531,12 +536,36 @@ Return JSON:
               diagnosis={finalDiagnosis}
               vitalSigns={vitalSigns}
               patientContext={patientContext}
-              onInsertElement={(text) => {
+              onInsertElement={(text, elementName) => {
                 setRoughNote(prev => prev + '\n\n' + text.trim());
                 setEnhancedNote('');
+                if (elementName) {
+                  setAppliedFixes(prev => [...prev, elementName]);
+                }
               }}
               onUpdateEnhancedNote={(updatedNote) => setEnhancedNote(updatedNote)}
+              onRoughNoteCompliance={(data) => setRoughNoteCompliance(data)}
+              onEnhancedNoteCompliance={(data) => setEnhancedNoteCompliance(data)}
+              onDismissedElements={(names) => setDismissedElementNames(names)}
             />
+          )}
+
+          {/* Compliance Summary Report */}
+          {enhancedNote && (
+            <div className="flex justify-end">
+              <ComplianceSummaryReport
+                patientId={selectedPatientId}
+                patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
+                visitType={visitType}
+                diagnosis={finalDiagnosis}
+                roughNoteCompliance={roughNoteCompliance}
+                enhancedNoteCompliance={enhancedNoteCompliance}
+                appliedFixes={appliedFixes}
+                dismissedElements={dismissedElementNames}
+                vitalSigns={vitalSigns}
+                nurseEmail={currentUser?.email}
+              />
+            </div>
           )}
 
           {/* Step 4: Enhanced Note */}

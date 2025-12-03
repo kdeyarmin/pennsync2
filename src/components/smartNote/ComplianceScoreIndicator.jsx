@@ -45,7 +45,10 @@ export default function ComplianceScoreIndicator({
   patientContext,
   onInsertElement,
   onUpdateEnhancedNote,
-  onFlaggedIssues
+  onFlaggedIssues,
+  onRoughNoteCompliance,
+  onEnhancedNoteCompliance,
+  onDismissedElements
 }) {
   const [complianceData, setComplianceData] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -277,6 +280,9 @@ Return JSON:
         }
       });
       setComplianceData(result);
+      if (onRoughNoteCompliance) {
+        onRoughNoteCompliance(result);
+      }
     } catch (error) {
       console.error("Compliance analysis error:", error);
     }
@@ -439,6 +445,9 @@ Return JSON:
       setInsertedIssues(new Set());
       if (onFlaggedIssues) {
         onFlaggedIssues(result);
+      }
+      if (onEnhancedNoteCompliance) {
+        onEnhancedNoteCompliance(result);
       }
     } catch (error) {
       console.error("Enhanced compliance analysis error:", error);
@@ -647,7 +656,15 @@ Return JSON:
                             className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setDismissedElements(prev => new Set([...prev, idx]));
+                              setDismissedElements(prev => {
+                                const next = new Set([...prev, idx]);
+                                // Report dismissed element names
+                                if (onDismissedElements && complianceData?.elements) {
+                                  const names = Array.from(next).map(i => complianceData.elements[i]?.name).filter(Boolean);
+                                  onDismissedElements(names);
+                                }
+                                return next;
+                              });
                               setSelectedSuggestions(prev => {
                                 const next = new Set(prev);
                                 next.delete(idx);
