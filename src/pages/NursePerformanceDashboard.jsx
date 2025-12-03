@@ -44,6 +44,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import { format, subDays, parseISO, startOfWeek } from "date-fns";
+import AutoAssignTraining from "../components/training/AutoAssignTraining";
+import TrainingCompletionTracker from "../components/training/TrainingCompletionTracker";
 
 const COLORS = {
   documentation: "#8b5cf6",
@@ -234,6 +236,9 @@ export default function NursePerformanceDashboard() {
           <Button variant="outline" size="icon" onClick={() => refetch()}>
             <RefreshCw className="w-4 h-4" />
           </Button>
+          {isAdmin && (
+            <AutoAssignTraining recommendations={recommendations} users={users} />
+          )}
         </div>
       </div>
 
@@ -480,6 +485,13 @@ export default function NursePerformanceDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Training Completion Tracker - Admin Only */}
+      {isAdmin && (
+        <div className="mt-6">
+          <TrainingCompletionTracker users={users} />
+        </div>
+      )}
 
       {/* Category Breakdown Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
