@@ -204,8 +204,10 @@ ${careType === 'home_health' ? `
 IMPORTANT: Find specific text passages that are weak or missing required elements.
 
 For each issue, provide:
-1. A ready-to-insert text that can be directly added to the note
+1. A ready-to-insert text that can be directly added to the note - THIS IS REQUIRED, never null or empty
 2. The best placement location (beginning, after_assessment, after_vitals, after_interventions, before_plan, end)
+
+CRITICAL: The "suggestion" field must ALWAYS contain specific, realistic clinical text that can be immediately added to the note. Never return null, empty strings, or generic placeholders. Use specific clinical language with realistic details.
 
 Return JSON:
 {
