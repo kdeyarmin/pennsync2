@@ -38,6 +38,42 @@ export default function ComplianceScoreIndicator({
   const [insertedIssues, setInsertedIssues] = useState(new Set());
   const [isReadyToPaste, setIsReadyToPaste] = useState(false);
 
+  // Default suggestions for missing elements
+  const getDefaultSuggestion = (elementName, type) => {
+    const homeHealthDefaults = {
+      "HOMEBOUND STATUS": "Patient is homebound due to severe shortness of breath on exertion, requiring rest after ambulating short distances. Leaving home requires considerable and taxing effort due to medical condition.",
+      "SKILLED NEED": "Skilled nursing required for comprehensive assessment, disease management, medication reconciliation, and patient/caregiver education on disease process and warning signs requiring professional nursing judgment.",
+      "PATIENT RESPONSE": "Patient verbalized understanding of instructions provided. Patient demonstrated comprehension through teach-back method and agreed to follow care plan recommendations.",
+      "FUNCTIONAL STATUS": "Patient requires assistance with ADLs including bathing, dressing, and mobility. Ambulates with assistive device. Limited endurance noted with activities.",
+      "VITAL SIGNS": "Vital signs obtained and documented. Blood pressure, heart rate, respiratory rate, temperature, and oxygen saturation assessed.",
+      "ASSESSMENT FINDINGS": "Comprehensive nursing assessment completed. Cardiac, respiratory, and integumentary systems assessed. Current condition stable with no acute distress noted.",
+      "INTERVENTIONS": "Skilled nursing interventions provided including comprehensive assessment, medication review, patient education, and care coordination with healthcare team.",
+      "PLAN/GOALS": "Continue current plan of care. Patient progressing toward goals. Will reassess at next visit. Follow-up with physician as needed."
+    };
+
+    const hospiceDefaults = {
+      "TERMINAL PROGNOSIS": "Patient continues to show decline consistent with terminal diagnosis. Disease progression noted with increased symptom burden.",
+      "SYMPTOM MANAGEMENT": "Pain and symptom assessment completed. Current comfort measures reviewed. Pain level assessed using appropriate scale.",
+      "PATIENT/FAMILY COPING": "Patient and family coping with terminal diagnosis. Emotional support provided. Spiritual needs addressed as appropriate.",
+      "COMFORT MEASURES": "Focus on quality of life and patient comfort. Comfort-focused interventions provided. Patient dignity maintained.",
+      "VITAL SIGNS": "Vital signs assessed as appropriate for hospice care. Monitoring for comfort rather than curative purposes.",
+      "MEDICATION REVIEW": "Comfort medications reviewed for effectiveness. PRN medications available for symptom management.",
+      "HOSPICE APPROPRIATENESS": "Patient continues to meet hospice eligibility criteria. Decline noted consistent with terminal prognosis.",
+      "GOALS OF CARE": "Goals of care reviewed with patient/family. Focus remains on comfort and quality of life. Advance directives in place."
+    };
+
+    const defaults = type === 'hospice' ? hospiceDefaults : homeHealthDefaults;
+    
+    // Try to match the element name
+    for (const [key, value] of Object.entries(defaults)) {
+      if (elementName.toUpperCase().includes(key) || key.includes(elementName.toUpperCase())) {
+        return value;
+      }
+    }
+    
+    return `Documentation needed for ${elementName}. Please add specific clinical details.`;
+  };
+
   // Debounced analysis for rough note
   useEffect(() => {
     if (roughNote && roughNote.length > 30) {
