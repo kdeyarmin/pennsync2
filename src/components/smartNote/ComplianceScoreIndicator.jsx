@@ -425,23 +425,23 @@ Return JSON:
                                   <p className="text-sm">{issue.problem}</p>
                                 </div>
                                 <div>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <p className="text-xs font-semibold text-gray-500">Ready-to-Insert Text</p>
-                                    <Badge variant="outline" className="text-xs">
-                                      Insert: {issue.insert_location?.replace('_', ' ') || 'end'}
-                                    </Badge>
-                                  </div>
+                                  <p className="text-xs font-semibold text-gray-500 mb-1">Suggested Text to Add</p>
                                   <div className="bg-green-50 p-3 rounded border border-green-200">
                                     <p className="text-sm text-green-900 whitespace-pre-wrap">{issue.suggestion}</p>
                                   </div>
                                 </div>
+                                <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                                  <p className="text-xs text-blue-800">
+                                    This will be added to your rough notes. Edit as needed, then click "Enhance with AI" to re-check compliance.
+                                  </p>
+                                </div>
                                 <Button
                                   size="sm"
                                   className="w-full bg-green-600 hover:bg-green-700"
-                                  onClick={() => insertAtLocation(issue.suggestion, issue.insert_location || 'end', idx)}
+                                  onClick={() => insertToRoughNote(issue.suggestion, idx)}
                                 >
                                   <Plus className="w-4 h-4 mr-1" />
-                                  Insert into Note & Re-analyze
+                                  Add to Rough Notes
                                 </Button>
                               </div>
                             </PopoverContent>
