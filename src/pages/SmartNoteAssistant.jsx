@@ -38,6 +38,7 @@ import {
   Brain,
   Target
 } from "lucide-react";
+import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -283,6 +284,20 @@ Return JSON:
       });
       setEnhancedNote(result.enhanced_note);
       setAuditResults(result);
+      
+      // Track any AI suggestions as recommendations for training
+      if (currentUser?.email && result.missing_critical_elements) {
+        result.missing_critical_elements.forEach(element => {
+          trackRecommendation({
+            nurseEmail: currentUser.email,
+            type: categorizeRecommendation(element),
+            text: element,
+            source: "smart_note",
+            severity: "medium",
+            patientId: selectedPatientId
+          });
+        });
+      }
     } catch (error) {
       console.error("Error enhancing note:", error);
     }
