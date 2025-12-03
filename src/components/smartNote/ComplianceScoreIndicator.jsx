@@ -192,7 +192,8 @@ Return JSON:
                   name: { type: "string" },
                   status: { type: "string" },
                   found_text: { type: "string" },
-                  suggested_addition: { type: "string" }
+                  suggested_addition: { type: "string" },
+                  why_needed: { type: "string" }
                 }
               }
             }
