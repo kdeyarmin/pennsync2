@@ -237,8 +237,27 @@ export default function SmartNoteAssistant() {
     enabled: !!selectedPatientId,
   });
 
+  const { data: recentVisits = [] } = useQuery({
+    queryKey: ['patientRecentVisits', selectedPatientId],
+    queryFn: () => base44.entities.Visit.filter({ patient_id: selectedPatientId, status: 'completed' }, '-visit_date', 3),
+    enabled: !!selectedPatientId,
+  });
+
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const finalDiagnosis = diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis;
+
+  // Build patient context for compliance checking
+  const patientContext = selectedPatient ? {
+    name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
+    primaryDiagnosis: selectedPatient.primary_diagnosis || finalDiagnosis,
+    secondaryDiagnoses: selectedPatient.secondary_diagnoses || [],
+    allergies: selectedPatient.allergies,
+    recentConditions: recentVisits[0]?.nurse_notes ? 
+      recentVisits[0].nurse_notes.substring(0, 200) + '...' : null,
+    previousVisitSummary: recentVisits[0] ? 
+      `Last visit ${recentVisits[0].visit_date}: ${recentVisits[0].visit_type}` : null,
+    carePlanGoals: carePlans.filter(cp => cp.status === 'active').map(cp => cp.goal)
+  } : null;
 
   const currentStep = useMemo(() => {
     if (!selectedPatientId) return 'patient';
@@ -511,6 +530,7 @@ Return JSON:
               visitType={visitType}
               diagnosis={finalDiagnosis}
               vitalSigns={vitalSigns}
+              patientContext={patientContext}
               onInsertElement={(text) => {
                 setRoughNote(prev => prev + '\n\n' + text.trim());
                 setEnhancedNote('');
