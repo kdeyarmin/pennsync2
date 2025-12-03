@@ -40,7 +40,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Dashboard", icon: Home, page: "Dashboard" },
     { name: "Patients", icon: Users, page: "Patients" },
     { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
-    { name: "Schedule", icon: Calendar, page: "ScheduleOptimizer" },
+    
     { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
     { name: "Alerts", icon: Bell, page: "PatientAlerts" },
     { name: "Compliance", icon: Shield, page: "ComplianceDashboard" },

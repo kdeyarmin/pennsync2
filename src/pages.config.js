@@ -14,7 +14,6 @@ import ComplianceDashboard from './pages/ComplianceDashboard';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import StaffTraining from './pages/StaffTraining';
 import PatientEducation from './pages/PatientEducation';
-import ScheduleOptimizer from './pages/ScheduleOptimizer';
 import NurseTraining from './pages/NurseTraining';
 import PatientAlerts from './pages/PatientAlerts';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
@@ -39,7 +38,6 @@ export const PAGES = {
     "PredictiveAnalytics": PredictiveAnalytics,
     "StaffTraining": StaffTraining,
     "PatientEducation": PatientEducation,
-    "ScheduleOptimizer": ScheduleOptimizer,
     "NurseTraining": NurseTraining,
     "PatientAlerts": PatientAlerts,
     "RegulatoryCompliance": RegulatoryCompliance,
