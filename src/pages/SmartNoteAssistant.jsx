@@ -36,9 +36,15 @@ import {
   ChevronRight,
   Circle,
   Brain,
-  Target
+  Target,
+  Shield,
+  ShieldAlert
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
+import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
+import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
+import TaskGenerator from "../components/smartNote/TaskGenerator";
+import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -468,6 +474,17 @@ Return JSON:
             </CardContent>
           </Card>
 
+          {/* Medicare Compliance Checker */}
+          {roughNote.length >= 30 && (
+            <ComplianceScoreIndicator
+              roughNote={roughNote}
+              careType="home_health"
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              onInsertElement={(text) => setRoughNote(prev => prev + '\n' + text)}
+            />
+          )}
+
           {/* Step 4: Enhanced Note */}
           {enhancedNote && (
             <Card className="border-2 border-green-300 bg-green-50">
@@ -507,7 +524,11 @@ Return JSON:
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="text-sm text-gray-600">Task generation based on your notes will appear here.</p>
+                  <TaskGenerator
+                    enhancedNote={enhancedNote}
+                    patientId={selectedPatientId}
+                    nurseEmail={currentUser?.email}
+                  />
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="careplans">
@@ -517,7 +538,11 @@ Return JSON:
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="text-sm text-gray-600">AI care plan suggestions will appear here.</p>
+                  <AICarePlanGenerator
+                    patientId={selectedPatientId}
+                    diagnosis={finalDiagnosis}
+                    enhancedNote={enhancedNote}
+                  />
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="incident">
@@ -543,6 +568,17 @@ Return JSON:
             hasEnhancedNote={!!enhancedNote}
             onAction={handleContextualAction}
           />
+
+          {/* Clinical Decision Support */}
+          {enhancedNote && (
+            <ClinicalDecisionSupport
+              enhancedNote={enhancedNote}
+              diagnosis={finalDiagnosis}
+              careType="home_health"
+              vitalSigns={vitalSigns}
+              onInsertRecommendation={(text) => setEnhancedNote(prev => prev + text)}
+            />
+          )}
 
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-3">
