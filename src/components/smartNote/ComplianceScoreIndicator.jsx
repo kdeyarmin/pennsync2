@@ -207,7 +207,18 @@ For each issue, provide:
 1. A ready-to-insert text that can be directly added to the note - THIS IS REQUIRED, never null or empty
 2. The best placement location (beginning, after_assessment, after_vitals, after_interventions, before_plan, end)
 
-CRITICAL: The "suggestion" field must ALWAYS contain specific, realistic clinical text that can be immediately added to the note. Never return null, empty strings, or generic placeholders. Use specific clinical language with realistic details.
+CRITICAL REQUIREMENTS FOR SUGGESTIONS:
+1. The "suggestion" field MUST contain a COMPLETE, READY-TO-USE clinical statement that fully addresses the identified problem
+2. Suggestions must be specific enough to directly fix the compliance issue when added to the note
+3. Never return null, empty strings, or generic placeholders
+4. Use professional clinical language with realistic, specific details
+5. Each suggestion should be a standalone paragraph that can be inserted directly
+
+EXAMPLES OF GOOD SUGGESTIONS:
+- For missing Homebound Status: "Patient is homebound due to severe dyspnea on exertion, requiring rest after ambulating approximately 15 feet. Patient experiences fatigue and weakness that limits ability to leave home. Leaving home requires considerable and taxing effort due to cardiac/respiratory limitations. Patient unable to safely access transportation without assistance."
+- For missing Skilled Need: "Skilled nursing services required for comprehensive cardiovascular assessment including auscultation of heart and lung sounds, evaluation of peripheral edema, medication reconciliation of complex cardiac regimen, and patient/caregiver education on heart failure warning signs requiring immediate medical attention. Assessment and teaching require professional nursing judgment that cannot be performed by non-skilled personnel."
+- For missing Patient Response: "Patient verbalized understanding of medication schedule and importance of daily weight monitoring. Patient correctly demonstrated teach-back of warning signs requiring physician notification including weight gain >3 lbs in 24 hours, increased shortness of breath, and chest pain. Patient agreed to follow recommended dietary sodium restrictions and activity modifications."
+- For weak documentation: "Skilled nursing assessment revealed bilateral lower extremity edema +2 pitting, lungs with bilateral basilar crackles, and oxygen saturation of 94% on room air. Patient reports increased dyspnea with activity over past 3 days. Interventions included medication review, disease process education, and coordination with physician regarding symptom changes."
 
 Return JSON:
 {
@@ -218,7 +229,7 @@ Return JSON:
       "element": "Which compliance element (e.g., Homebound Status, Skilled Need)",
       "location_hint": "Brief quote or description of where in note this applies",
       "problem": "What's wrong or missing",
-      "suggestion": "Complete, specific clinical text ready to add. Use realistic clinical language with specific details like actual vital values, specific patient responses, concrete observations. Example: 'Patient is homebound due to severe SOB on exertion, requiring rest after walking 10 feet. Cannot safely leave home without taxing effort.' NOT vague like 'Patient has difficulty leaving home.'",
+      "suggestion": "A COMPLETE clinical paragraph that fully addresses this specific compliance issue. Must be detailed enough to satisfy Medicare requirements when added to the note. Include specific clinical observations, patient responses, or interventions as appropriate for the element type.",
       "severity": "high" | "medium" | "low"
     }
   ],
