@@ -38,6 +38,7 @@ export default function ComplianceScoreIndicator({
   const [isAnalyzingEnhanced, setIsAnalyzingEnhanced] = useState(false);
   const [insertedIssues, setInsertedIssues] = useState(new Set());
   const [isReadyToPaste, setIsReadyToPaste] = useState(false);
+  const [selectedSuggestions, setSelectedSuggestions] = useState(new Set());
 
   // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
   const getDefaultSuggestion = (elementName, type) => {
