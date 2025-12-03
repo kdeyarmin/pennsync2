@@ -197,58 +197,71 @@ Return JSON:
     
     setIsAnalyzingEnhanced(true);
     try {
+      // Build vitals string for context
+      const vitalsString = vitalSigns ? Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
+        if (k === 'o2') {
+          const o2Text = `O2 Sat: ${v}`;
+          if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
+            return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
+          } else if (vitalSigns.o2Source === 'on_oxygen') {
+            return `${o2Text} on supplemental O2`;
+          }
+          return `${o2Text} on room air`;
+        }
+        if (k === 'bp') return `Blood Pressure: ${v}`;
+        if (k === 'hr') return `Heart Rate: ${v}`;
+        if (k === 'temp') return `Temperature: ${v}`;
+        if (k === 'pain') return `Pain: ${v}`;
+        return `${k.toUpperCase()}: ${v}`;
+      }).join(', ') : '';
+      
+      const hasVitalsEntered = vitalsString.length > 0;
+      
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this ENHANCED nursing note for Medicare compliance. Identify specific phrases or sections that need improvement.
+        prompt: `Analyze this ENHANCED nursing note for Medicare compliance. Be ACCURATE - only flag elements that are truly missing or weak.
 
 CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
 VISIT TYPE: ${visitType}
 DIAGNOSIS: ${diagnosis || 'Not specified'}
-VITAL SIGNS ENTERED: ${vitalSigns ? Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
-  if (k === 'o2') {
-    const o2Text = `O2 Sat: ${v}`;
-    if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
-      return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
-    } else if (vitalSigns.o2Source === 'on_oxygen') {
-      return `${o2Text} on supplemental O2`;
-    }
-    return `${o2Text} on room air`;
-  }
-  return `${k.toUpperCase()}: ${v}`;
-}).join(', ') || 'None entered' : 'None entered'}
+VITAL SIGNS ENTERED BY USER: ${hasVitalsEntered ? vitalsString : 'None entered'}
 
-ENHANCED NOTE:
+ENHANCED NOTE TO ANALYZE:
 ${enhancedNote}
 
-For ${careType === 'hospice' ? 'HOSPICE' : 'HOME HEALTH'} documentation, check:
+CRITICAL INSTRUCTIONS FOR ACCURATE ANALYSIS:
+1. READ THE ENTIRE NOTE CAREFULLY before determining what is present vs missing
+2. If vital signs were entered by the user (shown above), they should be in the note - if the note mentions vitals (BP, HR, temp, O2, pain), mark VITAL SIGNS as PRESENT
+3. Look for EQUIVALENT LANGUAGE - documentation doesn't need exact headers:
+   - "homebound" OR "unable to leave home" OR "taxing effort" OR "difficulty leaving" = HOMEBOUND STATUS present
+   - "skilled" OR "RN assessment" OR "nursing judgment" OR "professional nursing" = SKILLED NEED present  
+   - "patient verbalized" OR "teach-back" OR "patient understood" OR "demonstrated understanding" = PATIENT RESPONSE present
+   - "ADLs" OR "ambulation" OR "mobility" OR "functional" OR "requires assistance" = FUNCTIONAL STATUS present
+   - "assessment" OR "findings" OR "lungs" OR "heart sounds" OR "edema" = ASSESSMENT FINDINGS present
+   - "education" OR "taught" OR "instructed" OR "intervention" = INTERVENTIONS present
+   - "plan" OR "goals" OR "continue" OR "next visit" OR "follow-up" = PLAN/GOALS present
+
+For ${careType === 'hospice' ? 'HOSPICE' : 'HOME HEALTH'} documentation, check these elements:
 ${careType === 'home_health' ? `
-- HOMEBOUND STATUS: Must clearly state why patient cannot leave home safely
-- SKILLED NEED: Must justify why RN skill/judgment is required (not just tasks an aide could do)
-- PATIENT RESPONSE: Must document how patient responded to teaching/interventions
-- MEASURABLE GOALS: Should reference progress toward specific, measurable goals
+1. HOMEBOUND STATUS - Why patient can't leave home safely (look for: homebound, taxing effort, unable to leave, difficulty)
+2. SKILLED NEED - Why RN skill/judgment is required (look for: skilled, RN assessment, nursing judgment, professional)
+3. PATIENT RESPONSE - How patient responded to teaching (look for: verbalized, understood, teach-back, demonstrated)
+4. FUNCTIONAL STATUS - ADL/mobility limitations (look for: ADLs, ambulation, mobility, assistance needed)
+5. VITAL SIGNS - Basic vitals documented (look for: BP, blood pressure, HR, heart rate, temp, O2, pain)
+6. ASSESSMENT FINDINGS - Objective clinical findings (look for: assessment, findings, lungs, heart, edema)
+7. INTERVENTIONS - What nursing care was provided (look for: education, taught, instructed, intervention, assessed)
+8. PLAN/GOALS - Next steps and goals addressed (look for: plan, goals, continue, next visit, follow-up)
 ` : `
-- TERMINAL PROGNOSIS: Evidence of disease progression toward end of life
-- COMFORT FOCUS: Quality of life and symptom management emphasis
-- FAMILY SUPPORT: Documentation of emotional/spiritual support provided
+1. TERMINAL PROGNOSIS - Evidence of disease progression
+2. SYMPTOM MANAGEMENT - Pain/comfort assessment  
+3. PATIENT/FAMILY COPING - Emotional/spiritual status
+4. COMFORT MEASURES - Quality of life focus
+5. VITAL SIGNS - Basic vitals if appropriate
+6. MEDICATION REVIEW - Comfort medications
+7. HOSPICE APPROPRIATENESS - Continued eligibility
+8. GOALS OF CARE - Patient/family wishes
 `}
 
-IMPORTANT: Find specific text passages that are weak or missing required elements.
-
-For each issue, provide:
-1. A ready-to-insert text that can be directly added to the note - THIS IS REQUIRED, never null or empty
-2. The best placement location (beginning, after_assessment, after_vitals, after_interventions, before_plan, end)
-
-CRITICAL REQUIREMENTS FOR SUGGESTIONS:
-1. The "suggestion" field MUST contain a COMPLETE, READY-TO-USE clinical statement that fully addresses the identified problem
-2. Suggestions must be specific enough to directly fix the compliance issue when added to the note
-3. Never return null, empty strings, or generic placeholders
-4. Use professional clinical language with realistic, specific details
-5. Each suggestion should be a standalone paragraph that can be inserted directly
-
-EXAMPLES OF GOOD SUGGESTIONS (these contain the EXACT KEY PHRASES that Medicare auditors look for):
-- For missing Homebound Status: "HOMEBOUND STATUS: Patient is homebound due to severe dyspnea on exertion, requiring rest after ambulating approximately 15 feet. Patient experiences fatigue and weakness that limits ability to leave home. Leaving home requires considerable and taxing effort due to cardiac/respiratory limitations. Patient unable to safely access transportation without assistance. Any absences from home are infrequent, of short duration, and require taxing effort."
-- For missing Skilled Need: "SKILLED NURSING NEED: Skilled nursing services required for comprehensive cardiovascular assessment including auscultation of heart and lung sounds, evaluation of peripheral edema, medication reconciliation of complex cardiac regimen, and patient/caregiver education on heart failure warning signs requiring immediate medical attention. Assessment and teaching require professional nursing judgment that cannot be performed by non-skilled personnel."
-- For missing Patient Response: "PATIENT RESPONSE TO TEACHING: Patient verbalized understanding of medication schedule and importance of daily weight monitoring. Patient correctly demonstrated teach-back of warning signs requiring physician notification including weight gain >3 lbs in 24 hours, increased shortness of breath, and chest pain. Patient agreed to follow recommended dietary sodium restrictions and activity modifications."
-- For weak documentation: "ASSESSMENT FINDINGS: Skilled nursing assessment revealed bilateral lower extremity edema +2 pitting, lungs with bilateral basilar crackles, and oxygen saturation of 94% on room air. Patient reports increased dyspnea with activity over past 3 days. INTERVENTIONS: Medication review completed, disease process education provided, and coordination with physician regarding symptom changes."
+ONLY flag issues that are TRULY missing or weak. Do NOT flag elements that ARE present in the note.
 
 Return JSON:
 {
@@ -256,22 +269,16 @@ Return JSON:
   "flagged_issues": [
     {
       "issue_type": "missing" | "weak" | "non_compliant",
-      "element": "Which compliance element (e.g., Homebound Status, Skilled Need)",
-      "location_hint": "Brief quote or description of where in note this applies",
-      "problem": "What's wrong or missing",
-      "suggestion": "A COMPLETE clinical paragraph starting with the element name as a header (e.g., 'HOMEBOUND STATUS:', 'SKILLED NEED:', 'PATIENT RESPONSE:'). This header helps ensure the AI recognizes the element when re-analyzing. Must be detailed enough to satisfy Medicare requirements when added to the note. Include specific clinical observations, patient responses, or interventions as appropriate for the element type.",
+      "element": "Which compliance element",
+      "location_hint": "Where the issue is or should be",
+      "problem": "What's wrong or missing - be specific",
+      "suggestion": "Complete clinical text to add",
       "severity": "high" | "medium" | "low"
     }
   ],
-  "compliant_elements": ["List of elements that are well documented"],
-  "quick_fixes": [
-    {
-      "original_text": "Text that could be improved (exact quote if possible)",
-      "improved_text": "Better version of the text",
-      "reason": "Why this is better"
-    }
-  ],
-  "ready_to_paste": true or false (true if score >= 85 and no high/critical severity issues)
+  "compliant_elements": ["List ALL elements that ARE documented in the note"],
+  "quick_fixes": [],
+  "ready_to_paste": true if score >= 85 and no high severity issues
 }`,
         response_json_schema: {
           type: "object",
