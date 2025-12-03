@@ -132,7 +132,11 @@ export default function DuplicatePatientManager() {
         };
         
         groups.push(group);
-        duplicates.forEach(d => processed.add(d.patient.id));
+        duplicates.forEach(d => {
+          if (d && d.patient && d.patient.id) {
+            processed.add(d.patient.id);
+          }
+        });
         processed.add(patient.id);
       }
     });
