@@ -418,6 +418,31 @@ Return JSON:
     (cdsAlerts.best_practice_alerts?.length || 0)
   ) : 0;
 
+  const hasProactiveAlerts = proactiveAlerts && (
+    proactiveAlerts.vital_concerns?.length > 0 ||
+    proactiveAlerts.required_assessments?.length > 0 ||
+    proactiveAlerts.potentially_missed?.length > 0 ||
+    proactiveAlerts.education_points?.length > 0 ||
+    proactiveAlerts.safety_checks?.length > 0 ||
+    proactiveAlerts.suggested_interventions?.length > 0
+  );
+
+  const totalProactiveItems = proactiveAlerts ? (
+    (proactiveAlerts.vital_concerns?.length || 0) +
+    (proactiveAlerts.required_assessments?.length || 0) +
+    (proactiveAlerts.potentially_missed?.length || 0) +
+    (proactiveAlerts.education_points?.length || 0)
+  ) : 0;
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'low': return 'bg-green-100 text-green-800 border-green-300';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <Card className={`border-2 ${hasAlerts ? 'border-red-300' : 'border-purple-200'}`}>
       <CardHeader 
