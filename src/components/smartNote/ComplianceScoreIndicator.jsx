@@ -173,8 +173,7 @@ Return JSON:
       "element": "Which compliance element (e.g., Homebound Status, Skilled Need)",
       "location_hint": "Brief quote or description of where in note this applies",
       "problem": "What's wrong or missing",
-      "suggestion": "Complete, ready-to-insert clinical text that requires no editing",
-      "insert_location": "beginning" | "after_assessment" | "after_vitals" | "after_interventions" | "before_plan" | "end",
+      "suggestion": "Complete, specific clinical text ready to add. Use realistic clinical language with specific details like actual vital values, specific patient responses, concrete observations. Example: 'Patient is homebound due to severe SOB on exertion, requiring rest after walking 10 feet. Cannot safely leave home without taxing effort.' NOT vague like 'Patient has difficulty leaving home.'",
       "severity": "high" | "medium" | "low"
     }
   ],
