@@ -15,7 +15,12 @@ import {
   ChevronUp,
   FlaskConical,
   HeartPulse,
-  RefreshCw
+  RefreshCw,
+  Lightbulb,
+  BookOpen,
+  Shield,
+  Plus,
+  Eye
 } from "lucide-react";
 
 export default function ClinicalDecisionSupport({
