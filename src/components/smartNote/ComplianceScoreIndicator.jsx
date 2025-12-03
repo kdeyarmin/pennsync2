@@ -473,7 +473,7 @@ Return JSON:
                                 <div>
                                   <p className="text-xs font-semibold text-gray-500 mb-1">Suggested Text to Add</p>
                                   <div className="bg-green-50 p-3 rounded border border-green-200">
-                                    <p className="text-sm text-green-900 whitespace-pre-wrap">{issue.suggestion}</p>
+                                    <p className="text-sm text-green-900 whitespace-pre-wrap">{issue.suggestion || getDefaultSuggestion(issue.element, careType)}</p>
                                   </div>
                                 </div>
                                 <div className="bg-blue-50 p-2 rounded border border-blue-200">
