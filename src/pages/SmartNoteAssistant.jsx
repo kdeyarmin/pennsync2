@@ -486,11 +486,8 @@ Return JSON:
               visitType={visitType}
               diagnosis={finalDiagnosis}
               onInsertElement={(text) => {
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n' + text);
-                } else {
-                  setRoughNote(prev => prev + '\n' + text);
-                }
+                setRoughNote(prev => prev + '\n\n' + text.trim());
+                setEnhancedNote('');
               }}
               onUpdateEnhancedNote={(updatedNote) => setEnhancedNote(updatedNote)}
             />
