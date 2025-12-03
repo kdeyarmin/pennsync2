@@ -109,6 +109,18 @@ export default function ComplianceScoreIndicator({
 CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
 VISIT TYPE: ${visitType}
 DIAGNOSIS: ${diagnosis || 'Not specified'}
+VITAL SIGNS ENTERED: ${vitalSigns ? Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
+  if (k === 'o2') {
+    const o2Text = `O2 Sat: ${v}`;
+    if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
+      return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
+    } else if (vitalSigns.o2Source === 'on_oxygen') {
+      return `${o2Text} on supplemental O2`;
+    }
+    return `${o2Text} on room air`;
+  }
+  return `${k.toUpperCase()}: ${v}`;
+}).join(', ') || 'None entered' : 'None entered'}
 
 NOTE:
 ${roughNote}
