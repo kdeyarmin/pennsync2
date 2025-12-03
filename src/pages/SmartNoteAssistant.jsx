@@ -266,7 +266,18 @@ export default function SmartNoteAssistant() {
 PATIENT CONTEXT:
 - Diagnosis: ${finalDiagnosis || 'Not specified'}
 - Visit Type: ${visitType.replace(/_/g, ' ')}
-- Vitals: ${Object.entries(vitalSigns).filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`).join(', ') || 'None provided'}
+- Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
+        if (k === 'o2') {
+          const o2Text = `O2 Sat: ${v}`;
+          if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
+            return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
+          } else if (vitalSigns.o2Source === 'on_oxygen') {
+            return `${o2Text} on supplemental O2`;
+          }
+          return `${o2Text} on room air`;
+        }
+        return `${k}: ${v}`;
+      }).join(', ') || 'None provided'}
 
 ROUGH NOTES:
 ${roughNote}
