@@ -352,20 +352,21 @@ Return JSON:
                     <p className="text-xs text-gray-600 italic truncate">"{element.found_text}"</p>
                   )}
                 </div>
-                {element.status !== 'present' && element.suggested_addition && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 text-xs px-2 shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onInsertElement && onInsertElement(element.suggested_addition);
-                    }}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Add
-                  </Button>
-                )}
+                {element.status !== 'present' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 text-xs px-2 shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const suggestion = element.suggested_addition || getDefaultSuggestion(element.name, careType);
+                          onInsertElement && onInsertElement(suggestion);
+                        }}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                    )}
               </div>
             ))}
           </div>
