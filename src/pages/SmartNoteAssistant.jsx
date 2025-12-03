@@ -45,6 +45,7 @@ import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreInd
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
+import AINoteDraftingAssistant from "../components/smartNote/AINoteDraftingAssistant";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -576,16 +577,31 @@ Return JSON:
             onAction={handleContextualAction}
           />
 
-          {/* Clinical Decision Support */}
-          {enhancedNote && (
-            <ClinicalDecisionSupport
-              enhancedNote={enhancedNote}
-              diagnosis={finalDiagnosis}
-              careType="home_health"
-              vitalSigns={vitalSigns}
-              onInsertRecommendation={(text) => setEnhancedNote(prev => prev + text)}
-            />
-          )}
+          {/* AI Note Drafting Assistant */}
+                          <AINoteDraftingAssistant
+                            vitalSigns={vitalSigns}
+                            diagnosis={finalDiagnosis}
+                            patientContext={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}, ${selectedPatient.primary_diagnosis || 'home health patient'}` : ''}
+                            symptoms={roughNote}
+                            onInsertText={(text) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(prev => prev + '\n\n' + text);
+                              } else {
+                                setRoughNote(prev => prev + '\n\n' + text);
+                              }
+                            }}
+                          />
+
+                          {/* Clinical Decision Support */}
+                          {enhancedNote && (
+                            <ClinicalDecisionSupport
+                              enhancedNote={enhancedNote}
+                              diagnosis={finalDiagnosis}
+                              careType="home_health"
+                              vitalSigns={vitalSigns}
+                              onInsertRecommendation={(text) => setEnhancedNote(prev => prev + text)}
+                            />
+                          )}
 
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-3">
