@@ -439,14 +439,32 @@ Return JSON:
         {isExpanded && complianceData && (
           <div className="mt-3 space-y-2 border-t pt-3">
             {complianceData.elements?.filter(e => e.status !== 'present').length > 1 && (
-              <div className="flex justify-end mb-2">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedSuggestions.size === complianceData.elements.filter(e => e.status !== 'present').length && selectedSuggestions.size > 0}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      const missingIndices = complianceData.elements
+                        .map((el, i) => el.status !== 'present' ? i : null)
+                        .filter(i => i !== null);
+                      if (selectedSuggestions.size === missingIndices.length) {
+                        setSelectedSuggestions(new Set());
+                      } else {
+                        setSelectedSuggestions(new Set(missingIndices));
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-xs text-gray-600">Select All</span>
+                </div>
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="text-xs"
+                  variant="default"
+                  className="text-xs bg-blue-600 hover:bg-blue-700"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const missingElements = complianceData.elements.filter(el => el.status !== 'present' && selectedSuggestions.has(idx => complianceData.elements.indexOf(el)));
                     const selectedIndices = Array.from(selectedSuggestions);
                     const textsToAdd = selectedIndices
                       .map(i => complianceData.elements[i])
