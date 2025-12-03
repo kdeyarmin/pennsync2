@@ -444,15 +444,16 @@ Return JSON:
   };
 
   return (
-    <Card className={`border-2 ${hasAlerts ? 'border-red-300' : 'border-purple-200'}`}>
+    <Card className={`border-2 ${hasAlerts ? 'border-red-300' : hasProactiveAlerts ? 'border-amber-300' : 'border-purple-200'}`}>
       <CardHeader 
-        className={`py-3 cursor-pointer ${hasAlerts ? 'bg-gradient-to-r from-red-50 to-orange-50' : 'bg-gradient-to-r from-purple-50 to-indigo-50'}`}
+        className={`py-3 cursor-pointer ${hasAlerts ? 'bg-gradient-to-r from-red-50 to-orange-50' : hasProactiveAlerts ? 'bg-gradient-to-r from-amber-50 to-yellow-50' : 'bg-gradient-to-r from-purple-50 to-indigo-50'}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldAlert className={`w-4 h-4 ${hasAlerts ? 'text-red-600' : 'text-purple-600'}`} />
+            <ShieldAlert className={`w-4 h-4 ${hasAlerts ? 'text-red-600' : hasProactiveAlerts ? 'text-amber-600' : 'text-purple-600'}`} />
             Clinical Decision Support
+            {isProactiveAnalyzing && <Loader2 className="w-3 h-3 animate-spin text-amber-600" />}
             {cdsAlerts && (
               <Badge className={`${getRiskColor(cdsAlerts.risk_level)} text-white text-xs`}>
                 {cdsAlerts.risk_level} risk
@@ -463,6 +464,11 @@ Return JSON:
                 {totalAlerts} alert{totalAlerts !== 1 ? 's' : ''}
               </Badge>
             )}
+            {!cdsAlerts && totalProactiveItems > 0 && (
+              <Badge className="bg-amber-100 text-amber-800 text-xs">
+                {totalProactiveItems} suggestion{totalProactiveItems !== 1 ? 's' : ''}
+              </Badge>
+            )}
           </div>
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </CardTitle>
@@ -470,7 +476,148 @@ Return JSON:
 
       {isExpanded && (
         <CardContent className="p-3 space-y-3">
-          {!cdsAlerts && !isAnalyzing && (
+          {/* Proactive Alerts Section - Shows before enhanced note */}
+          {!enhancedNote && proactiveAlerts && hasProactiveAlerts && (
+            <div className="space-y-3">
+              {proactiveAlerts.quick_summary && (
+                <Alert className="bg-amber-50 border-amber-200">
+                  <Lightbulb className="w-4 h-4 text-amber-600" />
+                  <AlertDescription className="text-xs text-amber-800">
+                    <strong>Proactive Alert:</strong> {proactiveAlerts.quick_summary}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Vital Concerns */}
+              {proactiveAlerts.vital_concerns?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-red-800 mb-1 flex items-center gap-1">
+                    <HeartPulse className="w-3 h-3" /> Vital Sign Concerns
+                  </p>
+                  {proactiveAlerts.vital_concerns.map((vc, idx) => (
+                    <div key={idx} className={`p-2 rounded border mb-1 ${getPriorityColor(vc.severity)}`}>
+                      <p className="text-xs font-medium">{vc.vital}: {vc.value}</p>
+                      <p className="text-xs text-gray-700">{vc.concern}</p>
+                      <p className="text-xs font-medium mt-1">→ {vc.action}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Required Assessments */}
+              {proactiveAlerts.required_assessments?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-blue-800 mb-1 flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> Recommended Assessments for {diagnosis || 'This Patient'}
+                  </p>
+                  <div className="space-y-1">
+                    {proactiveAlerts.required_assessments.map((ra, idx) => (
+                      <div key={idx} className="bg-blue-50 p-2 rounded border border-blue-200 flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-xs font-medium">{ra.assessment}</p>
+                          <p className="text-xs text-gray-600">{ra.rationale}</p>
+                        </div>
+                        <Badge className={getPriorityColor(ra.priority)} variant="outline">
+                          {ra.priority}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Potentially Missed Elements */}
+              {proactiveAlerts.potentially_missed?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-orange-800 mb-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> Don't Forget to Document
+                  </p>
+                  {proactiveAlerts.potentially_missed.map((pm, idx) => (
+                    <div key={idx} className="bg-orange-50 p-2 rounded border border-orange-200 mb-1">
+                      <p className="text-xs font-medium">{pm.element}</p>
+                      <p className="text-xs text-gray-600">{pm.why_important}</p>
+                      {pm.suggested_text && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 text-xs mt-1 text-orange-800"
+                          onClick={() => onInsertRecommendation && onInsertRecommendation(pm.suggested_text)}
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Add to notes
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Patient Education Points */}
+              {proactiveAlerts.education_points?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-green-800 mb-1 flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" /> Patient Education Opportunities
+                  </p>
+                  {proactiveAlerts.education_points.map((ep, idx) => (
+                    <div key={idx} className="bg-green-50 p-2 rounded border border-green-200 mb-1">
+                      <p className="text-xs font-medium">{ep.topic}</p>
+                      <p className="text-xs text-gray-600">{ep.key_points}</p>
+                      {ep.teach_back && (
+                        <p className="text-xs text-green-700 mt-1 italic">Teach-back: "{ep.teach_back}"</p>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-5 text-xs mt-1 text-green-800"
+                        onClick={() => onInsertRecommendation && onInsertRecommendation(`Patient education provided on ${ep.topic}. ${ep.key_points} Patient verbalized understanding.`)}
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> Add education to notes
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Safety Checks */}
+              {proactiveAlerts.safety_checks?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-purple-800 mb-1 flex items-center gap-1">
+                    <Shield className="w-3 h-3" /> Safety Checks
+                  </p>
+                  <div className="space-y-1">
+                    {proactiveAlerts.safety_checks.map((sc, idx) => (
+                      <div key={idx} className="bg-purple-50 p-2 rounded border border-purple-200">
+                        <p className="text-xs font-medium">{sc.check}</p>
+                        <p className="text-xs text-gray-600">{sc.rationale}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Suggested Interventions from Proactive */}
+              {proactiveAlerts.suggested_interventions?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-indigo-800 mb-1 flex items-center gap-1">
+                    <Stethoscope className="w-3 h-3" /> Consider These Interventions
+                  </p>
+                  {proactiveAlerts.suggested_interventions.map((si, idx) => (
+                    <div key={idx} className="bg-indigo-50 p-2 rounded border border-indigo-200 mb-1 flex items-start justify-between">
+                      <div>
+                        <p className="text-xs font-medium">{si.intervention}</p>
+                        <p className="text-xs text-gray-600">{si.rationale}</p>
+                      </div>
+                      <Badge className={getPriorityColor(si.priority)} variant="outline">
+                        {si.priority}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Original CDS section for enhanced notes */}
+          {!cdsAlerts && !isAnalyzing && enhancedNote && (
             <Button
               onClick={analyzeForCDS}
               disabled={!enhancedNote || enhancedNote.length < 50}
@@ -480,6 +627,13 @@ Return JSON:
               <ShieldAlert className="w-4 h-4 mr-2" />
               Analyze for Clinical Alerts
             </Button>
+          )}
+
+          {!enhancedNote && !proactiveAlerts && !isProactiveAnalyzing && (
+            <div className="text-center py-3 text-gray-500">
+              <Lightbulb className="w-6 h-6 mx-auto mb-1 text-gray-300" />
+              <p className="text-xs">Enter vitals, diagnosis, or notes to get proactive clinical suggestions</p>
+            </div>
           )}
 
           {isAnalyzing && (
