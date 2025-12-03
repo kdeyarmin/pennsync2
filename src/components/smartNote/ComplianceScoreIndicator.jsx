@@ -38,40 +38,44 @@ export default function ComplianceScoreIndicator({
   const [insertedIssues, setInsertedIssues] = useState(new Set());
   const [isReadyToPaste, setIsReadyToPaste] = useState(false);
 
-  // Default suggestions for missing elements
+  // Default suggestions for missing elements - comprehensive, Medicare-compliant text
   const getDefaultSuggestion = (elementName, type) => {
     const homeHealthDefaults = {
-      "HOMEBOUND STATUS": "Patient is homebound due to severe shortness of breath on exertion, requiring rest after ambulating short distances. Leaving home requires considerable and taxing effort due to medical condition.",
-      "SKILLED NEED": "Skilled nursing required for comprehensive assessment, disease management, medication reconciliation, and patient/caregiver education on disease process and warning signs requiring professional nursing judgment.",
-      "PATIENT RESPONSE": "Patient verbalized understanding of instructions provided. Patient demonstrated comprehension through teach-back method and agreed to follow care plan recommendations.",
-      "FUNCTIONAL STATUS": "Patient requires assistance with ADLs including bathing, dressing, and mobility. Ambulates with assistive device. Limited endurance noted with activities.",
-      "VITAL SIGNS": "Vital signs obtained and documented. Blood pressure, heart rate, respiratory rate, temperature, and oxygen saturation assessed.",
-      "ASSESSMENT FINDINGS": "Comprehensive nursing assessment completed. Cardiac, respiratory, and integumentary systems assessed. Current condition stable with no acute distress noted.",
-      "INTERVENTIONS": "Skilled nursing interventions provided including comprehensive assessment, medication review, patient education, and care coordination with healthcare team.",
-      "PLAN/GOALS": "Continue current plan of care. Patient progressing toward goals. Will reassess at next visit. Follow-up with physician as needed."
+      "HOMEBOUND STATUS": "Patient is homebound due to severe dyspnea on exertion, requiring rest after ambulating approximately 15-20 feet. Patient experiences significant fatigue and weakness that limits ability to leave home independently. Leaving home requires considerable and taxing effort due to medical condition. Patient unable to safely access transportation without assistance. Any absence from home is infrequent, short duration, and for medical appointments or adult day care.",
+      "SKILLED NEED": "Skilled nursing services required for comprehensive assessment of cardiopulmonary status including auscultation of heart and lung sounds, evaluation of peripheral edema and skin integrity, medication reconciliation of complex medication regimen, and patient/caregiver education on disease process and warning signs requiring immediate medical attention. Assessment, clinical judgment, and teaching require professional nursing skills that cannot be safely performed by non-skilled personnel.",
+      "PATIENT RESPONSE": "Patient verbalized understanding of medication schedule, purpose, and potential side effects. Patient correctly demonstrated teach-back of warning signs requiring physician notification. Patient agreed to follow recommended dietary modifications and activity guidelines. Patient expressed commitment to adhering to plan of care and stated understanding of when to contact nurse or physician.",
+      "FUNCTIONAL STATUS": "Patient requires moderate assistance with ADLs including bathing, dressing, and grooming. Ambulates with assistive device (walker/cane) for short distances with supervision due to unsteady gait and fall risk. Limited endurance noted - requires rest periods after 5-10 minutes of activity. Transfers with minimal assistance. Cognitively intact and oriented to person, place, and time.",
+      "VITAL SIGNS": "Vital signs obtained and documented: Blood pressure within/above/below expected parameters for patient. Heart rate regular/irregular. Respiratory rate unlabored. Temperature afebrile. Oxygen saturation adequate on room air/supplemental oxygen. Pain assessed using 0-10 scale.",
+      "ASSESSMENT FINDINGS": "Comprehensive skilled nursing assessment completed. Cardiovascular: Heart sounds regular, peripheral pulses palpable, edema assessment completed. Respiratory: Lung sounds clear/diminished, no acute distress, work of breathing normal. Integumentary: Skin intact, no new lesions or wounds noted. Neurological: Alert and oriented, follows commands appropriately. Patient reports current condition stable/improved/declined since last visit.",
+      "INTERVENTIONS": "Skilled nursing interventions provided including: comprehensive head-to-toe assessment, medication reconciliation and review of all current medications for therapeutic effect and side effects, patient and caregiver education on disease management and warning signs, coordination of care with physician and interdisciplinary team, assessment of home safety and fall prevention measures.",
+      "PLAN/GOALS": "Continue current plan of care with skilled nursing visits as ordered. Patient progressing toward/maintaining established goals. Goals reviewed and remain appropriate. Will continue to monitor for signs of improvement or decline. Patient and caregiver understand when to contact nurse or seek emergency care. Next visit scheduled per physician orders. Will reassess progress at next visit and update plan as needed."
     };
 
     const hospiceDefaults = {
-      "TERMINAL PROGNOSIS": "Patient continues to show decline consistent with terminal diagnosis. Disease progression noted with increased symptom burden.",
-      "SYMPTOM MANAGEMENT": "Pain and symptom assessment completed. Current comfort measures reviewed. Pain level assessed using appropriate scale.",
-      "PATIENT/FAMILY COPING": "Patient and family coping with terminal diagnosis. Emotional support provided. Spiritual needs addressed as appropriate.",
-      "COMFORT MEASURES": "Focus on quality of life and patient comfort. Comfort-focused interventions provided. Patient dignity maintained.",
-      "VITAL SIGNS": "Vital signs assessed as appropriate for hospice care. Monitoring for comfort rather than curative purposes.",
-      "MEDICATION REVIEW": "Comfort medications reviewed for effectiveness. PRN medications available for symptom management.",
-      "HOSPICE APPROPRIATENESS": "Patient continues to meet hospice eligibility criteria. Decline noted consistent with terminal prognosis.",
-      "GOALS OF CARE": "Goals of care reviewed with patient/family. Focus remains on comfort and quality of life. Advance directives in place."
+      "TERMINAL PROGNOSIS": "Patient continues to demonstrate decline consistent with terminal diagnosis and 6-month prognosis. Disease progression noted with increased symptom burden including decreased functional status, increased fatigue, decreased appetite and oral intake, and progressive weakness. Patient/family aware of terminal nature of illness and have elected comfort-focused care.",
+      "SYMPTOM MANAGEMENT": "Comprehensive pain and symptom assessment completed. Current pain level assessed using appropriate scale - patient reports pain controlled/uncontrolled with current regimen. Assessed for dyspnea, nausea, anxiety, and other distressing symptoms. Comfort medications reviewed for effectiveness. PRN medications available and patient/caregiver instructed on appropriate use.",
+      "PATIENT/FAMILY COPING": "Patient and family coping with terminal diagnosis and disease progression. Emotional support provided during visit. Assessed for signs of anticipatory grief and provided appropriate support. Spiritual needs addressed and chaplain services offered/provided. Family verbalizes understanding of disease trajectory and comfort-focused goals.",
+      "COMFORT MEASURES": "Focus of care remains on quality of life, dignity, and patient comfort. Comfort-focused interventions provided including positioning for comfort, skin care and hygiene assistance, medication administration for symptom relief, and emotional support. Patient's wishes and preferences honored. Environment maintained for patient comfort and safety.",
+      "VITAL SIGNS": "Vital signs assessed as clinically appropriate for hospice care. Monitoring focused on comfort assessment rather than curative intervention. Patient's baseline and current status documented for trending and symptom management purposes.",
+      "MEDICATION REVIEW": "Comfort medications reviewed for effectiveness in managing pain and symptoms. PRN medications available and caregiver instructed on indications and administration. Non-essential medications discontinued per physician orders. Medication administration route appropriate for patient's current condition and ability to swallow.",
+      "HOSPICE APPROPRIATENESS": "Patient continues to meet hospice eligibility criteria with documented decline in functional status and disease progression consistent with terminal prognosis. Decline noted in ability to perform ADLs, nutritional status, and overall strength. Patient/family remain committed to comfort-focused care and goals of hospice.",
+      "GOALS OF CARE": "Goals of care reviewed and confirmed with patient and family. Focus remains on comfort, dignity, and quality of remaining life. Advance directives in place and reviewed. DNR/comfort measures only confirmed. Patient and family understand and agree with comfort-focused plan. Preferences for end-of-life care documented and will be honored."
     };
 
     const defaults = type === 'hospice' ? hospiceDefaults : homeHealthDefaults;
     
-    // Try to match the element name
+    // Try to match the element name with flexible matching
+    const normalizedElement = elementName.toUpperCase().replace(/[^A-Z\s]/g, '');
     for (const [key, value] of Object.entries(defaults)) {
-      if (elementName.toUpperCase().includes(key) || key.includes(elementName.toUpperCase())) {
+      const normalizedKey = key.replace(/[^A-Z\s]/g, '');
+      if (normalizedElement.includes(normalizedKey) || normalizedKey.includes(normalizedElement) ||
+          normalizedElement.split(' ').some(word => normalizedKey.includes(word) && word.length > 3)) {
         return value;
       }
     }
     
-    return `Documentation needed for ${elementName}. Please add specific clinical details.`;
+    // Fallback with more helpful generic text
+    return `Documentation needed for ${elementName}: Provide specific clinical details including objective findings, patient assessment, interventions performed, patient response to care, and any changes from previous visit. Include measurable data and professional nursing observations that support the skilled nature of the visit.`;
   };
 
   // Debounced analysis for rough note
