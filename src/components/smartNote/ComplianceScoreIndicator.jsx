@@ -528,7 +528,7 @@ Return JSON:
                     <AlertCircle className="w-5 h-5 text-yellow-600" />
                     <div>
                       <p className="text-sm font-semibold text-yellow-800">Almost ready - review suggested fixes above</p>
-                      <p className="text-xs text-yellow-700">Add {enhancedComplianceData.flagged_issues?.filter(i => i.severity === 'high').length || 0} high-priority items for full compliance.</p>
+                      <p className="text-xs text-yellow-700">Add fixes to rough notes, edit, then click "Enhance with AI" again.</p>
                     </div>
                   </>
                 ) : (
