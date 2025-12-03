@@ -234,7 +234,7 @@ Return JSON:
       "element": "Which compliance element (e.g., Homebound Status, Skilled Need)",
       "location_hint": "Brief quote or description of where in note this applies",
       "problem": "What's wrong or missing",
-      "suggestion": "A COMPLETE clinical paragraph that fully addresses this specific compliance issue. Must be detailed enough to satisfy Medicare requirements when added to the note. Include specific clinical observations, patient responses, or interventions as appropriate for the element type.",
+      "suggestion": "A COMPLETE clinical paragraph starting with the element name as a header (e.g., 'HOMEBOUND STATUS:', 'SKILLED NEED:', 'PATIENT RESPONSE:'). This header helps ensure the AI recognizes the element when re-analyzing. Must be detailed enough to satisfy Medicare requirements when added to the note. Include specific clinical observations, patient responses, or interventions as appropriate for the element type.",
       "severity": "high" | "medium" | "low"
     }
   ],
