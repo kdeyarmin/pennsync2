@@ -536,7 +536,7 @@ Return JSON:
                     <XCircle className="w-5 h-5 text-orange-600" />
                     <div>
                       <p className="text-sm font-semibold text-orange-800">Needs improvement before pasting</p>
-                      <p className="text-xs text-orange-700">Click "Fix" on issues above to add required elements.</p>
+                      <p className="text-xs text-orange-700">Click "Fix" to add text to rough notes, edit, then re-enhance.</p>
                     </div>
                   </>
                 )}
