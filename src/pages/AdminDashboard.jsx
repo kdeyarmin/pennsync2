@@ -66,6 +66,7 @@ import QualityMetricsDashboard from "../components/admin/QualityMetricsDashboard
 import UserManagement from "../components/admin/UserManagement";
 import ReportsCenter from "../components/admin/ReportsCenter";
 import SystemSettings from "../components/admin/SystemSettings";
+import UserActivityLog from "../components/admin/UserActivityLog";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -354,10 +355,14 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-6 w-full">
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-7 w-full">
           <TabsTrigger value="users" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
             <Users className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
+            <Activity className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Activity</span>
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
             <BarChart3 className="w-3 h-3 md:w-4 md:h-4" />
@@ -384,6 +389,11 @@ export default function AdminDashboard() {
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-6">
           <UserManagement users={users} currentUser={currentUser} />
+        </TabsContent>
+
+        {/* Activity Tab */}
+        <TabsContent value="activity" className="space-y-6">
+          <UserActivityLog />
         </TabsContent>
 
         {/* Reports Tab */}
