@@ -371,6 +371,17 @@ PATIENT-SPECIFIC CHECKS:
 - If patient has wounds: Flag if wound not specifically assessed
 - Check if active care plan goals are addressed in the note
 
+CRITICAL FOR SUGGESTIONS:
+For each flagged issue, you MUST generate a COMPLETE, SPECIFIC clinical text suggestion that:
+1. Is ready to be added directly to the rough note
+2. Includes the patient's actual diagnosis "${diagnosis || 'condition'}" 
+3. References specific vital signs if available: "${vitalSigns ? JSON.stringify(vitalSigns) : 'none'}"
+4. Uses patient context like secondary diagnoses, allergies, and care plan goals
+5. Is written in professional clinical language appropriate for Medicare documentation
+6. Is at least 2-3 sentences with specific clinical details
+
+DO NOT give vague suggestions like "add homebound status" - instead provide the ACTUAL TEXT to add.
+
 Return JSON:
 {
   "overall_score": 0-100,
@@ -380,7 +391,7 @@ Return JSON:
       "element": "Which compliance element",
       "location_hint": "Where the issue is or should be",
       "problem": "What's wrong or missing - be specific",
-      "suggestion": "Complete clinical text to add",
+      "suggestion": "COMPLETE CLINICAL TEXT - Ready to paste. Example: 'HOMEBOUND STATUS: Patient is homebound due to severe dyspnea on exertion secondary to COPD. Patient requires rest after ambulating 10-15 feet. Leaving home requires considerable and taxing effort. Patient unable to safely access transportation without maximum assistance.'",
       "severity": "high" | "medium" | "low"
     }
   ],
