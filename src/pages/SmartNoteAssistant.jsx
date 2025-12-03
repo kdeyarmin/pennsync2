@@ -593,15 +593,20 @@ Return JSON:
                           />
 
                           {/* Clinical Decision Support */}
-                          {enhancedNote && (
-                            <ClinicalDecisionSupport
-                              enhancedNote={enhancedNote}
-                              diagnosis={finalDiagnosis}
-                              careType="home_health"
-                              vitalSigns={vitalSigns}
-                              onInsertRecommendation={(text) => setEnhancedNote(prev => prev + text)}
-                            />
-                          )}
+                          <ClinicalDecisionSupport
+                            enhancedNote={enhancedNote}
+                            roughNote={roughNote}
+                            diagnosis={finalDiagnosis}
+                            careType="home_health"
+                            vitalSigns={vitalSigns}
+                            onInsertRecommendation={(text) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(prev => prev + '\n\n' + text);
+                              } else {
+                                setRoughNote(prev => prev + '\n\n' + text);
+                              }
+                            }}
+                          />
 
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-3">
