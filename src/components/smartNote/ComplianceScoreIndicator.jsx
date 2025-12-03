@@ -104,26 +104,33 @@ export default function ComplianceScoreIndicator({
   const analyzeCompliance = async () => {
     setIsAnalyzing(true);
     try {
+      // Build vitals string
+      const vitalsString = vitalSigns ? Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
+        if (k === 'o2') {
+          const o2Text = `O2 Sat: ${v}`;
+          if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
+            return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
+          } else if (vitalSigns.o2Source === 'on_oxygen') {
+            return `${o2Text} on supplemental O2`;
+          }
+          return `${o2Text} on room air`;
+        }
+        if (k === 'bp') return `Blood Pressure: ${v}`;
+        if (k === 'hr') return `Heart Rate: ${v}`;
+        if (k === 'temp') return `Temperature: ${v}`;
+        if (k === 'pain') return `Pain: ${v}`;
+        return `${k.toUpperCase()}: ${v}`;
+      }).join(', ') : '';
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this nursing note for Medicare compliance elements. Be quick and precise.
+        prompt: `Analyze this nursing note for Medicare compliance elements. Generate PERSONALIZED suggestions based on the actual note content.
 
 CARE TYPE: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
 VISIT TYPE: ${visitType}
 DIAGNOSIS: ${diagnosis || 'Not specified'}
-VITAL SIGNS ENTERED: ${vitalSigns ? Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
-  if (k === 'o2') {
-    const o2Text = `O2 Sat: ${v}`;
-    if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
-      return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
-    } else if (vitalSigns.o2Source === 'on_oxygen') {
-      return `${o2Text} on supplemental O2`;
-    }
-    return `${o2Text} on room air`;
-  }
-  return `${k.toUpperCase()}: ${v}`;
-}).join(', ') || 'None entered' : 'None entered'}
+VITAL SIGNS ENTERED: ${vitalsString || 'None entered'}
 
-NOTE:
+ROUGH NOTE:
 ${roughNote}
 
 Check for these ${careType === 'hospice' ? 'HOSPICE' : 'HOME HEALTH'} required elements:
@@ -148,12 +155,17 @@ ${careType === 'home_health' ? `
 8. GOALS OF CARE - Patient/family wishes
 `}
 
-IMPORTANT: For EVERY element that is "missing" or "partial", you MUST provide a specific, realistic suggested_addition that can be directly added to the note. Use clinical language with specific details. Never return null or empty strings for suggested_addition.
+CRITICAL INSTRUCTIONS FOR SUGGESTIONS:
+1. READ the rough note carefully and INCORPORATE details mentioned (symptoms, conditions, interventions) into your suggestions
+2. If the note mentions SOB/dyspnea, use that in homebound and skilled need suggestions
+3. If the note mentions wound care, use that in skilled need and intervention suggestions
+4. If the note mentions teaching/education, reference it in patient response suggestions
+5. Use the actual diagnosis "${diagnosis || 'the patient\'s condition'}" in relevant suggestions
+6. Include the vital signs "${vitalsString || 'documented values'}" where appropriate
 
-Example suggestions:
-- Homebound: "Patient is homebound due to severe shortness of breath on exertion, requiring rest after ambulating 10 feet. Leaving home requires considerable and taxing effort."
-- Skilled Need: "Skilled nursing required for comprehensive cardiac assessment, medication management, and patient education on disease process and warning signs."
-- Patient Response: "Patient verbalized understanding of medication schedule and demonstrated correct return demonstration of blood glucose monitoring technique."
+For EACH element, provide:
+- suggested_addition: Personalized clinical text incorporating note details
+- why_needed: Brief Medicare/compliance reason (1 sentence)
 
 Return JSON:
 {
@@ -163,7 +175,8 @@ Return JSON:
       "name": "Element name",
       "status": "present" | "partial" | "missing",
       "found_text": "Quote from note if present, empty string if missing",
-      "suggested_addition": "REQUIRED: Specific clinical text to add - never null or empty for missing/partial elements"
+      "suggested_addition": "PERSONALIZED clinical text incorporating details from the rough note - REQUIRED for missing/partial",
+      "why_needed": "Brief explanation of why Medicare requires this element (e.g., 'Medicare requires homebound documentation to justify skilled home health services')"
     }
   ]
 }`,
