@@ -93,6 +93,13 @@ ${careType === 'home_health' ? `
 8. GOALS OF CARE - Patient/family wishes
 `}
 
+IMPORTANT: For EVERY element that is "missing" or "partial", you MUST provide a specific, realistic suggested_addition that can be directly added to the note. Use clinical language with specific details. Never return null or empty strings for suggested_addition.
+
+Example suggestions:
+- Homebound: "Patient is homebound due to severe shortness of breath on exertion, requiring rest after ambulating 10 feet. Leaving home requires considerable and taxing effort."
+- Skilled Need: "Skilled nursing required for comprehensive cardiac assessment, medication management, and patient education on disease process and warning signs."
+- Patient Response: "Patient verbalized understanding of medication schedule and demonstrated correct return demonstration of blood glucose monitoring technique."
+
 Return JSON:
 {
   "score": 0-100,
@@ -100,8 +107,8 @@ Return JSON:
     {
       "name": "Element name",
       "status": "present" | "partial" | "missing",
-      "found_text": "Quote from note if present, null if missing",
-      "suggested_addition": "Text to add if missing or partial"
+      "found_text": "Quote from note if present, empty string if missing",
+      "suggested_addition": "REQUIRED: Specific clinical text to add - never null or empty for missing/partial elements"
     }
   ]
 }`,
