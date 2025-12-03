@@ -484,7 +484,10 @@ Return JSON:
                                 <Button
                                   size="sm"
                                   className="w-full bg-green-600 hover:bg-green-700"
-                                  onClick={() => insertToRoughNote(issue.suggestion, idx)}
+                                  onClick={() => {
+                                    const suggestion = issue.suggestion || getDefaultSuggestion(issue.element, careType);
+                                    insertToRoughNote(suggestion, idx);
+                                  }}
                                 >
                                   <Plus className="w-4 h-4 mr-1" />
                                   Add to Rough Notes
