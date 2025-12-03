@@ -46,6 +46,9 @@ import {
 import { format, subDays, parseISO, startOfWeek } from "date-fns";
 import AutoAssignTraining from "../components/training/AutoAssignTraining";
 import TrainingCompletionTracker from "../components/training/TrainingCompletionTracker";
+import AutomatedComplianceAuditor from "../components/compliance/AutomatedComplianceAuditor";
+import ComplianceAuditResults from "../components/compliance/ComplianceAuditResults";
+import NurseComplianceRiskIndicator from "../components/compliance/NurseComplianceRiskIndicator";
 
 const COLORS = {
   documentation: "#8b5cf6",
@@ -485,6 +488,21 @@ export default function NursePerformanceDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Compliance Auditing & Risk - Admin Only */}
+      {isAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <AutomatedComplianceAuditor onAuditComplete={() => refetch()} />
+          <NurseComplianceRiskIndicator users={users} />
+        </div>
+      )}
+
+      {/* Compliance Audit Results - Admin Only */}
+      {isAdmin && (
+        <div className="mt-6">
+          <ComplianceAuditResults users={users} />
+        </div>
+      )}
 
       {/* Training Completion Tracker - Admin Only */}
       {isAdmin && (
