@@ -67,6 +67,7 @@ import UserManagement from "../components/admin/UserManagement";
 import ReportsCenter from "../components/admin/ReportsCenter";
 import SystemSettings from "../components/admin/SystemSettings";
 import UserActivityLog from "../components/admin/UserActivityLog";
+import NoteConversionReport from "../components/admin/NoteConversionReport";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -398,6 +399,7 @@ export default function AdminDashboard() {
 
         {/* Reports Tab */}
         <TabsContent value="reports" className="space-y-6">
+          <NoteConversionReport />
           <ReportsCenter 
             users={users}
             patients={patients}
