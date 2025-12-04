@@ -455,11 +455,13 @@ export default function ComplianceDashboard() {
 
       {/* Tabs for Compliance Sections */}
       <Tabs defaultValue="alerts" className="mb-6">
-        <TabsList className="mb-4">
-          <TabsTrigger value="alerts">Compliance Alerts</TabsTrigger>
-          <TabsTrigger value="auditor">Audit Documentation</TabsTrigger>
-          <TabsTrigger value="trends">Audit Trends</TabsTrigger>
-          <TabsTrigger value="rules">Configure Rules</TabsTrigger>
+        <TabsList className="mb-4 flex-wrap">
+          <TabsTrigger value="alerts">Alerts</TabsTrigger>
+          <TabsTrigger value="auditor">Audit</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="trends">Trends</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="rules">Rules</TabsTrigger>
         </TabsList>
 
         <TabsContent value="auditor">
