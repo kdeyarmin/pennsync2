@@ -450,7 +450,69 @@ export default function ComplianceDashboard() {
         </TabsList>
 
         <TabsContent value="auditor">
-          <EnhancedComplianceAuditor />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <EnhancedComplianceAuditor onAuditComplete={(audit) => setSelectedAudit(audit)} />
+            </div>
+            <div className="space-y-4">
+              {selectedAudit && (
+                <AIAuditSuggestions audit={selectedAudit} />
+              )}
+              <AuditCategoryAnalyzer audits={complianceAudits} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="trends">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                  Audit Performance Trends
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <NurseAuditTrends 
+                  audits={complianceAudits} 
+                  nurseEmail={currentUser?.role !== 'admin' ? currentUser?.email : null}
+                />
+              </CardContent>
+            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AuditCategoryAnalyzer audits={complianceAudits} />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Recent Audits</CardTitle>
+                </CardHeader>
+                <CardContent className="max-h-80 overflow-y-auto">
+                  <div className="space-y-2">
+                    {complianceAudits.slice(0, 10).map((audit, idx) => (
+                      <div 
+                        key={idx} 
+                        className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+                        onClick={() => setSelectedAudit(audit)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{audit.nurse_email?.split('@')[0]}</span>
+                          <Badge className={
+                            audit.status === 'passed' ? 'bg-green-100 text-green-800' :
+                            audit.status === 'critical' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }>
+                            {audit.compliance_score}%
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {audit.issues?.length || 0} issues • {audit.audit_date?.split('T')[0]}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="rules">
