@@ -490,7 +490,13 @@ Return JSON:
                 <VoiceHub onTranscription={handleVoiceTranscription} onVitalsRecognized={handleVoiceVitals} />
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-4 space-y-3">
+              {/* Quick phrase buttons */}
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Quick phrases (click to add):</p>
+                <QuickPhraseButtons onInsert={handleInsertPhrase} />
+              </div>
+
               <Textarea
                 placeholder="Type or dictate your notes... Example: pt stable, lungs clear, checked wound, changed dressing, taught about meds"
                 value={roughNote}
@@ -498,8 +504,17 @@ Return JSON:
                 rows={6}
                 className="font-mono text-sm"
               />
-              <div className="flex justify-between items-center mt-3">
-                <p className="text-xs text-gray-500">{roughNote.length} characters</p>
+              
+              {/* Character count with progress indicator */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <p className={`text-xs ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                    {roughNote.length} characters
+                  </p>
+                  {roughNote.length < 20 && roughNote.length > 0 && (
+                    <p className="text-xs text-orange-500">(min 20 to enhance)</p>
+                  )}
+                </div>
                 <Button
                   onClick={handleEnhanceNote}
                   disabled={isProcessing || roughNote.length < 20}
