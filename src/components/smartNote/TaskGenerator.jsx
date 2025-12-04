@@ -448,7 +448,7 @@ Return JSON:
         {tasks.length === 0 ? (
           <Button
             onClick={generateTasks}
-            disabled={isGenerating || !narrativeText}
+            disabled={isGenerating || (!narrativeText && !enhancedNote)}
             className="w-full bg-orange-600 hover:bg-orange-700"
             size="sm"
           >

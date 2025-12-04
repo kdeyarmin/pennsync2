@@ -799,8 +799,13 @@ Return JSON:
                 <AccordionContent>
                   <TaskGenerator
                     enhancedNote={enhancedNote}
+                    narrativeText={roughNote}
                     patientId={selectedPatientId}
+                    patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
+                    diagnosis={finalDiagnosis}
+                    complianceGaps={enhancedNoteCompliance?.flagged_issues || roughNoteCompliance?.elements?.filter(e => e.status !== 'present') || []}
                     nurseEmail={currentUser?.email}
+                    autoGenerate={false}
                   />
                 </AccordionContent>
               </AccordionItem>
