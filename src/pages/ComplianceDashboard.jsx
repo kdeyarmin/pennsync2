@@ -445,6 +445,7 @@ export default function ComplianceDashboard() {
         <TabsList className="mb-4">
           <TabsTrigger value="alerts">Compliance Alerts</TabsTrigger>
           <TabsTrigger value="auditor">Audit Documentation</TabsTrigger>
+          <TabsTrigger value="trends">Audit Trends</TabsTrigger>
           <TabsTrigger value="rules">Configure Rules</TabsTrigger>
         </TabsList>
 
