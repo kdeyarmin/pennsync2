@@ -832,24 +832,50 @@ Return JSON:
                   </div>
                   {element.status !== 'present' && (
                     <div className="px-2 pb-2 space-y-2">
+                      {/* Granular explanation section */}
+                      <div className="bg-slate-50 p-2 rounded text-xs border border-slate-200">
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <Info className="w-3 h-3 text-slate-600" />
+                          <p className="font-semibold text-slate-700">Why this matters:</p>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed">
+                          {element.status === 'missing' 
+                            ? `This element is completely missing from your documentation. Medicare auditors specifically look for "${element.name.toLowerCase()}" documentation to verify medical necessity and skilled care requirements.`
+                            : `This element is partially documented but lacks the specificity required for Medicare compliance. Vague or incomplete documentation can result in claim denials.`
+                          }
+                        </p>
+                      </div>
+
                       {/* Problematic phrasing callout */}
                       {element.problematic_phrasing && (
                         <div className="bg-red-50 p-2 rounded text-xs border border-red-200">
                           <p className="font-medium text-red-800 mb-1 flex items-center gap-1">
                             <Ban className="w-3 h-3" /> Non-compliant phrasing found:
                           </p>
-                          <p className="text-red-700 italic">"{element.problematic_phrasing}"</p>
+                          <p className="text-red-700 italic mb-1">"{element.problematic_phrasing}"</p>
+                          <p className="text-red-600 text-[10px]">This phrasing doesn't meet Medicare's documentation standards because it lacks measurable, objective clinical data.</p>
                         </div>
                       )}
+                      
+                      {/* Medicare requirement explanation */}
                       {element.why_needed && (
-                        <div className="bg-blue-50 p-2 rounded text-xs text-blue-800 border border-blue-200 flex items-start gap-1.5">
-                          <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                          <span>{element.why_needed}</span>
+                        <div className="bg-blue-50 p-2 rounded text-xs border border-blue-200">
+                          <div className="flex items-start gap-1.5">
+                            <BookOpen className="w-3 h-3 mt-0.5 flex-shrink-0 text-blue-600" />
+                            <div>
+                              <p className="font-medium text-blue-800 mb-0.5">Medicare Requirement:</p>
+                              <p className="text-blue-700">{element.why_needed}</p>
+                            </div>
+                          </div>
                         </div>
                       )}
+                      
                       <div className="bg-white/70 p-2 rounded text-xs text-gray-700 border border-gray-200">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-gray-500">Suggested text:</p>
+                          <p className="font-medium text-gray-500 flex items-center gap-1">
+                            <Lightbulb className="w-3 h-3 text-amber-500" />
+                            Suggested compliant text:
+                          </p>
                           <div className="flex items-center gap-1">
                             <Button
                               size="sm"
