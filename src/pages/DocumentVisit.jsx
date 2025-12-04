@@ -1055,10 +1055,17 @@ Generate the complete clinical narrative based on the audio and context:`;
 
               <QuickTemplatesLibrary onInsertTemplate={handleInsertTemplate} />
 
-              <VitalSignsForm 
-                vitalSigns={vitalSigns}
-                onChange={setVitalSigns}
-              />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Vital Signs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SmartVitalsInput 
+                    vitalSigns={vitalSigns}
+                    onChange={setVitalSigns}
+                  />
+                </CardContent>
+              </Card>
 
               <SmartVitalsPredictor
                 patient={patient}
