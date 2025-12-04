@@ -44,7 +44,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
     { name: "Alerts", icon: Bell, page: "PatientAlerts" },
     { name: "Compliance", icon: Shield, page: "ComplianceDashboard" },
-    { name: "Training", icon: GraduationCap, page: "NurseTraining" },
+    { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
     { name: "Features", icon: FileText, page: "Features" },
   ];
 
