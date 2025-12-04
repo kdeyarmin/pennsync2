@@ -496,23 +496,27 @@ ${careType === 'home_health' ? `
 
 ONLY flag issues that are TRULY missing or weak. Do NOT flag elements that ARE present in the note.
 
-PATIENT-SPECIFIC CHECKS:
-- If patient has COPD: Flag if no mention of respiratory status, O2 use, or COPD exacerbation signs
-- If patient has CHF: Flag if no mention of edema assessment, weight, or fluid status
-- If patient has Diabetes: Flag if no mention of blood glucose or diabetic-specific assessments
-- If patient has wounds: Flag if wound not specifically assessed
+PATIENT-SPECIFIC CHECKS (CRITICAL - analyze based on diagnosis):
+- If patient has CHF/Heart Failure: Flag VITAL SIGNS as 'weak' if missing daily weight, edema grade (0-4+), JVD assessment. Flag ASSESSMENT as 'weak' if missing bilateral lung sounds for crackles, S3 gallop assessment, peripheral edema measurement in cm, fluid status evaluation
+- If patient has COPD: Flag VITAL SIGNS as 'weak' if missing O2 saturation on room air/supplemental O2, respiratory rate. Flag ASSESSMENT as 'weak' if missing bilateral lung sounds (wheezes/rhonchi), accessory muscle use, work of breathing, cyanosis assessment
+- If patient has Diabetes: Flag VITAL SIGNS as 'weak' if missing blood glucose. Flag ASSESSMENT as 'weak' if missing diabetic foot exam (pedal pulses, sensation, skin integrity), peripheral neuropathy screening
+- If patient has wounds/pressure injuries: Flag ASSESSMENT as 'weak' if missing wound dimensions, wound bed description, exudate characteristics, periwound assessment
+- If patient has Stroke/CVA: Flag ASSESSMENT as 'weak' if missing neurological assessment (LOC, motor strength grading, speech, swallowing)
+- If patient has Hypertension: Flag VITAL SIGNS as 'weak' if missing BP in proper position, orthostatic measurements if indicated
 - Check if active care plan goals are addressed in the note
 
-CRITICAL FOR SUGGESTIONS:
-For each flagged issue, you MUST generate a COMPLETE, SPECIFIC clinical text suggestion that:
-1. Is ready to be added directly to the rough note
-2. Includes the patient's actual diagnosis "${diagnosis || 'condition'}" 
-3. References specific vital signs if available: "${vitalSigns ? JSON.stringify(vitalSigns) : 'none'}"
-4. Uses patient context like secondary diagnoses, allergies, and care plan goals
-5. Is written in professional clinical language appropriate for Medicare documentation
-6. Is at least 2-3 sentences with specific clinical details
+CRITICAL FOR 'WEAK' OR 'NON_COMPLIANT' SUGGESTIONS:
+When generating suggestions for weak/non-compliant issues, you MUST:
+1. Identify EXACTLY what is missing based on the diagnosis (e.g., for CHF with only BP/HR documented, the suggestion must specifically add: weight, edema assessment with grading, JVD check, lung sounds for crackles)
+2. Reference the patient's specific diagnosis in the suggestion text (e.g., "Weight obtained today: ___ lbs. Daily weight monitoring critical for CHF fluid status assessment.")
+3. Use proper medical terminology and grading scales (e.g., "Bilateral lower extremity edema: ___ + pitting, measured at ___ cm above malleolus")
+4. Include specific assessment parameters relevant to the condition
+5. Be ready to paste directly into documentation
 
-DO NOT give vague suggestions like "add homebound status" - instead provide the ACTUAL TEXT to add.
+Example for CHF patient with weak VITAL SIGNS (only BP and HR documented):
+"VITAL SIGNS - CHF-SPECIFIC: Weight today: ___ lbs (compared to previous: ___ lbs, change: ___ lbs). Weight trend monitored for fluid retention - gain >2-3 lbs in 24 hours or >5 lbs in one week indicates possible CHF exacerbation requiring physician notification. Bilateral lower extremity edema assessed and graded. JVD assessed with patient at 45 degrees."
+
+DO NOT give vague suggestions. Each suggestion must include diagnosis-specific clinical parameters.
 
 Return JSON:
 {
