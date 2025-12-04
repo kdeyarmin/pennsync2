@@ -980,7 +980,7 @@ Return JSON:
                         const textsToAdd = selectedIndices
                           .map(i => enhancedComplianceData.flagged_issues[i])
                           .filter(issue => issue)
-                          .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType, 'missing', diagnosis));
+                          .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType, issue.issue_type, diagnosis));
                         if (textsToAdd.length > 0) {
                           onInsertElement && onInsertElement(textsToAdd.join('\n\n'));
                           selectedIndices.forEach(idx => setInsertedIssues(prev => new Set([...prev, idx])));
