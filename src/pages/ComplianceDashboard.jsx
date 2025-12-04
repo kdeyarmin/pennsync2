@@ -37,6 +37,9 @@ import PolicyGuidelineMonitor from "../components/compliance/PolicyGuidelineMoni
 import AutomatedComplianceReporting from "../components/compliance/AutomatedComplianceReporting";
 import ComplianceRuleManager from "../components/compliance/ComplianceRuleManager";
 import EnhancedComplianceAuditor from "../components/compliance/EnhancedComplianceAuditor";
+import AIAuditSuggestions from "../components/compliance/AIAuditSuggestions";
+import AuditCategoryAnalyzer from "../components/compliance/AuditCategoryAnalyzer";
+import NurseAuditTrends from "../components/compliance/NurseAuditTrends";
 
 export default function ComplianceDashboard() {
   const [filterCategory, setFilterCategory] = useState("all");
