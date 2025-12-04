@@ -68,17 +68,141 @@ export default function ComplianceScoreIndicator({
   const [selectedEnhancedIssues, setSelectedEnhancedIssues] = useState(new Set());
   const [isFixingAll, setIsFixingAll] = useState(false);
 
+  // Condition-specific assessment requirements
+  const conditionSpecificAssessments = {
+    // CHF / Heart Failure
+    'CHF': {
+      vitals: 'daily weight monitoring, bilateral lower extremity edema assessment (grade 0-4+), jugular venous distension (JVD) assessment, orthopnea evaluation',
+      assessment: 'cardiovascular: S1/S2 heart sounds, presence of S3 gallop, bilateral pedal edema measured in cm, capillary refill, peripheral pulses (2+ bilaterally), skin color and temperature of extremities. Respiratory: lung sounds bilateral bases for crackles/rales indicating fluid overload, work of breathing, use of accessory muscles. Fluid status: daily weight trend, intake/output if monitored, sodium restriction compliance',
+      skilled: 'CHF exacerbation monitoring, fluid status assessment, medication titration education (diuretics, ACE inhibitors, beta-blockers), sodium-restricted diet teaching, daily weight monitoring instruction, recognition of worsening symptoms (increased dyspnea, weight gain >2-3 lbs/day, increased edema)',
+      homebound: 'severe activity intolerance secondary to CHF with dyspnea on minimal exertion, unable to ambulate more than 10-15 feet without significant shortness of breath and fatigue requiring rest'
+    },
+    'HEART FAILURE': { /* alias for CHF */ },
+    'CONGESTIVE': { /* alias for CHF */ },
+    
+    // COPD
+    'COPD': {
+      vitals: 'oxygen saturation on room air and on supplemental O2 if applicable, respiratory rate, work of breathing assessment, peak flow if ordered',
+      assessment: 'respiratory: bilateral lung sounds (wheezes, rhonchi, diminished breath sounds), accessory muscle use, pursed-lip breathing, barrel chest, cyanosis assessment, cough productivity and sputum characteristics (color, consistency, amount). Cardiovascular: heart rate, presence of cor pulmonale signs',
+      skilled: 'COPD exacerbation monitoring, inhaler technique assessment and education, oxygen therapy management, breathing exercises (pursed-lip, diaphragmatic), energy conservation techniques, smoking cessation if applicable, recognition of exacerbation triggers and warning signs',
+      homebound: 'severe dyspnea on exertion secondary to COPD requiring supplemental oxygen, unable to leave home without significant respiratory distress and desaturation, requires frequent rest periods'
+    },
+    'CHRONIC OBSTRUCTIVE': { /* alias for COPD */ },
+    
+    // Diabetes
+    'DIABETES': {
+      vitals: 'blood glucose reading if available, blood pressure (target <130/80 for diabetics)',
+      assessment: 'integumentary: bilateral lower extremity skin assessment, diabetic foot exam (pedal pulses, sensation testing with monofilament, skin integrity between toes, callus formation, nail condition), wound assessment if present. Neurological: peripheral neuropathy assessment (numbness, tingling, burning sensations)',
+      skilled: 'blood glucose monitoring and log review, insulin administration technique if applicable, hypoglycemia/hyperglycemia recognition and treatment, diabetic diet education, foot care instruction, A1C goal discussion, medication compliance assessment',
+      homebound: 'diabetic neuropathy affecting balance and gait safety, visual impairment secondary to diabetic retinopathy limiting safe ambulation outside home'
+    },
+    'DIABETIC': { /* alias */ },
+    'DM': { /* alias */ },
+    
+    // Wound Care
+    'WOUND': {
+      vitals: 'temperature to monitor for infection',
+      assessment: 'wound assessment: location, dimensions (length x width x depth in cm), wound bed appearance (granulation, slough, eschar percentage), exudate (type, amount, odor), periwound skin condition (maceration, erythema, induration), undermining/tunneling if present, pain level at wound site',
+      skilled: 'wound care requiring skilled nursing assessment and judgment, wound measurement and staging, dressing change per physician orders, infection monitoring, debridement if ordered, wound vac management if applicable, patient/caregiver wound care education',
+      homebound: 'wound care requirements necessitate remaining homebound to prevent contamination and promote healing, mobility limitations due to wound location'
+    },
+    'PRESSURE': { /* alias for wound */ },
+    'ULCER': { /* alias */ },
+    
+    // Stroke / CVA
+    'STROKE': {
+      vitals: 'blood pressure monitoring (critical for stroke patients), neurological vital signs',
+      assessment: 'neurological: level of consciousness, orientation, speech/language assessment (aphasia type if present), facial symmetry, motor strength bilateral upper and lower extremities (grade 0-5), sensation, coordination, swallowing assessment/dysphagia screening, safety awareness',
+      skilled: 'stroke recovery monitoring, fall prevention assessment, ADL retraining, communication strategies if aphasia present, swallowing precautions, medication compliance (anticoagulants, antihypertensives), caregiver training for safe transfers and mobility',
+      homebound: 'residual weakness and balance deficits from CVA limiting safe ambulation, requires assistance for all mobility, high fall risk'
+    },
+    'CVA': { /* alias */ },
+    'CEREBROVASCULAR': { /* alias */ },
+    
+    // Hypertension
+    'HYPERTENSION': {
+      vitals: 'blood pressure in both arms if indicated, orthostatic blood pressure measurements (lying, sitting, standing)',
+      assessment: 'cardiovascular: blood pressure trend analysis, heart rate and rhythm, presence of headache or visual changes, peripheral edema',
+      skilled: 'blood pressure monitoring and medication effectiveness assessment, antihypertensive medication education (purpose, side effects, importance of compliance), lifestyle modification teaching (DASH diet, sodium restriction, exercise, stress management, smoking cessation)',
+      homebound: 'uncontrolled hypertension with risk of hypertensive crisis, dizziness and orthostatic hypotension affecting safe ambulation'
+    },
+    'HTN': { /* alias */ },
+    
+    // Cancer / Oncology
+    'CANCER': {
+      vitals: 'temperature (infection risk due to immunosuppression), pain assessment using appropriate scale',
+      assessment: 'general: nutritional status, weight trend, fatigue level, performance status. Integumentary: skin integrity, mucositis if on chemotherapy, surgical site if applicable. Pain: location, quality, intensity, aggravating/alleviating factors',
+      skilled: 'symptom management, pain control assessment, medication administration and education, nutritional support, coordination with oncology team, emotional support, advance care planning discussions if appropriate',
+      homebound: 'severe fatigue and weakness secondary to cancer treatment/disease progression, immunocompromised status requiring limited exposure to public settings'
+    },
+    'ONCOLOGY': { /* alias */ },
+    'MALIGNANCY': { /* alias */ }
+  };
+
+  // Function to detect conditions from diagnosis text
+  const detectConditions = (diagnosisText) => {
+    if (!diagnosisText) return [];
+    const upperDx = diagnosisText.toUpperCase();
+    const detected = [];
+    
+    for (const condition of Object.keys(conditionSpecificAssessments)) {
+      if (upperDx.includes(condition)) {
+        detected.push(condition);
+      }
+    }
+    
+    // Map aliases to primary conditions
+    const aliasMap = {
+      'HEART FAILURE': 'CHF', 'CONGESTIVE': 'CHF',
+      'CHRONIC OBSTRUCTIVE': 'COPD',
+      'DIABETIC': 'DIABETES', 'DM': 'DIABETES',
+      'PRESSURE': 'WOUND', 'ULCER': 'WOUND',
+      'CVA': 'STROKE', 'CEREBROVASCULAR': 'STROKE',
+      'HTN': 'HYPERTENSION',
+      'ONCOLOGY': 'CANCER', 'MALIGNANCY': 'CANCER'
+    };
+    
+    return [...new Set(detected.map(c => aliasMap[c] || c))];
+  };
+
   // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
-  const getDefaultSuggestion = (elementName, type) => {
+  const getDefaultSuggestion = (elementName, type, issueType = 'missing', currentDiagnosis = null) => {
+    const detectedConditions = detectConditions(currentDiagnosis || diagnosis);
+    const primaryCondition = detectedConditions[0];
+    const conditionData = primaryCondition ? conditionSpecificAssessments[primaryCondition] : null;
+    
+    // Build condition-specific additions
+    const buildConditionSpecificText = (baseText, conditionKey) => {
+      if (!conditionData || !conditionData[conditionKey]) return baseText;
+      return `${baseText} Condition-specific for ${primaryCondition}: ${conditionData[conditionKey]}`;
+    };
+
     // These suggestions include explicit headers/labels that AI will recognize during enhanced note analysis
     const homeHealthDefaults = {
-      "HOMEBOUND STATUS": "HOMEBOUND STATUS: Patient is homebound due to severe dyspnea on exertion, requiring rest after ambulating approximately 15-20 feet. Patient experiences significant fatigue and weakness that limits ability to leave home independently. Leaving home requires considerable and taxing effort due to medical condition. Patient unable to safely access transportation without assistance. Any absence from home is infrequent, short duration, and for medical appointments only.",
-      "SKILLED NEED": "SKILLED NURSING NEED: Skilled nursing services required for comprehensive assessment of cardiopulmonary status including auscultation of heart and lung sounds, evaluation of peripheral edema and skin integrity, medication reconciliation of complex medication regimen, and patient/caregiver education on disease process and warning signs requiring immediate medical attention. Assessment, clinical judgment, and teaching require professional nursing skills that cannot be safely performed by non-skilled personnel.",
+      "HOMEBOUND STATUS": conditionData?.homebound 
+        ? `HOMEBOUND STATUS: Patient is homebound due to ${conditionData.homebound}. Leaving home requires considerable and taxing effort due to medical condition. Patient unable to safely access transportation without assistance. Any absence from home is infrequent, short duration, and for medical appointments only.`
+        : "HOMEBOUND STATUS: Patient is homebound due to severe dyspnea on exertion, requiring rest after ambulating approximately 15-20 feet. Patient experiences significant fatigue and weakness that limits ability to leave home independently. Leaving home requires considerable and taxing effort due to medical condition. Patient unable to safely access transportation without assistance. Any absence from home is infrequent, short duration, and for medical appointments only.",
+      
+      "SKILLED NEED": conditionData?.skilled
+        ? `SKILLED NURSING NEED: Skilled nursing services required for ${conditionData.skilled}. Assessment, clinical judgment, and teaching require professional nursing skills that cannot be safely performed by non-skilled personnel.`
+        : "SKILLED NURSING NEED: Skilled nursing services required for comprehensive assessment of cardiopulmonary status including auscultation of heart and lung sounds, evaluation of peripheral edema and skin integrity, medication reconciliation of complex medication regimen, and patient/caregiver education on disease process and warning signs requiring immediate medical attention. Assessment, clinical judgment, and teaching require professional nursing skills that cannot be safely performed by non-skilled personnel.",
+      
       "PATIENT RESPONSE": "PATIENT RESPONSE TO TEACHING/INTERVENTIONS: Patient verbalized understanding of medication schedule, purpose, and potential side effects. Patient correctly demonstrated teach-back of warning signs requiring physician notification. Patient agreed to follow recommended dietary modifications and activity guidelines. Patient expressed commitment to adhering to plan of care and stated understanding of when to contact nurse or physician.",
+      
       "FUNCTIONAL STATUS": "FUNCTIONAL STATUS: Patient requires moderate assistance with ADLs including bathing, dressing, and grooming. Ambulates with assistive device (walker/cane) for short distances with supervision due to unsteady gait and fall risk. Limited endurance noted - requires rest periods after 5-10 minutes of activity. Transfers with minimal assistance. Cognitively intact and oriented to person, place, and time.",
-      "VITAL SIGNS": "VITAL SIGNS: Blood pressure within expected parameters for patient. Heart rate regular. Respiratory rate unlabored. Temperature afebrile. Oxygen saturation adequate on room air. Pain assessed using 0-10 scale - patient reports current pain level.",
-      "ASSESSMENT FINDINGS": "ASSESSMENT FINDINGS: Comprehensive skilled nursing assessment completed. Cardiovascular: Heart sounds regular, peripheral pulses palpable, edema assessment completed. Respiratory: Lung sounds clear bilaterally, no acute distress, work of breathing normal. Integumentary: Skin intact, no new lesions or wounds noted. Neurological: Alert and oriented, follows commands appropriately. Patient reports current condition stable since last visit.",
-      "INTERVENTIONS": "SKILLED NURSING INTERVENTIONS: Skilled nursing interventions provided including comprehensive head-to-toe assessment, medication reconciliation and review of all current medications for therapeutic effect and side effects, patient and caregiver education on disease management and warning signs, coordination of care with physician and interdisciplinary team, assessment of home safety and fall prevention measures.",
+      
+      "VITAL SIGNS": conditionData?.vitals
+        ? `VITAL SIGNS: Complete vital signs obtained including ${conditionData.vitals}. Blood pressure within expected parameters for patient's condition. Heart rate regular. Respiratory rate unlabored. Temperature afebrile. Pain assessed using 0-10 scale.`
+        : "VITAL SIGNS: Blood pressure within expected parameters for patient. Heart rate regular. Respiratory rate unlabored. Temperature afebrile. Oxygen saturation adequate on room air. Pain assessed using 0-10 scale - patient reports current pain level.",
+      
+      "ASSESSMENT FINDINGS": conditionData?.assessment
+        ? `ASSESSMENT FINDINGS: Comprehensive skilled nursing assessment completed. ${conditionData.assessment}. Patient reports current condition compared to previous visit.`
+        : "ASSESSMENT FINDINGS: Comprehensive skilled nursing assessment completed. Cardiovascular: Heart sounds regular, peripheral pulses palpable, edema assessment completed. Respiratory: Lung sounds clear bilaterally, no acute distress, work of breathing normal. Integumentary: Skin intact, no new lesions or wounds noted. Neurological: Alert and oriented, follows commands appropriately. Patient reports current condition stable since last visit.",
+      
+      "INTERVENTIONS": conditionData?.skilled
+        ? `SKILLED NURSING INTERVENTIONS: Skilled nursing interventions provided including ${conditionData.skilled}. Comprehensive assessment completed, medication reconciliation performed, patient and caregiver education provided on disease management and warning signs, coordination of care with physician and interdisciplinary team.`
+        : "SKILLED NURSING INTERVENTIONS: Skilled nursing interventions provided including comprehensive head-to-toe assessment, medication reconciliation and review of all current medications for therapeutic effect and side effects, patient and caregiver education on disease management and warning signs, coordination of care with physician and interdisciplinary team, assessment of home safety and fall prevention measures.",
+      
       "PLAN/GOALS": "PLAN OF CARE/GOALS: Continue current plan of care with skilled nursing visits as ordered. Patient progressing toward established goals. Goals reviewed and remain appropriate. Will continue to monitor for signs of improvement or decline. Patient and caregiver understand when to contact nurse or seek emergency care. Next visit scheduled per physician orders. Will reassess progress at next visit and update plan as needed."
     };
 
