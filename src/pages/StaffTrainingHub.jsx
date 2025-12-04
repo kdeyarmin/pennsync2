@@ -400,18 +400,51 @@ export default function StaffTrainingHub() {
 
         {/* Quiz Tab */}
         <TabsContent value="quiz">
-          <InteractiveQuizModule 
-            nurseEmail={currentUser?.email}
-            onQuizCompleted={handleQuizCompleted}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* AI Interactive Quiz */}
+            <AIInteractiveQuiz
+              topic={selectedQuizTopic || "Medicare Home Health Documentation"}
+              difficulty="intermediate"
+              questionCount={5}
+              onComplete={(result) => {
+                handleQuizCompleted({ ...result, category: selectedQuizTopic || 'General' });
+                setSelectedQuizTopic(null);
+              }}
+            />
+            
+            {/* Classic Quiz Module */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Or choose a category:</h3>
+              <InteractiveQuizModule 
+                nurseEmail={currentUser?.email}
+                onQuizCompleted={handleQuizCompleted}
+              />
+            </div>
+          </div>
         </TabsContent>
 
         {/* Simulate Tab */}
         <TabsContent value="simulate">
-          <ClinicalSimulationModule 
-            nurseEmail={currentUser?.email}
-            onSimulationCompleted={handleSimulationCompleted}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* AI Patient Simulation */}
+            <AIPatientSimulation
+              scenario={selectedSimScenario || "general"}
+              difficulty="intermediate"
+              onComplete={(result) => {
+                handleSimulationCompleted(result);
+                setSelectedSimScenario(null);
+              }}
+            />
+            
+            {/* Classic Simulation Module */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Or choose a scenario:</h3>
+              <ClinicalSimulationModule 
+                nurseEmail={currentUser?.email}
+                onSimulationCompleted={handleSimulationCompleted}
+              />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
