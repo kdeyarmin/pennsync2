@@ -156,7 +156,6 @@ Return your analysis as JSON:
   "strengths": ["List of well-documented areas"],
   "key_recommendations": ["Top 5 priority recommendations"]
 }`,
-        file_urls: file_url,
         response_json_schema: {
           type: "object",
           properties: {
