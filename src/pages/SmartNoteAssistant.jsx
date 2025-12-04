@@ -47,6 +47,10 @@ import TaskGenerator from "../components/smartNote/TaskGenerator";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 import AINoteDraftingAssistant from "../components/smartNote/AINoteDraftingAssistant";
 import ComplianceSummaryReport from "../components/smartNote/ComplianceSummaryReport";
+import FloatingActionBar from "../components/smartNote/FloatingActionBar";
+import QuickPhraseButtons from "../components/smartNote/QuickPhraseButtons";
+import ImprovedStepIndicator from "../components/smartNote/ImprovedStepIndicator";
+import PatientContextCard from "../components/smartNote/PatientContextCard";
 
 // Common diagnoses list
 const commonDiagnoses = [
