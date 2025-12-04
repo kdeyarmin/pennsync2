@@ -480,18 +480,13 @@ Return JSON:
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-3">
-              {/* Quick phrase buttons */}
-              <div>
-                <p className="text-xs text-gray-500 mb-2">Quick phrases (click to add):</p>
-                <QuickPhraseButtons onInsert={handleInsertPhrase} />
-              </div>
-
-              <Textarea
-                placeholder="Type or dictate your notes... Example: pt stable, lungs clear, checked wound, changed dressing, taught about meds"
+              {/* Smart auto-complete textarea with phrase categories */}
+              <SmartAutoComplete
                 value={roughNote}
-                onChange={(e) => setRoughNote(e.target.value)}
-                rows={6}
-                className="font-mono text-sm"
+                onChange={setRoughNote}
+                placeholder="Type or dictate your notes... Start typing trigger words like 'lungs', 'heart', 'wound' for quick phrases"
+                diagnosis={finalDiagnosis}
+                className="min-h-[150px]"
               />
               
               {/* Character count with progress indicator */}
