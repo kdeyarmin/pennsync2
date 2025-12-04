@@ -181,6 +181,40 @@ export default function StaffTrainingHub() {
           </TabsTrigger>
         </TabsList>
 
+        {/* My Plan Tab - Personalized Training Based on AI Feedback */}
+        <TabsContent value="myplan">
+          {activeModule ? (
+            <TargetedLessonGenerator
+              module={activeModule}
+              nurseEmail={currentUser?.email}
+              onComplete={(result) => {
+                queryClient.invalidateQueries({ queryKey: ['trainingProgress'] });
+                setActiveModule(null);
+              }}
+              onExit={() => setActiveModule(null)}
+            />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <NurseFeedbackAggregator
+                  nurseEmail={currentUser?.email}
+                  onTrainingRecommendations={(gaps) => setSkillGaps(gaps)}
+                />
+              </div>
+              <div className="lg:col-span-2">
+                <PersonalizedTrainingPlan
+                  nurseEmail={currentUser?.email}
+                  skillGaps={skillGaps}
+                  onStartModule={(module) => setActiveModule(module)}
+                  onModuleComplete={(result) => {
+                    queryClient.invalidateQueries({ queryKey: ['trainingProgress'] });
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
