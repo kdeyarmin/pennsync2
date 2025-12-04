@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { logError } from './activityLogger';
 
 /**
  * Security utility functions for Penn Sync
@@ -364,6 +365,14 @@ export async function handleSecureError(error, context, userCallback) {
     context,
     error_type: error.name,
     // Don't log full error message as it might contain sensitive info
+  });
+  
+  // Log error for admin review via UserActivity
+  await logError(error.message, {
+    stack: error.stack,
+    component: context,
+    context: context,
+    page: window.location.pathname
   });
   
   // Show generic error to user
