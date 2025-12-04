@@ -58,6 +58,9 @@ import PatientContextCard from "../components/smartNote/PatientContextCard";
 import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
 import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
 import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
+import ComplianceEducationPanel from "../components/smartNote/ComplianceEducationPanel";
+import DocumentationPracticeScenarios from "../components/smartNote/DocumentationPracticeScenarios";
+import LearningDashboard from "../components/smartNote/LearningDashboard";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -249,6 +252,8 @@ export default function SmartNoteAssistant() {
   const [enhancedNoteCompliance, setEnhancedNoteCompliance] = useState(null);
   const [appliedFixes, setAppliedFixes] = useState([]);
   const [dismissedElementNames, setDismissedElementNames] = useState([]);
+  const [showPracticeScenarios, setShowPracticeScenarios] = useState(false);
+  const [complianceIssues, setComplianceIssues] = useState([]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -630,6 +635,7 @@ Return JSON:
 
           {/* Medicare Compliance Checker */}
           {(roughNote.length >= 30 || enhancedNote) && (
+            <>
             <ComplianceScoreIndicator
               roughNote={roughNote}
               enhancedNote={enhancedNote}
@@ -646,8 +652,18 @@ Return JSON:
                 }
               }}
               onUpdateEnhancedNote={(updatedNote) => setEnhancedNote(updatedNote)}
-              onRoughNoteCompliance={(data) => setRoughNoteCompliance(data)}
-              onEnhancedNoteCompliance={(data) => setEnhancedNoteCompliance(data)}
+              onRoughNoteCompliance={(data) => {
+                setRoughNoteCompliance(data);
+                if (data?.elements) {
+                  setComplianceIssues(data.elements.filter(e => e.status !== 'present'));
+                }
+              }}
+              onEnhancedNoteCompliance={(data) => {
+                setEnhancedNoteCompliance(data);
+                if (data?.flagged_issues) {
+                  setComplianceIssues(data.flagged_issues);
+                }
+              }}
               onDismissedElements={(names) => setDismissedElementNames(names)}
               onFixAllAndReEnhance={async (suggestions) => {
                 // Add all suggestions to rough note
@@ -710,6 +726,16 @@ Return JSON:
                 setIsProcessing(false);
               }}
             />
+
+            {/* Educational Panel - Shows Medicare guidelines for issues */}
+            {complianceIssues.length > 0 && (
+              <ComplianceEducationPanel
+                issues={complianceIssues}
+                onStartPractice={() => setShowPracticeScenarios(true)}
+              />
+            )}
+            </>
+          )}
           )}
 
           {/* Compliance Summary Report */}
@@ -849,6 +875,13 @@ Return JSON:
                             }}
                           />
 
+          {/* Learning Dashboard - Compact View */}
+          <LearningDashboard
+            nurseEmail={currentUser?.email}
+            onStartTraining={(area) => setShowPracticeScenarios(true)}
+            compact={true}
+          />
+
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-3">
               <p className="text-xs font-semibold text-blue-900 mb-2">💡 Quick Tips</p>
@@ -861,6 +894,16 @@ Return JSON:
           </Card>
         </div>
       </div>
+
+      {/* Practice Scenarios Dialog */}
+      <DocumentationPracticeScenarios
+        weakAreas={complianceIssues.map(i => ({ area: i.element || i.name }))}
+        recentErrors={complianceIssues}
+        nurseEmail={currentUser?.email}
+        isOpen={showPracticeScenarios}
+        onOpenChange={setShowPracticeScenarios}
+        onComplete={() => {}}
+      />
 
       {/* Floating Action Bar */}
       <FloatingActionBar
