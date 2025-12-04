@@ -34,15 +34,18 @@ import { format, addDays } from "date-fns";
 
 export default function TaskGenerator({ 
   narrativeText,
+  enhancedNote,
   patientId,
   patientName,
   diagnosis,
   missingCriticalElements = [],
+  complianceGaps = [],
   auditResults = null,
   incidentData = null,
   nurseEmail = null,
   onTasksGenerated,
-  onTrainingRecommended
+  onTrainingRecommended,
+  autoGenerate = false
 }) {
   const [tasks, setTasks] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -71,8 +74,16 @@ export default function TaskGenerator({
     }
   };
 
+  // Auto-generate when autoGenerate is true and we have content
+  React.useEffect(() => {
+    if (autoGenerate && (enhancedNote || narrativeText) && tasks.length === 0 && !isGenerating) {
+      generateTasks();
+    }
+  }, [autoGenerate, enhancedNote, narrativeText]);
+
   const generateTasks = async () => {
-    if (!narrativeText || narrativeText.length < 50) {
+    const noteToAnalyze = enhancedNote || narrativeText;
+    if (!noteToAnalyze || noteToAnalyze.length < 50) {
       alert("Please enter documentation to analyze for tasks.");
       return;
     }
@@ -80,11 +91,30 @@ export default function TaskGenerator({
     setIsGenerating(true);
     setCreatedTasks([]);
     try {
-      // Build context from missing elements and audit results
+      // Build context from missing elements, compliance gaps, and audit results
       let additionalContext = '';
       
       if (missingCriticalElements && missingCriticalElements.length > 0) {
         additionalContext += `\nMISSING CRITICAL ELEMENTS (from note enhancement):\n${missingCriticalElements.map(e => `- ${e}`).join('\n')}\n`;
+      }
+
+      // Add compliance gaps context for automatic task generation
+      if (complianceGaps && complianceGaps.length > 0) {
+        additionalContext += `\nCOMPLIANCE GAPS IDENTIFIED:\n`;
+        complianceGaps.forEach(gap => {
+          const element = gap.element || gap.name || 'Unknown';
+          const issue = gap.issue_type || gap.status || 'flagged';
+          const severity = gap.severity || 'medium';
+          additionalContext += `- ${element} (${issue}, ${severity} severity): ${gap.problem || gap.suggested_addition || ''}\n`;
+        });
+        additionalContext += `\nCRITICAL: For each compliance gap, generate a specific follow-up task:\n`;
+        additionalContext += `- HOMEBOUND STATUS gap → "Re-assess and document homebound status on next visit" (include specific qualifying factors to document)\n`;
+        additionalContext += `- SKILLED NEED gap → "Document skilled nursing justification" (specify what skilled interventions need documentation)\n`;
+        additionalContext += `- PATIENT RESPONSE gap → "Complete teach-back verification on next visit"\n`;
+        additionalContext += `- VITAL SIGNS gap → "Ensure complete vital signs documentation including [missing vitals]"\n`;
+        additionalContext += `- ASSESSMENT gap → "Complete comprehensive assessment documentation"\n`;
+        additionalContext += `- INTERVENTIONS gap → "Document all skilled interventions performed"\n`;
+        additionalContext += `- PLAN/GOALS gap → "Update and document progress toward care plan goals"\n`;
       }
       
       if (auditResults) {
@@ -123,7 +153,7 @@ DIAGNOSIS: ${diagnosis || 'Not specified'}
 ${additionalContext}
 
 NURSING DOCUMENTATION:
-${narrativeText}
+${noteToAnalyze}
 
 Generate follow-up tasks considering:
       1. Clinical interventions mentioned that need follow-up
@@ -135,7 +165,15 @@ Generate follow-up tasks considering:
       7. Documentation completion tasks (especially for missing critical elements)
       8. Safety follow-ups (fall risk, medication safety, etc.)
       9. Tasks to address any missing critical documentation elements
-      10. INCIDENT-SPECIFIC TASKS: If an incident is reported, create mandatory follow-up tasks:
+      10. COMPLIANCE GAP TASKS (CRITICAL - generate for EACH compliance gap identified):
+          - Homebound Status: "Re-assess homebound status on next visit - document specific limitations, taxing effort required, and frequency of absences"
+          - Skilled Need: "Document skilled nursing justification - specify interventions requiring RN assessment/judgment"
+          - Patient Response: "Complete teach-back verification - document patient verbalization and demonstration of understanding"
+          - Vital Signs: "Obtain and document complete vital signs including [specify missing]"
+          - Assessment: "Complete comprehensive systems assessment - document objective findings"
+          - Interventions: "Document all skilled nursing interventions with clinical rationale"
+          - Plan/Goals: "Review and document progress toward care plan goals"
+      11. INCIDENT-SPECIFIC TASKS: If an incident is reported, create mandatory follow-up tasks:
           - Fall: "Complete Fall Risk Assessment", "Update Care Plan - Fall Prevention", "Consider PT/OT Referral"
           - Hospitalization: "Complete Transition of Care Assessment", "Medication Reconciliation Required", "Notify Physician of Discharge"
           - Medication Error: "Complete Medication Review", "Re-educate Patient on Medications", "Notify Pharmacy"
@@ -226,6 +264,10 @@ Return JSON:
                   type: "array",
                   items: { type: "object" }
                 },
+                compliance_tasks: {
+                  type: "array",
+                  items: { type: "object" }
+                },
                 training_recommendations: {
                   type: "array",
                   items: { type: "object" }
@@ -239,19 +281,20 @@ Return JSON:
             onTrainingRecommended(result.training_recommendations);
             }
 
-        // Combine all tasks, prioritizing incident and skilled need tasks
+        // Combine all tasks, prioritizing incident, compliance, and skilled need tasks
         const allTasks = [
         ...(result.incident_tasks || []).map(t => ({ ...t, source: 'incident' })),
+        ...(result.compliance_tasks || []).map(t => ({ ...t, source: 'compliance' })),
         ...(result.skilled_need_tasks || []).map(t => ({ ...t, source: 'skilled_need' })),
         ...(result.tasks || [])
         ];
 
       setTasks(allTasks);
 
-      // Auto-select high priority tasks and all incident/skilled need tasks
+      // Auto-select high priority tasks and all incident/compliance/skilled need tasks
       const autoSelected = {};
       allTasks.forEach((task, idx) => {
-        if (task.priority === 'high' || task.source === 'incident' || task.source === 'skilled_need') {
+        if (task.priority === 'high' || task.source === 'incident' || task.source === 'compliance' || task.source === 'skilled_need') {
           autoSelected[idx] = true;
         }
       });
@@ -288,6 +331,9 @@ Return JSON:
   const getSourceBadge = (source) => {
     if (source === 'incident') {
       return <Badge className="bg-red-100 text-red-800 text-xs ml-1">Incident</Badge>;
+    }
+    if (source === 'compliance') {
+      return <Badge className="bg-blue-100 text-blue-800 text-xs ml-1">Compliance</Badge>;
     }
     if (source === 'skilled_need') {
       return <Badge className="bg-purple-100 text-purple-800 text-xs ml-1">Skilled Need</Badge>;
