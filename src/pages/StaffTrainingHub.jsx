@@ -199,7 +199,7 @@ export default function StaffTrainingHub() {
           </TabsTrigger>
         </TabsList>
 
-        {/* My Plan Tab - Personalized Training Based on AI Feedback */}
+        {/* My Plan Tab - AI-Powered Personalized Training */}
         <TabsContent value="myplan">
           {activeModule ? (
             <TargetedLessonGenerator
@@ -212,22 +212,67 @@ export default function StaffTrainingHub() {
               onExit={() => setActiveModule(null)}
             />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* AI-Generated Training Plan */}
+              <AIPersonalizedTrainingPlan
+                nurseEmail={currentUser?.email}
+                audits={complianceAudits}
+                recommendations={recommendations}
+                onStartModule={(module) => {
+                  setSelectedQuizTopic(module.weak_area_addressed);
+                  setActiveTab('quiz');
+                }}
+              />
+              
+              {/* Feedback Aggregator */}
+              <div className="space-y-4">
                 <NurseFeedbackAggregator
                   nurseEmail={currentUser?.email}
                   onTrainingRecommendations={(gaps) => setSkillGaps(gaps)}
                 />
-              </div>
-              <div className="lg:col-span-2">
-                <PersonalizedTrainingPlan
-                  nurseEmail={currentUser?.email}
-                  skillGaps={skillGaps}
-                  onStartModule={(module) => setActiveModule(module)}
-                  onModuleComplete={(result) => {
-                    queryClient.invalidateQueries({ queryKey: ['trainingProgress'] });
-                  }}
-                />
+                
+                {/* Quick Actions based on weak areas */}
+                {skillGaps.length > 0 && (
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardHeader className="py-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Target className="w-4 h-4 text-orange-600" />
+                        Recommended Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {skillGaps.slice(0, 3).map((gap, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 bg-white rounded">
+                          <span className="text-sm">{gap.area || gap.skill_area}</span>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => {
+                                setSelectedQuizTopic(gap.area || gap.skill_area);
+                                setActiveTab('quiz');
+                              }}
+                            >
+                              Quiz
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => {
+                                setSelectedSimScenario(gap.area?.toLowerCase().replace(/\s+/g, '_') || 'general');
+                                setActiveTab('simulate');
+                              }}
+                            >
+                              Simulate
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           )}
