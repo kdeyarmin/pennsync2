@@ -616,29 +616,31 @@ Return JSON:
             </div>
           )}
 
-          {/* Step 4: Enhanced Note */}
+          {/* Step 4: Enhanced Note with Rich Text Editor */}
           {enhancedNote && (
             <Card className="border-2 border-green-300 bg-green-50">
               <CardHeader className="py-3">
-                <CardTitle className="text-sm flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    4. Enhanced Note
-                    {auditResults?.quality_score && <Badge className="bg-green-600">{auditResults.quality_score}% Quality</Badge>}
-                  </div>
-                  <Button onClick={handleCopy} variant="outline" size="sm">
-                    {copied ? <><CheckCircle2 className="w-4 h-4 mr-1" /> Copied!</> : <><Copy className="w-4 h-4 mr-1" /> Copy</>}
-                  </Button>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  4. Enhanced Note
+                  <span className="text-xs text-gray-500 font-normal ml-auto">Click Edit to modify • Ctrl+Z to undo</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="bg-white p-4 rounded-lg border border-green-200 mb-4">
-                  <pre className="whitespace-pre-wrap font-sans text-sm">{enhancedNote}</pre>
-                </div>
-                <Alert className="bg-green-100 border-green-300">
+                <RichTextNoteEditor
+                  value={enhancedNote}
+                  onChange={setEnhancedNote}
+                  onCopy={() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  copied={copied}
+                  qualityScore={auditResults?.quality_score}
+                />
+                <Alert className="bg-green-100 border-green-300 mt-4">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
                   <AlertDescription className="text-green-800">
-                    Ready to copy into your EHR system!
+                    Ready to copy into your EHR system! Use the Copy button above for plain text.
                   </AlertDescription>
                 </Alert>
               </CardContent>
