@@ -372,27 +372,19 @@ Return JSON:
         <p className="text-sm text-gray-600">Transform rough notes into Medicare-compliant documentation</p>
       </div>
 
-      <StepIndicator currentStep={currentStep} completedSteps={completedSteps} />
+      <ImprovedStepIndicator 
+        currentStep={currentStep} 
+        completedSteps={completedSteps}
+      />
 
       {selectedPatient && (
-        <Card className="mb-4 bg-blue-50 border-blue-200">
-          <CardContent className="p-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                {selectedPatient.first_name?.charAt(0)}{selectedPatient.last_name?.charAt(0)}
-              </div>
-              <div>
-                <p className="font-semibold">{selectedPatient.first_name} {selectedPatient.last_name}</p>
-                <p className="text-xs text-gray-600">{selectedPatient.primary_diagnosis || 'No diagnosis'}</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {vitalSigns.bp && <Badge variant="outline">BP: {vitalSigns.bp}</Badge>}
-              {vitalSigns.hr && <Badge variant="outline">HR: {vitalSigns.hr}</Badge>}
-              <Badge variant="outline">{carePlans.length} Care Plans</Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <PatientContextCard
+          patient={selectedPatient}
+          carePlans={carePlans}
+          recentVisit={recentVisits[0]}
+          vitalSigns={vitalSigns}
+          onClear={() => setSelectedPatientId("")}
+        />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
