@@ -70,18 +70,22 @@ export default function ImportPatients() {
 
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
     
-    // Map common header variations
+    // Map common header variations - supports standard format AND agency export format
     const headerMap = {
       'first_name': ['first_name', 'firstname', 'first name', 'fname'],
       'last_name': ['last_name', 'lastname', 'last name', 'lname'],
+      'patient_name': ['patient', 'patient name', 'patientname'], // Agency format - full name
       'date_of_birth': ['date_of_birth', 'dob', 'dateofbirth', 'birth_date', 'birthdate'],
       'medical_record_number': ['medical_record_number', 'mrn', 'medical_record', 'record_number'],
+      'admitted_date': ['admitted date', 'admitted_date', 'admitteddate', 'admission_date', 'admission date'],
       'address': ['address', 'street_address', 'home_address'],
       'phone': ['phone', 'phone_number', 'telephone', 'mobile'],
       'email': ['email', 'email_address', 'e-mail'],
-      'primary_diagnosis': ['primary_diagnosis', 'diagnosis', 'dx', 'primary_dx'],
+      'primary_diagnosis': ['primary_diagnosis', 'diagnosis', 'dx', 'primary_dx', 'primary diagnosis'],
       'allergies': ['allergies', 'allergy'],
-      'status': ['status', 'patient_status']
+      'status': ['status', 'patient_status', 'current admission status', 'current_admission_status', 'currentadmissionstatus'],
+      'idg_name': ['idg name', 'idg_name', 'idgname', 'team'],
+      'gender': ['gender', 'sex']
     };
 
     const getColumnIndex = (field) => {
