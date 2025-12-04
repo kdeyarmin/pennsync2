@@ -351,6 +351,20 @@ Return JSON:
     if (action === 'tasks') setActiveAccordion('tasks');
   };
 
+  const handleClearNote = () => {
+    setRoughNote("");
+    setEnhancedNote("");
+    setAuditResults(null);
+    setAppliedFixes([]);
+    setDismissedElementNames([]);
+    setRoughNoteCompliance(null);
+    setEnhancedNoteCompliance(null);
+  };
+
+  const handleInsertPhrase = (text) => {
+    setRoughNote(prev => prev ? prev + ' ' + text : text);
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="mb-4">
