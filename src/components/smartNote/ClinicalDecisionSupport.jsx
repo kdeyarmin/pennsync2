@@ -778,12 +778,14 @@ Return JSON:
     cdsAlerts.best_practice_alerts?.length > 0
   );
 
-  const totalAlerts = cdsAlerts ? (
+  const totalAlerts = (cdsAlerts ? (
     (cdsAlerts.drug_interactions?.length || 0) +
     (cdsAlerts.contraindications?.length || 0) +
     (cdsAlerts.vital_sign_alerts?.length || 0) +
     (cdsAlerts.best_practice_alerts?.length || 0)
-  ) : 0;
+  ) : 0) + immediateAlerts.length;
+
+  const hasCriticalAlerts = immediateAlerts.some(a => a.severity === 'critical');
 
   const hasProactiveAlerts = proactiveAlerts && (
     proactiveAlerts.vital_concerns?.length > 0 ||
