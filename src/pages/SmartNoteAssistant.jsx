@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/accordion";
 import {
   Sparkles,
-  Copy,
   CheckCircle2,
   Wand2,
   User,
@@ -35,7 +34,9 @@ import {
   MicOff,
   ChevronRight,
   Brain,
-  HelpCircle
+  HelpCircle,
+  Undo2,
+  Redo2
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
