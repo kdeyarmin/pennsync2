@@ -1200,6 +1200,17 @@ Generate the complete clinical narrative based on the audio and context:`;
                 patientId={visit?.patient_id}
               />
 
+              {/* ICD-10 Code Suggester */}
+              <ICD10CodeSuggester
+                narrativeText={narrativeText}
+                diagnosis={patient?.primary_diagnosis}
+                patient={patient}
+                onCodesSelected={(codes) => {
+                  const codeText = `\n\n**ICD-10 CODES:**\n${codes.map(c => `• ${c.code} - ${c.description}`).join('\n')}`;
+                  setNarrativeText(prev => prev + codeText);
+                }}
+              />
+
               <div className="flex justify-between gap-3 pb-8">
                 <div className="flex gap-2">
                   <Button
