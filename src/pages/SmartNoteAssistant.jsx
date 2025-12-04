@@ -460,27 +460,10 @@ Return JSON:
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    <Input placeholder="BP: 120/80" value={vitalSigns.bp} onChange={(e) => setVitalSigns({...vitalSigns, bp: e.target.value})} />
-                                    <Input placeholder="HR: 72" value={vitalSigns.hr} onChange={(e) => setVitalSigns({...vitalSigns, hr: e.target.value})} />
-                                    <Input placeholder="Temp: 98.6" value={vitalSigns.temp} onChange={(e) => setVitalSigns({...vitalSigns, temp: e.target.value})} />
-                                    <Input placeholder="Pain: 3/10" value={vitalSigns.pain} onChange={(e) => setVitalSigns({...vitalSigns, pain: e.target.value})} />
-                                  </div>
-                                  <div className="grid grid-cols-3 gap-2 mt-2">
-                                    <Input placeholder="O2 Sat: 98%" value={vitalSigns.o2} onChange={(e) => setVitalSigns({...vitalSigns, o2: e.target.value})} />
-                                    <Select value={vitalSigns.o2Source} onValueChange={(v) => setVitalSigns({...vitalSigns, o2Source: v, o2Flow: v === "room_air" ? "" : vitalSigns.o2Flow})}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="O2 Source" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="room_air">Room Air</SelectItem>
-                                        <SelectItem value="on_oxygen">On Oxygen</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    {vitalSigns.o2Source === "on_oxygen" && (
-                                      <Input placeholder="L/min (e.g., 2)" value={vitalSigns.o2Flow} onChange={(e) => setVitalSigns({...vitalSigns, o2Flow: e.target.value})} />
-                                    )}
-                                  </div>
+              <SmartVitalsInput 
+                vitalSigns={vitalSigns} 
+                onChange={setVitalSigns} 
+              />
             </CardContent>
           </Card>
 
