@@ -102,17 +102,65 @@ export default function ImportPatients() {
       const values = parseCSVLine(lines[i]);
       if (values.length === 0) continue;
 
+      // Handle combined "Patient" column (agency format: "Last, First" or "First Last")
+      let firstName = values[getColumnIndex('first_name')] || '';
+      let lastName = values[getColumnIndex('last_name')] || '';
+      
+      const patientNameIdx = getColumnIndex('patient_name');
+      if (patientNameIdx !== -1 && (!firstName || !lastName)) {
+        const fullName = values[patientNameIdx] || '';
+        if (fullName.includes(',')) {
+          // Format: "Last, First"
+          const parts = fullName.split(',').map(p => p.trim());
+          lastName = parts[0] || '';
+          firstName = parts[1] || '';
+        } else {
+          // Format: "First Last"
+          const parts = fullName.trim().split(/\s+/);
+          firstName = parts[0] || '';
+          lastName = parts.slice(1).join(' ') || '';
+        }
+      }
+
+      // Parse DOB from various formats
+      let dob = values[getColumnIndex('date_of_birth')] || '';
+      if (dob) {
+        // Handle MM/DD/YYYY format
+        if (dob.includes('/')) {
+          const parts = dob.split('/');
+          if (parts.length === 3) {
+            const month = parts[0].padStart(2, '0');
+            const day = parts[1].padStart(2, '0');
+            const year = parts[2].length === 2 ? (parseInt(parts[2]) > 50 ? '19' + parts[2] : '20' + parts[2]) : parts[2];
+            dob = `${year}-${month}-${day}`;
+          }
+        }
+      }
+
+      // Map admission status to our status enum
+      let status = values[getColumnIndex('status')] || 'active';
+      status = status.toLowerCase().trim();
+      if (status === 'admitted' || status === 'current' || status === 'open') {
+        status = 'active';
+      } else if (status === 'discharged' || status === 'closed') {
+        status = 'discharged';
+      } else if (status === 'hospitalized' || status === 'inpatient') {
+        status = 'hospitalized';
+      } else {
+        status = 'active'; // Default
+      }
+
       const patient = {
-        first_name: values[getColumnIndex('first_name')] || '',
-        last_name: values[getColumnIndex('last_name')] || '',
-        date_of_birth: values[getColumnIndex('date_of_birth')] || '',
+        first_name: firstName,
+        last_name: lastName,
+        date_of_birth: dob,
         medical_record_number: values[getColumnIndex('medical_record_number')] || '',
         address: values[getColumnIndex('address')] || '',
         phone: values[getColumnIndex('phone')] || '',
         email: values[getColumnIndex('email')] || '',
         primary_diagnosis: values[getColumnIndex('primary_diagnosis')] || '',
         allergies: values[getColumnIndex('allergies')] || '',
-        status: values[getColumnIndex('status')] || 'active',
+        status: status,
         _rowIndex: i,
         _issues: []
       };
