@@ -401,7 +401,7 @@ export default function ImportPatients() {
               className="max-w-xs mx-auto"
             />
             <p className="text-sm text-gray-500 mt-2">
-              CSV should include: first_name, last_name, date_of_birth, medical_record_number, phone, email, address, primary_diagnosis
+              Supports standard format (first_name, last_name, etc.) or agency export format (Patient, MRN, DOB, Primary Diagnosis, etc.)
             </p>
           </div>
 
