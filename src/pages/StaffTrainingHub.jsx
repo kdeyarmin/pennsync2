@@ -53,6 +53,21 @@ export default function StaffTrainingHub() {
     enabled: !!currentUser?.email,
   });
 
+  const { data: complianceAudits = [] } = useQuery({
+    queryKey: ['nurseAudits', currentUser?.email],
+    queryFn: () => base44.entities.ComplianceAudit.filter({ nurse_email: currentUser?.email }),
+    enabled: !!currentUser?.email,
+  });
+
+  const { data: recommendations = [] } = useQuery({
+    queryKey: ['nurseRecommendations', currentUser?.email],
+    queryFn: () => base44.entities.TrainingRecommendation.filter({ nurse_email: currentUser?.email }),
+    enabled: !!currentUser?.email,
+  });
+
+  const [selectedQuizTopic, setSelectedQuizTopic] = useState(null);
+  const [selectedSimScenario, setSelectedSimScenario] = useState(null);
+
   const saveProgressMutation = useMutation({
     mutationFn: (data) => base44.entities.MicroLearningProgress.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trainingProgress'] })
