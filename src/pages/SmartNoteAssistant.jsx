@@ -48,6 +48,9 @@ import FloatingActionBar from "../components/smartNote/FloatingActionBar";
 import QuickPhraseButtons from "../components/smartNote/QuickPhraseButtons";
 import ImprovedStepIndicator from "../components/smartNote/ImprovedStepIndicator";
 import PatientContextCard from "../components/smartNote/PatientContextCard";
+import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
+import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
+import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
 
 // Common diagnoses list
 const commonDiagnoses = [
