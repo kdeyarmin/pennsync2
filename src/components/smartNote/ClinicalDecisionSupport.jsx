@@ -813,16 +813,21 @@ Return JSON:
   };
 
   return (
-    <Card className={`border-2 ${hasAlerts ? 'border-red-300' : hasProactiveAlerts ? 'border-amber-300' : 'border-purple-200'}`}>
+    <Card className={`border-2 ${hasCriticalAlerts ? 'border-red-500 shadow-lg shadow-red-100' : hasAlerts || immediateAlerts.length > 0 ? 'border-orange-300' : hasProactiveAlerts ? 'border-amber-300' : 'border-purple-200'}`}>
       <CardHeader 
-        className={`py-3 cursor-pointer ${hasAlerts ? 'bg-gradient-to-r from-red-50 to-orange-50' : hasProactiveAlerts ? 'bg-gradient-to-r from-amber-50 to-yellow-50' : 'bg-gradient-to-r from-purple-50 to-indigo-50'}`}
+        className={`py-3 cursor-pointer ${hasCriticalAlerts ? 'bg-gradient-to-r from-red-100 to-red-50' : hasAlerts || immediateAlerts.length > 0 ? 'bg-gradient-to-r from-orange-50 to-amber-50' : hasProactiveAlerts ? 'bg-gradient-to-r from-amber-50 to-yellow-50' : 'bg-gradient-to-r from-purple-50 to-indigo-50'}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldAlert className={`w-4 h-4 ${hasAlerts ? 'text-red-600' : hasProactiveAlerts ? 'text-amber-600' : 'text-purple-600'}`} />
+            <ShieldAlert className={`w-4 h-4 ${hasCriticalAlerts ? 'text-red-600 animate-pulse' : hasAlerts || immediateAlerts.length > 0 ? 'text-orange-600' : hasProactiveAlerts ? 'text-amber-600' : 'text-purple-600'}`} />
             Clinical Decision Support
             {isProactiveAnalyzing && <Loader2 className="w-3 h-3 animate-spin text-amber-600" />}
+            {hasCriticalAlerts && (
+              <Badge className="bg-red-600 text-white text-xs animate-pulse">
+                CRITICAL
+              </Badge>
+            )}
             {cdsAlerts && (
               <Badge className={`${getRiskColor(cdsAlerts.risk_level)} text-white text-xs`}>
                 {cdsAlerts.risk_level} risk
@@ -833,7 +838,7 @@ Return JSON:
                 {totalAlerts} alert{totalAlerts !== 1 ? 's' : ''}
               </Badge>
             )}
-            {!cdsAlerts && totalProactiveItems > 0 && (
+            {!cdsAlerts && !immediateAlerts.length && totalProactiveItems > 0 && (
               <Badge className="bg-amber-100 text-amber-800 text-xs">
                 {totalProactiveItems} suggestion{totalProactiveItems !== 1 ? 's' : ''}
               </Badge>
