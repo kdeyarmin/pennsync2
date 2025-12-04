@@ -24,6 +24,7 @@ import CarePlanTimelinePredictor from "../components/carePlan/CarePlanTimelinePr
 import PatientFriendlyCarePlanSummary from "../components/carePlan/PatientFriendlyCarePlanSummary";
 import CarePlanEvolution from "../components/carePlan/CarePlanEvolution";
 import PatientRiskStratification from "../components/patient/PatientRiskStratification";
+import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
