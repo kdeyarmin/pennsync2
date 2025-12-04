@@ -640,7 +640,7 @@ Return JSON:
     // Collect all suggestions from flagged issues
     const allSuggestions = enhancedComplianceData.flagged_issues
       .filter((_, idx) => !insertedIssues.has(idx))
-      .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType));
+      .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType, issue.issue_type, diagnosis));
     
     if (allSuggestions.length > 0 && onFixAllAndReEnhance) {
       await onFixAllAndReEnhance(allSuggestions);
