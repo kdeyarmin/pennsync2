@@ -28,5 +28,36 @@ export const ActivityActions = {
   LOGIN: 'login',
   PAGE_VISIT: 'page_visit',
   EXPORT: 'export',
-  GENERATE: 'generate'
+  GENERATE: 'generate',
+  ERROR: 'error'
+};
+
+export const logError = async (errorMessage, errorDetails = {}) => {
+  try {
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch (e) {
+      // User might not be logged in
+    }
+
+    await base44.entities.UserActivity.create({
+      user_email: user?.email || 'unknown',
+      user_name: user?.full_name || 'Unknown User',
+      action: ActivityActions.ERROR,
+      details: {
+        error_message: errorMessage,
+        error_stack: errorDetails.stack || null,
+        component: errorDetails.component || null,
+        context: errorDetails.context || null,
+        ...errorDetails
+      },
+      page: errorDetails.page || window.location.pathname,
+      entity_type: errorDetails.entity_type || null,
+      entity_id: errorDetails.entity_id || null,
+      user_agent: navigator.userAgent
+    });
+  } catch (error) {
+    console.error("Failed to log error:", error);
+  }
 };
