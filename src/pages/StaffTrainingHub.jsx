@@ -30,6 +30,8 @@ import TargetedLessonGenerator from "../components/training/TargetedLessonGenera
 export default function StaffTrainingHub() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
+  const [skillGaps, setSkillGaps] = useState([]);
+  const [activeModule, setActiveModule] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
