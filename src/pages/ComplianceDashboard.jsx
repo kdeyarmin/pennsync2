@@ -478,6 +478,15 @@ export default function ComplianceDashboard() {
           </div>
         </TabsContent>
 
+        <TabsContent value="analytics">
+          <AdvancedComplianceAnalytics 
+            audits={complianceAudits}
+            trainingCompletions={trainingCompletions}
+            nurses={allUsers}
+            patients={patients}
+          />
+        </TabsContent>
+
         <TabsContent value="trends">
           <div className="space-y-6">
             <Card>
@@ -527,6 +536,66 @@ export default function ComplianceDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-600" />
+                    Generate Custom Reports
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Create customized compliance reports with flexible filtering options. 
+                    Export to CSV or JSON for further analysis.
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <Card className="bg-blue-50">
+                      <CardContent className="p-3 text-center">
+                        <p className="text-2xl font-bold text-blue-600">{complianceAudits.length}</p>
+                        <p className="text-xs text-gray-500">Total Audits</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-green-50">
+                      <CardContent className="p-3 text-center">
+                        <p className="text-2xl font-bold text-green-600">
+                          {new Set(complianceAudits.map(a => a.nurse_email)).size}
+                        </p>
+                        <p className="text-xs text-gray-500">Nurses</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-purple-50">
+                      <CardContent className="p-3 text-center">
+                        <p className="text-2xl font-bold text-purple-600">
+                          {complianceAudits.reduce((sum, a) => sum + (a.issues?.length || 0), 0)}
+                        </p>
+                        <p className="text-xs text-gray-500">Total Issues</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-orange-50">
+                      <CardContent className="p-3 text-center">
+                        <p className="text-2xl font-bold text-orange-600">
+                          {complianceAudits.length > 0 
+                            ? Math.round(complianceAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / complianceAudits.length)
+                            : 0}%
+                        </p>
+                        <p className="text-xs text-gray-500">Avg Score</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <CustomReportGenerator 
+              audits={complianceAudits}
+              nurses={allUsers}
+              patients={patients}
+            />
           </div>
         </TabsContent>
 
