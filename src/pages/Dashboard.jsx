@@ -206,6 +206,24 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Proactive Risk Identification for High-Risk Patients */}
+      {patients.filter(p => p.status === 'active').slice(0, 3).map((patient) => {
+        const patientVisits = visits.filter(v => v.patient_id === patient.id);
+        const patientCarePlans = carePlans.filter(cp => cp.patient_id === patient.id);
+        const patientIncidents = incidents.filter(i => i.patient_id === patient.id);
+        return (
+          <div key={patient.id} className="mb-4">
+            <ProactiveRiskIdentifier
+              patient={patient}
+              recentVisits={patientVisits}
+              carePlans={patientCarePlans}
+              incidents={patientIncidents}
+              compact={true}
+            />
+          </div>
+        );
+      })}
+
       {/* Real-time Patient Alerts */}
       <div className="mb-6">
         <RealTimePatientAlerts
