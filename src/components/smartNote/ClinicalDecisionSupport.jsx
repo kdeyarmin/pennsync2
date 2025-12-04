@@ -843,6 +843,112 @@ Return JSON:
 
       {isExpanded && (
         <CardContent className="p-3 space-y-3">
+          {/* Immediate Rule-Based Alerts - Always show first */}
+          {immediateAlerts.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-4 h-4 text-amber-600" />
+                <span className="text-xs font-semibold text-amber-800">Real-Time Clinical Alerts</span>
+                <Badge className="bg-amber-100 text-amber-800 text-xs">
+                  {immediateAlerts.length} alert{immediateAlerts.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+              
+              {immediateAlerts.filter(a => a.severity === 'critical').map((alert, idx) => (
+                <div key={`critical-${idx}`} className="bg-red-100 border-2 border-red-400 rounded-lg p-3 animate-pulse">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-red-800">{alert.title}</p>
+                      <p className="text-xs text-red-700 mt-1">{alert.message}</p>
+                      <div className="mt-2 bg-red-50 p-2 rounded">
+                        <p className="text-xs font-semibold text-red-800 mb-1">Immediate Actions:</p>
+                        <ul className="text-xs text-red-700 space-y-0.5">
+                          {alert.actions.slice(0, 4).map((action, i) => (
+                            <li key={i} className="flex items-start gap-1">
+                              <span>•</span> {action}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      {alert.documentationSuggestion && (
+                        <Button
+                          size="sm"
+                          className="mt-2 bg-red-600 hover:bg-red-700 text-white text-xs h-7"
+                          onClick={() => onInsertRecommendation && onInsertRecommendation(alert.documentationSuggestion)}
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Add Documentation
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {immediateAlerts.filter(a => a.severity === 'high').map((alert, idx) => (
+                <div key={`high-${idx}`} className="bg-orange-50 border border-orange-300 rounded-lg p-2.5">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-orange-800">{alert.title}</p>
+                        <Badge className="bg-orange-200 text-orange-800 text-[10px]">High Priority</Badge>
+                      </div>
+                      <p className="text-xs text-orange-700 mt-0.5">{alert.message}</p>
+                      <div className="mt-1.5 bg-orange-100/50 p-1.5 rounded">
+                        <p className="text-[10px] font-semibold text-orange-800 mb-0.5">Recommended Actions:</p>
+                        <ul className="text-[10px] text-orange-700 space-y-0.5">
+                          {alert.actions.slice(0, 3).map((action, i) => (
+                            <li key={i}>• {action}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      {alert.documentationSuggestion && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-1 text-orange-800 text-xs h-6 px-2"
+                          onClick={() => onInsertRecommendation && onInsertRecommendation(alert.documentationSuggestion)}
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Add to Notes
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {immediateAlerts.filter(a => a.severity === 'medium').map((alert, idx) => (
+                <div key={`med-${idx}`} className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                  <div className="flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-yellow-800">{alert.title}</p>
+                      <p className="text-[10px] text-yellow-700">{alert.message}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {alert.actions.slice(0, 2).map((action, i) => (
+                          <Badge key={i} variant="outline" className="text-[9px] bg-yellow-100 text-yellow-800 border-yellow-300">
+                            {action}
+                          </Badge>
+                        ))}
+                      </div>
+                      {alert.documentationSuggestion && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-1 text-yellow-800 text-[10px] h-5 px-1"
+                          onClick={() => onInsertRecommendation && onInsertRecommendation(alert.documentationSuggestion)}
+                        >
+                          <Plus className="w-2.5 h-2.5 mr-0.5" /> Add
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Proactive Alerts Section - Shows before enhanced note */}
           {!enhancedNote && proactiveAlerts && hasProactiveAlerts && (
             <div className="space-y-3">
