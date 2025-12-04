@@ -364,9 +364,15 @@ Return JSON:
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Smart Note Assistant</h1>
-        <p className="text-sm text-gray-600">Transform rough notes into Medicare-compliant documentation</p>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Smart Note Assistant</h1>
+          <p className="text-sm text-gray-600">Transform rough notes into Medicare-compliant documentation</p>
+        </div>
+        <Button variant="ghost" size="sm" className="text-gray-500 gap-1">
+          <HelpCircle className="w-4 h-4" />
+          <span className="hidden sm:inline">Help</span>
+        </Button>
       </div>
 
       <ImprovedStepIndicator 
