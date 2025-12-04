@@ -57,14 +57,35 @@ export default function OASISAnalyzer() {
     try {
       // Upload the file
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setUploadProgress(50);
+      setUploadProgress(40);
+
+      // Extract text content from PDF
+      const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url: file_url,
+        json_schema: { type: "string" }
+      });
+
+      setUploadProgress(60);
+
+      if (extractedData.status === "error" || !extractedData.output) {
+        throw new Error(extractedData.details || "Failed to extract text from PDF.");
+      }
+
+      const oasisTextContent = typeof extractedData.output === 'string' 
+        ? extractedData.output 
+        : JSON.stringify(extractedData.output);
 
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Analyze the OASIS document using LLM with the file
+      // Analyze the OASIS document using LLM with the extracted text
       const analysisResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS (Outcome and Assessment Information Set) analyst and home health compliance specialist. Analyze the uploaded OASIS assessment document thoroughly.
+        prompt: `You are an expert OASIS (Outcome and Assessment Information Set) analyst and home health compliance specialist. Analyze the following OASIS assessment document content thoroughly.
+
+OASIS Document Content:
+"""
+${oasisTextContent}
+"""
 
 Provide a comprehensive analysis including:
 
