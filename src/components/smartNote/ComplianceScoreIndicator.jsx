@@ -24,7 +24,11 @@ import {
   Check,
   Pencil,
   History,
-  RotateCcw
+  RotateCcw,
+  FileText,
+  Zap,
+  Info,
+  BookOpen
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
