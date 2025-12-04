@@ -759,6 +759,19 @@ Return JSON:
           </Card>
         </div>
       </div>
+
+      {/* Floating Action Bar */}
+      <FloatingActionBar
+        roughNoteLength={roughNote.length}
+        hasEnhancedNote={!!enhancedNote}
+        isProcessing={isProcessing}
+        copied={copied}
+        complianceScore={enhancedNoteCompliance?.overall_score || roughNoteCompliance?.score || null}
+        onEnhance={handleEnhanceNote}
+        onCopy={handleCopy}
+        onClear={handleClearNote}
+        onGenerateTasks={() => setActiveAccordion('tasks')}
+      />
     </div>
   );
 }
