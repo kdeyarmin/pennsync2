@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, User, Phone, MapPin, FileText, X } from "lucide-react";
+import { Plus, Search, User, Phone, MapPin, FileText, X, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format } from 'date-fns';
@@ -22,14 +22,25 @@ import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Patients() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPatient, setEditingPatient] = useState(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [summaryPatient, setSummaryPatient] = useState(null);
 
@@ -86,13 +97,21 @@ export default function Patients() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
-      setShowDeleteDialog(false);
+      setDeleteDialogOpen(false);
       setPatientToDelete(null);
+      setIsDeleting(false);
     },
     onError: async (error) => {
+      setIsDeleting(false);
       await handleSecureError(error, 'patient_delete', (msg) => alert(msg));
     }
   });
+
+  const handleDeletePatient = () => {
+    if (!patientToDelete) return;
+    setIsDeleting(true);
+    deletePatientMutation.mutate(patientToDelete.id);
+  };
 
   const handleSubmit = (data) => {
     if (editingPatient) {
@@ -295,35 +314,46 @@ export default function Patients() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleShowSummary(patient)}
-                    className="gap-1"
-                    title="View AI Summary"
-                  >
-                    <FileText className="w-3 h-3" />
-                    Summary
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingPatient(patient);
-                      setShowForm(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Link 
-                    to={`${createPageUrl("PatientDetails")}?patientId=${patient.id}`}
-                    className="flex-1"
-                  >
-                    <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                      View Details
-                    </Button>
-                  </Link>
-                </div>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleShowSummary(patient)}
+                                          className="gap-1"
+                                          title="View AI Summary"
+                                        >
+                                          <FileText className="w-3 h-3" />
+                                          Summary
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            setEditingPatient(patient);
+                                            setShowForm(true);
+                                          }}
+                                        >
+                                          Edit
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            setPatientToDelete(patient);
+                                            setDeleteDialogOpen(true);
+                                          }}
+                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                        <Link 
+                                          to={`${createPageUrl("PatientDetails")}?patientId=${patient.id}`}
+                                          className="flex-1"
+                                        >
+                                          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                                            View Details
+                                          </Button>
+                                        </Link>
+                                      </div>
 
                 {/* Visit type templates */}
                 <div className="mt-3 pt-3 border-t">
@@ -361,24 +391,47 @@ export default function Patients() {
       />
 
       {/* Patient Summary Dialog */}
-      <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-600" />
-              Patient Summary: {summaryPatient?.first_name} {summaryPatient?.last_name}
-            </DialogTitle>
-          </DialogHeader>
-          {summaryPatient && (
-            <AIPatientSummaryReport
-              patient={summaryPatient}
-              previousVisits={summaryVisits}
-              carePlans={summaryCarePlans}
-              compact={false}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+                  <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
+                    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-indigo-600" />
+                          Patient Summary: {summaryPatient?.first_name} {summaryPatient?.last_name}
+                        </DialogTitle>
+                      </DialogHeader>
+                      {summaryPatient && (
+                        <AIPatientSummaryReport
+                          patient={summaryPatient}
+                          previousVisits={summaryVisits}
+                          carePlans={summaryCarePlans}
+                          compact={false}
+                        />
+                      )}
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Delete Confirmation Dialog */}
+                  <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Patient</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete {patientToDelete?.first_name} {patientToDelete?.last_name}? 
+                          This action cannot be undone and will remove all associated data.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeletePatient}
+                          disabled={isDeleting}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              );
+            }
