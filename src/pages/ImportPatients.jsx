@@ -84,7 +84,6 @@ export default function ImportPatients() {
       'primary_diagnosis': ['primary_diagnosis', 'diagnosis', 'dx', 'primary_dx', 'primary diagnosis'],
       'allergies': ['allergies', 'allergy'],
       'status': ['status', 'patient_status', 'current admission status', 'current_admission_status', 'currentadmissionstatus'],
-      'idg_name': ['idg name', 'idg_name', 'idgname', 'team'],
       'gender': ['gender', 'sex']
     };
 
