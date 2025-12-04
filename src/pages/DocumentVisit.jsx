@@ -1032,6 +1032,21 @@ Generate the complete clinical narrative based on the audio and context:`;
                 onSummaryGenerated={(summary) => setNarrativeText(summary)}
               />
 
+              {/* Proactive Risk Identification */}
+              <ProactiveRiskIdentifier
+                patient={patient}
+                recentVisits={allVisits}
+                carePlans={carePlans}
+                vitalSigns={vitalSigns}
+                onAlertCreated={async (alertData) => {
+                  try {
+                    await base44.entities.PatientAlert.create(alertData);
+                  } catch (error) {
+                    console.error("Error creating alert:", error);
+                  }
+                }}
+              />
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
