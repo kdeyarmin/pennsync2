@@ -52,6 +52,7 @@ import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
 import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
 import ICD10CodeSuggester from "../components/visit/ICD10CodeSuggester";
 import DischargeVisitSummary from "../components/visit/DischargeVisitSummary";
+import ProactiveRiskIdentifier from "../components/alerts/ProactiveRiskIdentifier";
 
 import { 
   canAccessVisit, 
