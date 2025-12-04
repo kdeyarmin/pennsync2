@@ -39,6 +39,365 @@ export default function ClinicalDecisionSupport({
   const [isExpanded, setIsExpanded] = useState(true);
   const [lastAnalyzedText, setLastAnalyzedText] = useState("");
   const [lastProactiveContext, setLastProactiveContext] = useState("");
+  const [immediateAlerts, setImmediateAlerts] = useState([]);
+
+  // Rule-based immediate alerts that don't require AI
+  useEffect(() => {
+    const alerts = generateImmediateAlerts();
+    setImmediateAlerts(alerts);
+  }, [vitalSigns, diagnosis, roughNote]);
+
+  // Generate immediate rule-based alerts
+  const generateImmediateAlerts = () => {
+    const alerts = [];
+    const diagnosisUpper = (diagnosis || '').toUpperCase();
+    const noteText = ((roughNote || '') + ' ' + (enhancedNote || '')).toLowerCase();
+
+    // Parse vital signs
+    const parseBP = (bp) => {
+      if (!bp) return null;
+      const match = bp.match(/(\d+)\s*\/\s*(\d+)/);
+      if (match) return { systolic: parseInt(match[1]), diastolic: parseInt(match[2]) };
+      return null;
+    };
+
+    const parseNumeric = (val) => {
+      if (!val) return null;
+      const match = String(val).match(/(\d+\.?\d*)/);
+      return match ? parseFloat(match[1]) : null;
+    };
+
+    const bp = parseBP(vitalSigns?.bp);
+    const hr = parseNumeric(vitalSigns?.hr);
+    const o2 = parseNumeric(vitalSigns?.o2);
+    const temp = parseNumeric(vitalSigns?.temp);
+    const pain = parseNumeric(vitalSigns?.pain);
+
+    // ===== BLOOD PRESSURE ALERTS =====
+    if (bp) {
+      // Hypertensive crisis
+      if (bp.systolic >= 180 || bp.diastolic >= 120) {
+        alerts.push({
+          type: 'vital_critical',
+          severity: 'critical',
+          icon: 'HeartPulse',
+          title: 'HYPERTENSIVE CRISIS',
+          message: `BP ${vitalSigns.bp} indicates hypertensive crisis. Immediate physician notification required.`,
+          actions: [
+            'Contact physician immediately',
+            'Assess for target organ damage (headache, chest pain, vision changes, confusion)',
+            'Keep patient calm and in semi-Fowler position',
+            'Prepare for possible emergency services'
+          ],
+          documentationSuggestion: `URGENT: Hypertensive crisis identified with BP ${vitalSigns.bp}. Physician notified at [TIME]. Patient assessed for symptoms of target organ damage including headache, chest pain, visual disturbances, and neurological changes. Patient instructed to remain calm and in semi-Fowler position.`
+        });
+      }
+      // Stage 2 Hypertension
+      else if (bp.systolic >= 140 || bp.diastolic >= 90) {
+        const isHTN = diagnosisUpper.includes('HYPERTENSION') || diagnosisUpper.includes('HTN');
+        alerts.push({
+          type: 'vital_elevated',
+          severity: 'high',
+          icon: 'HeartPulse',
+          title: 'Elevated Blood Pressure',
+          message: `BP ${vitalSigns.bp} is elevated${isHTN ? ' despite hypertension diagnosis' : ''}.`,
+          actions: isHTN ? [
+            'Review medication compliance - ask patient about missed doses',
+            'Assess dietary sodium intake',
+            'Check for medication side effects',
+            'Verify patient is taking medications as prescribed',
+            'Consider physician notification if persistent'
+          ] : [
+            'Recheck BP in 5 minutes with proper technique',
+            'Assess for pain, anxiety, or recent activity',
+            'Document and notify physician if persistent',
+            'Educate on lifestyle modifications'
+          ],
+          documentationSuggestion: isHTN 
+            ? `Elevated BP noted at ${vitalSigns.bp}. Medication compliance reviewed with patient. Patient reports [COMPLIANCE STATUS]. Dietary sodium intake assessed. Patient educated on importance of taking antihypertensive medications as prescribed and low-sodium diet adherence.`
+            : `Elevated BP noted at ${vitalSigns.bp}. BP rechecked in 5 minutes: [RECHECK VALUE]. Patient assessed for contributing factors including pain, anxiety, and recent activity.`
+        });
+      }
+      // Hypotension
+      if (bp.systolic < 90 || bp.diastolic < 60) {
+        alerts.push({
+          type: 'vital_low',
+          severity: 'high',
+          icon: 'HeartPulse',
+          title: 'Hypotension Alert',
+          message: `BP ${vitalSigns.bp} indicates hypotension.`,
+          actions: [
+            'Assess for orthostatic changes (lying, sitting, standing)',
+            'Check for signs of dehydration',
+            'Review medications for hypotensive effects',
+            'Assess for dizziness, lightheadedness, falls risk',
+            'Notify physician if symptomatic'
+          ],
+          documentationSuggestion: `Hypotension noted with BP ${vitalSigns.bp}. Orthostatic vital signs obtained: Lying [BP], Sitting [BP], Standing [BP]. Patient assessed for symptoms including dizziness, lightheadedness, and falls history. Hydration status evaluated. Current medications reviewed for hypotensive effects.`
+        });
+      }
+    }
+
+    // ===== OXYGEN SATURATION ALERTS =====
+    if (o2 !== null) {
+      const isCOPD = diagnosisUpper.includes('COPD') || diagnosisUpper.includes('CHRONIC OBSTRUCTIVE');
+      const targetLow = isCOPD ? 88 : 92;
+      
+      if (o2 < 88) {
+        alerts.push({
+          type: 'vital_critical',
+          severity: 'critical',
+          icon: 'Wind',
+          title: 'CRITICAL HYPOXEMIA',
+          message: `O2 saturation ${vitalSigns.o2} is critically low. Immediate intervention required.`,
+          actions: [
+            'Verify pulse oximeter reading and probe placement',
+            'Assess respiratory status immediately',
+            'Increase supplemental oxygen if available',
+            'Position patient upright (high Fowler\'s)',
+            'Contact physician/emergency services',
+            'Prepare for possible hospitalization'
+          ],
+          documentationSuggestion: `URGENT: Critical hypoxemia with O2 saturation ${vitalSigns.o2}. Pulse oximeter reading verified. Respiratory assessment: [FINDINGS]. Supplemental oxygen adjusted to [FLOW RATE]. Patient positioned upright. Physician notified at [TIME]. Emergency services contacted if indicated.`
+        });
+      } else if (o2 < targetLow) {
+        alerts.push({
+          type: 'vital_elevated',
+          severity: 'high',
+          icon: 'Wind',
+          title: 'Low Oxygen Saturation',
+          message: `O2 sat ${vitalSigns.o2} is below target${isCOPD ? ' (88-92% for COPD)' : ' (≥92%)'}.`,
+          actions: isCOPD ? [
+            'Verify current oxygen flow rate and delivery device',
+            'Assess for COPD exacerbation signs',
+            'Review inhaler technique and compliance',
+            'Check for infection signs (fever, sputum changes)',
+            'Assess work of breathing and accessory muscle use'
+          ] : [
+            'Assess respiratory status (rate, depth, effort)',
+            'Verify pulse oximeter accuracy',
+            'Consider supplemental oxygen if ordered',
+            'Assess lung sounds bilaterally',
+            'Notify physician of findings'
+          ],
+          documentationSuggestion: isCOPD
+            ? `O2 saturation ${vitalSigns.o2} below COPD target range (88-92%). Current oxygen: ${vitalSigns.o2Source === 'on_oxygen' ? vitalSigns.o2Flow + 'L via ' : 'room air'}. Respiratory assessment performed. Lung sounds: [FINDINGS]. Work of breathing: [DESCRIPTION]. Inhaler technique reviewed. Patient assessed for exacerbation signs.`
+            : `O2 saturation ${vitalSigns.o2} below target. Respiratory assessment: RR [RATE], lung sounds [FINDINGS], work of breathing [DESCRIPTION]. Physician notified of findings.`
+        });
+      }
+    }
+
+    // ===== HEART RATE ALERTS =====
+    if (hr !== null) {
+      if (hr > 100) {
+        const isCHF = diagnosisUpper.includes('CHF') || diagnosisUpper.includes('HEART FAILURE');
+        alerts.push({
+          type: 'vital_elevated',
+          severity: hr > 120 ? 'high' : 'medium',
+          icon: 'HeartPulse',
+          title: 'Tachycardia',
+          message: `Heart rate ${vitalSigns.hr} is elevated.`,
+          actions: isCHF ? [
+            'Assess for CHF exacerbation signs',
+            'Check for new onset atrial fibrillation',
+            'Review beta-blocker compliance',
+            'Assess fluid status (weight, edema)',
+            'Evaluate for infection or fever'
+          ] : [
+            'Assess for pain, anxiety, fever, dehydration',
+            'Review medications (stimulants, bronchodilators)',
+            'Check temperature and hydration status',
+            'Recheck after patient rests 10 minutes'
+          ],
+          documentationSuggestion: `Tachycardia noted with HR ${vitalSigns.hr}. ${isCHF ? 'CHF exacerbation assessment performed. Weight today: ___ lbs. Edema: ___. Lung sounds: ___.' : 'Patient assessed for contributing factors. Pain: ___, Anxiety: ___, Temperature: ___. Hydration status evaluated.'}`
+        });
+      }
+      if (hr < 60) {
+        alerts.push({
+          type: 'vital_low',
+          severity: hr < 50 ? 'high' : 'medium',
+          icon: 'HeartPulse',
+          title: 'Bradycardia',
+          message: `Heart rate ${vitalSigns.hr} is low.`,
+          actions: [
+            'Assess for dizziness, syncope, fatigue',
+            'Review beta-blocker/cardiac medications',
+            'Check if patient is athletic (may be normal)',
+            'Assess peripheral perfusion',
+            'Notify physician if symptomatic'
+          ],
+          documentationSuggestion: `Bradycardia noted with HR ${vitalSigns.hr}. Patient assessed for symptoms: dizziness [Y/N], syncope [Y/N], fatigue [Y/N]. Current cardiac medications reviewed. Peripheral perfusion assessed.`
+        });
+      }
+    }
+
+    // ===== TEMPERATURE ALERTS =====
+    if (temp !== null) {
+      if (temp >= 100.4 || temp >= 38) {
+        alerts.push({
+          type: 'vital_elevated',
+          severity: temp >= 102 ? 'high' : 'medium',
+          icon: 'Thermometer',
+          title: 'Fever Detected',
+          message: `Temperature ${vitalSigns.temp} indicates fever.`,
+          actions: [
+            'Assess for infection source (UTI, respiratory, wound)',
+            'Check for other infection signs',
+            'Review recent procedures or hospitalizations',
+            'Encourage fluid intake',
+            'Notify physician for possible cultures/antibiotics'
+          ],
+          documentationSuggestion: `Fever noted with temperature ${vitalSigns.temp}. Infection assessment performed. Respiratory: [FINDINGS]. Urinary symptoms: [FINDINGS]. Wound status: [FINDINGS]. Skin assessment: [FINDINGS]. Physician notified for evaluation.`
+        });
+      }
+      if (temp < 97 || temp < 36.1) {
+        alerts.push({
+          type: 'vital_low',
+          severity: 'medium',
+          icon: 'Thermometer',
+          title: 'Hypothermia Risk',
+          message: `Temperature ${vitalSigns.temp} is low.`,
+          actions: [
+            'Verify thermometer accuracy',
+            'Assess home heating adequacy',
+            'Check for signs of infection (elderly may not mount fever)',
+            'Ensure adequate clothing and blankets',
+            'Monitor closely for sepsis signs'
+          ],
+          documentationSuggestion: `Low temperature noted at ${vitalSigns.temp}. Home environment assessed for adequate heating. Patient assessed for subtle infection signs (confusion, weakness, decreased appetite). Warm blankets provided.`
+        });
+      }
+    }
+
+    // ===== PAIN ALERTS =====
+    if (pain !== null && pain >= 7) {
+      alerts.push({
+        type: 'symptom',
+        severity: pain >= 8 ? 'high' : 'medium',
+        icon: 'Activity',
+        title: 'Severe Pain',
+        message: `Pain level ${vitalSigns.pain}/10 requires attention.`,
+        actions: [
+          'Perform comprehensive pain assessment (location, quality, duration)',
+          'Review current pain management regimen',
+          'Assess for new injury or condition change',
+          'Consider PRN medications if available',
+          'Notify physician for medication adjustment'
+        ],
+        documentationSuggestion: `Severe pain reported at ${vitalSigns.pain}/10. Pain assessment: Location: ___. Quality: ___. Onset: ___. Duration: ___. Aggravating factors: ___. Alleviating factors: ___. Current pain regimen reviewed. Physician notified for pain management evaluation.`
+      });
+    }
+
+    // ===== DIAGNOSIS-SPECIFIC ALERTS =====
+    
+    // CHF-specific
+    if (diagnosisUpper.includes('CHF') || diagnosisUpper.includes('HEART FAILURE') || diagnosisUpper.includes('CONGESTIVE')) {
+      if (!noteText.includes('weight') && !noteText.includes('edema')) {
+        alerts.push({
+          type: 'assessment_needed',
+          severity: 'high',
+          icon: 'Scale',
+          title: 'CHF: Weight & Edema Assessment Needed',
+          message: 'Daily weight and edema assessment required for CHF monitoring.',
+          actions: [
+            'Obtain current weight and compare to baseline/previous',
+            'Assess bilateral lower extremity edema (grade 0-4+)',
+            'Check for JVD at 45 degrees',
+            'Auscultate lung bases for crackles',
+            'Review sodium and fluid intake'
+          ],
+          documentationSuggestion: `CHF ASSESSMENT: Weight today: ___ lbs. Previous weight: ___ lbs. Weight change: ___ lbs. Bilateral lower extremity edema: ___+ pitting. JVD: present/absent at 45 degrees. Lung sounds: ___. Sodium restriction compliance reviewed. Patient educated on daily weight monitoring and to notify nurse if weight gain >2-3 lbs in 24 hours or >5 lbs in one week.`
+        });
+      }
+    }
+
+    // Diabetes-specific
+    if (diagnosisUpper.includes('DIABETES') || diagnosisUpper.includes('DM') || diagnosisUpper.includes('DIABETIC')) {
+      if (!noteText.includes('glucose') && !noteText.includes('blood sugar') && !noteText.includes('foot') && !noteText.includes('feet')) {
+        alerts.push({
+          type: 'assessment_needed',
+          severity: 'medium',
+          icon: 'Droplet',
+          title: 'Diabetes: Blood Glucose & Foot Exam Needed',
+          message: 'Blood glucose check and diabetic foot exam should be documented.',
+          actions: [
+            'Check blood glucose if glucometer available',
+            'Perform diabetic foot exam',
+            'Check pedal pulses bilaterally',
+            'Assess sensation with monofilament if available',
+            'Inspect between toes for breakdown'
+          ],
+          documentationSuggestion: `DIABETES ASSESSMENT: Blood glucose: ___ mg/dL (fasting/random). Diabetic foot exam performed. Pedal pulses: R ___, L ___. Skin integrity: ___. Sensation: ___. Nails: ___. Patient educated on daily foot inspection, proper footwear, and signs of hypoglycemia/hyperglycemia.`
+        });
+      }
+    }
+
+    // Wound-specific
+    if (noteText.includes('wound') || noteText.includes('ulcer') || noteText.includes('pressure') || noteText.includes('incision')) {
+      if (!noteText.includes('cm') && !noteText.includes('measure') && !noteText.includes('dimension')) {
+        alerts.push({
+          type: 'assessment_needed',
+          severity: 'high',
+          icon: 'Bandage',
+          title: 'Wound: Detailed Assessment Needed',
+          message: 'Wound documentation requires measurements and detailed description.',
+          actions: [
+            'Measure wound dimensions (L x W x D in cm)',
+            'Document wound bed appearance (% granulation, slough, eschar)',
+            'Describe exudate (type, amount, odor)',
+            'Assess periwound skin condition',
+            'Check for undermining/tunneling',
+            'Take photo if policy allows'
+          ],
+          documentationSuggestion: `WOUND ASSESSMENT: Location: ___. Dimensions: ___ cm (L) x ___ cm (W) x ___ cm (D). Wound bed: ___% granulation, ___% slough, ___% eschar. Exudate: type ___, amount ___, odor ___. Periwound skin: ___. Undermining: ___. Tunneling: ___. Pain at wound site: ___/10. Dressing changed per orders: ___.`
+        });
+      }
+    }
+
+    // COPD-specific
+    if (diagnosisUpper.includes('COPD') || diagnosisUpper.includes('CHRONIC OBSTRUCTIVE')) {
+      if (!noteText.includes('inhaler') && !noteText.includes('breathing') && !noteText.includes('lung sounds')) {
+        alerts.push({
+          type: 'assessment_needed',
+          severity: 'medium',
+          icon: 'Wind',
+          title: 'COPD: Respiratory Assessment Needed',
+          message: 'COPD patients require detailed respiratory assessment and inhaler review.',
+          actions: [
+            'Auscultate lung sounds (note wheezes, rhonchi, diminished sounds)',
+            'Assess work of breathing and accessory muscle use',
+            'Review inhaler technique',
+            'Check O2 equipment if applicable',
+            'Assess for exacerbation signs'
+          ],
+          documentationSuggestion: `COPD ASSESSMENT: Lung sounds: ___. Respiratory rate: ___. Work of breathing: ___. Accessory muscle use: ___. Cough: productive/non-productive. Sputum: color ___, amount ___. Inhaler technique reviewed and corrected as needed. O2 delivery: ___ L/min via ___. Patient educated on pursed-lip breathing and energy conservation techniques.`
+        });
+      }
+    }
+
+    // Stroke/CVA-specific
+    if (diagnosisUpper.includes('STROKE') || diagnosisUpper.includes('CVA') || diagnosisUpper.includes('CEREBROVASCULAR')) {
+      if (!noteText.includes('neuro') && !noteText.includes('strength') && !noteText.includes('speech') && !noteText.includes('swallow')) {
+        alerts.push({
+          type: 'assessment_needed',
+          severity: 'high',
+          icon: 'Brain',
+          title: 'Stroke: Neurological Assessment Needed',
+          message: 'Stroke patients require neurological assessment each visit.',
+          actions: [
+            'Assess level of consciousness and orientation',
+            'Check motor strength bilateral upper and lower extremities',
+            'Evaluate speech and language',
+            'Assess swallowing function',
+            'Review fall prevention measures'
+          ],
+          documentationSuggestion: `NEUROLOGICAL ASSESSMENT: LOC: alert/oriented x ___. Speech: clear/slurred/aphasia type ___. Motor strength: RUE ___/5, LUE ___/5, RLE ___/5, LLE ___/5. Facial symmetry: ___. Swallowing: ___. Gait: ___. Fall risk: ___. Safety measures in place: ___.`
+        });
+      }
+    }
+
+    return alerts;
+  };
 
   // Proactive analysis based on vitals, diagnosis, and rough note (before enhancement)
   useEffect(() => {
