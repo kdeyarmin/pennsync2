@@ -209,14 +209,22 @@ export default function PatientDetails() {
                     <span>DOB: {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
                   </div>
                 </div>
-                <Badge 
-                  className={`flex-shrink-0 ${patient.care_type === 'hospice' 
-                    ? 'bg-purple-100 text-purple-800 border-purple-200' 
-                    : 'bg-blue-100 text-blue-800 border-blue-200'
-                  }`}
-                >
-                  {patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
-                </Badge>
+                <div className="flex flex-col sm:flex-row items-end gap-2">
+                  <Badge 
+                    className={`flex-shrink-0 ${patient.care_type === 'hospice' 
+                      ? 'bg-purple-100 text-purple-800 border-purple-200' 
+                      : 'bg-blue-100 text-blue-800 border-blue-200'
+                    }`}
+                  >
+                    {patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
+                  </Badge>
+                  {patient.status !== 'discharged' && (
+                    <DischargeSummaryGenerator 
+                      patientId={patientId} 
+                      onComplete={() => queryClient.invalidateQueries({ queryKey: ['patient', patientId] })}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
