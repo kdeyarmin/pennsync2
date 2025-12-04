@@ -980,7 +980,7 @@ Return JSON:
                         const textsToAdd = selectedIndices
                           .map(i => enhancedComplianceData.flagged_issues[i])
                           .filter(issue => issue)
-                          .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType));
+                          .map(issue => issue.suggestion || getDefaultSuggestion(issue.element, careType, 'missing', diagnosis));
                         if (textsToAdd.length > 0) {
                           onInsertElement && onInsertElement(textsToAdd.join('\n\n'));
                           selectedIndices.forEach(idx => setInsertedIssues(prev => new Set([...prev, idx])));
@@ -998,7 +998,7 @@ Return JSON:
                 {enhancedComplianceData.flagged_issues.map((issue, idx) => {
                   const isInserted = insertedIssues.has(idx);
                   const isSelected = selectedEnhancedIssues.has(idx);
-                  const suggestionText = issue.suggestion || getDefaultSuggestion(issue.element, careType);
+                  const suggestionText = issue.suggestion || getDefaultSuggestion(issue.element, careType, issue.issue_type, diagnosis);
 
                   return (
                     <div key={idx} className={`rounded border ${isInserted ? 'bg-green-50 border-green-300 opacity-60' : getSeverityColor(issue.severity)}`}>
