@@ -1183,12 +1183,14 @@ Generate the complete clinical narrative based on the audio and context:`;
                     </Alert>
                   )}
                   
-                  <Textarea
+                  <RichTextNoteEditor
                     value={narrativeText}
-                    onChange={(e) => setNarrativeText(e.target.value)}
-                    placeholder="AI-generated Medicare-compliant narrative will appear here. You can edit it as needed."
-                    rows={20}
-                    className="font-mono text-sm"
+                    onChange={setNarrativeText}
+                    onCopy={() => {
+                      navigator.clipboard.writeText(narrativeText.replace(/<[^>]*>/g, ''));
+                    }}
+                    copied={false}
+                    qualityScore={null}
                   />
                 </CardContent>
               </Card>
