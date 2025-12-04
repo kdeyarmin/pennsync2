@@ -1022,6 +1022,15 @@ Generate the complete clinical narrative based on the audio and context:`;
                 onIncidentReported={handleIncidentReported}
               />
 
+              {/* Discharge Visit Auto-Summary */}
+              <DischargeVisitSummary
+                patient={patient}
+                visit={visit}
+                allVisits={allVisits}
+                carePlans={carePlans}
+                onSummaryGenerated={(summary) => setNarrativeText(summary)}
+              />
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
