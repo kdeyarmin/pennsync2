@@ -284,6 +284,7 @@ export default function SmartNoteAssistant() {
   const handleEnhanceNote = async () => {
     if (!roughNote.trim()) return;
     setIsProcessing(true);
+    const startTime = Date.now();
     try {
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
@@ -328,6 +329,23 @@ Return JSON:
       });
       setEnhancedNote(result.enhanced_note);
       setAuditResults(result);
+
+      // Track note conversion for admin reporting
+      const conversionTime = Date.now() - startTime;
+      try {
+        await base44.entities.NoteConversion.create({
+          nurse_email: currentUser?.email || 'unknown',
+          patient_id: selectedPatientId || null,
+          visit_type: visitType,
+          diagnosis: finalDiagnosis || null,
+          rough_note_length: roughNote.length,
+          enhanced_note_length: result.enhanced_note?.length || 0,
+          quality_score: result.quality_score || null,
+          conversion_time_ms: conversionTime
+        });
+      } catch (trackError) {
+        console.error("Error tracking note conversion:", trackError);
+      }
       
       // Track any AI suggestions as recommendations for training
       if (currentUser?.email && result.missing_critical_elements) {
