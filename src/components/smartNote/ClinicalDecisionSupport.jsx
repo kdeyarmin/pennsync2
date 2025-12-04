@@ -20,7 +20,15 @@ import {
   BookOpen,
   Shield,
   Plus,
-  Eye
+  Eye,
+  Wind,
+  Thermometer,
+  Activity,
+  Scale,
+  Droplet,
+  Brain,
+  Zap,
+  Phone
 } from "lucide-react";
 
 export default function ClinicalDecisionSupport({
