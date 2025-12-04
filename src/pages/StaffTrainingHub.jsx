@@ -26,6 +26,9 @@ import ClinicalSimulationModule from "../components/training/ClinicalSimulationM
 import NurseFeedbackAggregator from "../components/training/NurseFeedbackAggregator";
 import PersonalizedTrainingPlan from "../components/training/PersonalizedTrainingPlan";
 import TargetedLessonGenerator from "../components/training/TargetedLessonGenerator";
+import AIPersonalizedTrainingPlan from "../components/training/AIPersonalizedTrainingPlan";
+import AIInteractiveQuiz from "../components/training/AIInteractiveQuiz";
+import AIPatientSimulation from "../components/training/AIPatientSimulation";
 
 export default function StaffTrainingHub() {
   const queryClient = useQueryClient();
