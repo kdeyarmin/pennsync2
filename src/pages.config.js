@@ -21,6 +21,7 @@ import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
 import ImportPatients from './pages/ImportPatients';
 import StaffTrainingHub from './pages/StaffTrainingHub';
+import OASISAnalyzer from './pages/OASISAnalyzer';
 import __Layout from './Layout.jsx';
 
 
@@ -48,6 +49,7 @@ export const PAGES = {
     "NursePerformanceDashboard": NursePerformanceDashboard,
     "ImportPatients": ImportPatients,
     "StaffTrainingHub": StaffTrainingHub,
+    "OASISAnalyzer": OASISAnalyzer,
 }
 
 export const pagesConfig = {
