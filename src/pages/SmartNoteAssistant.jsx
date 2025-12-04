@@ -215,6 +215,23 @@ export default function SmartNoteAssistant() {
   });
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
+  
+  // Auto-fill diagnosis when patient is selected
+  React.useEffect(() => {
+    if (selectedPatient?.primary_diagnosis) {
+      const matchingDiagnosis = commonDiagnoses.find(dx => 
+        selectedPatient.primary_diagnosis.toLowerCase().includes(dx.toLowerCase().split(' ')[0].toLowerCase()) ||
+        dx.toLowerCase().includes(selectedPatient.primary_diagnosis.toLowerCase().split(' ')[0].toLowerCase())
+      );
+      if (matchingDiagnosis) {
+        setDiagnosis(matchingDiagnosis);
+      } else {
+        setDiagnosis("Custom (type below)");
+        setCustomDiagnosis(selectedPatient.primary_diagnosis);
+      }
+    }
+  }, [selectedPatientId, selectedPatient?.primary_diagnosis]);
+
   const finalDiagnosis = diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis;
 
   // Build patient context for compliance checking
