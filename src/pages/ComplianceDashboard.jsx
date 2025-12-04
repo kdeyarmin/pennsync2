@@ -82,6 +82,13 @@ export default function ComplianceDashboard() {
     initialData: [],
   });
 
+  const { data: complianceAudits = [] } = useQuery({
+    queryKey: ['complianceAudits'],
+    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 100),
+  });
+
+  const [selectedAudit, setSelectedAudit] = useState(null);
+
   const aggregatedAlerts = useMemo(() => {
     const alerts = [];
     const today = new Date();
