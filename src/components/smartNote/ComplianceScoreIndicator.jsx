@@ -962,19 +962,32 @@ Return JSON:
               )}
             </div>
 
-            {/* Fix All Button */}
+            {/* Fix All Button with explanation */}
             {enhancedComplianceData?.flagged_issues?.filter((_, idx) => !insertedIssues.has(idx)).length > 0 && (
-              <Button
-                onClick={handleFixAllAndReEnhance}
-                disabled={isFixingAll}
-                className="w-full mb-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-              >
-                {isFixingAll ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fixing & Re-Enhancing...</>
-                ) : (
-                  <><CheckCircle2 className="w-4 h-4 mr-2" /> Fix All Deficiencies & Re-Enhance ({enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length})</>
-                )}
-              </Button>
+              <div className="mb-3 space-y-2">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded-lg border border-green-200">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-green-800">One-Click Fix Available</p>
+                      <p className="text-[10px] text-green-700 mt-0.5">
+                        This will add all {enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length} missing/weak elements to your rough note and automatically re-enhance for Medicare compliance.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleFixAllAndReEnhance}
+                    disabled={isFixingAll}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  >
+                    {isFixingAll ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fixing & Re-Enhancing...</>
+                    ) : (
+                      <><Zap className="w-4 h-4 mr-2" /> Fix All & Re-Enhance ({enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length} issues)</>
+                    )}
+                  </Button>
+                </div>
+              </div>
             )}
 
             {/* Flagged Issues with Clickable Suggestions */}
