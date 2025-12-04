@@ -1030,6 +1030,28 @@ Return JSON:
                   const isSelected = selectedEnhancedIssues.has(idx);
                   const suggestionText = issue.suggestion || getDefaultSuggestion(issue.element, careType, issue.issue_type, diagnosis);
 
+                  // Generate granular explanation based on issue type
+                  const getGranularExplanation = () => {
+                    const explanations = {
+                      missing: {
+                        high: `CRITICAL: "${issue.element}" is completely absent from your documentation. This is a Medicare requirement that auditors specifically verify. Missing this element puts the entire visit at risk for denial.`,
+                        medium: `"${issue.element}" documentation is missing. While not immediately critical, this gap could trigger audit questions and potential recoupment requests.`,
+                        low: `"${issue.element}" should be documented for completeness. Consider adding this to strengthen your documentation.`
+                      },
+                      weak: {
+                        high: `CRITICAL: Your "${issue.element}" documentation lacks required specificity. Medicare requires measurable, objective clinical data - vague statements like "patient doing well" are insufficient.`,
+                        medium: `Your "${issue.element}" documentation needs more detail. Include specific measurements, times, or quantifiable observations.`,
+                        low: `Consider strengthening your "${issue.element}" documentation with more clinical specificity.`
+                      },
+                      non_compliant: {
+                        high: `CRITICAL: Current "${issue.element}" documentation uses non-compliant language that could trigger audit flags. This phrasing pattern is commonly rejected by Medicare.`,
+                        medium: `"${issue.element}" documentation uses phrasing that may not meet compliance standards. Review and revise for clarity.`,
+                        low: `Minor compliance concern with "${issue.element}" - consider revising for best practices.`
+                      }
+                    };
+                    return explanations[issue.issue_type]?.[issue.severity] || issue.problem;
+                  };
+
                   return (
                     <div key={idx} className={`rounded border ${isInserted ? 'bg-green-50 border-green-300 opacity-60' : getSeverityColor(issue.severity)}`}>
                       <div className="flex items-start gap-2 p-2">
@@ -1057,20 +1079,49 @@ Return JSON:
                           getIssueTypeIcon(issue.issue_type)
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-xs font-semibold">{issue.element}</p>
                             {isInserted ? (
                               <Badge className="bg-green-100 text-green-800 text-xs">Added</Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs capitalize">{issue.issue_type}</Badge>
+                              <>
+                                <Badge variant="outline" className="text-xs capitalize">{issue.issue_type}</Badge>
+                                <Badge className={`text-[10px] ${
+                                  issue.severity === 'high' ? 'bg-red-600 text-white' :
+                                  issue.severity === 'medium' ? 'bg-yellow-500 text-white' :
+                                  'bg-blue-500 text-white'
+                                }`}>
+                                  {issue.severity} priority
+                                </Badge>
+                              </>
                             )}
                           </div>
-                          <p className="text-xs text-gray-700 mt-0.5">{issue.problem}</p>
+                          
+                          {/* Granular explanation */}
+                          {!isInserted && (
+                            <div className="mt-1.5 bg-white/50 p-2 rounded border border-gray-200">
+                              <div className="flex items-start gap-1.5">
+                                <FileText className="w-3 h-3 mt-0.5 text-gray-500 flex-shrink-0" />
+                                <p className="text-xs text-gray-700 leading-relaxed">{getGranularExplanation()}</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Location hint */}
+                          {!isInserted && issue.location_hint && (
+                            <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
+                              <Info className="w-2.5 h-2.5" />
+                              Location: {issue.location_hint}
+                            </p>
+                          )}
 
                           {/* Show suggestion preview */}
                           {!isInserted && (
                             <div className="mt-2 bg-green-50 p-2 rounded border border-green-200">
-                              <p className="text-xs font-medium text-green-800 mb-1">AI Suggestion:</p>
+                              <p className="text-xs font-medium text-green-800 mb-1 flex items-center gap-1">
+                                <Zap className="w-3 h-3" />
+                                AI-Generated Fix:
+                              </p>
                               <p className="text-xs text-green-900 whitespace-pre-wrap line-clamp-3">{suggestionText}</p>
                             </div>
                           )}
