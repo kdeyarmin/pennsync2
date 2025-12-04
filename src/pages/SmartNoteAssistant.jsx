@@ -34,11 +34,8 @@ import {
   Mic,
   MicOff,
   ChevronRight,
-  Circle,
   Brain,
-  Target,
-  Shield,
-  ShieldAlert
+  HelpCircle
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
