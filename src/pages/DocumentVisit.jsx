@@ -48,6 +48,10 @@ import AIDocumentationAutomation from "../components/visit/AIDocumentationAutoma
 import RealTimeClinicalDecisionSupport from "../components/clinical/RealTimeClinicalDecisionSupport";
 import EnhancedClinicalDecisionSupport from "../components/clinical/EnhancedClinicalDecisionSupport";
 import AIDocumentationAudit from "../components/audit/AIDocumentationAudit";
+import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
+import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
+import ICD10CodeSuggester from "../components/visit/ICD10CodeSuggester";
+import DischargeVisitSummary from "../components/visit/DischargeVisitSummary";
 
 import { 
   canAccessVisit, 
