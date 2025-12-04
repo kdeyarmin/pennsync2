@@ -158,10 +158,14 @@ export default function StaffTrainingHub() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full mb-6">
+        <TabsList className="grid grid-cols-5 w-full mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="myplan" className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            <span className="hidden sm:inline">My Plan</span>
           </TabsTrigger>
           <TabsTrigger value="learn" className="flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
