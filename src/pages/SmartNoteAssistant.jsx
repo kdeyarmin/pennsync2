@@ -33,10 +33,16 @@ import {
   Mic,
   MicOff,
   ChevronRight,
+  ChevronLeft,
   Brain,
   HelpCircle,
   Undo2,
-  Redo2
+  Redo2,
+  ArrowRight,
+  Copy,
+  RotateCcw,
+  Lightbulb,
+  MessageCircle
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
@@ -131,26 +137,59 @@ function VoiceHub({ onTranscription, onVitalsRecognized }) {
   );
 }
 
-// Contextual AI Tools Sidebar
-function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote, onAction }) {
+// Contextual AI Tools Sidebar - Enhanced with better guidance
+function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote, onAction, diagnosis, complianceScore }) {
   const getTools = () => {
-    if (!hasPatient) return { title: "Getting Started", items: [{ label: "Select a patient to begin", type: "info" }] };
-    if (!hasNotes) return { title: "Ready to Document", items: [{ label: "Use voice or type notes", type: "info" }] };
-    if (!hasEnhancedNote) return { title: "Notes Ready", items: [{ label: "Enhance with AI", action: "enhance", type: "action", primary: true }] };
-    return { title: "Ready to Copy", items: [
-      { label: "Copy to clipboard", action: "copy", type: "action", primary: true },
-      { label: "Generate tasks", action: "tasks", type: "action" }
-    ]};
+    if (!hasPatient) return { 
+      title: "👋 Let's Get Started", 
+      subtitle: "Step 1 of 4",
+      items: [
+        { label: "Select a patient from the dropdown", type: "tip", icon: User },
+        { label: "Choose visit type and diagnosis", type: "tip", icon: ClipboardList }
+      ],
+      hint: "This helps AI tailor your documentation"
+    };
+    if (!hasNotes) return { 
+      title: "📝 Ready to Document", 
+      subtitle: "Step 2 of 4",
+      items: [
+        { label: "Use Voice button to dictate", type: "tip", icon: Mic },
+        { label: "Or type your observations", type: "tip", icon: Wand2 },
+        { label: "Try: 'lungs clear, no edema'", type: "example" }
+      ],
+      hint: "Be brief - AI will expand your notes"
+    };
+    if (!hasEnhancedNote) return { 
+      title: "✨ Ready to Enhance", 
+      subtitle: "Step 3 of 4",
+      items: [
+        { label: "Transform to Medicare-Compliant", action: "enhance", type: "action", primary: true, icon: Sparkles },
+      ],
+      hint: diagnosis ? `AI will optimize for ${diagnosis.split(' ')[0]}` : "AI adds clinical language & compliance elements"
+    };
+    return { 
+      title: "🎉 Note Complete!", 
+      subtitle: complianceScore ? `${complianceScore}% Compliant` : "Ready to use",
+      items: [
+        { label: "Copy to Clipboard", action: "copy", type: "action", primary: true, icon: Copy },
+        { label: "Generate Follow-up Tasks", action: "tasks", type: "action", icon: ClipboardList },
+        { label: "Start New Note", action: "clear", type: "action", icon: RotateCcw }
+      ],
+      hint: "Review the note before pasting to EHR"
+    };
   };
   const tools = getTools();
 
   return (
-    <Card className="border-2 border-indigo-200 bg-indigo-50">
-      <CardHeader className="py-3">
+    <Card className="border-2 border-indigo-200 bg-gradient-to-b from-indigo-50 to-white">
+      <CardHeader className="py-3 pb-1">
         <CardTitle className="text-sm flex items-center gap-2">
-          <Brain className="w-4 h-4" />
+          <Brain className="w-4 h-4 text-indigo-600" />
           {tools.title}
         </CardTitle>
+        {tools.subtitle && (
+          <p className="text-xs text-indigo-600 font-medium">{tools.subtitle}</p>
+        )}
       </CardHeader>
       <CardContent className="py-2 space-y-2">
         {tools.items.map((item, idx) => (
@@ -162,14 +201,33 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
                 className={`w-full justify-between ${item.primary ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
                 onClick={() => onAction?.(item.action)}
               >
-                {item.label}
-                <ChevronRight className="w-4 h-4" />
+                <span className="flex items-center gap-2">
+                  {item.icon && <item.icon className="w-3 h-3" />}
+                  {item.label}
+                </span>
+                <ArrowRight className="w-4 h-4" />
               </Button>
+            ) : item.type === 'example' ? (
+              <div className="bg-white/70 p-2 rounded border border-indigo-100">
+                <p className="text-xs text-indigo-700 italic flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" /> {item.label}
+                </p>
+              </div>
             ) : (
-              <p className="text-xs text-gray-600">{item.label}</p>
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                {item.icon && <item.icon className="w-3 h-3 text-indigo-400" />}
+                {item.label}
+              </div>
             )}
           </div>
         ))}
+        {tools.hint && (
+          <div className="pt-2 border-t border-indigo-100">
+            <p className="text-xs text-indigo-600 flex items-center gap-1">
+              <Lightbulb className="w-3 h-3" /> {tools.hint}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -254,6 +312,29 @@ export default function SmartNoteAssistant() {
     if (!enhancedNote) return 'enhance';
     return 'review';
   }, [selectedPatientId, vitalSigns, roughNote, enhancedNote]);
+
+  // Step navigation helpers
+  const stepOrder = ['patient', 'vitals', 'notes', 'enhance', 'review'];
+  
+  const handleStepClick = (stepId) => {
+    const targetIndex = stepOrder.indexOf(stepId);
+    const currentIndex = stepOrder.indexOf(currentStep);
+    
+    // Allow clicking on completed steps or current step
+    if (targetIndex <= currentIndex || completedSteps.includes(stepId)) {
+      // Scroll to the relevant section
+      const sectionId = `step-${stepId}`;
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  const handleGoBack = () => {
+    const currentIndex = stepOrder.indexOf(currentStep);
+    if (currentIndex > 0) {
+      const prevStep = stepOrder[currentIndex - 1];
+      handleStepClick(prevStep);
+    }
+  };
 
   const completedSteps = useMemo(() => {
     const steps = [];
@@ -367,6 +448,7 @@ Return JSON:
     if (action === 'enhance') handleEnhanceNote();
     if (action === 'copy') handleCopy();
     if (action === 'tasks') setActiveAccordion('tasks');
+    if (action === 'clear') handleClearNote();
   };
 
   const handleClearNote = () => {
@@ -386,9 +468,22 @@ Return JSON:
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Smart Note Assistant</h1>
-          <p className="text-sm text-gray-600">Transform rough notes into Medicare-compliant documentation</p>
+        <div className="flex items-center gap-3">
+          {currentStep !== 'patient' && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleGoBack}
+              className="gap-1 text-gray-600 hover:text-gray-900"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back</span>
+            </Button>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Smart Note Assistant</h1>
+            <p className="text-sm text-gray-600">Transform rough notes into Medicare-compliant documentation</p>
+          </div>
         </div>
         <Button variant="ghost" size="sm" className="text-gray-500 gap-1">
           <HelpCircle className="w-4 h-4" />
@@ -399,6 +494,7 @@ Return JSON:
       <ImprovedStepIndicator 
         currentStep={currentStep} 
         completedSteps={completedSteps}
+        onStepClick={handleStepClick}
       />
 
       {selectedPatient && (
@@ -415,7 +511,7 @@ Return JSON:
         <div className="lg:col-span-3 space-y-4">
           
           {/* Step 1: Patient Selection */}
-          <Card className={`border-2 ${currentStep === 'patient' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
+          <Card id="step-patient" className={`border-2 ${currentStep === 'patient' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
             <CardHeader className="py-3 bg-gradient-to-r from-blue-50 to-indigo-50">
               <CardTitle className="text-sm flex items-center gap-2">
                 <User className="w-4 h-4 text-blue-600" />
@@ -469,7 +565,7 @@ Return JSON:
           </Card>
 
           {/* Step 2: Vitals */}
-          <Card className={`border-2 ${currentStep === 'vitals' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
+          <Card id="step-vitals" className={`border-2 ${currentStep === 'vitals' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
             <CardHeader className="py-3 bg-gradient-to-r from-green-50 to-emerald-50">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Activity className="w-4 h-4 text-green-600" />
@@ -486,7 +582,7 @@ Return JSON:
           </Card>
 
           {/* Step 3: Notes */}
-          <Card className={`border-2 ${currentStep === 'notes' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
+          <Card id="step-notes" className={`border-2 ${currentStep === 'notes' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
             <CardHeader className="py-3 bg-gradient-to-r from-purple-50 to-pink-50">
               <CardTitle className="text-sm flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -636,7 +732,7 @@ Return JSON:
 
           {/* Step 4: Enhanced Note with Rich Text Editor */}
           {enhancedNote && (
-            <Card className="border-2 border-green-300 bg-green-50">
+            <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
               <CardHeader className="py-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -718,6 +814,8 @@ Return JSON:
             hasNotes={roughNote.length >= 20}
             hasEnhancedNote={!!enhancedNote}
             onAction={handleContextualAction}
+            diagnosis={finalDiagnosis}
+            complianceScore={enhancedNoteCompliance?.overall_score}
           />
 
           {/* AI Note Drafting Assistant */}
