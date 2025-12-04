@@ -86,7 +86,18 @@ export default function ComplianceDashboard() {
 
   const { data: complianceAudits = [] } = useQuery({
     queryKey: ['complianceAudits'],
-    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 100),
+    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 500),
+  });
+
+  const { data: trainingCompletions = [] } = useQuery({
+    queryKey: ['trainingCompletions'],
+    queryFn: () => base44.entities.TrainingCompletion.list('-completion_date', 200),
+  });
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: currentUser?.role === 'admin',
   });
 
   const [selectedAudit, setSelectedAudit] = useState(null);
