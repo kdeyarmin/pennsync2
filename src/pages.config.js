@@ -20,6 +20,7 @@ import RegulatoryCompliance from './pages/RegulatoryCompliance';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
 import ImportPatients from './pages/ImportPatients';
+import StaffTrainingHub from './pages/StaffTrainingHub';
 import __Layout from './Layout.jsx';
 
 
@@ -46,6 +47,7 @@ export const PAGES = {
     "SmartNoteAssistant": SmartNoteAssistant,
     "NursePerformanceDashboard": NursePerformanceDashboard,
     "ImportPatients": ImportPatients,
+    "StaffTrainingHub": StaffTrainingHub,
 }
 
 export const pagesConfig = {
