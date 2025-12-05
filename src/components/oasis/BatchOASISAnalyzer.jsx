@@ -23,7 +23,7 @@ import {
 import { processOASISBatch } from "@/functions/processOASISBatch";
 import OASISComparisonView from "./OASISComparisonView";
 
-export default function BatchOASISAnalyzer({ onSingleAnalysis }) {
+export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }) {
   const [files, setFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(''); // uploading, extracting, analyzing, generating
