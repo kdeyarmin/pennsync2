@@ -526,6 +526,18 @@ Return JSON:
                 }
               }
             },
+            vague_documentation: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  oasis_item: { type: "string" },
+                  current_language: { type: "string" },
+                  problem: { type: "string" },
+                  improved_language: { type: "string" }
+                }
+              }
+            },
             compliant_items: {
               type: "array",
               items: {
@@ -533,12 +545,21 @@ Return JSON:
                 properties: {
                   oasis_item: { type: "string" },
                   category: { type: "string" },
-                  evidence: { type: "string" }
+                  evidence: { type: "string" },
+                  score_supported: { type: "string" }
                 }
               }
             },
             recommendations: { type: "array", items: { type: "string" } },
-            quality_measures_impact: { type: "array", items: { type: "string" } }
+            quality_measures_impact: { type: "array", items: { type: "string" } },
+            audit_defense_summary: {
+              type: "object",
+              properties: {
+                strongest_documentation: { type: "array", items: { type: "string" } },
+                weakest_documentation: { type: "array", items: { type: "string" } },
+                recommended_priority_fixes: { type: "array", items: { type: "string" } }
+              }
+            }
           }
         }
       });
