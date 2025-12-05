@@ -23,6 +23,7 @@ import ImportPatients from './pages/ImportPatients';
 import StaffTrainingHub from './pages/StaffTrainingHub';
 import OASISAnalyzer from './pages/OASISAnalyzer';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import OASISAuditDashboard from './pages/OASISAuditDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "StaffTrainingHub": StaffTrainingHub,
     "OASISAnalyzer": OASISAnalyzer,
     "AnalyticsDashboard": AnalyticsDashboard,
+    "OASISAuditDashboard": OASISAuditDashboard,
 }
 
 export const pagesConfig = {
