@@ -84,7 +84,8 @@ export default function OASISAnalyzer() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadProgress(40);
 
-      // Extract structured OASIS data from PDF using AI (handles both text-based and scanned/image PDFs)
+      // Enhanced multi-pass extraction for OASIS PDFs (handles text-based, scanned, and image PDFs)
+      // First pass: Extract comprehensive structured OASIS data
       const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: {
@@ -92,159 +93,230 @@ export default function OASISAnalyzer() {
           properties: {
             patient_info: {
               type: "object",
-              description: "Patient demographics and identifiers",
+              description: "Patient demographics - look for name, DOB, MRN, Medicare/Medicaid numbers at top of document or in header sections",
               properties: {
-                name: { type: "string" },
-                dob: { type: "string" },
-                medicare_number: { type: "string" },
-                address: { type: "string" },
-                soc_date: { type: "string", description: "Start of Care date" },
-                assessment_date: { type: "string" },
-                assessment_type: { type: "string", description: "SOC, ROC, Recert, Discharge, etc." }
+                name: { type: "string", description: "Patient full name" },
+                dob: { type: "string", description: "Date of birth in any format" },
+                medicare_number: { type: "string", description: "Medicare Beneficiary Identifier (MBI) or Health Insurance Claim Number (HICN)" },
+                medicaid_number: { type: "string", description: "Medicaid ID if present" },
+                medical_record_number: { type: "string", description: "MRN or chart number" },
+                address: { type: "string", description: "Patient address" },
+                phone: { type: "string", description: "Patient phone number" },
+                soc_date: { type: "string", description: "Start of Care date - M0030" },
+                assessment_date: { type: "string", description: "Assessment completion date - M0090" },
+                assessment_type: { type: "string", description: "SOC, ROC, Recert, Follow-up, Transfer, Discharge - look for M0100" },
+                discharge_date: { type: "string", description: "Discharge date if applicable" },
+                agency_name: { type: "string", description: "Home health agency name" }
               }
             },
             primary_diagnosis: {
               type: "object",
-              description: "M1021 Primary Diagnosis - THIS IS CRITICAL. Look for: M1021, Primary Diagnosis, Principal Diagnosis, Admitting Diagnosis, or the first/main ICD-10 code listed. Extract BOTH the ICD-10 code (e.g., I50.9, J44.1, E11.9) AND the text description.",
+              description: "M1021 Primary Diagnosis - CRITICAL for PDGM. Search for: 'M1021', 'Primary Diagnosis', 'Principal Diagnosis', 'Admitting Diagnosis'. Extract the ICD-10-CM code (format: letter + 2 digits + optional decimal + digits, e.g., I50.9, J44.1, E11.65) AND full description.",
               properties: {
-                icd10_code: { type: "string", description: "The ICD-10-CM code (e.g., I50.9, J44.1). MUST extract this." },
-                description: { type: "string", description: "Full text description of diagnosis (e.g., Heart failure, unspecified)" },
-                symptom_control_rating: { type: "string" },
-                raw_text: { type: "string", description: "The exact text as it appears in the document for M1021 or primary diagnosis field" }
+                icd10_code: { type: "string", description: "ICD-10-CM code exactly as written (e.g., I50.9, J44.1, M79.3)" },
+                description: { type: "string", description: "Full diagnosis text description" },
+                symptom_control_rating: { type: "string", description: "Symptom control rating 0-4 if present" },
+                date_of_onset: { type: "string", description: "Date diagnosis began if documented" },
+                raw_text: { type: "string", description: "Copy exact text as it appears for M1021 field" }
               }
             },
             all_diagnoses_raw: {
               type: "string",
-              description: "Copy ALL diagnosis-related text from the document verbatim, including any ICD-10 codes, diagnosis lists, problem lists, or medical conditions mentioned anywhere"
+              description: "COPY VERBATIM all diagnosis text you can find: M1021, M1023, problem lists, diagnosis lists, ICD-10 codes anywhere in document, comorbidities, past medical history conditions"
             },
             other_diagnoses: {
               type: "array",
-              description: "M1023 Other Diagnoses - all secondary diagnoses with ICD-10 codes",
+              description: "M1023 Other Diagnoses - ALL secondary/comorbid diagnoses with ICD-10 codes. Include V, E, W, X, Y codes for external causes",
               items: {
                 type: "object",
                 properties: {
-                  icd10_code: { type: "string" },
-                  description: { type: "string" }
+                  position: { type: "string", description: "b, c, d, e, f position" },
+                  icd10_code: { type: "string", description: "ICD-10 code" },
+                  description: { type: "string", description: "Diagnosis description" },
+                  symptom_control_rating: { type: "string" }
                 }
               }
             },
             functional_status: {
               type: "object",
-              description: "M1800-M1860 Functional Status items with exact numeric responses",
+              description: "M1800-M1860 ADL/IADL Functional Status - extract NUMERIC responses only (not descriptions). Look for checkboxes, circled numbers, or selected options.",
               properties: {
-                m1800_grooming: { type: "string", description: "Response 0-3" },
-                m1810_dress_upper: { type: "string", description: "Response 0-3" },
-                m1820_dress_lower: { type: "string", description: "Response 0-3" },
-                m1830_bathing: { type: "string", description: "Response 0-6" },
-                m1840_toilet_transfer: { type: "string", description: "Response 0-4" },
-                m1850_transferring: { type: "string", description: "Response 0-5" },
-                m1860_ambulation: { type: "string", description: "Response 0-6" }
+                m1800_grooming: { type: "string", description: "Current Grooming: 0=Independent, 1=Needs setup, 2=Requires assistance, 3=Dependent" },
+                m1810_dress_upper: { type: "string", description: "Current Upper Body Dressing: 0-3 scale" },
+                m1820_dress_lower: { type: "string", description: "Current Lower Body Dressing: 0-3 scale" },
+                m1830_bathing: { type: "string", description: "Current Bathing: 0-6 scale (0=Independent, 6=Unable to bathe)" },
+                m1840_toilet_transfer: { type: "string", description: "Current Toilet Transferring: 0-4 scale" },
+                m1850_transferring: { type: "string", description: "Current Transferring: 0-5 scale" },
+                m1860_ambulation: { type: "string", description: "Current Ambulation/Locomotion: 0-6 scale" },
+                m1033_risk_hosp: { type: "string", description: "Risk for hospitalization - multiple checkboxes, note which are checked" },
+                m1034_overall_status: { type: "string", description: "Overall status comparison" }
               }
             },
             gg_functional_abilities: {
               type: "object",
-              description: "Section GG Functional Abilities - GG0130 Self-Care and GG0170 Mobility scores",
+              description: "Section GG - CRITICAL for PDGM. Scores use 06=Independent to 01=Dependent, 07=Refused, 09=Not applicable, 88=Not attempted, ^=Activity not attempted",
               properties: {
                 gg0130_self_care: {
                   type: "object",
+                  description: "GG0130 Self-Care - Column A (Admission) scores are most important for PDGM",
                   properties: {
-                    eating: { type: "string" },
-                    oral_hygiene: { type: "string" },
-                    toileting_hygiene: { type: "string" },
-                    shower_bathe: { type: "string" },
-                    upper_body_dressing: { type: "string" },
-                    lower_body_dressing: { type: "string" },
-                    footwear: { type: "string" }
+                    eating_admission: { type: "string", description: "A. Eating admission score" },
+                    eating_discharge_goal: { type: "string" },
+                    oral_hygiene_admission: { type: "string" },
+                    toileting_hygiene_admission: { type: "string" },
+                    shower_bathe_self_admission: { type: "string" },
+                    upper_body_dressing_admission: { type: "string" },
+                    lower_body_dressing_admission: { type: "string" },
+                    putting_on_footwear_admission: { type: "string" }
                   }
                 },
                 gg0170_mobility: {
                   type: "object",
+                  description: "GG0170 Mobility - Column A (Admission) scores",
                   properties: {
-                    sit_to_lying: { type: "string" },
-                    lying_to_sitting: { type: "string" },
-                    sit_to_stand: { type: "string" },
-                    chair_bed_transfer: { type: "string" },
-                    toilet_transfer: { type: "string" },
-                    walk_10_feet: { type: "string" },
-                    walk_50_feet_2_turns: { type: "string" },
-                    walk_150_feet: { type: "string" },
-                    walking_10_feet_uneven: { type: "string" },
-                    step_curb: { type: "string" },
-                    four_steps: { type: "string" },
-                    twelve_steps: { type: "string" },
-                    picking_up_object: { type: "string" },
-                    wheel_50_feet: { type: "string" },
-                    wheel_150_feet: { type: "string" }
+                    roll_left_right_admission: { type: "string" },
+                    sit_to_lying_admission: { type: "string" },
+                    lying_to_sitting_admission: { type: "string" },
+                    sit_to_stand_admission: { type: "string" },
+                    chair_bed_transfer_admission: { type: "string" },
+                    toilet_transfer_admission: { type: "string" },
+                    walk_10_feet_admission: { type: "string" },
+                    walk_50_feet_2_turns_admission: { type: "string" },
+                    walk_150_feet_admission: { type: "string" },
+                    walk_10_feet_uneven_admission: { type: "string" },
+                    step_curb_admission: { type: "string" },
+                    four_steps_admission: { type: "string" },
+                    twelve_steps_admission: { type: "string" },
+                    picking_up_object_admission: { type: "string" },
+                    wheel_50_feet_admission: { type: "string" },
+                    wheel_150_feet_admission: { type: "string" }
                   }
                 }
               }
             },
             clinical_items: {
               type: "object",
-              description: "Key clinical assessment items",
+              description: "Key clinical status items - extract numeric values where possible",
               properties: {
-                m1033_risk_hospitalization: { type: "string" },
-                m1400_dyspnea: { type: "string" },
-                m1242_pain_freq: { type: "string" },
-                m1302_risk_pressure_ulcer: { type: "string" },
-                m1306_pressure_ulcer_present: { type: "string" },
-                m1311_pressure_ulcer_count: { type: "string" },
-                m1322_pressure_ulcer_stage: { type: "string" },
+                m1033_risk_hospitalization: { type: "string", description: "Risk factors checked - list all" },
+                m1400_dyspnea: { type: "string", description: "Dyspnea: 0-4 scale (0=None, 4=At rest)" },
+                m1242_pain_freq: { type: "string", description: "Frequency of pain: 0-4 scale" },
+                m1240_pain_assessment: { type: "string", description: "Standardized pain assessment conducted" },
+                m1302_risk_pressure_ulcer: { type: "string", description: "Risk assessment conducted" },
+                m1306_pressure_ulcer_present: { type: "string", description: "Unhealed pressure ulcer present: 0=No, 1=Yes" },
+                m1307_oldest_pressure_ulcer: { type: "string", description: "Oldest Stage 2+ pressure ulcer" },
+                m1311_pressure_ulcer_count: { type: "string", description: "Number of pressure ulcers at each stage" },
+                m1322_pressure_ulcer_stage: { type: "string", description: "Current stage of most problematic ulcer" },
                 m1324_stage2_pressure_ulcer: { type: "string" },
-                m1330_stasis_ulcer: { type: "string" },
-                m1340_surgical_wound: { type: "string" },
-                m1342_surgical_wound_status: { type: "string" }
+                m1330_stasis_ulcer: { type: "string", description: "Stasis ulcer present: 0=No, 1=Yes" },
+                m1332_stasis_ulcer_count: { type: "string" },
+                m1334_stasis_ulcer_status: { type: "string" },
+                m1340_surgical_wound: { type: "string", description: "Surgical wound present: 0=No, 1=Yes" },
+                m1342_surgical_wound_status: { type: "string", description: "Status of most problematic surgical wound" },
+                m1400_sob: { type: "string", description: "When is patient short of breath" },
+                m1610_urinary_incontinence: { type: "string" },
+                m1620_bowel_incontinence: { type: "string" },
+                m1630_ostomy: { type: "string" }
               }
             },
             medications: {
               type: "object",
               description: "Medication management items",
               properties: {
-                m2001_drug_regimen_review: { type: "string" },
-                m2003_med_followup: { type: "string" },
-                m2005_med_intervention: { type: "string" },
-                m2010_high_risk_drugs: { type: "string" },
-                m2020_oral_med_mgmt: { type: "string" },
-                m2030_injectable_med_mgmt: { type: "string" }
+                m2001_drug_regimen_review: { type: "string", description: "Drug regimen review conducted: 0=No, 1=Yes" },
+                m2003_med_followup: { type: "string", description: "Medication follow-up: 0=No, 1=Yes" },
+                m2005_med_intervention: { type: "string", description: "Medication intervention: 0=No, 1=Yes" },
+                m2010_high_risk_drugs: { type: "string", description: "Patient taking any high-risk drugs" },
+                m2015_high_risk_drug_classes: { type: "string", description: "Which high-risk drug classes" },
+                m2020_oral_med_mgmt: { type: "string", description: "Oral medication management: 0-3 scale" },
+                m2030_injectable_med_mgmt: { type: "string", description: "Injectable medication management: 0-3 scale" },
+                m2040_prior_med_mgmt: { type: "string" },
+                medication_list_raw: { type: "string", description: "Copy any medication lists found in document" }
               }
             },
             admission_info: {
               type: "object",
-              description: "Admission source and episode timing",
+              description: "Admission source and timing - CRITICAL for PDGM payment",
               properties: {
-                m1000_from_where_admitted: { type: "string", description: "Community, hospital, SNF, etc." },
-                admission_source_category: { type: "string", description: "community or institutional" },
-                episode_timing: { type: "string", description: "early (first 30 days) or late" },
-                m0110_episode_timing: { type: "string" }
+                m1000_from_where_admitted: { type: "string", description: "Where admitted from: 1=Community, 2=Hospital, 3=SNF, etc." },
+                m1005_inpatient_discharge_date: { type: "string", description: "Date of discharge from inpatient facility" },
+                admission_source_category: { type: "string", description: "Determine: 'community' or 'institutional' based on M1000 (1,5,6=community; 2,3,4=institutional)" },
+                episode_timing: { type: "string", description: "Determine: 'early' (first 30 days) or 'late' (days 31-60) based on episode timing" },
+                m0110_episode_timing: { type: "string", description: "Episode timing indicator" },
+                m0102_soc_roc_date: { type: "string" },
+                lupa_risk: { type: "string", description: "Any mention of LUPA or low utilization" },
+                referral_source: { type: "string", description: "Physician or facility that referred patient" }
               }
             },
             therapy_need: {
               type: "object",
-              description: "Therapy requirements",
+              description: "Therapy services ordered - check for PT, OT, SLP, MSW",
               properties: {
                 m2200_therapy_need: { type: "string" },
-                pt_ordered: { type: "boolean" },
-                ot_ordered: { type: "boolean" },
-                slp_ordered: { type: "boolean" }
+                pt_ordered: { type: "boolean", description: "Physical therapy ordered" },
+                pt_visits_planned: { type: "string" },
+                ot_ordered: { type: "boolean", description: "Occupational therapy ordered" },
+                ot_visits_planned: { type: "string" },
+                slp_ordered: { type: "boolean", description: "Speech-language pathology ordered" },
+                slp_visits_planned: { type: "string" },
+                msw_ordered: { type: "boolean", description: "Medical social worker ordered" },
+                hha_ordered: { type: "boolean", description: "Home health aide ordered" },
+                sn_visits_planned: { type: "string", description: "Skilled nursing visits planned" }
               }
             },
             cognitive_status: {
               type: "object",
-              description: "Cognitive and mental status",
+              description: "Cognitive, behavioral, and mental status items",
               properties: {
-                m1700_cognitive: { type: "string" },
-                m1710_confusion: { type: "string" },
-                m1720_anxiety: { type: "string" },
-                m1730_depression_screening: { type: "string" },
-                m1740_cognitive_function: { type: "string" }
+                m1700_cognitive: { type: "string", description: "Cognitive functioning: 0-4 scale" },
+                m1710_confusion: { type: "string", description: "When confused: 0-4" },
+                m1720_anxiety: { type: "string", description: "When anxious: 0-3" },
+                m1730_depression_screening: { type: "string", description: "PHQ-2 conducted and score" },
+                m1740_cognitive_function: { type: "string" },
+                m1745_phq2_score: { type: "string", description: "PHQ-2 total score" },
+                m1750_phq9_score: { type: "string", description: "PHQ-9 total score if completed" },
+                bims_score: { type: "string", description: "Brief Interview for Mental Status score if present" },
+                cam_result: { type: "string", description: "Confusion Assessment Method result if present" }
+              }
+            },
+            sensory_status: {
+              type: "object",
+              description: "Sensory and integumentary status",
+              properties: {
+                m1200_vision: { type: "string" },
+                m1210_hearing: { type: "string" },
+                m1220_speech: { type: "string" },
+                skin_integrity_notes: { type: "string", description: "Any skin integrity observations" }
+              }
+            },
+            care_management: {
+              type: "object",
+              description: "Care planning and coordination items",
+              properties: {
+                m2102_care_management: { type: "string", description: "Types of care management provided" },
+                fall_risk_assessment: { type: "string" },
+                fall_prevention_discussed: { type: "string" },
+                advance_directives: { type: "string" },
+                emergency_plan: { type: "string" }
               }
             },
             full_text_content: {
               type: "string",
-              description: "Complete raw text from the document for any items not captured above"
+              description: "IMPORTANT: Copy ALL remaining text from document not captured above - narratives, notes, assessments, history"
+            },
+            document_metadata: {
+              type: "object",
+              description: "Document information",
+              properties: {
+                total_pages: { type: "string" },
+                emr_system: { type: "string", description: "Electronic medical record system name if visible" },
+                clinician_name: { type: "string" },
+                clinician_credentials: { type: "string" },
+                signature_date: { type: "string" }
+              }
             }
           },
-          required: ["primary_diagnosis", "functional_status"]
+          required: ["primary_diagnosis", "functional_status", "all_diagnoses_raw"]
         }
       });
 
