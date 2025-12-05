@@ -60,11 +60,12 @@ export default function OASISScrubber({
   const runOASISScrubber = async () => {
     setIsScrubbing(true);
     setShowDialog(true);
+    setExpandedCategories(['underscoring', 'overscoring', 'critical']); // Auto-expand important sections
     
     try {
-      await logSecurityEvent('OASIS_SCRUBBER_STARTED', { visit_id: visit.id });
+      await logSecurityEvent('OASIS_SCRUBBER_STARTED', { visit_id: visit?.id });
 
-      const visitType = visit.visit_type.replace(/_/g, ' ').toUpperCase();
+      const visitType = visit?.visit_type?.replace(/_/g, ' ').toUpperCase() || 'VISIT';
 
       let prompt = `You are a CMS-certified OASIS-E compliance auditor with expertise in 2024 Medicare home health CoP regulations. Perform RIGOROUS completeness and accuracy check for ${visitType}.
 
@@ -391,9 +392,16 @@ Return JSON:
 
     } catch (error) {
       console.error("Error running OASIS scrubber:", error);
-      alert("Error running OASIS compliance check. Please try again.");
+      setOasisResults({
+        overall_score: 0,
+        completeness_percentage: 0,
+        ready_for_submission: false,
+        reimbursement_risk_level: 'critical',
+        error_message: error.message || 'Failed to analyze documentation. Please try again.',
+        recommendations: ['Ensure documentation is complete before running analysis', 'Check network connection and try again']
+      });
       await logSecurityEvent('OASIS_SCRUBBER_ERROR', { 
-        visit_id: visit.id,
+        visit_id: visit?.id,
         error: error.message 
       });
     }
@@ -542,9 +550,26 @@ Return JSON:
               <div>
                 <p className="text-lg font-semibold text-gray-900">Analyzing OASIS Compliance...</p>
                 <p className="text-sm text-gray-600 mt-2">
-                  Checking against CMS OASIS-E requirements for {visit?.visit_type?.replace(/_/g, ' ')} visits
+                  Checking against CMS OASIS-E 2024 requirements for {visit?.visit_type?.replace(/_/g, ' ')} visits
                 </p>
+                <div className="flex justify-center gap-2 mt-4">
+                  <Badge variant="outline">Functional Scores</Badge>
+                  <Badge variant="outline">GG Items</Badge>
+                  <Badge variant="outline">PDGM Impact</Badge>
+                </div>
               </div>
+            </div>
+          ) : oasisResults?.error_message ? (
+            <div className="py-8">
+              <Alert className="bg-red-50 border-red-200">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  <strong>Analysis Error:</strong> {oasisResults.error_message}
+                </AlertDescription>
+              </Alert>
+              <Button onClick={runOASISScrubber} className="mt-4 w-full">
+                <Sparkles className="w-4 h-4 mr-2" /> Retry Analysis
+              </Button>
             </div>
           ) : oasisResults ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -612,6 +637,41 @@ Return JSON:
 
               <TabsContent value="results">
                 <div className="space-y-6 py-4">
+              {/* Quick Summary Banner */}
+              <div className={`p-4 rounded-lg border-2 ${
+                oasisResults.ready_for_submission 
+                  ? 'bg-green-50 border-green-300' 
+                  : oasisResults.reimbursement_risk_level === 'critical' 
+                    ? 'bg-red-50 border-red-300'
+                    : 'bg-yellow-50 border-yellow-300'
+              }`}>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    {oasisResults.ready_for_submission ? (
+                      <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    ) : (
+                      <AlertTriangle className="w-8 h-8 text-yellow-600" />
+                    )}
+                    <div>
+                      <p className="font-bold text-lg">
+                        {oasisResults.ready_for_submission ? 'Ready for Submission' : 'Action Required'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {oasisResults.critical_missing?.length || 0} missing items • 
+                        {oasisResults.underscoring_opportunities?.length || 0} revenue opportunities • 
+                        {oasisResults.overscoring_risks?.length || 0} audit risks
+                      </p>
+                    </div>
+                  </div>
+                  {oasisResults.pdgm_analysis?.optimization_potential && (
+                    <Badge className="bg-green-600 text-white text-sm px-3 py-1">
+                      <DollarSign className="w-4 h-4 mr-1" />
+                      {oasisResults.pdgm_analysis.optimization_potential}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
               {/* Overall Score Card */}
               <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
                 <div className="grid grid-cols-2 gap-6 mb-4">
