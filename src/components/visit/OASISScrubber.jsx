@@ -239,19 +239,50 @@ DISCHARGE MANDATORY:
 
 ---
 
-**ACCURACY VALIDATION RULES:**
-1. Functional scores must match narrative description (if "needs assist with bathing" then M1830 cannot be 0)
-2. Diagnosis must support functional limitations documented
-3. GG scores must be internally consistent (can't walk 150ft if can't walk 10ft)
-4. Wound staging must match size/depth description
-5. Medication count must match med list in narrative
-6. Cognitive score must align with behavioral observations
+**ACCURACY VALIDATION RULES (APPLY RIGOROUSLY):**
 
-Identify:
-1. MISSING required items (by M-number)
-2. INCONSISTENCIES between narrative and likely OASIS response
-3. UNDERSCORING opportunities (documentation supports higher acuity)
-4. OVERSCORING risks (documentation doesn't support claimed impairment)
+FUNCTIONAL SCORING ACCURACY:
+1. M1800 Grooming (0-3): 
+   - 0=Independently grooms; 1=Grooms with setup only; 2=Someone must assist; 3=Dependent
+   - "Needs reminders" = 1 (setup); "Assistance with shaving" = 2; "Unable to groom" = 3
+   
+2. M1810/M1820 Dressing (0-3):
+   - 0=Independent; 1=Setup/retrieval only; 2=Physical assistance needed; 3=Dependent
+   - "Difficulty with buttons" = 2; "Cannot reach feet" = 2-3 for lower
+   
+3. M1830 Bathing (0-6):
+   - 0=Independent shower/tub; 1=With devices only; 2=Intermittent assistance; 
+   - 3=Assistance throughout; 4=Transferred in/out only; 5=Assistance throughout + transfer; 6=Unable
+   - Shower chair use without human help = 1; CNA helps with back = 2-3
+   
+4. M1840 Toilet Transfer (0-4):
+   - 0=Independent; 1=Device only; 2=Human standby; 3=Assistance needed; 4=Unable
+   
+5. M1850 Transferring (0-5):
+   - 0=Independent; 1=Device; 2=Supervision; 3=Assistance; 4=Bears no weight; 5=Bedfast
+   
+6. M1860 Ambulation (0-6):
+   - 0=Independent any surface; 1=Device on all surfaces; 2=Assist on stairs only;
+   - 3=Assist on all surfaces; 4=Wheelchair; 5=Bedfast; 6=N/A
+
+CROSS-VALIDATION CHECKS:
+- If M1860 Ambulation > 3, then M1850 Transferring should typically be ≥ 2
+- If using oxygen, document respiratory status for M1400
+- If wound documented, all M1306-M1342 items MUST be addressed
+- If high-risk meds (anticoagulants, insulin, opioids), M2010 must be YES
+- Cognitive issues must align with M1700-M1740 responses
+
+PDGM FUNCTIONAL POINTS CALCULATION:
+- M1800 + M1810 + M1820 + M1830 + M1840 + M1850 + M1860 = Total Points
+- Low: 0-5 points; Medium: 6-11 points; High: 12+ points
+- Higher functional impairment = Higher reimbursement
+
+Analyze for:
+1. MISSING required items - Be specific about M-number and visit type requirement
+2. INCONSISTENCIES - Quote exact conflicting phrases from documentation
+3. UNDERSCORING - Where documentation CLEARLY supports higher impairment than likely scored
+4. OVERSCORING - Where claims exceed documented evidence (audit risk)
+5. VAGUE DOCUMENTATION - Items that need more specific language for defensible scoring
 
 Return JSON:
 
