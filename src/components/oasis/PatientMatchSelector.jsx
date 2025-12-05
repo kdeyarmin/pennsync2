@@ -1,18 +1,76 @@
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, AlertTriangle, User, Calendar } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2, AlertTriangle, User, Calendar, XCircle, RotateCcw, ThumbsUp, ThumbsDown, CreditCard, MapPin } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function PatientMatchSelector({ 
   extractedName, 
-  extractedDOB, 
+  extractedDOB,
+  extractedMedicareId,
   matchResults, 
   selectedPatientId, 
   onSelectPatient,
-  allPatients 
+  allPatients,
+  oasisUploadId
 }) {
+  const [showDispute, setShowDispute] = useState(false);
+  const [disputeNotes, setDisputeNotes] = useState("");
+  const [showAllMatches, setShowAllMatches] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const queryClient = useQueryClient();
+
+  const feedbackMutation = useMutation({
+    mutationFn: (data) => base44.entities.OASISFeedback.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['oasisFeedback'] });
+      setFeedbackSubmitted(true);
+    }
+  });
+
+  const handleConfirmMatch = (patientId, isCorrect = true) => {
+    onSelectPatient(patientId);
+    
+    // Submit feedback
+    if (matchResults && oasisUploadId) {
+      feedbackMutation.mutate({
+        oasis_upload_id: oasisUploadId,
+        feedback_type: isCorrect ? 'correct_match' : 'manual_override',
+        extracted_name: extractedName,
+        extracted_medicare_id: extractedMedicareId,
+        extracted_dob: extractedDOB,
+        suggested_patient_id: matchResults.matches?.[0]?.patient?.id,
+        suggested_confidence: matchResults.matches?.[0]?.confidence,
+        actual_patient_id: patientId,
+        match_factors_used: matchResults.matches?.[0]?.matchFactors
+      });
+    }
+  };
+
+  const handleDispute = () => {
+    if (matchResults && oasisUploadId) {
+      feedbackMutation.mutate({
+        oasis_upload_id: oasisUploadId,
+        feedback_type: 'incorrect_match',
+        extracted_name: extractedName,
+        extracted_medicare_id: extractedMedicareId,
+        extracted_dob: extractedDOB,
+        suggested_patient_id: matchResults.matches?.[0]?.patient?.id,
+        suggested_confidence: matchResults.matches?.[0]?.confidence,
+        actual_patient_id: selectedPatientId || null,
+        user_notes: disputeNotes,
+        match_factors_used: matchResults.matches?.[0]?.matchFactors
+      });
+    }
+    setShowDispute(false);
+    setDisputeNotes("");
+  };
+
   if (!extractedName || !matchResults) return null;
 
   const getConfidenceColor = (score) => {
@@ -43,13 +101,20 @@ export default function PatientMatchSelector({
         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
           <p className="text-xs text-blue-700 mb-2">Extracted from OASIS:</p>
           <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-gray-900 flex items-center gap-2">
+              <User className="w-4 h-4" />
               {extractedName || <span className="text-red-600">Name not found</span>}
             </p>
             {extractedDOB && (
               <p className="text-xs text-gray-600 flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 DOB: {extractedDOB}
+              </p>
+            )}
+            {extractedMedicareId && (
+              <p className="text-xs text-gray-600 flex items-center gap-1">
+                <CreditCard className="w-3 h-3" />
+                Medicare: {extractedMedicareId}
               </p>
             )}
           </div>
@@ -74,13 +139,29 @@ export default function PatientMatchSelector({
               <p className="font-medium text-gray-900">
                 {bestMatch.patient.first_name} {bestMatch.patient.last_name}
               </p>
-              {bestMatch.patient.date_of_birth && (
-                <p className="text-xs text-gray-600 flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  DOB: {bestMatch.patient.date_of_birth}
-                  {bestMatch.dobMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
-                </p>
-              )}
+              <div className="space-y-0.5 mt-1">
+                {bestMatch.patient.date_of_birth && (
+                  <p className="text-xs text-gray-600 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    DOB: {bestMatch.patient.date_of_birth}
+                    {bestMatch.dobMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
+                  </p>
+                )}
+                {bestMatch.patient.medical_record_number && (
+                  <p className="text-xs text-gray-600 flex items-center gap-1">
+                    <CreditCard className="w-3 h-3" />
+                    MRN: {bestMatch.patient.medical_record_number}
+                    {bestMatch.medicareMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
+                  </p>
+                )}
+                {bestMatch.patient.address && (
+                  <p className="text-xs text-gray-600 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {bestMatch.patient.address}
+                    {bestMatch.addressMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Match Factors */}
@@ -93,15 +174,27 @@ export default function PatientMatchSelector({
               ))}
             </div>
 
-            {bestMatch.confidence >= 70 && (
+            <div className="flex gap-2 mt-2">
+              {bestMatch.confidence >= 70 && (
+                <Button
+                  onClick={() => handleConfirmMatch(bestMatch.patient.id, true)}
+                  size="sm"
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  <ThumbsUp className="w-3 h-3 mr-2" />
+                  Correct Match
+                </Button>
+              )}
               <Button
-                onClick={() => onSelectPatient(bestMatch.patient.id)}
+                onClick={() => setShowDispute(true)}
                 size="sm"
-                className="w-full mt-2 bg-blue-600 hover:bg-blue-700"
+                variant="outline"
+                className={`${bestMatch.confidence >= 70 ? 'flex-1' : 'w-full'} border-red-300 text-red-700 hover:bg-red-50`}
               >
-                Confirm Match
+                <XCircle className="w-3 h-3 mr-2" />
+                Dispute
               </Button>
-            )}
+            </div>
           </div>
         ) : (
           <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-center">
@@ -110,30 +203,73 @@ export default function PatientMatchSelector({
           </div>
         )}
 
-        {/* Alternative Matches */}
+        {/* Alternative Matches - More Prominent */}
         {hasAlternatives && (
-          <div className="bg-gray-50 p-3 rounded-lg border">
-            <p className="text-xs font-semibold text-gray-700 mb-2">Other Possible Matches:</p>
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-300">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-purple-900">Alternative Matches</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAllMatches(!showAllMatches)}
+                className="text-purple-700"
+              >
+                {showAllMatches ? 'Show Less' : `Show All (${matchResults.matches.length - 1})`}
+              </Button>
+            </div>
             <div className="space-y-2">
-              {matchResults.matches.slice(1, 4).map((match, idx) => (
+              {matchResults.matches.slice(1, showAllMatches ? undefined : 4).map((match, idx) => (
                 <div 
                   key={idx}
-                  className="bg-white p-2 rounded border cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => onSelectPatient(match.patient.id)}
+                  className={`bg-white p-3 rounded-lg border-2 cursor-pointer hover:border-purple-400 transition-all ${
+                    selectedPatientId === match.patient.id ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200'
+                  }`}
+                  onClick={() => handleConfirmMatch(match.patient.id, false)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-gray-900">
                         {match.patient.first_name} {match.patient.last_name}
                       </p>
-                      {match.patient.date_of_birth && (
-                        <p className="text-xs text-gray-500">DOB: {match.patient.date_of_birth}</p>
-                      )}
+                      <Badge className={getConfidenceBadge(match.confidence)}>
+                        {match.confidence}%
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {match.confidence}%
-                    </Badge>
+                    {selectedPatientId === match.patient.id && (
+                      <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                    )}
                   </div>
+                  <div className="space-y-0.5">
+                    {match.patient.date_of_birth && (
+                      <p className="text-xs text-gray-600 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        DOB: {match.patient.date_of_birth}
+                        {match.dobMatch && <CheckCircle2 className="w-3 h-3 text-green-600" />}
+                      </p>
+                    )}
+                    {match.patient.medical_record_number && (
+                      <p className="text-xs text-gray-600 flex items-center gap-1">
+                        <CreditCard className="w-3 h-3" />
+                        MRN: {match.patient.medical_record_number}
+                        {match.medicareMatch && <CheckCircle2 className="w-3 h-3 text-green-600" />}
+                      </p>
+                    )}
+                    {match.patient.address && (
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {match.patient.address}
+                      </p>
+                    )}
+                  </div>
+                  {match.matchFactors && match.matchFactors.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {match.matchFactors.slice(0, 3).map((factor, fIdx) => (
+                        <Badge key={fIdx} variant="outline" className="text-xs">
+                          {factor}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -142,10 +278,24 @@ export default function PatientMatchSelector({
 
         {/* Manual Override */}
         <div className="border-t pt-3">
-          <p className="text-xs text-gray-600 mb-2">Or select manually:</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-gray-600">Manual Selection:</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedPatientId("");
+                setShowDispute(false);
+              }}
+              className="text-xs h-7"
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Reset
+            </Button>
+          </div>
           <Select 
             value={selectedPatientId || "none"} 
-            onValueChange={(v) => onSelectPatient(v === "none" ? "" : v)}
+            onValueChange={(v) => handleConfirmMatch(v === "none" ? "" : v, false)}
           >
             <SelectTrigger className="bg-white">
               <SelectValue placeholder="Choose different patient..." />
@@ -155,13 +305,74 @@ export default function PatientMatchSelector({
               {allPatients.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.first_name} {p.last_name}
-                  {p.date_of_birth && ` - ${p.date_of_birth}`}
+                  {p.date_of_birth && ` - DOB: ${p.date_of_birth}`}
+                  {p.medical_record_number && ` - MRN: ${p.medical_record_number}`}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
+        {/* Feedback Status */}
+        {feedbackSubmitted && (
+          <Alert className="bg-green-50 border-green-200 mt-3">
+            <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <AlertDescription className="text-green-800 text-xs">
+              Thank you! Your feedback helps improve matching accuracy.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
+
+      {/* Dispute Dialog */}
+      <Dialog open={showDispute} onOpenChange={setShowDispute}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report Incorrect Match</DialogTitle>
+            <DialogDescription>
+              Help us improve matching accuracy by explaining why this match is incorrect.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+              <p className="text-xs text-yellow-700 mb-1">Suggested Match:</p>
+              <p className="font-medium text-gray-900">
+                {bestMatch?.patient.first_name} {bestMatch?.patient.last_name}
+              </p>
+              <p className="text-xs text-gray-600">Confidence: {bestMatch?.confidence}%</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                What's wrong with this match?
+              </label>
+              <Textarea
+                value={disputeNotes}
+                onChange={(e) => setDisputeNotes(e.target.value)}
+                placeholder="e.g., Different patient with similar name, wrong DOB, etc."
+                className="h-20"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={handleDispute}
+                className="flex-1 bg-red-600 hover:bg-red-700"
+              >
+                Submit Feedback
+              </Button>
+              <Button
+                onClick={() => setShowDispute(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -291,12 +291,14 @@ export default function OASISAnalyzer() {
     }
     
     // DOB Verification (CRITICAL - can add or subtract confidence)
+    let medicareMatch = false;
+    let addressMatch = false;
+    
     if (extractedDOB && patient.date_of_birth) {
       const normalizeDOB = (dob) => {
-        // Handle various date formats
         const cleaned = dob.replace(/[^\d]/g, '');
         if (cleaned.length >= 6) {
-          return cleaned.substring(0, 8); // MMDDYYYY or YYYYMMDD
+          return cleaned.substring(0, 8);
         }
         return cleaned;
       };
@@ -305,11 +307,10 @@ export default function OASISAnalyzer() {
       const patientDOBNorm = normalizeDOB(patient.date_of_birth);
       
       if (extractedDOBNorm === patientDOBNorm) {
-        confidence += 30; // Major confidence boost
+        confidence += 30;
         dobMatch = true;
         matchFactors.push('✓ Date of birth verified');
       } else if (extractedDOBNorm && patientDOBNorm) {
-        // Check if year matches
         const extractedYear = extractedDOB.match(/\d{4}/)?.[0];
         const patientYear = patient.date_of_birth.match(/\d{4}/)?.[0];
         
@@ -317,17 +318,61 @@ export default function OASISAnalyzer() {
           confidence += 10;
           matchFactors.push('Birth year matches');
         } else {
-          // DOB mismatch is a red flag
           confidence -= 20;
           matchFactors.push('⚠ Date of birth does NOT match');
         }
       }
     }
     
+    // Medicare ID Verification (HIGH VALUE)
+    const extractedMedicareId = pdgmData?.patient_info?.medicare_number || analysisResults?.pdgm_data?.patient_info?.medicare_number;
+    if (extractedMedicareId && extractedMedicareId !== 'Not found' && patient.medical_record_number) {
+      const normalizeMedicare = (id) => id.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      const extractedNorm = normalizeMedicare(extractedMedicareId);
+      const patientNorm = normalizeMedicare(patient.medical_record_number);
+      
+      if (extractedNorm === patientNorm) {
+        confidence += 35; // Even higher than DOB - Medicare ID is unique
+        medicareMatch = true;
+        matchFactors.push('✓ Medicare ID verified');
+      } else if (extractedNorm.length >= 4 && patientNorm.includes(extractedNorm.substring(0, 4))) {
+        confidence += 15;
+        matchFactors.push('Partial Medicare ID match');
+      }
+    }
+    
+    // Address Verification (MODERATE VALUE)
+    const extractedAddress = pdgmData?.patient_info?.address || analysisResults?.pdgm_data?.patient_info?.address;
+    if (extractedAddress && patient.address) {
+      const normalizeAddress = (addr) => addr.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const extractedAddrNorm = normalizeAddress(extractedAddress);
+      const patientAddrNorm = normalizeAddress(patient.address);
+      
+      // Check for street number match
+      const extractedStreetNum = extractedAddress.match(/^\d+/)?.[0];
+      const patientStreetNum = patient.address.match(/^\d+/)?.[0];
+      
+      if (extractedStreetNum && extractedStreetNum === patientStreetNum) {
+        confidence += 15;
+        addressMatch = true;
+        matchFactors.push('✓ Street number matches');
+      } else if (extractedAddrNorm.length >= 10 && similarity(extractedAddrNorm, patientAddrNorm) >= 70) {
+        confidence += 10;
+        addressMatch = true;
+        matchFactors.push('Address similarity');
+      }
+    }
+    
     // Cap confidence at 100
     confidence = Math.min(100, Math.max(0, confidence));
     
-    return { confidence: Math.round(confidence), matchFactors, dobMatch };
+    return { 
+      confidence: Math.round(confidence), 
+      matchFactors, 
+      dobMatch,
+      medicareMatch,
+      addressMatch
+    };
   };
 
   // Reset match results when starting new analysis
@@ -479,7 +524,8 @@ export default function OASISAnalyzer() {
             patient_last_name: { type: "string", description: "Patient's LAST NAME only - separate field for matching. Look for 'Last Name:', 'Surname:' or extract from full name." },
             patient_dob: { type: "string", description: "Date of birth - look for 'DOB:', 'Date of Birth:', birth date field. Format MM/DD/YYYY or any date format found." },
             patient_gender: { type: "string", description: "Gender - M, F, Male, Female. Look for 'Gender:', 'Sex:' checkbox or field." },
-            medicare_number: { type: "string", description: "Medicare number or ID - look for 'Medicare:', 'Medicare #:', 'ID:' near top of form." },
+            medicare_number: { type: "string", description: "Medicare number or ID - look for 'Medicare:', 'Medicare #:', 'MBI:', 'ID:', 'Medical Record Number:', 'MRN:' near top of form. Extract full number." },
+            patient_address: { type: "string", description: "Patient home address - look for 'Address:', 'Street:', 'Home Address:' on patient demographics section." },
 
             // Assessment info
             assessment_date: { type: "string", description: "M0090 date of assessment" },
@@ -991,6 +1037,7 @@ Return JSON:
           dob: output?.patient_dob || "Not found",
           gender: output?.patient_gender || "Not specified",
           medicare_number: output?.medicare_number || "Not found",
+          address: output?.patient_address || null,
           assessment_date: output?.assessment_date || new Date().toISOString().split('T')[0], 
           assessment_type: output?.assessment_type || "Unknown",
           assessment_reason: output?.assessment_reason || "Not specified"
@@ -1439,10 +1486,12 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
           <PatientMatchSelector
             extractedName={patientName}
             extractedDOB={pdgmData?.patient_info?.dob}
+            extractedMedicareId={pdgmData?.patient_info?.medicare_number}
             matchResults={matchResults}
             selectedPatientId={selectedPatientId}
             onSelectPatient={(patientId) => setSelectedPatientId(patientId)}
             allPatients={patients}
+            oasisUploadId={analysisId}
           />
 
           {/* Save to Patient Action */}
