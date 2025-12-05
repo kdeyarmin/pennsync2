@@ -414,16 +414,154 @@ PATIENT CONTEXT:
 - Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None documented'}
 - Visit Date: ${visit.visit_date}
 
-CLINICAL INDICATORS DETECTED IN NARRATIVE:
-${JSON.stringify(clinicalIndicators, null, 2)}
+=== CLINICAL INDICATORS EXTRACTED FROM NARRATIVE ===
 
-FUNCTIONAL PHRASES EXTRACTED:
-- Bathing: ${functionalPhrases.bathing.join(' | ') || 'None found'}
-- Dressing: ${functionalPhrases.dressing.join(' | ') || 'None found'}
-- Ambulation: ${functionalPhrases.ambulation.join(' | ') || 'None found'}
-- Transfers: ${functionalPhrases.transfer.join(' | ') || 'None found'}
-- Toileting: ${functionalPhrases.toileting.join(' | ') || 'None found'}
-- Grooming: ${functionalPhrases.grooming.join(' | ') || 'None found'}
+**ASSISTIVE DEVICES:**
+- Detected: ${clinicalIndicators.assistDevices.detected ? 'YES' : 'No'}
+${clinicalIndicators.assistDevices.detected ? `- Walker mentions: ${clinicalIndicators.assistDevices.walkers.join(' | ') || 'None'}
+- Cane mentions: ${clinicalIndicators.assistDevices.canes.join(' | ') || 'None'}
+- Wheelchair mentions: ${clinicalIndicators.assistDevices.wheelchairs.join(' | ') || 'None'}
+- Bathroom equipment: ${clinicalIndicators.assistDevices.bathroom.join(' | ') || 'None'}
+- Transfer equipment: ${clinicalIndicators.assistDevices.transfers.join(' | ') || 'None'}
+- Context sentences: ${clinicalIndicators.assistDevices.sentences.join(' | ') || 'None'}` : ''}
+
+**OXYGEN USE:**
+- Detected: ${clinicalIndicators.oxygenUse.detected ? 'YES' : 'No'}
+${clinicalIndicators.oxygenUse.detected ? `- Flow rate: ${clinicalIndicators.oxygenUse.flowRate.join(' | ') || 'Not specified'}
+- Delivery method: ${clinicalIndicators.oxygenUse.deliveryMethod.join(' | ') || 'Not specified'}
+- Frequency: ${clinicalIndicators.oxygenUse.frequency.join(' | ') || 'Not specified'}
+- Saturation readings: ${clinicalIndicators.oxygenUse.saturation.join(' | ') || 'Not documented'}
+- Context sentences: ${clinicalIndicators.oxygenUse.sentences.join(' | ') || 'None'}` : ''}
+
+**WOUND PRESENCE:**
+- Detected: ${clinicalIndicators.woundPresent.detected ? 'YES' : 'No'}
+${clinicalIndicators.woundPresent.detected ? `- Pressure ulcers: ${clinicalIndicators.woundPresent.pressureUlcers.join(' | ') || 'None'}
+- Surgical wounds: ${clinicalIndicators.woundPresent.surgicalWounds.join(' | ') || 'None'}
+- Venous/stasis ulcers: ${clinicalIndicators.woundPresent.venousUlcers.join(' | ') || 'None'}
+- Diabetic wounds: ${clinicalIndicators.woundPresent.diabeticWounds.join(' | ') || 'None'}
+- Skin tears: ${clinicalIndicators.woundPresent.skinTears.join(' | ') || 'None'}
+- Wound characteristics: ${clinicalIndicators.woundPresent.woundCharacteristics.join(' | ') || 'None'}
+- Dressing types: ${clinicalIndicators.woundPresent.dressingTypes.join(' | ') || 'None'}
+- Measurements: ${clinicalIndicators.woundPresent.measurements.join(' | ') || 'None'}
+- Context sentences: ${clinicalIndicators.woundPresent.sentences.join(' | ') || 'None'}` : ''}
+
+**FALL RISK:**
+- Detected: ${clinicalIndicators.fallRisk.detected ? 'YES' : 'No'}
+${clinicalIndicators.fallRisk.detected ? `- Fall history: ${clinicalIndicators.fallRisk.history.join(' | ') || 'None documented'}
+- Balance issues: ${clinicalIndicators.fallRisk.balanceIssues.join(' | ') || 'None'}
+- Gait problems: ${clinicalIndicators.fallRisk.gaitProblems.join(' | ') || 'None'}
+- Weakness: ${clinicalIndicators.fallRisk.weakness.join(' | ') || 'None'}
+- Dizziness/vertigo: ${clinicalIndicators.fallRisk.dizziness.join(' | ') || 'None'}
+- Environmental hazards: ${clinicalIndicators.fallRisk.environmental.join(' | ') || 'None'}
+- Context sentences: ${clinicalIndicators.fallRisk.sentences.join(' | ') || 'None'}` : ''}
+
+**PAIN:**
+- Detected: ${clinicalIndicators.painMentioned.detected ? 'YES' : 'No'}
+${clinicalIndicators.painMentioned.detected ? `- Location: ${clinicalIndicators.painMentioned.location.join(' | ') || 'Not specified'}
+- Intensity: ${clinicalIndicators.painMentioned.intensity.join(' | ') || 'Not specified'}
+- Quality: ${clinicalIndicators.painMentioned.quality.join(' | ') || 'Not specified'}
+- Triggers: ${clinicalIndicators.painMentioned.triggers.join(' | ') || 'Not specified'}
+- Management: ${clinicalIndicators.painMentioned.management.join(' | ') || 'Not specified'}
+- Context sentences: ${clinicalIndicators.painMentioned.sentences.join(' | ') || 'None'}` : ''}
+
+**COGNITIVE STATUS:**
+- Detected: ${clinicalIndicators.cognitiveIssues.detected ? 'YES' : 'No'}
+${clinicalIndicators.cognitiveIssues.detected ? `- Orientation: ${clinicalIndicators.cognitiveIssues.orientation.join(' | ') || 'Not documented'}
+- Memory issues: ${clinicalIndicators.cognitiveIssues.memoryIssues.join(' | ') || 'None'}
+- Diagnoses: ${clinicalIndicators.cognitiveIssues.diagnosis.join(' | ') || 'None'}
+- Judgment: ${clinicalIndicators.cognitiveIssues.judgment.join(' | ') || 'Not assessed'}
+- Screening scores: ${clinicalIndicators.cognitiveIssues.screening.join(' | ') || 'None'}
+- Behaviors: ${clinicalIndicators.cognitiveIssues.behaviors.join(' | ') || 'None'}
+- Context sentences: ${clinicalIndicators.cognitiveIssues.sentences.join(' | ') || 'None'}` : ''}
+
+**DIABETIC MANAGEMENT:**
+- Detected: ${clinicalIndicators.diabetic.detected ? 'YES' : 'No'}
+${clinicalIndicators.diabetic.detected ? `- Type: ${clinicalIndicators.diabetic.type.join(' | ') || 'Not specified'}
+- Medications: ${clinicalIndicators.diabetic.medications.join(' | ') || 'None listed'}
+- Glucose readings: ${clinicalIndicators.diabetic.glucoseReadings.join(' | ') || 'None'}
+- A1C: ${clinicalIndicators.diabetic.a1c.join(' | ') || 'Not documented'}
+- Hypoglycemia: ${clinicalIndicators.diabetic.hypoglycemia.join(' | ') || 'None'}
+- Complications: ${clinicalIndicators.diabetic.complications.join(' | ') || 'None'}
+- Management: ${clinicalIndicators.diabetic.management.join(' | ') || 'Not specified'}
+- Context sentences: ${clinicalIndicators.diabetic.sentences.join(' | ') || 'None'}` : ''}
+
+**CARDIAC STATUS:**
+- Detected: ${clinicalIndicators.cardiacIssues.detected ? 'YES' : 'No'}
+${clinicalIndicators.cardiacIssues.detected ? `- Heart failure: ${clinicalIndicators.cardiacIssues.heartFailure.join(' | ') || 'None'}
+- Arrhythmias: ${clinicalIndicators.cardiacIssues.arrhythmias.join(' | ') || 'None'}
+- Edema: ${clinicalIndicators.cardiacIssues.edema.join(' | ') || 'None'}
+- Dyspnea/SOB: ${clinicalIndicators.cardiacIssues.dyspnea.join(' | ') || 'None'}
+- Chest pain: ${clinicalIndicators.cardiacIssues.chestPain.join(' | ') || 'None'}
+- Cardiac devices: ${clinicalIndicators.cardiacIssues.devices.join(' | ') || 'None'}
+- Context sentences: ${clinicalIndicators.cardiacIssues.sentences.join(' | ') || 'None'}` : ''}
+
+**ASSISTANCE LEVELS:**
+- Assistance mentioned: ${clinicalIndicators.assistanceNeeded.detected ? 'YES' : 'No'}
+${clinicalIndicators.assistanceNeeded.detected ? `- Levels of assist: ${clinicalIndicators.assistanceNeeded.levelOfAssist.join(' | ') || 'Not specified'}
+- Dependencies: ${clinicalIndicators.assistanceNeeded.dependency.join(' | ') || 'None'}` : ''}
+- Independence mentioned: ${clinicalIndicators.independentMentioned.detected ? 'YES' : 'No'}
+${clinicalIndicators.independentMentioned.detected ? `- Independent activities: ${clinicalIndicators.independentMentioned.activities.join(' | ') || 'None'}` : ''}
+
+=== ADL/IADL FUNCTIONAL PHRASES EXTRACTED ===
+
+**BATHING (M1830, GG0130E):**
+- All phrases: ${functionalPhrases.bathing.allPhrases.join(' | ') || 'None found'}
+- Assist levels: ${functionalPhrases.bathing.assistLevel.join(' | ') || 'Not specified'}
+- Equipment: ${functionalPhrases.bathing.equipment.join(' | ') || 'None'}
+- Limitations: ${functionalPhrases.bathing.limitations.join(' | ') || 'None'}
+
+**DRESSING (M1810/M1820, GG0130F/G):**
+- All phrases: ${functionalPhrases.dressing.allPhrases.join(' | ') || 'None found'}
+- Upper body: ${functionalPhrases.dressing.upperBody.join(' | ') || 'Not specified'}
+- Lower body: ${functionalPhrases.dressing.lowerBody.join(' | ') || 'Not specified'}
+- Assist levels: ${functionalPhrases.dressing.assistLevel.join(' | ') || 'Not specified'}
+- Limitations: ${functionalPhrases.dressing.limitations.join(' | ') || 'None'}
+
+**AMBULATION/MOBILITY (M1860, GG0170):**
+- All phrases: ${functionalPhrases.ambulation.allPhrases.join(' | ') || 'None found'}
+- Distance: ${functionalPhrases.ambulation.distance.join(' | ') || 'Not specified'}
+- Devices: ${functionalPhrases.ambulation.assistDevice.join(' | ') || 'None'}
+- Assist levels: ${functionalPhrases.ambulation.assistLevel.join(' | ') || 'Not specified'}
+- Weight bearing: ${functionalPhrases.ambulation.weightBearing.join(' | ') || 'Not specified'}
+- Stairs: ${functionalPhrases.ambulation.stairs.join(' | ') || 'Not documented'}
+- Surfaces: ${functionalPhrases.ambulation.surfaces.join(' | ') || 'Not specified'}
+
+**TRANSFERS (M1850, GG0170):**
+- All phrases: ${functionalPhrases.transfer.allPhrases.join(' | ') || 'None found'}
+- Transfer types: ${functionalPhrases.transfer.types.join(' | ') || 'Not specified'}
+- Assist levels: ${functionalPhrases.transfer.assistLevel.join(' | ') || 'Not specified'}
+- Equipment: ${functionalPhrases.transfer.equipment.join(' | ') || 'None'}
+- Weight bearing: ${functionalPhrases.transfer.weightBearing.join(' | ') || 'Not specified'}
+
+**TOILETING (M1840, GG0130C, GG0170F):**
+- All phrases: ${functionalPhrases.toileting.allPhrases.join(' | ') || 'None found'}
+- Transfers: ${functionalPhrases.toileting.transfers.join(' | ') || 'Not specified'}
+- Hygiene: ${functionalPhrases.toileting.hygiene.join(' | ') || 'Not specified'}
+- Continence: ${functionalPhrases.toileting.continence.join(' | ') || 'Not assessed'}
+- Equipment: ${functionalPhrases.toileting.equipment.join(' | ') || 'None'}
+- Assist levels: ${functionalPhrases.toileting.assistLevel.join(' | ') || 'Not specified'}
+
+**GROOMING (M1800, GG0130B):**
+- All phrases: ${functionalPhrases.grooming.allPhrases.join(' | ') || 'None found'}
+- Oral care: ${functionalPhrases.grooming.oralCare.join(' | ') || 'Not specified'}
+- Hair care: ${functionalPhrases.grooming.hairCare.join(' | ') || 'Not specified'}
+- Shaving: ${functionalPhrases.grooming.shaving.join(' | ') || 'Not specified'}
+- Nail care: ${functionalPhrases.grooming.nailCare.join(' | ') || 'Not specified'}
+- Assist levels: ${functionalPhrases.grooming.assistLevel.join(' | ') || 'Not specified'}
+
+**EATING (GG0130A):**
+- All phrases: ${functionalPhrases.eating.allPhrases.join(' | ') || 'None found'}
+- Self-feeding: ${functionalPhrases.eating.selfFeeding.join(' | ') || 'Not specified'}
+- Assist levels: ${functionalPhrases.eating.assistLevel.join(' | ') || 'Not specified'}
+- Swallowing: ${functionalPhrases.eating.swallowing.join(' | ') || 'Not assessed'}
+- Diet: ${functionalPhrases.eating.diet.join(' | ') || 'Not specified'}
+
+**MEDICATION MANAGEMENT (M2020, M2030):**
+- All phrases: ${functionalPhrases.medications.allPhrases.join(' | ') || 'None found'}
+- Oral meds: ${functionalPhrases.medications.oralMeds.join(' | ') || 'Not specified'}
+- Injectables: ${functionalPhrases.medications.injectables.join(' | ') || 'Not specified'}
+- Management: ${functionalPhrases.medications.management.join(' | ') || 'Not specified'}
+- Compliance: ${functionalPhrases.medications.compliance.join(' | ') || 'Not assessed'}
 
 VITAL SIGNS:
 ${Object.keys(vitalSigns).length > 0 ? JSON.stringify(vitalSigns, null, 2) : 'None documented'}
