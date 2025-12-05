@@ -46,17 +46,49 @@ export default function PredictiveAnalytics() {
         <p className="text-gray-600 mt-1">AI-powered risk forecasting and proactive care recommendations</p>
       </div>
 
-      <Tabs defaultValue="risk-scoring" className="space-y-6">
-        <TabsList>
+      <Tabs defaultValue="pdgm-forecast" className="space-y-6">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsTrigger value="pdgm-forecast" className="gap-2">
+            <DollarSign className="w-4 h-4" />
+            PDGM Forecast
+          </TabsTrigger>
+          <TabsTrigger value="coding-gaps" className="gap-2">
+            <Search className="w-4 h-4" />
+            Coding Gaps
+          </TabsTrigger>
           <TabsTrigger value="risk-scoring" className="gap-2">
             <Brain className="w-4 h-4" />
             Risk Scoring
           </TabsTrigger>
           <TabsTrigger value="forecasting" className="gap-2">
             <Activity className="w-4 h-4" />
-            Forecasting
+            Clinical
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="pdgm-forecast">
+          <PDGMCaseMixForecaster />
+        </TabsContent>
+
+        <TabsContent value="coding-gaps">
+          <div className="space-y-6">
+            <p className="text-sm text-gray-600">
+              Select a patient below to analyze their documentation for coding gaps and ICD-10 optimization opportunities.
+            </p>
+            {patients.filter(p => p.status === 'active').slice(0, 5).map(patient => {
+              const patientVisits = visits.filter(v => v.patient_id === patient.id);
+              const patientCarePlans = carePlans.filter(cp => cp.patient_id === patient.id);
+              return (
+                <PDGMCodingGapAnalyzer 
+                  key={patient.id}
+                  patient={patient}
+                  visits={patientVisits}
+                  carePlans={patientCarePlans}
+                />
+              );
+            })}
+          </div>
+        </TabsContent>
 
         <TabsContent value="risk-scoring">
           <PredictiveRiskScoring 
