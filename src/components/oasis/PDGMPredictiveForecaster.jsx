@@ -15,14 +15,23 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
-  LineChart
+  LineChart,
+  Sliders,
+  Activity,
+  TrendingDown
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Slider } from "@/components/ui/slider";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart as RechartsLineChart, Line } from 'recharts';
+import { calculatePDGM } from "@/functions/calculatePDGM";
 
 export default function PDGMPredictiveForecaster({ pdgmData, analysisResults, currentPayment, triggeredPathways }) {
   const [isPredicting, setIsPredicting] = useState(false);
   const [predictions, setPredictions] = useState(null);
   const [hasAutoPredicted, setHasAutoPredicted] = useState(false);
+  const [simulationMode, setSimulationMode] = useState(false);
+  const [simulatedScores, setSimulatedScores] = useState(null);
+  const [simulationResults, setSimulationResults] = useState(null);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   const { data: agencySettings } = useQuery({
     queryKey: ['agencySettings'],
@@ -178,6 +187,151 @@ Return JSON:
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
   };
 
+  const initSimulationScores = () => {
+    if (!pdgmData?.functional_scores) return;
+    setSimulatedScores({
+      m1800_grooming: pdgmData.functional_scores.m1800_grooming || 0,
+      m1810_dress_upper: pdgmData.functional_scores.m1810_dress_upper || 0,
+      m1820_dress_lower: pdgmData.functional_scores.m1820_dress_lower || 0,
+      m1830_bathing: pdgmData.functional_scores.m1830_bathing || 0,
+      m1840_toilet_transfer: pdgmData.functional_scores.m1840_toilet_transfer || 0,
+      m1850_transferring: pdgmData.functional_scores.m1850_transferring || 0,
+      m1860_ambulation: pdgmData.functional_scores.m1860_ambulation || 0
+    });
+  };
+
+  const runSimulation = async () => {
+    if (!simulatedScores || !pdgmData) return;
+
+    setIsSimulating(true);
+    
+    try {
+      // Create modified PDGM data with simulated scores
+      const modifiedPdgmData = {
+        ...pdgmData,
+        functional_scores: simulatedScores
+      };
+
+      // Calculate new PDGM payment
+      const response = await calculatePDGM({
+        pdgmData: pdgmData,
+        correctedPdgmData: modifiedPdgmData
+      });
+
+      // Get AI analysis of the grouping changes
+      const analysis = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze how these functional score changes impact PDGM grouping and payment.
+
+ORIGINAL SCORES:
+${JSON.stringify(pdgmData.functional_scores, null, 2)}
+
+SIMULATED SCORES:
+${JSON.stringify(simulatedScores, null, 2)}
+
+ORIGINAL PAYMENT DATA:
+${JSON.stringify(response.data?.original, null, 2)}
+
+NEW PAYMENT DATA:
+${JSON.stringify(response.data?.corrected, null, 2)}
+
+Provide detailed analysis:
+
+1. FUNCTIONAL LEVEL IMPACT
+   - Did functional level change? (Low → Medium → High)
+   - Which specific M-items drove the change?
+   - Functional points calculation
+
+2. PDGM GROUPING CHANGES
+   - Did this affect Clinical Group classification?
+   - Any impact on Comorbidity adjustment?
+   - Changes to case-mix multipliers
+
+3. PAYMENT IMPACT BREAKDOWN
+   - Payment difference: $ and %
+   - Which component contributed most to the change?
+   - Is this change clinically justifiable?
+
+4. DOCUMENTATION RECOMMENDATIONS
+   - What specific clinical observations support these scores?
+   - Required narrative documentation
+   - CMS compliance considerations
+
+5. IMPLEMENTATION GUIDANCE
+   - Is this improvement realistic?
+   - What clinical evidence is needed?
+   - Training/education requirements
+
+Return JSON:
+{
+  "functional_level_impact": {
+    "original_level": "low/medium/high",
+    "new_level": "low/medium/high",
+    "changed": true/false,
+    "original_points": 0,
+    "new_points": 0,
+    "driving_changes": ["which M-items caused shift"]
+  },
+  "grouping_changes": {
+    "clinical_group_changed": true/false,
+    "clinical_group_from": "group name",
+    "clinical_group_to": "group name",
+    "comorbidity_adjustment_changed": true/false,
+    "case_mix_multiplier_impact": "explanation"
+  },
+  "payment_breakdown": {
+    "original_payment": 0,
+    "new_payment": 0,
+    "difference": 0,
+    "percentage_change": 0,
+    "primary_driver": "which component contributed most",
+    "clinically_justifiable": true/false,
+    "justification_notes": "why or why not"
+  },
+  "documentation_requirements": {
+    "required_narratives": ["specific observations needed"],
+    "supporting_evidence": ["clinical evidence required"],
+    "cms_compliance_notes": "compliance considerations"
+  },
+  "implementation": {
+    "realistic": true/false,
+    "realistic_rating": 0-100,
+    "clinical_evidence_needed": ["what to document"],
+    "training_needs": ["staff training required"],
+    "risk_factors": ["potential challenges"]
+  },
+  "summary": "one sentence summary of impact"
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            functional_level_impact: { type: "object" },
+            grouping_changes: { type: "object" },
+            payment_breakdown: { type: "object" },
+            documentation_requirements: { type: "object" },
+            implementation: { type: "object" },
+            summary: { type: "string" }
+          }
+        }
+      });
+
+      setSimulationResults({
+        paymentData: response.data,
+        analysis: analysis
+      });
+    } catch (err) {
+      console.error("Simulation error:", err);
+    }
+
+    setIsSimulating(false);
+  };
+
+  const handleScoreChange = (item, value) => {
+    setSimulatedScores(prev => ({
+      ...prev,
+      [item]: value[0]
+    }));
+  };
+
   const getEffortColor = (effort) => {
     switch (effort) {
       case 'low': return 'bg-green-100 text-green-800';
@@ -202,6 +356,16 @@ Return JSON:
 
   if (!pdgmData) return null;
 
+  const mItemConfig = {
+    m1800_grooming: { label: "M1800 Grooming", max: 3, icon: Activity },
+    m1810_dress_upper: { label: "M1810 Dress Upper", max: 3, icon: Activity },
+    m1820_dress_lower: { label: "M1820 Dress Lower", max: 3, icon: Activity },
+    m1830_bathing: { label: "M1830 Bathing", max: 6, icon: Activity },
+    m1840_toilet_transfer: { label: "M1840 Toilet Transfer", max: 4, icon: Activity },
+    m1850_transferring: { label: "M1850 Transferring", max: 5, icon: Activity },
+    m1860_ambulation: { label: "M1860 Ambulation", max: 6, icon: Activity }
+  };
+
   return (
     <Card className="border-2 border-purple-200">
       <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-pink-50">
@@ -210,20 +374,313 @@ Return JSON:
             <Sparkles className="w-5 h-5 text-purple-600" />
             PDGM Predictive Forecaster
           </div>
-          {currentPayment && (
-            <Badge className="bg-gray-600 text-white text-lg px-3">
-              Current: {formatCurrency(currentPayment)}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {currentPayment && (
+              <Badge className="bg-gray-600 text-white text-lg px-3">
+                Current: {formatCurrency(currentPayment)}
+              </Badge>
+            )}
+            <Button
+              variant={simulationMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setSimulationMode(!simulationMode);
+                if (!simulationMode && !simulatedScores) {
+                  initSimulationScores();
+                }
+              }}
+              className={simulationMode ? "bg-orange-600 hover:bg-orange-700" : ""}
+            >
+              <Sliders className="w-4 h-4 mr-2" />
+              {simulationMode ? "Exit" : "Simulate"} Changes
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        {isPredicting ? (
-          <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-600">Generating predictive scenarios...</p>
+        {/* Documentation Improvement Simulator */}
+        {simulationMode && (
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border-2 border-orange-300 space-y-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-orange-600" />
+                <h3 className="font-semibold text-orange-900">Documentation Improvement Simulator</h3>
+              </div>
+              <Badge className="bg-orange-600 text-white">Live PDGM Calculation</Badge>
+            </div>
+
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertDescription className="text-blue-800 text-xs">
+                Adjust functional scores below to see real-time impact on PDGM grouping and payment. 
+                This shows how specific documentation improvements affect classification and revenue.
+              </AlertDescription>
+            </Alert>
+
+            {/* Functional Score Sliders */}
+            <div className="space-y-3">
+              {Object.entries(mItemConfig).map(([key, config]) => {
+                const currentValue = simulatedScores?.[key] || 0;
+                const originalValue = pdgmData?.functional_scores?.[key] || 0;
+                const hasChanged = currentValue !== originalValue;
+
+                return (
+                  <div key={key} className="bg-white p-3 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <config.icon className="w-4 h-4 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-900">{config.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {hasChanged && (
+                          <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-300">
+                            {originalValue} → {currentValue}
+                          </Badge>
+                        )}
+                        <Badge className={`text-sm ${hasChanged ? 'bg-orange-600' : 'bg-gray-600'}`}>
+                          {currentValue}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Slider
+                      value={[currentValue]}
+                      onValueChange={(v) => handleScoreChange(key, v)}
+                      max={config.max}
+                      step={1}
+                      className="mt-2"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>0 (Independent)</span>
+                      <span>{config.max} (Dependent)</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Calculate Button */}
+            <Button
+              onClick={runSimulation}
+              disabled={isSimulating || !simulatedScores}
+              className="w-full bg-orange-600 hover:bg-orange-700"
+            >
+              {isSimulating ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculating Impact...</>
+              ) : (
+                <><Target className="w-4 h-4 mr-2" /> Calculate PDGM Impact</>
+              )}
+            </Button>
+
+            {/* Simulation Results */}
+            {simulationResults && (
+              <div className="space-y-3 mt-4 pt-4 border-t border-orange-300">
+                {/* Summary */}
+                <div className="bg-white p-3 rounded-lg border-2 border-orange-300">
+                  <p className="text-sm font-semibold text-orange-900 mb-2">
+                    {simulationResults.analysis.summary}
+                  </p>
+                </div>
+
+                {/* Payment Impact */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-white p-3 rounded text-center border">
+                    <p className="text-xs text-gray-500 mb-1">Original</p>
+                    <p className="text-lg font-bold text-gray-700">
+                      {formatCurrency(simulationResults.analysis.payment_breakdown?.original_payment)}
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded text-center border">
+                    <ArrowRight className="w-5 h-5 text-orange-500 mx-auto mb-1" />
+                    <p className="text-xs text-orange-600">
+                      {simulationResults.analysis.payment_breakdown?.difference >= 0 ? '+' : ''}
+                      {simulationResults.analysis.payment_breakdown?.percentage_change}%
+                    </p>
+                  </div>
+                  <div className={`p-3 rounded text-center border-2 ${
+                    simulationResults.analysis.payment_breakdown?.difference >= 0 
+                      ? 'bg-green-50 border-green-300' 
+                      : 'bg-red-50 border-red-300'
+                  }`}>
+                    <p className="text-xs text-gray-500 mb-1">Simulated</p>
+                    <p className={`text-lg font-bold ${
+                      simulationResults.analysis.payment_breakdown?.difference >= 0 
+                        ? 'text-green-700' 
+                        : 'text-red-700'
+                    }`}>
+                      {formatCurrency(simulationResults.analysis.payment_breakdown?.new_payment)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Functional Level Impact */}
+                {simulationResults.analysis.functional_level_impact && (
+                  <div className="bg-white p-3 rounded-lg border">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Functional Level Impact</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="capitalize">
+                          {simulationResults.analysis.functional_level_impact.original_level}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          ({simulationResults.analysis.functional_level_impact.original_points} pts)
+                        </span>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                      <div className="flex items-center gap-2">
+                        <Badge className={`capitalize ${
+                          simulationResults.analysis.functional_level_impact.changed 
+                            ? 'bg-orange-600' 
+                            : 'bg-gray-600'
+                        }`}>
+                          {simulationResults.analysis.functional_level_impact.new_level}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          ({simulationResults.analysis.functional_level_impact.new_points} pts)
+                        </span>
+                      </div>
+                    </div>
+                    {simulationResults.analysis.functional_level_impact.driving_changes?.length > 0 && (
+                      <div className="text-xs text-gray-600">
+                        <p className="font-medium mb-1">Key Changes:</p>
+                        <ul className="space-y-0.5">
+                          {simulationResults.analysis.functional_level_impact.driving_changes.map((change, idx) => (
+                            <li key={idx}>• {change}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* PDGM Grouping Changes */}
+                {simulationResults.analysis.grouping_changes && (
+                  <div className="bg-white p-3 rounded-lg border">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">PDGM Grouping Changes</p>
+                    
+                    {simulationResults.analysis.grouping_changes.clinical_group_changed ? (
+                      <div className="bg-yellow-50 p-2 rounded border border-yellow-300 mb-2">
+                        <p className="text-xs font-medium text-yellow-800 mb-1">⚠️ Clinical Group Changed</p>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span>{simulationResults.analysis.grouping_changes.clinical_group_from}</span>
+                          <ArrowRight className="w-3 h-3" />
+                          <span className="font-bold">{simulationResults.analysis.grouping_changes.clinical_group_to}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-green-700 mb-2">✓ Clinical group unchanged</p>
+                    )}
+                    
+                    {simulationResults.analysis.grouping_changes.comorbidity_adjustment_changed && (
+                      <p className="text-xs text-orange-700 mb-2">⚠️ Comorbidity adjustment impacted</p>
+                    )}
+                    
+                    <p className="text-xs text-gray-600">
+                      {simulationResults.analysis.grouping_changes.case_mix_multiplier_impact}
+                    </p>
+                  </div>
+                )}
+
+                {/* Documentation Requirements */}
+                {simulationResults.analysis.documentation_requirements && (
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p className="text-xs font-semibold text-blue-900 mb-2">Documentation Requirements</p>
+                    
+                    {simulationResults.analysis.documentation_requirements.required_narratives?.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-xs font-medium text-blue-800 mb-1">Required Narratives:</p>
+                        <ul className="text-xs text-blue-700 space-y-0.5">
+                          {simulationResults.analysis.documentation_requirements.required_narratives.slice(0, 3).map((narrative, idx) => (
+                            <li key={idx}>• {narrative}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {simulationResults.analysis.documentation_requirements.cms_compliance_notes && (
+                      <p className="text-xs text-blue-600 italic">
+                        {simulationResults.analysis.documentation_requirements.cms_compliance_notes}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Implementation Feasibility */}
+                {simulationResults.analysis.implementation && (
+                  <div className={`p-3 rounded-lg border-2 ${
+                    simulationResults.analysis.implementation.realistic 
+                      ? 'bg-green-50 border-green-300' 
+                      : 'bg-red-50 border-red-300'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-gray-800">Implementation Feasibility</p>
+                      <Badge className={
+                        simulationResults.analysis.implementation.realistic 
+                          ? 'bg-green-600' 
+                          : 'bg-red-600'
+                      }>
+                        {simulationResults.analysis.implementation.realistic_rating}% Realistic
+                      </Badge>
+                    </div>
+                    
+                    {simulationResults.analysis.implementation.clinical_evidence_needed?.length > 0 && (
+                      <div className="text-xs text-gray-700">
+                        <p className="font-medium mb-1">Evidence Needed:</p>
+                        <ul className="space-y-0.5">
+                          {simulationResults.analysis.implementation.clinical_evidence_needed.slice(0, 2).map((evidence, idx) => (
+                            <li key={idx}>• {evidence}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Case-Mix Comparison Chart */}
+                {simulationResults.paymentData?.original && simulationResults.paymentData?.corrected && (
+                  <div className="bg-white p-3 rounded-lg border">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Case-Mix Component Comparison</p>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <RechartsLineChart data={[
+                        { 
+                          component: 'Clinical',
+                          Original: simulationResults.paymentData.original.clinicalWeight,
+                          Simulated: simulationResults.paymentData.corrected.clinicalWeight
+                        },
+                        { 
+                          component: 'Functional',
+                          Original: simulationResults.paymentData.original.functionalMultiplier,
+                          Simulated: simulationResults.paymentData.corrected.functionalMultiplier
+                        },
+                        { 
+                          component: 'Comorbidity',
+                          Original: simulationResults.paymentData.original.comorbidityMultiplier,
+                          Simulated: simulationResults.paymentData.corrected.comorbidityMultiplier
+                        }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="component" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: '10px' }} />
+                        <Line type="monotone" dataKey="Original" stroke="#6b7280" strokeWidth={2} />
+                        <Line type="monotone" dataKey="Simulated" stroke="#ea580c" strokeWidth={2} />
+                      </RechartsLineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        ) : !predictions ? (
+        )}
+
+        {/* Original Predictive Scenarios */}
+        {!simulationMode && (
+          <>
+            {isPredicting ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
+                <p className="text-sm text-gray-600">Generating predictive scenarios...</p>
+              </div>
+            ) : !predictions ? (
           <Button onClick={generatePredictions} className="w-full bg-purple-600 hover:bg-purple-700">
             <Sparkles className="w-4 h-4 mr-2" />
             Generate Revenue Predictions
@@ -438,6 +895,8 @@ Return JSON:
             >
               Regenerate Predictions
             </Button>
+          </>
+            )}
           </>
         )}
       </CardContent>
