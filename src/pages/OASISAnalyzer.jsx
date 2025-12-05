@@ -97,12 +97,17 @@ export default function OASISAnalyzer() {
             },
             primary_diagnosis: {
               type: "object",
-              description: "M1021 Primary Diagnosis",
+              description: "M1021 Primary Diagnosis - THIS IS CRITICAL. Look for: M1021, Primary Diagnosis, Principal Diagnosis, Admitting Diagnosis, or the first/main ICD-10 code listed. Extract BOTH the ICD-10 code (e.g., I50.9, J44.1, E11.9) AND the text description.",
               properties: {
-                icd10_code: { type: "string" },
-                description: { type: "string" },
-                symptom_control_rating: { type: "string" }
+                icd10_code: { type: "string", description: "The ICD-10-CM code (e.g., I50.9, J44.1). MUST extract this." },
+                description: { type: "string", description: "Full text description of diagnosis (e.g., Heart failure, unspecified)" },
+                symptom_control_rating: { type: "string" },
+                raw_text: { type: "string", description: "The exact text as it appears in the document for M1021 or primary diagnosis field" }
               }
+            },
+            all_diagnoses_raw: {
+              type: "string",
+              description: "Copy ALL diagnosis-related text from the document verbatim, including any ICD-10 codes, diagnosis lists, problem lists, or medical conditions mentioned anywhere"
             },
             other_diagnoses: {
               type: "array",
