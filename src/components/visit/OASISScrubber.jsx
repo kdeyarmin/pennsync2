@@ -557,6 +557,23 @@ PATIENT CONTEXT:
 - Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None documented'}
 - Visit Date: ${visit.visit_date}
 
+=== PRE-ANALYZED PDGM CLINICAL GROUP ===
+**Determined Clinical Group:** ${clinicalGroupAnalysis.group} - ${clinicalGroupAnalysis.name}
+**Confidence Level:** ${clinicalGroupAnalysis.confidence.toUpperCase()}
+**Matched Patterns:** ${clinicalGroupAnalysis.matchedPatterns.join(', ') || 'Default assignment'}
+
+=== PRE-ANALYZED COMORBIDITIES ===
+**Total Qualifying Comorbidities Found:** ${comorbidityAnalysis.count}
+**Recommended Adjustment Level:** ${comorbidityAnalysis.adjustment.toUpperCase()}
+
+**High-Impact Comorbidities (1 needed for HIGH adjustment):**
+${comorbidityAnalysis.high.length > 0 ? comorbidityAnalysis.high.map(c => `- ${c.name} (ICD-10: ${c.icd10_codes.join(', ')})`).join('\n') : '- None identified'}
+
+**Low-Impact Comorbidities (2+ needed for LOW adjustment):**
+${comorbidityAnalysis.low.length > 0 ? comorbidityAnalysis.low.map(c => `- ${c.name} (ICD-10: ${c.icd10_codes.join(', ')})`).join('\n') : '- None identified'}
+
+IMPORTANT: Use the above pre-analyzed clinical group and comorbidities as your baseline. Validate against the narrative and adjust confidence/findings if narrative contradicts or supports differently.
+
 === CLINICAL INDICATORS EXTRACTED FROM NARRATIVE ===
 
 **ASSISTIVE DEVICES:**
