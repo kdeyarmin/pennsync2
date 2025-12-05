@@ -322,9 +322,36 @@ export default function OASISAnalyzer() {
       console.log("Extracted OASIS content length:", oasisTextContent.length);
       
       // Store structured data for direct use in PDGM calculation
+      // Try multiple sources for primary diagnosis to ensure we capture it
+      let primaryDiagnosisText = output?.primary_diagnosis?.description || '';
+      let primaryDiagnosisCode = output?.primary_diagnosis?.icd10_code || '';
+      
+      // If not found in structured field, try to extract from raw text
+      if (!primaryDiagnosisText && !primaryDiagnosisCode) {
+        const rawDiagnoses = output?.all_diagnoses_raw || output?.primary_diagnosis?.raw_text || '';
+        // Look for ICD-10 pattern (letter followed by 2 digits, optional decimal and more digits)
+        const icd10Match = rawDiagnoses.match(/[A-Z]\d{2}\.?\d{0,4}/i);
+        if (icd10Match) {
+          primaryDiagnosisCode = icd10Match[0];
+        }
+        // Take the first line or meaningful text as description
+        if (rawDiagnoses) {
+          const firstLine = rawDiagnoses.split('\n')[0]?.trim();
+          if (firstLine && firstLine.length > 3) {
+            primaryDiagnosisText = firstLine;
+          }
+        }
+      }
+      
+      // Final fallback - check other_diagnoses if primary is still empty
+      if (!primaryDiagnosisText && !primaryDiagnosisCode && output?.other_diagnoses?.length > 0) {
+        primaryDiagnosisText = output.other_diagnoses[0]?.description || '';
+        primaryDiagnosisCode = output.other_diagnoses[0]?.icd10_code || '';
+      }
+      
       const structuredPdgmData = {
-        primary_diagnosis: output?.primary_diagnosis?.description || output?.primary_diagnosis?.icd10_code || '',
-        primary_diagnosis_code: output?.primary_diagnosis?.icd10_code || '',
+        primary_diagnosis: primaryDiagnosisText || primaryDiagnosisCode || '',
+        primary_diagnosis_code: primaryDiagnosisCode,
         comorbidities: (output?.other_diagnoses || []).map(d => d.description || d.icd10_code).filter(Boolean),
         admission_source: output?.admission_info?.admission_source_category || 'community',
         episode_timing: output?.admission_info?.episode_timing || 'early',
