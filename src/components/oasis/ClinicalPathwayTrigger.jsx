@@ -27,7 +27,7 @@ import {
   Activity
 } from "lucide-react";
 
-export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, patientId, onTasksCreated }) {
+export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, patientId, onTasksCreated, onPathwaysTriggered }) {
   const [triggeredPathways, setTriggeredPathways] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const queryClient = useQueryClient();
@@ -74,6 +74,11 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
     });
 
     setTriggeredPathways(triggered);
+    
+    // Notify parent component
+    if (onPathwaysTriggered) {
+      onPathwaysTriggered(triggered);
+    }
   };
 
   const evaluateCondition = (condition, data) => {

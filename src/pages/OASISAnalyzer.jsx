@@ -64,6 +64,7 @@ import AIProactiveDocumentationAssistant from "../components/oasis/AIProactiveDo
 import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
+import PDGMPredictiveForecaster from "../components/oasis/PDGMPredictiveForecaster";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -85,6 +86,7 @@ export default function OASISAnalyzer() {
   const [revenueData, setRevenueData] = useState(null);
   const [navigationData, setNavigationData] = useState(null);
   const [qualityScore, setQualityScore] = useState(null);
+  const [triggeredPathways, setTriggeredPathways] = useState([]);
 
   const queryClient = useQueryClient();
 
@@ -1474,6 +1476,15 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             analysisResults={analysisResults}
             patientId={selectedPatientId}
             onTasksCreated={(count) => console.log(`${count} pathway tasks created`)}
+            onPathwaysTriggered={(pathways) => setTriggeredPathways(pathways)}
+          />
+
+          {/* PDGM Predictive Forecaster */}
+          <PDGMPredictiveForecaster
+            pdgmData={pdgmData}
+            analysisResults={analysisResults}
+            currentPayment={originalPayment}
+            triggeredPathways={triggeredPathways}
           />
 
           {/* OASIS Validation Panel - Full Width for Prominence */}
