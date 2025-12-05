@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -30,9 +31,13 @@ import {
   Sparkles,
   Info,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  BookOpen,
+  MessageSquare
 } from "lucide-react";
 import { logSecurityEvent } from "../utils/security";
+import OASISFeedbackPanel from "../oasis/OASISFeedbackPanel";
+import CMSComplianceReference from "../oasis/CMSComplianceReference";
 
 export default function OASISScrubber({ 
   patient, 
@@ -45,6 +50,9 @@ export default function OASISScrubber({
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [oasisResults, setOasisResults] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState([]);
+  const [activeTab, setActiveTab] = useState("results");
+  const [acceptedSuggestions, setAcceptedSuggestions] = useState([]);
+  const [feedbackStats, setFeedbackStats] = useState({ accepted: 0, rejected: 0, modified: 0 });
 
   const isHomeHealth = patient?.care_type === 'home_health';
   const isOASISVisit = ['admission', 'recertification', 'discharge'].includes(visit?.visit_type);
@@ -408,6 +416,37 @@ Return JSON:
     }
   };
 
+  const handleSuggestionAccept = (suggestion, suggestionType) => {
+    setAcceptedSuggestions(prev => [...prev, { ...suggestion, type: suggestionType }]);
+    setFeedbackStats(prev => ({ ...prev, accepted: prev.accepted + 1 }));
+    if (suggestion.example || suggestion.documentation_guidance) {
+      handleQuickFix(suggestion.documentation_guidance || '', suggestion.example || '');
+    }
+  };
+
+  const handleSuggestionReject = (reason) => {
+    setFeedbackStats(prev => ({ ...prev, rejected: prev.rejected + 1 }));
+  };
+
+  const handleSuggestionModify = (modifiedText) => {
+    setFeedbackStats(prev => ({ ...prev, modified: prev.modified + 1 }));
+    if (onFixSuggestion) {
+      onFixSuggestion(`\n\n${modifiedText}`);
+    }
+  };
+
+  const handleInsertGuidance = (itemKey, item) => {
+    if (onFixSuggestion && item) {
+      let guidance = `\n\n[${itemKey}: ${item.name}]\n`;
+      if (item.description) guidance += `${item.description}\n`;
+      if (item.scoringScale) {
+        guidance += "Scoring: ";
+        guidance += Object.entries(item.scoringScale).map(([k, v]) => `${k}=${v}`).join(', ');
+      }
+      onFixSuggestion(guidance);
+    }
+  };
+
   const getRiskColor = (risk) => {
     switch (risk) {
       case 'low': return 'bg-green-100 text-green-800 border-green-300';
@@ -508,6 +547,70 @@ Return JSON:
               </div>
             </div>
           ) : oasisResults ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="results" className="gap-2">
+                  <FileCheck className="w-4 h-4" />
+                  Results
+                </TabsTrigger>
+                <TabsTrigger value="reference" className="gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  CMS Reference
+                </TabsTrigger>
+                <TabsTrigger value="feedback" className="gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Feedback ({feedbackStats.accepted + feedbackStats.rejected + feedbackStats.modified})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="reference">
+                <CMSComplianceReference onInsertGuidance={handleInsertGuidance} />
+              </TabsContent>
+
+              <TabsContent value="feedback">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Your Feedback Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
+                        <p className="text-3xl font-bold text-green-700">{feedbackStats.accepted}</p>
+                        <p className="text-sm text-green-600">Accepted</p>
+                      </div>
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
+                        <p className="text-3xl font-bold text-blue-700">{feedbackStats.modified}</p>
+                        <p className="text-sm text-blue-600">Modified</p>
+                      </div>
+                      <div className="bg-red-50 p-4 rounded-lg border border-red-200 text-center">
+                        <p className="text-3xl font-bold text-red-700">{feedbackStats.rejected}</p>
+                        <p className="text-sm text-red-600">Rejected</p>
+                      </div>
+                    </div>
+                    <Alert className="bg-blue-50 border-blue-200">
+                      <Info className="w-4 h-4 text-blue-600" />
+                      <AlertDescription className="text-blue-800 text-sm">
+                        Your feedback helps improve AI accuracy for reimbursement impact assessments and documentation suggestions. All feedback is used to enhance future recommendations.
+                      </AlertDescription>
+                    </Alert>
+                    {acceptedSuggestions.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">Applied Suggestions:</h4>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {acceptedSuggestions.map((s, idx) => (
+                            <div key={idx} className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200 text-sm">
+                              <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                              <span className="text-green-900">{s.oasis_item || s.type}: Applied</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="results">
             <div className="space-y-6 py-4">
               {/* Overall Score Card */}
               <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
@@ -670,6 +773,17 @@ Return JSON:
                               <p className="text-xs text-gray-500">Evidence from Narrative:</p>
                               <p className="text-gray-900 italic">"{item.narrative_evidence}"</p>
                             </div>
+                            <OASISFeedbackPanel
+                              suggestion={item}
+                              suggestionType="underscoring"
+                              oasisItem={item.oasis_item}
+                              visitId={visit?.id}
+                              patientId={patient?.id}
+                              onAccept={() => handleSuggestionAccept(item, 'underscoring')}
+                              onReject={handleSuggestionReject}
+                              onModify={handleSuggestionModify}
+                              reimbursementImpact={item.revenue_impact}
+                            />
                           </CardContent>
                         </Card>
                       ))}
@@ -727,6 +841,16 @@ Return JSON:
                                 <strong>Recommendation:</strong> {item.recommendation}
                               </AlertDescription>
                             </Alert>
+                            <OASISFeedbackPanel
+                              suggestion={item}
+                              suggestionType="overscoring"
+                              oasisItem={item.oasis_item}
+                              visitId={visit?.id}
+                              patientId={patient?.id}
+                              onAccept={() => handleSuggestionAccept(item, 'overscoring')}
+                              onReject={handleSuggestionReject}
+                              onModify={handleSuggestionModify}
+                            />
                           </CardContent>
                         </Card>
                       ))}
@@ -795,14 +919,17 @@ Return JSON:
                               <p className="text-sm text-green-900 italic">"{item.example}"</p>
                             </div>
 
-                            <Button
-                              size="sm"
-                              onClick={() => handleQuickFix(item.documentation_guidance, item.example)}
-                              className="w-full bg-red-600 hover:bg-red-700"
-                            >
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Add Guidance to Note
-                            </Button>
+                            <OASISFeedbackPanel
+                              suggestion={item}
+                              suggestionType="missing_item"
+                              oasisItem={item.oasis_item}
+                              visitId={visit?.id}
+                              patientId={patient?.id}
+                              onAccept={() => handleSuggestionAccept(item, 'missing_item')}
+                              onReject={handleSuggestionReject}
+                              onModify={handleSuggestionModify}
+                              reimbursementImpact={item.estimated_revenue_impact}
+                            />
                           </CardContent>
                         </Card>
                       ))}
@@ -1001,7 +1128,8 @@ Return JSON:
                   </ul>
                 </div>
               )}
-            </div>
+              </TabsContent>
+            </Tabs>
           ) : null}
 
           <DialogFooter className="border-t pt-4">
