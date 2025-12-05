@@ -41,6 +41,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Patients", icon: Users, page: "Patients" },
     { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
     { name: "OASIS Analyzer", icon: ClipboardList, page: "OASISAnalyzer" },
+    { name: "OASIS Analytics", icon: BarChart3, page: "OASISAnalyticsDashboard" },
     { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
     { name: "Alerts", icon: Bell, page: "PatientAlerts" },
     { name: "Compliance", icon: Shield, page: "ComplianceDashboard" },

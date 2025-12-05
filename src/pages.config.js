@@ -24,6 +24,7 @@ import StaffTrainingHub from './pages/StaffTrainingHub';
 import OASISAnalyzer from './pages/OASISAnalyzer';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import OASISAuditDashboard from './pages/OASISAuditDashboard';
+import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +55,7 @@ export const PAGES = {
     "OASISAnalyzer": OASISAnalyzer,
     "AnalyticsDashboard": AnalyticsDashboard,
     "OASISAuditDashboard": OASISAuditDashboard,
+    "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
 }
 
 export const pagesConfig = {
