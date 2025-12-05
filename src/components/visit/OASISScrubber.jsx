@@ -363,45 +363,71 @@ Return JSON:
   },
   "critical_missing": [
     {
-      "oasis_item": "M-number: Name",
-      "category": "Functional|Clinical|Medications|Wounds|GG",
-      "pdgm_impact": "Affects clinical group|functional level|comorbidity",
-      "why_critical": "Specific CMS requirement",
-      "documentation_guidance": "Exact wording needed",
-      "example": "Patient requires moderate assistance (2 person) for shower transfers due to lower extremity weakness and balance impairment.",
+      "oasis_item": "M-number: Full Name",
+      "category": "Functional|Clinical|Medications|Wounds|GG|Cognitive|Safety",
+      "pdgm_impact": "Specific impact: Affects clinical group|functional level|comorbidity adjustment",
+      "why_critical": "CMS requirement citation and audit risk",
+      "documentation_guidance": "Exact language and elements needed",
+      "example": "Patient requires moderate assistance (1 person) for shower transfers due to lower extremity weakness (R/T CVA residual) and balance impairment. Uses shower chair and grab bars.",
       "reimbursement_impact": "high|medium|low",
       "estimated_revenue_impact": "$XXX per episode"
     }
   ],
   "underscoring_opportunities": [
     {
-      "oasis_item": "M-number",
-      "current_score": "documented value",
+      "oasis_item": "M-number: Name",
+      "current_implied_score": "what current documentation suggests",
       "supported_score": "higher value supported by narrative",
-      "narrative_evidence": "exact quote",
-      "revenue_impact": "$XXX difference"
+      "narrative_evidence": "EXACT QUOTE from documentation",
+      "cms_scoring_reference": "CMS definition that supports higher score",
+      "revenue_impact": "$XXX-XXX per episode difference",
+      "documentation_enhancement": "specific wording to add to support higher score"
     }
   ],
   "overscoring_risks": [
     {
-      "oasis_item": "M-number",
-      "claimed_score": "documented value",
-      "supported_score": "lower value actually supported",
+      "oasis_item": "M-number: Name",
+      "claimed_score": "implied value from documentation",
+      "supported_score": "lower value actually supported by evidence",
+      "narrative_evidence": "EXACT QUOTE that contradicts higher score",
       "audit_risk": "high|medium",
-      "recommendation": "Add documentation or adjust score"
+      "audit_vulnerability": "specific audit concern",
+      "recommendation": "Add specific documentation OR adjust score to X"
     }
   ],
   "inconsistencies": [
     {
-      "issue": "description",
-      "narrative_states": "quote 1",
-      "conflicts_with": "quote 2 or implied OASIS response",
-      "resolution": "specific fix"
+      "issue": "Clear description of conflict",
+      "location_1": "exact quote 1 with context",
+      "location_2": "exact quote 2 that conflicts",
+      "oasis_items_affected": ["M-numbers affected"],
+      "resolution": "specific documentation change to resolve",
+      "audit_risk": "high|medium|low"
     }
   ],
-  "compliant_items": [{"oasis_item": "M-number", "category": "cat", "evidence": "quote"}],
-  "recommendations": ["actionable items ranked by revenue impact"],
-  "quality_measures_impact": ["HH-CAHPS and HHQI items affected"]
+  "vague_documentation": [
+    {
+      "oasis_item": "M-number",
+      "current_language": "vague phrase from documentation",
+      "problem": "why this is not defensible",
+      "improved_language": "specific wording that would be defensible"
+    }
+  ],
+  "compliant_items": [
+    {
+      "oasis_item": "M-number: Name",
+      "category": "category",
+      "evidence": "exact supporting quote",
+      "score_supported": "specific score this documentation supports"
+    }
+  ],
+  "recommendations": ["Top 5-7 actionable items ranked by revenue impact with specific actions"],
+  "quality_measures_impact": ["Specific HH-CAHPS and HHQI measures affected with explanation"],
+  "audit_defense_summary": {
+    "strongest_documentation": ["well-documented areas"],
+    "weakest_documentation": ["areas most vulnerable to audit"],
+    "recommended_priority_fixes": ["top 3 items to fix before submission"]
+  }
 }`;
 
       const result = await base44.integrations.Core.InvokeLLM({
