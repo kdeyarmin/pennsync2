@@ -1902,6 +1902,227 @@ Return JSON:
                 </Button>
               </div>
 
+              <TabsContent value="indicators">
+                <ScrollArea className="h-[60vh]">
+                  {extractedIndicators ? (
+                    <div className="space-y-6 p-1">
+                      {/* Clinical Group Determination */}
+                      <Card className="border-indigo-200">
+                        <CardHeader className="py-3 bg-indigo-50">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4 text-indigo-600" />
+                            PDGM Clinical Group Analysis
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <p className="text-lg font-bold text-indigo-900">
+                                {extractedIndicators.clinicalGroup.group}
+                              </p>
+                              <p className="text-sm text-indigo-700">{extractedIndicators.clinicalGroup.name}</p>
+                            </div>
+                            <Badge className={`${
+                              extractedIndicators.clinicalGroup.confidence === 'high' ? 'bg-green-600' :
+                              extractedIndicators.clinicalGroup.confidence === 'medium' ? 'bg-yellow-600' : 'bg-red-600'
+                            } text-white`}>
+                              {extractedIndicators.clinicalGroup.confidence?.toUpperCase()} CONFIDENCE
+                            </Badge>
+                          </div>
+                          {extractedIndicators.clinicalGroup.matchedPatterns.length > 0 && (
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Matched Patterns:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {extractedIndicators.clinicalGroup.matchedPatterns.map((p, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">{p}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Comorbidities */}
+                      <Card className="border-green-200">
+                        <CardHeader className="py-3 bg-green-50">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-green-600" />
+                            Comorbidity Analysis
+                            <Badge className={`ml-auto ${
+                              extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
+                              extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-gray-500'
+                            }`}>
+                              {extractedIndicators.comorbidities.adjustment?.toUpperCase()} Adjustment
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-green-50 p-3 rounded border border-green-200">
+                              <p className="text-xs font-semibold text-green-800 mb-2">High-Impact (1 = HIGH adj)</p>
+                              {extractedIndicators.comorbidities.high.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {extractedIndicators.comorbidities.high.map((c, i) => (
+                                    <li key={i} className="text-sm flex items-center gap-2">
+                                      <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                      <span className="text-green-900">{c.name}</span>
+                                      <span className="text-xs text-green-600">({c.icd10_codes?.join(', ')})</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-sm text-gray-500">None identified</p>
+                              )}
+                            </div>
+                            <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                              <p className="text-xs font-semibold text-yellow-800 mb-2">Low-Impact (2+ = LOW adj)</p>
+                              {extractedIndicators.comorbidities.low.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {extractedIndicators.comorbidities.low.map((c, i) => (
+                                    <li key={i} className="text-sm flex items-center gap-2">
+                                      <CheckCircle2 className="w-3 h-3 text-yellow-600" />
+                                      <span className="text-yellow-900">{c.name}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-sm text-gray-500">None identified</p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Clinical Indicators Detail */}
+                      <Card>
+                        <CardHeader className="py-3 bg-gray-50">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Brain className="w-4 h-4 text-gray-600" />
+                            Clinical Indicators Extracted
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {Object.entries({
+                              assistDevices: { label: 'Assistive Devices', icon: Footprints, color: 'blue' },
+                              oxygenUse: { label: 'Oxygen Usage', icon: Wind, color: 'cyan' },
+                              woundPresent: { label: 'Wound Presence', icon: Activity, color: 'red' },
+                              fallRisk: { label: 'Fall Risk Factors', icon: AlertTriangle, color: 'orange' },
+                              painMentioned: { label: 'Pain Indicators', icon: Thermometer, color: 'purple' },
+                              cognitiveIssues: { label: 'Cognitive Concerns', icon: Brain, color: 'pink' },
+                              diabetic: { label: 'Diabetic Management', icon: Pill, color: 'amber' },
+                              cardiacIssues: { label: 'Cardiac Symptoms', icon: Heart, color: 'rose' },
+                              assistanceNeeded: { label: 'Assistance Levels', icon: Hand, color: 'indigo' },
+                              independentMentioned: { label: 'Independence', icon: CheckCircle2, color: 'green' }
+                            }).map(([key, { label, icon: Icon, color }]) => {
+                              const indicator = extractedIndicators.clinical[key];
+                              if (!indicator) return null;
+                              return (
+                                <div key={key} className={`p-3 rounded border ${indicator.detected ? `bg-${color}-50 border-${color}-200` : 'bg-gray-50 border-gray-200'}`}>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <Icon className={`w-4 h-4 ${indicator.detected ? `text-${color}-600` : 'text-gray-400'}`} />
+                                      <span className="font-medium text-sm">{label}</span>
+                                    </div>
+                                    {indicator.detected ? (
+                                      <Badge className="bg-green-500 text-xs">Detected</Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="text-xs">Not found</Badge>
+                                    )}
+                                  </div>
+                                  {indicator.detected && indicator.sentences?.length > 0 && (
+                                    <div className="mt-2 space-y-1 max-h-24 overflow-y-auto">
+                                      {indicator.sentences.slice(0, 3).map((s, i) => (
+                                        <div key={i} className="flex items-start gap-1 group">
+                                          <p className="text-xs text-gray-600 italic flex-1">"{s.substring(0, 150)}{s.length > 150 ? '...' : ''}"</p>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
+                                            onClick={() => copyToClipboard(s, `${key}-${i}`)}
+                                          >
+                                            {copiedText === `${key}-${i}` ? (
+                                              <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                            ) : (
+                                              <Copy className="w-3 h-3" />
+                                            )}
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Functional Phrases Detail */}
+                      <Card>
+                        <CardHeader className="py-3 bg-blue-50">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Footprints className="w-4 h-4 text-blue-600" />
+                            ADL/IADL Functional Phrases
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {Object.entries({
+                              bathing: { label: 'Bathing (M1830)', icon: '🚿', items: ['M1830', 'GG0130E'] },
+                              dressing: { label: 'Dressing (M1810/20)', icon: '👕', items: ['M1810', 'M1820'] },
+                              ambulation: { label: 'Ambulation (M1860)', icon: '🚶', items: ['M1860', 'GG0170'] },
+                              transfer: { label: 'Transfers (M1850)', icon: '🔄', items: ['M1850'] },
+                              toileting: { label: 'Toileting (M1840)', icon: '🚽', items: ['M1840'] },
+                              grooming: { label: 'Grooming (M1800)', icon: '🪥', items: ['M1800'] },
+                              eating: { label: 'Eating (GG0130A)', icon: '🍽️', items: ['GG0130A'] },
+                              medications: { label: 'Medications (M2020)', icon: '💊', items: ['M2020', 'M2030'] }
+                            }).map(([key, { label, icon, items }]) => {
+                              const phrases = extractedIndicators.functional[key];
+                              const count = phrases?.allPhrases?.length || 0;
+                              return (
+                                <div key={key} className={`p-3 rounded border ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-lg">{icon}</span>
+                                      <span className="font-medium text-sm">{label}</span>
+                                    </div>
+                                    <Badge variant={count > 0 ? 'default' : 'outline'} className="text-xs">
+                                      {count} phrases
+                                    </Badge>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1 mb-2">
+                                    {items.map(item => (
+                                      <Badge key={item} variant="outline" className="text-xs">{item}</Badge>
+                                    ))}
+                                  </div>
+                                  {count > 0 && phrases.allPhrases?.slice(0, 2).map((s, i) => (
+                                    <p key={i} className="text-xs text-gray-600 italic mb-1">"{s.substring(0, 80)}..."</p>
+                                  ))}
+                                  {phrases?.assistLevel?.length > 0 && (
+                                    <div className="mt-2 pt-2 border-t">
+                                      <p className="text-xs text-gray-500">Assist Levels Found:</p>
+                                      {phrases.assistLevel.slice(0, 2).map((a, i) => (
+                                        <Badge key={i} variant="outline" className="text-xs mr-1 mt-1">{a.substring(0, 40)}</Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>Run the OASIS analysis to see extracted indicators</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+
               <TabsContent value="reference">
                 <CMSComplianceReference onInsertGuidance={handleInsertGuidance} />
               </TabsContent>
