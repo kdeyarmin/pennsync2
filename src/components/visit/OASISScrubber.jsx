@@ -887,44 +887,78 @@ Return JSON:
       "estimated_revenue_impact": "$XXX per episode"
     }
   ],
+  "cross_validation_failures": [
+    {
+      "rule_violated": "specific cross-validation rule number and name from list",
+      "items_involved": ["M-numbers involved in the conflict"],
+      "current_values": "current documented/implied values for each item",
+      "expected_relationship": "what the relationship should be per CMS guidelines",
+      "narrative_evidence": "exact quotes showing the conflict",
+      "resolution": "specific fix - either adjust scores or add documentation",
+      "pdgm_impact": "how this affects functional level/reimbursement",
+      "audit_risk": "high|medium|low"
+    }
+  ],
   "underscoring_opportunities": [
     {
-      "oasis_item": "M-number: Name",
-      "current_implied_score": "what current documentation suggests",
-      "supported_score": "higher value supported by narrative",
-      "narrative_evidence": "EXACT QUOTE from documentation",
-      "cms_scoring_reference": "CMS definition that supports higher score",
+      "oasis_item": "M-number: Full Name",
+      "current_implied_score": "what current documentation suggests (numeric)",
+      "supported_score": "higher value supported by narrative (numeric)",
+      "score_difference": "+X points",
+      "narrative_evidence": "EXACT QUOTE from documentation that supports higher score",
+      "cms_scoring_definition": "CMS OASIS-E 2024 definition for the supported score level",
+      "cms_reference": "Specific CMS guidance manual chapter/section",
+      "why_higher_score_applies": "detailed explanation matching narrative to CMS definition",
       "revenue_impact": "$XXX-XXX per episode difference",
-      "documentation_enhancement": "specific wording to add to support higher score"
+      "functional_level_change": "whether this changes low→medium or medium→high",
+      "documentation_enhancement": "specific wording to add to strengthen the score justification",
+      "example_compliant_language": "model documentation that fully supports the higher score"
     }
   ],
   "overscoring_risks": [
     {
-      "oasis_item": "M-number: Name",
-      "claimed_score": "implied value from documentation",
-      "supported_score": "lower value actually supported by evidence",
+      "oasis_item": "M-number: Full Name",
+      "claimed_score": "implied/documented value (numeric)",
+      "supported_score": "lower value actually supported by evidence (numeric)",
+      "score_difference": "-X points",
       "narrative_evidence": "EXACT QUOTE that contradicts higher score",
+      "cms_scoring_definition": "CMS definition showing why lower score applies",
+      "audit_vulnerability": {
+        "type": "ADR|TPE|SMRC|RAC",
+        "specific_risk": "detailed description of what auditors would flag",
+        "potential_recoupment": "$XXX estimated if audited",
+        "documentation_that_contradicts": "specific phrases auditors would cite"
+      },
       "audit_risk": "high|medium",
-      "audit_vulnerability": "specific audit concern",
-      "recommendation": "Add specific documentation OR adjust score to X"
+      "recommended_action": "EITHER add documentation: [specific text] OR adjust score to X",
+      "if_keeping_score": "documentation needed to defend current score",
+      "if_lowering_score": "how to properly document the lower functional level"
     }
   ],
   "inconsistencies": [
     {
       "issue": "Clear description of conflict",
+      "inconsistency_type": "internal_narrative|narrative_vs_oasis|cross_item|diagnosis_vs_function",
       "location_1": "exact quote 1 with context",
       "location_2": "exact quote 2 that conflicts",
       "oasis_items_affected": ["M-numbers affected"],
+      "why_problematic": "specific audit/compliance concern",
       "resolution": "specific documentation change to resolve",
       "audit_risk": "high|medium|low"
     }
   ],
   "vague_documentation": [
     {
-      "oasis_item": "M-number",
-      "current_language": "vague phrase from documentation",
-      "problem": "why this is not defensible",
-      "improved_language": "specific wording that would be defensible"
+      "oasis_item": "M-number: Full Name",
+      "current_language": "exact vague phrase from documentation",
+      "problem": "why this is not defensible - what's missing",
+      "cms_requirement": "what CMS requires for defensible scoring",
+      "defensibility_issue": "how an auditor would challenge this",
+      "score_range_ambiguity": "which scores this vague language could support (e.g., could be 1, 2, or 3)",
+      "improved_language": "specific wording that would be defensible",
+      "key_elements_to_add": ["list of specific elements missing"],
+      "example_for_score_X": "if intending score X, document: [specific text]",
+      "example_for_score_Y": "if intending score Y, document: [specific text]"
     }
   ],
   "compliant_items": [
