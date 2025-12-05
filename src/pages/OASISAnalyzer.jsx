@@ -253,11 +253,15 @@ export default function OASISAnalyzer() {
             referral_date: { type: "string", description: "M0104 Referral date" },
             days_since_soc: { type: "string", description: "Number of days since start of care if mentioned" },
 
-            // Diagnoses - capture all text
-            primary_diagnosis_code: { type: "string", description: "M1021 primary ICD-10 code" },
-            primary_diagnosis_description: { type: "string", description: "Primary diagnosis name" },
+            // Diagnoses - capture all text with improved extraction
+            m1021_primary_diagnosis_code: { type: "string", description: "M1021 Primary Diagnosis ICD-10-CM code (e.g., I50.9, J44.1)" },
+            m1021_primary_diagnosis_description: { type: "string", description: "M1021 Primary Diagnosis full description/name" },
+            m1023_other_diagnoses: { type: "string", description: "M1023 Other Diagnoses - all ICD-10 codes and descriptions comma separated" },
+            primary_diagnosis_code: { type: "string", description: "Primary ICD-10 code if M1021 not found" },
+            primary_diagnosis_description: { type: "string", description: "Primary diagnosis name if M1021 not found" },
             secondary_diagnoses: { type: "string", description: "All secondary diagnoses codes and names comma separated" },
             comorbidities_text: { type: "string", description: "All comorbidities and conditions mentioned" },
+            diagnosis_severity: { type: "string", description: "Any severity indicators mentioned (acute, chronic, exacerbation, etc.)" },
 
             // Admission source and timing
             m1000_admission_source: { type: "string", description: "M1000 value 1-6 or description" },
@@ -339,9 +343,11 @@ export default function OASISAnalyzer() {
       Reason (M0100): ${output.assessment_reason || '?'}
 
       DIAGNOSES:
-      Primary (M1021): ${output.primary_diagnosis_code || '?'} - ${output.primary_diagnosis_description || 'Not found'}
+      M1021 Primary Diagnosis: ${output.m1021_primary_diagnosis_code || output.primary_diagnosis_code || '?'} - ${output.m1021_primary_diagnosis_description || output.primary_diagnosis_description || 'Not found'}
+      M1023 Other Diagnoses: ${output.m1023_other_diagnoses || 'None documented'}
       Secondary Diagnoses: ${output.secondary_diagnoses || 'None documented'}
       Comorbidities: ${output.comorbidities_text || 'None extracted'}
+      Severity Indicators: ${output.diagnosis_severity || 'None noted'}
 
       ADMISSION/EPISODE:
       M1000 Admission Source: ${output.m1000_admission_source || '?'}
@@ -459,6 +465,18 @@ export default function OASISAnalyzer() {
         return items.slice(0, 15); // Limit to 15 comorbidities
       };
 
+      // Extract primary diagnosis with M1021 priority
+      const primaryDxCode = output?.m1021_primary_diagnosis_code || output?.primary_diagnosis_code || '';
+      const primaryDxDescription = output?.m1021_primary_diagnosis_description || output?.primary_diagnosis_description || '';
+      const primaryDiagnosis = primaryDxDescription || primaryDxCode;
+
+      // Combine M1023 and secondary diagnoses for comorbidities
+      const allSecondaryDx = [
+        output?.m1023_other_diagnoses,
+        output?.secondary_diagnoses,
+        output?.comorbidities_text
+      ].filter(Boolean).join(', ');
+
       // Determine therapy needs
       const checkTherapy = (val) => {
         if (!val) return false;
@@ -468,9 +486,11 @@ export default function OASISAnalyzer() {
 
       // Build structured PDGM data with enhanced extraction
       const structuredPdgmData = {
-        primary_diagnosis: output?.primary_diagnosis_description || output?.primary_diagnosis_code || '',
-        primary_diagnosis_code: output?.primary_diagnosis_code || '',
-        comorbidities: parseComorbidities(output?.secondary_diagnoses || output?.comorbidities_text),
+        primary_diagnosis: primaryDiagnosis,
+        primary_diagnosis_code: primaryDxCode,
+        primary_diagnosis_description: primaryDxDescription,
+        diagnosis_severity: output?.diagnosis_severity || null,
+        comorbidities: parseComorbidities(allSecondaryDx),
         admission_source: admissionSource,
         episode_timing: episodeTiming,
         m0110_episode_timing: output?.m0110_episode_timing || null,
