@@ -2171,7 +2171,8 @@ Return JSON:
               </TabsContent>
 
               <TabsContent value="results">
-                <div className="space-y-6 py-4">
+                <ScrollArea className="h-[60vh]">
+                <div className="space-y-6 py-4 pr-2">
               {/* Quick Summary Banner */}
               <div className={`p-4 rounded-lg border-2 ${
                 oasisResults.ready_for_submission 
