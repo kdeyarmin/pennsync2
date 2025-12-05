@@ -3331,7 +3331,6 @@ Return JSON:
                 </ScrollArea>
               </TabsContent>
             </Tabs>
-            </Tabs>
           ) : null}
 
           <DialogFooter className="border-t pt-4">
