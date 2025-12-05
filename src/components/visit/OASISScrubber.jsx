@@ -611,7 +611,7 @@ Return JSON:
               </TabsContent>
 
               <TabsContent value="results">
-            <div className="space-y-6 py-4">
+                <div className="space-y-6 py-4">
               {/* Overall Score Card */}
               <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
                 <div className="grid grid-cols-2 gap-6 mb-4">
@@ -1126,8 +1126,9 @@ Return JSON:
                       </li>
                     ))}
                   </ul>
+                  </div>
+                )}
                 </div>
-              )}
               </TabsContent>
             </Tabs>
           ) : null}
