@@ -661,12 +661,20 @@ PDGM FUNCTIONAL POINTS CALCULATION:
 - Low: 0-5 points; Medium: 6-11 points; High: 12+ points
 - Higher functional impairment = Higher reimbursement
 
+UPLOADED OASIS VALIDATION (if OASIS data was uploaded):
+- Compare uploaded OASIS scores against clinical narrative for consistency
+- Flag any M-item scores that DON'T match the narrative description
+- Identify GG scores that conflict with M1800-M1860 scores
+- Check if diagnosis codes support the documented functional limitations
+- Validate that discharge goals are realistic based on current status
+
 Analyze for:
 1. MISSING required items - Be specific about M-number and visit type requirement
-2. INCONSISTENCIES - Quote exact conflicting phrases from documentation
-3. UNDERSCORING - Where documentation CLEARLY supports higher impairment than likely scored
-4. OVERSCORING - Where claims exceed documented evidence (audit risk)
+2. INCONSISTENCIES - Quote exact conflicting phrases from documentation AND compare against uploaded OASIS if available
+3. UNDERSCORING - Where documentation CLEARLY supports higher impairment than the uploaded OASIS score
+4. OVERSCORING - Where uploaded OASIS scores exceed what narrative documentation supports (audit risk)
 5. VAGUE DOCUMENTATION - Items that need more specific language for defensible scoring
+6. OASIS-NARRATIVE MISMATCHES - Where uploaded OASIS scores don't align with clinical narrative
 
 Return JSON:
 
