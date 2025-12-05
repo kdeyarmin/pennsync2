@@ -1203,42 +1203,13 @@ Return JSON:
                               <TrendingUp className="w-3 h-3" /> 1-Year Projection
                             </p>
                             <div className="space-y-2">
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-gray-50 p-2 rounded">
-                                  <p className="text-gray-500">Similar Episodes/Year</p>
-                                  <p className="font-bold text-gray-800">
-                                    {financialPredictions[idx].annual_projection?.similar_episodes_per_year}
-                                  </p>
-                                </div>
-                                <div className="bg-gray-50 p-2 rounded">
-                                  <p className="text-gray-500">Monthly Impact</p>
-                                  <p className="font-bold text-blue-700">
-                                    {formatCurrency(financialPredictions[idx].annual_projection?.monthly_impact)}
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-2 rounded border border-orange-200">
-                                <p className="text-xs text-orange-700 mb-1">⚠️ If Unaddressed (Current Path)</p>
-                                <p className="text-lg font-bold text-red-700">
-                                  {formatCurrency(financialPredictions[idx].annual_projection?.total_current_revenue)}
-                                </p>
-                              </div>
-
-                              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded border border-green-300">
-                                <p className="text-xs text-green-700 mb-1">✅ If Corrected (Optimized)</p>
-                                <p className="text-lg font-bold text-green-700">
-                                  {formatCurrency(financialPredictions[idx].annual_projection?.total_corrected_revenue)}
-                                </p>
-                              </div>
-
                               <div className="bg-gradient-to-r from-purple-100 to-indigo-100 p-3 rounded border-2 border-purple-300">
                                 <p className="text-xs text-purple-700 mb-1">💎 Total Annual Opportunity</p>
                                 <p className="text-3xl font-bold text-purple-800">
                                   {formatCurrency(financialPredictions[idx].annual_projection?.total_opportunity)}
                                 </p>
                                 <p className="text-xs text-purple-600 mt-1">
-                                  Even at 50% correction rate: {formatCurrency(financialPredictions[idx].annual_projection?.opportunity_if_50_percent_corrected)}
+                                  Based on {financialPredictions[idx].annual_projection?.similar_episodes_per_year} similar episodes per year
                                 </p>
                               </div>
                             </div>
