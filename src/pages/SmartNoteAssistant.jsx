@@ -879,6 +879,42 @@ Return JSON:
                             }}
                           />
 
+                          {/* AI Risk & Gap Detector */}
+                          <AIRiskAndGapDetector
+                            noteContent={enhancedNote || roughNote}
+                            patientData={selectedPatient}
+                            diagnosis={finalDiagnosis}
+                            vitalSigns={vitalSigns}
+                            carePlans={carePlans}
+                            onInsertText={(text) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(prev => prev + '\n\n' + text);
+                              } else {
+                                setRoughNote(prev => prev + '\n\n' + text);
+                              }
+                            }}
+                          />
+
+                          {/* AI Grammar & Terminology Corrector */}
+                          <AIGrammarTerminologyCorrector
+                            noteContent={enhancedNote || roughNote}
+                            careType="home_health"
+                            onApplyCorrection={(original, corrected) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(prev => prev.replace(original, corrected));
+                              } else {
+                                setRoughNote(prev => prev.replace(original, corrected));
+                              }
+                            }}
+                            onApplyAll={(correctedNote) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(correctedNote);
+                              } else {
+                                setRoughNote(correctedNote);
+                              }
+                            }}
+                          />
+
                           {/* Clinical Decision Support */}
                           <ClinicalDecisionSupport
                             enhancedNote={enhancedNote}
