@@ -449,6 +449,14 @@ Return JSON:
                 optimization_potential: { type: "string" }
               }
             },
+            documentation_quality: {
+              type: "object",
+              properties: {
+                specificity_score: { type: "number" },
+                defensibility_score: { type: "number" },
+                key_weaknesses: { type: "array", items: { type: "string" } }
+              }
+            },
             functional_score_analysis: {
               type: "object",
               properties: {
@@ -460,7 +468,8 @@ Return JSON:
                 m1850_transferring: { type: "object" },
                 m1860_ambulation: { type: "object" },
                 total_functional_points: { type: "number" },
-                functional_level_result: { type: "string" }
+                functional_level_result: { type: "string" },
+                cross_validation_issues: { type: "array", items: { type: "string" } }
               }
             },
             critical_missing: {
