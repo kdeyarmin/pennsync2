@@ -34,8 +34,10 @@ import {
   Download,
   FileJson,
   FileDown,
-  FileSpreadsheet
+  FileSpreadsheet,
+  BarChart3
 } from "lucide-react";
+import PDGMAnalyticsDashboard from "./PDGMAnalyticsDashboard";
 import {
   Dialog,
   DialogContent,
@@ -668,6 +670,7 @@ Return JSON:
   };
 
   const [isExporting, setIsExporting] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const exportPDF = async () => {
     if (!navigation) return;
@@ -800,6 +803,15 @@ Return JSON:
             {navigation && (
               <div className="flex items-center gap-2">
                 <Button
+                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  size="sm"
+                  variant={showAnalytics ? "default" : "outline"}
+                  className="gap-2"
+                >
+                  <BarChart3 className="w-3 h-3" />
+                  Analytics
+                </Button>
+                <Button
                   onClick={exportJSON}
                   size="sm"
                   variant="outline"
@@ -851,6 +863,13 @@ Return JSON:
           </Button>
         ) : (
           <>
+            {/* Analytics Dashboard */}
+            {showAnalytics && (
+              <div className="mb-6">
+                <PDGMAnalyticsDashboard />
+              </div>
+            )}
+
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Clinical Group */}
