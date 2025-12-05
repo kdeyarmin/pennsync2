@@ -54,6 +54,7 @@ import OASISActionWorkflow from "../components/oasis/OASISActionWorkflow";
 import AIDocumentationQualityAnalyzer from "../components/oasis/AIDocumentationQualityAnalyzer";
 import AIDocumentationAssistant from "../components/oasis/AIDocumentationAssistant";
 import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";
+import OASISDocumentationQualityScorer from "../components/oasis/OASISDocumentationQualityScorer";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
 import SmartNoteDataImport from "../components/oasis/SmartNoteDataImport";
 import { useAutoFlagOASIS, THRESHOLDS } from "../components/oasis/OASISAutoFlagger";
@@ -1223,6 +1224,9 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             currentReport={analysisResults}
             currentPdgmData={pdgmData}
           />
+
+          {/* AI Documentation Quality Scorer - Full Width */}
+          <OASISDocumentationQualityScorer analysisResults={analysisResults} pdgmData={pdgmData} />
 
           {/* AI Documentation Quality Analyzer - Full Width */}
           <AIDocumentationQualityAnalyzer analysisResults={analysisResults} pdgmData={pdgmData} />
