@@ -41,10 +41,11 @@ export default function OASISIntegratedClinicalSupport({
   noteContent,
   diagnosis,
   vitalSigns,
-  carePlans,
+  carePlans = [],
   onInsertText,
   onCreateTask,
-  onUpdateCarePlan
+  onUpdateCarePlan,
+  onDiscrepanciesFound
 }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
@@ -214,12 +215,17 @@ Return JSON:
         });
 
         setAnalysis(response);
+        
+        // Notify parent of discrepancies for AI Documentation Suggester
+        if (response?.discrepancies && onDiscrepanciesFound) {
+          onDiscrepanciesFound(response.discrepancies);
+        }
       } catch (err) {
         console.error("Clinical support analysis error:", err);
       }
       setIsAnalyzing(false);
     }, 2000),
-    [noteContent, oasisPdgmData, diagnosis, vitalSigns, carePlans, patientName]
+    [noteContent, oasisPdgmData, diagnosis, vitalSigns, carePlans, patientName, onDiscrepanciesFound]
   );
 
   // Auto-analyze when content changes significantly
