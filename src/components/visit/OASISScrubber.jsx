@@ -1496,6 +1496,66 @@ Return JSON:
     return colors[impact] || 'bg-gray-500';
   };
 
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(id);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
+
+  const exportResults = () => {
+    if (!oasisResults) return;
+    const dataStr = JSON.stringify(oasisResults, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oasis-analysis-${visit?.id || 'report'}-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getFilteredResults = () => {
+    if (!oasisResults || analysisFilter === 'all') return oasisResults;
+    
+    const filtered = { ...oasisResults };
+    switch (analysisFilter) {
+      case 'revenue':
+        filtered.critical_missing = filtered.critical_missing?.filter(i => i.reimbursement_impact === 'high');
+        filtered.overscoring_risks = [];
+        filtered.inconsistencies = [];
+        filtered.vague_documentation = [];
+        break;
+      case 'audit':
+        filtered.underscoring_opportunities = [];
+        filtered.critical_missing = filtered.critical_missing?.filter(i => i.reimbursement_impact !== 'low');
+        break;
+      case 'functional':
+        filtered.oasis_narrative_mismatches = [];
+        filtered.inconsistencies = [];
+        break;
+      case 'clinical':
+        filtered.underscoring_opportunities = [];
+        filtered.overscoring_risks = [];
+        break;
+    }
+    return filtered;
+  };
+
+  const getCategoryIcon = (category) => {
+    const icons = {
+      'Functional': Footprints,
+      'Clinical': Stethoscope,
+      'Medications': Pill,
+      'Wounds': Activity,
+      'GG': Hand,
+      'Cognitive': Brain,
+      'Safety': AlertTriangle,
+      'Cardiac': Heart,
+      'Respiratory': Wind
+    };
+    return icons[category] || FileCheck;
+  };
+
   // Don't show for hospice patients
   if (!isHomeHealth) {
     return null;
