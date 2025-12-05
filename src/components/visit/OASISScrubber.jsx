@@ -140,37 +140,45 @@ GG0170: Mobility
 
 ---
 
-**SPECIAL CONSIDERATIONS FOR ${visitType}:**
+**${visitType} SPECIFIC REQUIREMENTS:**
 `;
 
       if (visit.visit_type === 'admission') {
         prompt += `
-SOC/ROC CRITICAL ITEMS:
-- Complete medication reconciliation REQUIRED
-- All ADL/IADL baselines REQUIRED
-- Functional limitations clearly documented
-- Primary caregiver assessment REQUIRED
-- Safety assessment REQUIRED
-- Homebound status clearly justified
+SOC/ROC MANDATORY:
+- ALL GG items with admission AND discharge goal scores
+- Complete medication reconciliation with HIGH-RISK drug identification
+- Baseline functional scores (M1800-M1860) - DOCUMENT WORST ABILITY
+- BIMS or CAM for cognitive screening
+- PHQ-2/PHQ-9 depression screening
+- Fall risk assessment with interventions
+- Homebound status with 2+ criteria documented
+- Primary caregiver capability assessment
+- 60-day prognosis statement
 `;
       } else if (visit.visit_type === 'recertification') {
         prompt += `
-RECERTIFICATION CRITICAL ITEMS:
-- Progress toward goals documented for ALL items
-- Comparison to previous OASIS timepoint
-- Continued need for services clearly justified
-- Updated medication list
-- Functional status reassessment (any changes?)
-- Homebound status reaffirmed
+RECERTIFICATION MANDATORY:
+- Functional status COMPARISON to prior assessment (improved/same/declined)
+- Updated GG scores with goal progress
+- Continued homebound justification (re-document criteria)
+- Skilled need justification (why services still needed)
+- Updated medication list with reconciliation
+- Wound healing progress (if applicable)
+- Fall risk re-assessment
+- Care plan goal achievement status
 `;
       } else if (visit.visit_type === 'discharge') {
         prompt += `
-DISCHARGE CRITICAL ITEMS:
-- Reason for discharge clearly stated
-- Final functional status assessment
-- Discharge disposition documented
-- Emergent care since last assessment
-- Patient outcomes achieved
+DISCHARGE MANDATORY:
+- M2410: Discharge disposition (specific destination)
+- Final GG scores (actual vs goal comparison)
+- M2301: Emergent care since last assessment
+- Outcome summary for each care plan goal
+- Final functional status M1800-M1860
+- Discharge medication list
+- Patient/caregiver education completed
+- Follow-up appointments scheduled
 `;
       }
 
@@ -178,15 +186,21 @@ DISCHARGE CRITICAL ITEMS:
 
 ---
 
-**YOUR TASK:**
+**ACCURACY VALIDATION RULES:**
+1. Functional scores must match narrative description (if "needs assist with bathing" then M1830 cannot be 0)
+2. Diagnosis must support functional limitations documented
+3. GG scores must be internally consistent (can't walk 150ft if can't walk 10ft)
+4. Wound staging must match size/depth description
+5. Medication count must match med list in narrative
+6. Cognitive score must align with behavioral observations
 
-Analyze the documentation and identify:
-1. MISSING OASIS data elements (critical for submission)
-2. INCOMPLETE assessments (vague or insufficient detail)
-3. INCONSISTENCIES (conflicting information)
-4. REIMBURSEMENT RISKS (issues that could affect PDGM case mix)
+Identify:
+1. MISSING required items (by M-number)
+2. INCONSISTENCIES between narrative and likely OASIS response
+3. UNDERSCORING opportunities (documentation supports higher acuity)
+4. OVERSCORING risks (documentation doesn't support claimed impairment)
 
-Return a detailed JSON assessment report:
+Return JSON:
 
 {
   "overall_score": 0-100,
