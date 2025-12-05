@@ -135,4 +135,4 @@ export function useAutoFlagOASIS() {
   });
 }
 
-export default { autoFlagOASIS, useAutoFlagOASIS, THRESHOLDS };
+export { autoFlagOASIS, useAutoFlagOASIS, THRESHOLDS };
