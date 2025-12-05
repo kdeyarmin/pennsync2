@@ -3244,7 +3244,91 @@ Return JSON:
                   </ul>
                   </div>
                 )}
+
+                {/* Audit Defense Summary */}
+                {oasisResults.audit_defense_summary && (
+                  <div className="bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+                    <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5" />
+                      Audit Defense Summary
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {oasisResults.audit_defense_summary.strongest_documentation?.length > 0 && (
+                        <div className="bg-green-50 p-3 rounded border border-green-200">
+                          <p className="text-xs font-semibold text-green-800 mb-2 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Strongest Documentation
+                          </p>
+                          <ul className="text-xs text-green-700 space-y-1">
+                            {oasisResults.audit_defense_summary.strongest_documentation.map((s, i) => (
+                              <li key={i}>• {s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {oasisResults.audit_defense_summary.weakest_documentation?.length > 0 && (
+                        <div className="bg-red-50 p-3 rounded border border-red-200">
+                          <p className="text-xs font-semibold text-red-800 mb-2 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" /> Weakest Documentation
+                          </p>
+                          <ul className="text-xs text-red-700 space-y-1">
+                            {oasisResults.audit_defense_summary.weakest_documentation.map((s, i) => (
+                              <li key={i}>• {s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {oasisResults.audit_defense_summary.recommended_priority_fixes?.length > 0 && (
+                        <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                          <p className="text-xs font-semibold text-yellow-800 mb-2 flex items-center gap-1">
+                            <Info className="w-3 h-3" /> Priority Fixes
+                          </p>
+                          <ol className="text-xs text-yellow-700 space-y-1 list-decimal list-inside">
+                            {oasisResults.audit_defense_summary.recommended_priority_fixes.map((s, i) => (
+                              <li key={i}>{s}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Documentation Quality Score */}
+                {oasisResults.documentation_quality && (
+                  <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                    <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <FileCheck className="w-5 h-5" />
+                      Documentation Quality Analysis
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Specificity Score</p>
+                        <p className="text-2xl font-bold text-gray-900">{oasisResults.documentation_quality.specificity_score || 'N/A'}</p>
+                        <Progress value={oasisResults.documentation_quality.specificity_score || 0} className="h-2 mt-1" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Defensibility Score</p>
+                        <p className="text-2xl font-bold text-gray-900">{oasisResults.documentation_quality.defensibility_score || 'N/A'}</p>
+                        <Progress value={oasisResults.documentation_quality.defensibility_score || 0} className="h-2 mt-1" />
+                      </div>
+                    </div>
+                    {oasisResults.documentation_quality.key_weaknesses?.length > 0 && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Key Weaknesses:</p>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {oasisResults.documentation_quality.key_weaknesses.map((w, i) => (
+                            <li key={i} className="flex items-start gap-1">
+                              <XCircle className="w-3 h-3 text-red-500 mt-0.5 flex-shrink-0" />
+                              {w}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
                 </div>
+                </ScrollArea>
               </TabsContent>
             </Tabs>
           ) : null}
