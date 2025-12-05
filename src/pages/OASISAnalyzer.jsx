@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion,
   AccordionContent,
@@ -25,17 +26,26 @@ import {
   ClipboardCheck,
   Lightbulb,
   Download,
-  FileDown
+  FileDown,
+  FolderArchive
 } from "lucide-react";
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
+import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
 
 export default function OASISAnalyzer() {
+  const [activeTab, setActiveTab] = useState("single");
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [error, setError] = useState(null);
+
+  // Handle viewing batch result in single analysis view
+  const handleViewBatchResult = (result) => {
+    setAnalysisResults(result);
+    setActiveTab("single");
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -263,78 +273,95 @@ Return your analysis as JSON:
         <p className="text-sm text-gray-600">Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips</p>
       </div>
 
-      {/* Upload Section */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Upload className="w-5 h-5 text-blue-600" />
-            Upload OASIS Document
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              className="hidden"
-              id="oasis-upload"
-            />
-            <label htmlFor="oasis-upload" className="cursor-pointer">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-sm text-gray-600 mb-2">
-                {file ? file.name : "Click to upload or drag and drop"}
-              </p>
-              <p className="text-xs text-gray-400">PDF files only</p>
-            </label>
-          </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="single" className="gap-2">
+            <FileText className="w-4 h-4" />
+            Single Document
+          </TabsTrigger>
+          <TabsTrigger value="batch" className="gap-2">
+            <FolderArchive className="w-4 h-4" />
+            Batch Analysis
+          </TabsTrigger>
+        </TabsList>
 
-          {file && (
-            <div className="mt-4 flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium">{file.name}</span>
-                <Badge variant="outline" className="text-xs">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </Badge>
+        <TabsContent value="batch" className="mt-4">
+          <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} />
+        </TabsContent>
+
+        <TabsContent value="single" className="mt-4">
+          {/* Upload Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Upload className="w-5 h-5 text-blue-600" />
+                Upload OASIS Document
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="oasis-upload"
+                />
+                <label htmlFor="oasis-upload" className="cursor-pointer">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-sm text-gray-600 mb-2">
+                    {file ? file.name : "Click to upload or drag and drop"}
+                  </p>
+                  <p className="text-xs text-gray-400">PDF files only</p>
+                </label>
               </div>
-              <Button
-                onClick={handleUploadAndAnalyze}
-                disabled={isUploading || isAnalyzing}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isUploading || isAnalyzing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {isUploading ? "Uploading..." : "Analyzing..."}
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCheck className="w-4 h-4 mr-2" />
-                    Analyze OASIS
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
 
-          {(isUploading || isAnalyzing) && (
-            <div className="mt-4">
-              <Progress value={uploadProgress} className="h-2" />
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                {isUploading ? "Uploading document..." : "AI is analyzing your OASIS document..."}
-              </p>
-            </div>
-          )}
+              {file && (
+                <div className="mt-4 flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium">{file.name}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </Badge>
+                  </div>
+                  <Button
+                    onClick={handleUploadAndAnalyze}
+                    disabled={isUploading || isAnalyzing}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isUploading || isAnalyzing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {isUploading ? "Uploading..." : "Analyzing..."}
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardCheck className="w-4 h-4 mr-2" />
+                        Analyze OASIS
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
 
-          {error && (
-            <Alert className="mt-4 bg-red-50 border-red-200">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+              {(isUploading || isAnalyzing) && (
+                <div className="mt-4">
+                  <Progress value={uploadProgress} className="h-2" />
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    {isUploading ? "Uploading document..." : "AI is analyzing your OASIS document..."}
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <Alert className="mt-4 bg-red-50 border-red-200">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <AlertDescription className="text-red-800">{error}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
 
       {/* Analysis Results */}
       {analysisResults && (
@@ -603,6 +630,8 @@ Return your analysis as JSON:
           </Accordion>
         </div>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
