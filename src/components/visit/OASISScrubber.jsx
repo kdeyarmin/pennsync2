@@ -551,15 +551,189 @@ Return JSON:
                   </div>
                 </div>
 
-                {oasisResults.estimated_case_mix_impact && (
-                  <Alert className="bg-yellow-50 border-yellow-200">
-                    <DollarSign className="w-4 h-4 text-yellow-600" />
-                    <AlertDescription className="text-yellow-900">
-                      <strong>PDGM Payment Impact:</strong> {oasisResults.estimated_case_mix_impact}
-                    </AlertDescription>
-                  </Alert>
+                {/* PDGM Analysis Section */}
+                {oasisResults.pdgm_analysis && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 mb-4">
+                    <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
+                      <DollarSign className="w-5 h-5" />
+                      PDGM Case-Mix Analysis
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div className="bg-white p-2 rounded border">
+                        <p className="text-xs text-gray-500">Clinical Group</p>
+                        <p className="font-semibold text-gray-900">{oasisResults.pdgm_analysis.clinical_group}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded border">
+                        <p className="text-xs text-gray-500">Functional Level</p>
+                        <p className={`font-semibold ${
+                          oasisResults.pdgm_analysis.functional_level === 'high' ? 'text-green-700' :
+                          oasisResults.pdgm_analysis.functional_level === 'medium' ? 'text-yellow-700' : 'text-red-700'
+                        }`}>{oasisResults.pdgm_analysis.functional_level?.toUpperCase()}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded border">
+                        <p className="text-xs text-gray-500">Comorbidity Adj.</p>
+                        <p className="font-semibold text-gray-900">{oasisResults.pdgm_analysis.comorbidity_adjustment}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded border">
+                        <p className="text-xs text-gray-500">Case-Mix Weight</p>
+                        <p className="font-semibold text-green-700">{oasisResults.pdgm_analysis.estimated_case_mix_weight}</p>
+                      </div>
+                    </div>
+                    {oasisResults.pdgm_analysis.optimization_potential && (
+                      <Alert className="mt-3 bg-green-100 border-green-300">
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        <AlertDescription className="text-green-900 text-sm">
+                          <strong>Optimization Potential:</strong> {oasisResults.pdgm_analysis.optimization_potential}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
+
+                {/* Functional Score Analysis */}
+                {oasisResults.functional_score_analysis && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="font-bold text-blue-900 mb-3">Functional Score Breakdown</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                      {['m1800_grooming', 'm1810_dress_upper', 'm1820_dress_lower', 'm1830_bathing', 'm1840_toilet_transfer', 'm1850_transferring', 'm1860_ambulation'].map(key => {
+                        const item = oasisResults.functional_score_analysis[key];
+                        if (!item) return null;
+                        return (
+                          <div key={key} className={`p-2 rounded border ${
+                            item.accuracy === 'underscored' ? 'bg-yellow-100 border-yellow-300' :
+                            item.accuracy === 'overscored' ? 'bg-red-100 border-red-300' :
+                            'bg-white border-gray-200'
+                          }`}>
+                            <p className="font-medium text-gray-700">{key.replace('m', 'M').replace(/_/g, ' ')}</p>
+                            <p className="text-lg font-bold">{item.documented_value ?? '?'}</p>
+                            {item.accuracy !== 'accurate' && (
+                              <Badge className={`text-xs ${item.accuracy === 'underscored' ? 'bg-yellow-500' : 'bg-red-500'}`}>
+                                {item.accuracy}
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div className="p-2 rounded border bg-indigo-100 border-indigo-300">
+                        <p className="font-medium text-indigo-700">Total Points</p>
+                        <p className="text-lg font-bold text-indigo-900">{oasisResults.functional_score_analysis.total_functional_points ?? '?'}</p>
+                        <Badge className="bg-indigo-600 text-xs">{oasisResults.functional_score_analysis.functional_level_result}</Badge>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
+
+              {/* Underscoring Opportunities */}
+              {oasisResults.underscoring_opportunities && oasisResults.underscoring_opportunities.length > 0 && (
+                <div className="space-y-3">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer bg-green-50 p-4 rounded-lg border-2 border-green-200"
+                    onClick={() => toggleCategory('underscoring')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="w-6 h-6 text-green-600" />
+                      <div>
+                        <h4 className="font-bold text-green-900 text-lg">
+                          💰 Underscoring Opportunities ({oasisResults.underscoring_opportunities.length})
+                        </h4>
+                        <p className="text-xs text-green-700">Documentation supports higher scores - potential revenue increase</p>
+                      </div>
+                    </div>
+                    {expandedCategories.includes('underscoring') ? (
+                      <ChevronUp className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-green-600" />
+                    )}
+                  </div>
+
+                  {expandedCategories.includes('underscoring') && (
+                    <div className="space-y-3">
+                      {oasisResults.underscoring_opportunities.map((item, index) => (
+                        <Card key={index} className="border-l-4 border-l-green-500 bg-green-50">
+                          <CardContent className="p-4 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-bold text-green-900">{item.oasis_item}</h5>
+                              <Badge className="bg-green-600">{item.revenue_impact}</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="bg-white p-2 rounded border">
+                                <p className="text-xs text-gray-500">Current Score</p>
+                                <p className="font-semibold text-gray-700">{item.current_score}</p>
+                              </div>
+                              <div className="bg-green-100 p-2 rounded border border-green-300">
+                                <p className="text-xs text-green-700">Supported Score</p>
+                                <p className="font-semibold text-green-800">{item.supported_score}</p>
+                              </div>
+                            </div>
+                            <div className="bg-white p-2 rounded border text-sm">
+                              <p className="text-xs text-gray-500">Evidence from Narrative:</p>
+                              <p className="text-gray-900 italic">"{item.narrative_evidence}"</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Overscoring Risks */}
+              {oasisResults.overscoring_risks && oasisResults.overscoring_risks.length > 0 && (
+                <div className="space-y-3">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer bg-red-50 p-4 rounded-lg border-2 border-red-200"
+                    onClick={() => toggleCategory('overscoring')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-6 h-6 text-red-600" />
+                      <div>
+                        <h4 className="font-bold text-red-900 text-lg">
+                          ⚠️ Overscoring Risks ({oasisResults.overscoring_risks.length})
+                        </h4>
+                        <p className="text-xs text-red-700">Claimed scores not fully supported - audit risk</p>
+                      </div>
+                    </div>
+                    {expandedCategories.includes('overscoring') ? (
+                      <ChevronUp className="w-5 h-5 text-red-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-red-600" />
+                    )}
+                  </div>
+
+                  {expandedCategories.includes('overscoring') && (
+                    <div className="space-y-3">
+                      {oasisResults.overscoring_risks.map((item, index) => (
+                        <Card key={index} className="border-l-4 border-l-red-500 bg-red-50">
+                          <CardContent className="p-4 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-bold text-red-900">{item.oasis_item}</h5>
+                              <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : 'bg-orange-500'}`}>
+                                {item.audit_risk} audit risk
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="bg-red-100 p-2 rounded border border-red-200">
+                                <p className="text-xs text-red-700">Claimed Score</p>
+                                <p className="font-semibold text-red-800">{item.claimed_score}</p>
+                              </div>
+                              <div className="bg-white p-2 rounded border">
+                                <p className="text-xs text-gray-500">Supported Score</p>
+                                <p className="font-semibold text-gray-700">{item.supported_score}</p>
+                              </div>
+                            </div>
+                            <Alert className="bg-white border-red-200">
+                              <AlertDescription className="text-red-900 text-sm">
+                                <strong>Recommendation:</strong> {item.recommendation}
+                              </AlertDescription>
+                            </Alert>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Critical Missing Items */}
               {oasisResults.critical_missing && oasisResults.critical_missing.length > 0 && (
