@@ -30,7 +30,11 @@ import {
   Target,
   Lightbulb,
   ChevronRight,
-  Settings
+  Settings,
+  Download,
+  FileJson,
+  FileDown,
+  FileSpreadsheet
 } from "lucide-react";
 import {
   Dialog,
@@ -329,6 +333,81 @@ Return JSON:
     localStorage.setItem('pdgm_agency_costs', JSON.stringify(defaults));
   };
 
+  const exportJSON = () => {
+    const exportData = {
+      navigation_analysis: navigation,
+      financial_predictions: financialPredictions,
+      resolution_workflows: resolutionWorkflows,
+      pdgm_data: pdgmData,
+      analysis_results: analysisResults,
+      export_date: new Date().toISOString()
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `PDGM_Navigator_Analysis_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportCSV = () => {
+    if (!navigation) return;
+
+    const rows = [
+      ['PDGM Navigator Analysis - Discrepancies & Opportunities'],
+      ['Generated:', new Date().toISOString()],
+      [''],
+      ['DISCREPANCIES'],
+      ['Type', 'Severity', 'Finding', 'Expected', 'Actual', 'Revenue Impact', 'Recommendation']
+    ];
+
+    (navigation.discrepancies || []).forEach(d => {
+      rows.push([
+        d.type || '',
+        d.severity || '',
+        d.finding || '',
+        d.expected || '',
+        d.actual || '',
+        d.revenue_impact || '',
+        d.recommendation || ''
+      ]);
+    });
+
+    rows.push(['']);
+    rows.push(['OPTIMIZATION OPPORTUNITIES']);
+    rows.push(['Area', 'Current State', 'Opportunity', 'Potential Impact', 'Action Required', 'Clinical Justification']);
+
+    (navigation.optimization_opportunities || []).forEach(o => {
+      rows.push([
+        o.area || '',
+        o.current_state || '',
+        o.opportunity || '',
+        o.potential_impact || '',
+        o.action_required || '',
+        o.clinical_justification_needed || ''
+      ]);
+    });
+
+    const csvContent = rows.map(row => 
+      row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `PDGM_Navigator_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const getFinancialPrediction = async (item, index, type = 'discrepancy') => {
     setLoadingPrediction(index);
     
@@ -588,6 +667,36 @@ Return JSON:
     return 'text-blue-600 bg-blue-100';
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const exportPDF = async () => {
+    if (!navigation) return;
+
+    setIsExporting(true);
+    try {
+      const { generatePDGMNavigatorPDF } = await import('@/functions/generatePDGMNavigatorPDF');
+      
+      const response = await generatePDGMNavigatorPDF({
+        navigationData: navigation,
+        pdgmData: pdgmData,
+        patientName: pdgmData?.patient_info?.name || 'Unknown Patient'
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PDGM_Navigator_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error("PDF export error:", err);
+    }
+    setIsExporting(false);
+  };
+
   if (!pdgmData) {
     return (
       <Card className="border-2 border-gray-200">
@@ -687,6 +796,41 @@ Return JSON:
               <Badge className="bg-green-600 text-white text-lg px-3 py-1">
                 {formatCurrency(navigation.summary.payment_amount)}
               </Badge>
+            )}
+            {navigation && (
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={exportJSON}
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <FileJson className="w-3 h-3" />
+                  JSON
+                </Button>
+                <Button
+                  onClick={exportCSV}
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <FileSpreadsheet className="w-3 h-3" />
+                  CSV
+                </Button>
+                <Button
+                  onClick={exportPDF}
+                  disabled={isExporting}
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                >
+                  {isExporting ? (
+                    <><Loader2 className="w-3 h-3 animate-spin" /> PDF</>
+                  ) : (
+                    <><FileDown className="w-3 h-3" /> PDF</>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </CardTitle>
