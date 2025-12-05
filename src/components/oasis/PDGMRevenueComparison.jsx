@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DollarSign,
   TrendingUp,
@@ -19,11 +20,16 @@ import {
   Wrench,
   Activity,
   Stethoscope,
-  ClipboardList
+  ClipboardList,
+  Sliders,
+  Trophy
 } from "lucide-react";
 import { calculatePDGM } from "@/functions/calculatePDGM";
 import { generatePDGMComparisonPDF } from "@/functions/generatePDGMComparisonPDF";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import PDGMWhatIfBuilder from "./PDGMWhatIfBuilder";
+import TopOptimizationOpportunities from "./TopOptimizationOpportunities";
+import debounce from "lodash/debounce";
 
 function CaseMixBreakdown({ original, corrected }) {
   if (!original) return null;
@@ -259,6 +265,10 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
   const [error, setError] = useState(null);
   const [hasAutoCalculated, setHasAutoCalculated] = useState(false);
   const [showCorrections, setShowCorrections] = useState(false);
+  const [activeTab, setActiveTab] = useState("analysis");
+  const [whatIfScenario, setWhatIfScenario] = useState(null);
+  const [whatIfRevenue, setWhatIfRevenue] = useState(null);
+  const [isCalculatingWhatIf, setIsCalculatingWhatIf] = useState(false);
 
   // Auto-calculate when pdgmData becomes available
   useEffect(() => {
@@ -273,8 +283,46 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
     if (!pdgmData) {
       setRevenueData(null);
       setHasAutoCalculated(false);
+      setWhatIfScenario(null);
+      setWhatIfRevenue(null);
     }
   }, [pdgmData]);
+
+  // Debounced What-If calculation
+  const calculateWhatIfRevenue = useCallback(
+    debounce(async (scenarioData) => {
+      if (!pdgmData || !scenarioData) return;
+      
+      setIsCalculatingWhatIf(true);
+      try {
+        const mergedScenario = {
+          ...pdgmData,
+          ...scenarioData,
+          functional_scores: {
+            ...pdgmData.functional_scores,
+            ...scenarioData.functional_scores
+          }
+        };
+
+        const response = await calculatePDGM({
+          pdgmData: pdgmData,
+          correctedPdgmData: mergedScenario
+        });
+
+        setWhatIfRevenue(response.data?.corrected?.totalPayment || 0);
+      } catch (err) {
+        console.error("What-If calculation error:", err);
+      }
+      setIsCalculatingWhatIf(false);
+    }, 500),
+    [pdgmData]
+  );
+
+  // Handle What-If scenario changes
+  const handleScenarioChange = (scenarioData) => {
+    setWhatIfScenario(scenarioData);
+    calculateWhatIfRevenue(scenarioData);
+  };
 
   const calculateRevenue = async () => {
     if (!pdgmData) return;
@@ -537,6 +585,46 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
           </>
         ) : (
           <>
+            {/* Tabs for different views */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="analysis" className="text-xs gap-1">
+                  <DollarSign className="w-3 h-3" />
+                  Analysis
+                </TabsTrigger>
+                <TabsTrigger value="whatif" className="text-xs gap-1">
+                  <Sliders className="w-3 h-3" />
+                  What-If
+                </TabsTrigger>
+                <TabsTrigger value="opportunities" className="text-xs gap-1">
+                  <Trophy className="w-3 h-3" />
+                  Top Tips
+                </TabsTrigger>
+              </TabsList>
+
+              {/* What-If Tab */}
+              <TabsContent value="whatif" className="mt-4 space-y-4">
+                <PDGMWhatIfBuilder
+                  originalPdgmData={pdgmData}
+                  onScenarioChange={handleScenarioChange}
+                  originalRevenue={revenueData.original?.totalPayment}
+                  scenarioRevenue={isCalculatingWhatIf ? null : whatIfRevenue}
+                />
+                {isCalculatingWhatIf && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Recalculating...
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Top Opportunities Tab */}
+              <TabsContent value="opportunities" className="mt-4">
+                <TopOptimizationOpportunities revenueTips={analysisResults?.revenue_tips} />
+              </TabsContent>
+
+              {/* Analysis Tab */}
+              <TabsContent value="analysis" className="mt-4 space-y-4">
             {/* Revenue Comparison */}
             <div className="grid grid-cols-2 gap-4">
               {/* Original Revenue */}
@@ -730,6 +818,8 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
             >
               Recalculate
             </Button>
+              </TabsContent>
+            </Tabs>
           </>
         )}
 
