@@ -201,7 +201,7 @@ Return your analysis as JSON:
       setAnalysisResults(analysisResult);
     } catch (err) {
       console.error("Error analyzing OASIS:", err);
-      setError("Failed to analyze the OASIS document. Please try again.");
+      setError(err.message || "Failed to analyze the OASIS document. Please try again.");
     }
 
     setIsUploading(false);
