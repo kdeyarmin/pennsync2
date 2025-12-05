@@ -24,8 +24,10 @@ import {
   TrendingUp,
   ClipboardCheck,
   Lightbulb,
-  Download
+  Download,
+  FileDown
 } from "lucide-react";
+import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 
 export default function OASISAnalyzer() {
   const [file, setFile] = useState(null);
@@ -230,81 +232,28 @@ Return your analysis as JSON:
     return colors[severity] || "bg-gray-100 text-gray-800";
   };
 
-  const handleDownloadReport = () => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadReport = async () => {
     if (!analysisResults) return;
 
-    const report = `
-OASIS ANALYSIS REPORT
-Generated: ${new Date().toLocaleString()}
-=====================
-
-OVERALL SCORES
---------------
-Overall Score: ${analysisResults.overall_score}%
-Accuracy Score: ${analysisResults.accuracy_score}%
-Compliance Score: ${analysisResults.compliance_score}%
-Revenue Optimization Score: ${analysisResults.revenue_optimization_score}%
-
-SUMMARY
--------
-${analysisResults.summary}
-
-KEY RECOMMENDATIONS
--------------------
-${analysisResults.key_recommendations?.map((r, i) => `${i + 1}. ${r}`).join('\n') || 'None'}
-
-STRENGTHS
----------
-${analysisResults.strengths?.map(s => `• ${s}`).join('\n') || 'None identified'}
-
-ACCURACY ISSUES
----------------
-${analysisResults.accuracy_issues?.map(i => `
-Item: ${i.item}
-Issue: ${i.issue}
-Severity: ${i.severity}
-Recommendation: ${i.recommendation}
-`).join('\n') || 'No issues found'}
-
-COMPLIANCE CONCERNS
--------------------
-${analysisResults.compliance_concerns?.map(c => `
-Area: ${c.area}
-Issue: ${c.issue}
-Severity: ${c.severity}
-CMS Reference: ${c.cms_reference || 'N/A'}
-Recommendation: ${c.recommendation}
-`).join('\n') || 'No concerns found'}
-
-REVENUE OPTIMIZATION TIPS
--------------------------
-${analysisResults.revenue_tips?.map(t => `
-Category: ${t.category}
-Current: ${t.current_documentation}
-Opportunity: ${t.opportunity}
-Impact: ${t.potential_impact}
-Action: ${t.specific_action}
-`).join('\n') || 'No tips available'}
-
-AUDIT RISK AREAS
-----------------
-${analysisResults.audit_risk_areas?.map(r => `
-Area: ${r.area}
-Risk Level: ${r.risk_level}
-Explanation: ${r.explanation}
-Mitigation: ${r.mitigation}
-`).join('\n') || 'No risks identified'}
-`;
-
-    const blob = new Blob([report], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `OASIS_Analysis_Report_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
+    setIsDownloading(true);
+    try {
+      const response = await generateOASISReportPDF({ analysisResults });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `OASIS_Analysis_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      setError("Failed to generate PDF report. Please try again.");
+    }
+    setIsDownloading(false);
   };
 
   return (
@@ -394,9 +343,18 @@ Mitigation: ${r.mitigation}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Analysis Results</CardTitle>
-              <Button variant="outline" size="sm" onClick={handleDownloadReport}>
-                <Download className="w-4 h-4 mr-2" />
-                Download Report
+              <Button variant="outline" size="sm" onClick={handleDownloadReport} disabled={isDownloading}>
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileDown className="w-4 h-4 mr-2" />
+                    Download PDF Report
+                  </>
+                )}
               </Button>
             </CardHeader>
             <CardContent>
