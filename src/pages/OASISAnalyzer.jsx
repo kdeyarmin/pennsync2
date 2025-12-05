@@ -78,6 +78,9 @@ export default function OASISAnalyzer() {
   const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedToPatient, setSavedToPatient] = useState(false);
+  const [revenueData, setRevenueData] = useState(null);
+  const [navigationData, setNavigationData] = useState(null);
+  const [qualityScore, setQualityScore] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -1188,6 +1191,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             analysisResults={analysisResults} 
             pdgmData={pdgmData}
             onPaymentCalculated={(payment) => setOriginalPayment(payment)}
+            onRevenueCalculated={(revData) => setRevenueData(revData)}
           />
 
           {/* Scenario Planning & Action Workflow */}

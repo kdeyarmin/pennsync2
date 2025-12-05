@@ -377,7 +377,7 @@ function CaseMixBreakdown({ original, corrected }) {
   );
 }
 
-export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPaymentCalculated }) {
+export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPaymentCalculated, onRevenueCalculated }) {
   const [isCalculating, setIsCalculating] = useState(false);
   const [revenueData, setRevenueData] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -461,6 +461,11 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
       });
 
       setRevenueData(response.data);
+
+      // Notify parent of revenue data
+      if (onRevenueCalculated && response.data) {
+        onRevenueCalculated(response.data);
+      }
 
                 // Store validation and scenarios data
                 if (response.data?.dataValidation) {
