@@ -67,18 +67,62 @@ export default function OASISScrubber({
 
       const visitType = visit?.visit_type?.replace(/_/g, ' ').toUpperCase() || 'VISIT';
 
-      let prompt = `You are a CMS-certified OASIS-E compliance auditor with expertise in 2024 Medicare home health CoP regulations. Perform RIGOROUS completeness and accuracy check for ${visitType}.
+      // Extract specific clinical indicators from narrative for better accuracy
+      const narrativeLower = (narrativeText || '').toLowerCase();
+      const clinicalIndicators = {
+        assistDevices: /walker|cane|wheelchair|rollator|crutch|grab bar|shower chair|commode/gi.test(narrativeText),
+        oxygenUse: /oxygen|o2|liters|lpm|nasal cannula|concentrator/gi.test(narrativeText),
+        woundPresent: /wound|ulcer|incision|surgical site|dressing|staging|granulation/gi.test(narrativeText),
+        fallRisk: /fall|unsteady|balance|gait|weak|dizziness|vertigo/gi.test(narrativeText),
+        painMentioned: /pain|discomfort|ache|soreness|tender/gi.test(narrativeText),
+        cognitiveIssues: /confused|forgetful|dementia|alzheimer|cognitive|memory|orientation/gi.test(narrativeText),
+        diabetic: /diabetes|diabetic|insulin|blood sugar|glucose|a1c|hypoglycemia/gi.test(narrativeText),
+        cardiacIssues: /heart|cardiac|chf|afib|pacemaker|edema|shortness of breath|dyspnea/gi.test(narrativeText),
+        assistanceNeeded: /assist|help|require|dependent|unable|cannot|difficulty|needs help/gi.test(narrativeText),
+        independentMentioned: /independent|independently|without assist|self|able to/gi.test(narrativeText)
+      };
 
-PATIENT:
+      // Extract specific functional phrases
+      const functionalPhrases = {
+        bathing: narrativeText?.match(/bath[eing]*[^.]*\./gi) || [],
+        dressing: narrativeText?.match(/dress[eing]*[^.]*\./gi) || [],
+        ambulation: narrativeText?.match(/(walk[ings]*|ambula[tion]*|mobil[ity]*)[^.]*\./gi) || [],
+        transfer: narrativeText?.match(/transfer[ring]*[^.]*\./gi) || [],
+        toileting: narrativeText?.match(/(toilet[ing]*|bathroom)[^.]*\./gi) || [],
+        grooming: narrativeText?.match(/(groom[ing]*|hygiene|brush|comb|shav)[^.]*\./gi) || []
+      };
+
+      let prompt = `You are a CMS-certified OASIS-E compliance auditor with 15+ years expertise in 2024 Medicare home health CoP regulations and PDGM optimization. Perform RIGOROUS, EVIDENCE-BASED completeness and accuracy check for ${visitType}.
+
+CRITICAL INSTRUCTIONS FOR ACCURACY:
+1. ONLY score based on EXPLICIT documentation - do not infer or assume
+2. When documentation is vague, flag as "insufficient documentation" not as a specific score
+3. Compare narrative descriptions against OASIS scoring definitions EXACTLY
+4. Identify CONTRADICTIONS between different parts of documentation
+5. Calculate functional points using CMS methodology precisely
+
+PATIENT CONTEXT:
 - Visit Type: ${visitType}
-- Primary Dx: ${patient.primary_diagnosis || 'Not specified'}
-- Date: ${visit.visit_date}
+- Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
+- Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None documented'}
+- Visit Date: ${visit.visit_date}
 
-DOCUMENTATION:
-${narrativeText || '[No documentation]'}
+CLINICAL INDICATORS DETECTED IN NARRATIVE:
+${JSON.stringify(clinicalIndicators, null, 2)}
 
-VITALS:
-${Object.keys(vitalSigns).length > 0 ? JSON.stringify(vitalSigns, null, 2) : 'None'}
+FUNCTIONAL PHRASES EXTRACTED:
+- Bathing: ${functionalPhrases.bathing.join(' | ') || 'None found'}
+- Dressing: ${functionalPhrases.dressing.join(' | ') || 'None found'}
+- Ambulation: ${functionalPhrases.ambulation.join(' | ') || 'None found'}
+- Transfers: ${functionalPhrases.transfer.join(' | ') || 'None found'}
+- Toileting: ${functionalPhrases.toileting.join(' | ') || 'None found'}
+- Grooming: ${functionalPhrases.grooming.join(' | ') || 'None found'}
+
+VITAL SIGNS:
+${Object.keys(vitalSigns).length > 0 ? JSON.stringify(vitalSigns, null, 2) : 'None documented'}
+
+FULL CLINICAL DOCUMENTATION:
+${narrativeText || '[No documentation provided]'}
 
 ---
 
