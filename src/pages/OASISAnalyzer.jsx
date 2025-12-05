@@ -55,6 +55,7 @@ import AIDocumentationQualityAnalyzer from "../components/oasis/AIDocumentationQ
 import AIDocumentationAssistant from "../components/oasis/AIDocumentationAssistant";
 import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";
 import OASISDocumentationQualityScorer from "../components/oasis/OASISDocumentationQualityScorer";
+import AutomatedPDGMNavigator from "../components/oasis/AutomatedPDGMNavigator";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
 import SmartNoteDataImport from "../components/oasis/SmartNoteDataImport";
 import { useAutoFlagOASIS, THRESHOLDS } from "../components/oasis/OASISAutoFlagger";
@@ -1162,6 +1163,13 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
               )}
             </CardContent>
           </Card>
+
+          {/* Automated PDGM Navigator */}
+          <AutomatedPDGMNavigator 
+            analysisResults={analysisResults} 
+            pdgmData={pdgmData}
+            revenueData={null}
+          />
 
           {/* PDGM Revenue Analysis */}
           <PDGMRevenueComparison 
