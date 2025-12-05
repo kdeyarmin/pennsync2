@@ -331,63 +331,216 @@ export default function OASISAnalyzer() {
       const output = extractedData.output;
       
       if (output) {
-        // Format structured data for analysis
+        // Format structured data for comprehensive analysis
         const sections = [];
         
+        // Patient demographics
         if (output.patient_info) {
-          sections.push(`PATIENT INFO:\n${JSON.stringify(output.patient_info, null, 2)}`);
+          const pi = output.patient_info;
+          sections.push(`PATIENT DEMOGRAPHICS:
+Name: ${pi.name || 'Not extracted'}
+DOB: ${pi.dob || '?'}
+Medicare #: ${pi.medicare_number || '?'}
+MRN: ${pi.medical_record_number || '?'}
+Address: ${pi.address || '?'}
+SOC Date: ${pi.soc_date || '?'}
+Assessment Date: ${pi.assessment_date || '?'}
+Assessment Type: ${pi.assessment_type || '?'}
+Agency: ${pi.agency_name || '?'}`);
         }
         
+        // Primary diagnosis - critical for PDGM
         if (output.primary_diagnosis) {
-          sections.push(`PRIMARY DIAGNOSIS (M1021):\nICD-10: ${output.primary_diagnosis.icd10_code || 'Not found'}\nDescription: ${output.primary_diagnosis.description || 'Not found'}\nRaw Text: ${output.primary_diagnosis.raw_text || 'N/A'}`);
+          const pd = output.primary_diagnosis;
+          sections.push(`PRIMARY DIAGNOSIS (M1021) - CRITICAL FOR PDGM:
+ICD-10 Code: ${pd.icd10_code || 'NOT FOUND - REQUIRES MANUAL REVIEW'}
+Description: ${pd.description || 'Not found'}
+Symptom Control Rating: ${pd.symptom_control_rating || '?'}
+Date of Onset: ${pd.date_of_onset || '?'}
+Raw Text from Document: ${pd.raw_text || 'N/A'}`);
         }
         
+        // All diagnoses verbatim
         if (output.all_diagnoses_raw) {
-          sections.push(`ALL DIAGNOSES RAW TEXT:\n${output.all_diagnoses_raw}`);
+          sections.push(`ALL DIAGNOSES (VERBATIM FROM DOCUMENT):
+${output.all_diagnoses_raw}`);
         }
         
+        // Other diagnoses structured
         if (output.other_diagnoses?.length > 0) {
-          sections.push(`OTHER DIAGNOSES (M1023):\n${output.other_diagnoses.map((d, i) => `${i+1}. ${d.icd10_code || ''} - ${d.description || ''}`).join('\n')}`);
+          sections.push(`OTHER DIAGNOSES (M1023):
+${output.other_diagnoses.map((d, i) => `${d.position || String.fromCharCode(98 + i)}. ${d.icd10_code || 'No code'} - ${d.description || 'No description'} (Control: ${d.symptom_control_rating || '?'})`).join('\n')}`);
         }
         
+        // M1800-M1860 Functional Status
         if (output.functional_status) {
-          sections.push(`FUNCTIONAL STATUS (M1800-M1860):\nM1800 Grooming: ${output.functional_status.m1800_grooming || '?'}\nM1810 Upper Dressing: ${output.functional_status.m1810_dress_upper || '?'}\nM1820 Lower Dressing: ${output.functional_status.m1820_dress_lower || '?'}\nM1830 Bathing: ${output.functional_status.m1830_bathing || '?'}\nM1840 Toilet Transfer: ${output.functional_status.m1840_toilet_transfer || '?'}\nM1850 Transferring: ${output.functional_status.m1850_transferring || '?'}\nM1860 Ambulation: ${output.functional_status.m1860_ambulation || '?'}`);
+          const fs = output.functional_status;
+          sections.push(`FUNCTIONAL STATUS (M1800-M1860):
+M1800 Grooming: ${fs.m1800_grooming || '?'} (0=Indep, 3=Dependent)
+M1810 Upper Body Dressing: ${fs.m1810_dress_upper || '?'} (0-3)
+M1820 Lower Body Dressing: ${fs.m1820_dress_lower || '?'} (0-3)
+M1830 Bathing: ${fs.m1830_bathing || '?'} (0-6, higher=more dependent)
+M1840 Toilet Transferring: ${fs.m1840_toilet_transfer || '?'} (0-4)
+M1850 Transferring: ${fs.m1850_transferring || '?'} (0-5)
+M1860 Ambulation: ${fs.m1860_ambulation || '?'} (0-6)
+M1033 Risk for Hospitalization: ${fs.m1033_risk_hosp || '?'}
+M1034 Overall Status: ${fs.m1034_overall_status || '?'}`);
         }
         
+        // Section GG - Critical for PDGM
         if (output.gg_functional_abilities) {
-          if (output.gg_functional_abilities.gg0130_self_care) {
-            sections.push(`GG0130 SELF-CARE:\n${JSON.stringify(output.gg_functional_abilities.gg0130_self_care, null, 2)}`);
+          const gg = output.gg_functional_abilities;
+          if (gg.gg0130_self_care) {
+            sections.push(`SECTION GG0130 SELF-CARE (Admission Scores - CRITICAL FOR PDGM):
+Eating: ${gg.gg0130_self_care.eating_admission || '?'}
+Oral Hygiene: ${gg.gg0130_self_care.oral_hygiene_admission || '?'}
+Toileting Hygiene: ${gg.gg0130_self_care.toileting_hygiene_admission || '?'}
+Shower/Bathe Self: ${gg.gg0130_self_care.shower_bathe_self_admission || '?'}
+Upper Body Dressing: ${gg.gg0130_self_care.upper_body_dressing_admission || '?'}
+Lower Body Dressing: ${gg.gg0130_self_care.lower_body_dressing_admission || '?'}
+Putting on Footwear: ${gg.gg0130_self_care.putting_on_footwear_admission || '?'}
+(Scores: 06=Independent, 05=Setup, 04=Supervision, 03=Partial, 02=Substantial, 01=Dependent)`);
           }
-          if (output.gg_functional_abilities.gg0170_mobility) {
-            sections.push(`GG0170 MOBILITY:\n${JSON.stringify(output.gg_functional_abilities.gg0170_mobility, null, 2)}`);
+          if (gg.gg0170_mobility) {
+            const m = gg.gg0170_mobility;
+            sections.push(`SECTION GG0170 MOBILITY (Admission Scores - CRITICAL FOR PDGM):
+Roll Left/Right: ${m.roll_left_right_admission || '?'}
+Sit to Lying: ${m.sit_to_lying_admission || '?'}
+Lying to Sitting: ${m.lying_to_sitting_admission || '?'}
+Sit to Stand: ${m.sit_to_stand_admission || '?'}
+Chair/Bed Transfer: ${m.chair_bed_transfer_admission || '?'}
+Toilet Transfer: ${m.toilet_transfer_admission || '?'}
+Walk 10 Feet: ${m.walk_10_feet_admission || '?'}
+Walk 50 Feet w/ 2 Turns: ${m.walk_50_feet_2_turns_admission || '?'}
+Walk 150 Feet: ${m.walk_150_feet_admission || '?'}
+Walk 10 Feet Uneven: ${m.walk_10_feet_uneven_admission || '?'}
+1 Step/Curb: ${m.step_curb_admission || '?'}
+4 Steps: ${m.four_steps_admission || '?'}
+12 Steps: ${m.twelve_steps_admission || '?'}
+Picking Up Object: ${m.picking_up_object_admission || '?'}`);
           }
         }
         
+        // Clinical items
         if (output.clinical_items) {
-          sections.push(`CLINICAL ITEMS:\n${JSON.stringify(output.clinical_items, null, 2)}`);
+          const ci = output.clinical_items;
+          sections.push(`CLINICAL STATUS ITEMS:
+M1400 Dyspnea: ${ci.m1400_dyspnea || '?'} (0=None, 4=At rest)
+M1242 Pain Frequency: ${ci.m1242_pain_freq || '?'}
+M1240 Pain Assessment: ${ci.m1240_pain_assessment || '?'}
+M1033 Risk Factors: ${ci.m1033_risk_hospitalization || '?'}
+
+INTEGUMENTARY STATUS:
+M1306 Pressure Ulcer Present: ${ci.m1306_pressure_ulcer_present || '?'}
+M1307 Oldest Stage 2+: ${ci.m1307_oldest_pressure_ulcer || '?'}
+M1311 Pressure Ulcer Count: ${ci.m1311_pressure_ulcer_count || '?'}
+M1322 Pressure Ulcer Stage: ${ci.m1322_pressure_ulcer_stage || '?'}
+M1330 Stasis Ulcer: ${ci.m1330_stasis_ulcer || '?'}
+M1332 Stasis Ulcer Count: ${ci.m1332_stasis_ulcer_count || '?'}
+M1334 Stasis Ulcer Status: ${ci.m1334_stasis_ulcer_status || '?'}
+M1340 Surgical Wound: ${ci.m1340_surgical_wound || '?'}
+M1342 Surgical Wound Status: ${ci.m1342_surgical_wound_status || '?'}
+
+ELIMINATION:
+M1610 Urinary Incontinence: ${ci.m1610_urinary_incontinence || '?'}
+M1620 Bowel Incontinence: ${ci.m1620_bowel_incontinence || '?'}
+M1630 Ostomy: ${ci.m1630_ostomy || '?'}`);
         }
         
+        // Medications
         if (output.medications) {
-          sections.push(`MEDICATIONS:\n${JSON.stringify(output.medications, null, 2)}`);
+          const med = output.medications;
+          sections.push(`MEDICATION MANAGEMENT:
+M2001 Drug Regimen Review: ${med.m2001_drug_regimen_review || '?'}
+M2003 Medication Follow-up: ${med.m2003_med_followup || '?'}
+M2005 Medication Intervention: ${med.m2005_med_intervention || '?'}
+M2010 High Risk Drugs: ${med.m2010_high_risk_drugs || '?'}
+M2015 High Risk Drug Classes: ${med.m2015_high_risk_drug_classes || '?'}
+M2020 Oral Medication Management: ${med.m2020_oral_med_mgmt || '?'}
+M2030 Injectable Medication Management: ${med.m2030_injectable_med_mgmt || '?'}
+
+Medication List: ${med.medication_list_raw || 'Not extracted'}`);
         }
         
+        // Admission info - Critical for PDGM
         if (output.admission_info) {
-          sections.push(`ADMISSION INFO:\nFrom: ${output.admission_info.m1000_from_where_admitted || '?'}\nSource Category: ${output.admission_info.admission_source_category || '?'}\nEpisode Timing: ${output.admission_info.episode_timing || '?'}`);
+          const ai = output.admission_info;
+          sections.push(`ADMISSION INFO (CRITICAL FOR PDGM):
+M1000 Admitted From: ${ai.m1000_from_where_admitted || '?'}
+M1005 Inpatient Discharge Date: ${ai.m1005_inpatient_discharge_date || '?'}
+Admission Source Category: ${ai.admission_source_category || 'NEEDS DETERMINATION'} (community vs institutional)
+Episode Timing: ${ai.episode_timing || 'NEEDS DETERMINATION'} (early=days 1-30, late=days 31-60)
+M0110 Episode Timing: ${ai.m0110_episode_timing || '?'}
+M0102 SOC/ROC Date: ${ai.m0102_soc_roc_date || '?'}
+LUPA Risk: ${ai.lupa_risk || '?'}
+Referral Source: ${ai.referral_source || '?'}`);
         }
         
+        // Therapy services
         if (output.therapy_need) {
-          sections.push(`THERAPY NEED:\n${JSON.stringify(output.therapy_need, null, 2)}`);
+          const th = output.therapy_need;
+          sections.push(`THERAPY SERVICES:
+M2200 Therapy Need: ${th.m2200_therapy_need || '?'}
+PT Ordered: ${th.pt_ordered ? 'Yes' : 'No'} - Visits: ${th.pt_visits_planned || '?'}
+OT Ordered: ${th.ot_ordered ? 'Yes' : 'No'} - Visits: ${th.ot_visits_planned || '?'}
+SLP Ordered: ${th.slp_ordered ? 'Yes' : 'No'} - Visits: ${th.slp_visits_planned || '?'}
+MSW Ordered: ${th.msw_ordered ? 'Yes' : 'No'}
+HHA Ordered: ${th.hha_ordered ? 'Yes' : 'No'}
+SN Visits Planned: ${th.sn_visits_planned || '?'}`);
         }
         
+        // Cognitive status
         if (output.cognitive_status) {
-          sections.push(`COGNITIVE STATUS:\n${JSON.stringify(output.cognitive_status, null, 2)}`);
+          const cog = output.cognitive_status;
+          sections.push(`COGNITIVE/BEHAVIORAL STATUS:
+M1700 Cognitive Functioning: ${cog.m1700_cognitive || '?'}
+M1710 When Confused: ${cog.m1710_confusion || '?'}
+M1720 When Anxious: ${cog.m1720_anxiety || '?'}
+M1730 Depression Screening: ${cog.m1730_depression_screening || '?'}
+M1745 PHQ-2 Score: ${cog.m1745_phq2_score || '?'}
+M1750 PHQ-9 Score: ${cog.m1750_phq9_score || '?'}
+BIMS Score: ${cog.bims_score || '?'}
+CAM Result: ${cog.cam_result || '?'}`);
+        }
+
+        // Sensory status
+        if (output.sensory_status) {
+          const ss = output.sensory_status;
+          sections.push(`SENSORY STATUS:
+M1200 Vision: ${ss.m1200_vision || '?'}
+M1210 Hearing: ${ss.m1210_hearing || '?'}
+M1220 Speech: ${ss.m1220_speech || '?'}
+Skin Integrity Notes: ${ss.skin_integrity_notes || '?'}`);
+        }
+
+        // Care management
+        if (output.care_management) {
+          const cm = output.care_management;
+          sections.push(`CARE MANAGEMENT:
+M2102 Care Management Types: ${cm.m2102_care_management || '?'}
+Fall Risk Assessment: ${cm.fall_risk_assessment || '?'}
+Fall Prevention Discussed: ${cm.fall_prevention_discussed || '?'}
+Advance Directives: ${cm.advance_directives || '?'}
+Emergency Plan: ${cm.emergency_plan || '?'}`);
         }
         
+        // Full text content
         if (output.full_text_content) {
-          sections.push(`ADDITIONAL CONTENT:\n${output.full_text_content}`);
+          sections.push(`ADDITIONAL DOCUMENT CONTENT:
+${output.full_text_content}`);
+        }
+
+        // Document metadata
+        if (output.document_metadata) {
+          const dm = output.document_metadata;
+          sections.push(`DOCUMENT METADATA:
+Pages: ${dm.total_pages || '?'}
+EMR System: ${dm.emr_system || '?'}
+Clinician: ${dm.clinician_name || '?'} ${dm.clinician_credentials || ''}
+Signature Date: ${dm.signature_date || '?'}`);
         }
         
-        oasisTextContent = sections.join('\n\n---\n\n');
+        oasisTextContent = sections.join('\n\n' + '='.repeat(50) + '\n\n');
         
         // Fallback to raw output if structured parsing failed
         if (!oasisTextContent || oasisTextContent.length < 100) {
