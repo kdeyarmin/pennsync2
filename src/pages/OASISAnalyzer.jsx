@@ -115,111 +115,34 @@ export default function OASISAnalyzer() {
 
       console.log("Extracted OASIS content length:", oasisTextContent.length);
 
+      // Truncate content if too long to avoid timeout
+      const maxContentLength = 15000;
+      const truncatedContent = oasisTextContent.length > maxContentLength 
+        ? oasisTextContent.substring(0, maxContentLength) + "\n\n[Content truncated for processing...]"
+        : oasisTextContent;
+
       setIsUploading(false);
       setIsAnalyzing(true);
 
       // Step 1: AI-driven validation for logical inconsistencies and PDGM-specific checks
       const validationResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS validator and PDGM specialist. Review this OASIS document for logical inconsistencies, missing critical data, M-item validation issues, and PDGM grouping readiness BEFORE detailed analysis.
+        prompt: `You are an expert OASIS validator. Review this OASIS document for issues and PDGM readiness.
 
-      OASIS Document:
-      """
-      ${oasisTextContent}
-      """
+OASIS Document:
+"""
+${truncatedContent}
+"""
 
-      Perform comprehensive validation including:
+Validate:
+1. M-Item consistency (M1800-M1860 functional scores should align logically)
+2. Diagnosis-function alignment
+3. Primary diagnosis PDGM suitability (valid ICD-10, specific enough)
+4. M1000 admission source consistency with document context
+5. Episode timing validation (early vs late)
+6. Critical PDGM data completeness
+7. Response pattern anomalies
 
-      **1. M-Item Logical Consistency**:
-      - Check if functional scores (M1800-M1860) are internally consistent
-      - Example: If M1860 (ambulation) shows "bedbound", M1850 (transferring) should also show significant impairment
-      - Verify ADL scores align with each other logically
-
-      **2. Diagnosis-Function Alignment**:
-      - Verify functional limitations align with documented diagnoses
-      - Example: A stroke patient should show related functional deficits
-      - Check if primary diagnosis supports the level of care documented
-
-      **3. PRIMARY DIAGNOSIS PDGM SUITABILITY**:
-      - Verify the primary diagnosis is appropriate for PDGM clinical grouping
-      - Check if diagnosis code format appears valid (ICD-10 format)
-      - Flag if diagnosis is too vague/unspecified for optimal PDGM grouping (e.g., "unspecified" codes that could be more specific)
-      - Identify if a more specific diagnosis code would improve case-mix classification
-      - Check for diagnoses that are commonly rejected or questioned by Medicare
-
-      **4. M1000 ADMISSION SOURCE CONSISTENCY**:
-      - Extract M1000 (Admission Source) value
-      - Verify consistency with patient history and context clues in the document
-      - Check if admission source matches: recent hospitalization mentions, facility references, community indicators
-      - Flag if M1000 shows "community" but document mentions recent hospital/SNF stay
-      - Flag if M1000 shows "institutional" but no supporting documentation of prior facility stay
-
-      **5. EPISODE TIMING VALIDATION**:
-      - Extract M0100 (Date of Assessment/Reason for Assessment)
-      - Determine if this is an early episode (first 30 days) or late episode (days 31-60)
-      - Check M0110 (Episode Timing) if present
-      - Validate episode timing is appropriate based on:
-      - SOC date vs assessment date
-      - Any recertification indicators
-      - Prior episode references
-      - Flag timing inconsistencies that could affect PDGM payment
-
-      **6. CRITICAL PDGM DATA POINT VALIDATION**:
-      - PRIMARY DIAGNOSIS: Is it present? Is it specific enough? Is it a valid home health diagnosis?
-      - FUNCTIONAL SCORES (M1800-M1860): Are all 7 items documented? Are values within valid ranges?
-      - ADMISSION SOURCE (M1000): Is it documented? Does it match context?
-      - COMORBIDITIES: Are secondary diagnoses documented to support comorbidity adjustment?
-      - Provide specific remediation steps for any missing/invalid data
-
-      **7. Response Pattern Anomalies**:
-      - Flag unusual patterns that may indicate data entry errors
-      - Check for all "0" functional scores (unlikely for home health patient)
-      - Check for all maximum scores (may indicate over-documentation)
-
-      Return JSON:
-      {
-      "validation_passed": true/false,
-      "critical_issues": [
-      {
-      "type": "inconsistency" | "missing_data" | "alignment_error" | "date_issue" | "anomaly" | "pdgm_diagnosis" | "admission_source" | "episode_timing",
-      "severity": "critical" | "warning",
-      "item": "Affected M-item(s) or data point",
-      "description": "What's wrong",
-      "expected": "What should be expected",
-      "found": "What was found",
-      "suggested_correction": "Specific step-by-step remediation",
-      "pdgm_impact": "How this affects PDGM revenue/grouping"
-      }
-      ],
-      "warnings": ["List of minor concerns"],
-      "validated_pdgm_items": {
-      "primary_diagnosis": "extracted diagnosis or null",
-      "primary_diagnosis_valid": true/false,
-      "primary_diagnosis_issues": "any issues with diagnosis for PDGM",
-      "m1000_admission_source": "community/institutional/null",
-      "m1000_consistent": true/false,
-      "m1000_issues": "any admission source inconsistencies",
-      "episode_timing": "early/late/unknown",
-      "episode_timing_valid": true/false,
-      "episode_timing_issues": "any timing issues",
-      "m1800_grooming": "extracted value or null if missing",
-      "m1810_dress_upper": "extracted value or null",
-      "m1820_dress_lower": "extracted value or null",
-      "m1830_bathing": "extracted value or null",
-      "m1840_toilet_transfer": "extracted value or null",
-      "m1850_transferring": "extracted value or null",
-      "m1860_ambulation": "extracted value or null",
-      "functional_scores_complete": true/false,
-      "comorbidities_documented": true/false,
-      "comorbidity_count": 0
-      },
-      "pdgm_readiness": {
-      "ready_for_grouping": true/false,
-      "missing_critical_elements": ["list of missing elements required for PDGM"],
-      "optimization_opportunities": ["list of ways to improve PDGM classification"]
-      },
-      "data_quality_score": 0-100,
-      "recommendation": "Brief recommendation before proceeding with specific action items"
-      }`,
+Return JSON with validation_passed, critical_issues (type, severity, item, description, suggested_correction, pdgm_impact), warnings, validated_pdgm_items (primary_diagnosis, m1000_admission_source, episode_timing, m1800-m1860 scores, functional_scores_complete), pdgm_readiness (ready_for_grouping, missing_critical_elements, optimization_opportunities), data_quality_score (0-100), recommendation.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -238,113 +161,24 @@ export default function OASISAnalyzer() {
 
       // Step 2: Main analysis with validation context
       const analysisResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS (Outcome and Assessment Information Set) analyst and home health compliance specialist. Analyze the following OASIS assessment document content thoroughly.
+        prompt: `You are an expert OASIS analyst. Analyze this OASIS document for accuracy, compliance, and revenue optimization.
 
-OASIS Document Content:
+OASIS Document:
 """
-${oasisTextContent}
+${truncatedContent}
 """
 
-PRE-VALIDATION RESULTS (address these in your analysis):
-${JSON.stringify(validationResult, null, 2)}
+PRE-VALIDATION: ${JSON.stringify(validationResult)}
 
-Provide a comprehensive analysis including:
+Provide analysis with:
+1. Accuracy issues (item, issue, severity, recommendation)
+2. Compliance concerns (area, issue, severity, cms_reference, recommendation)
+3. Revenue tips (category, current_documentation, opportunity, potential_impact, specific_action)
+4. Documentation improvements
+5. Audit risk areas
+6. PDGM data extraction (primary_diagnosis, comorbidities, admission_source, episode_timing, functional_scores M1800-M1860)
 
-1. **Accuracy Check**: Identify any inconsistencies, missing data points, or potential errors in the OASIS documentation.
-
-2. **Compliance Issues**: Flag any areas that may not meet CMS (Centers for Medicare & Medicaid Services) guidelines or could trigger audit concerns.
-
-3. **Revenue Optimization Tips**: Identify areas where documentation could be strengthened to better capture patient acuity and ensure appropriate reimbursement. Look for:
-   - Underscored functional limitations
-   - Missing or inadequately documented diagnoses that affect case-mix
-   - Therapy needs not fully captured
-   - ADL dependencies not accurately reflected
-   - Clinical conditions that could support higher PDGM (Patient-Driven Groupings Model) scores
-
-4. **Documentation Improvement Suggestions**: Specific actionable tips to improve the quality and completeness of the OASIS assessment.
-
-5. **Risk Areas**: Highlight any documentation that could be flagged in an audit or lead to claim denials.
-
-6. **PDGM Data Extraction**: Extract key OASIS items needed for PDGM revenue calculation:
-   - Primary diagnosis
-   - Secondary diagnoses/comorbidities
-   - Admission source (community vs institutional)
-   - Episode timing (early vs late)
-   - Functional status M-items (M1800-M1860 scores)
-
-Return your analysis as JSON:
-{
-  "overall_score": 0-100,
-  "accuracy_score": 0-100,
-  "compliance_score": 0-100,
-  "revenue_optimization_score": 0-100,
-  "summary": "Brief overall summary of the OASIS document quality",
-  "pdgm_data": {
-    "primary_diagnosis": "Primary diagnosis extracted from document",
-    "comorbidities": ["List of secondary diagnoses"],
-    "admission_source": "community" | "institutional",
-    "episode_timing": "early" | "late",
-    "functional_scores": {
-      "m1800_grooming": 0-3,
-      "m1810_dress_upper": 0-3,
-      "m1820_dress_lower": 0-3,
-      "m1830_bathing": 0-6,
-      "m1840_toilet_transfer": 0-4,
-      "m1850_transferring": 0-5,
-      "m1860_ambulation": 0-6
-    }
-  },
-  "accuracy_issues": [
-    {
-      "item": "OASIS item code (e.g., M1800)",
-      "issue": "Description of the accuracy issue",
-      "severity": "high" | "medium" | "low",
-      "recommendation": "How to fix this issue"
-    }
-  ],
-  "compliance_concerns": [
-    {
-      "area": "Area of concern",
-      "issue": "Description of the compliance issue",
-      "severity": "high" | "medium" | "low",
-      "cms_reference": "Relevant CMS guideline or regulation",
-      "recommendation": "How to address this"
-    }
-  ],
-  "revenue_tips": [
-    {
-      "category": "Functional Status" | "Clinical Condition" | "Therapy" | "Diagnosis" | "Other",
-      "current_documentation": "What is currently documented",
-      "opportunity": "What could be documented better",
-      "potential_impact": "high" | "medium" | "low",
-      "specific_action": "Exactly what to do"
-    }
-  ],
-  "documentation_improvements": [
-    {
-      "item": "OASIS item or section",
-      "current_state": "How it's currently documented",
-      "improved_state": "How it should be documented",
-      "rationale": "Why this improvement matters"
-    }
-  ],
-  "audit_risk_areas": [
-    {
-      "area": "Risk area",
-      "risk_level": "high" | "medium" | "low",
-      "explanation": "Why this is a risk",
-      "mitigation": "How to reduce this risk"
-    }
-  ],
-  "strengths": ["List of well-documented areas"],
-  "key_recommendations": ["Top 5 priority recommendations"],
-  "validation_summary": {
-    "data_quality_score": 0-100,
-    "critical_issues_found": 0,
-    "warnings_found": 0,
-    "issues": [{"type": "string", "item": "string", "description": "string", "suggested_correction": "string"}]
-  }
-}`,
+Return JSON with overall_score, accuracy_score, compliance_score, revenue_optimization_score, summary, pdgm_data, accuracy_issues, compliance_concerns, revenue_tips, documentation_improvements, audit_risk_areas, strengths, key_recommendations.`,
         response_json_schema: {
           type: "object",
           properties: {
