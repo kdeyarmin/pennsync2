@@ -277,7 +277,30 @@ Return JSON:
             completeness_percentage: { type: "number" },
             ready_for_submission: { type: "boolean" },
             reimbursement_risk_level: { type: "string" },
-            estimated_case_mix_impact: { type: "string" },
+            pdgm_analysis: {
+              type: "object",
+              properties: {
+                clinical_group: { type: "string" },
+                functional_level: { type: "string" },
+                comorbidity_adjustment: { type: "string" },
+                estimated_case_mix_weight: { type: "string" },
+                optimization_potential: { type: "string" }
+              }
+            },
+            functional_score_analysis: {
+              type: "object",
+              properties: {
+                m1800_grooming: { type: "object" },
+                m1810_dress_upper: { type: "object" },
+                m1820_dress_lower: { type: "object" },
+                m1830_bathing: { type: "object" },
+                m1840_toilet_transfer: { type: "object" },
+                m1850_transferring: { type: "object" },
+                m1860_ambulation: { type: "object" },
+                total_functional_points: { type: "number" },
+                functional_level_result: { type: "string" }
+              }
+            },
             critical_missing: {
               type: "array",
               items: {
@@ -285,23 +308,38 @@ Return JSON:
                 properties: {
                   oasis_item: { type: "string" },
                   category: { type: "string" },
+                  pdgm_impact: { type: "string" },
                   why_critical: { type: "string" },
                   documentation_guidance: { type: "string" },
                   example: { type: "string" },
-                  reimbursement_impact: { type: "string" }
+                  reimbursement_impact: { type: "string" },
+                  estimated_revenue_impact: { type: "string" }
                 }
               }
             },
-            incomplete_assessments: {
+            underscoring_opportunities: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   oasis_item: { type: "string" },
-                  current_documentation: { type: "string" },
-                  issue: { type: "string" },
-                  guidance: { type: "string" },
-                  example: { type: "string" }
+                  current_score: { type: "string" },
+                  supported_score: { type: "string" },
+                  narrative_evidence: { type: "string" },
+                  revenue_impact: { type: "string" }
+                }
+              }
+            },
+            overscoring_risks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  oasis_item: { type: "string" },
+                  claimed_score: { type: "string" },
+                  supported_score: { type: "string" },
+                  audit_risk: { type: "string" },
+                  recommendation: { type: "string" }
                 }
               }
             },
@@ -311,7 +349,8 @@ Return JSON:
                 type: "object",
                 properties: {
                   issue: { type: "string" },
-                  conflicting_info: { type: "array", items: { type: "string" } },
+                  narrative_states: { type: "string" },
+                  conflicts_with: { type: "string" },
                   resolution: { type: "string" }
                 }
               }
@@ -327,14 +366,8 @@ Return JSON:
                 }
               }
             },
-            recommendations: {
-              type: "array",
-              items: { type: "string" }
-            },
-            star_rating_considerations: {
-              type: "array",
-              items: { type: "string" }
-            }
+            recommendations: { type: "array", items: { type: "string" } },
+            quality_measures_impact: { type: "array", items: { type: "string" } }
           }
         }
       });
