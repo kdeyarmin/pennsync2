@@ -61,6 +61,7 @@ import SmartNoteDataImport from "../components/oasis/SmartNoteDataImport";
 import { useAutoFlagOASIS, THRESHOLDS } from "../components/oasis/OASISAutoFlagger";
 import OASISExportManager from "../components/oasis/OASISExportManager";
 import AIProactiveDocumentationAssistant from "../components/oasis/AIProactiveDocumentationAssistant";
+import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1320,6 +1321,13 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             savedReports={savedBatchResults}
             currentReport={analysisResults}
             currentPdgmData={pdgmData}
+          />
+
+          {/* AI Documentation Generator - Generate Draft Clinical Text */}
+          <AIDocumentationGenerator
+            analysisResults={analysisResults}
+            pdgmData={pdgmData}
+            navigationData={navigationData}
           />
 
           {/* AI Proactive Documentation Assistant - Most Important for Real-Time Help */}
