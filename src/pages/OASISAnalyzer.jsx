@@ -852,6 +852,13 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             pdgmData={pdgmData}
           />
 
+          {/* Multi-Report Comparison */}
+          <PDGMMultiReportComparison
+            savedReports={savedBatchResults}
+            currentReport={analysisResults}
+            currentPdgmData={pdgmData}
+          />
+
           {/* Detailed Analysis Accordion */}
           <Accordion type="multiple" className="space-y-2">
             {/* Accuracy Issues */}
