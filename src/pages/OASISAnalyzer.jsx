@@ -113,10 +113,12 @@ export default function OASISAnalyzer() {
   // Generate unique analysis ID when new analysis starts
   useEffect(() => {
     if (analysisResults && !analysisId) {
-      const newAnalysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setAnalysisId(newAnalysisId);
-      const extractedName = analysisResults.pdgm_data?.patient_info?.name || "Unknown Patient";
-      setPatientName(extractedName);
+        const newAnalysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setAnalysisId(newAnalysisId);
+        const extractedName = analysisResults.pdgm_data?.patient_info?.name || 
+                               pdgmData?.patient_info?.name || 
+                               "Unknown Patient";
+        setPatientName(extractedName);
       setSavedToPatient(false);
       
       // Try to auto-match patient by name
@@ -267,7 +269,7 @@ export default function OASISAnalyzer() {
               type: "object",
               properties: {
             // Patient demographics - LOOK AT THE TOP OF THE DOCUMENT
-            patient_name: { type: "string", description: "Patient's full name - typically at the top of the form. Look for: 'Patient Name:', 'Name:', labels near demographics section. Extract first and last name." },
+            patient_name: { type: "string", description: "PATIENT FULL NAME - REQUIRED! Look at the very top of the form in the header section. Search for: 'Patient Name:', 'Patient:', 'Name:', 'Pt Name:', or any name field in the demographics section. Extract the complete first and last name. This is usually one of the first fields on an OASIS form." },
             patient_dob: { type: "string", description: "Date of birth - look for 'DOB:', 'Date of Birth:', birth date field. Format MM/DD/YYYY or any date format found." },
             patient_gender: { type: "string", description: "Gender - M, F, Male, Female. Look for 'Gender:', 'Sex:' checkbox or field." },
             medicare_number: { type: "string", description: "Medicare number or ID - look for 'Medicare:', 'Medicare #:', 'ID:' near top of form." },
@@ -385,9 +387,10 @@ export default function OASISAnalyzer() {
         const primaryDxDesc = output.m1021_primary_diagnosis_description || output.primary_diagnosis_description || 'NOT FOUND';
         const otherDx = output.m1023_other_diagnoses || output.secondary_diagnoses || 'NOT FOUND';
         const comorbidities = output.comorbidities_text || 'NOT FOUND';
+        const patientName = output.patient_name || 'NOT FOUND - CHECK DOCUMENT HEADER';
 
         oasisTextContent = `PATIENT DEMOGRAPHICS:
-      Name: ${output.patient_name || 'Unknown'}
+      Name: ${patientName}
       DOB: ${output.patient_dob || '?'}
       Gender: ${output.patient_gender || '?'}
       Medicare #: ${output.medicare_number || 'N/A'}
@@ -640,13 +643,13 @@ export default function OASISAnalyzer() {
         },
         homebound_reason: output?.homebound_reason || null,
         patient_info: { 
-          name: output?.patient_name, 
-          dob: output?.patient_dob,
-          gender: output?.patient_gender,
-          medicare_number: output?.medicare_number,
-          assessment_date: output?.assessment_date, 
-          assessment_type: output?.assessment_type,
-          assessment_reason: output?.assessment_reason
+          name: output?.patient_name || "Unknown Patient - Verify Document", 
+          dob: output?.patient_dob || "Not found",
+          gender: output?.patient_gender || "Not specified",
+          medicare_number: output?.medicare_number || "Not found",
+          assessment_date: output?.assessment_date || new Date().toISOString().split('T')[0], 
+          assessment_type: output?.assessment_type || "Unknown",
+          assessment_reason: output?.assessment_reason || "Not specified"
         }
       };
 
