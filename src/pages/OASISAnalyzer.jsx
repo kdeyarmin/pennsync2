@@ -122,15 +122,39 @@ export default function OASISAnalyzer() {
         setPatientName(extractedName);
       setSavedToPatient(false);
       
-      // Try to auto-match patient by name
-      if (extractedName && extractedName !== "Unknown Patient" && patients.length > 0) {
+      // Try to auto-match patient by name with fuzzy matching
+      if (extractedName && extractedName !== "Unknown Patient" && extractedName !== "Unknown Patient - Verify Document" && patients.length > 0) {
+        const extractedNameClean = extractedName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+        const nameParts = extractedNameClean.split(/\s+/);
+        
         const matchedPatient = patients.find(p => {
           const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
-          return fullName.includes(extractedName.toLowerCase()) || 
-                 extractedName.toLowerCase().includes(fullName);
+          const firstName = (p.first_name || '').toLowerCase();
+          const lastName = (p.last_name || '').toLowerCase();
+          
+          // Exact match
+          if (fullName === extractedNameClean) return true;
+          
+          // Both first and last name present
+          if (nameParts.length >= 2) {
+            const hasFirstName = nameParts.some(part => firstName.includes(part) || part.includes(firstName));
+            const hasLastName = nameParts.some(part => lastName.includes(part) || part.includes(lastName));
+            if (hasFirstName && hasLastName) return true;
+          }
+          
+          // Contains full name
+          if (fullName.includes(extractedNameClean) || extractedNameClean.includes(fullName)) {
+            return true;
+          }
+          
+          return false;
         });
+        
         if (matchedPatient) {
           setSelectedPatientId(matchedPatient.id);
+          console.log('Auto-matched patient:', matchedPatient.first_name, matchedPatient.last_name);
+        } else {
+          console.log('No patient match found for:', extractedName);
         }
       }
     }
@@ -270,7 +294,7 @@ export default function OASISAnalyzer() {
               type: "object",
               properties: {
             // Patient demographics - LOOK AT THE TOP OF THE DOCUMENT
-            patient_name: { type: "string", description: "PATIENT FULL NAME - REQUIRED! Look at the very top of the form in the header section. Search for: 'Patient Name:', 'Patient:', 'Name:', 'Pt Name:', or any name field in the demographics section. Extract the complete first and last name. This is usually one of the first fields on an OASIS form." },
+            patient_name: { type: "string", description: "PATIENT FULL NAME - CRITICAL! This is typically at the VERY TOP of the OASIS form. Look in these locations IN ORDER: 1) Form header section (top 1/4 of page 1), 2) 'Patient Name:' or 'Patient:' or 'Name:' field, 3) Demographics section, 4) Near 'M0080' or 'M0065' items, 5) Before diagnosis section. Extract EXACTLY as written - usually 'FirstName LastName' or 'LastName, FirstName'. If you find ANY name that looks like a patient name in the first page header, extract it here. DO NOT leave this blank - it's essential for matching." },
             patient_dob: { type: "string", description: "Date of birth - look for 'DOB:', 'Date of Birth:', birth date field. Format MM/DD/YYYY or any date format found." },
             patient_gender: { type: "string", description: "Gender - M, F, Male, Female. Look for 'Gender:', 'Sex:' checkbox or field." },
             medicare_number: { type: "string", description: "Medicare number or ID - look for 'Medicare:', 'Medicare #:', 'ID:' near top of form." },
