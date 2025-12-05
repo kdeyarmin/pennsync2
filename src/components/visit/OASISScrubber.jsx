@@ -33,7 +33,10 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  Upload,
+  FileText,
+  Loader2
 } from "lucide-react";
 import { logSecurityEvent } from "../utils/security";
 import OASISFeedbackPanel from "../oasis/OASISFeedbackPanel";
