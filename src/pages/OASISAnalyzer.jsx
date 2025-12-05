@@ -116,69 +116,51 @@ export default function OASISAnalyzer() {
       console.log("Extracted OASIS content length:", oasisTextContent.length);
 
       // Truncate content if too long to avoid timeout
-      const maxContentLength = 15000;
+      const maxContentLength = 8000;
       const truncatedContent = oasisTextContent.length > maxContentLength 
-        ? oasisTextContent.substring(0, maxContentLength) + "\n\n[Content truncated for processing...]"
+        ? oasisTextContent.substring(0, maxContentLength) + "\n[truncated]"
         : oasisTextContent;
 
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Step 1: AI-driven validation for logical inconsistencies and PDGM-specific checks
-      const validationResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS validator. Review this OASIS document for issues and PDGM readiness.
-
-OASIS Document:
-"""
-${truncatedContent}
-"""
-
-Validate:
-1. M-Item consistency (M1800-M1860 functional scores should align logically)
-2. Diagnosis-function alignment
-3. Primary diagnosis PDGM suitability (valid ICD-10, specific enough)
-4. M1000 admission source consistency with document context
-5. Episode timing validation (early vs late)
-6. Critical PDGM data completeness
-7. Response pattern anomalies
-
-Return JSON with validation_passed, critical_issues (type, severity, item, description, suggested_correction, pdgm_impact), warnings, validated_pdgm_items (primary_diagnosis, m1000_admission_source, episode_timing, m1800-m1860 scores, functional_scores_complete), pdgm_readiness (ready_for_grouping, missing_critical_elements, optimization_opportunities), data_quality_score (0-100), recommendation.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            validation_passed: { type: "boolean" },
-            critical_issues: { type: "array", items: { type: "object" } },
-            warnings: { type: "array", items: { type: "string" } },
-            validated_pdgm_items: { type: "object" },
-            pdgm_readiness: { type: "object" },
-            data_quality_score: { type: "number" },
-            recommendation: { type: "string" }
-          }
-        }
-      });
-
-      setUploadProgress(75);
-
-      // Step 2: Main analysis with validation context
+      // Combined analysis - single LLM call to avoid timeout
       const analysisResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS analyst. Analyze this OASIS document for accuracy, compliance, and revenue optimization.
+        prompt: `Analyze this OASIS document. Extract PDGM data and identify issues.
 
-OASIS Document:
-"""
+OASIS:
 ${truncatedContent}
-"""
 
-PRE-VALIDATION: ${JSON.stringify(validationResult)}
-
-Provide analysis with:
-1. Accuracy issues (item, issue, severity, recommendation)
-2. Compliance concerns (area, issue, severity, cms_reference, recommendation)
-3. Revenue tips (category, current_documentation, opportunity, potential_impact, specific_action)
-4. Documentation improvements
-5. Audit risk areas
-6. PDGM data extraction (primary_diagnosis, comorbidities, admission_source, episode_timing, functional_scores M1800-M1860)
-
-Return JSON with overall_score, accuracy_score, compliance_score, revenue_optimization_score, summary, pdgm_data, accuracy_issues, compliance_concerns, revenue_tips, documentation_improvements, audit_risk_areas, strengths, key_recommendations.`,
+Return JSON:
+{
+  "overall_score": 0-100,
+  "accuracy_score": 0-100,
+  "compliance_score": 0-100,
+  "revenue_optimization_score": 0-100,
+  "summary": "brief summary",
+  "pdgm_data": {
+    "primary_diagnosis": "diagnosis",
+    "comorbidities": ["list"],
+    "admission_source": "community or institutional",
+    "episode_timing": "early or late",
+    "functional_scores": {
+      "m1800_grooming": 0-3,
+      "m1810_dress_upper": 0-3,
+      "m1820_dress_lower": 0-3,
+      "m1830_bathing": 0-6,
+      "m1840_toilet_transfer": 0-4,
+      "m1850_transferring": 0-5,
+      "m1860_ambulation": 0-6
+    }
+  },
+  "accuracy_issues": [{"item": "M-item", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix"}],
+  "compliance_concerns": [{"area": "area", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix"}],
+  "revenue_tips": [{"category": "Functional Status/Diagnosis/Therapy/Other", "current_documentation": "current", "opportunity": "improvement", "potential_impact": "high/medium/low", "specific_action": "action"}],
+  "documentation_improvements": [{"item": "item", "current_state": "current", "improved_state": "improved", "rationale": "why"}],
+  "audit_risk_areas": [{"area": "area", "risk_level": "high/medium/low", "explanation": "why", "mitigation": "fix"}],
+  "strengths": ["list"],
+  "key_recommendations": ["top 5"]
+}`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -194,8 +176,29 @@ Return JSON with overall_score, accuracy_score, compliance_score, revenue_optimi
             documentation_improvements: { type: "array", items: { type: "object" } },
             audit_risk_areas: { type: "array", items: { type: "object" } },
             strengths: { type: "array", items: { type: "string" } },
-            key_recommendations: { type: "array", items: { type: "string" } },
-            validation_summary: { type: "object" }
+            key_recommendations: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
+
+      setUploadProgress(90);
+
+      // Quick validation pass
+      const validationResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `Validate OASIS PDGM data. Check: M-item consistency, diagnosis validity, admission source, episode timing.
+
+Data: ${JSON.stringify(analysisResult.pdgm_data || {})}
+
+Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "string", "severity": "critical/warning", "item": "item", "description": "desc", "suggested_correction": "fix", "pdgm_impact": "impact"}], "warnings": [], "data_quality_score": 0-100, "pdgm_readiness": {"ready_for_grouping": true/false, "missing_critical_elements": [], "optimization_opportunities": []}, "recommendation": "brief"}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            validation_passed: { type: "boolean" },
+            critical_issues: { type: "array", items: { type: "object" } },
+            warnings: { type: "array", items: { type: "string" } },
+            data_quality_score: { type: "number" },
+            pdgm_readiness: { type: "object" },
+            recommendation: { type: "string" }
           }
         }
       });
