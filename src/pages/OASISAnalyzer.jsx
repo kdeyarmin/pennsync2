@@ -481,35 +481,39 @@ export default function OASISAnalyzer() {
 
       // Combined analysis with pre-extracted structured data
       const analysisResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly.
+        prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly and provide HIGHLY SPECIFIC, ACTIONABLE recommendations.
 
-PRE-EXTRACTED STRUCTURED DATA:
-${JSON.stringify(structuredPdgmData, null, 2)}
+      PRE-EXTRACTED STRUCTURED DATA:
+      ${JSON.stringify(structuredPdgmData, null, 2)}
 
-FULL OASIS DOCUMENT CONTENT:
-${truncatedContent}
+      FULL OASIS DOCUMENT CONTENT:
+      ${truncatedContent}
 
-ANALYSIS INSTRUCTIONS:
-1. Verify the pre-extracted data against the full document content
-2. Identify any missing or incorrectly extracted OASIS items
-3. Check for internal consistency (e.g., functional scores should match narrative descriptions)
-4. Identify PDGM revenue optimization opportunities
-5. Flag compliance concerns and audit risks
+      ANALYSIS INSTRUCTIONS:
+      1. Verify the pre-extracted data against the full document content
+      2. Identify any missing or incorrectly extracted OASIS items
+      3. Check for internal consistency (e.g., functional scores should match narrative descriptions)
+      4. Identify PDGM revenue optimization opportunities with SPECIFIC dollar impacts
+      5. Flag compliance concerns and audit risks
+      6. Provide EXACT wording suggestions for documentation improvements
+      7. Identify SPECIFIC M-items that could be rescored based on clinical evidence
 
-Return JSON:
-{
-  "overall_score": 0-100,
-  "accuracy_score": 0-100,
-  "compliance_score": 0-100,
-  "revenue_optimization_score": 0-100,
-  "summary": "comprehensive summary of findings",
-  "pdgm_data": {
-    "primary_diagnosis": "exact diagnosis from document",
-    "primary_diagnosis_code": "ICD-10 code if found",
-    "comorbidities": ["all secondary diagnoses found"],
-    "admission_source": "community or institutional",
-    "episode_timing": "early or late",
-    "functional_scores": {
+      CRITICAL: Be extremely specific in your recommendations. Instead of "improve functional documentation", say exactly WHAT to document and HOW it would change the score.
+
+      Return JSON:
+      {
+      "overall_score": 0-100,
+      "accuracy_score": 0-100,
+      "compliance_score": 0-100,
+      "revenue_optimization_score": 0-100,
+      "summary": "comprehensive summary of findings",
+      "pdgm_data": {
+      "primary_diagnosis": "exact diagnosis from document",
+      "primary_diagnosis_code": "ICD-10 code if found",
+      "comorbidities": ["all secondary diagnoses found"],
+      "admission_source": "community or institutional",
+      "episode_timing": "early or late",
+      "functional_scores": {
       "m1800_grooming": 0-3,
       "m1810_dress_upper": 0-3,
       "m1820_dress_lower": 0-3,
@@ -517,25 +521,29 @@ Return JSON:
       "m1840_toilet_transfer": 0-4,
       "m1850_transferring": 0-5,
       "m1860_ambulation": 0-6
-    },
-    "gg_scores": {
+      },
+      "gg_scores": {
       "self_care_admission": "score or null",
       "mobility_admission": "score or null"
-    }
-  },
-  "extracted_items": {
-    "items_found": ["list of M-items successfully extracted"],
-    "items_missing": ["list of expected M-items not found"],
-    "extraction_confidence": "high/medium/low"
-  },
-  "accuracy_issues": [{"item": "M-item code", "issue": "specific issue description", "severity": "high/medium/low", "recommendation": "specific fix", "document_evidence": "quote from document"}],
-  "compliance_concerns": [{"area": "area", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix", "cms_reference": "regulation reference"}],
-  "revenue_tips": [{"category": "Functional Status/Diagnosis/Therapy/Comorbidity/Other", "current_documentation": "what document shows", "opportunity": "improvement opportunity", "potential_impact": "high/medium/low", "specific_action": "exact action to take", "estimated_revenue_impact": "$X per episode"}],
-  "documentation_improvements": [{"item": "item", "current_state": "current", "improved_state": "improved", "rationale": "why"}],
-  "audit_risk_areas": [{"area": "area", "risk_level": "high/medium/low", "explanation": "why", "mitigation": "fix"}],
-  "strengths": ["list of well-documented areas"],
-  "key_recommendations": ["top 5 prioritized recommendations"]
-}`,
+      }
+      },
+      "extracted_items": {
+      "items_found": ["list of M-items successfully extracted"],
+      "items_missing": ["list of expected M-items not found"],
+      "extraction_confidence": "high/medium/low"
+      },
+      "accuracy_issues": [{"item": "M-item code", "issue": "specific issue description", "severity": "high/medium/low", "recommendation": "specific fix", "document_evidence": "quote from document", "correct_score": "what score should be based on evidence", "scoring_rationale": "why this score is correct per CMS guidelines"}],
+      "compliance_concerns": [{"area": "area", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix", "cms_reference": "regulation reference", "exact_documentation_needed": "specific text to add"}],
+      "revenue_tips": [{"category": "Functional Status/Diagnosis/Therapy/Comorbidity/Other", "current_documentation": "what document shows", "opportunity": "improvement opportunity", "potential_impact": "high/medium/low", "specific_action": "exact action to take", "estimated_revenue_impact": "$X per episode", "clinical_justification": "why this change is clinically appropriate", "example_documentation": "exact example text to support the change"}],
+      "documentation_improvements": [{"item": "item", "current_state": "current", "improved_state": "improved", "rationale": "why", "exact_text_to_add": "specific documentation text", "m_item_impact": "which M-items this affects"}],
+      "audit_risk_areas": [{"area": "area", "risk_level": "high/medium/low", "explanation": "why", "mitigation": "fix", "documentation_to_add": "specific text that would mitigate risk"}],
+      "specific_rescore_opportunities": [{"m_item": "M-item code", "current_score": "current", "recommended_score": "recommended", "clinical_evidence": "evidence from document supporting change", "revenue_impact": "estimated $ impact", "action_required": "what clinician needs to document/verify"}],
+      "missing_high_value_documentation": [{"area": "what is missing", "why_it_matters": "PDGM/compliance impact", "suggested_text": "exact documentation to add", "potential_value": "$ impact"}],
+      "strengths": ["list of well-documented areas"],
+      "key_recommendations": ["top 5 prioritized recommendations with specific actions"],
+      "quick_wins": [{"action": "immediate action", "effort": "low/medium", "impact": "$ or compliance benefit", "how_to": "step by step"}],
+      "clinician_questions": ["specific questions to ask the assessing clinician to clarify scoring"]
+      }`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -551,11 +559,15 @@ Return JSON:
             revenue_tips: { type: "array", items: { type: "object" } },
             documentation_improvements: { type: "array", items: { type: "object" } },
             audit_risk_areas: { type: "array", items: { type: "object" } },
+            specific_rescore_opportunities: { type: "array", items: { type: "object" } },
+            missing_high_value_documentation: { type: "array", items: { type: "object" } },
             strengths: { type: "array", items: { type: "string" } },
-            key_recommendations: { type: "array", items: { type: "string" } }
+            key_recommendations: { type: "array", items: { type: "string" } },
+            quick_wins: { type: "array", items: { type: "object" } },
+            clinician_questions: { type: "array", items: { type: "string" } }
           }
         }
-      });
+        });
 
       setUploadProgress(90);
 
