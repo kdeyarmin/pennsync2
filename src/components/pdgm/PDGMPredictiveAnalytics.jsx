@@ -28,8 +28,13 @@ import {
   BarChart3,
   LineChart as LineChartIcon,
   RefreshCw,
-  Info
+  Info,
+  PieChart as PieChartIcon,
+  Calculator,
+  Layers
 } from "lucide-react";
+import PatientCohortAnalysis from "./PatientCohortAnalysis";
+import StaffingSimulationModule from "./StaffingSimulationModule";
 import {
   LineChart,
   Line,
@@ -86,7 +91,7 @@ export default function PDGMPredictiveAnalytics({ compact = false }) {
       }));
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a PDGM financial analyst. Based on this home health agency data, generate predictive analytics.
+        prompt: `You are a PDGM financial analyst. Based on this home health agency data, generate predictive analytics with detailed cohort analysis.
 
 PATIENT DATA (${activePatients.length} active):
 ${JSON.stringify(patientSummary)}
@@ -94,7 +99,7 @@ ${JSON.stringify(patientSummary)}
 RECENT VISITS:
 ${JSON.stringify(visitSummary)}
 
-Generate realistic PDGM predictions for next ${timeRange === '3months' ? '3' : timeRange === '6months' ? '6' : '12'} months:
+Generate realistic PDGM predictions for next ${timeRange === '3months' ? '3' : timeRange === '6months' ? '6' : '12'} months including patient cohort segmentation:
 
 Return JSON:
 {
@@ -125,6 +130,126 @@ Return JSON:
     {"group": "Respiratory", "percentage": 12, "avg_payment": 2150, "trend": "decreasing"},
     {"group": "Other", "percentage": 30, "avg_payment": 1950, "trend": "stable"}
   ],
+  "patient_cohort_analysis": {
+    "cohorts": [
+      {
+        "name": "High-Acuity Cardiac",
+        "patient_count": 12,
+        "avg_revenue": 2650,
+        "avg_case_mix": 1.18,
+        "total_revenue": 31800,
+        "predicted_revenue": 33000,
+        "actual_revenue": 31800,
+        "variance_pct": -3.6,
+        "optimization_potential": 4200,
+        "risk_breakdown": [
+          {"level": "High", "count": 3, "pct": 25},
+          {"level": "Medium", "count": 5, "pct": 42},
+          {"level": "Low", "count": 4, "pct": 33}
+        ],
+        "characteristics": ["CHF primary diagnosis", "Multiple comorbidities", "High functional impairment"]
+      },
+      {
+        "name": "Wound Care Complex",
+        "patient_count": 8,
+        "avg_revenue": 2850,
+        "avg_case_mix": 1.22,
+        "total_revenue": 22800,
+        "predicted_revenue": 24000,
+        "actual_revenue": 22800,
+        "variance_pct": -5.0,
+        "optimization_potential": 3600,
+        "risk_breakdown": [
+          {"level": "High", "count": 2, "pct": 25},
+          {"level": "Medium", "count": 4, "pct": 50},
+          {"level": "Low", "count": 2, "pct": 25}
+        ],
+        "characteristics": ["Stage 3-4 pressure ulcers", "Diabetic foot wounds", "Requires skilled nursing"]
+      },
+      {
+        "name": "Post-Surgical Rehab",
+        "patient_count": 15,
+        "avg_revenue": 2100,
+        "avg_case_mix": 1.05,
+        "total_revenue": 31500,
+        "predicted_revenue": 30000,
+        "actual_revenue": 31500,
+        "variance_pct": 5.0,
+        "optimization_potential": 2800,
+        "risk_breakdown": [
+          {"level": "High", "count": 1, "pct": 7},
+          {"level": "Medium", "count": 6, "pct": 40},
+          {"level": "Low", "count": 8, "pct": 53}
+        ],
+        "characteristics": ["Joint replacement", "Short-term therapy focus", "Good discharge potential"]
+      },
+      {
+        "name": "Medically Complex Elderly",
+        "patient_count": 10,
+        "avg_revenue": 2400,
+        "avg_case_mix": 1.12,
+        "total_revenue": 24000,
+        "predicted_revenue": 22000,
+        "actual_revenue": 24000,
+        "variance_pct": 9.1,
+        "optimization_potential": 1800,
+        "risk_breakdown": [
+          {"level": "High", "count": 4, "pct": 40},
+          {"level": "Medium", "count": 4, "pct": 40},
+          {"level": "Low", "count": 2, "pct": 20}
+        ],
+        "characteristics": ["Age 85+", "5+ comorbidities", "Polypharmacy", "Caregiver support needed"]
+      }
+    ],
+    "variance_drivers": [
+      {
+        "driver": "Functional Documentation Gaps",
+        "description": "M1800-M1860 scores not reflecting actual impairment levels",
+        "revenue_impact": -8500,
+        "impact_pct": -4.2,
+        "affected_patients": 18,
+        "priority": "high",
+        "actionable": true,
+        "recommendation": "Implement OASIS scrubber pre-submission review for all SOC assessments"
+      },
+      {
+        "driver": "Comorbidity Under-capture",
+        "description": "Secondary diagnoses not fully documented from medication lists",
+        "revenue_impact": -5200,
+        "impact_pct": -2.6,
+        "affected_patients": 12,
+        "priority": "high",
+        "actionable": true,
+        "recommendation": "Medication-to-diagnosis reconciliation at every admission"
+      },
+      {
+        "driver": "Therapy Utilization Optimization",
+        "description": "PT/OT visits aligned well with functional needs",
+        "revenue_impact": 6800,
+        "impact_pct": 3.4,
+        "affected_patients": 22,
+        "priority": "medium",
+        "actionable": false,
+        "recommendation": "Continue current therapy assessment protocols"
+      },
+      {
+        "driver": "Wound Care Documentation Excellence",
+        "description": "Detailed wound measurements and staging improving case-mix",
+        "revenue_impact": 4500,
+        "impact_pct": 2.2,
+        "affected_patients": 8,
+        "priority": "low",
+        "actionable": false,
+        "recommendation": "Share wound documentation best practices across teams"
+      }
+    ],
+    "predicted_vs_actual": [
+      {"name": "Cardiac", "predicted_revenue": 33000, "actual_revenue": 31800},
+      {"name": "Wounds", "predicted_revenue": 24000, "actual_revenue": 22800},
+      {"name": "Post-Surgical", "predicted_revenue": 30000, "actual_revenue": 31500},
+      {"name": "Complex Elderly", "predicted_revenue": 22000, "actual_revenue": 24000}
+    ]
+  },
   "high_risk_profiles": [
     {
       "risk_type": "Documentation Gap",
@@ -168,7 +293,8 @@ Return JSON:
   "key_insights": [
     "Functional documentation improvements could increase revenue by 12%",
     "Wound care patients show highest reimbursement potential",
-    "8 patients at risk for underscored assessments"
+    "8 patients at risk for underscored assessments",
+    "Post-surgical cohort outperforming predictions by 5%"
   ],
   "recommended_actions": [
     {"action": "Implement OASIS scrubber for all SOC visits", "impact": "high", "timeline": "immediate"},
@@ -182,6 +308,7 @@ Return JSON:
             revenue_forecast: { type: "object" },
             case_mix_trends: { type: "object" },
             clinical_group_distribution: { type: "array", items: { type: "object" } },
+            patient_cohort_analysis: { type: "object" },
             high_risk_profiles: { type: "array", items: { type: "object" } },
             documentation_impact_simulation: { type: "array", items: { type: "object" } },
             quarterly_projections: { type: "array", items: { type: "object" } },
@@ -311,11 +438,17 @@ Return JSON:
           </Alert>
         ) : predictions ? (
           <Tabs defaultValue="revenue" className="space-y-4">
-            <TabsList className="grid grid-cols-5 w-full">
+            <TabsList className="grid grid-cols-7 w-full">
               <TabsTrigger value="revenue" className="text-xs">Revenue</TabsTrigger>
+              <TabsTrigger value="cohorts" className="text-xs gap-1">
+                <Layers className="w-3 h-3" />Cohorts
+              </TabsTrigger>
               <TabsTrigger value="casemix" className="text-xs">Case-Mix</TabsTrigger>
               <TabsTrigger value="risks" className="text-xs">High Risk</TabsTrigger>
-              <TabsTrigger value="simulation" className="text-xs">Simulation</TabsTrigger>
+              <TabsTrigger value="simulation" className="text-xs">Doc Sim</TabsTrigger>
+              <TabsTrigger value="financial_sim" className="text-xs gap-1">
+                <Calculator className="w-3 h-3" />Forecast
+              </TabsTrigger>
               <TabsTrigger value="actions" className="text-xs">Actions</TabsTrigger>
             </TabsList>
 
@@ -385,6 +518,14 @@ Return JSON:
                   ))}
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Patient Cohort Analysis Tab */}
+            <TabsContent value="cohorts" className="space-y-4">
+              <PatientCohortAnalysis 
+                cohortData={predictions.patient_cohort_analysis}
+                formatCurrency={formatCurrency}
+              />
             </TabsContent>
 
             {/* Case-Mix Trends Tab */}
@@ -588,6 +729,18 @@ Return JSON:
                   <TrendingUp className="w-12 h-12 text-green-600" />
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Financial Simulation Tab */}
+            <TabsContent value="financial_sim" className="space-y-4">
+              <StaffingSimulationModule 
+                currentData={{
+                  activePatients: patients.filter(p => p.status === 'active').length,
+                  monthlyRevenue: predictions.revenue_forecast?.current_monthly_avg || 0,
+                  caseMixWeight: predictions.case_mix_trends?.current_avg_weight || 1.0
+                }}
+                formatCurrency={formatCurrency}
+              />
             </TabsContent>
 
             {/* Actions Tab */}
