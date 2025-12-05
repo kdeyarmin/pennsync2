@@ -40,6 +40,7 @@ import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
 import DocumentationQualitySuggestions from "../components/oasis/DocumentationQualitySuggestions";
 import OASISScenarioManager from "../components/oasis/OASISScenarioManager";
 import OASISActionWorkflow from "../components/oasis/OASISActionWorkflow";
+import AIDocumentationQualityAnalyzer from "../components/oasis/AIDocumentationQualityAnalyzer";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1265,6 +1266,9 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             currentReport={analysisResults}
             currentPdgmData={pdgmData}
           />
+
+          {/* AI Documentation Quality Analyzer - Full Width */}
+          <AIDocumentationQualityAnalyzer analysisResults={analysisResults} pdgmData={pdgmData} />
 
           {/* AI-Enhanced Insights Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
