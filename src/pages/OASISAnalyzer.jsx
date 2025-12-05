@@ -62,18 +62,40 @@ export default function OASISAnalyzer() {
       // Extract text content from PDF
       const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
-        json_schema: { type: "string" }
+        json_schema: {
+          type: "object",
+          properties: {
+            document_text: { type: "string", description: "The full text content of the OASIS document" },
+            patient_info: { type: "string", description: "Patient identification information if found" },
+            assessment_items: { type: "string", description: "All OASIS assessment items and their values" }
+          }
+        }
       });
 
       setUploadProgress(60);
 
-      if (extractedData.status === "error" || !extractedData.output) {
+      if (extractedData.status === "error") {
         throw new Error(extractedData.details || "Failed to extract text from PDF.");
       }
 
-      const oasisTextContent = typeof extractedData.output === 'string' 
-        ? extractedData.output 
-        : JSON.stringify(extractedData.output);
+      // Handle various output formats
+      let oasisTextContent = "";
+      if (extractedData.output) {
+        if (typeof extractedData.output === 'string') {
+          oasisTextContent = extractedData.output;
+        } else if (typeof extractedData.output === 'object') {
+          // Combine all extracted fields
+          const parts = [];
+          if (extractedData.output.document_text) parts.push(extractedData.output.document_text);
+          if (extractedData.output.patient_info) parts.push("Patient Info: " + extractedData.output.patient_info);
+          if (extractedData.output.assessment_items) parts.push("Assessment Items: " + extractedData.output.assessment_items);
+          oasisTextContent = parts.length > 0 ? parts.join("\n\n") : JSON.stringify(extractedData.output, null, 2);
+        }
+      }
+
+      if (!oasisTextContent || oasisTextContent.trim().length < 50) {
+        throw new Error("Could not extract sufficient text from the PDF. Please ensure it's a valid OASIS document.");
+      }
 
       setIsUploading(false);
       setIsAnalyzing(true);
