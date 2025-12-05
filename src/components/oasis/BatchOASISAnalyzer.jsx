@@ -149,6 +149,19 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis, onBatchComplete }
       setOverallProgress(100);
       setCurrentStep('complete');
 
+      // Notify parent of completed batch for multi-report comparison
+      if (onBatchComplete && response.data?.results) {
+        const successfulResults = response.data.results
+          .filter(r => r.status === 'success' && r.analysis)
+          .map(r => ({
+            ...r.analysis,
+            fileName: r.fileName,
+            pdgm_data: r.analysis?.pdgm_data,
+            timestamp: new Date().toISOString()
+          }));
+        onBatchComplete(successfulResults);
+      }
+
     } catch (err) {
       console.error("Batch processing error:", err);
       setError(err.message || "Failed to process batch. Please try again.");
