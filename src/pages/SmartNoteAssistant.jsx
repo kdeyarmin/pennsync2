@@ -64,6 +64,7 @@ import LearningDashboard from "../components/smartNote/LearningDashboard";
 import AIPatientHistorySummarizer from "../components/smartNote/AIPatientHistorySummarizer";
 import AIRiskAndGapDetector from "../components/smartNote/AIRiskAndGapDetector";
 import AIGrammarTerminologyCorrector from "../components/smartNote/AIGrammarTerminologyCorrector";
+import OASISDataSync from "../components/smartNote/OASISDataSync";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -523,6 +524,31 @@ Return JSON:
             carePlans={carePlans}
             onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
             compact={false}
+          />
+          {/* OASIS Data Sync */}
+          <OASISDataSync
+            patientId={selectedPatientId}
+            onSyncData={(syncData) => {
+              // Apply diagnosis from OASIS
+              if (syncData.diagnosis) {
+                setDiagnosis("Custom (type below)");
+                setCustomDiagnosis(syncData.diagnosis);
+              }
+              // Build narrative intro from OASIS data
+              const narrativeIntro = [];
+              if (syncData.diagnosis) narrativeIntro.push(`Patient with ${syncData.diagnosis}`);
+              if (syncData.comorbidities?.length > 0) {
+                narrativeIntro.push(`and ${syncData.comorbidities.slice(0, 3).join(', ')}`);
+              }
+              if (syncData.admissionSource === 'institutional') {
+                narrativeIntro.push('Recently discharged from facility.');
+              }
+              if (narrativeIntro.length > 0) {
+                setRoughNote(prev => narrativeIntro.join(' ') + '. ' + prev);
+              }
+            }}
+            currentDiagnosis={finalDiagnosis}
+            currentVitalSigns={vitalSigns}
           />
         </>
       )}

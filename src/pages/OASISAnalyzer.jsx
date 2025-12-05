@@ -52,6 +52,8 @@ import DocumentationQualitySuggestions from "../components/oasis/DocumentationQu
 import OASISScenarioManager from "../components/oasis/OASISScenarioManager";
 import OASISActionWorkflow from "../components/oasis/OASISActionWorkflow";
 import AIDocumentationQualityAnalyzer from "../components/oasis/AIDocumentationQualityAnalyzer";
+import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
+import SmartNoteDataImport from "../components/oasis/SmartNoteDataImport";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1268,6 +1270,15 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             </CardContent>
           </Card>
 
+          {/* Auto-Generated Tasks Based on Analysis */}
+          <OASISTaskGenerator
+            analysisResults={analysisResults}
+            pdgmData={pdgmData}
+            patientId={selectedPatientId}
+            patientName={patientName}
+            onTasksCreated={(count) => console.log(`${count} tasks created`)}
+          />
+
           {/* Key Takeaways Summary - Most Important */}
           <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
 
@@ -1474,6 +1485,33 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
               patientName={patientName}
             />
           </div>
+
+          {/* Smart Note Data Import - Bi-directional sync */}
+          <SmartNoteDataImport
+            patientId={selectedPatientId}
+            patientName={patientName}
+            onImportData={(importData) => {
+              // Apply imported functional observations to PDGM data for comparison
+              if (importData.functionalObservations && pdgmData) {
+                const obs = importData.functionalObservations;
+                const updatedScores = { ...pdgmData.functional_scores };
+                if (obs.ambulation?.score !== undefined) {
+                  updatedScores.m1860_ambulation = obs.ambulation.score;
+                }
+                if (obs.transfer?.score !== undefined) {
+                  updatedScores.m1850_transferring = obs.transfer.score;
+                }
+                if (obs.bathing?.score !== undefined) {
+                  updatedScores.m1830_bathing = obs.bathing.score;
+                }
+                setPdgmData(prev => ({
+                  ...prev,
+                  functional_scores: updatedScores,
+                  _importedFromVisit: importData.visitDate
+                }));
+              }
+            }}
+          />
 
           {/* Multi-Report Comparison */}
           <EnhancedMultiReportComparison
