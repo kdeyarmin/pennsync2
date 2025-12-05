@@ -819,6 +819,22 @@ Return JSON:
     "strongest_documentation": ["well-documented areas"],
     "weakest_documentation": ["areas most vulnerable to audit"],
     "recommended_priority_fixes": ["top 3 items to fix before submission"]
+  },
+  "oasis_narrative_mismatches": [
+    {
+      "oasis_item": "M-number",
+      "uploaded_score": "score from uploaded OASIS",
+      "narrative_suggests": "what the narrative documentation actually supports",
+      "discrepancy": "explanation of the mismatch",
+      "recommendation": "specific action to resolve",
+      "audit_risk": "high|medium|low"
+    }
+  ],
+  "gg_section_analysis": {
+    "gg0130_self_care_summary": "overview of self-care scores and any issues",
+    "gg0170_mobility_summary": "overview of mobility scores and any issues",
+    "goal_appropriateness": "whether DC goals are realistic",
+    "functional_improvement_potential": "assessment of improvement potential"
   }
 }`;
 
