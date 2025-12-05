@@ -527,11 +527,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { pdgmData, correctedPdgmData } = await req.json();
+    const { pdgmData, correctedPdgmData, wageIndex } = await req.json();
 
     if (!pdgmData) {
       return Response.json({ error: 'No PDGM data provided' }, { status: 400 });
     }
+
+    // Apply wage index adjustment (defaults to 1.0 if not provided)
+    const appliedWageIndex = wageIndex || 1.0;
 
     // Validate primary diagnosis code
     const diagnosisValidation = validatePrimaryDiagnosis(pdgmData);
@@ -548,7 +551,7 @@ Deno.serve(async (req) => {
     ];
 
     // Calculate original PDGM revenue
-    const originalRevenue = calculatePDGMRevenue(pdgmData);
+    const originalRevenue = calculatePDGMRevenue(pdgmData, appliedWageIndex);
     originalRevenue.dataValidation = {
       admissionSource: sourceValidation,
       episodeTiming: timingValidation,
@@ -570,7 +573,7 @@ Deno.serve(async (req) => {
         episode_timing: correctedPdgmData.episode_timing || timingValidation.validatedTiming
       };
       
-      correctedRevenue = calculatePDGMRevenue(correctedWithValidation);
+      correctedRevenue = calculatePDGMRevenue(correctedWithValidation, appliedWageIndex);
       correctedRevenue._appliedCorrections = correctedPdgmData._appliedCorrections || [];
       correctedRevenue._correctionCount = correctedPdgmData._correctionCount || 0;
       
@@ -579,7 +582,7 @@ Deno.serve(async (req) => {
     }
 
     // Calculate alternative scenarios for comparison
-    const scenarios = calculateAlternativeScenarios(pdgmData);
+    const scenarios = calculateAlternativeScenarios(pdgmData, appliedWageIndex);
 
     return Response.json({
       original: originalRevenue,
@@ -600,7 +603,8 @@ Deno.serve(async (req) => {
         m0110Value: timingValidation.m0110Value,
         daysSinceSoc: timingValidation.daysSinceSoc
       },
-      alternativeScenarios: scenarios
+      alternativeScenarios: scenarios,
+      wageIndexApplied: appliedWageIndex
     });
 
   } catch (error) {
@@ -610,7 +614,7 @@ Deno.serve(async (req) => {
 });
 
 // Calculate all 4 scenario combinations for comparison
-function calculateAlternativeScenarios(data) {
+function calculateAlternativeScenarios(data, wageIndex = 1.0) {
   const scenarios = {};
   const combinations = [
     { admission_source: 'community', episode_timing: 'early', key: 'community_early' },
@@ -625,7 +629,7 @@ function calculateAlternativeScenarios(data) {
       admission_source: combo.admission_source,
       episode_timing: combo.episode_timing
     };
-    const result = calculatePDGMRevenue(scenarioData);
+    const result = calculatePDGMRevenue(scenarioData, wageIndex);
     scenarios[combo.key] = {
       admissionSource: combo.admission_source,
       episodeTiming: combo.episode_timing,
@@ -652,7 +656,7 @@ function calculateAlternativeScenarios(data) {
   };
 }
 
-function calculatePDGMRevenue(data) {
+function calculatePDGMRevenue(data, wageIndex = 1.0) {
   // Extract data - try multiple fields for primary diagnosis
   const primaryDiagnosis = data.primary_diagnosis || data.primary_diagnosis_description || '';
   
@@ -696,11 +700,16 @@ function calculatePDGMRevenue(data) {
   // Note: Source and timing are already factored into the individual weights
   const caseMixWeight = clinicalWeight * functionalMultiplier * comorbidityMultiplier;
 
-  // Calculate payment
-  const totalPayment = Math.round(BASE_PAYMENT_RATE_2024 * caseMixWeight * 100) / 100;
+  // Apply wage index to base payment
+  const adjustedBasePayment = Math.round(BASE_PAYMENT_RATE_2024 * wageIndex * 100) / 100;
+
+  // Calculate payment with wage-adjusted base
+  const totalPayment = Math.round(adjustedBasePayment * caseMixWeight * 100) / 100;
 
   return {
     basePayment: BASE_PAYMENT_RATE_2024,
+    wageIndex: wageIndex,
+    adjustedBasePayment: adjustedBasePayment,
     clinicalGroup,
     clinicalWeight: Math.round(clinicalWeight * 10000) / 10000,
     functionalLevel: functionalResult.level,
@@ -717,8 +726,12 @@ function calculatePDGMRevenue(data) {
     caseMixWeight: Math.round(caseMixWeight * 10000) / 10000,
     totalPayment,
     calculationBreakdown: {
-      formula: 'Base Payment × Clinical Weight × Functional Multiplier × Comorbidity Multiplier',
-      values: `$${BASE_PAYMENT_RATE_2024} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`,
+      formula: wageIndex !== 1.0 
+        ? 'Base Payment × Wage Index × Clinical Weight × Functional Multiplier × Comorbidity Multiplier'
+        : 'Base Payment × Clinical Weight × Functional Multiplier × Comorbidity Multiplier',
+      values: wageIndex !== 1.0
+        ? `$${BASE_PAYMENT_RATE_2024} × ${wageIndex.toFixed(4)} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`
+        : `$${BASE_PAYMENT_RATE_2024} × ${clinicalWeight.toFixed(4)} × ${functionalMultiplier.toFixed(4)} × ${comorbidityMultiplier.toFixed(4)}`,
       result: `$${totalPayment.toFixed(2)}`
     }
   };

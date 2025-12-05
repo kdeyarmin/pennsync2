@@ -452,12 +452,17 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
     setError(null);
 
     try {
+      // Get wage index from agency settings
+      const savedCosts = localStorage.getItem('pdgm_agency_costs');
+      const agencyCosts = savedCosts ? JSON.parse(savedCosts) : { wageIndex: 1.0 };
+      
       // Build corrected PDGM data based on AI recommendations
       const correctedPdgmData = buildCorrectedPdgmData(pdgmData, analysisResults);
 
       const response = await calculatePDGM({
         pdgmData: pdgmData,
-        correctedPdgmData: correctedPdgmData
+        correctedPdgmData: correctedPdgmData,
+        wageIndex: agencyCosts.wageIndex || 1.0
       });
 
       setRevenueData(response.data);
@@ -777,18 +782,35 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
                                   />
                                 )}
 
+                                {/* Wage Index Display */}
+                                {revenueData.wageIndexApplied && revenueData.wageIndexApplied !== 1.0 && (
+                                  <Alert className="bg-blue-50 border-blue-200">
+                                    <Info className="w-4 h-4 text-blue-600" />
+                                    <AlertDescription className="text-blue-800 text-xs">
+                                      <strong>Wage Index Applied: {revenueData.wageIndexApplied.toFixed(4)}</strong>
+                                      <br />
+                                      National Base: ${revenueData.original?.basePayment?.toFixed(2)} × {revenueData.wageIndexApplied.toFixed(4)} = ${revenueData.original?.adjustedBasePayment?.toFixed(2)} (Adjusted Base)
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+
                                 {/* Revenue Comparison */}
                                 <div className="grid grid-cols-2 gap-4">
-              {/* Original Revenue */}
-              <div className="p-4 bg-gray-50 rounded-lg border">
-                <p className="text-xs text-gray-500 mb-1">Current Documentation</p>
-                <p className="text-2xl font-bold text-gray-700">
-                  {formatCurrency(revenueData.original?.totalPayment || 0)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Case-Mix: {revenueData.original?.caseMixWeight?.toFixed(4)}
-                </p>
-              </div>
+                                  {/* Original Revenue */}
+                                  <div className="p-4 bg-gray-50 rounded-lg border">
+                                    <p className="text-xs text-gray-500 mb-1">Current Documentation</p>
+                                    <p className="text-2xl font-bold text-gray-700">
+                                      {formatCurrency(revenueData.original?.totalPayment || 0)}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Case-Mix: {revenueData.original?.caseMixWeight?.toFixed(4)}
+                                    </p>
+                                    {revenueData.original?.wageIndex && revenueData.original.wageIndex !== 1.0 && (
+                                      <p className="text-xs text-blue-600 mt-0.5">
+                                        Wage Index: {revenueData.original.wageIndex.toFixed(4)}
+                                      </p>
+                                    )}
+                                  </div>
 
               {/* Corrected Revenue */}
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">

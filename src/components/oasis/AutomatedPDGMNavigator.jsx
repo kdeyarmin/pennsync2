@@ -83,7 +83,9 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
       trainingCostPerHour: 35,
       documentationTimePerEpisode: 0.5,
       auditStaffHourlyRate: 50,
-      avgEpisodesPerYear: 50
+      avgEpisodesPerYear: 50,
+      wageIndex: 1.0,
+      zipCode: ''
     };
   });
 
@@ -329,7 +331,9 @@ Return JSON:
       trainingCostPerHour: 35,
       documentationTimePerEpisode: 0.5,
       auditStaffHourlyRate: 50,
-      avgEpisodesPerYear: 50
+      avgEpisodesPerYear: 50,
+      wageIndex: 1.0,
+      zipCode: ''
     };
     setAgencyCosts(defaults);
     localStorage.setItem('pdgm_agency_costs', JSON.stringify(defaults));
@@ -784,6 +788,41 @@ Return JSON:
                       onChange={(e) => handleCostChange('avgEpisodesPerYear', e.target.value)}
                     />
                   </div>
+                  <div className="border-t pt-4 space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-900">Location-Based Adjustments</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">Office ZIP Code</Label>
+                      <Input
+                        id="zipCode"
+                        type="text"
+                        placeholder="e.g., 19104"
+                        value={agencyCosts.zipCode}
+                        onChange={(e) => setAgencyCosts(prev => {
+                          const updated = { ...prev, zipCode: e.target.value };
+                          localStorage.setItem('pdgm_agency_costs', JSON.stringify(updated));
+                          return updated;
+                        })}
+                      />
+                      <p className="text-xs text-gray-500">Used to determine wage index for your area</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="wageIndex">
+                        CMS Wage Index
+                        <span className="text-xs text-gray-500 ml-2">(Default: 1.0 = National Average)</span>
+                      </Label>
+                      <Input
+                        id="wageIndex"
+                        type="number"
+                        step="0.0001"
+                        placeholder="1.0000"
+                        value={agencyCosts.wageIndex}
+                        onChange={(e) => handleCostChange('wageIndex', e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Find your wage index at <a href="https://www.cms.gov/medicare/payment/prospective-payment-systems/home-health/home-health-pps-wage-index" target="_blank" className="text-blue-600 hover:underline">CMS.gov</a>
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <Button onClick={resetCosts} variant="outline" className="flex-1">
                       Reset to Defaults
@@ -976,6 +1015,12 @@ Return JSON:
                   <p className="text-xs text-gray-500">
                     Source/Timing: <span className="font-mono">{navigation.case_mix_calculation.source_timing_key}</span>
                   </p>
+                  {agencyCosts.wageIndex && agencyCosts.wageIndex !== 1.0 && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      <Info className="w-3 h-3" />
+                      Wage Index: {agencyCosts.wageIndex.toFixed(4)} applied
+                    </p>
+                  )}
                 </div>
 
                 {/* Calculation Steps */}
