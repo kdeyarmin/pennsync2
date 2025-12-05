@@ -43,6 +43,7 @@ export default function OASISAnalyzer() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [pdgmData, setPdgmData] = useState(null);
   const [error, setError] = useState(null);
+  const [savedBatchResults, setSavedBatchResults] = useState([]);
 
   // Handle viewing batch result in single analysis view
   const handleViewBatchResult = (result) => {
