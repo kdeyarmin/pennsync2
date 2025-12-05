@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,8 @@ import {
   Lightbulb,
   Download,
   FileDown,
-  FolderArchive
+  FolderArchive,
+  Workflow
 } from "lucide-react";
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
@@ -37,6 +38,8 @@ import EnhancedMultiReportComparison from "../components/oasis/EnhancedMultiRepo
 import KeyTakeawaysSummary from "../components/oasis/KeyTakeawaysSummary";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
 import DocumentationQualitySuggestions from "../components/oasis/DocumentationQualitySuggestions";
+import OASISScenarioManager from "../components/oasis/OASISScenarioManager";
+import OASISActionWorkflow from "../components/oasis/OASISActionWorkflow";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -48,6 +51,17 @@ export default function OASISAnalyzer() {
   const [pdgmData, setPdgmData] = useState(null);
   const [error, setError] = useState(null);
   const [savedBatchResults, setSavedBatchResults] = useState([]);
+  const [analysisId, setAnalysisId] = useState(null);
+  const [originalPayment, setOriginalPayment] = useState(null);
+  const [patientName, setPatientName] = useState("");
+
+  // Generate unique analysis ID when new analysis starts
+  useEffect(() => {
+    if (analysisResults && !analysisId) {
+      setAnalysisId(`analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+      setPatientName(analysisResults.pdgm_data?.patient_info?.name || "Unknown Patient");
+    }
+  }, [analysisResults]);
 
   // Handle viewing batch result in single analysis view
   const handleViewBatchResult = (result) => {
@@ -1221,7 +1235,29 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
           <PDGMRevenueComparison 
             analysisResults={analysisResults} 
             pdgmData={pdgmData}
+            onPaymentCalculated={(payment) => setOriginalPayment(payment)}
           />
+
+          {/* Scenario Planning & Action Workflow */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <OASISScenarioManager
+              analysisId={analysisId}
+              originalPdgmData={pdgmData}
+              originalPayment={originalPayment || 0}
+              patientName={patientName}
+              onCreateActions={(scenarios) => {
+                // Trigger action creation from scenarios
+                console.log("Creating actions from scenarios:", scenarios);
+              }}
+            />
+            <OASISActionWorkflow
+              analysisId={analysisId}
+              analysisResults={analysisResults}
+              pdgmData={pdgmData}
+              originalPayment={originalPayment || 0}
+              patientName={patientName}
+            />
+          </div>
 
           {/* Multi-Report Comparison */}
           <EnhancedMultiReportComparison
