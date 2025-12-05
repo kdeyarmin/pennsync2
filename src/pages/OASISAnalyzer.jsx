@@ -32,6 +32,7 @@ import {
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
+import PDGMMultiReportComparison from "../components/oasis/PDGMMultiReportComparison";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
