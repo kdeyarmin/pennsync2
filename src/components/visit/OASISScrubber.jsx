@@ -967,6 +967,29 @@ Return JSON:
                 weakest_documentation: { type: "array", items: { type: "string" } },
                 recommended_priority_fixes: { type: "array", items: { type: "string" } }
               }
+            },
+            oasis_narrative_mismatches: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  oasis_item: { type: "string" },
+                  uploaded_score: { type: "string" },
+                  narrative_suggests: { type: "string" },
+                  discrepancy: { type: "string" },
+                  recommendation: { type: "string" },
+                  audit_risk: { type: "string" }
+                }
+              }
+            },
+            gg_section_analysis: {
+              type: "object",
+              properties: {
+                gg0130_self_care_summary: { type: "string" },
+                gg0170_mobility_summary: { type: "string" },
+                goal_appropriateness: { type: "string" },
+                functional_improvement_potential: { type: "string" }
+              }
             }
           }
         }
