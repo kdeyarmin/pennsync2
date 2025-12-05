@@ -377,7 +377,7 @@ function CaseMixBreakdown({ original, corrected }) {
   );
 }
 
-export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
+export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPaymentCalculated }) {
   const [isCalculating, setIsCalculating] = useState(false);
   const [revenueData, setRevenueData] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -462,14 +462,19 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
 
       setRevenueData(response.data);
 
-              // Store validation and scenarios data
-              if (response.data?.dataValidation) {
-                setDataValidation(response.data.dataValidation);
-              }
-              if (response.data?.alternativeScenarios) {
-                setAlternativeScenarios(response.data.alternativeScenarios);
-              }
-            } catch (err) {
+                // Store validation and scenarios data
+                if (response.data?.dataValidation) {
+                  setDataValidation(response.data.dataValidation);
+                }
+                if (response.data?.alternativeScenarios) {
+                  setAlternativeScenarios(response.data.alternativeScenarios);
+                }
+
+                // Notify parent of original payment for scenario planning
+                if (onPaymentCalculated && response.data?.original?.totalPayment) {
+                  onPaymentCalculated(response.data.original.totalPayment);
+                }
+              } catch (err) {
               console.error("Error calculating PDGM:", err);
               setError("Failed to calculate PDGM revenue. Please try again.");
             }
