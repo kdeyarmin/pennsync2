@@ -20,9 +20,11 @@ import {
   Loader2,
   CheckCircle2,
   Plus,
-  Trash2
+  Trash2,
+  Sparkles
 } from "lucide-react";
 import { format } from "date-fns";
+import AIAuditReportAssistant from "./AIAuditReportAssistant";
 
 export default function OASISAuditReportGenerator({ audit, isOpen, onClose, currentUser }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -232,6 +234,13 @@ ${data.corrections?.map(c => `
           </div>
         ) : (
           <div className="space-y-6">
+            {/* AI Audit Report Assistant */}
+            <AIAuditReportAssistant 
+              audit={audit}
+              onUpdateFindings={(findings) => setAdditionalFindings(findings)}
+              onAddRecommendations={(recs) => setRecommendations(recs)}
+            />
+
             {/* Include Sections */}
             <div>
               <Label className="text-sm font-medium">Include Sections</Label>

@@ -52,6 +52,8 @@ import DocumentationQualitySuggestions from "../components/oasis/DocumentationQu
 import OASISScenarioManager from "../components/oasis/OASISScenarioManager";
 import OASISActionWorkflow from "../components/oasis/OASISActionWorkflow";
 import AIDocumentationQualityAnalyzer from "../components/oasis/AIDocumentationQualityAnalyzer";
+import AIDocumentationAssistant from "../components/oasis/AIDocumentationAssistant";
+import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
 import SmartNoteDataImport from "../components/oasis/SmartNoteDataImport";
 import { useAutoFlagOASIS, THRESHOLDS } from "../components/oasis/OASISAutoFlagger";
@@ -1166,6 +1168,19 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
 
           {/* AI Documentation Quality Analyzer - Full Width */}
           <AIDocumentationQualityAnalyzer analysisResults={analysisResults} pdgmData={pdgmData} />
+
+          {/* AI Documentation Assistant & Audit Risk Predictor */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AIDocumentationAssistant 
+              analysisResults={analysisResults} 
+              pdgmData={pdgmData}
+              onInsertText={(text) => console.log("Insert text:", text)}
+            />
+            <AIAuditRiskPredictor 
+              analysisResults={analysisResults} 
+              patientId={selectedPatientId}
+            />
+          </div>
 
           {/* AI-Enhanced Insights Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
