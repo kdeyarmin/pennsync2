@@ -146,17 +146,22 @@ export default function OASISAnalyzer() {
         
         setMatchResults(results);
         
-        // Auto-select if confidence is very high (>= 85%)
+        // Auto-select and auto-save if confidence is very high (>= 85%)
         const bestMatch = matchedPatients[0];
         if (bestMatch && bestMatch.confidence >= 85) {
           setSelectedPatientId(bestMatch.patient.id);
           console.log(`Auto-matched patient with ${bestMatch.confidence}% confidence:`, bestMatch.patient.first_name, bestMatch.patient.last_name);
+          
+          // Auto-save to patient chart
+          setTimeout(() => {
+            handleSaveToPatient(bestMatch.patient.id);
+          }, 500);
         } else if (bestMatch) {
           console.log(`Best match (${bestMatch.confidence}% confidence):`, bestMatch.patient.first_name, bestMatch.patient.last_name, '- awaiting manual confirmation');
         }
       }
     }
-  }, [analysisResults, patients]);
+  }, [analysisResults, patients, uploadedFileUrl]);
 
   // Sophisticated patient matching algorithm
   const calculatePatientMatchScore = (extractedName, patient, extractedDOB) => {
