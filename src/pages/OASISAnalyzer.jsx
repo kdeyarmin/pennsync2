@@ -59,23 +59,25 @@ export default function OASISAnalyzer() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadProgress(40);
 
-      // Extract text content from PDF
+      // Extract text content from PDF using AI (handles both text-based and scanned/image PDFs)
       const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: {
           type: "object",
           properties: {
-            document_text: { type: "string", description: "The full text content of the OASIS document" },
-            patient_info: { type: "string", description: "Patient identification information if found" },
-            assessment_items: { type: "string", description: "All OASIS assessment items and their values" }
-          }
+            full_content: { 
+              type: "string", 
+              description: "Extract ALL text content from this OASIS assessment document. Include every field, item code (M0000-M2400), responses, patient information, dates, and any clinical notes. Preserve the structure and formatting as much as possible."
+            }
+          },
+          required: ["full_content"]
         }
       });
 
       setUploadProgress(60);
 
       if (extractedData.status === "error") {
-        throw new Error(extractedData.details || "Failed to extract text from PDF.");
+        throw new Error(extractedData.details || "Failed to extract text from PDF. Please ensure it's a readable OASIS document.");
       }
 
       // Handle various output formats
@@ -83,19 +85,18 @@ export default function OASISAnalyzer() {
       if (extractedData.output) {
         if (typeof extractedData.output === 'string') {
           oasisTextContent = extractedData.output;
+        } else if (extractedData.output.full_content) {
+          oasisTextContent = extractedData.output.full_content;
         } else if (typeof extractedData.output === 'object') {
-          // Combine all extracted fields
-          const parts = [];
-          if (extractedData.output.document_text) parts.push(extractedData.output.document_text);
-          if (extractedData.output.patient_info) parts.push("Patient Info: " + extractedData.output.patient_info);
-          if (extractedData.output.assessment_items) parts.push("Assessment Items: " + extractedData.output.assessment_items);
-          oasisTextContent = parts.length > 0 ? parts.join("\n\n") : JSON.stringify(extractedData.output, null, 2);
+          oasisTextContent = JSON.stringify(extractedData.output, null, 2);
         }
       }
 
-      if (!oasisTextContent || oasisTextContent.trim().length < 50) {
-        throw new Error("Could not extract sufficient text from the PDF. Please ensure it's a valid OASIS document.");
+      if (!oasisTextContent || oasisTextContent.trim().length < 20) {
+        throw new Error("Could not extract text from the PDF. The document may be empty, password-protected, or in an unsupported format.");
       }
+
+      console.log("Extracted OASIS content length:", oasisTextContent.length);
 
       setIsUploading(false);
       setIsAnalyzing(true);
