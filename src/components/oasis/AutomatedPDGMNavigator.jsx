@@ -54,6 +54,8 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [navigation, setNavigation] = useState(null);
   const [error, setError] = useState(null);
   const [autoAnalyzed, setAutoAnalyzed] = useState(false);
+  const [resolutionWorkflows, setResolutionWorkflows] = useState({});
+  const [loadingResolution, setLoadingResolution] = useState(null);
 
   // Auto-analyze when data is available
   useEffect(() => {
@@ -269,6 +271,113 @@ Return JSON:
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
+  };
+
+  const getResolutionWorkflow = async (discrepancy, index) => {
+    setLoadingResolution(index);
+    
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a CMS OASIS compliance expert. Provide a detailed resolution workflow for this PDGM discrepancy.
+
+DISCREPANCY DETAILS:
+${JSON.stringify(discrepancy, null, 2)}
+
+FULL OASIS CONTEXT:
+Primary Diagnosis: ${pdgmData.primary_diagnosis_code} - ${pdgmData.primary_diagnosis_description}
+Admission Source: ${pdgmData.admission_source}
+Episode Timing: ${pdgmData.episode_timing}
+Functional Scores: ${JSON.stringify(pdgmData.functional_scores, null, 2)}
+Comorbidities: ${JSON.stringify(pdgmData.comorbidities, null, 2)}
+
+Provide a comprehensive resolution plan:
+
+1. ROOT CAUSE ANALYSIS
+   - Identify exactly why this discrepancy occurred
+   - Explain the specific data points causing the issue
+
+2. STEP-BY-STEP CORRECTION PROCESS
+   - Provide numbered steps to resolve
+   - Be specific about which M-items or fields need correction
+   - Include verification steps
+
+3. CLINICAL DOCUMENTATION CHANGES
+   - Provide exact text snippets to add/modify
+   - Show before/after examples
+   - Ensure clinical appropriateness
+
+4. CMS GUIDELINES REFERENCE
+   - Cite specific CMS OASIS-E guidance sections
+   - Reference relevant M-item definitions
+   - Include PDGM grouping rules
+
+5. VALIDATION CHECKLIST
+   - List items to verify after correction
+   - Include interdependency checks
+
+Return JSON:
+{
+  "root_cause": "detailed explanation of why discrepancy exists",
+  "severity_explanation": "why this matters for reimbursement/compliance",
+  "correction_steps": [
+    {
+      "step_number": 1,
+      "action": "what to do",
+      "specific_fields": ["M-items or fields to change"],
+      "rationale": "why this step is needed"
+    }
+  ],
+  "documentation_changes": [
+    {
+      "item": "M-item or field",
+      "current_value": "what's currently documented",
+      "recommended_value": "what it should be",
+      "example_narrative": "exact text to add to clinical notes",
+      "clinical_justification": "why this is clinically appropriate"
+    }
+  ],
+  "cms_references": [
+    {
+      "guideline": "CMS guideline name",
+      "section": "specific section",
+      "quote": "relevant quote from guideline",
+      "application": "how it applies to this case"
+    }
+  ],
+  "validation_checklist": [
+    "item to verify after correction"
+  ],
+  "estimated_resolution_time": "time estimate",
+  "revenue_impact_if_resolved": "$ impact explanation"
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            root_cause: { type: "string" },
+            severity_explanation: { type: "string" },
+            correction_steps: { type: "array", items: { type: "object" } },
+            documentation_changes: { type: "array", items: { type: "object" } },
+            cms_references: { type: "array", items: { type: "object" } },
+            validation_checklist: { type: "array", items: { type: "string" } },
+            estimated_resolution_time: { type: "string" },
+            revenue_impact_if_resolved: { type: "string" }
+          }
+        }
+      });
+
+      setResolutionWorkflows(prev => ({
+        ...prev,
+        [index]: result
+      }));
+    } catch (err) {
+      console.error("Resolution workflow error:", err);
+      setResolutionWorkflows(prev => ({
+        ...prev,
+        [index]: { error: "Failed to generate resolution workflow. Please try again." }
+      }));
+    }
+    
+    setLoadingResolution(null);
   };
 
   const getLevelColor = (level) => {
@@ -705,25 +814,176 @@ Return JSON:
                   <AlertTriangle className="w-4 h-4" />
                   Discrepancies Detected ({navigation.discrepancies.length})
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {navigation.discrepancies.map((disc, idx) => (
-                    <div key={idx} className="bg-white p-3 rounded border border-red-200">
-                      <div className="flex items-center justify-between mb-1">
-                        <Badge className={getSeverityBadge(disc.severity)}>{disc.severity}</Badge>
-                        <Badge variant="outline" className="text-xs">{disc.type}</Badge>
+                    <div key={idx} className="bg-white rounded border border-red-200 overflow-hidden">
+                      <div className="p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <Badge className={getSeverityBadge(disc.severity)}>{disc.severity}</Badge>
+                          <Badge variant="outline" className="text-xs">{disc.type}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-800 mb-1">{disc.finding}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                          <span>Expected: <strong>{disc.expected}</strong></span>
+                          <ArrowRight className="w-3 h-3" />
+                          <span>Actual: <strong className="text-red-600">{disc.actual}</strong></span>
+                        </div>
+                        {disc.revenue_impact && (
+                          <p className="text-xs text-green-700 bg-green-50 p-1 rounded mb-2">💰 {disc.revenue_impact}</p>
+                        )}
+                        <p className="text-xs text-blue-700 mb-2">
+                          <strong>Action:</strong> {disc.recommendation}
+                        </p>
+                        
+                        <Button
+                          onClick={() => getResolutionWorkflow(disc, idx)}
+                          disabled={loadingResolution === idx}
+                          size="sm"
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          {loadingResolution === idx ? (
+                            <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Generating Resolution...</>
+                          ) : resolutionWorkflows[idx] ? (
+                            <><CheckCircle2 className="w-3 h-3 mr-2" /> View Resolution Workflow</>
+                          ) : (
+                            <><Target className="w-3 h-3 mr-2" /> Get Resolution Workflow</>
+                          )}
+                        </Button>
                       </div>
-                      <p className="text-sm text-gray-800 mb-1">{disc.finding}</p>
-                      <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                        <span>Expected: <strong>{disc.expected}</strong></span>
-                        <ArrowRight className="w-3 h-3" />
-                        <span>Actual: <strong className="text-red-600">{disc.actual}</strong></span>
-                      </div>
-                      {disc.revenue_impact && (
-                        <p className="text-xs text-green-700 bg-green-50 p-1 rounded">💰 {disc.revenue_impact}</p>
+
+                      {/* Resolution Workflow Details */}
+                      {resolutionWorkflows[idx] && !resolutionWorkflows[idx].error && (
+                        <div className="border-t border-red-200 bg-blue-50 p-4 space-y-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Target className="w-4 h-4 text-blue-600" />
+                            <h4 className="font-semibold text-blue-900">Resolution Workflow</h4>
+                          </div>
+
+                          {/* Root Cause */}
+                          <div className="bg-white p-3 rounded border">
+                            <p className="text-xs font-semibold text-gray-700 mb-1">Root Cause Analysis</p>
+                            <p className="text-sm text-gray-800">{resolutionWorkflows[idx].root_cause}</p>
+                            <p className="text-xs text-orange-700 mt-1 bg-orange-50 p-1.5 rounded">
+                              <strong>Impact:</strong> {resolutionWorkflows[idx].severity_explanation}
+                            </p>
+                          </div>
+
+                          {/* Correction Steps */}
+                          {resolutionWorkflows[idx].correction_steps?.length > 0 && (
+                            <div className="bg-white p-3 rounded border">
+                              <p className="text-xs font-semibold text-gray-700 mb-2">Step-by-Step Correction Process</p>
+                              <div className="space-y-2">
+                                {resolutionWorkflows[idx].correction_steps.map((step, i) => (
+                                  <div key={i} className="flex gap-2">
+                                    <div className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                      {step.step_number}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-gray-800">{step.action}</p>
+                                      {step.specific_fields?.length > 0 && (
+                                        <p className="text-xs text-gray-600">
+                                          Fields: {step.specific_fields.map(f => <span key={f} className="font-mono bg-gray-100 px-1 rounded">{f}</span>)}
+                                        </p>
+                                      )}
+                                      <p className="text-xs text-gray-500 italic">{step.rationale}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Documentation Changes */}
+                          {resolutionWorkflows[idx].documentation_changes?.length > 0 && (
+                            <div className="bg-white p-3 rounded border">
+                              <p className="text-xs font-semibold text-gray-700 mb-2">Clinical Documentation Changes</p>
+                              <div className="space-y-2">
+                                {resolutionWorkflows[idx].documentation_changes.map((change, i) => (
+                                  <div key={i} className="bg-gray-50 p-2 rounded border">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-xs font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
+                                        {change.item}
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
+                                      <div className="bg-red-50 p-1.5 rounded border border-red-200">
+                                        <p className="text-red-600 font-medium mb-0.5">Current</p>
+                                        <p className="text-gray-700">{change.current_value || 'Not documented'}</p>
+                                      </div>
+                                      <div className="bg-green-50 p-1.5 rounded border border-green-200">
+                                        <p className="text-green-600 font-medium mb-0.5">Recommended</p>
+                                        <p className="text-gray-700">{change.recommended_value}</p>
+                                      </div>
+                                    </div>
+                                    <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-1">
+                                      <p className="text-xs text-blue-600 font-medium mb-0.5">📝 Example Narrative:</p>
+                                      <p className="text-sm text-blue-900 italic">"{change.example_narrative}"</p>
+                                    </div>
+                                    <p className="text-xs text-gray-600">
+                                      <strong>Clinical Justification:</strong> {change.clinical_justification}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* CMS References */}
+                          {resolutionWorkflows[idx].cms_references?.length > 0 && (
+                            <div className="bg-white p-3 rounded border">
+                              <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                                <BookOpen className="w-3 h-3" /> CMS Guidelines Reference
+                              </p>
+                              <div className="space-y-2">
+                                {resolutionWorkflows[idx].cms_references.map((ref, i) => (
+                                  <div key={i} className="bg-gray-50 p-2 rounded border text-xs">
+                                    <p className="font-medium text-gray-800">{ref.guideline}</p>
+                                    <p className="text-gray-600">Section: {ref.section}</p>
+                                    <p className="text-gray-700 italic mt-1 bg-white p-1 rounded">"{ref.quote}"</p>
+                                    <p className="text-blue-700 mt-1">
+                                      <strong>Application:</strong> {ref.application}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Validation Checklist */}
+                          {resolutionWorkflows[idx].validation_checklist?.length > 0 && (
+                            <div className="bg-white p-3 rounded border">
+                              <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Post-Correction Validation
+                              </p>
+                              <ul className="space-y-1">
+                                {resolutionWorkflows[idx].validation_checklist.map((item, i) => (
+                                  <li key={i} className="text-xs text-gray-700 flex items-start gap-1">
+                                    <span className="text-green-600">✓</span> {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Summary Info */}
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-white p-2 rounded border">
+                              <p className="text-gray-500 mb-0.5">Estimated Time</p>
+                              <p className="font-medium text-gray-800">{resolutionWorkflows[idx].estimated_resolution_time}</p>
+                            </div>
+                            <div className="bg-green-50 p-2 rounded border border-green-200">
+                              <p className="text-green-600 mb-0.5">Revenue Impact</p>
+                              <p className="font-medium text-green-800">{resolutionWorkflows[idx].revenue_impact_if_resolved}</p>
+                            </div>
+                          </div>
+                        </div>
                       )}
-                      <p className="text-xs text-blue-700 mt-1">
-                        <strong>Action:</strong> {disc.recommendation}
-                      </p>
+
+                      {resolutionWorkflows[idx]?.error && (
+                        <div className="border-t border-red-200 bg-red-50 p-3">
+                          <p className="text-xs text-red-800">{resolutionWorkflows[idx].error}</p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
