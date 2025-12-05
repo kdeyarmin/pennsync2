@@ -1663,6 +1663,158 @@ Return JSON:
               </AlertDescription>
             </Alert>
           )}
+
+          {/* Extracted Indicators Preview */}
+          {extractedIndicators && (
+            <div className="mt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowExtractedIndicators(!showExtractedIndicators)}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                {showExtractedIndicators ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                {showExtractedIndicators ? 'Hide' : 'Show'} Extracted Clinical Indicators
+              </Button>
+              
+              {showExtractedIndicators && (
+                <div className="mt-3 bg-white rounded-lg border p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      Pre-Analysis Extraction Results
+                    </h4>
+                    <Badge variant="outline" className="text-xs">
+                      Auto-extracted from narrative
+                    </Badge>
+                  </div>
+
+                  {/* Clinical Group Preview */}
+                  <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-indigo-900">PDGM Clinical Group</span>
+                      <Badge className={`${
+                        extractedIndicators.clinicalGroup.confidence === 'high' ? 'bg-green-600' :
+                        extractedIndicators.clinicalGroup.confidence === 'medium' ? 'bg-yellow-600' : 'bg-red-600'
+                      }`}>
+                        {extractedIndicators.clinicalGroup.confidence} confidence
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-indigo-800 font-semibold">
+                      {extractedIndicators.clinicalGroup.group} - {extractedIndicators.clinicalGroup.name}
+                    </p>
+                    {extractedIndicators.clinicalGroup.matchedPatterns.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {extractedIndicators.clinicalGroup.matchedPatterns.map((p, i) => (
+                          <Badge key={i} variant="outline" className="text-xs bg-white">{p}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Clinical Indicators Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {[
+                      { key: 'assistDevices', label: 'Assistive Devices', icon: Footprints, color: 'blue' },
+                      { key: 'oxygenUse', label: 'Oxygen Use', icon: Wind, color: 'cyan' },
+                      { key: 'woundPresent', label: 'Wounds', icon: Activity, color: 'red' },
+                      { key: 'fallRisk', label: 'Fall Risk', icon: AlertTriangle, color: 'orange' },
+                      { key: 'painMentioned', label: 'Pain', icon: Thermometer, color: 'purple' },
+                      { key: 'cognitiveIssues', label: 'Cognitive', icon: Brain, color: 'pink' },
+                      { key: 'diabetic', label: 'Diabetic', icon: Pill, color: 'amber' },
+                      { key: 'cardiacIssues', label: 'Cardiac', icon: Heart, color: 'rose' }
+                    ].map(({ key, label, icon: Icon, color }) => {
+                      const indicator = extractedIndicators.clinical[key];
+                      return (
+                        <TooltipProvider key={key}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className={`p-2 rounded border ${
+                                indicator?.detected 
+                                  ? `bg-${color}-50 border-${color}-200` 
+                                  : 'bg-gray-50 border-gray-200'
+                              }`}>
+                                <div className="flex items-center gap-2">
+                                  <Icon className={`w-4 h-4 ${indicator?.detected ? `text-${color}-600` : 'text-gray-400'}`} />
+                                  <span className={`text-xs font-medium ${indicator?.detected ? `text-${color}-900` : 'text-gray-500'}`}>
+                                    {label}
+                                  </span>
+                                </div>
+                                <div className="mt-1">
+                                  {indicator?.detected ? (
+                                    <Badge className={`bg-${color}-500 text-white text-xs`}>Detected</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs">Not found</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-xs">
+                              {indicator?.sentences?.length > 0 ? (
+                                <div className="text-xs space-y-1">
+                                  <p className="font-semibold">Relevant phrases:</p>
+                                  {indicator.sentences.slice(0, 3).map((s, i) => (
+                                    <p key={i} className="text-gray-600">"{s.substring(0, 100)}..."</p>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs">No mentions found in narrative</p>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    })}
+                  </div>
+
+                  {/* Comorbidities Summary */}
+                  {extractedIndicators.comorbidities.count > 0 && (
+                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-green-900">Identified Comorbidities</span>
+                        <Badge className={`${
+                          extractedIndicators.comorbidities.adjustment === 'high' ? 'bg-green-600' :
+                          extractedIndicators.comorbidities.adjustment === 'low' ? 'bg-yellow-600' : 'bg-gray-500'
+                        }`}>
+                          {extractedIndicators.comorbidities.adjustment} adjustment
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {extractedIndicators.comorbidities.high.map((c, i) => (
+                          <Badge key={`h-${i}`} className="bg-green-600 text-white text-xs">{c.name}</Badge>
+                        ))}
+                        {extractedIndicators.comorbidities.low.map((c, i) => (
+                          <Badge key={`l-${i}`} variant="outline" className="text-xs">{c.name}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Functional Phrases Summary */}
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2 text-xs">
+                    {[
+                      { key: 'bathing', label: 'Bathing', icon: '🚿' },
+                      { key: 'dressing', label: 'Dressing', icon: '👕' },
+                      { key: 'ambulation', label: 'Ambulation', icon: '🚶' },
+                      { key: 'transfer', label: 'Transfers', icon: '🔄' },
+                      { key: 'toileting', label: 'Toileting', icon: '🚽' },
+                      { key: 'grooming', label: 'Grooming', icon: '🪥' }
+                    ].map(({ key, label, icon }) => {
+                      const phrases = extractedIndicators.functional[key];
+                      const count = phrases?.allPhrases?.length || 0;
+                      return (
+                        <div key={key} className={`p-2 rounded border text-center ${count > 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                          <span className="text-lg">{icon}</span>
+                          <p className={`font-medium ${count > 0 ? 'text-blue-900' : 'text-gray-500'}`}>{label}</p>
+                          <p className={count > 0 ? 'text-blue-700' : 'text-gray-400'}>{count} phrases</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
