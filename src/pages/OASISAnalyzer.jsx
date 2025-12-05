@@ -259,7 +259,11 @@ export default function OASISAnalyzer() {
         }
         
         if (output.primary_diagnosis) {
-          sections.push(`PRIMARY DIAGNOSIS (M1021):\nICD-10: ${output.primary_diagnosis.icd10_code || 'Not found'}\nDescription: ${output.primary_diagnosis.description || 'Not found'}`);
+          sections.push(`PRIMARY DIAGNOSIS (M1021):\nICD-10: ${output.primary_diagnosis.icd10_code || 'Not found'}\nDescription: ${output.primary_diagnosis.description || 'Not found'}\nRaw Text: ${output.primary_diagnosis.raw_text || 'N/A'}`);
+        }
+        
+        if (output.all_diagnoses_raw) {
+          sections.push(`ALL DIAGNOSES RAW TEXT:\n${output.all_diagnoses_raw}`);
         }
         
         if (output.other_diagnoses?.length > 0) {
