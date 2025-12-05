@@ -403,6 +403,61 @@ function validateAdmissionSource(data) {
   return { validatedSource: expectedSource, discrepancies, m1000Value: m1000Val };
 }
 
+// Validate primary diagnosis code
+function validatePrimaryDiagnosis(data) {
+  const discrepancies = [];
+  
+  // Try to find diagnosis code from multiple possible fields
+  let diagnosisCode = data.primary_diagnosis_code || '';
+  const diagnosisDescription = data.primary_diagnosis || data.primary_diagnosis_description || '';
+  
+  // If no explicit code, try to extract from description
+  if (!diagnosisCode && diagnosisDescription) {
+    const codeMatch = diagnosisDescription.match(/\b([A-Z]\d{2}\.?\d{0,2})\b/i);
+    if (codeMatch) {
+      diagnosisCode = codeMatch[1].toUpperCase();
+    }
+  }
+  
+  // Check M1021 fields as well
+  if (!diagnosisCode) {
+    diagnosisCode = data.m1021_primary_diagnosis_code || '';
+  }
+  
+  // Validate the code format if we have one
+  if (diagnosisCode) {
+    const cleanCode = diagnosisCode.toUpperCase().replace(/[^A-Z0-9.]/g, '');
+    const validFormat = /^[A-Z]\d{2}\.?\d{0,4}$/.test(cleanCode);
+    
+    if (!validFormat) {
+      discrepancies.push({
+        type: 'invalid_diagnosis_code_format',
+        severity: 'warning',
+        message: `Primary diagnosis code format may be invalid: ${diagnosisCode}`,
+        expected: 'ICD-10-CM format (e.g., I50.9, J44.1)',
+        actual: diagnosisCode,
+        revenueImpact: 'Invalid code may affect clinical grouping.'
+      });
+    }
+  } else if (!diagnosisDescription) {
+    // Only flag as critical if we have neither code nor description
+    discrepancies.push({
+      type: 'missing_primary_diagnosis',
+      severity: 'critical',
+      message: 'No primary diagnosis code or description found',
+      expected: 'ICD-10-CM code (e.g., I50.9) or diagnosis description',
+      actual: 'Not provided',
+      revenueImpact: 'Required for PDGM grouping - using default clinical group.'
+    });
+  }
+  
+  return {
+    validatedCode: diagnosisCode,
+    validatedDescription: diagnosisDescription,
+    discrepancies
+  };
+}
+
 // Validate episode timing from dates
 function validateEpisodeTiming(data) {
   const discrepancies = [];
@@ -478,12 +533,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No PDGM data provided' }, { status: 400 });
     }
 
+    // Validate primary diagnosis code
+    const diagnosisValidation = validatePrimaryDiagnosis(pdgmData);
+    
     // Validate admission source and timing
     const sourceValidation = validateAdmissionSource(pdgmData);
     const timingValidation = validateEpisodeTiming(pdgmData);
     
     // Combine all discrepancies
     const allDiscrepancies = [
+      ...diagnosisValidation.discrepancies,
       ...sourceValidation.discrepancies,
       ...timingValidation.discrepancies
     ];
@@ -594,9 +653,20 @@ function calculateAlternativeScenarios(data) {
 }
 
 function calculatePDGMRevenue(data) {
-  // Extract data
-  const primaryDiagnosis = data.primary_diagnosis || '';
-  const icd10Code = data.primary_diagnosis_code || '';
+  // Extract data - try multiple fields for primary diagnosis
+  const primaryDiagnosis = data.primary_diagnosis || data.primary_diagnosis_description || '';
+  
+  // Try multiple fields for ICD-10 code
+  let icd10Code = data.primary_diagnosis_code || '';
+  
+  // If no code found, try to extract from primary_diagnosis text (e.g., "I50.9 - Heart Failure")
+  if (!icd10Code && primaryDiagnosis) {
+    const codeMatch = primaryDiagnosis.match(/\b([A-Z]\d{2}\.?\d{0,2})\b/i);
+    if (codeMatch) {
+      icd10Code = codeMatch[1].toUpperCase();
+    }
+  }
+  
   const comorbidities = data.comorbidities || [];
   const admissionSource = (data.admission_source || 'community').toLowerCase();
   const episodeTiming = (data.episode_timing || 'early').toLowerCase();
