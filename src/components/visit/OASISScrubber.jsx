@@ -571,6 +571,14 @@ export default function OASISScrubber({
         narrativeText
       );
 
+      // Store extracted indicators for UI display
+      setExtractedIndicators({
+        clinical: clinicalIndicators,
+        functional: functionalPhrases,
+        clinicalGroup: clinicalGroupAnalysis,
+        comorbidities: comorbidityAnalysis
+      });
+
       let prompt = `You are a CMS-certified OASIS-E compliance auditor with 15+ years expertise in 2024 Medicare home health CoP regulations and PDGM optimization. Perform RIGOROUS, EVIDENCE-BASED completeness and accuracy check for ${visitType}.
 
 CRITICAL INSTRUCTIONS FOR ACCURACY:
