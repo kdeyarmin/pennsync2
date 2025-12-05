@@ -368,18 +368,19 @@ export default function OASISAnalyzer() {
   };
 
   // Save OASIS to patient record
-  const handleSaveToPatient = async () => {
+  const handleSaveToPatient = async (autoPatientId = null) => {
+    const patientIdToUse = autoPatientId || selectedPatientId;
     if (!analysisResults || !uploadedFileUrl) return;
     
     setIsSaving(true);
     try {
-      const selectedPatient = patients.find(p => p.id === selectedPatientId);
+      const selectedPatient = patients.find(p => p.id === patientIdToUse);
       const patientFullName = selectedPatient 
         ? `${selectedPatient.first_name} ${selectedPatient.last_name}`
         : patientName;
       
       const savedOASIS = await saveOASISMutation.mutateAsync({
-        patient_id: selectedPatientId || null,
+        patient_id: patientIdToUse || null,
         patient_name: patientFullName,
         file_url: uploadedFileUrl,
         file_name: file?.name || 'OASIS Document',
