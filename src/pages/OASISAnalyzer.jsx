@@ -33,6 +33,9 @@ import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
 import PDGMMultiReportComparison from "../components/oasis/PDGMMultiReportComparison";
+import KeyTakeawaysSummary from "../components/oasis/KeyTakeawaysSummary";
+import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
+import DocumentationQualitySuggestions from "../components/oasis/DocumentationQualitySuggestions";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -962,6 +965,9 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       {/* Analysis Results */}
       {analysisResults && (
         <div className="space-y-6">
+          {/* Key Takeaways Summary - Most Important */}
+          <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
+
           {/* Score Overview */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1150,6 +1156,15 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             currentReport={analysisResults}
             currentPdgmData={pdgmData}
           />
+
+          {/* AI-Enhanced Insights Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Audit Risk Predictor */}
+            <AuditRiskPredictor analysisResults={analysisResults} />
+            
+            {/* Documentation Quality Suggestions */}
+            <DocumentationQualitySuggestions analysisResults={analysisResults} />
+          </div>
 
           {/* Detailed Analysis Accordion */}
           <Accordion type="multiple" className="space-y-2">
