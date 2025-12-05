@@ -1703,6 +1703,83 @@ Return JSON:
                 </div>
               )}
 
+              {/* Cross-Validation Failures */}
+              {oasisResults.cross_validation_failures && oasisResults.cross_validation_failures.length > 0 && (
+                <div className="space-y-3">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer bg-orange-50 p-4 rounded-lg border-2 border-orange-200"
+                    onClick={() => toggleCategory('crossvalidation')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-6 h-6 text-orange-600" />
+                      <div>
+                        <h4 className="font-bold text-orange-900 text-lg">
+                          🔗 Cross-Validation Issues ({oasisResults.cross_validation_failures.length})
+                        </h4>
+                        <p className="text-xs text-orange-700">Related OASIS items don't align per CMS rules</p>
+                      </div>
+                    </div>
+                    {expandedCategories.includes('crossvalidation') ? (
+                      <ChevronUp className="w-5 h-5 text-orange-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-orange-600" />
+                    )}
+                  </div>
+
+                  {expandedCategories.includes('crossvalidation') && (
+                    <div className="space-y-3">
+                      {oasisResults.cross_validation_failures.map((item, index) => (
+                        <Card key={index} className="border-l-4 border-l-orange-500 bg-orange-50">
+                          <CardContent className="p-4 space-y-3">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <h5 className="font-bold text-orange-900">{item.rule_violated}</h5>
+                              <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : item.audit_risk === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`}>
+                                {item.audit_risk} audit risk
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {item.items_involved?.map((mi, idx) => (
+                                <Badge key={idx} variant="outline" className="bg-white text-orange-800 border-orange-300 text-xs">
+                                  {mi}
+                                </Badge>
+                              ))}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="bg-red-100 p-2 rounded border border-red-200">
+                                <p className="text-xs text-red-700 font-medium">Current Values</p>
+                                <p className="text-red-900">{item.current_values}</p>
+                              </div>
+                              <div className="bg-green-100 p-2 rounded border border-green-200">
+                                <p className="text-xs text-green-700 font-medium">Expected Relationship</p>
+                                <p className="text-green-900">{item.expected_relationship}</p>
+                              </div>
+                            </div>
+                            {item.narrative_evidence && (
+                              <div className="bg-white p-2 rounded border text-sm">
+                                <p className="text-xs text-gray-500">Evidence:</p>
+                                <p className="text-gray-900 italic">"{item.narrative_evidence}"</p>
+                              </div>
+                            )}
+                            {item.pdgm_impact && (
+                              <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
+                                <p className="text-xs text-purple-700 font-medium">PDGM Impact:</p>
+                                <p className="text-purple-900">{item.pdgm_impact}</p>
+                              </div>
+                            )}
+                            <Alert className="bg-blue-50 border-blue-200">
+                              <Info className="w-4 h-4 text-blue-600" />
+                              <AlertDescription className="text-blue-900 text-sm">
+                                <strong>Resolution:</strong> {item.resolution}
+                              </AlertDescription>
+                            </Alert>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* GG Section Analysis */}
               {oasisResults.gg_section_analysis && (
                 <div className="bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200">
