@@ -572,24 +572,86 @@ export default function OASISAnalyzer() {
         console.warn("Structured extraction failed, trying text fallback:", extractErr);
         extractionMethod = 'text_fallback';
         
-        // Fallback: Extract as plain text and let AI parse it
+        // Fallback: Extract as plain text with AI-assisted parsing
         try {
-          extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
+          const textExtract = await base44.integrations.Core.ExtractDataFromUploadedFile({
             file_url: file_url,
             json_schema: {
               type: "object",
               properties: {
                 full_text: { 
                   type: "string", 
-                  description: "Extract ALL text from the PDF document exactly as it appears" 
+                  description: "Extract ALL text from the PDF document exactly as it appears, preserving line breaks and spacing" 
                 }
               }
             }
           });
           
-          if (extractedData.status === "success" && extractedData.output?.full_text) {
-            // AI will parse the raw text in the analysis step
-            console.log("Text fallback successful, extracted", extractedData.output.full_text.length, "characters");
+          if (textExtract.status === "success" && textExtract.output?.full_text) {
+            console.log("Text fallback successful, extracted", textExtract.output.full_text.length, "characters");
+            
+            // Use AI to parse the raw text for critical fields
+            const parsedData = await base44.integrations.Core.InvokeLLM({
+              prompt: `Parse this OASIS document text and extract key data fields. Focus on accuracy.
+
+DOCUMENT TEXT:
+${textExtract.output.full_text.substring(0, 8000)}
+
+Extract ONLY what you can clearly identify. Return "NOT FOUND" for fields you cannot locate.
+
+CRITICAL FIELDS TO FIND:
+1. Patient name - look at the very top of the document
+2. M1021 Primary Diagnosis - ICD-10 code AND description
+3. M1023 Other Diagnoses - ALL codes and descriptions listed
+4. Date of birth
+5. Assessment date (M0090)
+6. Functional scores (M1800-M1860)
+
+Return JSON:
+{
+  "patient_name": "exact name from document or NOT FOUND",
+  "patient_dob": "DOB or NOT FOUND",
+  "m1021_code": "ICD-10 code or NOT FOUND",
+  "m1021_description": "diagnosis description or NOT FOUND",
+  "m1023_list": "all other diagnoses with codes, comma separated, or NOT FOUND",
+  "assessment_date": "date or NOT FOUND",
+  "functional_scores": {"m1800": "0-3 or ?", "m1810": "0-3 or ?", "m1820": "0-3 or ?", "m1830": "0-6 or ?", "m1840": "0-4 or ?", "m1850": "0-5 or ?", "m1860": "0-6 or ?"}
+}`,
+              response_json_schema: {
+                type: "object",
+                properties: {
+                  patient_name: { type: "string" },
+                  patient_dob: { type: "string" },
+                  m1021_code: { type: "string" },
+                  m1021_description: { type: "string" },
+                  m1023_list: { type: "string" },
+                  assessment_date: { type: "string" },
+                  functional_scores: { type: "object" }
+                }
+              }
+            });
+            
+            // Map parsed data to extraction output format
+            extractedData = {
+              status: "success",
+              output: {
+                full_text: textExtract.output.full_text,
+                patient_name_raw: parsedData.patient_name,
+                patient_name: parsedData.patient_name,
+                patient_dob: parsedData.patient_dob,
+                m1021_primary_diagnosis_code: parsedData.m1021_code,
+                m1021_primary_diagnosis_description: parsedData.m1021_description,
+                m1023_other_diagnoses: parsedData.m1023_list,
+                assessment_date: parsedData.assessment_date,
+                m1800_grooming: parsedData.functional_scores?.m1800,
+                m1810_dress_upper: parsedData.functional_scores?.m1810,
+                m1820_dress_lower: parsedData.functional_scores?.m1820,
+                m1830_bathing: parsedData.functional_scores?.m1830,
+                m1840_toilet_transfer: parsedData.functional_scores?.m1840,
+                m1850_transferring: parsedData.functional_scores?.m1850,
+                m1860_ambulation: parsedData.functional_scores?.m1860
+              }
+            };
           } else {
             throw new Error("Text extraction also failed");
           }
@@ -961,7 +1023,11 @@ export default function OASISAnalyzer() {
          - Look in sections: "Diagnoses", "ICD-10", "Primary", "Secondary", "Comorbidities", "Medical History"
          - PDGM clinical grouping REQUIRES accurate diagnosis - this is CRITICAL
 
-        2. Verify the pre-extracted data against the full document content
+        2. **DIAGNOSES ARE MANDATORY** - If pre-extracted shows "NOT FOUND" for M1021 or M1023, you MUST search the full document content thoroughly:
+          - Look for sections with "Diagnosis", "ICD-10", "M1021", "M1023", "Primary", "Secondary"
+          - Look for ICD-10 code patterns: Letter + 2-3 digits (I50, E11, J44, etc.)
+          - Extract from the raw text even if not in the expected format
+          - If you find ANY diagnosis information, include it in your response
         3. Identify any missing or incorrectly extracted OASIS items
         4. Check for internal consistency (e.g., functional scores should match narrative descriptions)
         5. Identify PDGM revenue optimization opportunities with SPECIFIC dollar impacts
@@ -979,10 +1045,10 @@ export default function OASISAnalyzer() {
       "revenue_optimization_score": 0-100,
       "summary": "comprehensive summary of findings",
       "pdgm_data": {
-      "primary_diagnosis": "MUST extract - exact diagnosis name from M1021 section",
-      "primary_diagnosis_code": "MUST extract - ICD-10 code from M1021 (e.g., I50.9)",
-      "primary_diagnosis_description": "Full description of primary diagnosis",
-      "comorbidities": ["MUST extract ALL from M1023 and secondary diagnosis sections - include ICD-10 codes and descriptions"],
+      "primary_diagnosis": "MANDATORY - exact diagnosis name from M1021 section. Search document thoroughly if pre-extracted shows NOT FOUND.",
+      "primary_diagnosis_code": "MANDATORY - ICD-10 code from M1021 (e.g., I50.9, E11.65). If NOT FOUND in pre-extracted, search full document text for 'M1021', 'Primary Diagnosis', or any ICD-10 pattern.",
+      "primary_diagnosis_description": "Full description of primary diagnosis. Search near the ICD-10 code.",
+      "comorbidities": ["MANDATORY - extract ALL from M1023 sections. Search for 'M1023', 'Other Diagnoses', 'Secondary Diagnoses'. Include ICD-10 codes AND descriptions. Example: ['I10 Hypertension', 'E11.9 Type 2 Diabetes', 'J44.9 COPD']. If pre-extracted shows NOT FOUND, parse from document text."],
       "admission_source": "community or institutional",
       "episode_timing": "early or late",
       "functional_scores": {
