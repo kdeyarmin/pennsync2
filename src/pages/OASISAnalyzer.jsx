@@ -247,6 +247,12 @@ export default function OASISAnalyzer() {
             assessment_type: { type: "string", description: "SOC, ROC, Recert, Follow-up, Transfer, Discharge" },
             assessment_reason: { type: "string", description: "M0100 reason for assessment" },
 
+            // Episode timing - critical for PDGM
+            m0110_episode_timing: { type: "string", description: "M0110 Episode Timing: 1=Early (within 30 days of SOC/ROC), 2=Late (31+ days), or NA" },
+            soc_date: { type: "string", description: "M0030 Start of Care date" },
+            referral_date: { type: "string", description: "M0104 Referral date" },
+            days_since_soc: { type: "string", description: "Number of days since start of care if mentioned" },
+
             // Diagnoses - capture all text
             primary_diagnosis_code: { type: "string", description: "M1021 primary ICD-10 code" },
             primary_diagnosis_description: { type: "string", description: "Primary diagnosis name" },
@@ -340,7 +346,11 @@ export default function OASISAnalyzer() {
       ADMISSION/EPISODE:
       M1000 Admission Source: ${output.m1000_admission_source || '?'}
       M1005 Inpatient Facility: ${output.m1005_inpatient_facility || 'N/A'}
-      Episode Timing: ${output.episode_timing || 'early'}
+      M0110 Episode Timing: ${output.m0110_episode_timing || '?'}
+      SOC Date (M0030): ${output.soc_date || '?'}
+      Referral Date (M0104): ${output.referral_date || '?'}
+      Days Since SOC: ${output.days_since_soc || '?'}
+      Episode Timing Determination: ${output.episode_timing || 'Not determined'}
 
       FUNCTIONAL STATUS (ADLs):
       M1800 Grooming: ${output.m1800_grooming || '?'}
@@ -416,6 +426,32 @@ export default function OASISAnalyzer() {
         admissionSource = 'institutional';
       }
 
+      // Determine episode timing from M0110 or calculated from dates
+      let episodeTiming = 'early';
+      const m0110 = String(output?.m0110_episode_timing || '').toLowerCase();
+      if (m0110.includes('2') || m0110.includes('late') || m0110.includes('31')) {
+        episodeTiming = 'late';
+      } else if (m0110.includes('1') || m0110.includes('early') || m0110.includes('30') || m0110.includes('within')) {
+        episodeTiming = 'early';
+      } else if (output?.days_since_soc) {
+        const days = parseInt(output.days_since_soc);
+        if (!isNaN(days) && days > 30) {
+          episodeTiming = 'late';
+        }
+      } else if (output?.soc_date && output?.assessment_date) {
+        // Try to calculate from dates
+        try {
+          const soc = new Date(output.soc_date);
+          const assessment = new Date(output.assessment_date);
+          const diffDays = Math.floor((assessment - soc) / (1000 * 60 * 60 * 24));
+          if (diffDays > 30) {
+            episodeTiming = 'late';
+          }
+        } catch (e) {
+          // Keep default early
+        }
+      }
+
       // Parse comorbidities from extracted text
       const parseComorbidities = (text) => {
         if (!text) return [];
@@ -436,7 +472,9 @@ export default function OASISAnalyzer() {
         primary_diagnosis_code: output?.primary_diagnosis_code || '',
         comorbidities: parseComorbidities(output?.secondary_diagnoses || output?.comorbidities_text),
         admission_source: admissionSource,
-        episode_timing: (output?.episode_timing || '').toLowerCase().includes('late') ? 'late' : 'early',
+        episode_timing: episodeTiming,
+        m0110_episode_timing: output?.m0110_episode_timing || null,
+        soc_date: output?.soc_date || null,
         functional_scores: {
           m1800_grooming: parseScore(output?.m1800_grooming),
           m1810_dress_upper: parseScore(output?.m1810_dress_upper),
