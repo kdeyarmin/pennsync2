@@ -118,49 +118,108 @@ export default function OASISAnalyzer() {
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Step 1: AI-driven validation for logical inconsistencies
+      // Step 1: AI-driven validation for logical inconsistencies and PDGM-specific checks
       const validationResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS validator. Review this OASIS document for logical inconsistencies, missing critical data, and M-item validation issues BEFORE detailed analysis.
+        prompt: `You are an expert OASIS validator and PDGM specialist. Review this OASIS document for logical inconsistencies, missing critical data, M-item validation issues, and PDGM grouping readiness BEFORE detailed analysis.
 
-OASIS Document:
-"""
-${oasisTextContent}
-"""
+      OASIS Document:
+      """
+      ${oasisTextContent}
+      """
 
-Validate the following:
-1. **M-Item Logical Consistency**: Check if functional scores (M1800-M1860) are internally consistent. Example: If M1860 (ambulation) shows "bedbound", M1850 (transferring) should also show significant impairment.
-2. **Diagnosis-Function Alignment**: Verify functional limitations align with documented diagnoses. Example: A stroke patient should show related functional deficits.
-3. **Missing Critical Data**: Identify any required M-items that appear missing or incomplete.
-4. **Date/Timing Issues**: Check for inconsistent dates or episode timing problems.
-5. **Response Pattern Anomalies**: Flag unusual patterns that may indicate data entry errors.
+      Perform comprehensive validation including:
 
-Return JSON:
-{
-  "validation_passed": true/false,
-  "critical_issues": [
-    {
-      "type": "inconsistency" | "missing_data" | "alignment_error" | "date_issue" | "anomaly",
+      **1. M-Item Logical Consistency**:
+      - Check if functional scores (M1800-M1860) are internally consistent
+      - Example: If M1860 (ambulation) shows "bedbound", M1850 (transferring) should also show significant impairment
+      - Verify ADL scores align with each other logically
+
+      **2. Diagnosis-Function Alignment**:
+      - Verify functional limitations align with documented diagnoses
+      - Example: A stroke patient should show related functional deficits
+      - Check if primary diagnosis supports the level of care documented
+
+      **3. PRIMARY DIAGNOSIS PDGM SUITABILITY**:
+      - Verify the primary diagnosis is appropriate for PDGM clinical grouping
+      - Check if diagnosis code format appears valid (ICD-10 format)
+      - Flag if diagnosis is too vague/unspecified for optimal PDGM grouping (e.g., "unspecified" codes that could be more specific)
+      - Identify if a more specific diagnosis code would improve case-mix classification
+      - Check for diagnoses that are commonly rejected or questioned by Medicare
+
+      **4. M1000 ADMISSION SOURCE CONSISTENCY**:
+      - Extract M1000 (Admission Source) value
+      - Verify consistency with patient history and context clues in the document
+      - Check if admission source matches: recent hospitalization mentions, facility references, community indicators
+      - Flag if M1000 shows "community" but document mentions recent hospital/SNF stay
+      - Flag if M1000 shows "institutional" but no supporting documentation of prior facility stay
+
+      **5. EPISODE TIMING VALIDATION**:
+      - Extract M0100 (Date of Assessment/Reason for Assessment)
+      - Determine if this is an early episode (first 30 days) or late episode (days 31-60)
+      - Check M0110 (Episode Timing) if present
+      - Validate episode timing is appropriate based on:
+      - SOC date vs assessment date
+      - Any recertification indicators
+      - Prior episode references
+      - Flag timing inconsistencies that could affect PDGM payment
+
+      **6. CRITICAL PDGM DATA POINT VALIDATION**:
+      - PRIMARY DIAGNOSIS: Is it present? Is it specific enough? Is it a valid home health diagnosis?
+      - FUNCTIONAL SCORES (M1800-M1860): Are all 7 items documented? Are values within valid ranges?
+      - ADMISSION SOURCE (M1000): Is it documented? Does it match context?
+      - COMORBIDITIES: Are secondary diagnoses documented to support comorbidity adjustment?
+      - Provide specific remediation steps for any missing/invalid data
+
+      **7. Response Pattern Anomalies**:
+      - Flag unusual patterns that may indicate data entry errors
+      - Check for all "0" functional scores (unlikely for home health patient)
+      - Check for all maximum scores (may indicate over-documentation)
+
+      Return JSON:
+      {
+      "validation_passed": true/false,
+      "critical_issues": [
+      {
+      "type": "inconsistency" | "missing_data" | "alignment_error" | "date_issue" | "anomaly" | "pdgm_diagnosis" | "admission_source" | "episode_timing",
       "severity": "critical" | "warning",
-      "item": "Affected M-item(s)",
+      "item": "Affected M-item(s) or data point",
       "description": "What's wrong",
       "expected": "What should be expected",
       "found": "What was found",
-      "suggested_correction": "How to fix it"
-    }
-  ],
-  "warnings": ["List of minor concerns"],
-  "validated_pdgm_items": {
-    "m1800_grooming": "extracted value or null if missing",
-    "m1810_dress_upper": "extracted value or null",
-    "m1820_dress_lower": "extracted value or null",
-    "m1830_bathing": "extracted value or null",
-    "m1840_toilet_transfer": "extracted value or null",
-    "m1850_transferring": "extracted value or null",
-    "m1860_ambulation": "extracted value or null"
-  },
-  "data_quality_score": 0-100,
-  "recommendation": "Brief recommendation before proceeding"
-}`,
+      "suggested_correction": "Specific step-by-step remediation",
+      "pdgm_impact": "How this affects PDGM revenue/grouping"
+      }
+      ],
+      "warnings": ["List of minor concerns"],
+      "validated_pdgm_items": {
+      "primary_diagnosis": "extracted diagnosis or null",
+      "primary_diagnosis_valid": true/false,
+      "primary_diagnosis_issues": "any issues with diagnosis for PDGM",
+      "m1000_admission_source": "community/institutional/null",
+      "m1000_consistent": true/false,
+      "m1000_issues": "any admission source inconsistencies",
+      "episode_timing": "early/late/unknown",
+      "episode_timing_valid": true/false,
+      "episode_timing_issues": "any timing issues",
+      "m1800_grooming": "extracted value or null if missing",
+      "m1810_dress_upper": "extracted value or null",
+      "m1820_dress_lower": "extracted value or null",
+      "m1830_bathing": "extracted value or null",
+      "m1840_toilet_transfer": "extracted value or null",
+      "m1850_transferring": "extracted value or null",
+      "m1860_ambulation": "extracted value or null",
+      "functional_scores_complete": true/false,
+      "comorbidities_documented": true/false,
+      "comorbidity_count": 0
+      },
+      "pdgm_readiness": {
+      "ready_for_grouping": true/false,
+      "missing_critical_elements": ["list of missing elements required for PDGM"],
+      "optimization_opportunities": ["list of ways to improve PDGM classification"]
+      },
+      "data_quality_score": 0-100,
+      "recommendation": "Brief recommendation before proceeding with specific action items"
+      }`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -168,6 +227,7 @@ Return JSON:
             critical_issues: { type: "array", items: { type: "object" } },
             warnings: { type: "array", items: { type: "string" } },
             validated_pdgm_items: { type: "object" },
+            pdgm_readiness: { type: "object" },
             data_quality_score: { type: "number" },
             recommendation: { type: "string" }
           }
@@ -313,7 +373,9 @@ Return your analysis as JSON:
         warnings_found: validationResult.warnings?.length || 0,
         issues: validationResult.critical_issues || [],
         warnings: validationResult.warnings || [],
-        recommendation: validationResult.recommendation
+        recommendation: validationResult.recommendation,
+        pdgm_readiness: validationResult.pdgm_readiness || null,
+        validated_pdgm_items: validationResult.validated_pdgm_items || null
       };
 
       // Use validated PDGM items if available
@@ -567,19 +629,56 @@ Return your analysis as JSON:
                   {analysisResults.validation_summary.recommendation && (
                     <p className="text-sm text-gray-700 mb-2">{analysisResults.validation_summary.recommendation}</p>
                   )}
+                  {/* PDGM Readiness Summary */}
+                  {analysisResults.validation_summary.pdgm_readiness && (
+                    <div className={`mt-3 p-2 rounded border ${
+                      analysisResults.validation_summary.pdgm_readiness.ready_for_grouping 
+                        ? 'bg-green-50 border-green-200' 
+                        : 'bg-orange-50 border-orange-200'
+                    }`}>
+                      <p className="text-xs font-semibold mb-1">
+                        {analysisResults.validation_summary.pdgm_readiness.ready_for_grouping 
+                          ? '✓ Ready for PDGM Grouping' 
+                          : '⚠ PDGM Data Issues Detected'}
+                      </p>
+                      {analysisResults.validation_summary.pdgm_readiness.missing_critical_elements?.length > 0 && (
+                        <div className="text-xs text-orange-800">
+                          <span className="font-medium">Missing: </span>
+                          {analysisResults.validation_summary.pdgm_readiness.missing_critical_elements.join(', ')}
+                        </div>
+                      )}
+                      {analysisResults.validation_summary.pdgm_readiness.optimization_opportunities?.length > 0 && (
+                        <div className="text-xs text-blue-700 mt-1">
+                          <span className="font-medium">Optimize: </span>
+                          {analysisResults.validation_summary.pdgm_readiness.optimization_opportunities.slice(0, 2).join('; ')}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {analysisResults.validation_summary.issues?.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      {analysisResults.validation_summary.issues.slice(0, 3).map((issue, idx) => (
+                      {analysisResults.validation_summary.issues.slice(0, 5).map((issue, idx) => (
                         <div key={idx} className="bg-white p-2 rounded border text-sm">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <Badge className={issue.severity === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
-                              {issue.type}
+                              {issue.severity}
                             </Badge>
-                            {issue.item && <span className="font-mono text-xs">{issue.item}</span>}
+                            <Badge variant="outline" className="text-xs">
+                              {issue.type?.replace('_', ' ')}
+                            </Badge>
+                            {issue.item && <span className="font-mono text-xs bg-gray-100 px-1 rounded">{issue.item}</span>}
                           </div>
                           <p className="text-gray-700">{issue.description}</p>
+                          {issue.pdgm_impact && (
+                            <p className="text-purple-700 text-xs mt-1">
+                              <span className="font-medium">PDGM Impact:</span> {issue.pdgm_impact}
+                            </p>
+                          )}
                           {issue.suggested_correction && (
-                            <p className="text-green-700 text-xs mt-1">→ {issue.suggested_correction}</p>
+                            <p className="text-green-700 text-xs mt-1 bg-green-50 p-1 rounded">
+                              <span className="font-medium">Fix:</span> {issue.suggested_correction}
+                            </p>
                           )}
                         </div>
                       ))}
