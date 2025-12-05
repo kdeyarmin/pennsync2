@@ -68,6 +68,7 @@ import OASISDataSync from "../components/smartNote/OASISDataSync";
 import OASISIntegratedClinicalSupport from "../components/smartNote/OASISIntegratedClinicalSupport";
 import OASISTriggeredTemplates from "../components/smartNote/OASISTriggeredTemplates";
 import OASISItemLinker from "../components/smartNote/OASISItemLinker";
+import AIDocumentationSuggester from "../components/smartNote/AIDocumentationSuggester";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -262,6 +263,7 @@ export default function SmartNoteAssistant() {
   const [showPracticeScenarios, setShowPracticeScenarios] = useState(false);
   const [complianceIssues, setComplianceIssues] = useState([]);
   const [oasisLinkedItems, setOasisLinkedItems] = useState([]);
+  const [oasisDiscrepancies, setOasisDiscrepancies] = useState([]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -282,6 +284,12 @@ export default function SmartNoteAssistant() {
   const { data: recentVisits = [] } = useQuery({
     queryKey: ['patientRecentVisits', selectedPatientId],
     queryFn: () => base44.entities.Visit.filter({ patient_id: selectedPatientId, status: 'completed' }, '-visit_date', 3),
+    enabled: !!selectedPatientId,
+  });
+
+  const { data: patientOASIS = [] } = useQuery({
+    queryKey: ['patientOASISForNotes', selectedPatientId],
+    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: selectedPatientId }, '-created_date', 1),
     enabled: !!selectedPatientId,
   });
 
@@ -950,6 +958,23 @@ Return JSON:
                             }}
                           />
 
+                          {/* AI Documentation Suggester - Real-time suggestions */}
+                          <AIDocumentationSuggester
+                            patientId={selectedPatientId}
+                            oasisData={patientOASIS[0]?.pdgm_data}
+                            noteContent={enhancedNote || roughNote}
+                            discrepancies={oasisDiscrepancies}
+                            carePlanNeeds={carePlans.filter(cp => cp.status === 'active')}
+                            vitalSigns={vitalSigns}
+                            onInsertText={(text) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(prev => prev + '\n\n' + text);
+                              } else {
+                                setRoughNote(prev => prev + '\n\n' + text);
+                              }
+                            }}
+                          />
+
                           {/* OASIS-Integrated Clinical Decision Support */}
                           <OASISIntegratedClinicalSupport
                             patientId={selectedPatientId}
@@ -967,6 +992,7 @@ Return JSON:
                             }}
                             onCreateTask={(task) => console.log("Task created:", task)}
                             onUpdateCarePlan={(rec) => console.log("Care plan update:", rec)}
+                            onDiscrepanciesFound={(discrepancies) => setOasisDiscrepancies(discrepancies)}
                           />
 
                           {/* Clinical Decision Support */}
