@@ -29,8 +29,19 @@ import {
   Calculator,
   Target,
   Lightbulb,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 // CMS PDGM Clinical Groups
 const CLINICAL_GROUPS = {
@@ -58,6 +69,17 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [loadingResolution, setLoadingResolution] = useState(null);
   const [financialPredictions, setFinancialPredictions] = useState({});
   const [loadingPrediction, setLoadingPrediction] = useState(null);
+  const [showCostSettings, setShowCostSettings] = useState(false);
+  const [agencyCosts, setAgencyCosts] = useState(() => {
+    const saved = localStorage.getItem('pdgm_agency_costs');
+    return saved ? JSON.parse(saved) : {
+      avgStaffHourlyRate: 45,
+      trainingCostPerHour: 35,
+      documentationTimePerEpisode: 0.5,
+      auditStaffHourlyRate: 50,
+      avgEpisodesPerYear: 50
+    };
+  });
 
   // Auto-analyze when data is available
   useEffect(() => {
@@ -288,6 +310,25 @@ Return JSON:
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
   };
 
+  const handleCostChange = (field, value) => {
+    const numValue = parseFloat(value) || 0;
+    const updated = { ...agencyCosts, [field]: numValue };
+    setAgencyCosts(updated);
+    localStorage.setItem('pdgm_agency_costs', JSON.stringify(updated));
+  };
+
+  const resetCosts = () => {
+    const defaults = {
+      avgStaffHourlyRate: 45,
+      trainingCostPerHour: 35,
+      documentationTimePerEpisode: 0.5,
+      auditStaffHourlyRate: 50,
+      avgEpisodesPerYear: 50
+    };
+    setAgencyCosts(defaults);
+    localStorage.setItem('pdgm_agency_costs', JSON.stringify(defaults));
+  };
+
   const getFinancialPrediction = async (item, index, type = 'discrepancy') => {
     setLoadingPrediction(index);
     
@@ -302,10 +343,16 @@ CURRENT REVENUE DATA:
 Base Payment: ${revenueData?.original?.totalPayment || navigation?.case_mix_calculation?.calculated_payment || 2031.64}
 Current Case-Mix: ${revenueData?.original?.caseMixWeight || navigation?.case_mix_calculation?.final_case_mix_weight || 1.0}
 
-AGENCY ASSUMPTIONS:
-- Average episodes per year: 50-60 similar cases
+AGENCY-SPECIFIC COST DATA (use these values for calculations):
+- Average Staff Hourly Rate: $${agencyCosts.avgStaffHourlyRate}
+- Training Cost Per Hour: $${agencyCosts.trainingCostPerHour}
+- Documentation Time Per Episode: ${agencyCosts.documentationTimePerEpisode} hours
+- Audit Staff Hourly Rate: $${agencyCosts.auditStaffHourlyRate}
+- Average Similar Episodes Per Year: ${agencyCosts.avgEpisodesPerYear}
 - Current documentation pattern: likely to repeat
 - Industry average correction rate: 65% if addressed proactively
+
+IMPORTANT: Use the agency-specific values above for ALL cost calculations, implementation costs, and breakeven analysis.
 
 Provide a detailed financial impact analysis:
 
@@ -315,7 +362,7 @@ Provide a detailed financial impact analysis:
    - Net gain per episode
 
 2. ANNUAL PROJECTION (1 YEAR)
-   - Assume 50 similar episodes/year (conservative)
+   - Use ${agencyCosts.avgEpisodesPerYear} episodes/year based on agency data
    - Total revenue if unaddressed
    - Total revenue if corrected
    - Total opportunity cost
@@ -334,8 +381,12 @@ Provide a detailed financial impact analysis:
    - Recommended action timeline
 
 5. BREAKEVEN ANALYSIS
-   - Time to implement correction
-   - Cost to implement (staff training, documentation updates)
+   - Time to implement correction (in hours)
+   - Cost to implement using agency rates:
+     * Staff time at $${agencyCosts.avgStaffHourlyRate}/hour
+     * Training at $${agencyCosts.trainingCostPerHour}/hour
+     * Documentation updates at ${agencyCosts.documentationTimePerEpisode} hours/episode
+     * Audit/review at $${agencyCosts.auditStaffHourlyRate}/hour
    - Breakeven point (# of episodes)
    - Net benefit after 1 year
 
@@ -349,7 +400,7 @@ Return JSON:
     "explanation": "why this gap exists"
   },
   "annual_projection": {
-    "similar_episodes_per_year": 50,
+    "similar_episodes_per_year": ${agencyCosts.avgEpisodesPerYear},
     "total_current_revenue": 0,
     "total_corrected_revenue": 0,
     "total_opportunity": 0,
@@ -556,11 +607,88 @@ Return JSON:
             <Navigation className="w-5 h-5 text-cyan-600" />
             Automated PDGM Navigator
           </div>
-          {navigation?.summary?.payment_amount && (
-            <Badge className="bg-green-600 text-white text-lg px-3 py-1">
-              {formatCurrency(navigation.summary.payment_amount)}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            <Dialog open={showCostSettings} onOpenChange={setShowCostSettings}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Settings className="w-3 h-3" />
+                  Agency Costs
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Agency Cost Settings</DialogTitle>
+                  <DialogDescription>
+                    Customize cost data for more accurate ROI calculations
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="staffRate">Average Staff Hourly Rate ($)</Label>
+                    <Input
+                      id="staffRate"
+                      type="number"
+                      step="0.01"
+                      value={agencyCosts.avgStaffHourlyRate}
+                      onChange={(e) => handleCostChange('avgStaffHourlyRate', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="trainingRate">Training Cost Per Hour ($)</Label>
+                    <Input
+                      id="trainingRate"
+                      type="number"
+                      step="0.01"
+                      value={agencyCosts.trainingCostPerHour}
+                      onChange={(e) => handleCostChange('trainingCostPerHour', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="docTime">Documentation Time Per Episode (hours)</Label>
+                    <Input
+                      id="docTime"
+                      type="number"
+                      step="0.1"
+                      value={agencyCosts.documentationTimePerEpisode}
+                      onChange={(e) => handleCostChange('documentationTimePerEpisode', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="auditRate">Audit Staff Hourly Rate ($)</Label>
+                    <Input
+                      id="auditRate"
+                      type="number"
+                      step="0.01"
+                      value={agencyCosts.auditStaffHourlyRate}
+                      onChange={(e) => handleCostChange('auditStaffHourlyRate', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="episodes">Avg Similar Episodes Per Year</Label>
+                    <Input
+                      id="episodes"
+                      type="number"
+                      value={agencyCosts.avgEpisodesPerYear}
+                      onChange={(e) => handleCostChange('avgEpisodesPerYear', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={resetCosts} variant="outline" className="flex-1">
+                      Reset to Defaults
+                    </Button>
+                    <Button onClick={() => setShowCostSettings(false)} className="flex-1">
+                      Save & Close
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            {navigation?.summary?.payment_amount && (
+              <Badge className="bg-green-600 text-white text-lg px-3 py-1">
+                {formatCurrency(navigation.summary.payment_amount)}
+              </Badge>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
@@ -1205,22 +1333,23 @@ Return JSON:
 
                           {/* Breakeven Analysis */}
                           <div className="bg-white p-3 rounded-lg border border-gray-300">
-                            <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                              <Calculator className="w-3 h-3" /> Breakeven Analysis
-                            </p>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div className="bg-gray-50 p-2 rounded">
-                                <p className="text-gray-500">Implementation Time</p>
-                                <p className="font-medium text-gray-800">
-                                  {financialPredictions[idx].breakeven?.implementation_time}
-                                </p>
-                              </div>
-                              <div className="bg-gray-50 p-2 rounded">
-                                <p className="text-gray-500">Implementation Cost</p>
-                                <p className="font-medium text-gray-800">
-                                  {formatCurrency(financialPredictions[idx].breakeven?.implementation_cost)}
-                                </p>
-                              </div>
+                          <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                            <Calculator className="w-3 h-3" /> Breakeven Analysis
+                            <Badge variant="outline" className="text-xs ml-auto">Agency-Specific</Badge>
+                          </p>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-gray-50 p-2 rounded">
+                              <p className="text-gray-500">Implementation Time</p>
+                              <p className="font-medium text-gray-800">
+                                {financialPredictions[idx].breakeven?.implementation_time}
+                              </p>
+                            </div>
+                            <div className="bg-gray-50 p-2 rounded">
+                              <p className="text-gray-500">Implementation Cost</p>
+                              <p className="font-medium text-gray-800">
+                                {formatCurrency(financialPredictions[idx].breakeven?.implementation_cost)}
+                              </p>
+                            </div>
                               <div className="bg-blue-50 p-2 rounded">
                                 <p className="text-blue-600">Episodes to Breakeven</p>
                                 <p className="font-bold text-blue-800">
