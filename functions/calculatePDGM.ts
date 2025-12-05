@@ -220,13 +220,17 @@ function calculatePDGMRevenue(data) {
     clinicalWeight,
     functionalLevel,
     functionalMultiplier,
+    functionalPoints: Object.values(functionalData).reduce((a, b) => a + (parseInt(b) || 0), 0),
     comorbidityLevel,
     comorbidityMultiplier,
+    comorbidityCount: comorbidities.length,
     admissionSource,
     admissionMultiplier,
     episodeTiming,
     timingMultiplier,
     caseMixWeight: Math.round(caseMixWeight * 10000) / 10000,
-    totalPayment
+    totalPayment,
+    _appliedCorrections: data._appliedCorrections || [],
+    _correctionCount: data._correctionCount || 0
   };
-}
+  }

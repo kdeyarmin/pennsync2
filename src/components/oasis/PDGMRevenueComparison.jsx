@@ -66,81 +66,162 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
   };
 
   const buildCorrectedPdgmData = (original, analysis) => {
-    const corrected = { ...original };
+    const corrected = JSON.parse(JSON.stringify(original)); // Deep clone
+    corrected.functional_scores = corrected.functional_scores || {};
+    corrected.comorbidities = corrected.comorbidities || [];
 
-    // Apply corrections based on revenue tips
+    const maxValues = {
+      m1800_grooming: 3,
+      m1810_dress_upper: 3,
+      m1820_dress_lower: 3,
+      m1830_bathing: 6,
+      m1840_toilet_transfer: 4,
+      m1850_transferring: 5,
+      m1860_ambulation: 6
+    };
+
+    const itemMap = {
+      '1800': 'm1800_grooming',
+      '1810': 'm1810_dress_upper',
+      '1820': 'm1820_dress_lower',
+      '1830': 'm1830_bathing',
+      '1840': 'm1840_toilet_transfer',
+      '1850': 'm1850_transferring',
+      '1860': 'm1860_ambulation'
+    };
+
+    const appliedCorrections = [];
+
+    // 1. Apply revenue tips corrections
     if (analysis?.revenue_tips?.length > 0) {
       analysis.revenue_tips.forEach(tip => {
-        // Adjust functional scores if functional status improvements suggested
+        const impact = tip.potential_impact || 'low';
+        const impactMultiplier = impact === 'high' ? 2 : impact === 'medium' ? 1 : 1;
+
         if (tip.category === 'Functional Status') {
-          corrected.functional_scores = corrected.functional_scores || {};
-          // Increase functional impairment scores based on suggestions
-          if (tip.potential_impact === 'high') {
-            corrected.functional_scores.m1830_bathing = Math.min(6, (corrected.functional_scores.m1830_bathing || 0) + 2);
-            corrected.functional_scores.m1860_ambulation = Math.min(6, (corrected.functional_scores.m1860_ambulation || 0) + 2);
-            corrected.functional_scores.m1850_transferring = Math.min(5, (corrected.functional_scores.m1850_transferring || 0) + 1);
-          } else if (tip.potential_impact === 'medium') {
-            corrected.functional_scores.m1850_transferring = Math.min(5, (corrected.functional_scores.m1850_transferring || 0) + 1);
-            corrected.functional_scores.m1840_toilet_transfer = Math.min(4, (corrected.functional_scores.m1840_toilet_transfer || 0) + 1);
+          // Parse specific M-item from tip text
+          const mItemMatch = (tip.specific_action + ' ' + tip.opportunity).match(/M18(\d{2})/i);
+          if (mItemMatch) {
+            const key = itemMap[`18${mItemMatch[1]}`];
+            if (key) {
+              const newVal = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + impactMultiplier);
+              corrected.functional_scores[key] = newVal;
+              appliedCorrections.push({ type: 'functional', item: key, change: `+${impactMultiplier}` });
+            }
           } else {
-            corrected.functional_scores.m1800_grooming = Math.min(3, (corrected.functional_scores.m1800_grooming || 0) + 1);
+            // General functional improvement - apply to most impactful items
+            ['m1830_bathing', 'm1860_ambulation', 'm1850_transferring'].forEach(key => {
+              const newVal = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + impactMultiplier);
+              corrected.functional_scores[key] = newVal;
+            });
+            appliedCorrections.push({ type: 'functional', item: 'multiple', change: `+${impactMultiplier}` });
           }
         }
 
-        // Add comorbidities if suggested
         if (tip.category === 'Diagnosis' || tip.category === 'Clinical Condition') {
-          corrected.comorbidities = corrected.comorbidities || [];
-          if (tip.opportunity && !corrected.comorbidities.includes(tip.opportunity)) {
-            corrected.comorbidities.push(tip.opportunity);
+          const diagnosisText = tip.opportunity || tip.specific_action || '';
+          if (diagnosisText && !corrected.comorbidities.some(c => c.toLowerCase().includes(diagnosisText.toLowerCase().slice(0, 10)))) {
+            corrected.comorbidities.push(diagnosisText);
+            appliedCorrections.push({ type: 'diagnosis', item: diagnosisText });
           }
         }
 
-        // Therapy adjustments
         if (tip.category === 'Therapy') {
-          corrected.functional_scores = corrected.functional_scores || {};
-          corrected.functional_scores.m1860_ambulation = Math.min(6, (corrected.functional_scores.m1860_ambulation || 0) + 1);
+          corrected.functional_scores.m1860_ambulation = Math.min(6, (corrected.functional_scores.m1860_ambulation || 0) + impactMultiplier);
+          corrected.functional_scores.m1850_transferring = Math.min(5, (corrected.functional_scores.m1850_transferring || 0) + 1);
+          appliedCorrections.push({ type: 'therapy', change: 'ambulation/transfer adjusted' });
+        }
+
+        if (tip.category === 'Other' && impact === 'high') {
+          // High-impact other category - likely affects multiple areas
+          corrected.functional_scores.m1840_toilet_transfer = Math.min(4, (corrected.functional_scores.m1840_toilet_transfer || 0) + 1);
+          appliedCorrections.push({ type: 'other', change: 'toilet transfer adjusted' });
         }
       });
     }
 
-    // Check for accuracy issues that might affect PDGM
+    // 2. Apply accuracy issue corrections
     if (analysis?.accuracy_issues?.length > 0) {
       analysis.accuracy_issues.forEach(issue => {
-        if (issue.item?.includes('M18')) {
-          // Functional item correction
-          corrected.functional_scores = corrected.functional_scores || {};
-          const itemNum = issue.item.match(/M18(\d{2})/i);
-          if (itemNum) {
-            const itemMap = {
-              '00': 'm1800_grooming',
-              '10': 'm1810_dress_upper',
-              '20': 'm1820_dress_lower',
-              '30': 'm1830_bathing',
-              '40': 'm1840_toilet_transfer',
-              '50': 'm1850_transferring',
-              '60': 'm1860_ambulation'
-            };
-            const key = itemMap[itemNum[1]];
+        const mItemMatch = issue.item?.match(/M?18(\d{2})/i);
+        if (mItemMatch) {
+          const key = itemMap[`18${mItemMatch[1]}`];
+          if (key) {
+            const severityAdd = issue.severity === 'high' ? 2 : issue.severity === 'medium' ? 1 : 1;
+            const newVal = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + severityAdd);
+            corrected.functional_scores[key] = newVal;
+            appliedCorrections.push({ type: 'accuracy', item: key, severity: issue.severity });
+          }
+        }
+
+        // Check for diagnosis-related accuracy issues
+        if (issue.item?.toLowerCase().includes('diagnosis') || issue.recommendation?.toLowerCase().includes('diagnosis')) {
+          const diagMatch = issue.recommendation?.match(/add|include|document[:\s]+([^.]+)/i);
+          if (diagMatch && diagMatch[1]) {
+            corrected.comorbidities.push(diagMatch[1].trim());
+            appliedCorrections.push({ type: 'accuracy_diagnosis', item: diagMatch[1].trim() });
+          }
+        }
+
+        // Admission source corrections
+        if (issue.item?.toLowerCase().includes('m1000') || issue.item?.toLowerCase().includes('admission')) {
+          if (issue.recommendation?.toLowerCase().includes('institutional')) {
+            corrected.admission_source = 'institutional';
+            appliedCorrections.push({ type: 'admission', change: 'institutional' });
+          }
+        }
+      });
+    }
+
+    // 3. Apply documentation improvement suggestions
+    if (analysis?.documentation_improvements?.length > 0) {
+      analysis.documentation_improvements.forEach(imp => {
+        const mItemMatch = imp.item?.match(/M?18(\d{2})/i);
+        if (mItemMatch) {
+          const key = itemMap[`18${mItemMatch[1]}`];
+          if (key) {
+            const improvedMatch = imp.improved_state?.match(/(\d+)/);
+            if (improvedMatch) {
+              const suggestedVal = parseInt(improvedMatch[1]);
+              if (suggestedVal > (corrected.functional_scores[key] || 0)) {
+                corrected.functional_scores[key] = Math.min(maxValues[key], suggestedVal);
+                appliedCorrections.push({ type: 'documentation', item: key, value: suggestedVal });
+              }
+            }
+          }
+        }
+
+        if (imp.rationale?.toLowerCase().includes('case-mix') || imp.rationale?.toLowerCase().includes('pdgm')) {
+          if (!corrected.comorbidities.includes('case-mix relevant condition')) {
+            corrected.comorbidities.push('case-mix relevant condition');
+            appliedCorrections.push({ type: 'documentation_casemix' });
+          }
+        }
+      });
+    }
+
+    // 4. Apply validation issue corrections
+    if (analysis?.validation_summary?.issues?.length > 0) {
+      analysis.validation_summary.issues.forEach(issue => {
+        if (issue.suggested_correction) {
+          const mItemMatch = issue.item?.match(/M?18(\d{2})/i);
+          if (mItemMatch) {
+            const key = itemMap[`18${mItemMatch[1]}`];
             if (key) {
-              const maxValues = { m1800_grooming: 3, m1810_dress_upper: 3, m1820_dress_lower: 3, m1830_bathing: 6, m1840_toilet_transfer: 4, m1850_transferring: 5, m1860_ambulation: 6 };
-              corrected.functional_scores[key] = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + 1);
+              const valMatch = issue.suggested_correction.match(/(\d+)/);
+              if (valMatch) {
+                corrected.functional_scores[key] = Math.min(maxValues[key], parseInt(valMatch[1]));
+                appliedCorrections.push({ type: 'validation', item: key });
+              }
             }
           }
         }
       });
     }
 
-    // Check documentation improvements for PDGM impact
-    if (analysis?.documentation_improvements?.length > 0) {
-      analysis.documentation_improvements.forEach(imp => {
-        if (imp.item?.toLowerCase().includes('diagnosis') || imp.rationale?.toLowerCase().includes('case-mix')) {
-          corrected.comorbidities = corrected.comorbidities || [];
-          if (corrected.comorbidities.length < 3) {
-            corrected.comorbidities.push('documented comorbidity');
-          }
-        }
-      });
-    }
+    // Store applied corrections for reference
+    corrected._appliedCorrections = appliedCorrections;
+    corrected._correctionCount = appliedCorrections.length;
 
     return corrected;
   };
@@ -297,6 +378,16 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Applied Corrections Summary */}
+            {revenueData.corrected?._correctionCount > 0 && (
+              <Alert className="bg-purple-50 border-purple-200">
+                <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                <AlertDescription className="text-purple-800 text-sm">
+                  <strong>{revenueData.corrected._correctionCount} corrections</strong> automatically applied from analysis recommendations to generate the optimized revenue figure.
+                </AlertDescription>
+              </Alert>
             )}
 
             {/* Breakdown */}
