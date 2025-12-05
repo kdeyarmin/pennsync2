@@ -2438,9 +2438,7 @@ Return JSON:
                       </div>
                       
                       {showOptimizationPanel && (
-                      
-                      {/* Clinical Group Optimization */}
-                      <div className="space-y-3">
+                        <div className="space-y-3">
                         {oasisResults.pdgm_analysis.clinical_group_confidence !== 'high' && (
                           <div className="bg-white p-3 rounded border border-amber-200">
                             <div className="flex items-start gap-2">
