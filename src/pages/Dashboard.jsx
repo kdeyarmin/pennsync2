@@ -196,17 +196,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Predictive Risk Scoring Widget */}
-      <div className="mb-6">
-        <PredictiveRiskScoring
-          patients={patients}
-          visits={visits}
-          carePlans={carePlans}
-          incidents={incidents}
-          compact={true}
-        />
-      </div>
-
       {/* Proactive Risk Identification for High-Risk Patients */}
       {patients.filter(p => p.status === 'active').slice(0, 3).map((patient) => {
         const patientVisits = visits.filter(v => v.patient_id === patient.id);
