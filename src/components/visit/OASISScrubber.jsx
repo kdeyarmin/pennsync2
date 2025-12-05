@@ -91,6 +91,7 @@ export default function OASISScrubber({
   const [extractedIndicators, setExtractedIndicators] = useState(null);
   const [copiedText, setCopiedText] = useState(null);
   const [showOptimizationPanel, setShowOptimizationPanel] = useState(true);
+  const [clinicalAlerts, setClinicalAlerts] = useState([]);
 
   const isHomeHealth = patient?.care_type === 'home_health';
   const isOASISVisit = ['admission', 'recertification', 'discharge'].includes(visit?.visit_type);
@@ -580,6 +581,102 @@ export default function OASISScrubber({
         clinicalGroup: clinicalGroupAnalysis,
         comorbidities: comorbidityAnalysis
       });
+
+      // Generate clinical decision support alerts based on detected indicators
+      const alerts = [];
+      
+      if (clinicalIndicators.woundPresent.detected) {
+        alerts.push({
+          type: 'wound',
+          severity: 'high',
+          title: 'Wound Care Best Practices',
+          guideline: 'Document weekly measurements (length × width × depth in cm), staging, wound bed characteristics (granulation/slough/necrotic %), drainage type/amount, periwound condition, and treatment effectiveness. Consider specialist referral if no healing progress in 2 weeks.',
+          cmsReference: 'M1306-M1342 Integumentary Status',
+          actions: ['Measure wound weekly', 'Document staging per NPUAP', 'Assess infection signs', 'Review pressure redistribution'],
+          revenueNote: 'Proper wound documentation supports MMTA-03 clinical group and may qualify for higher case-mix weight.'
+        });
+      }
+
+      if (clinicalIndicators.cardiacIssues.detected) {
+        const hasHF = clinicalIndicators.cardiacIssues.heartFailure.length > 0;
+        const hasEdema = clinicalIndicators.cardiacIssues.edema.length > 0;
+        alerts.push({
+          type: 'cardiac',
+          severity: hasHF ? 'high' : 'medium',
+          title: hasHF ? 'Heart Failure Management' : 'Cardiac Monitoring',
+          guideline: hasHF 
+            ? 'Document daily weights, I&O if applicable, edema assessment (location, pitting scale, circumference), dyspnea at rest vs. exertion, medication compliance, and dietary sodium restriction adherence. Report weight gain >2 lbs in 24hrs or >5 lbs in week to MD.'
+            : 'Monitor vital signs, document cardiac rhythm if irregular, assess for chest pain/palpitations, review medication compliance, and educate on symptom recognition.',
+          cmsReference: 'M1033 Risk for Hospitalization, M1400 Dyspnea',
+          actions: hasHF 
+            ? ['Daily weights', 'Assess edema (scale 1-4+)', 'Document dyspnea level', 'Review diuretic compliance', 'Dietary counseling']
+            : ['Monitor BP/HR', 'Assess peripheral pulses', 'Review cardiac meds', 'Educate on warning signs'],
+          revenueNote: 'CHF is a high-impact comorbidity for PDGM adjustment. Ensure ICD-10 specifies HFrEF (I50.2x) or HFpEF (I50.3x) with EF% if known.'
+        });
+      }
+
+      if (clinicalIndicators.diabetic.detected) {
+        const hasComplications = clinicalIndicators.diabetic.complications.length > 0;
+        alerts.push({
+          type: 'diabetes',
+          severity: hasComplications ? 'high' : 'medium',
+          title: hasComplications ? 'Diabetic Complications Management' : 'Diabetes Monitoring',
+          guideline: 'Document glucose readings with time/context (fasting, pre/post-meal), insulin administration technique, hypoglycemia episodes, foot inspection findings, neuropathy symptoms, dietary compliance, and A1C if available. Assess for complications: neuropathy, nephropathy, retinopathy.',
+          cmsReference: 'M2020/M2030 Medication Management, M1860 Ambulation',
+          actions: ['Check blood glucose', 'Inspect feet for ulcers', 'Assess sensation (monofilament)', 'Review insulin technique', 'Educate on hypoglycemia'],
+          revenueNote: 'Diabetic complications (neuropathy E11.4x, nephropathy E11.2x) qualify as high-impact comorbidities. Document separately from uncomplicated diabetes (E11.9).'
+        });
+      }
+
+      if (clinicalIndicators.fallRisk.detected) {
+        alerts.push({
+          type: 'fall_risk',
+          severity: 'high',
+          title: 'Fall Risk Mitigation',
+          guideline: 'Complete fall risk assessment using validated tool (Morse, Tinetti). Document specific risk factors: gait/balance impairment, assistive device use, environmental hazards, high-risk medications (sedatives, antihypertensives), orthostatic vitals, footwear safety, vision issues. Implement interventions: PT referral, medication review, home safety modifications.',
+          cmsReference: 'M1033 Risk for Hospitalization, M1850/M1860 Functional Status',
+          actions: ['Assess gait and balance', 'Environmental safety check', 'Review fall-risk meds', 'Educate on fall prevention', 'Consider PT evaluation'],
+          revenueNote: 'Fall risk with functional limitations supports higher M1850/M1860 scores. Document specific assistance needed to prevent falls.'
+        });
+      }
+
+      if (clinicalIndicators.cognitiveIssues.detected) {
+        alerts.push({
+          type: 'cognitive',
+          severity: 'medium',
+          title: 'Cognitive Assessment Requirements',
+          guideline: 'Administer BIMS (Brief Interview for Mental Status) or CAM (Confusion Assessment Method) at SOC/ROC. Document orientation (person/place/time/situation), short-term memory (3-item recall), judgment/decision-making ability, safety awareness, behavioral symptoms (wandering, agitation), and caregiver support needs.',
+          cmsReference: 'M1700-M1740 Cognitive/Behavioral Status, BIMS',
+          actions: ['Perform BIMS screening', 'Assess orientation (A&Ox?)', 'Test 3-item recall', 'Evaluate judgment', 'Safety awareness check'],
+          revenueNote: 'Cognitive impairment often affects functional scores (M1800-M1820) due to need for cueing/supervision. Document clearly.'
+        });
+      }
+
+      if (clinicalIndicators.oxygenUse.detected) {
+        alerts.push({
+          type: 'respiratory',
+          severity: 'medium',
+          title: 'Oxygen Therapy Monitoring',
+          guideline: 'Document oxygen flow rate (L/min), delivery method (NC, mask, concentrator), frequency (continuous, PRN, with exertion), SpO2 on room air vs. on O2, dyspnea level at rest and with activity (M1400), and patient/caregiver education on equipment safety and maintenance.',
+          cmsReference: 'M1400 Dyspnea, M2020 Medication Management',
+          actions: ['Check SpO2 on RA and on O2', 'Document flow rate/delivery', 'Assess dyspnea scale', 'Inspect equipment', 'Fire safety education'],
+          revenueNote: 'Oxygen use must correlate with M1400 dyspnea score (cannot be 0 if on O2). COPD/respiratory conditions may support higher clinical group.'
+        });
+      }
+
+      if (clinicalIndicators.painMentioned.detected && clinicalIndicators.painMentioned.intensity.length === 0) {
+        alerts.push({
+          type: 'pain',
+          severity: 'medium',
+          title: 'Comprehensive Pain Assessment',
+          guideline: 'Use 0-10 numeric scale or FACES for intensity. Document location, quality (sharp/dull/aching), frequency (constant/intermittent), triggers/relieving factors, impact on function/sleep, current pain management (meds, non-pharm), and effectiveness. Reassess after interventions.',
+          cmsReference: 'M1242 Pain Frequency, Quality Measures',
+          actions: ['Rate pain 0-10', 'Describe quality/location', 'Assess medication effectiveness', 'Document functional impact', 'Non-pharm interventions'],
+          revenueNote: 'Pain affecting ADLs should be reflected in functional scores (M1830-M1860). Uncontrolled pain impacts quality measures.'
+        });
+      }
+
+      setClinicalAlerts(alerts);
 
       let prompt = `You are a CMS-certified OASIS-E compliance auditor with 15+ years expertise in 2024 Medicare home health CoP regulations and PDGM optimization. Perform RIGOROUS, EVIDENCE-BASED completeness and accuracy check for ${visitType}.
 
@@ -1769,6 +1866,65 @@ Return JSON:
                     })}
                   </div>
 
+                  {/* Clinical Decision Support Alerts */}
+                  {clinicalAlerts.length > 0 && (
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-lg border border-blue-300">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-bold text-blue-900 flex items-center gap-2">
+                          <Stethoscope className="w-4 h-4" />
+                          Clinical Decision Support
+                        </h4>
+                        <Badge variant="outline" className="text-xs bg-white">
+                          {clinicalAlerts.length} active alert{clinicalAlerts.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        {clinicalAlerts.map((alert, idx) => (
+                          <div key={idx} className={`bg-white p-2 rounded border ${
+                            alert.severity === 'high' ? 'border-red-300' : 'border-blue-200'
+                          }`}>
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <p className="text-xs font-semibold text-gray-900">{alert.title}</p>
+                              <Badge className={`${
+                                alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
+                              } text-white text-xs flex-shrink-0`}>
+                                {alert.severity}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-700 mb-2">{alert.guideline}</p>
+                            <div className="flex flex-wrap gap-1 mb-1">
+                              {alert.actions.slice(0, 3).map((action, i) => (
+                                <Badge key={i} variant="outline" className="text-xs bg-blue-50">✓ {action}</Badge>
+                              ))}
+                            </div>
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+                              <p className="text-xs text-gray-500">
+                                <strong>CMS:</strong> {alert.cmsReference}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setActiveTab('reference')}
+                                className="h-5 text-xs text-blue-600 hover:text-blue-800"
+                              >
+                                <BookOpen className="w-3 h-3 mr-1" />
+                                Details
+                              </Button>
+                            </div>
+                            {alert.revenueNote && (
+                              <div className="mt-2 bg-green-50 p-2 rounded border border-green-200">
+                                <p className="text-xs text-green-800">
+                                  <DollarSign className="w-3 h-3 inline mr-1" />
+                                  <strong>PDGM:</strong> {alert.revenueNote}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Comorbidities Summary */}
                   {extractedIndicators.comorbidities.count > 0 && (
                     <div className="bg-green-50 p-3 rounded-lg border border-green-200">
@@ -1908,6 +2064,87 @@ Return JSON:
                 <ScrollArea className="h-[60vh]">
                   {extractedIndicators ? (
                     <div className="space-y-6 p-1">
+                      {/* Clinical Decision Support Alerts - Expanded View */}
+                      {clinicalAlerts.length > 0 && (
+                        <Card className="border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50">
+                          <CardHeader className="py-3 bg-blue-100">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Stethoscope className="w-4 h-4 text-blue-700" />
+                              AI Clinical Decision Support ({clinicalAlerts.length})
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-4">
+                            <div className="space-y-3">
+                              {clinicalAlerts.map((alert, idx) => (
+                                <div key={idx} className="bg-white p-3 rounded-lg border-2 border-blue-200">
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
+                                      }`} />
+                                      <h5 className="font-bold text-gray-900">{alert.title}</h5>
+                                    </div>
+                                    <Badge className={`${
+                                      alert.severity === 'high' ? 'bg-red-500' : 'bg-blue-500'
+                                    } text-white text-xs`}>
+                                      {alert.severity} priority
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-2">
+                                    <p className="text-xs font-semibold text-blue-900 mb-1">📋 Evidence-Based Guideline:</p>
+                                    <p className="text-sm text-blue-800">{alert.guideline}</p>
+                                  </div>
+
+                                  <div className="mb-2">
+                                    <p className="text-xs font-semibold text-gray-700 mb-1">Recommended Actions:</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                                      {alert.actions.map((action, i) => (
+                                        <div key={i} className="flex items-center gap-1 text-xs text-gray-700">
+                                          <CheckCircle2 className="w-3 h-3 text-green-600 flex-shrink-0" />
+                                          {action}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {alert.revenueNote && (
+                                    <div className="bg-green-50 p-2 rounded border border-green-200 mb-2">
+                                      <p className="text-xs text-green-800">
+                                        <DollarSign className="w-3 h-3 inline mr-1" />
+                                        <strong>PDGM Impact:</strong> {alert.revenueNote}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  <div className="flex items-center justify-between pt-2 border-t">
+                                    <p className="text-xs text-gray-500">
+                                      <strong>CMS Reference:</strong> {alert.cmsReference}
+                                    </p>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setActiveTab('reference')}
+                                      className="h-6 text-xs"
+                                    >
+                                      <BookOpen className="w-3 h-3 mr-1" />
+                                      View CMS Guidance
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <Alert className="mt-3 bg-cyan-50 border-cyan-200">
+                              <Info className="w-4 h-4 text-cyan-600" />
+                              <AlertDescription className="text-cyan-900 text-xs">
+                                These evidence-based alerts are triggered by clinical indicators detected in your documentation. 
+                                Following these guidelines improves patient outcomes, strengthens OASIS defensibility, and optimizes reimbursement.
+                              </AlertDescription>
+                            </Alert>
+                          </CardContent>
+                        </Card>
+                      )}
+
                       {/* Clinical Group Determination */}
                       <Card className="border-indigo-200">
                         <CardHeader className="py-3 bg-indigo-50">
