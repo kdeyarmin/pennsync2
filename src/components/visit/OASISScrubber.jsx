@@ -52,7 +52,8 @@ import {
   Footprints,
   Hand,
   Utensils,
-  Stethoscope
+  Stethoscope,
+  ClipboardList
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
