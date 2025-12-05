@@ -63,6 +63,7 @@ import OASISExportManager from "../components/oasis/OASISExportManager";
 import AIProactiveDocumentationAssistant from "../components/oasis/AIProactiveDocumentationAssistant";
 import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
+import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1466,6 +1467,14 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
               patientId={selectedPatientId}
             />
           </div>
+
+          {/* Clinical Pathway Trigger - Full Width */}
+          <ClinicalPathwayTrigger
+            pdgmData={pdgmData}
+            analysisResults={analysisResults}
+            patientId={selectedPatientId}
+            onTasksCreated={(count) => console.log(`${count} pathway tasks created`)}
+          />
 
           {/* OASIS Validation Panel - Full Width for Prominence */}
           <OASISValidationPanel 
