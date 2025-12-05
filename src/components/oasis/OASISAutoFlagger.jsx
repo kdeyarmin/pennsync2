@@ -9,7 +9,7 @@ const THRESHOLDS = {
   overall: 70
 };
 
-export async function autoFlagOASIS(oasisUpload, analysisResults) {
+async function autoFlagOASIS(oasisUpload, analysisResults) {
   if (!oasisUpload || !analysisResults) return null;
 
   const shouldFlag = 
@@ -110,7 +110,7 @@ export async function autoFlagOASIS(oasisUpload, analysisResults) {
   return auditRecord;
 }
 
-export function useAutoFlagOASIS() {
+function useAutoFlagOASIS() {
   const queryClient = useQueryClient();
 
   return useMutation({
