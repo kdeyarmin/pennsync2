@@ -454,10 +454,24 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       setUploadProgress(100);
       setAnalysisResults(analysisResult);
       
-      // Extract PDGM data for revenue calculation
-      if (analysisResult.pdgm_data) {
-        setPdgmData(analysisResult.pdgm_data);
-      }
+      // Use pre-extracted structured data merged with AI analysis for PDGM calculation
+      const finalPdgmData = {
+        ...structuredPdgmData,
+        ...(analysisResult.pdgm_data || {}),
+        // Prefer AI-analyzed values if they seem more complete
+        primary_diagnosis: analysisResult.pdgm_data?.primary_diagnosis || structuredPdgmData.primary_diagnosis,
+        comorbidities: (analysisResult.pdgm_data?.comorbidities?.length > structuredPdgmData.comorbidities?.length) 
+          ? analysisResult.pdgm_data.comorbidities 
+          : structuredPdgmData.comorbidities,
+        functional_scores: {
+          ...structuredPdgmData.functional_scores,
+          ...(analysisResult.pdgm_data?.functional_scores || {})
+        }
+      };
+      
+      // Update the analysis result with merged data
+      analysisResult.pdgm_data = finalPdgmData;
+      setPdgmData(finalPdgmData);
     } catch (err) {
       console.error("Error analyzing OASIS:", err);
       setError(err.message || "Failed to analyze the OASIS document. Please try again.");
