@@ -283,15 +283,15 @@ export default function OASISAnalyzer() {
             referral_date: { type: "string", description: "M0104 Referral date" },
             days_since_soc: { type: "string", description: "Number of days since start of care if mentioned" },
 
-            // Diagnoses - capture all text with improved extraction
-            m1021_primary_diagnosis_code: { type: "string", description: "M1021 Primary Diagnosis ICD-10-CM code (e.g., I50.9, J44.1)" },
-            m1021_primary_diagnosis_description: { type: "string", description: "M1021 Primary Diagnosis full description/name" },
-            m1023_other_diagnoses: { type: "string", description: "M1023 Other Diagnoses - all ICD-10 codes and descriptions comma separated" },
-            primary_diagnosis_code: { type: "string", description: "Primary ICD-10 code if M1021 not found" },
-            primary_diagnosis_description: { type: "string", description: "Primary diagnosis name if M1021 not found" },
-            secondary_diagnoses: { type: "string", description: "All secondary diagnoses codes and names comma separated" },
-            comorbidities_text: { type: "string", description: "All comorbidities and conditions mentioned" },
-            diagnosis_severity: { type: "string", description: "Any severity indicators mentioned (acute, chronic, exacerbation, etc.)" },
+            // Diagnoses - comprehensive extraction with multiple patterns
+            m1021_primary_diagnosis_code: { type: "string", description: "M1021 or M-1021 Primary Diagnosis ICD-10-CM code - look for patterns like 'M1021', 'M-1021', 'Primary Diagnosis:', may have multiple codes listed with (a), (b) suffixes. Extract the FIRST code listed." },
+            m1021_primary_diagnosis_description: { type: "string", description: "M1021 Primary Diagnosis description - the text immediately following the ICD-10 code, often describes the condition name" },
+            m1023_other_diagnoses: { type: "string", description: "M1023 or M-1023 Other Diagnoses - look for this section, extract ALL ICD-10 codes and their descriptions, format as 'CODE1 Description1, CODE2 Description2'. Common section headers: 'M1023', 'Other Diagnoses', 'Secondary Diagnoses'" },
+            primary_diagnosis_code: { type: "string", description: "If M1021 section not clearly labeled, look for 'Primary', 'Principal', 'Admitting' diagnosis section and extract the ICD-10 code (format: Letter followed by numbers and optional decimal, e.g., I50.9, J44.1, E11.9)" },
+            primary_diagnosis_description: { type: "string", description: "The condition name/description associated with the primary diagnosis code" },
+            secondary_diagnoses: { type: "string", description: "All non-primary diagnoses - look throughout the document for diagnosis lists, ICD-10 codes in sections like 'Other Diagnoses', 'Additional Diagnoses', 'Comorbidities'. Format as comma-separated list with codes and names." },
+            comorbidities_text: { type: "string", description: "All mentioned conditions, comorbidities, past medical history - extract from narrative sections, diagnosis lists, medical history sections. Include chronic conditions even if not primary." },
+            diagnosis_severity: { type: "string", description: "Look for severity descriptors near diagnosis codes: acute, chronic, exacerbation, uncontrolled, controlled, with complications, without complications, etc." },
 
             // Admission source and timing
             m1000_admission_source: { type: "string", description: "M1000 value 1-6 or description" },
