@@ -331,8 +331,10 @@ export default function OASISAnalyzer() {
       setUploadedFileUrl(file_url);
       setUploadProgress(40);
 
-      // Enhanced extraction schema - comprehensive but flat to avoid API limits
+      // Enhanced extraction schema - simplified for better reliability
       let extractedData;
+      let extractionMethod = 'structured';
+      
       try {
         extractedData = await Promise.race([
           base44.integrations.Core.ExtractDataFromUploadedFile({
@@ -442,20 +444,71 @@ export default function OASISAnalyzer() {
           )
         ]);
       } catch (extractErr) {
-        throw new Error(`Data extraction failed: ${extractErr.message}. The PDF may be unreadable or too large.`);
+        console.warn("Structured extraction failed, trying text fallback:", extractErr);
+        extractionMethod = 'text_fallback';
+        
+        // Fallback: Extract as plain text and let AI parse it
+        try {
+          extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url: file_url,
+            json_schema: {
+              type: "object",
+              properties: {
+                full_text: { 
+                  type: "string", 
+                  description: "Extract ALL text from the PDF document exactly as it appears" 
+                }
+              }
+            }
+          });
+          
+          if (extractedData.status === "success" && extractedData.output?.full_text) {
+            // AI will parse the raw text in the analysis step
+            console.log("Text fallback successful, extracted", extractedData.output.full_text.length, "characters");
+          } else {
+            throw new Error("Text extraction also failed");
+          }
+        } catch (fallbackErr) {
+          throw new Error(`Unable to read PDF: ${extractErr.message}. Please ensure the PDF is not password-protected, corrupted, or scanned without OCR. Try re-saving the PDF or using a different file.`);
+        }
       }
 
       setUploadProgress(50);
 
       if (extractedData.status === "error") {
-        throw new Error(extractedData.details || "Failed to extract data from PDF. Please ensure it's a readable OASIS document.");
+        throw new Error(extractedData.details || "Failed to extract data from PDF. The file may be password-protected, corrupted, or require OCR. Please try a different file or re-save the PDF.");
       }
 
-      // Build comprehensive OASIS content from enhanced extraction
+      // Build comprehensive OASIS content from extraction
       const output = extractedData.output;
       let oasisTextContent = "";
+      let extractedPatientName = "Unknown Patient";
 
-      if (output) {
+      // Handle text fallback extraction
+      if (extractionMethod === 'text_fallback' && output?.full_text) {
+        oasisTextContent = output.full_text;
+        
+        // Try to extract patient name from raw text
+        const namePatterns = [
+          /Patient Name:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i,
+          /Patient:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i,
+          /Name:\s*([A-Z][a-z]+,?\s+[A-Z][a-z]+)/i,
+          /([A-Z][a-z]+,\s*[A-Z][a-z]+(?:\s+[A-Z]\.?)?)/,
+        ];
+        
+        for (const pattern of namePatterns) {
+          const match = output.full_text.match(pattern);
+          if (match && match[1]) {
+            extractedPatientName = match[1].trim();
+            console.log("Extracted name from text:", extractedPatientName);
+            break;
+          }
+        }
+        
+        // Create minimal structured output for downstream processing
+        output.patient_name_raw = extractedPatientName;
+        output.patient_name = extractedPatientName;
+      } else if (output) {
         // Build detailed diagnosis section
         const primaryDxCode = output.m1021_primary_diagnosis_code || output.primary_diagnosis_code || 'NOT FOUND';
         const primaryDxDesc = output.m1021_primary_diagnosis_description || output.primary_diagnosis_description || 'NOT FOUND';
@@ -479,10 +532,10 @@ export default function OASISAnalyzer() {
           .replace(/\s+/g, ' ')
           .trim();
         
-        const patientName = extractedPatientName || 'NOT FOUND - CHECK DOCUMENT HEADER';
+        extractedPatientName = extractedPatientName || 'NOT FOUND - CHECK DOCUMENT HEADER';
 
         oasisTextContent = `PATIENT DEMOGRAPHICS:
-      Name: ${patientName}
+      Name: ${extractedPatientName}
       DOB: ${output.patient_dob || '?'}
       Gender: ${output.patient_gender || '?'}
       Medicare #: ${output.medicare_number || 'N/A'}
@@ -568,10 +621,14 @@ export default function OASISAnalyzer() {
       CLINICAL NARRATIVE:
       ${output.clinical_narrative || 'No narrative extracted'}`;
       }
-
+      
+      // Final fallback for text extraction method
+      if ((!oasisTextContent || oasisTextContent.trim().length < 20) && extractionMethod === 'text_fallback') {
+        oasisTextContent = output?.full_text || '';
+      }
+      
       if (!oasisTextContent || oasisTextContent.trim().length < 20) {
-        // Fallback to raw output
-        oasisTextContent = typeof output === 'string' ? output : JSON.stringify(output, null, 2);
+        throw new Error("PDF appears to be empty or unreadable. Please ensure it's a valid OASIS document with actual content.");
       }
 
       console.log("Extracted OASIS content length:", oasisTextContent.length);
