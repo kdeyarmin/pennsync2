@@ -247,345 +247,90 @@ export default function OASISAnalyzer() {
         throw new Error(extractedData.details || "Failed to extract data from PDF. Please ensure it's a readable OASIS document.");
       }
 
-      // Build comprehensive OASIS content from structured extraction
-      let oasisTextContent = "";
+      // Build OASIS content from simplified extraction
       const output = extractedData.output;
+      let oasisTextContent = "";
       
       if (output) {
-        // Format structured data for comprehensive analysis
-        const sections = [];
-        
-        // Patient demographics
-        if (output.patient_info) {
-          const pi = output.patient_info;
-          sections.push(`PATIENT DEMOGRAPHICS:
-Name: ${pi.name || 'Not extracted'}
-DOB: ${pi.dob || '?'}
-Medicare #: ${pi.medicare_number || '?'}
-MRN: ${pi.medical_record_number || '?'}
-Address: ${pi.address || '?'}
-SOC Date: ${pi.soc_date || '?'}
-Assessment Date: ${pi.assessment_date || '?'}
-Assessment Type: ${pi.assessment_type || '?'}
-Agency: ${pi.agency_name || '?'}`);
-        }
-        
-        // Primary diagnosis - critical for PDGM
-        if (output.primary_diagnosis) {
-          const pd = output.primary_diagnosis;
-          sections.push(`PRIMARY DIAGNOSIS (M1021) - CRITICAL FOR PDGM:
-ICD-10 Code: ${pd.icd10_code || 'NOT FOUND - REQUIRES MANUAL REVIEW'}
-Description: ${pd.description || 'Not found'}
-Symptom Control Rating: ${pd.symptom_control_rating || '?'}
-Date of Onset: ${pd.date_of_onset || '?'}
-Raw Text from Document: ${pd.raw_text || 'N/A'}`);
-        }
-        
-        // All diagnoses verbatim
-        if (output.all_diagnoses_raw) {
-          sections.push(`ALL DIAGNOSES (VERBATIM FROM DOCUMENT):
-${output.all_diagnoses_raw}`);
-        }
-        
-        // Other diagnoses structured
-        if (output.other_diagnoses?.length > 0) {
-          sections.push(`OTHER DIAGNOSES (M1023):
-${output.other_diagnoses.map((d, i) => `${d.position || String.fromCharCode(98 + i)}. ${d.icd10_code || 'No code'} - ${d.description || 'No description'} (Control: ${d.symptom_control_rating || '?'})`).join('\n')}`);
-        }
-        
-        // M1800-M1860 Functional Status
-        if (output.functional_status) {
-          const fs = output.functional_status;
-          sections.push(`FUNCTIONAL STATUS (M1800-M1860):
-M1800 Grooming: ${fs.m1800_grooming || '?'} (0=Indep, 3=Dependent)
-M1810 Upper Body Dressing: ${fs.m1810_dress_upper || '?'} (0-3)
-M1820 Lower Body Dressing: ${fs.m1820_dress_lower || '?'} (0-3)
-M1830 Bathing: ${fs.m1830_bathing || '?'} (0-6, higher=more dependent)
-M1840 Toilet Transferring: ${fs.m1840_toilet_transfer || '?'} (0-4)
-M1850 Transferring: ${fs.m1850_transferring || '?'} (0-5)
-M1860 Ambulation: ${fs.m1860_ambulation || '?'} (0-6)
-M1033 Risk for Hospitalization: ${fs.m1033_risk_hosp || '?'}
-M1034 Overall Status: ${fs.m1034_overall_status || '?'}`);
-        }
-        
-        // Section GG - Critical for PDGM
-        if (output.gg_functional_abilities) {
-          const gg = output.gg_functional_abilities;
-          if (gg.gg0130_self_care) {
-            sections.push(`SECTION GG0130 SELF-CARE (Admission Scores - CRITICAL FOR PDGM):
-Eating: ${gg.gg0130_self_care.eating_admission || '?'}
-Oral Hygiene: ${gg.gg0130_self_care.oral_hygiene_admission || '?'}
-Toileting Hygiene: ${gg.gg0130_self_care.toileting_hygiene_admission || '?'}
-Shower/Bathe Self: ${gg.gg0130_self_care.shower_bathe_self_admission || '?'}
-Upper Body Dressing: ${gg.gg0130_self_care.upper_body_dressing_admission || '?'}
-Lower Body Dressing: ${gg.gg0130_self_care.lower_body_dressing_admission || '?'}
-Putting on Footwear: ${gg.gg0130_self_care.putting_on_footwear_admission || '?'}
-(Scores: 06=Independent, 05=Setup, 04=Supervision, 03=Partial, 02=Substantial, 01=Dependent)`);
-          }
-          if (gg.gg0170_mobility) {
-            const m = gg.gg0170_mobility;
-            sections.push(`SECTION GG0170 MOBILITY (Admission Scores - CRITICAL FOR PDGM):
-Roll Left/Right: ${m.roll_left_right_admission || '?'}
-Sit to Lying: ${m.sit_to_lying_admission || '?'}
-Lying to Sitting: ${m.lying_to_sitting_admission || '?'}
-Sit to Stand: ${m.sit_to_stand_admission || '?'}
-Chair/Bed Transfer: ${m.chair_bed_transfer_admission || '?'}
-Toilet Transfer: ${m.toilet_transfer_admission || '?'}
-Walk 10 Feet: ${m.walk_10_feet_admission || '?'}
-Walk 50 Feet w/ 2 Turns: ${m.walk_50_feet_2_turns_admission || '?'}
-Walk 150 Feet: ${m.walk_150_feet_admission || '?'}
-Walk 10 Feet Uneven: ${m.walk_10_feet_uneven_admission || '?'}
-1 Step/Curb: ${m.step_curb_admission || '?'}
-4 Steps: ${m.four_steps_admission || '?'}
-12 Steps: ${m.twelve_steps_admission || '?'}
-Picking Up Object: ${m.picking_up_object_admission || '?'}`);
-          }
-        }
-        
-        // Clinical items
-        if (output.clinical_items) {
-          const ci = output.clinical_items;
-          sections.push(`CLINICAL STATUS ITEMS:
-M1400 Dyspnea: ${ci.m1400_dyspnea || '?'} (0=None, 4=At rest)
-M1242 Pain Frequency: ${ci.m1242_pain_freq || '?'}
-M1240 Pain Assessment: ${ci.m1240_pain_assessment || '?'}
-M1033 Risk Factors: ${ci.m1033_risk_hospitalization || '?'}
+        oasisTextContent = `PATIENT: ${output.patient_name || 'Unknown'}
+DOB: ${output.patient_dob || '?'}
+Assessment Date: ${output.assessment_date || '?'}
+Assessment Type: ${output.assessment_type || '?'}
 
-INTEGUMENTARY STATUS:
-M1306 Pressure Ulcer Present: ${ci.m1306_pressure_ulcer_present || '?'}
-M1307 Oldest Stage 2+: ${ci.m1307_oldest_pressure_ulcer || '?'}
-M1311 Pressure Ulcer Count: ${ci.m1311_pressure_ulcer_count || '?'}
-M1322 Pressure Ulcer Stage: ${ci.m1322_pressure_ulcer_stage || '?'}
-M1330 Stasis Ulcer: ${ci.m1330_stasis_ulcer || '?'}
-M1332 Stasis Ulcer Count: ${ci.m1332_stasis_ulcer_count || '?'}
-M1334 Stasis Ulcer Status: ${ci.m1334_stasis_ulcer_status || '?'}
-M1340 Surgical Wound: ${ci.m1340_surgical_wound || '?'}
-M1342 Surgical Wound Status: ${ci.m1342_surgical_wound_status || '?'}
+PRIMARY DIAGNOSIS:
+Code: ${output.primary_diagnosis_code || 'Not found'}
+Description: ${output.primary_diagnosis_description || 'Not found'}
 
-ELIMINATION:
-M1610 Urinary Incontinence: ${ci.m1610_urinary_incontinence || '?'}
-M1620 Bowel Incontinence: ${ci.m1620_bowel_incontinence || '?'}
-M1630 Ostomy: ${ci.m1630_ostomy || '?'}`);
-        }
-        
-        // Medications
-        if (output.medications) {
-          const med = output.medications;
-          sections.push(`MEDICATION MANAGEMENT:
-M2001 Drug Regimen Review: ${med.m2001_drug_regimen_review || '?'}
-M2003 Medication Follow-up: ${med.m2003_med_followup || '?'}
-M2005 Medication Intervention: ${med.m2005_med_intervention || '?'}
-M2010 High Risk Drugs: ${med.m2010_high_risk_drugs || '?'}
-M2015 High Risk Drug Classes: ${med.m2015_high_risk_drug_classes || '?'}
-M2020 Oral Medication Management: ${med.m2020_oral_med_mgmt || '?'}
-M2030 Injectable Medication Management: ${med.m2030_injectable_med_mgmt || '?'}
+ALL DIAGNOSES:
+${output.all_diagnoses_text || 'None extracted'}
 
-Medication List: ${med.medication_list_raw || 'Not extracted'}`);
-        }
-        
-        // Admission info - Critical for PDGM
-        if (output.admission_info) {
-          const ai = output.admission_info;
-          sections.push(`ADMISSION INFO (CRITICAL FOR PDGM):
-M1000 Admitted From: ${ai.m1000_from_where_admitted || '?'}
-M1005 Inpatient Discharge Date: ${ai.m1005_inpatient_discharge_date || '?'}
-Admission Source Category: ${ai.admission_source_category || 'NEEDS DETERMINATION'} (community vs institutional)
-Episode Timing: ${ai.episode_timing || 'NEEDS DETERMINATION'} (early=days 1-30, late=days 31-60)
-M0110 Episode Timing: ${ai.m0110_episode_timing || '?'}
-M0102 SOC/ROC Date: ${ai.m0102_soc_roc_date || '?'}
-LUPA Risk: ${ai.lupa_risk || '?'}
-Referral Source: ${ai.referral_source || '?'}`);
-        }
-        
-        // Therapy services
-        if (output.therapy_need) {
-          const th = output.therapy_need;
-          sections.push(`THERAPY SERVICES:
-M2200 Therapy Need: ${th.m2200_therapy_need || '?'}
-PT Ordered: ${th.pt_ordered ? 'Yes' : 'No'} - Visits: ${th.pt_visits_planned || '?'}
-OT Ordered: ${th.ot_ordered ? 'Yes' : 'No'} - Visits: ${th.ot_visits_planned || '?'}
-SLP Ordered: ${th.slp_ordered ? 'Yes' : 'No'} - Visits: ${th.slp_visits_planned || '?'}
-MSW Ordered: ${th.msw_ordered ? 'Yes' : 'No'}
-HHA Ordered: ${th.hha_ordered ? 'Yes' : 'No'}
-SN Visits Planned: ${th.sn_visits_planned || '?'}`);
-        }
-        
-        // Cognitive status
-        if (output.cognitive_status) {
-          const cog = output.cognitive_status;
-          sections.push(`COGNITIVE/BEHAVIORAL STATUS:
-M1700 Cognitive Functioning: ${cog.m1700_cognitive || '?'}
-M1710 When Confused: ${cog.m1710_confusion || '?'}
-M1720 When Anxious: ${cog.m1720_anxiety || '?'}
-M1730 Depression Screening: ${cog.m1730_depression_screening || '?'}
-M1745 PHQ-2 Score: ${cog.m1745_phq2_score || '?'}
-M1750 PHQ-9 Score: ${cog.m1750_phq9_score || '?'}
-BIMS Score: ${cog.bims_score || '?'}
-CAM Result: ${cog.cam_result || '?'}`);
-        }
+ADMISSION SOURCE (M1000): ${output.m1000_admission_source || '?'}
+EPISODE TIMING: ${output.episode_timing || 'early'}
 
-        // Sensory status
-        if (output.sensory_status) {
-          const ss = output.sensory_status;
-          sections.push(`SENSORY STATUS:
-M1200 Vision: ${ss.m1200_vision || '?'}
-M1210 Hearing: ${ss.m1210_hearing || '?'}
-M1220 Speech: ${ss.m1220_speech || '?'}
-Skin Integrity Notes: ${ss.skin_integrity_notes || '?'}`);
-        }
+FUNCTIONAL STATUS:
+M1800 Grooming: ${output.m1800_grooming || '?'}
+M1810 Upper Dressing: ${output.m1810_dress_upper || '?'}
+M1820 Lower Dressing: ${output.m1820_dress_lower || '?'}
+M1830 Bathing: ${output.m1830_bathing || '?'}
+M1840 Toilet Transfer: ${output.m1840_toilet_transfer || '?'}
+M1850 Transferring: ${output.m1850_transferring || '?'}
+M1860 Ambulation: ${output.m1860_ambulation || '?'}
 
-        // Care management
-        if (output.care_management) {
-          const cm = output.care_management;
-          sections.push(`CARE MANAGEMENT:
-M2102 Care Management Types: ${cm.m2102_care_management || '?'}
-Fall Risk Assessment: ${cm.fall_risk_assessment || '?'}
-Fall Prevention Discussed: ${cm.fall_prevention_discussed || '?'}
-Advance Directives: ${cm.advance_directives || '?'}
-Emergency Plan: ${cm.emergency_plan || '?'}`);
-        }
-        
-        // Full text content
-        if (output.full_text_content) {
-          sections.push(`ADDITIONAL DOCUMENT CONTENT:
-${output.full_text_content}`);
-        }
+CLINICAL:
+M1400 Dyspnea: ${output.m1400_dyspnea || '?'}
+M1306 Pressure Ulcer: ${output.m1306_pressure_ulcer || '?'}
+M1340 Surgical Wound: ${output.m1340_surgical_wound || '?'}
 
-        // Document metadata
-        if (output.document_metadata) {
-          const dm = output.document_metadata;
-          sections.push(`DOCUMENT METADATA:
-Pages: ${dm.total_pages || '?'}
-EMR System: ${dm.emr_system || '?'}
-Clinician: ${dm.clinician_name || '?'} ${dm.clinician_credentials || ''}
-Signature Date: ${dm.signature_date || '?'}`);
-        }
-        
-        oasisTextContent = sections.join('\n\n' + '='.repeat(50) + '\n\n');
-        
-        // Fallback to raw output if structured parsing failed
-        if (!oasisTextContent || oasisTextContent.length < 100) {
-          oasisTextContent = typeof output === 'string' ? output : JSON.stringify(output, null, 2);
-        }
+FULL DOCUMENT TEXT:
+${output.full_document_text || ''}`;
       }
 
       if (!oasisTextContent || oasisTextContent.trim().length < 20) {
-        throw new Error("Could not extract sufficient data from the PDF. The document may be empty, password-protected, or in an unsupported format.");
+        // Fallback to raw output
+        oasisTextContent = typeof output === 'string' ? output : JSON.stringify(output, null, 2);
       }
 
       console.log("Extracted OASIS content length:", oasisTextContent.length);
       
-      // Store structured data for direct use in PDGM calculation
-      // Try multiple sources for primary diagnosis to ensure we capture it
-      let primaryDiagnosisText = output?.primary_diagnosis?.description || '';
-      let primaryDiagnosisCode = output?.primary_diagnosis?.icd10_code || '';
-      
-      // If not found in structured field, try to extract from raw text
-      if (!primaryDiagnosisText && !primaryDiagnosisCode) {
-        const rawDiagnoses = output?.all_diagnoses_raw || output?.primary_diagnosis?.raw_text || '';
-        // Look for ICD-10 pattern (letter followed by 2 digits, optional decimal and more digits)
-        const icd10Match = rawDiagnoses.match(/[A-Z]\d{2}\.?\d{0,4}/i);
-        if (icd10Match) {
-          primaryDiagnosisCode = icd10Match[0];
-        }
-        // Take the first line or meaningful text as description
-        if (rawDiagnoses) {
-          const firstLine = rawDiagnoses.split('\n')[0]?.trim();
-          if (firstLine && firstLine.length > 3) {
-            primaryDiagnosisText = firstLine;
-          }
-        }
-      }
-      
-      // Final fallback - check other_diagnoses if primary is still empty
-      if (!primaryDiagnosisText && !primaryDiagnosisCode && output?.other_diagnoses?.length > 0) {
-        primaryDiagnosisText = output.other_diagnoses[0]?.description || '';
-        primaryDiagnosisCode = output.other_diagnoses[0]?.icd10_code || '';
-      }
-      
-      // Build comprehensive structured PDGM data from extraction
+      // Parse scores helper
       const parseScore = (val) => {
         if (!val) return 0;
         const num = parseInt(String(val).replace(/[^0-9]/g, ''));
         return isNaN(num) ? 0 : num;
       };
 
-      // Determine admission source category
-      let admissionSource = output?.admission_info?.admission_source_category || '';
-      if (!admissionSource && output?.admission_info?.m1000_from_where_admitted) {
-        const m1000 = String(output.admission_info.m1000_from_where_admitted).toLowerCase();
-        // 1,5,6 = community; 2,3,4 = institutional
-        if (m1000.includes('1') || m1000.includes('community') || m1000.includes('5') || m1000.includes('6') || m1000.includes('home')) {
-          admissionSource = 'community';
-        } else if (m1000.includes('2') || m1000.includes('hospital') || m1000.includes('3') || m1000.includes('snf') || m1000.includes('4') || m1000.includes('rehab') || m1000.includes('institutional')) {
-          admissionSource = 'institutional';
-        } else {
-          admissionSource = 'community'; // default
-        }
+      // Determine admission source
+      let admissionSource = 'community';
+      const m1000 = String(output?.m1000_admission_source || '').toLowerCase();
+      if (m1000.includes('2') || m1000.includes('hospital') || m1000.includes('3') || m1000.includes('snf') || m1000.includes('4') || m1000.includes('institutional')) {
+        admissionSource = 'institutional';
       }
-      
-      // Build comorbidities list with ICD-10 codes
-      const comorbidities = (output?.other_diagnoses || [])
-        .map(d => {
-          if (d.icd10_code && d.description) {
-            return `${d.description} (${d.icd10_code})`;
-          }
-          return d.description || d.icd10_code;
-        })
-        .filter(Boolean);
 
-      // Parse GG scores for PDGM calculation
-      const ggSelfCare = output?.gg_functional_abilities?.gg0130_self_care || {};
-      const ggMobility = output?.gg_functional_abilities?.gg0170_mobility || {};
-
+      // Build structured PDGM data
       const structuredPdgmData = {
-        primary_diagnosis: primaryDiagnosisText || primaryDiagnosisCode || '',
-        primary_diagnosis_code: primaryDiagnosisCode,
-        comorbidities: comorbidities,
-        admission_source: admissionSource || 'community',
-        episode_timing: output?.admission_info?.episode_timing || 'early',
+        primary_diagnosis: output?.primary_diagnosis_description || output?.primary_diagnosis_code || '',
+        primary_diagnosis_code: output?.primary_diagnosis_code || '',
+        comorbidities: [],
+        admission_source: admissionSource,
+        episode_timing: output?.episode_timing || 'early',
         functional_scores: {
-          m1800_grooming: parseScore(output?.functional_status?.m1800_grooming),
-          m1810_dress_upper: parseScore(output?.functional_status?.m1810_dress_upper),
-          m1820_dress_lower: parseScore(output?.functional_status?.m1820_dress_lower),
-          m1830_bathing: parseScore(output?.functional_status?.m1830_bathing),
-          m1840_toilet_transfer: parseScore(output?.functional_status?.m1840_toilet_transfer),
-          m1850_transferring: parseScore(output?.functional_status?.m1850_transferring),
-          m1860_ambulation: parseScore(output?.functional_status?.m1860_ambulation)
+          m1800_grooming: parseScore(output?.m1800_grooming),
+          m1810_dress_upper: parseScore(output?.m1810_dress_upper),
+          m1820_dress_lower: parseScore(output?.m1820_dress_lower),
+          m1830_bathing: parseScore(output?.m1830_bathing),
+          m1840_toilet_transfer: parseScore(output?.m1840_toilet_transfer),
+          m1850_transferring: parseScore(output?.m1850_transferring),
+          m1860_ambulation: parseScore(output?.m1860_ambulation)
         },
-        gg_scores: {
-          self_care: {
-            eating: parseScore(ggSelfCare.eating_admission),
-            oral_hygiene: parseScore(ggSelfCare.oral_hygiene_admission),
-            toileting_hygiene: parseScore(ggSelfCare.toileting_hygiene_admission),
-            shower_bathe: parseScore(ggSelfCare.shower_bathe_self_admission),
-            upper_body_dressing: parseScore(ggSelfCare.upper_body_dressing_admission),
-            lower_body_dressing: parseScore(ggSelfCare.lower_body_dressing_admission),
-            footwear: parseScore(ggSelfCare.putting_on_footwear_admission)
-          },
-          mobility: {
-            sit_to_lying: parseScore(ggMobility.sit_to_lying_admission),
-            lying_to_sitting: parseScore(ggMobility.lying_to_sitting_admission),
-            sit_to_stand: parseScore(ggMobility.sit_to_stand_admission),
-            chair_bed_transfer: parseScore(ggMobility.chair_bed_transfer_admission),
-            toilet_transfer: parseScore(ggMobility.toilet_transfer_admission),
-            walk_10_feet: parseScore(ggMobility.walk_10_feet_admission),
-            walk_50_feet_2_turns: parseScore(ggMobility.walk_50_feet_2_turns_admission),
-            walk_150_feet: parseScore(ggMobility.walk_150_feet_admission)
-          }
-        },
+        gg_scores: { self_care: {}, mobility: {} },
         clinical_items: {
-          dyspnea: parseScore(output?.clinical_items?.m1400_dyspnea),
-          pain_frequency: parseScore(output?.clinical_items?.m1242_pain_freq),
-          pressure_ulcer_present: output?.clinical_items?.m1306_pressure_ulcer_present === '1' || String(output?.clinical_items?.m1306_pressure_ulcer_present).toLowerCase() === 'yes',
-          surgical_wound: output?.clinical_items?.m1340_surgical_wound === '1' || String(output?.clinical_items?.m1340_surgical_wound).toLowerCase() === 'yes'
+          dyspnea: parseScore(output?.m1400_dyspnea),
+          pain_frequency: 0,
+          pressure_ulcer_present: output?.m1306_pressure_ulcer === '1' || String(output?.m1306_pressure_ulcer).toLowerCase() === 'yes',
+          surgical_wound: output?.m1340_surgical_wound === '1' || String(output?.m1340_surgical_wound).toLowerCase() === 'yes'
         },
-        therapy_services: {
-          pt: output?.therapy_need?.pt_ordered || false,
-          ot: output?.therapy_need?.ot_ordered || false,
-          slp: output?.therapy_need?.slp_ordered || false
-        },
-        patient_info: output?.patient_info || {}
+        therapy_services: { pt: false, ot: false, slp: false },
+        patient_info: { name: output?.patient_name, assessment_date: output?.assessment_date, assessment_type: output?.assessment_type }
       };
 
       // Increase content limit for better analysis
