@@ -971,16 +971,40 @@ Return JSON:
     "key_weaknesses": ["list of documentation gaps that reduce defensibility"]
   },
   "pdgm_analysis": {
-    "clinical_group": "MMTA category based on primary diagnosis",
-    "clinical_group_confidence": "high|medium|low",
-    "functional_level": "low|medium|high",
-    "functional_points_calculated": "exact number 0-30",
-    "comorbidity_adjustment": "none|low|high",
-    "comorbidity_count": "number of qualifying comorbidities found",
-    "estimated_case_mix_weight": "X.XXXX",
-    "optimization_potential": "$XXX-$XXX per episode",
-    "calculation_notes": "explanation of how PDGM was determined"
-  },
+            "clinical_group": "${clinicalGroupAnalysis.group} - ${clinicalGroupAnalysis.name}",
+            "clinical_group_confidence": "${clinicalGroupAnalysis.confidence}",
+            "clinical_group_rationale": "explanation of why this clinical group was assigned based on primary diagnosis",
+            "primary_dx_icd10_suggested": "ICD-10 code that best matches the primary diagnosis for this clinical group",
+            "alternative_clinical_groups": ["list other possible clinical groups if diagnosis is ambiguous"],
+            "functional_level": "low|medium|high",
+            "functional_points_calculated": "exact number 0-30",
+            "functional_points_breakdown": {
+              "m1800": "0-3",
+              "m1810": "0-3", 
+              "m1820": "0-3",
+              "m1830": "0-6",
+              "m1840": "0-4",
+              "m1850": "0-5",
+              "m1860": "0-6"
+            },
+            "comorbidity_adjustment": "${comorbidityAnalysis.adjustment}",
+            "comorbidity_count": ${comorbidityAnalysis.count},
+            "qualifying_comorbidities": {
+              "high_impact": [${comorbidityAnalysis.high.map(c => `"${c.name}"`).join(', ')}],
+              "low_impact": [${comorbidityAnalysis.low.map(c => `"${c.name}"`).join(', ')}],
+              "missing_documentation": ["list comorbidities mentioned but not properly coded"],
+              "potential_additions": ["list conditions in narrative that could qualify if properly documented"]
+            },
+            "estimated_case_mix_weight": "X.XXXX",
+            "case_mix_weight_breakdown": {
+              "clinical_component": "X.XX",
+              "functional_component": "X.XX", 
+              "comorbidity_component": "X.XX"
+            },
+            "optimization_potential": "$XXX-$XXX per episode",
+            "optimization_strategies": ["specific actions to improve case-mix weight"],
+            "calculation_notes": "detailed explanation of PDGM calculation methodology"
+          },
   "functional_score_analysis": {
     "m1800_grooming": {
       "documented_value": "0-3 or null if not documented",
