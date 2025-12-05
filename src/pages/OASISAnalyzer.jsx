@@ -62,6 +62,7 @@ import { useAutoFlagOASIS, THRESHOLDS } from "../components/oasis/OASISAutoFlagg
 import OASISExportManager from "../components/oasis/OASISExportManager";
 import AIProactiveDocumentationAssistant from "../components/oasis/AIProactiveDocumentationAssistant";
 import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";
+import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1442,14 +1443,14 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             />
           </div>
 
+          {/* OASIS Validation Panel - Full Width for Prominence */}
+          <OASISValidationPanel 
+            pdgmData={pdgmData} 
+            analysisResults={analysisResults}
+          />
+
           {/* AI-Enhanced Insights Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* OASIS Validation Panel */}
-            <OASISValidationPanel 
-              pdgmData={pdgmData} 
-              analysisResults={analysisResults}
-            />
-
             {/* Audit Risk Predictor */}
             <AuditRiskPredictor analysisResults={analysisResults} />
             
