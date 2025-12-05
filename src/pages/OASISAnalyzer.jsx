@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
+import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -39,11 +40,15 @@ export default function OASISAnalyzer() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analysisResults, setAnalysisResults] = useState(null);
+  const [pdgmData, setPdgmData] = useState(null);
   const [error, setError] = useState(null);
 
   // Handle viewing batch result in single analysis view
   const handleViewBatchResult = (result) => {
     setAnalysisResults(result);
+    if (result?.pdgm_data) {
+      setPdgmData(result.pdgm_data);
+    }
     setActiveTab("single");
   };
 
@@ -139,6 +144,13 @@ Provide a comprehensive analysis including:
 
 5. **Risk Areas**: Highlight any documentation that could be flagged in an audit or lead to claim denials.
 
+6. **PDGM Data Extraction**: Extract key OASIS items needed for PDGM revenue calculation:
+   - Primary diagnosis
+   - Secondary diagnoses/comorbidities
+   - Admission source (community vs institutional)
+   - Episode timing (early vs late)
+   - Functional status M-items (M1800-M1860 scores)
+
 Return your analysis as JSON:
 {
   "overall_score": 0-100,
@@ -146,6 +158,21 @@ Return your analysis as JSON:
   "compliance_score": 0-100,
   "revenue_optimization_score": 0-100,
   "summary": "Brief overall summary of the OASIS document quality",
+  "pdgm_data": {
+    "primary_diagnosis": "Primary diagnosis extracted from document",
+    "comorbidities": ["List of secondary diagnoses"],
+    "admission_source": "community" | "institutional",
+    "episode_timing": "early" | "late",
+    "functional_scores": {
+      "m1800_grooming": 0-3,
+      "m1810_dress_upper": 0-3,
+      "m1820_dress_lower": 0-3,
+      "m1830_bathing": 0-6,
+      "m1840_toilet_transfer": 0-4,
+      "m1850_transferring": 0-5,
+      "m1860_ambulation": 0-6
+    }
+  },
   "accuracy_issues": [
     {
       "item": "OASIS item code (e.g., M1800)",
@@ -199,6 +226,7 @@ Return your analysis as JSON:
             compliance_score: { type: "number" },
             revenue_optimization_score: { type: "number" },
             summary: { type: "string" },
+            pdgm_data: { type: "object" },
             accuracy_issues: { type: "array", items: { type: "object" } },
             compliance_concerns: { type: "array", items: { type: "object" } },
             revenue_tips: { type: "array", items: { type: "object" } },
@@ -212,6 +240,11 @@ Return your analysis as JSON:
 
       setUploadProgress(100);
       setAnalysisResults(analysisResult);
+      
+      // Extract PDGM data for revenue calculation
+      if (analysisResult.pdgm_data) {
+        setPdgmData(analysisResult.pdgm_data);
+      }
     } catch (err) {
       console.error("Error analyzing OASIS:", err);
       setError(err.message || "Failed to analyze the OASIS document. Please try again.");
@@ -459,6 +492,12 @@ Return your analysis as JSON:
               )}
             </CardContent>
           </Card>
+
+          {/* PDGM Revenue Analysis */}
+          <PDGMRevenueComparison 
+            analysisResults={analysisResults} 
+            pdgmData={pdgmData}
+          />
 
           {/* Detailed Analysis Accordion */}
           <Accordion type="multiple" className="space-y-2">
