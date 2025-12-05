@@ -59,6 +59,7 @@ import AutomatedPDGMNavigator from "../components/oasis/AutomatedPDGMNavigator";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
 import SmartNoteDataImport from "../components/oasis/SmartNoteDataImport";
 import { useAutoFlagOASIS, THRESHOLDS } from "../components/oasis/OASISAutoFlagger";
+import OASISExportManager from "../components/oasis/OASISExportManager";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -985,6 +986,16 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             onTasksCreated={(count) => console.log(`${count} tasks created`)}
           />
 
+          {/* Export Manager */}
+          <OASISExportManager
+            analysisResults={analysisResults}
+            pdgmData={pdgmData}
+            revenueData={revenueData}
+            navigationData={navigationData}
+            qualityScore={qualityScore}
+            patientName={patientName}
+          />
+
           {/* Key Takeaways Summary - Most Important */}
           <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
 
@@ -1169,6 +1180,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             analysisResults={analysisResults} 
             pdgmData={pdgmData}
             revenueData={null}
+            onNavigationComplete={(navData) => setNavigationData(navData)}
           />
 
           {/* PDGM Revenue Analysis */}
@@ -1234,7 +1246,11 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
           />
 
           {/* AI Documentation Quality Scorer - Full Width */}
-          <OASISDocumentationQualityScorer analysisResults={analysisResults} pdgmData={pdgmData} />
+          <OASISDocumentationQualityScorer 
+            analysisResults={analysisResults} 
+            pdgmData={pdgmData}
+            onQualityScoreComplete={(score) => setQualityScore(score)}
+          />
 
           {/* AI Documentation Quality Analyzer - Full Width */}
           <AIDocumentationQualityAnalyzer analysisResults={analysisResults} pdgmData={pdgmData} />

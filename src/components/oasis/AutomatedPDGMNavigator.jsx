@@ -49,7 +49,7 @@ const CLINICAL_GROUPS = {
   'MMTA_Musculoskeletal': { name: 'Musculoskeletal', category: 'MMTA' }
 };
 
-export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, revenueData }) {
+export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, revenueData, onNavigationComplete }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [navigation, setNavigation] = useState(null);
   const [error, setError] = useState(null);
@@ -242,6 +242,11 @@ Return JSON:
       });
 
       setNavigation(result);
+      
+      // Notify parent of navigation completion
+      if (onNavigationComplete) {
+        onNavigationComplete(result);
+      }
     } catch (err) {
       console.error("PDGM Navigation error:", err);
       setError("Failed to analyze PDGM grouping. Please try again.");

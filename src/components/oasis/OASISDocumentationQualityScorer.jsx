@@ -87,7 +87,7 @@ const SCORING_CRITERIA = {
   }
 };
 
-export default function OASISDocumentationQualityScorer({ analysisResults, pdgmData }) {
+export default function OASISDocumentationQualityScorer({ analysisResults, pdgmData, onQualityScoreComplete }) {
   const [isScoring, setIsScoring] = useState(false);
   const [qualityScore, setQualityScore] = useState(null);
   const [error, setError] = useState(null);
@@ -204,6 +204,11 @@ Return JSON:
       });
 
       setQualityScore(result);
+      
+      // Notify parent of quality score completion
+      if (onQualityScoreComplete) {
+        onQualityScoreComplete(result);
+      }
     } catch (err) {
       console.error("Quality scoring error:", err);
       setError("Failed to analyze documentation quality. Please try again.");
