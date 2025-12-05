@@ -205,51 +205,68 @@ Return JSON:
 {
   "overall_score": 0-100,
   "completeness_percentage": 0-100,
-  "ready_for_submission": true | false,
-  "reimbursement_risk_level": "low" | "medium" | "high" | "critical",
-  "estimated_case_mix_impact": "Brief assessment of how missing data could affect PDGM payment",
+  "ready_for_submission": true|false,
+  "reimbursement_risk_level": "low|medium|high|critical",
+  "pdgm_analysis": {
+    "clinical_group": "MMTA category",
+    "functional_level": "low|medium|high",
+    "comorbidity_adjustment": "none|low|high",
+    "estimated_case_mix_weight": "X.XXXX",
+    "optimization_potential": "$XXX-$XXX per episode"
+  },
+  "functional_score_analysis": {
+    "m1800_grooming": {"documented_value": 0-3, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
+    "m1810_dress_upper": {"documented_value": 0-3, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
+    "m1820_dress_lower": {"documented_value": 0-3, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
+    "m1830_bathing": {"documented_value": 0-6, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
+    "m1840_toilet_transfer": {"documented_value": 0-4, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
+    "m1850_transferring": {"documented_value": 0-5, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
+    "m1860_ambulation": {"documented_value": 0-6, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
+    "total_functional_points": 0-30,
+    "functional_level_result": "low|medium|high"
+  },
   "critical_missing": [
     {
-      "oasis_item": "M-item number and name",
-      "category": "Demographics|ADL|Clinical|Medications|etc",
-      "why_critical": "Impact on compliance/reimbursement",
-      "documentation_guidance": "Specific instructions on what to document",
-      "example": "Example of compliant documentation",
-      "reimbursement_impact": "high" | "medium" | "low"
+      "oasis_item": "M-number: Name",
+      "category": "Functional|Clinical|Medications|Wounds|GG",
+      "pdgm_impact": "Affects clinical group|functional level|comorbidity",
+      "why_critical": "Specific CMS requirement",
+      "documentation_guidance": "Exact wording needed",
+      "example": "Patient requires moderate assistance (2 person) for shower transfers due to lower extremity weakness and balance impairment.",
+      "reimbursement_impact": "high|medium|low",
+      "estimated_revenue_impact": "$XXX per episode"
     }
   ],
-  "incomplete_assessments": [
+  "underscoring_opportunities": [
     {
-      "oasis_item": "M-item number",
-      "current_documentation": "Quote from note",
-      "issue": "What's missing or vague",
-      "guidance": "How to improve",
-      "example": "Better version"
+      "oasis_item": "M-number",
+      "current_score": "documented value",
+      "supported_score": "higher value supported by narrative",
+      "narrative_evidence": "exact quote",
+      "revenue_impact": "$XXX difference"
+    }
+  ],
+  "overscoring_risks": [
+    {
+      "oasis_item": "M-number",
+      "claimed_score": "documented value",
+      "supported_score": "lower value actually supported",
+      "audit_risk": "high|medium",
+      "recommendation": "Add documentation or adjust score"
     }
   ],
   "inconsistencies": [
     {
-      "issue": "Description of inconsistency",
-      "conflicting_info": ["statement 1", "statement 2"],
-      "resolution": "How to fix"
+      "issue": "description",
+      "narrative_states": "quote 1",
+      "conflicts_with": "quote 2 or implied OASIS response",
+      "resolution": "specific fix"
     }
   ],
-  "compliant_items": [
-    {
-      "oasis_item": "M-item",
-      "category": "category",
-      "evidence": "Quote showing it's documented"
-    }
-  ],
-  "recommendations": [
-    "Specific actionable recommendation"
-  ],
-  "star_rating_considerations": [
-    "Items that impact HH CAHPS or quality measures"
-  ]
-}
-
-Be thorough and specific. Focus on items that impact Medicare payment and quality reporting.`;
+  "compliant_items": [{"oasis_item": "M-number", "category": "cat", "evidence": "quote"}],
+  "recommendations": ["actionable items ranked by revenue impact"],
+  "quality_measures_impact": ["HH-CAHPS and HHQI items affected"]
+}`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
