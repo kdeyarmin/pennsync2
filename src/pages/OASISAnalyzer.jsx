@@ -266,11 +266,11 @@ export default function OASISAnalyzer() {
             json_schema: {
               type: "object",
               properties: {
-            // Patient demographics
-            patient_name: { type: "string", description: "Patient full name" },
-            patient_dob: { type: "string", description: "Date of birth" },
-            patient_gender: { type: "string", description: "M or F" },
-            medicare_number: { type: "string", description: "Medicare ID if present" },
+            // Patient demographics - LOOK AT THE TOP OF THE DOCUMENT
+            patient_name: { type: "string", description: "Patient's full name - typically at the top of the form. Look for: 'Patient Name:', 'Name:', labels near demographics section. Extract first and last name." },
+            patient_dob: { type: "string", description: "Date of birth - look for 'DOB:', 'Date of Birth:', birth date field. Format MM/DD/YYYY or any date format found." },
+            patient_gender: { type: "string", description: "Gender - M, F, Male, Female. Look for 'Gender:', 'Sex:' checkbox or field." },
+            medicare_number: { type: "string", description: "Medicare number or ID - look for 'Medicare:', 'Medicare #:', 'ID:' near top of form." },
 
             // Assessment info
             assessment_date: { type: "string", description: "M0090 date of assessment" },
@@ -283,15 +283,27 @@ export default function OASISAnalyzer() {
             referral_date: { type: "string", description: "M0104 Referral date" },
             days_since_soc: { type: "string", description: "Number of days since start of care if mentioned" },
 
-            // Diagnoses - comprehensive extraction with multiple patterns
-            m1021_primary_diagnosis_code: { type: "string", description: "M1021 or M-1021 Primary Diagnosis ICD-10-CM code - look for patterns like 'M1021', 'M-1021', 'Primary Diagnosis:', may have multiple codes listed with (a), (b) suffixes. Extract the FIRST code listed." },
-            m1021_primary_diagnosis_description: { type: "string", description: "M1021 Primary Diagnosis description - the text immediately following the ICD-10 code, often describes the condition name" },
-            m1023_other_diagnoses: { type: "string", description: "M1023 or M-1023 Other Diagnoses - look for this section, extract ALL ICD-10 codes and their descriptions, format as 'CODE1 Description1, CODE2 Description2'. Common section headers: 'M1023', 'Other Diagnoses', 'Secondary Diagnoses'" },
-            primary_diagnosis_code: { type: "string", description: "If M1021 section not clearly labeled, look for 'Primary', 'Principal', 'Admitting' diagnosis section and extract the ICD-10 code (format: Letter followed by numbers and optional decimal, e.g., I50.9, J44.1, E11.9)" },
-            primary_diagnosis_description: { type: "string", description: "The condition name/description associated with the primary diagnosis code" },
-            secondary_diagnoses: { type: "string", description: "All non-primary diagnoses - look throughout the document for diagnosis lists, ICD-10 codes in sections like 'Other Diagnoses', 'Additional Diagnoses', 'Comorbidities'. Format as comma-separated list with codes and names." },
-            comorbidities_text: { type: "string", description: "All mentioned conditions, comorbidities, past medical history - extract from narrative sections, diagnosis lists, medical history sections. Include chronic conditions even if not primary." },
-            diagnosis_severity: { type: "string", description: "Look for severity descriptors near diagnosis codes: acute, chronic, exacerbation, uncontrolled, controlled, with complications, without complications, etc." },
+            // DIAGNOSES - SEARCH THE ENTIRE DOCUMENT FOR THESE
+            m1021_primary_diagnosis_code: { 
+              type: "string", 
+              description: "PRIMARY DIAGNOSIS ICD-10 CODE - CRITICAL! Search for: 'M1021', 'M-1021', 'M 1021', '(M1021)', 'Primary Diagnosis', 'Principal Diagnosis'. Extract ICD-10 code (format: letter + numbers + optional decimal, examples: I50.9, J44.1, E11.65, Z99.11). May be listed as (a), (b), etc - get the FIRST one. If you find ANY ICD-10 code pattern, extract it here even if not labeled M1021." 
+            },
+            m1021_primary_diagnosis_description: { 
+              type: "string", 
+              description: "PRIMARY DIAGNOSIS NAME - the condition name/description next to the primary ICD-10 code. Examples: 'Congestive heart failure', 'COPD', 'Diabetes with complications'. Extract the full text description." 
+            },
+            m1023_other_diagnoses: { 
+              type: "string", 
+              description: "OTHER/SECONDARY DIAGNOSES - Search for: 'M1023', 'M-1023', 'M 1023', 'Other Diagnoses', 'Secondary Diagnoses', 'Additional Diagnoses'. Extract ALL ICD-10 codes found with their descriptions. Format: 'I10 Hypertension, E11.9 Diabetes, J44.9 COPD' - include ALL you find, separated by commas." 
+            },
+            all_icd10_codes_found: {
+              type: "string",
+              description: "EXTRACT ALL ICD-10 CODES FOUND ANYWHERE IN DOCUMENT - Look for any text matching pattern: Letter followed by 2-3 digits, optional decimal and more digits (I50.9, J44.1, E11.65, etc). List ALL codes found, comma separated, even if not in M1021/M1023 sections."
+            },
+            diagnosis_section_text: {
+              type: "string",
+              description: "RAW TEXT FROM DIAGNOSIS SECTION - Copy the entire text from any section labeled with 'Diagnosis', 'ICD-10', 'M1021', 'M1023' verbatim. This ensures we capture everything even if codes are unclear."
+            },
 
             // Admission source and timing
             m1000_admission_source: { type: "string", description: "M1000 value 1-6 or description" },
@@ -519,17 +531,48 @@ export default function OASISAnalyzer() {
         return items.slice(0, 15); // Limit to 15 comorbidities
       };
 
-      // Extract primary diagnosis with M1021 priority
-      const primaryDxCode = output?.m1021_primary_diagnosis_code || output?.primary_diagnosis_code || '';
-      const primaryDxDescription = output?.m1021_primary_diagnosis_description || output?.primary_diagnosis_description || '';
+      // Extract primary diagnosis with M1021 priority - use ANY code found as fallback
+      let primaryDxCode = output?.m1021_primary_diagnosis_code || output?.primary_diagnosis_code || '';
+      let primaryDxDescription = output?.m1021_primary_diagnosis_description || output?.primary_diagnosis_description || '';
+
+      // Fallback: try to extract from all_icd10_codes_found or diagnosis_section_text
+      if (!primaryDxCode && output?.all_icd10_codes_found) {
+        const firstCode = output.all_icd10_codes_found.split(',')[0]?.trim();
+        if (firstCode) {
+          primaryDxCode = firstCode.split(' ')[0]; // Get just the code
+          primaryDxDescription = firstCode.substring(primaryDxCode.length).trim(); // Get description
+        }
+      }
+
+      // Another fallback: parse diagnosis_section_text for ICD-10 pattern
+      if (!primaryDxCode && output?.diagnosis_section_text) {
+        const icd10Match = output.diagnosis_section_text.match(/([A-Z]\d{2}\.?\d*)\s+([^,\n]+)/);
+        if (icd10Match) {
+          primaryDxCode = icd10Match[1];
+          primaryDxDescription = icd10Match[2].trim();
+        }
+      }
+
       const primaryDiagnosis = primaryDxDescription || primaryDxCode;
 
       // Combine M1023 and secondary diagnoses for comorbidities
       const allSecondaryDx = [
         output?.m1023_other_diagnoses,
+        output?.all_icd10_codes_found,
         output?.secondary_diagnoses,
         output?.comorbidities_text
       ].filter(Boolean).join(', ');
+
+      // Parse out additional codes from all_icd10_codes_found
+      const additionalCodes = [];
+      if (output?.all_icd10_codes_found) {
+        const codes = output.all_icd10_codes_found.split(',').map(c => c.trim()).filter(c => c);
+        codes.forEach(code => {
+          if (code !== primaryDxCode && !additionalCodes.includes(code)) {
+            additionalCodes.push(code);
+          }
+        });
+      }
 
       // Determine therapy needs
       const checkTherapy = (val) => {
@@ -544,7 +587,13 @@ export default function OASISAnalyzer() {
         primary_diagnosis_code: primaryDxCode,
         primary_diagnosis_description: primaryDxDescription,
         diagnosis_severity: output?.diagnosis_severity || null,
-        comorbidities: parseComorbidities(allSecondaryDx),
+        comorbidities: [...parseComorbidities(allSecondaryDx), ...additionalCodes].filter((v, i, a) => a.indexOf(v) === i), // Deduplicate
+        raw_diagnosis_data: {
+          m1021_found: !!output?.m1021_primary_diagnosis_code,
+          m1023_found: !!output?.m1023_other_diagnoses,
+          all_codes_found: output?.all_icd10_codes_found || null,
+          diagnosis_section: output?.diagnosis_section_text || null
+        },
         admission_source: admissionSource,
         episode_timing: episodeTiming,
         m0110_episode_timing: output?.m0110_episode_timing || null,
