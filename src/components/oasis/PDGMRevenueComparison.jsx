@@ -23,6 +23,23 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
   const [revenueData, setRevenueData] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasAutoCalculated, setHasAutoCalculated] = useState(false);
+
+  // Auto-calculate when pdgmData becomes available
+  useEffect(() => {
+    if (pdgmData && !revenueData && !isCalculating && !hasAutoCalculated) {
+      calculateRevenue();
+      setHasAutoCalculated(true);
+    }
+  }, [pdgmData]);
+
+  // Reset when pdgmData changes
+  useEffect(() => {
+    if (!pdgmData) {
+      setRevenueData(null);
+      setHasAutoCalculated(false);
+    }
+  }, [pdgmData]);
 
   const calculateRevenue = async () => {
     if (!pdgmData) return;
@@ -61,17 +78,27 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
           if (tip.potential_impact === 'high') {
             corrected.functional_scores.m1830_bathing = Math.min(6, (corrected.functional_scores.m1830_bathing || 0) + 2);
             corrected.functional_scores.m1860_ambulation = Math.min(6, (corrected.functional_scores.m1860_ambulation || 0) + 2);
-          } else {
             corrected.functional_scores.m1850_transferring = Math.min(5, (corrected.functional_scores.m1850_transferring || 0) + 1);
+          } else if (tip.potential_impact === 'medium') {
+            corrected.functional_scores.m1850_transferring = Math.min(5, (corrected.functional_scores.m1850_transferring || 0) + 1);
+            corrected.functional_scores.m1840_toilet_transfer = Math.min(4, (corrected.functional_scores.m1840_toilet_transfer || 0) + 1);
+          } else {
+            corrected.functional_scores.m1800_grooming = Math.min(3, (corrected.functional_scores.m1800_grooming || 0) + 1);
           }
         }
 
         // Add comorbidities if suggested
         if (tip.category === 'Diagnosis' || tip.category === 'Clinical Condition') {
           corrected.comorbidities = corrected.comorbidities || [];
-          if (!corrected.comorbidities.includes(tip.opportunity)) {
+          if (tip.opportunity && !corrected.comorbidities.includes(tip.opportunity)) {
             corrected.comorbidities.push(tip.opportunity);
           }
+        }
+
+        // Therapy adjustments
+        if (tip.category === 'Therapy') {
+          corrected.functional_scores = corrected.functional_scores || {};
+          corrected.functional_scores.m1860_ambulation = Math.min(6, (corrected.functional_scores.m1860_ambulation || 0) + 1);
         }
       });
     }
@@ -82,8 +109,35 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
         if (issue.item?.includes('M18')) {
           // Functional item correction
           corrected.functional_scores = corrected.functional_scores || {};
-          const itemKey = `m${issue.item.toLowerCase()}_score`;
-          corrected.functional_scores[itemKey] = (corrected.functional_scores[itemKey] || 0) + 1;
+          const itemNum = issue.item.match(/M18(\d{2})/i);
+          if (itemNum) {
+            const itemMap = {
+              '00': 'm1800_grooming',
+              '10': 'm1810_dress_upper',
+              '20': 'm1820_dress_lower',
+              '30': 'm1830_bathing',
+              '40': 'm1840_toilet_transfer',
+              '50': 'm1850_transferring',
+              '60': 'm1860_ambulation'
+            };
+            const key = itemMap[itemNum[1]];
+            if (key) {
+              const maxValues = { m1800_grooming: 3, m1810_dress_upper: 3, m1820_dress_lower: 3, m1830_bathing: 6, m1840_toilet_transfer: 4, m1850_transferring: 5, m1860_ambulation: 6 };
+              corrected.functional_scores[key] = Math.min(maxValues[key], (corrected.functional_scores[key] || 0) + 1);
+            }
+          }
+        }
+      });
+    }
+
+    // Check documentation improvements for PDGM impact
+    if (analysis?.documentation_improvements?.length > 0) {
+      analysis.documentation_improvements.forEach(imp => {
+        if (imp.item?.toLowerCase().includes('diagnosis') || imp.rationale?.toLowerCase().includes('case-mix')) {
+          corrected.comorbidities = corrected.comorbidities || [];
+          if (corrected.comorbidities.length < 3) {
+            corrected.comorbidities.push('documented comorbidity');
+          }
         }
       });
     }
@@ -134,12 +188,20 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        {!revenueData ? (
+        {isCalculating ? (
+          <div className="text-center py-6">
+            <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-3" />
+            <p className="text-sm text-gray-600">Calculating PDGM revenue based on OASIS data...</p>
+            <p className="text-xs text-gray-400 mt-1">Applying CMS PDGM rules and corrections</p>
+          </div>
+        ) : !revenueData ? (
           <>
             <Alert className="bg-blue-50 border-blue-200">
               <Info className="w-4 h-4 text-blue-600" />
               <AlertDescription className="text-blue-800 text-sm">
-                Calculate the potential revenue impact of documentation improvements based on CMS PDGM rules.
+                {pdgmData 
+                  ? "Ready to calculate PDGM revenue based on extracted OASIS data."
+                  : "Upload and analyze an OASIS document to calculate PDGM revenue impact."}
               </AlertDescription>
             </Alert>
 
@@ -148,11 +210,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
               disabled={isCalculating || !pdgmData}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              {isCalculating ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculating PDGM Revenue...</>
-              ) : (
-                <><Calculator className="w-4 h-4 mr-2" /> Calculate Revenue Impact</>
-              )}
+              <Calculator className="w-4 h-4 mr-2" /> Calculate Revenue Impact
             </Button>
 
             {!pdgmData && (
