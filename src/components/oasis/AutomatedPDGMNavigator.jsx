@@ -102,13 +102,21 @@ ${JSON.stringify({
 CURRENT REVENUE CALCULATION (if available):
 ${JSON.stringify(revenueData?.original || {}, null, 2)}
 
+CRITICAL INSTRUCTIONS:
+- ALL ICD-10 diagnoses are valid for PDGM - there is no such thing as an "invalid diagnosis for PDGM"
+- Every diagnosis maps to one of the 12 PDGM clinical groups (MMTA categories)
+- If you're uncertain about the exact mapping, use your best clinical judgment to assign to the most appropriate group
+- Do NOT flag a diagnosis as "invalid" or "not recognized" - instead, determine which clinical group it most closely aligns with
+- If the diagnosis is unclear, assign it to "MMTA_Other" rather than marking it as invalid
+
 Provide a complete PDGM navigation analysis:
 
 1. CLINICAL GROUP DETERMINATION
-- Identify the correct clinical group based on primary diagnosis
-- Explain WHY this clinical group applies (cite ICD-10 mapping rules)
-- List alternative clinical groups that could apply if documentation changes
-- Flag if current grouping may be incorrect
+- Identify the correct PDGM clinical group based on the primary diagnosis ICD-10 code
+- Every diagnosis MUST be assigned to one of the 12 clinical groups (Surgical Aftercare, Cardiac/Circulatory, Endocrine, GI/GU, Infectious Disease, Respiratory, Neuro/Rehab, Wounds, Complex Nursing, Behavioral Health, Medication Management, Musculoskeletal, or Other)
+- Explain WHY this clinical group applies based on the diagnosis description and ICD-10 category
+- List alternative clinical groups that could apply if documentation or coding changes
+- Only flag issues if there are true documentation problems (missing info, conflicting data) - NOT diagnosis validity
 
 2. FUNCTIONAL IMPAIRMENT LEVEL
 - Calculate total functional points from M-items (M1800-M1860)
@@ -144,10 +152,10 @@ Return JSON:
     "assigned_group": "MMTA_GroupName",
     "group_name": "Human readable name",
     "confidence": "high/medium/low",
-    "rationale": "Why this group was assigned",
-    "icd10_basis": "ICD-10 code and mapping logic",
+    "rationale": "Why this group was assigned based on the diagnosis",
+    "icd10_basis": "ICD-10 code category and clinical reasoning for this mapping",
     "alternative_groups": [{"group": "name", "if_condition": "what would need to change"}],
-    "potential_issues": ["list of concerns with current grouping"]
+    "potential_issues": ["ONLY list real documentation issues like missing data or conflicts - NEVER say diagnosis is invalid"]
   },
   "functional_level": {
     "total_points": 0,
