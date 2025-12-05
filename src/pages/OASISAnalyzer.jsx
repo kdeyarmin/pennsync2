@@ -590,7 +590,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
         </TabsList>
 
         <TabsContent value="batch" className="mt-4">
-          <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} />
+          <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} onBatchComplete={handleBatchComplete} />
         </TabsContent>
 
         <TabsContent value="single" className="mt-4">
