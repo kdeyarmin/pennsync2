@@ -13,7 +13,7 @@ import { getCommandsForContext } from "../components/voice/voiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
 import ProactiveRiskIdentifier from "../components/alerts/ProactiveRiskIdentifier";
 import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
-import PredictiveRiskScoring from "../components/predictive/PredictiveRiskScoring";
+
 import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
 import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
