@@ -503,6 +503,8 @@ ${Object.keys(vitalSigns).length > 0 ? JSON.stringify(vitalSigns, null, 2) : 'No
 FULL CLINICAL DOCUMENTATION:
 ${narrativeText || '[No documentation provided]'}
 
+${extractedOasisData ? formatExtractedOasisForPrompt(extractedOasisData) : ''}
+
 ---
 
 OASIS-E 2024 REQUIRED ELEMENTS (${visitType}):
