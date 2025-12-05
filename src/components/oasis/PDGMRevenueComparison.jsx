@@ -23,6 +23,234 @@ import {
 } from "lucide-react";
 import { calculatePDGM } from "@/functions/calculatePDGM";
 import { generatePDGMComparisonPDF } from "@/functions/generatePDGMComparisonPDF";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+
+function CaseMixBreakdown({ original, corrected }) {
+  if (!original) return null;
+
+  const componentData = [
+    { 
+      name: 'Clinical', 
+      original: original.clinicalWeight || 1, 
+      corrected: corrected?.clinicalWeight || original.clinicalWeight || 1,
+      fullName: 'Clinical Group'
+    },
+    { 
+      name: 'Functional', 
+      original: original.functionalMultiplier || 1, 
+      corrected: corrected?.functionalMultiplier || original.functionalMultiplier || 1,
+      fullName: 'Functional Level'
+    },
+    { 
+      name: 'Comorbidity', 
+      original: original.comorbidityMultiplier || 1, 
+      corrected: corrected?.comorbidityMultiplier || original.comorbidityMultiplier || 1,
+      fullName: 'Comorbidity Adj.'
+    },
+    { 
+      name: 'Admission', 
+      original: original.admissionMultiplier || 1, 
+      corrected: corrected?.admissionMultiplier || original.admissionMultiplier || 1,
+      fullName: 'Admission Source'
+    },
+    { 
+      name: 'Timing', 
+      original: original.timingMultiplier || 1, 
+      corrected: corrected?.timingMultiplier || original.timingMultiplier || 1,
+      fullName: 'Episode Timing'
+    },
+  ];
+
+  const radarData = componentData.map(item => ({
+    subject: item.name,
+    Original: item.original,
+    Corrected: item.corrected,
+    fullMark: 1.5
+  }));
+
+  const hasChanges = corrected && (
+    original.caseMixWeight !== corrected.caseMixWeight
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-gray-700">Case-Mix Weight Breakdown</p>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-gray-400 rounded"></span> Original
+          </span>
+          {hasChanges && (
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 bg-green-500 rounded"></span> Corrected
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Radar Chart */}
+      <div className="bg-gray-50 rounded-lg p-3">
+        <ResponsiveContainer width="100%" height={200}>
+          <RadarChart data={radarData}>
+            <PolarGrid stroke="#e5e7eb" />
+            <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
+            <PolarRadiusAxis angle={90} domain={[0.8, 1.4]} tick={{ fontSize: 9 }} />
+            <Radar name="Original" dataKey="Original" stroke="#9ca3af" fill="#9ca3af" fillOpacity={0.3} />
+            {hasChanges && (
+              <Radar name="Corrected" dataKey="Corrected" stroke="#22c55e" fill="#22c55e" fillOpacity={0.3} />
+            )}
+            <Tooltip formatter={(value) => value.toFixed(4)} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Component Details Table */}
+      <div className="border rounded-lg overflow-hidden">
+        <table className="w-full text-xs">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="text-left p-2 font-medium">Component</th>
+              <th className="text-center p-2 font-medium">Original</th>
+              {hasChanges && <th className="text-center p-2 font-medium">Corrected</th>}
+              <th className="text-center p-2 font-medium">Weight</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            <tr className="bg-blue-50">
+              <td className="p-2 font-medium">Clinical Group</td>
+              <td className="p-2 text-center">
+                <span className="block text-gray-600">{original.clinicalGroup?.replace('MMTA_', '')}</span>
+                <span className="text-gray-400">{original.clinicalWeight?.toFixed(4)}</span>
+              </td>
+              {hasChanges && (
+                <td className="p-2 text-center">
+                  <span className="block text-green-600">{corrected.clinicalGroup?.replace('MMTA_', '')}</span>
+                  <span className="text-green-500">{corrected.clinicalWeight?.toFixed(4)}</span>
+                </td>
+              )}
+              <td className="p-2 text-center font-mono text-blue-700">
+                {(hasChanges ? corrected : original).clinicalWeight?.toFixed(4)}
+              </td>
+            </tr>
+            <tr>
+              <td className="p-2 font-medium">
+                Functional Level
+                <span className="block text-gray-400 font-normal">Points: {original.functionalPoints || 0}{hasChanges && corrected.functionalPoints !== original.functionalPoints ? ` → ${corrected.functionalPoints}` : ''}</span>
+              </td>
+              <td className="p-2 text-center">
+                <span className="block text-gray-600 capitalize">{original.functionalLevel}</span>
+                <span className="text-gray-400">×{original.functionalMultiplier?.toFixed(2)}</span>
+              </td>
+              {hasChanges && (
+                <td className="p-2 text-center">
+                  <span className={`block capitalize ${corrected.functionalLevel !== original.functionalLevel ? 'text-green-600' : 'text-gray-600'}`}>
+                    {corrected.functionalLevel}
+                  </span>
+                  <span className={corrected.functionalMultiplier !== original.functionalMultiplier ? 'text-green-500' : 'text-gray-400'}>
+                    ×{corrected.functionalMultiplier?.toFixed(2)}
+                  </span>
+                </td>
+              )}
+              <td className="p-2 text-center font-mono text-blue-700">
+                ×{(hasChanges ? corrected : original).functionalMultiplier?.toFixed(2)}
+              </td>
+            </tr>
+            <tr className="bg-blue-50">
+              <td className="p-2 font-medium">
+                Comorbidity Adj.
+                <span className="block text-gray-400 font-normal">Count: {original.comorbidityCount || 0}{hasChanges && corrected.comorbidityCount !== original.comorbidityCount ? ` → ${corrected.comorbidityCount}` : ''}</span>
+              </td>
+              <td className="p-2 text-center">
+                <span className="block text-gray-600 capitalize">{original.comorbidityLevel}</span>
+                <span className="text-gray-400">×{original.comorbidityMultiplier?.toFixed(2)}</span>
+              </td>
+              {hasChanges && (
+                <td className="p-2 text-center">
+                  <span className={`block capitalize ${corrected.comorbidityLevel !== original.comorbidityLevel ? 'text-green-600' : 'text-gray-600'}`}>
+                    {corrected.comorbidityLevel}
+                  </span>
+                  <span className={corrected.comorbidityMultiplier !== original.comorbidityMultiplier ? 'text-green-500' : 'text-gray-400'}>
+                    ×{corrected.comorbidityMultiplier?.toFixed(2)}
+                  </span>
+                </td>
+              )}
+              <td className="p-2 text-center font-mono text-blue-700">
+                ×{(hasChanges ? corrected : original).comorbidityMultiplier?.toFixed(2)}
+              </td>
+            </tr>
+            <tr>
+              <td className="p-2 font-medium">Admission Source</td>
+              <td className="p-2 text-center">
+                <span className="block text-gray-600 capitalize">{original.admissionSource}</span>
+                <span className="text-gray-400">×{original.admissionMultiplier?.toFixed(2)}</span>
+              </td>
+              {hasChanges && (
+                <td className="p-2 text-center">
+                  <span className={`block capitalize ${corrected.admissionSource !== original.admissionSource ? 'text-green-600' : 'text-gray-600'}`}>
+                    {corrected.admissionSource}
+                  </span>
+                  <span className={corrected.admissionMultiplier !== original.admissionMultiplier ? 'text-green-500' : 'text-gray-400'}>
+                    ×{corrected.admissionMultiplier?.toFixed(2)}
+                  </span>
+                </td>
+              )}
+              <td className="p-2 text-center font-mono text-blue-700">
+                ×{(hasChanges ? corrected : original).admissionMultiplier?.toFixed(2)}
+              </td>
+            </tr>
+            <tr className="bg-blue-50">
+              <td className="p-2 font-medium">Episode Timing</td>
+              <td className="p-2 text-center">
+                <span className="block text-gray-600 capitalize">{original.episodeTiming}</span>
+                <span className="text-gray-400">×{original.timingMultiplier?.toFixed(2)}</span>
+              </td>
+              {hasChanges && (
+                <td className="p-2 text-center">
+                  <span className={`block capitalize ${corrected.episodeTiming !== original.episodeTiming ? 'text-green-600' : 'text-gray-600'}`}>
+                    {corrected.episodeTiming}
+                  </span>
+                  <span className={corrected.timingMultiplier !== original.timingMultiplier ? 'text-green-500' : 'text-gray-400'}>
+                    ×{corrected.timingMultiplier?.toFixed(2)}
+                  </span>
+                </td>
+              )}
+              <td className="p-2 text-center font-mono text-blue-700">
+                ×{(hasChanges ? corrected : original).timingMultiplier?.toFixed(2)}
+              </td>
+            </tr>
+          </tbody>
+          <tfoot className="bg-indigo-100">
+            <tr>
+              <td className="p-2 font-semibold">Final Case-Mix Weight</td>
+              <td className="p-2 text-center font-mono font-semibold text-gray-700">
+                {original.caseMixWeight?.toFixed(4)}
+              </td>
+              {hasChanges && (
+                <td className="p-2 text-center font-mono font-semibold text-green-700">
+                  {corrected.caseMixWeight?.toFixed(4)}
+                </td>
+              )}
+              <td className="p-2 text-center font-mono font-bold text-indigo-700">
+                {(hasChanges ? corrected : original).caseMixWeight?.toFixed(4)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* Weight Calculation Formula */}
+      <div className="bg-indigo-50 p-3 rounded-lg text-xs">
+        <p className="font-medium text-indigo-800 mb-1">Case-Mix Calculation</p>
+        <p className="text-indigo-600 font-mono">
+          Base (${original.basePayment?.toFixed(2)}) × Clinical × Functional × Comorbidity × Admission × Timing
+        </p>
+        <p className="text-indigo-700 mt-1">
+          = ${original.basePayment?.toFixed(2)} × {(hasChanges ? corrected : original).caseMixWeight?.toFixed(4)} = <strong>${(hasChanges ? corrected : original).totalPayment?.toFixed(2)}</strong>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
   const [isCalculating, setIsCalculating] = useState(false);
@@ -477,48 +705,8 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
               </div>
             )}
 
-            {/* Breakdown */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">PDGM Component Comparison</p>
-              <div className="text-xs space-y-1">
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>Clinical Group</span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-gray-600">{revenueData.original?.clinicalGroup?.replace('MMTA_', '')}</span>
-                    {revenueData.corrected?.clinicalGroup !== revenueData.original?.clinicalGroup && (
-                      <>
-                        <ArrowRight className="w-3 h-3" />
-                        <span className="text-green-600 font-medium">{revenueData.corrected?.clinicalGroup?.replace('MMTA_', '')}</span>
-                      </>
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>Functional Level</span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-gray-600 capitalize">{revenueData.original?.functionalLevel}</span>
-                    {revenueData.corrected?.functionalLevel !== revenueData.original?.functionalLevel && (
-                      <>
-                        <ArrowRight className="w-3 h-3" />
-                        <span className="text-green-600 font-medium capitalize">{revenueData.corrected?.functionalLevel}</span>
-                      </>
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>Comorbidity Adjustment</span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-gray-600 capitalize">{revenueData.original?.comorbidityLevel}</span>
-                    {revenueData.corrected?.comorbidityLevel !== revenueData.original?.comorbidityLevel && (
-                      <>
-                        <ArrowRight className="w-3 h-3" />
-                        <span className="text-green-600 font-medium capitalize">{revenueData.corrected?.comorbidityLevel}</span>
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Case-Mix Weight Breakdown */}
+            <CaseMixBreakdown original={revenueData.original} corrected={revenueData.corrected} />
 
             {/* Download Button */}
             <Button
