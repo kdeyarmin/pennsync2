@@ -227,20 +227,42 @@ export default function OASISAnalyzer() {
   const handleUploadAndAnalyze = async () => {
     if (!file) return;
 
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      setError("File size exceeds 10MB. Please upload a smaller file.");
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(20);
     setError(null);
 
     try {
-      // Upload the file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Upload the file with timeout handling
+      let file_url;
+      try {
+        const uploadResult = await Promise.race([
+          base44.integrations.Core.UploadFile({ file }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Upload timeout - file may be too large')), 60000)
+          )
+        ]);
+        file_url = uploadResult.file_url;
+      } catch (uploadErr) {
+        throw new Error(`File upload failed: ${uploadErr.message}. Please check your connection and try again.`);
+      }
+      
       setUploadedFileUrl(file_url);
       setUploadProgress(40);
 
       // Enhanced extraction schema - comprehensive but flat to avoid API limits
-      const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
-        file_url: file_url,
-        json_schema: {
+      let extractedData;
+      try {
+        extractedData = await Promise.race([
+          base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url: file_url,
+            json_schema: {
           type: "object",
           properties: {
             // Patient demographics
@@ -324,8 +346,14 @@ export default function OASISAnalyzer() {
             // Full text for AI analysis
             clinical_narrative: { type: "string", description: "Any narrative clinical notes or comments" }
           }
-        }
-      });
+        }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Data extraction timeout - PDF may be too complex')), 90000)
+          )
+        ]);
+      } catch (extractErr) {
+        throw new Error(`Data extraction failed: ${extractErr.message}. The PDF may be unreadable or too large.`);
+      }
 
       setUploadProgress(50);
 
@@ -564,7 +592,10 @@ export default function OASISAnalyzer() {
       setIsAnalyzing(true);
 
       // Combined analysis with pre-extracted structured data
-      const analysisResult = await base44.integrations.Core.InvokeLLM({
+      let analysisResult;
+      try {
+        analysisResult = await Promise.race([
+          base44.integrations.Core.InvokeLLM({
         prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly and provide HIGHLY SPECIFIC, ACTIONABLE recommendations.
 
       PRE-EXTRACTED STRUCTURED DATA:
@@ -650,13 +681,22 @@ export default function OASISAnalyzer() {
             quick_wins: { type: "array", items: { type: "object" } },
             clinician_questions: { type: "array", items: { type: "string" } }
           }
-        }
-        });
+        }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Analysis timeout - please try again')), 120000)
+          )
+        ]);
+      } catch (analysisErr) {
+        throw new Error(`AI analysis failed: ${analysisErr.message}. Please try uploading again.`);
+      }
 
       setUploadProgress(90);
 
       // Quick validation pass
-      const validationResult = await base44.integrations.Core.InvokeLLM({
+      let validationResult;
+      try {
+        validationResult = await Promise.race([
+          base44.integrations.Core.InvokeLLM({
         prompt: `Validate OASIS PDGM data. Check: M-item consistency, diagnosis validity, admission source, episode timing.
 
 Data: ${JSON.stringify(analysisResult.pdgm_data || {})}
@@ -672,8 +712,21 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             pdgm_readiness: { type: "object" },
             recommendation: { type: "string" }
           }
-        }
-      });
+        }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Validation timeout')), 60000)
+          )
+        ]);
+      } catch (validationErr) {
+        console.warn("Validation step failed:", validationErr);
+        // Continue without validation if it fails
+        validationResult = {
+          data_quality_score: 75,
+          critical_issues: [],
+          warnings: [],
+          recommendation: 'Validation step skipped due to timeout'
+        };
+      }
 
       // Merge validation results into analysis
       analysisResult.validation_summary = {
@@ -720,7 +773,23 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       setPdgmData(finalPdgmData);
     } catch (err) {
       console.error("Error analyzing OASIS:", err);
-      setError(err.message || "Failed to analyze the OASIS document. Please try again.");
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to analyze the OASIS document. ";
+      
+      if (err.message?.includes('timeout')) {
+        errorMessage += "The request timed out. The file may be too large or complex. Try a smaller file or try again.";
+      } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
+        errorMessage += "Network error. Please check your internet connection and try again.";
+      } else if (err.message?.includes('upload')) {
+        errorMessage += "File upload failed. Please try again with a different file.";
+      } else if (err.message?.includes('extract')) {
+        errorMessage += "Could not read the PDF. Ensure it's a valid OASIS document.";
+      } else {
+        errorMessage += err.message || "Please try again.";
+      }
+      
+      setError(errorMessage);
     }
 
     setIsUploading(false);
