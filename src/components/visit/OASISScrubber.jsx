@@ -291,23 +291,75 @@ Return JSON:
   "completeness_percentage": 0-100,
   "ready_for_submission": true|false,
   "reimbursement_risk_level": "low|medium|high|critical",
+  "documentation_quality": {
+    "specificity_score": 0-100,
+    "defensibility_score": 0-100,
+    "key_weaknesses": ["list of documentation gaps that reduce defensibility"]
+  },
   "pdgm_analysis": {
-    "clinical_group": "MMTA category",
+    "clinical_group": "MMTA category based on primary diagnosis",
+    "clinical_group_confidence": "high|medium|low",
     "functional_level": "low|medium|high",
+    "functional_points_calculated": "exact number 0-30",
     "comorbidity_adjustment": "none|low|high",
+    "comorbidity_count": "number of qualifying comorbidities found",
     "estimated_case_mix_weight": "X.XXXX",
-    "optimization_potential": "$XXX-$XXX per episode"
+    "optimization_potential": "$XXX-$XXX per episode",
+    "calculation_notes": "explanation of how PDGM was determined"
   },
   "functional_score_analysis": {
-    "m1800_grooming": {"documented_value": 0-3, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
-    "m1810_dress_upper": {"documented_value": 0-3, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
-    "m1820_dress_lower": {"documented_value": 0-3, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
-    "m1830_bathing": {"documented_value": 0-6, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
-    "m1840_toilet_transfer": {"documented_value": 0-4, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
-    "m1850_transferring": {"documented_value": 0-5, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
-    "m1860_ambulation": {"documented_value": 0-6, "supported_by": "quote", "accuracy": "accurate|underscored|overscored"},
-    "total_functional_points": 0-30,
-    "functional_level_result": "low|medium|high"
+    "m1800_grooming": {
+      "documented_value": "0-3 or null if not documented",
+      "supported_by": "exact quote from documentation",
+      "accuracy": "accurate|underscored|overscored|insufficient_documentation",
+      "recommended_value": "what score the documentation actually supports",
+      "scoring_rationale": "why this score based on CMS definitions"
+    },
+    "m1810_dress_upper": {
+      "documented_value": "0-3 or null",
+      "supported_by": "exact quote",
+      "accuracy": "accurate|underscored|overscored|insufficient_documentation",
+      "recommended_value": "supported score",
+      "scoring_rationale": "rationale"
+    },
+    "m1820_dress_lower": {
+      "documented_value": "0-3 or null",
+      "supported_by": "exact quote",
+      "accuracy": "accurate|underscored|overscored|insufficient_documentation",
+      "recommended_value": "supported score",
+      "scoring_rationale": "rationale"
+    },
+    "m1830_bathing": {
+      "documented_value": "0-6 or null",
+      "supported_by": "exact quote",
+      "accuracy": "accurate|underscored|overscored|insufficient_documentation",
+      "recommended_value": "supported score",
+      "scoring_rationale": "rationale"
+    },
+    "m1840_toilet_transfer": {
+      "documented_value": "0-4 or null",
+      "supported_by": "exact quote",
+      "accuracy": "accurate|underscored|overscored|insufficient_documentation",
+      "recommended_value": "supported score",
+      "scoring_rationale": "rationale"
+    },
+    "m1850_transferring": {
+      "documented_value": "0-5 or null",
+      "supported_by": "exact quote",
+      "accuracy": "accurate|underscored|overscored|insufficient_documentation",
+      "recommended_value": "supported score",
+      "scoring_rationale": "rationale"
+    },
+    "m1860_ambulation": {
+      "documented_value": "0-6 or null",
+      "supported_by": "exact quote",
+      "accuracy": "accurate|underscored|overscored|insufficient_documentation",
+      "recommended_value": "supported score",
+      "scoring_rationale": "rationale"
+    },
+    "total_functional_points": "calculated sum 0-30",
+    "functional_level_result": "low|medium|high",
+    "cross_validation_issues": ["any logical inconsistencies between functional items"]
   },
   "critical_missing": [
     {
