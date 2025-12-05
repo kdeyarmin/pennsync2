@@ -54,6 +54,12 @@ export default function OASISAnalyzer() {
     setActiveTab("single");
   };
 
+  // Handle batch results for comparison
+  const handleBatchComplete = (results) => {
+    const successfulResults = results.filter(r => r.status === 'success' && r.pdgm_data);
+    setSavedBatchResults(prev => [...prev, ...successfulResults]);
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile && selectedFile.type === "application/pdf") {
