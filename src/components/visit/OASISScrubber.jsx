@@ -1052,16 +1052,39 @@ Return JSON:
                 }
               }
             },
+            cross_validation_failures: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  rule_violated: { type: "string" },
+                  items_involved: { type: "array", items: { type: "string" } },
+                  current_values: { type: "string" },
+                  expected_relationship: { type: "string" },
+                  narrative_evidence: { type: "string" },
+                  resolution: { type: "string" },
+                  pdgm_impact: { type: "string" },
+                  audit_risk: { type: "string" }
+                }
+              }
+            },
             underscoring_opportunities: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   oasis_item: { type: "string" },
-                  current_score: { type: "string" },
+                  current_implied_score: { type: "string" },
                   supported_score: { type: "string" },
+                  score_difference: { type: "string" },
                   narrative_evidence: { type: "string" },
-                  revenue_impact: { type: "string" }
+                  cms_scoring_definition: { type: "string" },
+                  cms_reference: { type: "string" },
+                  why_higher_score_applies: { type: "string" },
+                  revenue_impact: { type: "string" },
+                  functional_level_change: { type: "string" },
+                  documentation_enhancement: { type: "string" },
+                  example_compliant_language: { type: "string" }
                 }
               }
             },
@@ -1073,8 +1096,14 @@ Return JSON:
                   oasis_item: { type: "string" },
                   claimed_score: { type: "string" },
                   supported_score: { type: "string" },
+                  score_difference: { type: "string" },
+                  narrative_evidence: { type: "string" },
+                  cms_scoring_definition: { type: "string" },
+                  audit_vulnerability: { type: "object" },
                   audit_risk: { type: "string" },
-                  recommendation: { type: "string" }
+                  recommended_action: { type: "string" },
+                  if_keeping_score: { type: "string" },
+                  if_lowering_score: { type: "string" }
                 }
               }
             },
@@ -1084,9 +1113,13 @@ Return JSON:
                 type: "object",
                 properties: {
                   issue: { type: "string" },
-                  narrative_states: { type: "string" },
-                  conflicts_with: { type: "string" },
-                  resolution: { type: "string" }
+                  inconsistency_type: { type: "string" },
+                  location_1: { type: "string" },
+                  location_2: { type: "string" },
+                  oasis_items_affected: { type: "array", items: { type: "string" } },
+                  why_problematic: { type: "string" },
+                  resolution: { type: "string" },
+                  audit_risk: { type: "string" }
                 }
               }
             },
@@ -1098,7 +1131,13 @@ Return JSON:
                   oasis_item: { type: "string" },
                   current_language: { type: "string" },
                   problem: { type: "string" },
-                  improved_language: { type: "string" }
+                  cms_requirement: { type: "string" },
+                  defensibility_issue: { type: "string" },
+                  score_range_ambiguity: { type: "string" },
+                  improved_language: { type: "string" },
+                  key_elements_to_add: { type: "array", items: { type: "string" } },
+                  example_for_higher_score: { type: "string" },
+                  example_for_lower_score: { type: "string" }
                 }
               }
             },
