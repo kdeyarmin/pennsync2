@@ -855,45 +855,25 @@ Return JSON:
               </div>
             </div>
             <div className="flex gap-2 items-center">
-              {/* OASIS PDF Upload */}
-              <div className="relative">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleOasisFileUpload}
-                  className="hidden"
-                  id="oasis-pdf-upload"
-                  disabled={isUploadingOasis}
-                />
-                <label htmlFor="oasis-pdf-upload">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className={`cursor-pointer ${extractedOasisData ? 'border-green-500 bg-green-50' : ''}`}
-                    asChild
-                    disabled={isUploadingOasis}
-                  >
-                    <span>
-                      {isUploadingOasis ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Extracting...
-                        </>
-                      ) : extractedOasisData ? (
-                        <>
-                          <CheckCircle2 className="w-5 h-5 mr-2 text-green-600" />
-                          OASIS Loaded
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-5 h-5 mr-2" />
-                          Upload OASIS PDF
-                        </>
-                      )}
-                    </span>
-                  </Button>
-                </label>
-              </div>
+              {/* OASIS PDF Upload Button */}
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setShowUploader(!showUploader)}
+                className={extractedOasisData ? 'border-green-500 bg-green-50' : ''}
+              >
+                {extractedOasisData ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 mr-2 text-green-600" />
+                    OASIS Loaded
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5 mr-2" />
+                    Upload OASIS PDFs
+                  </>
+                )}
+              </Button>
               
               <Button
                 onClick={runOASISScrubber}
@@ -916,48 +896,27 @@ Return JSON:
             </div>
           </div>
 
-          {/* Show extracted OASIS data summary */}
-          {extractedOasisData && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span className="font-semibold text-blue-900 text-sm">Uploaded OASIS Data Detected</span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                {extractedOasisData.m0100_reason_for_assessment && (
-                  <div className="bg-white p-2 rounded border">
-                    <span className="text-gray-500">Assessment:</span>
-                    <span className="ml-1 font-medium">{extractedOasisData.m0100_reason_for_assessment}</span>
-                  </div>
-                )}
-                {extractedOasisData.clinical_record_items?.m1021_primary_diagnosis && (
-                  <div className="bg-white p-2 rounded border">
-                    <span className="text-gray-500">Primary Dx:</span>
-                    <span className="ml-1 font-medium truncate">{extractedOasisData.clinical_record_items.m1021_primary_diagnosis}</span>
-                  </div>
-                )}
-                {extractedOasisData.adl_iadl_status?.m1830_bathing && (
-                  <div className="bg-white p-2 rounded border">
-                    <span className="text-gray-500">M1830 Bathing:</span>
-                    <span className="ml-1 font-medium">{extractedOasisData.adl_iadl_status.m1830_bathing}</span>
-                  </div>
-                )}
-                {extractedOasisData.adl_iadl_status?.m1860_ambulation && (
-                  <div className="bg-white p-2 rounded border">
-                    <span className="text-gray-500">M1860 Ambulation:</span>
-                    <span className="ml-1 font-medium">{extractedOasisData.adl_iadl_status.m1860_ambulation}</span>
-                  </div>
-                )}
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="mt-2 text-xs text-blue-600"
-                onClick={() => setExtractedOasisData(null)}
-              >
-                Clear uploaded OASIS
-              </Button>
+          {/* OASIS PDF Uploader Component */}
+          {showUploader && (
+            <div className="mt-4">
+              <OASISPDFUploader
+                visitId={visit?.id}
+                patientId={patient?.id}
+                onDataExtracted={handleOasisDataExtracted}
+                initialData={extractedOasisData}
+              />
             </div>
+          )}
+
+          {/* Show extracted OASIS data summary (compact view when uploader is hidden) */}
+          {extractedOasisData && !showUploader && (
+            <OASISPDFUploader
+              visitId={visit?.id}
+              patientId={patient?.id}
+              onDataExtracted={handleOasisDataExtracted}
+              initialData={extractedOasisData}
+              compact={true}
+            />
           )}
 
           {!isOASISVisit && (
