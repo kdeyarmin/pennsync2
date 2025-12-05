@@ -56,6 +56,8 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [autoAnalyzed, setAutoAnalyzed] = useState(false);
   const [resolutionWorkflows, setResolutionWorkflows] = useState({});
   const [loadingResolution, setLoadingResolution] = useState(null);
+  const [financialPredictions, setFinancialPredictions] = useState({});
+  const [loadingPrediction, setLoadingPrediction] = useState(null);
 
   // Auto-analyze when data is available
   useEffect(() => {
@@ -276,6 +278,142 @@ Return JSON:
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
+  };
+
+  const getFinancialPrediction = async (item, index, type = 'discrepancy') => {
+    setLoadingPrediction(index);
+    
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a PDGM financial analyst. Predict the financial impact of this ${type} over a 1-year period.
+
+${type.toUpperCase()} DETAILS:
+${JSON.stringify(item, null, 2)}
+
+CURRENT REVENUE DATA:
+Base Payment: ${revenueData?.original?.totalPayment || navigation?.case_mix_calculation?.calculated_payment || 2031.64}
+Current Case-Mix: ${revenueData?.original?.caseMixWeight || navigation?.case_mix_calculation?.final_case_mix_weight || 1.0}
+
+AGENCY ASSUMPTIONS:
+- Average episodes per year: 50-60 similar cases
+- Current documentation pattern: likely to repeat
+- Industry average correction rate: 65% if addressed proactively
+
+Provide a detailed financial impact analysis:
+
+1. PER-EPISODE IMPACT
+   - Current state payment (if unaddressed)
+   - Corrected state payment (if addressed)
+   - Net gain per episode
+
+2. ANNUAL PROJECTION (1 YEAR)
+   - Assume 50 similar episodes/year (conservative)
+   - Total revenue if unaddressed
+   - Total revenue if corrected
+   - Total opportunity cost
+   - Cumulative impact over time
+
+3. RISK ANALYSIS
+   - Probability this issue repeats: %
+   - Audit risk if unaddressed
+   - Compliance exposure
+   - Downside scenarios
+
+4. PRIORITIZATION SCORE
+   - Financial urgency (1-10)
+   - Ease of correction (1-10)
+   - ROI potential (low/medium/high)
+   - Recommended action timeline
+
+5. BREAKEVEN ANALYSIS
+   - Time to implement correction
+   - Cost to implement (staff training, documentation updates)
+   - Breakeven point (# of episodes)
+   - Net benefit after 1 year
+
+Return JSON:
+{
+  "per_episode": {
+    "current_payment": 0,
+    "corrected_payment": 0,
+    "gain_per_episode": 0,
+    "percentage_increase": 0,
+    "explanation": "why this gap exists"
+  },
+  "annual_projection": {
+    "similar_episodes_per_year": 50,
+    "total_current_revenue": 0,
+    "total_corrected_revenue": 0,
+    "total_opportunity": 0,
+    "opportunity_if_50_percent_corrected": 0,
+    "cumulative_12_month": 0,
+    "monthly_impact": 0
+  },
+  "risk_analysis": {
+    "repetition_probability": 0,
+    "audit_risk_level": "low/medium/high/critical",
+    "compliance_exposure": "description",
+    "downside_scenario": "worst case if unaddressed",
+    "downside_amount": 0
+  },
+  "prioritization": {
+    "financial_urgency": 0,
+    "ease_of_correction": 0,
+    "roi_potential": "low/medium/high",
+    "priority_rank": "low/medium/high/critical",
+    "recommended_timeline": "immediate/this week/this month/this quarter",
+    "justification": "why this priority"
+  },
+  "breakeven": {
+    "implementation_time": "time estimate",
+    "implementation_cost": 0,
+    "episodes_to_breakeven": 0,
+    "time_to_breakeven": "time estimate",
+    "net_benefit_year_1": 0,
+    "roi_percentage": 0
+  },
+  "visual_summary": {
+    "icon": "💰/⚠️/🎯/📈",
+    "tagline": "one-sentence impact summary",
+    "color_code": "green/yellow/orange/red"
+  }
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            per_episode: { type: "object" },
+            annual_projection: { type: "object" },
+            risk_analysis: { type: "object" },
+            prioritization: { type: "object" },
+            breakeven: { type: "object" },
+            visual_summary: { type: "object" }
+          }
+        }
+      });
+
+      setFinancialPredictions(prev => ({
+        ...prev,
+        [index]: result
+      }));
+    } catch (err) {
+      console.error("Financial prediction error:", err);
+      setFinancialPredictions(prev => ({
+        ...prev,
+        [index]: { error: "Failed to generate financial prediction. Please try again." }
+      }));
+    }
+    
+    setLoadingPrediction(null);
+  };
+
+  const getPriorityColor = (priority) => {
+    const colors = {
+      critical: 'bg-red-600 text-white',
+      high: 'bg-orange-500 text-white',
+      medium: 'bg-yellow-500 text-white',
+      low: 'bg-blue-500 text-white'
+    };
+    return colors[priority] || colors.medium;
   };
 
   const getResolutionWorkflow = async (discrepancy, index) => {
@@ -840,21 +978,274 @@ Return JSON:
                           <strong>Action:</strong> {disc.recommendation}
                         </p>
                         
-                        <Button
-                          onClick={() => getResolutionWorkflow(disc, idx)}
-                          disabled={loadingResolution === idx}
-                          size="sm"
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                        >
-                          {loadingResolution === idx ? (
-                            <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Generating Resolution...</>
-                          ) : resolutionWorkflows[idx] ? (
-                            <><CheckCircle2 className="w-3 h-3 mr-2" /> View Resolution Workflow</>
-                          ) : (
-                            <><Target className="w-3 h-3 mr-2" /> Get Resolution Workflow</>
-                          )}
-                        </Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={() => getFinancialPrediction(disc, idx, 'discrepancy')}
+                            disabled={loadingPrediction === idx}
+                            size="sm"
+                            variant="outline"
+                            className="border-green-300 hover:bg-green-50"
+                          >
+                            {loadingPrediction === idx ? (
+                              <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Calculating...</>
+                            ) : financialPredictions[idx] ? (
+                              <><DollarSign className="w-3 h-3 mr-2" /> View Prediction</>
+                            ) : (
+                              <><DollarSign className="w-3 h-3 mr-2" /> Financial Impact</>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => getResolutionWorkflow(disc, idx)}
+                            disabled={loadingResolution === idx}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            {loadingResolution === idx ? (
+                              <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Loading...</>
+                            ) : resolutionWorkflows[idx] ? (
+                              <><CheckCircle2 className="w-3 h-3 mr-2" /> View Steps</>
+                            ) : (
+                              <><Target className="w-3 h-3 mr-2" /> Resolution</>
+                            )}
+                          </Button>
+                        </div>
                       </div>
+
+                      {/* Financial Prediction Details */}
+                      {financialPredictions[idx] && !financialPredictions[idx].error && (
+                        <div className="border-t border-red-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4 space-y-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">{financialPredictions[idx].visual_summary?.icon || '💰'}</span>
+                              <div>
+                                <h4 className="font-semibold text-gray-900">Financial Impact Prediction</h4>
+                                <p className="text-xs text-gray-600">{financialPredictions[idx].visual_summary?.tagline}</p>
+                              </div>
+                            </div>
+                            <Badge className={getPriorityColor(financialPredictions[idx].prioritization?.priority_rank || 'medium')}>
+                              {financialPredictions[idx].prioritization?.priority_rank?.toUpperCase()} PRIORITY
+                            </Badge>
+                          </div>
+
+                          {/* Per Episode Impact */}
+                          <div className="bg-white p-3 rounded-lg border-2 border-green-300">
+                            <p className="text-xs font-semibold text-gray-700 mb-2">Per Episode Impact</p>
+                            <div className="grid grid-cols-3 gap-2 mb-2">
+                              <div className="text-center p-2 bg-red-50 rounded">
+                                <p className="text-xs text-red-600">Current</p>
+                                <p className="text-lg font-bold text-red-700">
+                                  {formatCurrency(financialPredictions[idx].per_episode?.current_payment)}
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-center">
+                                <ArrowRight className="w-5 h-5 text-green-600" />
+                              </div>
+                              <div className="text-center p-2 bg-green-50 rounded">
+                                <p className="text-xs text-green-600">If Corrected</p>
+                                <p className="text-lg font-bold text-green-700">
+                                  {formatCurrency(financialPredictions[idx].per_episode?.corrected_payment)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-center bg-gradient-to-r from-green-100 to-emerald-100 p-2 rounded">
+                              <p className="text-xs text-green-700">Gain Per Episode</p>
+                              <p className="text-2xl font-bold text-green-800">
+                                +{formatCurrency(financialPredictions[idx].per_episode?.gain_per_episode)}
+                              </p>
+                              <p className="text-xs text-green-600">
+                                (+{financialPredictions[idx].per_episode?.percentage_increase}% increase)
+                              </p>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-2 italic">
+                              {financialPredictions[idx].per_episode?.explanation}
+                            </p>
+                          </div>
+
+                          {/* Annual Projection */}
+                          <div className="bg-white p-3 rounded-lg border-2 border-blue-300">
+                            <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                              <TrendingUp className="w-3 h-3" /> 1-Year Projection
+                            </p>
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="bg-gray-50 p-2 rounded">
+                                  <p className="text-gray-500">Similar Episodes/Year</p>
+                                  <p className="font-bold text-gray-800">
+                                    {financialPredictions[idx].annual_projection?.similar_episodes_per_year}
+                                  </p>
+                                </div>
+                                <div className="bg-gray-50 p-2 rounded">
+                                  <p className="text-gray-500">Monthly Impact</p>
+                                  <p className="font-bold text-blue-700">
+                                    {formatCurrency(financialPredictions[idx].annual_projection?.monthly_impact)}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-2 rounded border border-orange-200">
+                                <p className="text-xs text-orange-700 mb-1">⚠️ If Unaddressed (Current Path)</p>
+                                <p className="text-lg font-bold text-red-700">
+                                  {formatCurrency(financialPredictions[idx].annual_projection?.total_current_revenue)}
+                                </p>
+                              </div>
+
+                              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded border border-green-300">
+                                <p className="text-xs text-green-700 mb-1">✅ If Corrected (Optimized)</p>
+                                <p className="text-lg font-bold text-green-700">
+                                  {formatCurrency(financialPredictions[idx].annual_projection?.total_corrected_revenue)}
+                                </p>
+                              </div>
+
+                              <div className="bg-gradient-to-r from-purple-100 to-indigo-100 p-3 rounded border-2 border-purple-300">
+                                <p className="text-xs text-purple-700 mb-1">💎 Total Annual Opportunity</p>
+                                <p className="text-3xl font-bold text-purple-800">
+                                  {formatCurrency(financialPredictions[idx].annual_projection?.total_opportunity)}
+                                </p>
+                                <p className="text-xs text-purple-600 mt-1">
+                                  Even at 50% correction rate: {formatCurrency(financialPredictions[idx].annual_projection?.opportunity_if_50_percent_corrected)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Risk Analysis */}
+                          <div className="bg-white p-3 rounded-lg border border-orange-300">
+                            <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 text-orange-600" /> Risk if Unaddressed
+                            </p>
+                            <div className="space-y-2 text-xs">
+                              <div className="flex items-center justify-between p-2 bg-orange-50 rounded">
+                                <span className="text-gray-700">Repetition Probability</span>
+                                <Badge className="bg-orange-600 text-white">
+                                  {financialPredictions[idx].risk_analysis?.repetition_probability}%
+                                </Badge>
+                              </div>
+                              <div className="flex items-center justify-between p-2 bg-red-50 rounded">
+                                <span className="text-gray-700">Audit Risk Level</span>
+                                <Badge className={getSeverityBadge(financialPredictions[idx].risk_analysis?.audit_risk_level)}>
+                                  {financialPredictions[idx].risk_analysis?.audit_risk_level}
+                                </Badge>
+                              </div>
+                              <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+                                <p className="font-medium text-yellow-800 mb-1">Compliance Exposure</p>
+                                <p className="text-gray-700">{financialPredictions[idx].risk_analysis?.compliance_exposure}</p>
+                              </div>
+                              <div className="bg-red-50 p-2 rounded border border-red-300">
+                                <p className="font-medium text-red-800 mb-1">⚠️ Worst Case Scenario</p>
+                                <p className="text-gray-700">{financialPredictions[idx].risk_analysis?.downside_scenario}</p>
+                                <p className="text-red-700 font-bold mt-1">
+                                  Potential Loss: {formatCurrency(financialPredictions[idx].risk_analysis?.downside_amount)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Prioritization */}
+                          <div className="bg-white p-3 rounded-lg border-2 border-indigo-300">
+                            <p className="text-xs font-semibold text-gray-700 mb-2">Prioritization Analysis</p>
+                            <div className="grid grid-cols-3 gap-2 mb-2 text-center text-xs">
+                              <div className="bg-indigo-50 p-2 rounded">
+                                <p className="text-indigo-600 mb-1">Financial Urgency</p>
+                                <div className="flex items-center justify-center gap-0.5">
+                                  {[...Array(10)].map((_, i) => (
+                                    <div
+                                      key={i}
+                                      className={`w-2 h-4 rounded-sm ${
+                                        i < financialPredictions[idx].prioritization?.financial_urgency
+                                          ? 'bg-indigo-600'
+                                          : 'bg-gray-200'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className="font-bold text-indigo-800 mt-1">
+                                  {financialPredictions[idx].prioritization?.financial_urgency}/10
+                                </p>
+                              </div>
+                              <div className="bg-green-50 p-2 rounded">
+                                <p className="text-green-600 mb-1">Ease of Fix</p>
+                                <div className="flex items-center justify-center gap-0.5">
+                                  {[...Array(10)].map((_, i) => (
+                                    <div
+                                      key={i}
+                                      className={`w-2 h-4 rounded-sm ${
+                                        i < financialPredictions[idx].prioritization?.ease_of_correction
+                                          ? 'bg-green-600'
+                                          : 'bg-gray-200'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className="font-bold text-green-800 mt-1">
+                                  {financialPredictions[idx].prioritization?.ease_of_correction}/10
+                                </p>
+                              </div>
+                              <div className="bg-purple-50 p-2 rounded">
+                                <p className="text-purple-600 mb-1">ROI Potential</p>
+                                <p className="text-2xl font-bold text-purple-800 uppercase">
+                                  {financialPredictions[idx].prioritization?.roi_potential}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 rounded border border-indigo-200">
+                              <p className="text-xs text-indigo-700 font-medium mb-1">
+                                🎯 Recommended Timeline: <span className="uppercase">{financialPredictions[idx].prioritization?.recommended_timeline}</span>
+                              </p>
+                              <p className="text-xs text-gray-700">{financialPredictions[idx].prioritization?.justification}</p>
+                            </div>
+                          </div>
+
+                          {/* Breakeven Analysis */}
+                          <div className="bg-white p-3 rounded-lg border border-gray-300">
+                            <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                              <Calculator className="w-3 h-3" /> Breakeven Analysis
+                            </p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="bg-gray-50 p-2 rounded">
+                                <p className="text-gray-500">Implementation Time</p>
+                                <p className="font-medium text-gray-800">
+                                  {financialPredictions[idx].breakeven?.implementation_time}
+                                </p>
+                              </div>
+                              <div className="bg-gray-50 p-2 rounded">
+                                <p className="text-gray-500">Implementation Cost</p>
+                                <p className="font-medium text-gray-800">
+                                  {formatCurrency(financialPredictions[idx].breakeven?.implementation_cost)}
+                                </p>
+                              </div>
+                              <div className="bg-blue-50 p-2 rounded">
+                                <p className="text-blue-600">Episodes to Breakeven</p>
+                                <p className="font-bold text-blue-800">
+                                  {financialPredictions[idx].breakeven?.episodes_to_breakeven} episodes
+                                </p>
+                              </div>
+                              <div className="bg-blue-50 p-2 rounded">
+                                <p className="text-blue-600">Time to Breakeven</p>
+                                <p className="font-bold text-blue-800">
+                                  {financialPredictions[idx].breakeven?.time_to_breakeven}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-2 bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded border border-green-300">
+                              <p className="text-xs text-green-700 mb-1">Year 1 Net Benefit</p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-2xl font-bold text-green-800">
+                                  {formatCurrency(financialPredictions[idx].breakeven?.net_benefit_year_1)}
+                                </p>
+                                <Badge className="bg-green-600 text-white text-lg">
+                                  {financialPredictions[idx].breakeven?.roi_percentage}% ROI
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {financialPredictions[idx]?.error && (
+                        <div className="border-t border-red-200 bg-red-50 p-3">
+                          <p className="text-xs text-red-800">{financialPredictions[idx].error}</p>
+                        </div>
+                      )}
 
                       {/* Resolution Workflow Details */}
                       {resolutionWorkflows[idx] && !resolutionWorkflows[idx].error && (
@@ -1003,24 +1394,83 @@ Return JSON:
                   Optimization Opportunities
                 </h3>
                 <div className="space-y-2">
-                  {navigation.optimization_opportunities.map((opp, idx) => (
-                    <div key={idx} className="bg-white p-3 rounded border border-green-200">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-green-900">{opp.area}</span>
-                        <Badge className="bg-green-600 text-white">{opp.potential_impact}</Badge>
+                  {navigation.optimization_opportunities.map((opp, idx) => {
+                    const oppIndex = `opp_${idx}`;
+                    return (
+                      <div key={idx} className="bg-white p-3 rounded border border-green-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium text-green-900">{opp.area}</span>
+                          <Badge className="bg-green-600 text-white">{opp.potential_impact}</Badge>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-1">Current: {opp.current_state}</p>
+                        <p className="text-sm text-green-800 mb-1">{opp.opportunity}</p>
+                        <div className="bg-blue-50 p-2 rounded text-xs mb-2">
+                          <strong>Action:</strong> {opp.action_required}
+                        </div>
+                        {opp.clinical_justification_needed && (
+                          <p className="text-xs text-gray-500 mb-2 italic">
+                            Requires: {opp.clinical_justification_needed}
+                          </p>
+                        )}
+                        
+                        <Button
+                          onClick={() => getFinancialPrediction(opp, oppIndex, 'opportunity')}
+                          disabled={loadingPrediction === oppIndex}
+                          size="sm"
+                          variant="outline"
+                          className="w-full border-green-300 hover:bg-green-50"
+                        >
+                          {loadingPrediction === oppIndex ? (
+                            <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Calculating...</>
+                          ) : financialPredictions[oppIndex] ? (
+                            <><DollarSign className="w-3 h-3 mr-2" /> View Financial Impact</>
+                          ) : (
+                            <><DollarSign className="w-3 h-3 mr-2" /> Predict Financial Impact</>
+                          )}
+                        </Button>
+
+                        {/* Financial Prediction for Opportunity */}
+                        {financialPredictions[oppIndex] && !financialPredictions[oppIndex].error && (
+                          <div className="mt-3 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded border-2 border-green-300 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xl">{financialPredictions[oppIndex].visual_summary?.icon}</span>
+                              <Badge className={getPriorityColor(financialPredictions[oppIndex].prioritization?.priority_rank || 'medium')}>
+                                {financialPredictions[oppIndex].prioritization?.priority_rank?.toUpperCase()}
+                              </Badge>
+                            </div>
+                            <p className="text-xs font-semibold text-green-800">
+                              {financialPredictions[oppIndex].visual_summary?.tagline}
+                            </p>
+                            
+                            <div className="bg-white p-2 rounded text-center">
+                              <p className="text-xs text-gray-500">Annual Opportunity</p>
+                              <p className="text-2xl font-bold text-green-700">
+                                {formatCurrency(financialPredictions[oppIndex].annual_projection?.total_opportunity)}
+                              </p>
+                              <p className="text-xs text-green-600">
+                                +{formatCurrency(financialPredictions[oppIndex].per_episode?.gain_per_episode)} per episode
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="bg-indigo-50 p-2 rounded text-center">
+                                <p className="text-indigo-600">Priority</p>
+                                <p className="font-bold text-indigo-800 uppercase">
+                                  {financialPredictions[oppIndex].prioritization?.recommended_timeline}
+                                </p>
+                              </div>
+                              <div className="bg-purple-50 p-2 rounded text-center">
+                                <p className="text-purple-600">ROI</p>
+                                <p className="font-bold text-purple-800">
+                                  {financialPredictions[oppIndex].breakeven?.roi_percentage}%
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">Current: {opp.current_state}</p>
-                      <p className="text-sm text-green-800 mb-1">{opp.opportunity}</p>
-                      <div className="bg-blue-50 p-2 rounded text-xs">
-                        <strong>Action:</strong> {opp.action_required}
-                      </div>
-                      {opp.clinical_justification_needed && (
-                        <p className="text-xs text-gray-500 mt-1 italic">
-                          Requires: {opp.clinical_justification_needed}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
