@@ -28,9 +28,20 @@ import {
   Download,
   FileDown,
   FolderArchive,
-  Workflow
+  Workflow,
+  Save,
+  User,
+  History
 } from "lucide-react";
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
 import PDGMMultiReportComparison from "../components/oasis/PDGMMultiReportComparison";
@@ -55,14 +66,56 @@ export default function OASISAnalyzer() {
   const [analysisId, setAnalysisId] = useState(null);
   const [originalPayment, setOriginalPayment] = useState(null);
   const [patientName, setPatientName] = useState("");
+  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedToPatient, setSavedToPatient] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  // Fetch patients for linking
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.list(),
+  });
+
+  // Fetch saved OASIS uploads
+  const { data: savedOASISUploads = [] } = useQuery({
+    queryKey: ['oasisUploads'],
+    queryFn: () => base44.entities.OASISUpload.list('-created_date', 50),
+  });
+
+  // Save OASIS mutation
+  const saveOASISMutation = useMutation({
+    mutationFn: (data) => base44.entities.OASISUpload.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['oasisUploads'] });
+      setSavedToPatient(true);
+    },
+  });
 
   // Generate unique analysis ID when new analysis starts
   useEffect(() => {
     if (analysisResults && !analysisId) {
-      setAnalysisId(`analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-      setPatientName(analysisResults.pdgm_data?.patient_info?.name || "Unknown Patient");
+      const newAnalysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setAnalysisId(newAnalysisId);
+      const extractedName = analysisResults.pdgm_data?.patient_info?.name || "Unknown Patient";
+      setPatientName(extractedName);
+      setSavedToPatient(false);
+      
+      // Try to auto-match patient by name
+      if (extractedName && extractedName !== "Unknown Patient" && patients.length > 0) {
+        const matchedPatient = patients.find(p => {
+          const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+          return fullName.includes(extractedName.toLowerCase()) || 
+                 extractedName.toLowerCase().includes(fullName);
+        });
+        if (matchedPatient) {
+          setSelectedPatientId(matchedPatient.id);
+        }
+      }
     }
-  }, [analysisResults]);
+  }, [analysisResults, patients]);
 
   // Handle viewing batch result in single analysis view
   const handleViewBatchResult = (result) => {
@@ -85,10 +138,62 @@ export default function OASISAnalyzer() {
       setFile(selectedFile);
       setError(null);
       setAnalysisResults(null);
+      setAnalysisId(null);
+      setSavedToPatient(false);
+      setUploadedFileUrl(null);
     } else {
       setError("Please select a valid PDF file.");
       setFile(null);
     }
+  };
+
+  // Save OASIS to patient record
+  const handleSaveToPatient = async () => {
+    if (!analysisResults || !uploadedFileUrl) return;
+    
+    setIsSaving(true);
+    try {
+      const selectedPatient = patients.find(p => p.id === selectedPatientId);
+      
+      await saveOASISMutation.mutateAsync({
+        patient_id: selectedPatientId || null,
+        patient_name: selectedPatient 
+          ? `${selectedPatient.first_name} ${selectedPatient.last_name}`
+          : patientName,
+        file_url: uploadedFileUrl,
+        file_name: file?.name || 'OASIS Document',
+        assessment_date: analysisResults.pdgm_data?.patient_info?.assessment_date || new Date().toISOString().split('T')[0],
+        assessment_type: analysisResults.pdgm_data?.patient_info?.assessment_type || 'Other',
+        analysis_id: analysisId,
+        pdgm_data: pdgmData,
+        analysis_results: analysisResults,
+        scores: {
+          overall: analysisResults.overall_score,
+          accuracy: analysisResults.accuracy_score,
+          compliance: analysisResults.compliance_score,
+          revenue_optimization: analysisResults.revenue_optimization_score
+        },
+        estimated_payment: originalPayment,
+        status: 'analyzed'
+      });
+    } catch (err) {
+      console.error("Error saving OASIS:", err);
+      setError("Failed to save OASIS to patient record.");
+    }
+    setIsSaving(false);
+  };
+
+  // Load saved OASIS for viewing
+  const handleLoadSavedOASIS = (oasisUpload) => {
+    setAnalysisResults(oasisUpload.analysis_results);
+    setPdgmData(oasisUpload.pdgm_data);
+    setAnalysisId(oasisUpload.analysis_id);
+    setPatientName(oasisUpload.patient_name);
+    setSelectedPatientId(oasisUpload.patient_id || '');
+    setOriginalPayment(oasisUpload.estimated_payment);
+    setUploadedFileUrl(oasisUpload.file_url);
+    setSavedToPatient(true);
+    setActiveTab("single");
   };
 
   const handleUploadAndAnalyze = async () => {
@@ -101,6 +206,7 @@ export default function OASISAnalyzer() {
     try {
       // Upload the file
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setUploadedFileUrl(file_url);
       setUploadProgress(40);
 
       // Enhanced multi-pass extraction for OASIS PDFs (handles text-based, scanned, and image PDFs)
@@ -961,7 +1067,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="single" className="gap-2">
             <FileText className="w-4 h-4" />
             Single Document
@@ -970,7 +1076,68 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             <FolderArchive className="w-4 h-4" />
             Batch Analysis
           </TabsTrigger>
+          <TabsTrigger value="saved" className="gap-2">
+            <History className="w-4 h-4" />
+            Saved ({savedOASISUploads.length})
+          </TabsTrigger>
         </TabsList>
+
+        {/* Saved OASIS Tab */}
+        <TabsContent value="saved" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <History className="w-5 h-5 text-blue-600" />
+                Saved OASIS Analyses
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {savedOASISUploads.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">
+                  No saved OASIS analyses yet. Upload and analyze a document, then save it to a patient.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {savedOASISUploads.map((oasis) => (
+                    <div 
+                      key={oasis.id} 
+                      className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => handleLoadSavedOASIS(oasis)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-8 h-8 text-blue-500" />
+                          <div>
+                            <p className="font-medium">{oasis.patient_name || 'Unknown Patient'}</p>
+                            <p className="text-sm text-gray-500">
+                              {oasis.assessment_type} - {oasis.assessment_date || 'No date'}
+                            </p>
+                            <p className="text-xs text-gray-400">{oasis.file_name}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex gap-2">
+                            <Badge className={oasis.scores?.overall >= 80 ? 'bg-green-100 text-green-800' : oasis.scores?.overall >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
+                              Score: {oasis.scores?.overall || 'N/A'}%
+                            </Badge>
+                            {oasis.estimated_payment && (
+                              <Badge variant="outline">
+                                ${oasis.estimated_payment?.toLocaleString()}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(oasis.created_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="batch" className="mt-4">
           <BatchOASISAnalyzer onSingleAnalysis={handleViewBatchResult} onBatchComplete={handleBatchComplete} />
@@ -1053,6 +1220,54 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       {/* Analysis Results */}
       {analysisResults && (
         <div className="space-y-6">
+          {/* Save to Patient Card */}
+          <Card className="border-2 border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <User className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Link to Patient Record</p>
+                    <p className="text-xs text-gray-500">Save this OASIS analysis for future comparison</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <Select value={selectedPatientId || "none"} onValueChange={(v) => setSelectedPatientId(v === "none" ? "" : v)}>
+                    <SelectTrigger className="w-full sm:w-[200px] bg-white">
+                      <SelectValue placeholder="Select patient..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No patient (save standalone)</SelectItem>
+                      {patients.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.first_name} {p.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleSaveToPatient}
+                    disabled={isSaving || savedToPatient || !uploadedFileUrl}
+                    className={savedToPatient ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}
+                  >
+                    {isSaving ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                    ) : savedToPatient ? (
+                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Saved</>
+                    ) : (
+                      <><Save className="w-4 h-4 mr-2" /> Save OASIS</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              {patientName && patientName !== "Unknown Patient" && (
+                <p className="text-xs text-blue-700 mt-2">
+                  Detected patient name from document: <strong>{patientName}</strong>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Key Takeaways Summary - Most Important */}
           <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
 
