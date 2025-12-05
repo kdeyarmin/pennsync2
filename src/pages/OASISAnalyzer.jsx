@@ -340,12 +340,22 @@ export default function OASISAnalyzer() {
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Combined analysis - single LLM call to avoid timeout
+      // Combined analysis with pre-extracted structured data
       const analysisResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this OASIS document. Extract PDGM data and identify issues.
+        prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly.
 
-OASIS:
+PRE-EXTRACTED STRUCTURED DATA:
+${JSON.stringify(structuredPdgmData, null, 2)}
+
+FULL OASIS DOCUMENT CONTENT:
 ${truncatedContent}
+
+ANALYSIS INSTRUCTIONS:
+1. Verify the pre-extracted data against the full document content
+2. Identify any missing or incorrectly extracted OASIS items
+3. Check for internal consistency (e.g., functional scores should match narrative descriptions)
+4. Identify PDGM revenue optimization opportunities
+5. Flag compliance concerns and audit risks
 
 Return JSON:
 {
@@ -353,10 +363,11 @@ Return JSON:
   "accuracy_score": 0-100,
   "compliance_score": 0-100,
   "revenue_optimization_score": 0-100,
-  "summary": "brief summary",
+  "summary": "comprehensive summary of findings",
   "pdgm_data": {
-    "primary_diagnosis": "diagnosis",
-    "comorbidities": ["list"],
+    "primary_diagnosis": "exact diagnosis from document",
+    "primary_diagnosis_code": "ICD-10 code if found",
+    "comorbidities": ["all secondary diagnoses found"],
     "admission_source": "community or institutional",
     "episode_timing": "early or late",
     "functional_scores": {
@@ -367,15 +378,24 @@ Return JSON:
       "m1840_toilet_transfer": 0-4,
       "m1850_transferring": 0-5,
       "m1860_ambulation": 0-6
+    },
+    "gg_scores": {
+      "self_care_admission": "score or null",
+      "mobility_admission": "score or null"
     }
   },
-  "accuracy_issues": [{"item": "M-item", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix"}],
-  "compliance_concerns": [{"area": "area", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix"}],
-  "revenue_tips": [{"category": "Functional Status/Diagnosis/Therapy/Other", "current_documentation": "current", "opportunity": "improvement", "potential_impact": "high/medium/low", "specific_action": "action"}],
+  "extracted_items": {
+    "items_found": ["list of M-items successfully extracted"],
+    "items_missing": ["list of expected M-items not found"],
+    "extraction_confidence": "high/medium/low"
+  },
+  "accuracy_issues": [{"item": "M-item code", "issue": "specific issue description", "severity": "high/medium/low", "recommendation": "specific fix", "document_evidence": "quote from document"}],
+  "compliance_concerns": [{"area": "area", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix", "cms_reference": "regulation reference"}],
+  "revenue_tips": [{"category": "Functional Status/Diagnosis/Therapy/Comorbidity/Other", "current_documentation": "what document shows", "opportunity": "improvement opportunity", "potential_impact": "high/medium/low", "specific_action": "exact action to take", "estimated_revenue_impact": "$X per episode"}],
   "documentation_improvements": [{"item": "item", "current_state": "current", "improved_state": "improved", "rationale": "why"}],
   "audit_risk_areas": [{"area": "area", "risk_level": "high/medium/low", "explanation": "why", "mitigation": "fix"}],
-  "strengths": ["list"],
-  "key_recommendations": ["top 5"]
+  "strengths": ["list of well-documented areas"],
+  "key_recommendations": ["top 5 prioritized recommendations"]
 }`,
         response_json_schema: {
           type: "object",
