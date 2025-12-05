@@ -17,9 +17,11 @@ import {
   Play,
   FolderArchive,
   AlertTriangle,
-  BarChart3
+  BarChart3,
+  GitCompare
 } from "lucide-react";
 import { processOASISBatch } from "@/functions/processOASISBatch";
+import OASISComparisonView from "./OASISComparisonView";
 
 export default function BatchOASISAnalyzer({ onSingleAnalysis }) {
   const [files, setFiles] = useState([]);
@@ -29,6 +31,7 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis }) {
   const [batchResults, setBatchResults] = useState(null);
   const [overallProgress, setOverallProgress] = useState(0);
   const [error, setError] = useState(null);
+  const [showComparison, setShowComparison] = useState(false);
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files).filter(
@@ -329,20 +332,41 @@ export default function BatchOASISAnalyzer({ onSingleAnalysis }) {
           <Alert className={successCount > 0 ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}>
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <AlertDescription>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <span>
                   <strong>{successCount}</strong> document{successCount !== 1 ? 's' : ''} analyzed successfully
                   {errorCount > 0 && <span className="text-red-600 ml-2">• {errorCount} failed</span>}
                 </span>
-                {successCount > 0 && (
-                  <Button size="sm" onClick={downloadAllReports} className="bg-green-600 hover:bg-green-700">
-                    <Download className="w-4 h-4 mr-1" />
-                    Download All (ZIP)
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {successCount >= 2 && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setShowComparison(!showComparison)} 
+                      className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                    >
+                      <GitCompare className="w-4 h-4 mr-1" />
+                      {showComparison ? 'Hide' : 'Compare'}
+                    </Button>
+                  )}
+                  {successCount > 0 && (
+                    <Button size="sm" onClick={downloadAllReports} className="bg-green-600 hover:bg-green-700">
+                      <Download className="w-4 h-4 mr-1" />
+                      Download All (ZIP)
+                    </Button>
+                  )}
+                </div>
               </div>
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Comparison View */}
+        {showComparison && successCount >= 2 && (
+          <OASISComparisonView 
+            availableReports={files.filter(f => f.status === 'success')}
+            onClose={() => setShowComparison(false)}
+          />
         )}
 
         {/* Error */}
