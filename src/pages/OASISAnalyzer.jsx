@@ -1444,6 +1444,12 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
 
           {/* AI-Enhanced Insights Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* OASIS Validation Panel */}
+            <OASISValidationPanel 
+              pdgmData={pdgmData} 
+              analysisResults={analysisResults}
+            />
+
             {/* Audit Risk Predictor */}
             <AuditRiskPredictor analysisResults={analysisResults} />
             
