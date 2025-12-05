@@ -66,6 +66,8 @@ import AIRiskAndGapDetector from "../components/smartNote/AIRiskAndGapDetector";
 import AIGrammarTerminologyCorrector from "../components/smartNote/AIGrammarTerminologyCorrector";
 import OASISDataSync from "../components/smartNote/OASISDataSync";
 import OASISIntegratedClinicalSupport from "../components/smartNote/OASISIntegratedClinicalSupport";
+import OASISTriggeredTemplates from "../components/smartNote/OASISTriggeredTemplates";
+import OASISItemLinker from "../components/smartNote/OASISItemLinker";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -259,6 +261,7 @@ export default function SmartNoteAssistant() {
   const [dismissedElementNames, setDismissedElementNames] = useState([]);
   const [showPracticeScenarios, setShowPracticeScenarios] = useState(false);
   const [complianceIssues, setComplianceIssues] = useState([]);
+  const [oasisLinkedItems, setOasisLinkedItems] = useState([]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -550,6 +553,11 @@ Return JSON:
             }}
             currentDiagnosis={finalDiagnosis}
             currentVitalSigns={vitalSigns}
+          />
+          {/* OASIS-Triggered Templates */}
+          <OASISTriggeredTemplates
+            patientId={selectedPatientId}
+            onInsertTemplate={(template) => setRoughNote(prev => prev + '\n\n' + template)}
           />
         </>
       )}
@@ -976,6 +984,14 @@ Return JSON:
                               }
                             }}
                           />
+
+          {/* OASIS Item Linker */}
+          <OASISItemLinker
+            linkedItems={oasisLinkedItems}
+            onAddLink={(link) => setOasisLinkedItems(prev => [...prev, link])}
+            onRemoveLink={(idx) => setOasisLinkedItems(prev => prev.filter((_, i) => i !== idx))}
+            selectedText=""
+          />
 
           {/* Learning Dashboard - Compact View */}
           <LearningDashboard
