@@ -506,13 +506,25 @@ Return JSON:
       />
 
       {selectedPatient && (
-        <PatientContextCard
-          patient={selectedPatient}
-          carePlans={carePlans}
-          recentVisit={recentVisits[0]}
-          vitalSigns={vitalSigns}
-          onClear={() => setSelectedPatientId("")}
-        />
+        <>
+          <PatientContextCard
+            patient={selectedPatient}
+            carePlans={carePlans}
+            recentVisit={recentVisits[0]}
+            vitalSigns={vitalSigns}
+            onClear={() => setSelectedPatientId("")}
+          />
+          {/* AI Patient History Summarizer */}
+          <AIPatientHistorySummarizer
+            patientId={selectedPatientId}
+            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+            diagnosis={finalDiagnosis || selectedPatient.primary_diagnosis}
+            previousVisits={recentVisits}
+            carePlans={carePlans}
+            onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
+            compact={false}
+          />
+        </>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
