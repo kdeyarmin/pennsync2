@@ -36,8 +36,33 @@ import {
   MessageSquare,
   Upload,
   FileText,
-  Loader2
+  Loader2,
+  Download,
+  Copy,
+  Eye,
+  EyeOff,
+  Filter,
+  BarChart3,
+  Activity,
+  Heart,
+  Thermometer,
+  Wind,
+  Pill,
+  Brain,
+  Footprints,
+  Hand,
+  Utensils,
+  Stethoscope
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { logSecurityEvent } from "../utils/security";
 import OASISFeedbackPanel from "../oasis/OASISFeedbackPanel";
 import CMSComplianceReference from "../oasis/CMSComplianceReference";
