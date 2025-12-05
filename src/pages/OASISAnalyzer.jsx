@@ -54,6 +54,7 @@ import OASISActionWorkflow from "../components/oasis/OASISActionWorkflow";
 import AIDocumentationQualityAnalyzer from "../components/oasis/AIDocumentationQualityAnalyzer";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
 import SmartNoteDataImport from "../components/oasis/SmartNoteDataImport";
+import { useAutoFlagOASIS, THRESHOLDS } from "../components/oasis/OASISAutoFlagger";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -95,6 +96,9 @@ export default function OASISAnalyzer() {
       setSavedToPatient(true);
     },
   });
+
+  // Auto-flag mutation for audit workflow
+  const autoFlagMutation = useAutoFlagOASIS();
 
   // Generate unique analysis ID when new analysis starts
   useEffect(() => {
@@ -156,12 +160,13 @@ export default function OASISAnalyzer() {
     setIsSaving(true);
     try {
       const selectedPatient = patients.find(p => p.id === selectedPatientId);
+      const patientFullName = selectedPatient 
+        ? `${selectedPatient.first_name} ${selectedPatient.last_name}`
+        : patientName;
       
-      await saveOASISMutation.mutateAsync({
+      const savedOASIS = await saveOASISMutation.mutateAsync({
         patient_id: selectedPatientId || null,
-        patient_name: selectedPatient 
-          ? `${selectedPatient.first_name} ${selectedPatient.last_name}`
-          : patientName,
+        patient_name: patientFullName,
         file_url: uploadedFileUrl,
         file_name: file?.name || 'OASIS Document',
         assessment_date: analysisResults.pdgm_data?.patient_info?.assessment_date || new Date().toISOString().split('T')[0],
@@ -178,6 +183,18 @@ export default function OASISAnalyzer() {
         estimated_payment: originalPayment,
         status: 'analyzed'
       });
+
+      // Auto-flag for audit if below thresholds
+      if (savedOASIS) {
+        autoFlagMutation.mutate({
+          oasisUpload: { 
+            ...savedOASIS, 
+            patient_name: patientFullName,
+            patient_id: selectedPatientId 
+          },
+          analysisResults: analysisResults
+        });
+      }
     } catch (err) {
       console.error("Error saving OASIS:", err);
       setError("Failed to save OASIS to patient record.");
@@ -604,6 +621,17 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
 
       setUploadProgress(100);
       setAnalysisResults(analysisResult);
+
+      // Auto-flag for audit if scores below threshold
+      const shouldFlag = 
+        (analysisResult.accuracy_score < THRESHOLDS.accuracy) ||
+        (analysisResult.compliance_score < THRESHOLDS.compliance) ||
+        (analysisResult.overall_score < THRESHOLDS.overall);
+
+      if (shouldFlag && uploadedFileUrl) {
+        // Will be flagged when saved to patient
+        console.log("OASIS flagged for audit review - scores below threshold");
+      }
       
       // Use pre-extracted structured data merged with AI analysis for PDGM calculation
       const finalPdgmData = {
