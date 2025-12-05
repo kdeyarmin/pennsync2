@@ -125,39 +125,83 @@ export default function OASISAnalyzer() {
         setPatientName(extractedName);
       setSavedToPatient(false);
       
-      // Try to auto-match patient by name with fuzzy matching
+      // Enhanced auto-match patient by name with improved fuzzy matching
       if (extractedName && extractedName !== "Unknown Patient" && extractedName !== "Unknown Patient - Verify Document" && patients.length > 0) {
         const extractedNameClean = extractedName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
-        const nameParts = extractedNameClean.split(/\s+/);
+        const nameParts = extractedNameClean.split(/\s+/).filter(p => p.length > 1);
         
-        const matchedPatient = patients.find(p => {
+        // Try multiple matching strategies
+        let matchedPatient = null;
+        let matchScore = 0;
+        
+        patients.forEach(p => {
           const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
           const firstName = (p.first_name || '').toLowerCase();
           const lastName = (p.last_name || '').toLowerCase();
+          let currentScore = 0;
           
-          // Exact match
-          if (fullName === extractedNameClean) return true;
-          
-          // Both first and last name present
-          if (nameParts.length >= 2) {
-            const hasFirstName = nameParts.some(part => firstName.includes(part) || part.includes(firstName));
-            const hasLastName = nameParts.some(part => lastName.includes(part) || part.includes(lastName));
-            if (hasFirstName && hasLastName) return true;
+          // Strategy 1: Exact full name match (highest priority)
+          if (fullName === extractedNameClean || extractedNameClean === fullName) {
+            currentScore = 100;
           }
           
-          // Contains full name
-          if (fullName.includes(extractedNameClean) || extractedNameClean.includes(fullName)) {
-            return true;
+          // Strategy 2: Handle "LastName, FirstName" format
+          else if (extractedName.includes(',')) {
+            const [lastPart, firstPart] = extractedName.split(',').map(s => s.trim().toLowerCase());
+            if (lastPart === lastName && firstPart.startsWith(firstName)) {
+              currentScore = 95;
+            }
           }
           
-          return false;
+          // Strategy 3: Both first and last name match (high confidence)
+          else if (nameParts.length >= 2) {
+            const firstNameMatch = nameParts.some(part => 
+              part === firstName || firstName === part || 
+              firstName.startsWith(part) || part.startsWith(firstName)
+            );
+            const lastNameMatch = nameParts.some(part => 
+              part === lastName || lastName === part ||
+              lastName.startsWith(part) || part.startsWith(lastName)
+            );
+            
+            if (firstNameMatch && lastNameMatch) {
+              // Check for exact matches vs partial
+              const exactFirst = nameParts.includes(firstName);
+              const exactLast = nameParts.includes(lastName);
+              currentScore = (exactFirst && exactLast) ? 90 : 80;
+            }
+          }
+          
+          // Strategy 4: Last name match with first initial (medium confidence)
+          else if (nameParts.length >= 2) {
+            const possibleLastName = nameParts[nameParts.length - 1];
+            const possibleFirstName = nameParts[0];
+            if (possibleLastName === lastName && possibleFirstName.startsWith(firstName.charAt(0))) {
+              currentScore = 70;
+            }
+          }
+          
+          // Strategy 5: Contains match (lower confidence)
+          else if (extractedNameClean.includes(fullName) || fullName.includes(extractedNameClean)) {
+            currentScore = 60;
+          }
+          
+          // Select best match
+          if (currentScore > matchScore) {
+            matchScore = currentScore;
+            matchedPatient = p;
+          }
         });
         
-        if (matchedPatient) {
+        // Only auto-select if confidence is high enough (>= 70%)
+        if (matchedPatient && matchScore >= 70) {
           setSelectedPatientId(matchedPatient.id);
-          console.log('Auto-matched patient:', matchedPatient.first_name, matchedPatient.last_name);
+          console.log(`Auto-matched patient with ${matchScore}% confidence:`, matchedPatient.first_name, matchedPatient.last_name);
+        } else if (matchedPatient && matchScore >= 50) {
+          // Lower confidence - don't auto-select but log suggestion
+          console.log(`Possible patient match (${matchScore}% confidence):`, matchedPatient.first_name, matchedPatient.last_name, '- not auto-selected due to low confidence');
         } else {
-          console.log('No patient match found for:', extractedName);
+          console.log('No confident patient match found for:', extractedName, '- Extracted parts:', nameParts);
         }
       }
     }
@@ -297,7 +341,9 @@ export default function OASISAnalyzer() {
               type: "object",
               properties: {
             // Patient demographics - LOOK AT THE TOP OF THE DOCUMENT
-            patient_name: { type: "string", description: "PATIENT FULL NAME - CRITICAL! This is typically at the VERY TOP of the OASIS form. Look in these locations IN ORDER: 1) Form header section (top 1/4 of page 1), 2) 'Patient Name:' or 'Patient:' or 'Name:' field, 3) Demographics section, 4) Near 'M0080' or 'M0065' items, 5) Before diagnosis section. Extract EXACTLY as written - usually 'FirstName LastName' or 'LastName, FirstName'. If you find ANY name that looks like a patient name in the first page header, extract it here. DO NOT leave this blank - it's essential for matching." },
+            patient_name_raw: { type: "string", description: "PATIENT FULL NAME - ABSOLUTELY CRITICAL FOR RECORD MATCHING! Search the ENTIRE FIRST PAGE top to bottom. Look for: 1) Header/title area (very top), 2) Fields labeled: 'Patient Name:', 'Patient:', 'Name:', 'Pt Name:', 'Client:', 3) Near 'M0080' (Patient ID) or 'M0065' (Medicaid Number), 4) Demographics box/section, 5) Before ICD-10 codes/diagnoses. FORMATS to recognize: 'Smith, John', 'John Smith', 'SMITH JOHN', 'Smith John A', 'John A Smith'. Extract EXACTLY as it appears - do NOT skip middle initials. If MULTIPLE names appear, choose the one that is NOT labeled as 'Physician' or 'Agency'. ALWAYS extract something even if uncertain - extraction is better than nothing." },
+            patient_first_name: { type: "string", description: "Patient's FIRST NAME only - separate field for matching. Look for 'First Name:', 'Given Name:' or extract from full name." },
+            patient_last_name: { type: "string", description: "Patient's LAST NAME only - separate field for matching. Look for 'Last Name:', 'Surname:' or extract from full name." },
             patient_dob: { type: "string", description: "Date of birth - look for 'DOB:', 'Date of Birth:', birth date field. Format MM/DD/YYYY or any date format found." },
             patient_gender: { type: "string", description: "Gender - M, F, Male, Female. Look for 'Gender:', 'Sex:' checkbox or field." },
             medicare_number: { type: "string", description: "Medicare number or ID - look for 'Medicare:', 'Medicare #:', 'ID:' near top of form." },
@@ -415,7 +461,25 @@ export default function OASISAnalyzer() {
         const primaryDxDesc = output.m1021_primary_diagnosis_description || output.primary_diagnosis_description || 'NOT FOUND';
         const otherDx = output.m1023_other_diagnoses || output.secondary_diagnoses || 'NOT FOUND';
         const comorbidities = output.comorbidities_text || 'NOT FOUND';
-        const patientName = output.patient_name || 'NOT FOUND - CHECK DOCUMENT HEADER';
+        
+        // Enhanced patient name extraction with fallbacks
+        let extractedPatientName = output.patient_name_raw || output.patient_name || '';
+        
+        // Try to construct from first/last if full name not found
+        if (!extractedPatientName && (output.patient_first_name || output.patient_last_name)) {
+          const firstName = output.patient_first_name || '';
+          const lastName = output.patient_last_name || '';
+          extractedPatientName = `${firstName} ${lastName}`.trim();
+        }
+        
+        // Clean up the name
+        extractedPatientName = extractedPatientName
+          .replace(/patient:?/gi, '')
+          .replace(/name:?/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        const patientName = extractedPatientName || 'NOT FOUND - CHECK DOCUMENT HEADER';
 
         oasisTextContent = `PATIENT DEMOGRAPHICS:
       Name: ${patientName}
@@ -671,7 +735,9 @@ export default function OASISAnalyzer() {
         },
         homebound_reason: output?.homebound_reason || null,
         patient_info: { 
-          name: output?.patient_name || "Unknown Patient - Verify Document", 
+          name: extractedPatientName || "Unknown Patient - Verify Document",
+          first_name: output?.patient_first_name || null,
+          last_name: output?.patient_last_name || null,
           dob: output?.patient_dob || "Not found",
           gender: output?.patient_gender || "Not specified",
           medicare_number: output?.medicare_number || "Not found",
@@ -1155,10 +1221,26 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                   </Button>
                 </div>
               </div>
-              {patientName && patientName !== "Unknown Patient" && (
-                <p className="text-xs text-blue-700 mt-2">
-                  Detected patient name from document: <strong>{patientName}</strong>
-                </p>
+              {patientName && (
+                <div className="mt-3 p-2 rounded border border-blue-200 bg-white">
+                  <p className="text-xs text-gray-600 mb-1">Extracted from OASIS:</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {patientName !== "Unknown Patient" && patientName !== "NOT FOUND - CHECK DOCUMENT HEADER" 
+                      ? patientName 
+                      : <span className="text-red-600">⚠ Patient name not found in document</span>}
+                  </p>
+                  {selectedPatientId && patients.find(p => p.id === selectedPatientId) && (
+                    <p className="text-xs text-green-700 mt-1 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Auto-matched to: {patients.find(p => p.id === selectedPatientId)?.first_name} {patients.find(p => p.id === selectedPatientId)?.last_name}
+                    </p>
+                  )}
+                  {!selectedPatientId && patientName !== "Unknown Patient" && patientName !== "NOT FOUND - CHECK DOCUMENT HEADER" && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      ⚠ No matching patient found - please select manually or create new patient
+                    </p>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
