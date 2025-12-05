@@ -582,22 +582,89 @@ Signature Date: ${dm.signature_date || '?'}`);
         primaryDiagnosisCode = output.other_diagnoses[0]?.icd10_code || '';
       }
       
+      // Build comprehensive structured PDGM data from extraction
+      const parseScore = (val) => {
+        if (!val) return 0;
+        const num = parseInt(String(val).replace(/[^0-9]/g, ''));
+        return isNaN(num) ? 0 : num;
+      };
+
+      // Determine admission source category
+      let admissionSource = output?.admission_info?.admission_source_category || '';
+      if (!admissionSource && output?.admission_info?.m1000_from_where_admitted) {
+        const m1000 = String(output.admission_info.m1000_from_where_admitted).toLowerCase();
+        // 1,5,6 = community; 2,3,4 = institutional
+        if (m1000.includes('1') || m1000.includes('community') || m1000.includes('5') || m1000.includes('6') || m1000.includes('home')) {
+          admissionSource = 'community';
+        } else if (m1000.includes('2') || m1000.includes('hospital') || m1000.includes('3') || m1000.includes('snf') || m1000.includes('4') || m1000.includes('rehab') || m1000.includes('institutional')) {
+          admissionSource = 'institutional';
+        } else {
+          admissionSource = 'community'; // default
+        }
+      }
+      
+      // Build comorbidities list with ICD-10 codes
+      const comorbidities = (output?.other_diagnoses || [])
+        .map(d => {
+          if (d.icd10_code && d.description) {
+            return `${d.description} (${d.icd10_code})`;
+          }
+          return d.description || d.icd10_code;
+        })
+        .filter(Boolean);
+
+      // Parse GG scores for PDGM calculation
+      const ggSelfCare = output?.gg_functional_abilities?.gg0130_self_care || {};
+      const ggMobility = output?.gg_functional_abilities?.gg0170_mobility || {};
+
       const structuredPdgmData = {
         primary_diagnosis: primaryDiagnosisText || primaryDiagnosisCode || '',
         primary_diagnosis_code: primaryDiagnosisCode,
-        comorbidities: (output?.other_diagnoses || []).map(d => d.description || d.icd10_code).filter(Boolean),
-        admission_source: output?.admission_info?.admission_source_category || 'community',
+        comorbidities: comorbidities,
+        admission_source: admissionSource || 'community',
         episode_timing: output?.admission_info?.episode_timing || 'early',
         functional_scores: {
-          m1800_grooming: parseInt(output?.functional_status?.m1800_grooming) || 0,
-          m1810_dress_upper: parseInt(output?.functional_status?.m1810_dress_upper) || 0,
-          m1820_dress_lower: parseInt(output?.functional_status?.m1820_dress_lower) || 0,
-          m1830_bathing: parseInt(output?.functional_status?.m1830_bathing) || 0,
-          m1840_toilet_transfer: parseInt(output?.functional_status?.m1840_toilet_transfer) || 0,
-          m1850_transferring: parseInt(output?.functional_status?.m1850_transferring) || 0,
-          m1860_ambulation: parseInt(output?.functional_status?.m1860_ambulation) || 0
+          m1800_grooming: parseScore(output?.functional_status?.m1800_grooming),
+          m1810_dress_upper: parseScore(output?.functional_status?.m1810_dress_upper),
+          m1820_dress_lower: parseScore(output?.functional_status?.m1820_dress_lower),
+          m1830_bathing: parseScore(output?.functional_status?.m1830_bathing),
+          m1840_toilet_transfer: parseScore(output?.functional_status?.m1840_toilet_transfer),
+          m1850_transferring: parseScore(output?.functional_status?.m1850_transferring),
+          m1860_ambulation: parseScore(output?.functional_status?.m1860_ambulation)
         },
-        gg_scores: output?.gg_functional_abilities || null
+        gg_scores: {
+          self_care: {
+            eating: parseScore(ggSelfCare.eating_admission),
+            oral_hygiene: parseScore(ggSelfCare.oral_hygiene_admission),
+            toileting_hygiene: parseScore(ggSelfCare.toileting_hygiene_admission),
+            shower_bathe: parseScore(ggSelfCare.shower_bathe_self_admission),
+            upper_body_dressing: parseScore(ggSelfCare.upper_body_dressing_admission),
+            lower_body_dressing: parseScore(ggSelfCare.lower_body_dressing_admission),
+            footwear: parseScore(ggSelfCare.putting_on_footwear_admission)
+          },
+          mobility: {
+            sit_to_lying: parseScore(ggMobility.sit_to_lying_admission),
+            lying_to_sitting: parseScore(ggMobility.lying_to_sitting_admission),
+            sit_to_stand: parseScore(ggMobility.sit_to_stand_admission),
+            chair_bed_transfer: parseScore(ggMobility.chair_bed_transfer_admission),
+            toilet_transfer: parseScore(ggMobility.toilet_transfer_admission),
+            walk_10_feet: parseScore(ggMobility.walk_10_feet_admission),
+            walk_50_feet_2_turns: parseScore(ggMobility.walk_50_feet_2_turns_admission),
+            walk_150_feet: parseScore(ggMobility.walk_150_feet_admission)
+          }
+        },
+        clinical_items: {
+          dyspnea: parseScore(output?.clinical_items?.m1400_dyspnea),
+          pain_frequency: parseScore(output?.clinical_items?.m1242_pain_freq),
+          pressure_ulcer_present: output?.clinical_items?.m1306_pressure_ulcer_present === '1' || String(output?.clinical_items?.m1306_pressure_ulcer_present).toLowerCase() === 'yes',
+          surgical_wound: output?.clinical_items?.m1340_surgical_wound === '1' || String(output?.clinical_items?.m1340_surgical_wound).toLowerCase() === 'yes'
+        },
+        therapy_services: {
+          pt: output?.therapy_need?.pt_ordered || false,
+          ot: output?.therapy_need?.ot_ordered || false,
+          slp: output?.therapy_need?.slp_ordered || false
+        },
+        patient_info: output?.patient_info || {}
       };
 
       // Increase content limit for better analysis
