@@ -17,6 +17,7 @@ import PredictiveRiskScoring from "../components/predictive/PredictiveRiskScorin
 import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
 import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
+import PDGMPredictiveAnalytics from "../components/pdgm/PDGMPredictiveAnalytics";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -237,6 +238,11 @@ export default function Dashboard() {
       {/* Regulatory Alerts for Nurses */}
       <div className="mb-6">
         <NurseRegulatoryAlerts nurseEmail={currentUser?.email} compact={true} />
+      </div>
+
+      {/* PDGM Predictive Analytics */}
+      <div className="mb-6">
+        <PDGMPredictiveAnalytics compact={true} />
       </div>
 
       {/* Add Compliance Widget before Visit Schedule */}
