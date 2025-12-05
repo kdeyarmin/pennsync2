@@ -118,7 +118,65 @@ export default function OASISAnalyzer() {
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Analyze the OASIS document using LLM with the extracted text
+      // Step 1: AI-driven validation for logical inconsistencies
+      const validationResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are an expert OASIS validator. Review this OASIS document for logical inconsistencies, missing critical data, and M-item validation issues BEFORE detailed analysis.
+
+OASIS Document:
+"""
+${oasisTextContent}
+"""
+
+Validate the following:
+1. **M-Item Logical Consistency**: Check if functional scores (M1800-M1860) are internally consistent. Example: If M1860 (ambulation) shows "bedbound", M1850 (transferring) should also show significant impairment.
+2. **Diagnosis-Function Alignment**: Verify functional limitations align with documented diagnoses. Example: A stroke patient should show related functional deficits.
+3. **Missing Critical Data**: Identify any required M-items that appear missing or incomplete.
+4. **Date/Timing Issues**: Check for inconsistent dates or episode timing problems.
+5. **Response Pattern Anomalies**: Flag unusual patterns that may indicate data entry errors.
+
+Return JSON:
+{
+  "validation_passed": true/false,
+  "critical_issues": [
+    {
+      "type": "inconsistency" | "missing_data" | "alignment_error" | "date_issue" | "anomaly",
+      "severity": "critical" | "warning",
+      "item": "Affected M-item(s)",
+      "description": "What's wrong",
+      "expected": "What should be expected",
+      "found": "What was found",
+      "suggested_correction": "How to fix it"
+    }
+  ],
+  "warnings": ["List of minor concerns"],
+  "validated_pdgm_items": {
+    "m1800_grooming": "extracted value or null if missing",
+    "m1810_dress_upper": "extracted value or null",
+    "m1820_dress_lower": "extracted value or null",
+    "m1830_bathing": "extracted value or null",
+    "m1840_toilet_transfer": "extracted value or null",
+    "m1850_transferring": "extracted value or null",
+    "m1860_ambulation": "extracted value or null"
+  },
+  "data_quality_score": 0-100,
+  "recommendation": "Brief recommendation before proceeding"
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            validation_passed: { type: "boolean" },
+            critical_issues: { type: "array", items: { type: "object" } },
+            warnings: { type: "array", items: { type: "string" } },
+            validated_pdgm_items: { type: "object" },
+            data_quality_score: { type: "number" },
+            recommendation: { type: "string" }
+          }
+        }
+      });
+
+      setUploadProgress(75);
+
+      // Step 2: Main analysis with validation context
       const analysisResult = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an expert OASIS (Outcome and Assessment Information Set) analyst and home health compliance specialist. Analyze the following OASIS assessment document content thoroughly.
 
@@ -126,6 +184,9 @@ OASIS Document Content:
 """
 ${oasisTextContent}
 """
+
+PRE-VALIDATION RESULTS (address these in your analysis):
+${JSON.stringify(validationResult, null, 2)}
 
 Provide a comprehensive analysis including:
 
@@ -216,7 +277,13 @@ Return your analysis as JSON:
     }
   ],
   "strengths": ["List of well-documented areas"],
-  "key_recommendations": ["Top 5 priority recommendations"]
+  "key_recommendations": ["Top 5 priority recommendations"],
+  "validation_summary": {
+    "data_quality_score": 0-100,
+    "critical_issues_found": 0,
+    "warnings_found": 0,
+    "issues": [{"type": "string", "item": "string", "description": "string", "suggested_correction": "string"}]
+  }
 }`,
         response_json_schema: {
           type: "object",
@@ -233,10 +300,33 @@ Return your analysis as JSON:
             documentation_improvements: { type: "array", items: { type: "object" } },
             audit_risk_areas: { type: "array", items: { type: "object" } },
             strengths: { type: "array", items: { type: "string" } },
-            key_recommendations: { type: "array", items: { type: "string" } }
+            key_recommendations: { type: "array", items: { type: "string" } },
+            validation_summary: { type: "object" }
           }
         }
       });
+
+      // Merge validation results into analysis
+      analysisResult.validation_summary = {
+        data_quality_score: validationResult.data_quality_score,
+        critical_issues_found: validationResult.critical_issues?.length || 0,
+        warnings_found: validationResult.warnings?.length || 0,
+        issues: validationResult.critical_issues || [],
+        warnings: validationResult.warnings || [],
+        recommendation: validationResult.recommendation
+      };
+
+      // Use validated PDGM items if available
+      if (validationResult.validated_pdgm_items && analysisResult.pdgm_data) {
+        analysisResult.pdgm_data.functional_scores = {
+          ...analysisResult.pdgm_data.functional_scores,
+          ...Object.fromEntries(
+            Object.entries(validationResult.validated_pdgm_items)
+              .filter(([_, v]) => v !== null && v !== undefined && !isNaN(parseInt(v)))
+              .map(([k, v]) => [k, parseInt(v)])
+          )
+        };
+      }
 
       setUploadProgress(100);
       setAnalysisResults(analysisResult);
@@ -452,6 +542,51 @@ Return your analysis as JSON:
                   {analysisResults.summary}
                 </AlertDescription>
               </Alert>
+
+              {/* Validation Summary */}
+              {analysisResults.validation_summary && (
+                <div className={`p-4 rounded-lg border-2 mb-4 ${
+                  analysisResults.validation_summary.critical_issues_found > 0 
+                    ? 'bg-red-50 border-red-300' 
+                    : analysisResults.validation_summary.warnings_found > 0
+                      ? 'bg-yellow-50 border-yellow-300'
+                      : 'bg-green-50 border-green-300'
+                }`}>
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    {analysisResults.validation_summary.critical_issues_found > 0 ? (
+                      <><AlertTriangle className="w-4 h-4 text-red-600" /> Data Validation Issues Found</>
+                    ) : analysisResults.validation_summary.warnings_found > 0 ? (
+                      <><AlertTriangle className="w-4 h-4 text-yellow-600" /> Validation Warnings</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4 text-green-600" /> Validation Passed</>
+                    )}
+                    <Badge variant="outline" className="ml-auto">
+                      Quality: {analysisResults.validation_summary.data_quality_score}%
+                    </Badge>
+                  </h3>
+                  {analysisResults.validation_summary.recommendation && (
+                    <p className="text-sm text-gray-700 mb-2">{analysisResults.validation_summary.recommendation}</p>
+                  )}
+                  {analysisResults.validation_summary.issues?.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                      {analysisResults.validation_summary.issues.slice(0, 3).map((issue, idx) => (
+                        <div key={idx} className="bg-white p-2 rounded border text-sm">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className={issue.severity === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
+                              {issue.type}
+                            </Badge>
+                            {issue.item && <span className="font-mono text-xs">{issue.item}</span>}
+                          </div>
+                          <p className="text-gray-700">{issue.description}</p>
+                          {issue.suggested_correction && (
+                            <p className="text-green-700 text-xs mt-1">→ {issue.suggested_correction}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Key Recommendations */}
               {analysisResults.key_recommendations?.length > 0 && (
