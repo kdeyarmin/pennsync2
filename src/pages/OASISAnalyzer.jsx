@@ -406,6 +406,7 @@ Return JSON:
             revenue_optimization_score: { type: "number" },
             summary: { type: "string" },
             pdgm_data: { type: "object" },
+            extracted_items: { type: "object" },
             accuracy_issues: { type: "array", items: { type: "object" } },
             compliance_concerns: { type: "array", items: { type: "object" } },
             revenue_tips: { type: "array", items: { type: "object" } },
