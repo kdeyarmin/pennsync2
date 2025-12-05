@@ -85,6 +85,10 @@ export default function OASISScrubber({
   const [feedbackStats, setFeedbackStats] = useState({ accepted: 0, rejected: 0, modified: 0 });
   const [extractedOasisData, setExtractedOasisData] = useState(uploadedOasisData || null);
   const [showUploader, setShowUploader] = useState(false);
+  const [analysisFilter, setAnalysisFilter] = useState('all');
+  const [showExtractedIndicators, setShowExtractedIndicators] = useState(false);
+  const [extractedIndicators, setExtractedIndicators] = useState(null);
+  const [copiedText, setCopiedText] = useState(null);
 
   const isHomeHealth = patient?.care_type === 'home_health';
   const isOASISVisit = ['admission', 'recertification', 'discharge'].includes(visit?.visit_type);
