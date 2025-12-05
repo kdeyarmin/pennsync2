@@ -76,49 +76,265 @@ export default function OASISAnalyzer() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadProgress(40);
 
-      // Extract text content from PDF using AI (handles both text-based and scanned/image PDFs)
+      // Extract structured OASIS data from PDF using AI (handles both text-based and scanned/image PDFs)
       const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: {
           type: "object",
           properties: {
-            full_content: { 
-              type: "string", 
-              description: "Extract ALL text content from this OASIS assessment document. Include every field, item code (M0000-M2400), responses, patient information, dates, and any clinical notes. Preserve the structure and formatting as much as possible."
+            patient_info: {
+              type: "object",
+              description: "Patient demographics and identifiers",
+              properties: {
+                name: { type: "string" },
+                dob: { type: "string" },
+                medicare_number: { type: "string" },
+                address: { type: "string" },
+                soc_date: { type: "string", description: "Start of Care date" },
+                assessment_date: { type: "string" },
+                assessment_type: { type: "string", description: "SOC, ROC, Recert, Discharge, etc." }
+              }
+            },
+            primary_diagnosis: {
+              type: "object",
+              description: "M1021 Primary Diagnosis",
+              properties: {
+                icd10_code: { type: "string" },
+                description: { type: "string" },
+                symptom_control_rating: { type: "string" }
+              }
+            },
+            other_diagnoses: {
+              type: "array",
+              description: "M1023 Other Diagnoses - all secondary diagnoses with ICD-10 codes",
+              items: {
+                type: "object",
+                properties: {
+                  icd10_code: { type: "string" },
+                  description: { type: "string" }
+                }
+              }
+            },
+            functional_status: {
+              type: "object",
+              description: "M1800-M1860 Functional Status items with exact numeric responses",
+              properties: {
+                m1800_grooming: { type: "string", description: "Response 0-3" },
+                m1810_dress_upper: { type: "string", description: "Response 0-3" },
+                m1820_dress_lower: { type: "string", description: "Response 0-3" },
+                m1830_bathing: { type: "string", description: "Response 0-6" },
+                m1840_toilet_transfer: { type: "string", description: "Response 0-4" },
+                m1850_transferring: { type: "string", description: "Response 0-5" },
+                m1860_ambulation: { type: "string", description: "Response 0-6" }
+              }
+            },
+            gg_functional_abilities: {
+              type: "object",
+              description: "Section GG Functional Abilities - GG0130 Self-Care and GG0170 Mobility scores",
+              properties: {
+                gg0130_self_care: {
+                  type: "object",
+                  properties: {
+                    eating: { type: "string" },
+                    oral_hygiene: { type: "string" },
+                    toileting_hygiene: { type: "string" },
+                    shower_bathe: { type: "string" },
+                    upper_body_dressing: { type: "string" },
+                    lower_body_dressing: { type: "string" },
+                    footwear: { type: "string" }
+                  }
+                },
+                gg0170_mobility: {
+                  type: "object",
+                  properties: {
+                    sit_to_lying: { type: "string" },
+                    lying_to_sitting: { type: "string" },
+                    sit_to_stand: { type: "string" },
+                    chair_bed_transfer: { type: "string" },
+                    toilet_transfer: { type: "string" },
+                    walk_10_feet: { type: "string" },
+                    walk_50_feet_2_turns: { type: "string" },
+                    walk_150_feet: { type: "string" },
+                    walking_10_feet_uneven: { type: "string" },
+                    step_curb: { type: "string" },
+                    four_steps: { type: "string" },
+                    twelve_steps: { type: "string" },
+                    picking_up_object: { type: "string" },
+                    wheel_50_feet: { type: "string" },
+                    wheel_150_feet: { type: "string" }
+                  }
+                }
+              }
+            },
+            clinical_items: {
+              type: "object",
+              description: "Key clinical assessment items",
+              properties: {
+                m1033_risk_hospitalization: { type: "string" },
+                m1400_dyspnea: { type: "string" },
+                m1242_pain_freq: { type: "string" },
+                m1302_risk_pressure_ulcer: { type: "string" },
+                m1306_pressure_ulcer_present: { type: "string" },
+                m1311_pressure_ulcer_count: { type: "string" },
+                m1322_pressure_ulcer_stage: { type: "string" },
+                m1324_stage2_pressure_ulcer: { type: "string" },
+                m1330_stasis_ulcer: { type: "string" },
+                m1340_surgical_wound: { type: "string" },
+                m1342_surgical_wound_status: { type: "string" }
+              }
+            },
+            medications: {
+              type: "object",
+              description: "Medication management items",
+              properties: {
+                m2001_drug_regimen_review: { type: "string" },
+                m2003_med_followup: { type: "string" },
+                m2005_med_intervention: { type: "string" },
+                m2010_high_risk_drugs: { type: "string" },
+                m2020_oral_med_mgmt: { type: "string" },
+                m2030_injectable_med_mgmt: { type: "string" }
+              }
+            },
+            admission_info: {
+              type: "object",
+              description: "Admission source and episode timing",
+              properties: {
+                m1000_from_where_admitted: { type: "string", description: "Community, hospital, SNF, etc." },
+                admission_source_category: { type: "string", description: "community or institutional" },
+                episode_timing: { type: "string", description: "early (first 30 days) or late" },
+                m0110_episode_timing: { type: "string" }
+              }
+            },
+            therapy_need: {
+              type: "object",
+              description: "Therapy requirements",
+              properties: {
+                m2200_therapy_need: { type: "string" },
+                pt_ordered: { type: "boolean" },
+                ot_ordered: { type: "boolean" },
+                slp_ordered: { type: "boolean" }
+              }
+            },
+            cognitive_status: {
+              type: "object",
+              description: "Cognitive and mental status",
+              properties: {
+                m1700_cognitive: { type: "string" },
+                m1710_confusion: { type: "string" },
+                m1720_anxiety: { type: "string" },
+                m1730_depression_screening: { type: "string" },
+                m1740_cognitive_function: { type: "string" }
+              }
+            },
+            full_text_content: {
+              type: "string",
+              description: "Complete raw text from the document for any items not captured above"
             }
           },
-          required: ["full_content"]
+          required: ["primary_diagnosis", "functional_status"]
         }
       });
 
-      setUploadProgress(60);
+      setUploadProgress(50);
 
       if (extractedData.status === "error") {
-        throw new Error(extractedData.details || "Failed to extract text from PDF. Please ensure it's a readable OASIS document.");
+        throw new Error(extractedData.details || "Failed to extract data from PDF. Please ensure it's a readable OASIS document.");
       }
 
-      // Handle various output formats
+      // Build comprehensive OASIS content from structured extraction
       let oasisTextContent = "";
-      if (extractedData.output) {
-        if (typeof extractedData.output === 'string') {
-          oasisTextContent = extractedData.output;
-        } else if (extractedData.output.full_content) {
-          oasisTextContent = extractedData.output.full_content;
-        } else if (typeof extractedData.output === 'object') {
-          oasisTextContent = JSON.stringify(extractedData.output, null, 2);
+      const output = extractedData.output;
+      
+      if (output) {
+        // Format structured data for analysis
+        const sections = [];
+        
+        if (output.patient_info) {
+          sections.push(`PATIENT INFO:\n${JSON.stringify(output.patient_info, null, 2)}`);
+        }
+        
+        if (output.primary_diagnosis) {
+          sections.push(`PRIMARY DIAGNOSIS (M1021):\nICD-10: ${output.primary_diagnosis.icd10_code || 'Not found'}\nDescription: ${output.primary_diagnosis.description || 'Not found'}`);
+        }
+        
+        if (output.other_diagnoses?.length > 0) {
+          sections.push(`OTHER DIAGNOSES (M1023):\n${output.other_diagnoses.map((d, i) => `${i+1}. ${d.icd10_code || ''} - ${d.description || ''}`).join('\n')}`);
+        }
+        
+        if (output.functional_status) {
+          sections.push(`FUNCTIONAL STATUS (M1800-M1860):\nM1800 Grooming: ${output.functional_status.m1800_grooming || '?'}\nM1810 Upper Dressing: ${output.functional_status.m1810_dress_upper || '?'}\nM1820 Lower Dressing: ${output.functional_status.m1820_dress_lower || '?'}\nM1830 Bathing: ${output.functional_status.m1830_bathing || '?'}\nM1840 Toilet Transfer: ${output.functional_status.m1840_toilet_transfer || '?'}\nM1850 Transferring: ${output.functional_status.m1850_transferring || '?'}\nM1860 Ambulation: ${output.functional_status.m1860_ambulation || '?'}`);
+        }
+        
+        if (output.gg_functional_abilities) {
+          if (output.gg_functional_abilities.gg0130_self_care) {
+            sections.push(`GG0130 SELF-CARE:\n${JSON.stringify(output.gg_functional_abilities.gg0130_self_care, null, 2)}`);
+          }
+          if (output.gg_functional_abilities.gg0170_mobility) {
+            sections.push(`GG0170 MOBILITY:\n${JSON.stringify(output.gg_functional_abilities.gg0170_mobility, null, 2)}`);
+          }
+        }
+        
+        if (output.clinical_items) {
+          sections.push(`CLINICAL ITEMS:\n${JSON.stringify(output.clinical_items, null, 2)}`);
+        }
+        
+        if (output.medications) {
+          sections.push(`MEDICATIONS:\n${JSON.stringify(output.medications, null, 2)}`);
+        }
+        
+        if (output.admission_info) {
+          sections.push(`ADMISSION INFO:\nFrom: ${output.admission_info.m1000_from_where_admitted || '?'}\nSource Category: ${output.admission_info.admission_source_category || '?'}\nEpisode Timing: ${output.admission_info.episode_timing || '?'}`);
+        }
+        
+        if (output.therapy_need) {
+          sections.push(`THERAPY NEED:\n${JSON.stringify(output.therapy_need, null, 2)}`);
+        }
+        
+        if (output.cognitive_status) {
+          sections.push(`COGNITIVE STATUS:\n${JSON.stringify(output.cognitive_status, null, 2)}`);
+        }
+        
+        if (output.full_text_content) {
+          sections.push(`ADDITIONAL CONTENT:\n${output.full_text_content}`);
+        }
+        
+        oasisTextContent = sections.join('\n\n---\n\n');
+        
+        // Fallback to raw output if structured parsing failed
+        if (!oasisTextContent || oasisTextContent.length < 100) {
+          oasisTextContent = typeof output === 'string' ? output : JSON.stringify(output, null, 2);
         }
       }
 
       if (!oasisTextContent || oasisTextContent.trim().length < 20) {
-        throw new Error("Could not extract text from the PDF. The document may be empty, password-protected, or in an unsupported format.");
+        throw new Error("Could not extract sufficient data from the PDF. The document may be empty, password-protected, or in an unsupported format.");
       }
 
       console.log("Extracted OASIS content length:", oasisTextContent.length);
+      
+      // Store structured data for direct use in PDGM calculation
+      const structuredPdgmData = {
+        primary_diagnosis: output?.primary_diagnosis?.description || output?.primary_diagnosis?.icd10_code || '',
+        primary_diagnosis_code: output?.primary_diagnosis?.icd10_code || '',
+        comorbidities: (output?.other_diagnoses || []).map(d => d.description || d.icd10_code).filter(Boolean),
+        admission_source: output?.admission_info?.admission_source_category || 'community',
+        episode_timing: output?.admission_info?.episode_timing || 'early',
+        functional_scores: {
+          m1800_grooming: parseInt(output?.functional_status?.m1800_grooming) || 0,
+          m1810_dress_upper: parseInt(output?.functional_status?.m1810_dress_upper) || 0,
+          m1820_dress_lower: parseInt(output?.functional_status?.m1820_dress_lower) || 0,
+          m1830_bathing: parseInt(output?.functional_status?.m1830_bathing) || 0,
+          m1840_toilet_transfer: parseInt(output?.functional_status?.m1840_toilet_transfer) || 0,
+          m1850_transferring: parseInt(output?.functional_status?.m1850_transferring) || 0,
+          m1860_ambulation: parseInt(output?.functional_status?.m1860_ambulation) || 0
+        },
+        gg_scores: output?.gg_functional_abilities || null
+      };
 
-      // Truncate content if too long to avoid timeout
-      const maxContentLength = 8000;
+      // Increase content limit for better analysis
+      const maxContentLength = 15000;
       const truncatedContent = oasisTextContent.length > maxContentLength 
-        ? oasisTextContent.substring(0, maxContentLength) + "\n[truncated]"
+        ? oasisTextContent.substring(0, maxContentLength) + "\n[content truncated for processing]"
         : oasisTextContent;
 
       setIsUploading(false);
