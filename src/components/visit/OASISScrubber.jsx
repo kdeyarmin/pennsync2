@@ -89,6 +89,7 @@ export default function OASISScrubber({
   const [showExtractedIndicators, setShowExtractedIndicators] = useState(false);
   const [extractedIndicators, setExtractedIndicators] = useState(null);
   const [copiedText, setCopiedText] = useState(null);
+  const [showOptimizationPanel, setShowOptimizationPanel] = useState(true);
 
   const isHomeHealth = patient?.care_type === 'home_health';
   const isOASISVisit = ['admission', 'recertification', 'discharge'].includes(visit?.visit_type);
@@ -2206,6 +2207,37 @@ Return JSON:
                     </Badge>
                   )}
                 </div>
+                {/* Quick Actions for Top Optimization */}
+                {(oasisResults.underscoring_opportunities?.length > 0 || oasisResults.critical_missing?.length > 0) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setActiveTab('results');
+                        setExpandedCategories(['underscoring', 'critical']);
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white border-green-700"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      View {oasisResults.underscoring_opportunities?.length || 0} Revenue Opportunities
+                    </Button>
+                    {oasisResults.critical_missing?.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setActiveTab('results');
+                          setExpandedCategories(['critical']);
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white border-red-700"
+                      >
+                        <AlertTriangle className="w-3 h-3 mr-1" />
+                        Fix {oasisResults.critical_missing.length} Critical Items
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Overall Score Card */}
@@ -2389,10 +2421,23 @@ Return JSON:
 
                     {/* Automated Optimization Suggestions */}
                     <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200 mt-3">
-                      <h5 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-600" />
-                        Automated Optimization Suggestions
-                      </h5>
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-bold text-amber-900 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-amber-600" />
+                          Automated Optimization Suggestions
+                        </h5>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowOptimizationPanel(!showOptimizationPanel)}
+                          className="h-6 text-xs"
+                        >
+                          {showOptimizationPanel ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                          {showOptimizationPanel ? 'Hide' : 'Show'}
+                        </Button>
+                      </div>
+                      
+                      {showOptimizationPanel && (
                       
                       {/* Clinical Group Optimization */}
                       <div className="space-y-3">
@@ -2446,8 +2491,26 @@ Return JSON:
                                     <>
                                       {(oasisResults.functional_score_analysis.m1830_bathing?.documented_value < 3 || !oasisResults.functional_score_analysis.m1830_bathing?.documented_value) && (
                                         <div className="bg-blue-50 p-2 rounded text-xs">
-                                          <p className="font-medium text-blue-800">🚿 M1830 Bathing (0-6 scale):</p>
-                                          <p className="text-blue-700">Document need for assistance throughout bathing, transfer assistance, or inability to bathe. Include safety concerns, equipment needs, and caregiver involvement.</p>
+                                          <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1">
+                                              <p className="font-medium text-blue-800">🚿 M1830 Bathing (0-6 scale):</p>
+                                              <p className="text-blue-700">Document need for assistance throughout bathing, transfer assistance, or inability to bathe. Include safety concerns, equipment needs, and caregiver involvement.</p>
+                                            </div>
+                                            {extractedIndicators?.functional?.bathing?.allPhrases?.length > 0 && (
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => copyToClipboard(extractedIndicators.functional.bathing.allPhrases[0], 'bathing-suggestion')}
+                                                className="h-6 px-2 flex-shrink-0"
+                                              >
+                                                {copiedText === 'bathing-suggestion' ? (
+                                                  <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                                ) : (
+                                                  <Copy className="w-3 h-3" />
+                                                )}
+                                              </Button>
+                                            )}
+                                          </div>
                                         </div>
                                       )}
                                       {(oasisResults.functional_score_analysis.m1860_ambulation?.documented_value < 3 || !oasisResults.functional_score_analysis.m1860_ambulation?.documented_value) && (
@@ -2467,8 +2530,19 @@ Return JSON:
                                   <div className="bg-green-50 p-2 rounded text-xs border border-green-200">
                                     <p className="font-medium text-green-800">📈 Revenue Impact:</p>
                                     <p className="text-green-700">
-                                      Each functional level increase (Low→Medium→High) can add $200-$500 per 30-day episode to reimbursement.
+                                      Each functional level increase (Low→Medium→High) can add $200-$500 per 30-day episode.
+                                      {oasisResults.pdgm_analysis.functional_level === 'low' && ' Moving from LOW to MEDIUM = +$200-300/episode.'}
+                                      {oasisResults.pdgm_analysis.functional_level === 'medium' && ' Moving from MEDIUM to HIGH = +$300-500/episode.'}
                                     </p>
+                                  </div>
+                                  <div className="bg-blue-50 p-2 rounded text-xs border border-blue-200 mt-2">
+                                    <p className="font-medium text-blue-800">🎯 Next Steps to Increase Score:</p>
+                                    <ol className="text-blue-700 list-decimal list-inside mt-1 space-y-1">
+                                      <li>Review narrative for ANY mention of assistance needs not captured in M-items</li>
+                                      <li>Document specific level of assist (min/mod/max) with observable details</li>
+                                      <li>Cross-check GG scores align with M1800-1860 functional documentation</li>
+                                      <li>Consider PT/OT referral for objective functional assessment</li>
+                                    </ol>
                                   </div>
                                 </div>
                               </div>
@@ -2512,13 +2586,35 @@ Return JSON:
                                   {oasisResults.pdgm_analysis.qualifying_comorbidities?.potential_additions?.length > 0 && (
                                     <div className="bg-green-50 p-2 rounded text-xs border border-green-200">
                                       <p className="font-medium text-green-800">✓ Identified in Narrative (needs proper coding):</p>
-                                      <ul className="text-green-700">
+                                      <ul className="text-green-700 space-y-1">
                                         {oasisResults.pdgm_analysis.qualifying_comorbidities.potential_additions.map((c, i) => (
-                                          <li key={i}>• {c}</li>
+                                          <li key={i} className="flex items-center gap-1">
+                                            <span>• {c}</span>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => copyToClipboard(c, `comorbid-${i}`)}
+                                              className="h-4 w-4 p-0 ml-auto"
+                                            >
+                                              {copiedText === `comorbid-${i}` ? (
+                                                <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                              ) : (
+                                                <Copy className="w-3 h-3" />
+                                              )}
+                                            </Button>
+                                          </li>
                                         ))}
                                       </ul>
                                     </div>
                                   )}
+                                  <div className="bg-indigo-50 p-2 rounded text-xs border border-indigo-200 mt-2">
+                                    <p className="font-medium text-indigo-800">💰 Comorbidity Impact:</p>
+                                    <p className="text-indigo-700">
+                                      {oasisResults.pdgm_analysis.comorbidity_adjustment === 'none' && 'Adding LOW adjustment = +$100-200/episode. Adding HIGH adjustment = +$300-500/episode.'}
+                                      {oasisResults.pdgm_analysis.comorbidity_adjustment === 'low' && 'Upgrading to HIGH adjustment = additional +$200-300/episode.'}
+                                      {oasisResults.pdgm_analysis.comorbidity_adjustment === 'high' && 'Currently maximized - excellent work!'}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -2632,12 +2728,50 @@ Return JSON:
                                     <strong> 0.05-0.15</strong>, translating to approximately 
                                     <strong> $150-$450</strong> additional per 30-day episode.
                                   </p>
+                                  <div className="mt-2 pt-2 border-t border-green-200">
+                                    <p className="text-green-800 font-medium">Annual Impact (60 episodes/year):</p>
+                                    <p className="text-2xl font-bold text-green-900">$9,000 - $27,000</p>
+                                  </div>
                                 </div>
+                                <Button
+                                  size="sm"
+                                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 mt-2"
+                                  onClick={() => {
+                                    const allSuggestions = [
+                                      ...(oasisResults.underscoring_opportunities || []),
+                                      ...(oasisResults.critical_missing || []),
+                                      ...(oasisResults.vague_documentation || [])
+                                    ];
+                                    const topSuggestion = allSuggestions[0];
+                                    if (topSuggestion) {
+                                      handleSuggestionAccept(topSuggestion, 'optimization');
+                                    }
+                                  }}
+                                  disabled={!oasisResults.underscoring_opportunities?.length && !oasisResults.critical_missing?.length}
+                                >
+                                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                                  Apply Top Suggestion Now
+                                </Button>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
+                    </div>
+                      )}
+
+                      {/* Quick Action Buttons */}
+                      {!showOptimizationPanel && (
+                        <div className="flex flex-wrap gap-2">
+                          <Badge className="bg-amber-600 text-white">
+                            {[
+                              oasisResults.pdgm_analysis.clinical_group_confidence !== 'high' ? 1 : 0,
+                              oasisResults.pdgm_analysis.functional_level !== 'high' ? 1 : 0,
+                              oasisResults.pdgm_analysis.comorbidity_adjustment !== 'high' ? 1 : 0
+                            ].reduce((a, b) => a + b, 0)} optimization areas available
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
