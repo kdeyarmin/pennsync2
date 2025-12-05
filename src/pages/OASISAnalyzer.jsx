@@ -33,6 +33,7 @@ import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
 import PDGMMultiReportComparison from "../components/oasis/PDGMMultiReportComparison";
+import EnhancedMultiReportComparison from "../components/oasis/EnhancedMultiReportComparison";
 import KeyTakeawaysSummary from "../components/oasis/KeyTakeawaysSummary";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
 import DocumentationQualitySuggestions from "../components/oasis/DocumentationQualitySuggestions";
@@ -1223,7 +1224,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
           />
 
           {/* Multi-Report Comparison */}
-          <PDGMMultiReportComparison
+          <EnhancedMultiReportComparison
             savedReports={savedBatchResults}
             currentReport={analysisResults}
             currentPdgmData={pdgmData}
