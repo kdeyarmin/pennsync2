@@ -1860,10 +1860,14 @@ Return JSON:
             </div>
           ) : oasisResults ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="results" className="gap-2">
                   <FileCheck className="w-4 h-4" />
                   Results
+                </TabsTrigger>
+                <TabsTrigger value="indicators" className="gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Indicators
                 </TabsTrigger>
                 <TabsTrigger value="reference" className="gap-2">
                   <BookOpen className="w-4 h-4" />
@@ -1874,6 +1878,29 @@ Return JSON:
                   Feedback ({feedbackStats.accepted + feedbackStats.rejected + feedbackStats.modified})
                 </TabsTrigger>
               </TabsList>
+
+              {/* Filter and Export Controls */}
+              <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-500" />
+                  <Select value={analysisFilter} onValueChange={setAnalysisFilter}>
+                    <SelectTrigger className="w-40 h-8 text-sm">
+                      <SelectValue placeholder="Filter results" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Findings</SelectItem>
+                      <SelectItem value="revenue">Revenue Focus</SelectItem>
+                      <SelectItem value="audit">Audit Risk</SelectItem>
+                      <SelectItem value="functional">Functional Scores</SelectItem>
+                      <SelectItem value="clinical">Clinical Items</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button variant="outline" size="sm" onClick={exportResults} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Export Report
+                </Button>
+              </div>
 
               <TabsContent value="reference">
                 <CMSComplianceReference onInsertGuidance={handleInsertGuidance} />
