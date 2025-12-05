@@ -2179,6 +2179,117 @@ Return JSON:
                 </div>
               )}
 
+              {/* Vague Documentation */}
+              {oasisResults.vague_documentation && oasisResults.vague_documentation.length > 0 && (
+                <div className="space-y-3">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer bg-amber-50 p-4 rounded-lg border-2 border-amber-200"
+                    onClick={() => toggleCategory('vague')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-6 h-6 text-amber-600" />
+                      <div>
+                        <h4 className="font-bold text-amber-900 text-lg">
+                          📝 Vague Documentation ({oasisResults.vague_documentation.length})
+                        </h4>
+                        <p className="text-xs text-amber-700">Language not specific enough for defensible OASIS scoring</p>
+                      </div>
+                    </div>
+                    {expandedCategories.includes('vague') ? (
+                      <ChevronUp className="w-5 h-5 text-amber-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-amber-600" />
+                    )}
+                  </div>
+
+                  {expandedCategories.includes('vague') && (
+                    <div className="space-y-3">
+                      {oasisResults.vague_documentation.map((item, index) => (
+                        <Card key={index} className="border-l-4 border-l-amber-500 bg-amber-50">
+                          <CardContent className="p-4 space-y-3">
+                            <h5 className="font-bold text-amber-900">{item.oasis_item}</h5>
+                            
+                            <div className="bg-red-100 p-2 rounded border border-red-200 text-sm">
+                              <p className="text-xs text-red-700 font-medium">❌ Current Vague Language:</p>
+                              <p className="text-red-900 italic">"{item.current_language}"</p>
+                            </div>
+
+                            <div className="bg-white p-2 rounded border text-sm">
+                              <p className="text-xs text-gray-600 font-medium">Problem:</p>
+                              <p className="text-gray-900">{item.problem}</p>
+                            </div>
+
+                            {item.cms_requirement && (
+                              <div className="bg-blue-50 p-2 rounded border border-blue-200 text-sm">
+                                <p className="text-xs text-blue-700 font-medium">📋 CMS Requirement:</p>
+                                <p className="text-blue-900">{item.cms_requirement}</p>
+                              </div>
+                            )}
+
+                            {item.defensibility_issue && (
+                              <div className="bg-orange-100 p-2 rounded border border-orange-200 text-sm">
+                                <p className="text-xs text-orange-700 font-medium">⚠️ Defensibility Issue:</p>
+                                <p className="text-orange-900">{item.defensibility_issue}</p>
+                              </div>
+                            )}
+
+                            {item.score_range_ambiguity && (
+                              <div className="bg-purple-50 p-2 rounded border border-purple-200 text-sm">
+                                <p className="text-xs text-purple-700 font-medium">🎯 Score Ambiguity:</p>
+                                <p className="text-purple-900">{item.score_range_ambiguity}</p>
+                              </div>
+                            )}
+
+                            {item.key_elements_to_add && item.key_elements_to_add.length > 0 && (
+                              <div className="bg-yellow-50 p-2 rounded border border-yellow-200 text-sm">
+                                <p className="text-xs text-yellow-700 font-medium">✚ Key Elements to Add:</p>
+                                <ul className="list-disc list-inside text-yellow-900 text-xs mt-1">
+                                  {item.key_elements_to_add.map((el, idx) => (
+                                    <li key={idx}>{el}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            <div className="bg-green-100 p-3 rounded border border-green-200 text-sm">
+                              <p className="text-xs text-green-700 font-medium">✓ Improved Language:</p>
+                              <p className="text-green-900 italic">"{item.improved_language}"</p>
+                            </div>
+
+                            {(item.example_for_higher_score || item.example_for_lower_score) && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                {item.example_for_higher_score && (
+                                  <div className="bg-emerald-50 p-2 rounded border border-emerald-200">
+                                    <p className="text-xs text-emerald-700 font-medium">For Higher Score:</p>
+                                    <p className="text-emerald-900 text-xs italic">"{item.example_for_higher_score}"</p>
+                                  </div>
+                                )}
+                                {item.example_for_lower_score && (
+                                  <div className="bg-gray-50 p-2 rounded border border-gray-200">
+                                    <p className="text-xs text-gray-600 font-medium">For Lower Score:</p>
+                                    <p className="text-gray-800 text-xs italic">"{item.example_for_lower_score}"</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                              onClick={() => handleQuickFix(item.cms_requirement || item.problem, item.improved_language)}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              Insert Improved Language
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Inconsistencies */}
               {oasisResults.inconsistencies && oasisResults.inconsistencies.length > 0 && (
                 <div className="space-y-3">
