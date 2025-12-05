@@ -2988,27 +2988,26 @@ Return JSON:
                                   <CheckCircle2 className="w-3 h-3 mr-1" />
                                   Apply Top Suggestion Now
                                 </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                      )}
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                                )}
 
-                      {/* Quick Action Buttons */}
-                      {!showOptimizationPanel && (
-                        <div className="flex flex-wrap gap-2">
-                          <Badge className="bg-amber-600 text-white">
-                            {[
-                              oasisResults.pdgm_analysis.clinical_group_confidence !== 'high' ? 1 : 0,
-                              oasisResults.pdgm_analysis.functional_level !== 'high' ? 1 : 0,
-                              oasisResults.pdgm_analysis.comorbidity_adjustment !== 'high' ? 1 : 0
-                            ].reduce((a, b) => a + b, 0)} optimization areas available
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
+                                {/* Quick Action Buttons */}
+                                {!showOptimizationPanel && (
+                                <div className="flex flex-wrap gap-2">
+                                <Badge className="bg-amber-600 text-white">
+                                {[
+                                oasisResults.pdgm_analysis.clinical_group_confidence !== 'high' ? 1 : 0,
+                                oasisResults.pdgm_analysis.functional_level !== 'high' ? 1 : 0,
+                                oasisResults.pdgm_analysis.comorbidity_adjustment !== 'high' ? 1 : 0
+                                ].reduce((a, b) => a + b, 0)} optimization areas available
+                                </Badge>
+                                </div>
+                                )}
+                                </div>
                   </div>
                 )}
 
