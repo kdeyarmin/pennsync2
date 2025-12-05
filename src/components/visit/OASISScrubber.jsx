@@ -189,29 +189,214 @@ export default function OASISScrubber({
 
       const visitType = visit?.visit_type?.replace(/_/g, ' ').toUpperCase() || 'VISIT';
 
-      // Extract specific clinical indicators from narrative for better accuracy
-      const narrativeLower = (narrativeText || '').toLowerCase();
-      const clinicalIndicators = {
-        assistDevices: /walker|cane|wheelchair|rollator|crutch|grab bar|shower chair|commode/gi.test(narrativeText),
-        oxygenUse: /oxygen|o2|liters|lpm|nasal cannula|concentrator/gi.test(narrativeText),
-        woundPresent: /wound|ulcer|incision|surgical site|dressing|staging|granulation/gi.test(narrativeText),
-        fallRisk: /fall|unsteady|balance|gait|weak|dizziness|vertigo/gi.test(narrativeText),
-        painMentioned: /pain|discomfort|ache|soreness|tender/gi.test(narrativeText),
-        cognitiveIssues: /confused|forgetful|dementia|alzheimer|cognitive|memory|orientation/gi.test(narrativeText),
-        diabetic: /diabetes|diabetic|insulin|blood sugar|glucose|a1c|hypoglycemia/gi.test(narrativeText),
-        cardiacIssues: /heart|cardiac|chf|afib|pacemaker|edema|shortness of breath|dyspnea/gi.test(narrativeText),
-        assistanceNeeded: /assist|help|require|dependent|unable|cannot|difficulty|needs help/gi.test(narrativeText),
-        independentMentioned: /independent|independently|without assist|self|able to/gi.test(narrativeText)
+      // Helper function to extract matching phrases with context
+      const extractPhrases = (text, pattern) => {
+        if (!text) return [];
+        const matches = text.match(pattern) || [];
+        return matches.map(m => m.trim()).filter(m => m.length > 5);
       };
 
-      // Extract specific functional phrases
+      // Helper to get sentence containing match
+      const getSentencesContaining = (text, pattern) => {
+        if (!text) return [];
+        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        return sentences
+          .filter(s => pattern.test(s))
+          .map(s => s.trim() + '.')
+          .slice(0, 5); // Limit to 5 most relevant
+      };
+
+      // === ENHANCED CLINICAL INDICATOR EXTRACTION ===
+      const clinicalIndicators = {
+        // Assistive Devices - detailed categorization
+        assistDevices: {
+          detected: /walker|cane|wheelchair|rollator|crutch|grab bar|shower chair|commode|quad cane|hemi-walker|gait belt|bedside commode|raised toilet seat|reacher|hospital bed|hoyer lift|transfer board|sliding board/gi.test(narrativeText),
+          walkers: extractPhrases(narrativeText, /(?:uses?|requires?|ambulates? with|utilizing)?\s*(?:front[- ]?wheel(?:ed)?|four[- ]?wheel(?:ed)?|standard|rolling)?\s*walker[^.]*\./gi),
+          canes: extractPhrases(narrativeText, /(?:uses?|requires?|ambulates? with)?\s*(?:quad|single[- ]?point|straight|offset)?\s*cane[^.]*\./gi),
+          wheelchairs: extractPhrases(narrativeText, /(?:uses?|requires?|dependent on)?\s*(?:manual|power|electric|transport)?\s*wheelchair[^.]*\./gi),
+          bathroom: extractPhrases(narrativeText, /(?:grab bar|shower chair|tub bench|raised toilet|commode|bath seat)[^.]*\./gi),
+          transfers: extractPhrases(narrativeText, /(?:hoyer|mechanical lift|transfer board|gait belt|sliding board)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /walker|cane|wheelchair|rollator|crutch|grab bar|shower chair|commode|gait belt|lift/gi)
+        },
+
+        // Oxygen Usage - with specifics
+        oxygenUse: {
+          detected: /oxygen|o2|liters|lpm|l\/min|nasal cannula|concentrator|portable oxygen|bipap|cpap|nebulizer|pulse ox|spo2|saturation/gi.test(narrativeText),
+          flowRate: extractPhrases(narrativeText, /(\d+\.?\d*)\s*(l|liters?|lpm|l\/min)[^.]*\./gi),
+          deliveryMethod: extractPhrases(narrativeText, /(nasal cannula|non-?rebreather|face ?mask|venturi|high[- ]?flow|concentrator|portable tank)[^.]*\./gi),
+          frequency: extractPhrases(narrativeText, /(continuous|prn|as needed|with exertion|at rest|during sleep|24\/7|around the clock)\s*(?:oxygen|o2)[^.]*\./gi),
+          saturation: extractPhrases(narrativeText, /(spo2|saturation|pulse ox|oxygen sat)[^.]*(\d+%?)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /oxygen|o2 at|liters|lpm|nasal cannula|concentrator|saturation|spo2/gi)
+        },
+
+        // Wound Presence - detailed typing
+        woundPresent: {
+          detected: /wound|ulcer|incision|surgical site|dressing|staging|granulation|pressure injury|skin tear|laceration|dehiscence|necrotic|slough|eschar|drainage|exudate/gi.test(narrativeText),
+          pressureUlcers: extractPhrases(narrativeText, /(pressure (?:ulcer|injury|sore)|stage\s*[1-4IiVv]+|unstageable|dti|deep tissue injury)[^.]*\./gi),
+          surgicalWounds: extractPhrases(narrativeText, /(surgical (?:wound|site|incision)|post[- ]?op|staples|sutures|steri[- ]?strips|incision)[^.]*\./gi),
+          venousUlcers: extractPhrases(narrativeText, /(venous|stasis|arterial|vascular)\s*(?:ulcer|wound)[^.]*\./gi),
+          diabeticWounds: extractPhrases(narrativeText, /(diabetic (?:ulcer|wound|foot)|neuropathic ulcer)[^.]*\./gi),
+          skinTears: extractPhrases(narrativeText, /(skin tear|laceration|abrasion|bruise|hematoma)[^.]*\./gi),
+          woundCharacteristics: extractPhrases(narrativeText, /(granulation|epithelialization|necrotic|slough|eschar|drainage|exudate|purulent|serous|sanguinous|undermining|tunneling)[^.]*\./gi),
+          dressingTypes: extractPhrases(narrativeText, /(dressing|gauze|foam|hydrocolloid|alginate|silver|antimicrobial|wound vac|negative pressure)[^.]*\./gi),
+          measurements: extractPhrases(narrativeText, /(\d+\.?\d*\s*(?:cm|mm|x)\s*\d+\.?\d*)[^.]*(?:wound|ulcer|incision)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /wound|ulcer|incision|dressing|stage|granulation|drainage/gi)
+        },
+
+        // Fall Risk Factors - comprehensive
+        fallRisk: {
+          detected: /fall|unsteady|balance|gait|weak|dizziness|vertigo|syncope|near[- ]?fall|history of falls?|high[- ]?risk|morse|tinetti/gi.test(narrativeText),
+          history: extractPhrases(narrativeText, /(history of falls?|fell\s+\d+|previous fall|recent fall|multiple falls)[^.]*\./gi),
+          balanceIssues: extractPhrases(narrativeText, /(unsteady|balance (?:impair|deficit|problem|issue)|poor balance|balance difficulty)[^.]*\./gi),
+          gaitProblems: extractPhrases(narrativeText, /(gait (?:impair|deficit|unsteady|abnormal|ataxic|shuffling|antalgic)|abnormal gait)[^.]*\./gi),
+          weakness: extractPhrases(narrativeText, /(weakness|weak(?:ened)?|(?:lower|upper) extremity weakness|generalized weakness|muscle weakness)[^.]*\./gi),
+          dizziness: extractPhrases(narrativeText, /(dizz(?:y|iness)|vertigo|lightheaded|syncope|orthostatic|presyncope)[^.]*\./gi),
+          medications: extractPhrases(narrativeText, /(sedativ|benzodiazepine|opioid|antihypertensive|diuretic)[^.]*(?:fall|risk)[^.]*\./gi),
+          environmental: extractPhrases(narrativeText, /(throw rug|clutter|poor lighting|stairs|uneven|tripping hazard)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /fall|unsteady|balance|gait|weak|dizz|vertigo/gi)
+        },
+
+        // Pain Indicators - detailed
+        painMentioned: {
+          detected: /pain|discomfort|ache|aching|soreness|tender|hurt|burning|sharp|dull|throbbing|radiating|cramping/gi.test(narrativeText),
+          location: extractPhrases(narrativeText, /((?:back|neck|shoulder|knee|hip|leg|arm|chest|abdominal|head|joint|muscle|nerve)\s*pain)[^.]*\./gi),
+          intensity: extractPhrases(narrativeText, /(pain\s*(?:level|scale|score|rating)?[:\s]*\d+(?:\/10)?|(?:mild|moderate|severe|excruciating)\s*pain)[^.]*\./gi),
+          quality: extractPhrases(narrativeText, /(sharp|dull|aching|burning|throbbing|stabbing|shooting|radiating|cramping|constant|intermittent)\s*(?:pain|discomfort)[^.]*\./gi),
+          triggers: extractPhrases(narrativeText, /(pain (?:with|during|upon|after)|(?:worse|better) with)[^.]*\./gi),
+          management: extractPhrases(narrativeText, /(pain (?:management|control|medication|relief)|(?:takes?|prescribed)\s+\w+\s+for pain)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /pain|discomfort|ache|soreness|tender|hurt/gi)
+        },
+
+        // Cognitive Concerns - detailed
+        cognitiveIssues: {
+          detected: /confused|forgetful|dementia|alzheimer|cognitive|memory|orientation|disoriented|impaired judgment|poor recall|short[- ]?term memory|long[- ]?term memory|alert and oriented|a&ox|bims/gi.test(narrativeText),
+          orientation: extractPhrases(narrativeText, /(oriented (?:x|to)\s*\d|a&ox?\d|alert and oriented|disoriented|oriented to (?:person|place|time|situation))[^.]*\./gi),
+          memoryIssues: extractPhrases(narrativeText, /(memory (?:loss|impair|deficit|problem)|short[- ]?term memory|long[- ]?term memory|forgetful|poor recall)[^.]*\./gi),
+          diagnosis: extractPhrases(narrativeText, /(dementia|alzheimer|cognitive impairment|mild cognitive|vascular dementia|lewy body)[^.]*\./gi),
+          judgment: extractPhrases(narrativeText, /(impaired judgment|poor (?:judgment|insight|decision)|safety awareness)[^.]*\./gi),
+          screening: extractPhrases(narrativeText, /(bims|mmse|moca|mini[- ]?mental|cognitive screening|score(?:d)?[:\s]*\d+)[^.]*\./gi),
+          behaviors: extractPhrases(narrativeText, /(wandering|agitation|sundowning|confusion|repetitive|exit[- ]?seeking)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /confused|memory|dementia|alzheimer|cognitive|orientation|oriented|bims/gi)
+        },
+
+        // Diabetic Management - detailed
+        diabetic: {
+          detected: /diabetes|diabetic|insulin|blood sugar|glucose|a1c|hba1c|hypoglycemia|hyperglycemia|fingerstick|glucometer|sliding scale|diabetic diet|carb counting/gi.test(narrativeText),
+          type: extractPhrases(narrativeText, /(type\s*[12]\s*diabet|iddm|niddm|insulin[- ]?dependent|non[- ]?insulin)[^.]*\./gi),
+          medications: extractPhrases(narrativeText, /(insulin|metformin|glipizide|januvia|lantus|humalog|novolog|ozempic|trulicity|jardiance)[^.]*\./gi),
+          glucoseReadings: extractPhrases(narrativeText, /(blood (?:sugar|glucose)|bs|bg|fingerstick|glucometer)[:\s]*(\d+)[^.]*\./gi),
+          a1c: extractPhrases(narrativeText, /(a1c|hba1c|hemoglobin a1c)[:\s]*(\d+\.?\d*)[^.]*\./gi),
+          hypoglycemia: extractPhrases(narrativeText, /(hypoglycemi|low blood sugar|bs\s*(?:below|under|<)\s*\d+)[^.]*\./gi),
+          complications: extractPhrases(narrativeText, /(diabetic (?:neuropathy|retinopathy|nephropathy|foot|ulcer)|peripheral neuropathy)[^.]*\./gi),
+          management: extractPhrases(narrativeText, /(sliding scale|carb counting|diabetic diet|glucose monitoring|insulin administration)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /diabetes|insulin|blood sugar|glucose|a1c|hypoglycemia|diabetic/gi)
+        },
+
+        // Cardiac Symptoms - detailed
+        cardiacIssues: {
+          detected: /heart|cardiac|chf|afib|pacemaker|edema|shortness of breath|dyspnea|sob|chest pain|palpitation|arrhythmia|angina|mi|cad|heart failure/gi.test(narrativeText),
+          heartFailure: extractPhrases(narrativeText, /(heart failure|chf|congestive|hfref|hfpef|ef\s*(?:of)?\s*\d+%?|ejection fraction)[^.]*\./gi),
+          arrhythmias: extractPhrases(narrativeText, /(afib|atrial fibrillation|arrhythmia|palpitation|irregular (?:heart|pulse)|tachycardia|bradycardia)[^.]*\./gi),
+          edema: extractPhrases(narrativeText, /(edema|swelling|(?:\d+\+?)\s*pitting|peripheral edema|bilateral (?:leg|lower extremity) (?:edema|swelling)|ankle swelling)[^.]*\./gi),
+          dyspnea: extractPhrases(narrativeText, /(shortness of breath|sob|dyspnea|breathless|winded|orthopnea|pnd|paroxysmal nocturnal)[^.]*\./gi),
+          chestPain: extractPhrases(narrativeText, /(chest (?:pain|discomfort|pressure|tightness)|angina|substernal)[^.]*\./gi),
+          devices: extractPhrases(narrativeText, /(pacemaker|icd|defibrillator|aicd|loop recorder|cardiac monitor)[^.]*\./gi),
+          vitals: extractPhrases(narrativeText, /(bp|blood pressure|hr|heart rate|pulse)[:\s]*\d+[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /heart|cardiac|chf|afib|edema|shortness of breath|dyspnea|pacemaker|chest pain/gi)
+        },
+
+        // Assistance Level Indicators
+        assistanceNeeded: {
+          detected: /assist|help|require|dependent|unable|cannot|difficulty|needs help|supervision|standby|contact guard|min assist|mod assist|max assist|total assist|cga|sba/gi.test(narrativeText),
+          levelOfAssist: extractPhrases(narrativeText, /((?:min(?:imal)?|mod(?:erate)?|max(?:imal)?|total|complete)\s*assist|independent|supervision|standby|contact guard|cga|sba|1[- ]?person|2[- ]?person)[^.]*\./gi),
+          dependency: extractPhrases(narrativeText, /(dependent|unable to|cannot|requires assistance|needs help)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /assist|dependent|unable|requires|needs help|supervision|standby/gi)
+        },
+
+        // Independence Indicators
+        independentMentioned: {
+          detected: /independent|independently|without assist|self|able to|performs? own|no assist|unassisted/gi.test(narrativeText),
+          activities: extractPhrases(narrativeText, /(independent(?:ly)?|without assist(?:ance)?|able to|performs? (?:own|independently)|self[- ]?care|unassisted)[^.]*\./gi),
+          sentences: getSentencesContaining(narrativeText, /independent|without assist|able to|performs? own|self|unassisted/gi)
+        }
+      };
+
+      // === ENHANCED ADL/IADL PHRASE EXTRACTION ===
       const functionalPhrases = {
-        bathing: narrativeText?.match(/bath[eing]*[^.]*\./gi) || [],
-        dressing: narrativeText?.match(/dress[eing]*[^.]*\./gi) || [],
-        ambulation: narrativeText?.match(/(walk[ings]*|ambula[tion]*|mobil[ity]*)[^.]*\./gi) || [],
-        transfer: narrativeText?.match(/transfer[ring]*[^.]*\./gi) || [],
-        toileting: narrativeText?.match(/(toilet[ing]*|bathroom)[^.]*\./gi) || [],
-        grooming: narrativeText?.match(/(groom[ing]*|hygiene|brush|comb|shav)[^.]*\./gi) || []
+        // Bathing - comprehensive
+        bathing: {
+          allPhrases: getSentencesContaining(narrativeText, /bath|shower|wash|tub|sponge bath|bed bath|hygiene/gi),
+          assistLevel: extractPhrases(narrativeText, /((?:min|mod|max|total|complete)\s*assist(?:ance)?|independent(?:ly)?|supervision|standby)\s*(?:with|for|during)?\s*(?:bath|shower|wash)[^.]*\./gi),
+          equipment: extractPhrases(narrativeText, /(shower chair|tub bench|grab bar|hand[- ]?held shower|bath seat|transfer bench)[^.]*\./gi),
+          limitations: extractPhrases(narrativeText, /(unable to|difficulty|cannot|requires help)\s*(?:with)?\s*(?:bath|shower|wash)[^.]*\./gi)
+        },
+
+        // Dressing - comprehensive  
+        dressing: {
+          allPhrases: getSentencesContaining(narrativeText, /dress|cloth|button|zipper|put(?:ting)? on|don(?:ning)?|doff/gi),
+          upperBody: extractPhrases(narrativeText, /(upper (?:body|extremity)|shirt|blouse|bra|jacket)\s*(?:dress)[^.]*\./gi),
+          lowerBody: extractPhrases(narrativeText, /(lower (?:body|extremity)|pants|shorts|underwear|socks|shoes|footwear)[^.]*\./gi),
+          assistLevel: extractPhrases(narrativeText, /((?:min|mod|max|total)\s*assist|independent|supervision|setup)\s*(?:with|for)?\s*(?:dress)[^.]*\./gi),
+          limitations: extractPhrases(narrativeText, /(unable to|difficulty|cannot|requires help)\s*(?:with)?\s*(?:dress|button|zipper|reach)[^.]*\./gi)
+        },
+
+        // Ambulation/Mobility - comprehensive
+        ambulation: {
+          allPhrases: getSentencesContaining(narrativeText, /walk|ambul|mobil|gait|step|stair|feet|distance|weight[- ]?bear/gi),
+          distance: extractPhrases(narrativeText, /(walk(?:s|ed|ing)?|ambulate(?:s|d)?)\s*(?:up to|approximately|about)?\s*\d+\s*(?:feet|ft|meters|yards)[^.]*\./gi),
+          assistDevice: extractPhrases(narrativeText, /(ambulate(?:s|d)?|walk(?:s|ed)?)\s*(?:with|using)\s*(?:walker|cane|wheelchair|rollator)[^.]*\./gi),
+          assistLevel: extractPhrases(narrativeText, /((?:min|mod|max|total)\s*assist|independent|supervision|standby|cga|sba)\s*(?:with|for)?\s*(?:ambul|walk|mobil)[^.]*\./gi),
+          weightBearing: extractPhrases(narrativeText, /((?:non|partial|toe[- ]?touch|full|weight[- ]?bearing)[- ]?(?:weight[- ]?bearing)?|nwb|pwb|ttwb|fwb|wbat)[^.]*\./gi),
+          stairs: extractPhrases(narrativeText, /(stair|step|flight|ascend|descend|rail)[^.]*\./gi),
+          surfaces: extractPhrases(narrativeText, /(uneven|carpet|tile|outdoor|indoor|curb|ramp)[^.]*(?:surface|floor|ground)?[^.]*\./gi)
+        },
+
+        // Transfers - comprehensive
+        transfer: {
+          allPhrases: getSentencesContaining(narrativeText, /transfer|bed|chair|toilet|car|stand|sit|position/gi),
+          types: extractPhrases(narrativeText, /(bed[- ]?to[- ]?chair|chair[- ]?to[- ]?bed|toilet transfer|car transfer|stand[- ]?pivot|sit[- ]?to[- ]?stand|supine[- ]?to[- ]?sit)[^.]*\./gi),
+          assistLevel: extractPhrases(narrativeText, /((?:min|mod|max|total)\s*assist|independent|supervision|standby|1[- ]?person|2[- ]?person)\s*(?:with|for)?\s*(?:transfer)[^.]*\./gi),
+          equipment: extractPhrases(narrativeText, /(hoyer|mechanical lift|transfer board|gait belt|slide board|trapeze)[^.]*(?:transfer)?[^.]*\./gi),
+          weightBearing: extractPhrases(narrativeText, /(weight[- ]?bear|nwb|pwb|fwb|wbat)[^.]*(?:transfer)?[^.]*\./gi)
+        },
+
+        // Toileting - comprehensive
+        toileting: {
+          allPhrases: getSentencesContaining(narrativeText, /toilet|bathroom|urinal|bedpan|commode|continence|incontinence|void|bowel|bladder|catheter/gi),
+          transfers: extractPhrases(narrativeText, /(toilet transfer|on(?:to)?\/off toilet|commode transfer)[^.]*\./gi),
+          hygiene: extractPhrases(narrativeText, /(toileting hygiene|perineal care|self[- ]?wipe|clean(?:ing)? self)[^.]*\./gi),
+          continence: extractPhrases(narrativeText, /((?:in)?continent|urinary|bowel|bladder|accident|leakage|urgency|frequency)[^.]*\./gi),
+          equipment: extractPhrases(narrativeText, /(commode|bedpan|urinal|raised toilet|grab bar|catheter|brief|diaper)[^.]*\./gi),
+          assistLevel: extractPhrases(narrativeText, /((?:min|mod|max|total)\s*assist|independent|supervision)\s*(?:with|for)?\s*(?:toilet|bathroom|continence)[^.]*\./gi)
+        },
+
+        // Grooming - comprehensive
+        grooming: {
+          allPhrases: getSentencesContaining(narrativeText, /groom|hygiene|oral|teeth|dental|brush|comb|hair|shav|nail|make[- ]?up/gi),
+          oralCare: extractPhrases(narrativeText, /(oral (?:care|hygiene)|brush(?:ing)? teeth|denture(?:s)?|dental)[^.]*\./gi),
+          hairCare: extractPhrases(narrativeText, /(comb(?:ing)?|brush(?:ing)? hair|hair care|wash(?:ing)? hair)[^.]*\./gi),
+          shaving: extractPhrases(narrativeText, /(shav(?:e|ing)|razor|electric shaver|facial hair)[^.]*\./gi),
+          nailCare: extractPhrases(narrativeText, /(nail (?:care|trim)|fingernail|toenail|podiatr)[^.]*\./gi),
+          assistLevel: extractPhrases(narrativeText, /((?:min|mod|max|total)\s*assist|independent|supervision|setup)\s*(?:with|for)?\s*(?:groom|hygiene|oral care)[^.]*\./gi)
+        },
+
+        // Eating/Feeding - comprehensive
+        eating: {
+          allPhrases: getSentencesContaining(narrativeText, /eat|feed|meal|diet|swallow|chew|nutrition|appetite|intake/gi),
+          selfFeeding: extractPhrases(narrativeText, /(self[- ]?feed|feed(?:s|ing)? self|independent(?:ly)? eat)[^.]*\./gi),
+          assistLevel: extractPhrases(narrativeText, /((?:min|mod|max|total)\s*assist|independent|supervision|setup)\s*(?:with|for)?\s*(?:eat|feed|meal)[^.]*\./gi),
+          swallowing: extractPhrases(narrativeText, /(swallow|dysphagia|aspiration|chok(?:e|ing)|thickened liquid|mechanical soft|pureed)[^.]*\./gi),
+          diet: extractPhrases(narrativeText, /(diet|nutrition|appetite|intake|npo|tube feed|peg|g[- ]?tube)[^.]*\./gi)
+        },
+
+        // Medication Management
+        medications: {
+          allPhrases: getSentencesContaining(narrativeText, /medic|pill|tablet|dose|prescri|pharma|inject|insulin/gi),
+          oralMeds: extractPhrases(narrativeText, /(oral med(?:ication)?s?|pill(?:s)?|tablet(?:s)?|capsule(?:s)?)[^.]*\./gi),
+          injectables: extractPhrases(narrativeText, /(inject(?:able|ion)?s?|insulin|subcutaneous|im|iv)[^.]*\./gi),
+          management: extractPhrases(narrativeText, /(med(?:ication)? management|pill box|med planner|self[- ]?administer|caregiver (?:gives|administers))[^.]*\./gi),
+          compliance: extractPhrases(narrativeText, /(complian(?:t|ce)|adherence|miss(?:ed|ing) doses?|non[- ]?complian)[^.]*\./gi)
+        }
       };
 
       let prompt = `You are a CMS-certified OASIS-E compliance auditor with 15+ years expertise in 2024 Medicare home health CoP regulations and PDGM optimization. Perform RIGOROUS, EVIDENCE-BASED completeness and accuracy check for ${visitType}.
