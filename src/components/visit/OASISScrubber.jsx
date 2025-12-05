@@ -984,18 +984,18 @@ Return JSON:
                 </div>
               )}
 
-              {/* Star Rating Considerations */}
-              {oasisResults.star_rating_considerations && oasisResults.star_rating_considerations.length > 0 && (
+              {/* Quality Measures Impact */}
+              {oasisResults.quality_measures_impact && oasisResults.quality_measures_impact.length > 0 && (
                 <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
                   <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
-                    Star Rating & Quality Measure Considerations
+                    Quality Measures & Star Rating Impact
                   </h4>
                   <ul className="space-y-2">
-                    {oasisResults.star_rating_considerations.map((consideration, index) => (
+                    {oasisResults.quality_measures_impact.map((measure, index) => (
                       <li key={index} className="flex items-start gap-2 text-sm text-purple-900">
                         <span className="font-bold text-purple-600 mt-0.5">★</span>
-                        <span>{consideration}</span>
+                        <span>{measure}</span>
                       </li>
                     ))}
                   </ul>
