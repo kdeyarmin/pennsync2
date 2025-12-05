@@ -712,17 +712,73 @@ FUNCTIONAL SCORING ACCURACY:
    - 0=Independent any surface; 1=Device on all surfaces; 2=Assist on stairs only;
    - 3=Assist on all surfaces; 4=Wheelchair; 5=Bedfast; 6=N/A
 
-CROSS-VALIDATION CHECKS:
-- If M1860 Ambulation > 3, then M1850 Transferring should typically be ≥ 2
-- If using oxygen, document respiratory status for M1400
-- If wound documented, all M1306-M1342 items MUST be addressed
-- If high-risk meds (anticoagulants, insulin, opioids), M2010 must be YES
-- Cognitive issues must align with M1700-M1740 responses
+=== MANDATORY CROSS-VALIDATION RULES (FLAG ALL VIOLATIONS) ===
+
+**FUNCTIONAL ITEM CROSS-VALIDATION:**
+1. M1860 Ambulation ↔ M1850 Transferring:
+   - If M1860 ≥ 4 (wheelchair/bedfast), then M1850 must be ≥ 3 (needs assist or bears no weight)
+   - If M1850 = 5 (bedfast), then M1860 must = 5 or 6
+   - If patient "walks with walker independently" (M1860=1), M1850 should be ≤ 2
+
+2. M1850 Transferring ↔ M1840 Toilet Transfer:
+   - M1840 cannot be lower than M1850 (toilet transfer is more demanding)
+   - If M1850 = 4-5, M1840 must be ≥ 3
+
+3. M1830 Bathing ↔ M1850 Transferring:
+   - If M1830 ≥ 4 (needs transfer assist for bathing), M1850 must be ≥ 2
+   - If patient "independent with shower chair" (M1830=1), transfers likely ≤ 2
+
+4. M1800-M1820 Grooming/Dressing ↔ Cognitive Status:
+   - If M1700 cognitive ≥ 2 (impaired), grooming/dressing typically ≥ 1
+   - "Needs cueing" indicates cognitive issue AND grooming assistance
+
+5. M1860 ↔ M1033 Hospitalization Risk:
+   - High fall risk + impaired ambulation = higher hospitalization risk
+   - Non-ambulatory patients have inherently higher M1033 risk
+
+**CLINICAL CROSS-VALIDATION:**
+6. Oxygen Use ↔ M1400 Dyspnea:
+   - If oxygen documented, M1400 MUST show dyspnea level (cannot be 0)
+   - Continuous O2 = M1400 should be ≥ 2
+
+7. Wounds ↔ M1306-M1342:
+   - ANY wound mention requires complete wound section documentation
+   - Pressure ulcer stage must match narrative description
+   - "Healed" wounds still need M1340/M1342 documentation
+
+8. High-Risk Medications ↔ M2010:
+   - Anticoagulants (warfarin, eliquis, etc.) = M2010 YES
+   - Insulin = M2010 YES  
+   - Opioids (scheduled) = M2010 YES
+   - If ANY high-risk med in narrative, M2010 must be checked
+
+9. Diabetes ↔ Related Items:
+   - Diabetic patient with neuropathy should affect M1860 ambulation
+   - Diabetic foot ulcer requires wound section completion
+   - Insulin use requires M2030 injectable med management
+
+10. Cognitive Diagnosis ↔ M1700-M1740:
+    - Dementia/Alzheimer diagnosis requires impaired M1700
+    - Memory complaints should align with M1710-M1720
+    - BIMS score must match cognitive function rating
+
+**GG ↔ M-ITEM CROSS-VALIDATION:**
+11. GG0130 Self-Care ↔ M1800-M1830:
+    - GG0130E (shower/bathe) should align with M1830
+    - GG0130F/G (dressing) should align with M1810/M1820
+    - Scores cannot contradict (e.g., GG=06 independent but M1830=4)
+
+12. GG0170 Mobility ↔ M1850/M1860:
+    - GG0170E (bed-chair transfer) aligns with M1850
+    - GG0170I-K (walking distances) align with M1860
+    - GG0170F (toilet transfer) aligns with M1840
 
 PDGM FUNCTIONAL POINTS CALCULATION:
 - M1800 + M1810 + M1820 + M1830 + M1840 + M1850 + M1860 = Total Points
-- Low: 0-5 points; Medium: 6-11 points; High: 12+ points
-- Higher functional impairment = Higher reimbursement
+- Low: 0-5 points (lowest reimbursement)
+- Medium: 6-11 points
+- High: 12+ points (highest reimbursement)
+- Each point increase can add $50-150 to episode payment
 
 UPLOADED OASIS VALIDATION (if OASIS data was uploaded):
 - Compare uploaded OASIS scores against clinical narrative for consistency
@@ -731,13 +787,16 @@ UPLOADED OASIS VALIDATION (if OASIS data was uploaded):
 - Check if diagnosis codes support the documented functional limitations
 - Validate that discharge goals are realistic based on current status
 
-Analyze for:
+=== ANALYSIS CATEGORIES ===
+
+Analyze for these 7 categories:
 1. MISSING required items - Be specific about M-number and visit type requirement
 2. INCONSISTENCIES - Quote exact conflicting phrases from documentation AND compare against uploaded OASIS if available
-3. UNDERSCORING - Where documentation CLEARLY supports higher impairment than the uploaded OASIS score
-4. OVERSCORING - Where uploaded OASIS scores exceed what narrative documentation supports (audit risk)
-5. VAGUE DOCUMENTATION - Items that need more specific language for defensible scoring
-6. OASIS-NARRATIVE MISMATCHES - Where uploaded OASIS scores don't align with clinical narrative
+3. CROSS-VALIDATION FAILURES - Identify specific rule violations from the list above
+4. UNDERSCORING - Where documentation CLEARLY supports higher impairment; include CMS scoring reference
+5. OVERSCORING - Where claimed scores exceed narrative support; include audit vulnerability and recommended adjustment
+6. VAGUE DOCUMENTATION - Items where language is not specific enough for defensible scoring; provide improved language examples
+7. OASIS-NARRATIVE MISMATCHES - Where uploaded OASIS scores don't align with clinical narrative
 
 Return JSON:
 
