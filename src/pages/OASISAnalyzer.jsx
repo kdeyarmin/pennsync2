@@ -211,32 +211,82 @@ export default function OASISAnalyzer() {
       setUploadedFileUrl(file_url);
       setUploadProgress(40);
 
-      // Simplified extraction schema to avoid API limits
+      // Enhanced extraction schema - comprehensive but flat to avoid API limits
       const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: {
           type: "object",
           properties: {
-            patient_name: { type: "string" },
-            patient_dob: { type: "string" },
-            assessment_date: { type: "string" },
-            assessment_type: { type: "string" },
-            primary_diagnosis_code: { type: "string" },
-            primary_diagnosis_description: { type: "string" },
-            all_diagnoses_text: { type: "string" },
-            m1000_admission_source: { type: "string" },
-            m1800_grooming: { type: "string" },
-            m1810_dress_upper: { type: "string" },
-            m1820_dress_lower: { type: "string" },
-            m1830_bathing: { type: "string" },
-            m1840_toilet_transfer: { type: "string" },
-            m1850_transferring: { type: "string" },
-            m1860_ambulation: { type: "string" },
-            m1400_dyspnea: { type: "string" },
-            m1306_pressure_ulcer: { type: "string" },
-            m1340_surgical_wound: { type: "string" },
-            episode_timing: { type: "string" },
-            full_document_text: { type: "string" }
+            // Patient demographics
+            patient_name: { type: "string", description: "Patient full name" },
+            patient_dob: { type: "string", description: "Date of birth" },
+            patient_gender: { type: "string", description: "M or F" },
+            medicare_number: { type: "string", description: "Medicare ID if present" },
+
+            // Assessment info
+            assessment_date: { type: "string", description: "M0090 date of assessment" },
+            assessment_type: { type: "string", description: "SOC, ROC, Recert, Follow-up, Transfer, Discharge" },
+            assessment_reason: { type: "string", description: "M0100 reason for assessment" },
+
+            // Diagnoses - capture all text
+            primary_diagnosis_code: { type: "string", description: "M1021 primary ICD-10 code" },
+            primary_diagnosis_description: { type: "string", description: "Primary diagnosis name" },
+            secondary_diagnoses: { type: "string", description: "All secondary diagnoses codes and names comma separated" },
+            comorbidities_text: { type: "string", description: "All comorbidities and conditions mentioned" },
+
+            // Admission source and timing
+            m1000_admission_source: { type: "string", description: "M1000 value 1-6 or description" },
+            m1005_inpatient_facility: { type: "string", description: "M1005 inpatient facility type" },
+            episode_timing: { type: "string", description: "Early (0-29 days) or Late (30+ days)" },
+
+            // Functional status - ADLs
+            m1800_grooming: { type: "string", description: "M1800 score 0-3" },
+            m1810_dress_upper: { type: "string", description: "M1810 score 0-3" },
+            m1820_dress_lower: { type: "string", description: "M1820 score 0-3" },
+            m1830_bathing: { type: "string", description: "M1830 score 0-6" },
+            m1840_toilet_transfer: { type: "string", description: "M1840 score 0-4" },
+            m1850_transferring: { type: "string", description: "M1850 score 0-5" },
+            m1860_ambulation: { type: "string", description: "M1860 score 0-6" },
+
+            // GG items if present
+            gg0130_self_care: { type: "string", description: "GG0130 self-care score" },
+            gg0170_mobility: { type: "string", description: "GG0170 mobility score" },
+
+            // Clinical status
+            m1400_dyspnea: { type: "string", description: "M1400 score 0-4" },
+            m1242_pain_freq: { type: "string", description: "M1242 pain frequency" },
+            m1306_pressure_ulcer: { type: "string", description: "M1306 pressure ulcer present 0-1" },
+            m1307_pressure_ulcer_stage: { type: "string", description: "M1307 oldest stage" },
+            m1311_pressure_ulcer_count: { type: "string", description: "M1311 number of ulcers" },
+            m1322_stasis_ulcer: { type: "string", description: "M1322 stasis ulcer present" },
+            m1324_stasis_ulcer_status: { type: "string", description: "M1324 status" },
+            m1330_surgical_wound: { type: "string", description: "M1330 surgical wound present" },
+            m1340_surgical_wound_status: { type: "string", description: "M1340 status" },
+
+            // Cognitive and behavioral
+            m1700_cognitive: { type: "string", description: "M1700 cognitive functioning" },
+            m1710_confusion: { type: "string", description: "M1710 when confused" },
+            m1720_anxiety: { type: "string", description: "M1720 anxiety level" },
+            m1730_depression: { type: "string", description: "M1730 PHQ-2 score" },
+
+            // Therapy needs
+            therapy_pt_needed: { type: "string", description: "Physical therapy ordered yes/no" },
+            therapy_ot_needed: { type: "string", description: "Occupational therapy ordered yes/no" },
+            therapy_slp_needed: { type: "string", description: "Speech therapy ordered yes/no" },
+
+            // Risk factors
+            fall_risk_assessment: { type: "string", description: "Fall risk score or level" },
+            hospitalization_risk: { type: "string", description: "Hospitalization risk indicators" },
+
+            // Medications
+            high_risk_medications: { type: "string", description: "High risk drugs mentioned" },
+            medication_count: { type: "string", description: "Number of medications if stated" },
+
+            // Homebound status
+            homebound_reason: { type: "string", description: "Reason patient is homebound" },
+
+            // Full text for AI analysis
+            clinical_narrative: { type: "string", description: "Any narrative clinical notes or comments" }
           }
         }
       });
@@ -247,42 +297,80 @@ export default function OASISAnalyzer() {
         throw new Error(extractedData.details || "Failed to extract data from PDF. Please ensure it's a readable OASIS document.");
       }
 
-      // Build OASIS content from simplified extraction
+      // Build comprehensive OASIS content from enhanced extraction
       const output = extractedData.output;
       let oasisTextContent = "";
-      
+
       if (output) {
-        oasisTextContent = `PATIENT: ${output.patient_name || 'Unknown'}
-DOB: ${output.patient_dob || '?'}
-Assessment Date: ${output.assessment_date || '?'}
-Assessment Type: ${output.assessment_type || '?'}
+        oasisTextContent = `PATIENT DEMOGRAPHICS:
+      Name: ${output.patient_name || 'Unknown'}
+      DOB: ${output.patient_dob || '?'}
+      Gender: ${output.patient_gender || '?'}
+      Medicare #: ${output.medicare_number || 'N/A'}
 
-PRIMARY DIAGNOSIS:
-Code: ${output.primary_diagnosis_code || 'Not found'}
-Description: ${output.primary_diagnosis_description || 'Not found'}
+      ASSESSMENT INFORMATION:
+      Date (M0090): ${output.assessment_date || '?'}
+      Type: ${output.assessment_type || '?'}
+      Reason (M0100): ${output.assessment_reason || '?'}
 
-ALL DIAGNOSES:
-${output.all_diagnoses_text || 'None extracted'}
+      DIAGNOSES:
+      Primary (M1021): ${output.primary_diagnosis_code || '?'} - ${output.primary_diagnosis_description || 'Not found'}
+      Secondary Diagnoses: ${output.secondary_diagnoses || 'None documented'}
+      Comorbidities: ${output.comorbidities_text || 'None extracted'}
 
-ADMISSION SOURCE (M1000): ${output.m1000_admission_source || '?'}
-EPISODE TIMING: ${output.episode_timing || 'early'}
+      ADMISSION/EPISODE:
+      M1000 Admission Source: ${output.m1000_admission_source || '?'}
+      M1005 Inpatient Facility: ${output.m1005_inpatient_facility || 'N/A'}
+      Episode Timing: ${output.episode_timing || 'early'}
 
-FUNCTIONAL STATUS:
-M1800 Grooming: ${output.m1800_grooming || '?'}
-M1810 Upper Dressing: ${output.m1810_dress_upper || '?'}
-M1820 Lower Dressing: ${output.m1820_dress_lower || '?'}
-M1830 Bathing: ${output.m1830_bathing || '?'}
-M1840 Toilet Transfer: ${output.m1840_toilet_transfer || '?'}
-M1850 Transferring: ${output.m1850_transferring || '?'}
-M1860 Ambulation: ${output.m1860_ambulation || '?'}
+      FUNCTIONAL STATUS (ADLs):
+      M1800 Grooming: ${output.m1800_grooming || '?'}
+      M1810 Upper Body Dressing: ${output.m1810_dress_upper || '?'}
+      M1820 Lower Body Dressing: ${output.m1820_dress_lower || '?'}
+      M1830 Bathing: ${output.m1830_bathing || '?'}
+      M1840 Toilet Transferring: ${output.m1840_toilet_transfer || '?'}
+      M1850 Transferring: ${output.m1850_transferring || '?'}
+      M1860 Ambulation: ${output.m1860_ambulation || '?'}
 
-CLINICAL:
-M1400 Dyspnea: ${output.m1400_dyspnea || '?'}
-M1306 Pressure Ulcer: ${output.m1306_pressure_ulcer || '?'}
-M1340 Surgical Wound: ${output.m1340_surgical_wound || '?'}
+      GG FUNCTIONAL ITEMS:
+      GG0130 Self-Care: ${output.gg0130_self_care || 'N/A'}
+      GG0170 Mobility: ${output.gg0170_mobility || 'N/A'}
 
-FULL DOCUMENT TEXT:
-${output.full_document_text || ''}`;
+      CLINICAL STATUS:
+      M1400 Dyspnea: ${output.m1400_dyspnea || '?'}
+      M1242 Pain Frequency: ${output.m1242_pain_freq || '?'}
+
+      WOUNDS/SKIN:
+      M1306 Pressure Ulcer Present: ${output.m1306_pressure_ulcer || '?'}
+      M1307 Pressure Ulcer Stage: ${output.m1307_pressure_ulcer_stage || 'N/A'}
+      M1311 Pressure Ulcer Count: ${output.m1311_pressure_ulcer_count || 'N/A'}
+      M1322 Stasis Ulcer: ${output.m1322_stasis_ulcer || '?'}
+      M1324 Stasis Ulcer Status: ${output.m1324_stasis_ulcer_status || 'N/A'}
+      M1330 Surgical Wound: ${output.m1330_surgical_wound || '?'}
+      M1340 Surgical Wound Status: ${output.m1340_surgical_wound_status || 'N/A'}
+
+      COGNITIVE/BEHAVIORAL:
+      M1700 Cognitive Functioning: ${output.m1700_cognitive || '?'}
+      M1710 When Confused: ${output.m1710_confusion || '?'}
+      M1720 Anxiety Level: ${output.m1720_anxiety || '?'}
+      M1730 Depression (PHQ-2): ${output.m1730_depression || '?'}
+
+      THERAPY SERVICES:
+      PT Ordered: ${output.therapy_pt_needed || '?'}
+      OT Ordered: ${output.therapy_ot_needed || '?'}
+      SLP Ordered: ${output.therapy_slp_needed || '?'}
+
+      RISK FACTORS:
+      Fall Risk: ${output.fall_risk_assessment || '?'}
+      Hospitalization Risk: ${output.hospitalization_risk || '?'}
+      High-Risk Medications: ${output.high_risk_medications || 'None noted'}
+      Medication Count: ${output.medication_count || '?'}
+
+      HOMEBOUND STATUS:
+      Reason: ${output.homebound_reason || 'Not documented'}
+
+      CLINICAL NARRATIVE:
+      ${output.clinical_narrative || 'No narrative extracted'}`;
       }
 
       if (!oasisTextContent || oasisTextContent.trim().length < 20) {
@@ -299,20 +387,37 @@ ${output.full_document_text || ''}`;
         return isNaN(num) ? 0 : num;
       };
 
-      // Determine admission source
+      // Determine admission source with improved detection
       let admissionSource = 'community';
       const m1000 = String(output?.m1000_admission_source || '').toLowerCase();
-      if (m1000.includes('2') || m1000.includes('hospital') || m1000.includes('3') || m1000.includes('snf') || m1000.includes('4') || m1000.includes('institutional')) {
+      const m1005 = String(output?.m1005_inpatient_facility || '').toLowerCase();
+      if (m1000.includes('2') || m1000.includes('hospital') || m1000.includes('3') || m1000.includes('snf') || 
+          m1000.includes('4') || m1000.includes('institutional') || m1000.includes('inpatient') ||
+          m1005.includes('hospital') || m1005.includes('snf') || m1005.includes('rehab') || m1005.includes('ltch')) {
         admissionSource = 'institutional';
       }
 
-      // Build structured PDGM data
+      // Parse comorbidities from extracted text
+      const parseComorbidities = (text) => {
+        if (!text) return [];
+        const items = text.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 2);
+        return items.slice(0, 15); // Limit to 15 comorbidities
+      };
+
+      // Determine therapy needs
+      const checkTherapy = (val) => {
+        if (!val) return false;
+        const v = val.toLowerCase();
+        return v.includes('yes') || v.includes('ordered') || v.includes('true') || v === '1';
+      };
+
+      // Build structured PDGM data with enhanced extraction
       const structuredPdgmData = {
         primary_diagnosis: output?.primary_diagnosis_description || output?.primary_diagnosis_code || '',
         primary_diagnosis_code: output?.primary_diagnosis_code || '',
-        comorbidities: [],
+        comorbidities: parseComorbidities(output?.secondary_diagnoses || output?.comorbidities_text),
         admission_source: admissionSource,
-        episode_timing: output?.episode_timing || 'early',
+        episode_timing: (output?.episode_timing || '').toLowerCase().includes('late') ? 'late' : 'early',
         functional_scores: {
           m1800_grooming: parseScore(output?.m1800_grooming),
           m1810_dress_upper: parseScore(output?.m1810_dress_upper),
@@ -322,15 +427,47 @@ ${output.full_document_text || ''}`;
           m1850_transferring: parseScore(output?.m1850_transferring),
           m1860_ambulation: parseScore(output?.m1860_ambulation)
         },
-        gg_scores: { self_care: {}, mobility: {} },
+        gg_scores: { 
+          self_care: output?.gg0130_self_care || null, 
+          mobility: output?.gg0170_mobility || null 
+        },
         clinical_items: {
           dyspnea: parseScore(output?.m1400_dyspnea),
-          pain_frequency: 0,
-          pressure_ulcer_present: output?.m1306_pressure_ulcer === '1' || String(output?.m1306_pressure_ulcer).toLowerCase() === 'yes',
-          surgical_wound: output?.m1340_surgical_wound === '1' || String(output?.m1340_surgical_wound).toLowerCase() === 'yes'
+          pain_frequency: parseScore(output?.m1242_pain_freq),
+          pressure_ulcer_present: output?.m1306_pressure_ulcer === '1' || String(output?.m1306_pressure_ulcer).toLowerCase().includes('yes'),
+          pressure_ulcer_stage: output?.m1307_pressure_ulcer_stage || null,
+          pressure_ulcer_count: parseScore(output?.m1311_pressure_ulcer_count),
+          stasis_ulcer: output?.m1322_stasis_ulcer === '1' || String(output?.m1322_stasis_ulcer).toLowerCase().includes('yes'),
+          surgical_wound: output?.m1330_surgical_wound === '1' || String(output?.m1330_surgical_wound).toLowerCase().includes('yes'),
+          surgical_wound_status: output?.m1340_surgical_wound_status || null
         },
-        therapy_services: { pt: false, ot: false, slp: false },
-        patient_info: { name: output?.patient_name, assessment_date: output?.assessment_date, assessment_type: output?.assessment_type }
+        cognitive_status: {
+          cognitive_functioning: output?.m1700_cognitive || null,
+          confusion: output?.m1710_confusion || null,
+          anxiety: output?.m1720_anxiety || null,
+          depression_phq2: output?.m1730_depression || null
+        },
+        therapy_services: { 
+          pt: checkTherapy(output?.therapy_pt_needed), 
+          ot: checkTherapy(output?.therapy_ot_needed), 
+          slp: checkTherapy(output?.therapy_slp_needed) 
+        },
+        risk_factors: {
+          fall_risk: output?.fall_risk_assessment || null,
+          hospitalization_risk: output?.hospitalization_risk || null,
+          high_risk_medications: output?.high_risk_medications || null,
+          medication_count: parseScore(output?.medication_count)
+        },
+        homebound_reason: output?.homebound_reason || null,
+        patient_info: { 
+          name: output?.patient_name, 
+          dob: output?.patient_dob,
+          gender: output?.patient_gender,
+          medicare_number: output?.medicare_number,
+          assessment_date: output?.assessment_date, 
+          assessment_type: output?.assessment_type,
+          assessment_reason: output?.assessment_reason
+        }
       };
 
       // Increase content limit for better analysis
