@@ -65,6 +65,7 @@ import AIPatientHistorySummarizer from "../components/smartNote/AIPatientHistory
 import AIRiskAndGapDetector from "../components/smartNote/AIRiskAndGapDetector";
 import AIGrammarTerminologyCorrector from "../components/smartNote/AIGrammarTerminologyCorrector";
 import OASISDataSync from "../components/smartNote/OASISDataSync";
+import OASISIntegratedClinicalSupport from "../components/smartNote/OASISIntegratedClinicalSupport";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -939,6 +940,25 @@ Return JSON:
                                 setRoughNote(correctedNote);
                               }
                             }}
+                          />
+
+                          {/* OASIS-Integrated Clinical Decision Support */}
+                          <OASISIntegratedClinicalSupport
+                            patientId={selectedPatientId}
+                            patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+                            noteContent={enhancedNote || roughNote}
+                            diagnosis={finalDiagnosis}
+                            vitalSigns={vitalSigns}
+                            carePlans={carePlans}
+                            onInsertText={(text) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(prev => prev + '\n\n' + text);
+                              } else {
+                                setRoughNote(prev => prev + '\n\n' + text);
+                              }
+                            }}
+                            onCreateTask={(task) => console.log("Task created:", task)}
+                            onUpdateCarePlan={(rec) => console.log("Care plan update:", rec)}
                           />
 
                           {/* Clinical Decision Support */}
