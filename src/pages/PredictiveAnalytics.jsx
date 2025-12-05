@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Brain, Activity } from "lucide-react";
+import { ArrowLeft, Brain, Activity, DollarSign, Search } from "lucide-react";
 import AdvancedPredictiveAnalytics from "../components/predictive/AdvancedPredictiveAnalytics";
 import PredictiveRiskScoring from "../components/predictive/PredictiveRiskScoring";
+import PDGMCodingGapAnalyzer from "../components/pdgm/PDGMCodingGapAnalyzer";
+import PDGMCaseMixForecaster from "../components/pdgm/PDGMCaseMixForecaster";
 
 export default function PredictiveAnalytics() {
   // Fetch all data needed for risk scoring
