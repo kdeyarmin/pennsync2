@@ -263,8 +263,8 @@ export default function OASISAnalyzer() {
           base44.integrations.Core.ExtractDataFromUploadedFile({
             file_url: file_url,
             json_schema: {
-          type: "object",
-          properties: {
+              type: "object",
+              properties: {
             // Patient demographics
             patient_name: { type: "string", description: "Patient full name" },
             patient_dob: { type: "string", description: "Date of birth" },
@@ -345,8 +345,9 @@ export default function OASISAnalyzer() {
 
             // Full text for AI analysis
             clinical_narrative: { type: "string", description: "Any narrative clinical notes or comments" }
-          }
-        }),
+              }
+            }
+          }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Data extraction timeout - PDF may be too complex')), 90000)
           )
@@ -596,7 +597,7 @@ export default function OASISAnalyzer() {
       try {
         analysisResult = await Promise.race([
           base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly and provide HIGHLY SPECIFIC, ACTIONABLE recommendations.
+            prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly and provide HIGHLY SPECIFIC, ACTIONABLE recommendations.
 
       PRE-EXTRACTED STRUCTURED DATA:
       ${JSON.stringify(structuredPdgmData, null, 2)}
@@ -659,10 +660,10 @@ export default function OASISAnalyzer() {
       "quick_wins": [{"action": "immediate action", "effort": "low/medium", "impact": "$ or compliance benefit", "how_to": "step by step"}],
       "clinician_questions": ["specific questions to ask the assessing clinician to clarify scoring"]
       }`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            overall_score: { type: "number" },
+            response_json_schema: {
+              type: "object",
+              properties: {
+                overall_score: { type: "number" },
             accuracy_score: { type: "number" },
             compliance_score: { type: "number" },
             revenue_optimization_score: { type: "number" },
@@ -678,10 +679,11 @@ export default function OASISAnalyzer() {
             missing_high_value_documentation: { type: "array", items: { type: "object" } },
             strengths: { type: "array", items: { type: "string" } },
             key_recommendations: { type: "array", items: { type: "string" } },
-            quick_wins: { type: "array", items: { type: "object" } },
-            clinician_questions: { type: "array", items: { type: "string" } }
-          }
-        }),
+                quick_wins: { type: "array", items: { type: "object" } },
+                clinician_questions: { type: "array", items: { type: "string" } }
+              }
+            }
+          }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Analysis timeout - please try again')), 120000)
           )
@@ -697,22 +699,23 @@ export default function OASISAnalyzer() {
       try {
         validationResult = await Promise.race([
           base44.integrations.Core.InvokeLLM({
-        prompt: `Validate OASIS PDGM data. Check: M-item consistency, diagnosis validity, admission source, episode timing.
+            prompt: `Validate OASIS PDGM data. Check: M-item consistency, diagnosis validity, admission source, episode timing.
 
 Data: ${JSON.stringify(analysisResult.pdgm_data || {})}
 
 Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "string", "severity": "critical/warning", "item": "item", "description": "desc", "suggested_correction": "fix", "pdgm_impact": "impact"}], "warnings": [], "data_quality_score": 0-100, "pdgm_readiness": {"ready_for_grouping": true/false, "missing_critical_elements": [], "optimization_opportunities": []}, "recommendation": "brief"}`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            validation_passed: { type: "boolean" },
+            response_json_schema: {
+              type: "object",
+              properties: {
+                validation_passed: { type: "boolean" },
             critical_issues: { type: "array", items: { type: "object" } },
             warnings: { type: "array", items: { type: "string" } },
             data_quality_score: { type: "number" },
-            pdgm_readiness: { type: "object" },
-            recommendation: { type: "string" }
-          }
-        }),
+                pdgm_readiness: { type: "object" },
+                recommendation: { type: "string" }
+              }
+            }
+          }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Validation timeout')), 60000)
           )
