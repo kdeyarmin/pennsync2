@@ -1487,6 +1487,104 @@ Return JSON:
                 )}
               </div>
 
+              {/* OASIS-Narrative Mismatches (from uploaded OASIS) */}
+              {oasisResults.oasis_narrative_mismatches && oasisResults.oasis_narrative_mismatches.length > 0 && (
+                <div className="space-y-3">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer bg-purple-50 p-4 rounded-lg border-2 border-purple-200"
+                    onClick={() => toggleCategory('mismatches')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-6 h-6 text-purple-600" />
+                      <div>
+                        <h4 className="font-bold text-purple-900 text-lg">
+                          🔍 OASIS vs Narrative Mismatches ({oasisResults.oasis_narrative_mismatches.length})
+                        </h4>
+                        <p className="text-xs text-purple-700">Uploaded OASIS scores don't match clinical documentation</p>
+                      </div>
+                    </div>
+                    {expandedCategories.includes('mismatches') ? (
+                      <ChevronUp className="w-5 h-5 text-purple-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-purple-600" />
+                    )}
+                  </div>
+
+                  {expandedCategories.includes('mismatches') && (
+                    <div className="space-y-3">
+                      {oasisResults.oasis_narrative_mismatches.map((item, index) => (
+                        <Card key={index} className="border-l-4 border-l-purple-500 bg-purple-50">
+                          <CardContent className="p-4 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-bold text-purple-900">{item.oasis_item}</h5>
+                              <Badge className={`${item.audit_risk === 'high' ? 'bg-red-600' : item.audit_risk === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`}>
+                                {item.audit_risk} audit risk
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="bg-red-100 p-2 rounded border border-red-200">
+                                <p className="text-xs text-red-700">Uploaded OASIS Score</p>
+                                <p className="font-semibold text-red-800">{item.uploaded_score}</p>
+                              </div>
+                              <div className="bg-green-100 p-2 rounded border border-green-200">
+                                <p className="text-xs text-green-700">Narrative Suggests</p>
+                                <p className="font-semibold text-green-800">{item.narrative_suggests}</p>
+                              </div>
+                            </div>
+                            <div className="bg-white p-2 rounded border text-sm">
+                              <p className="text-xs text-gray-500">Discrepancy:</p>
+                              <p className="text-gray-900">{item.discrepancy}</p>
+                            </div>
+                            <Alert className="bg-blue-50 border-blue-200">
+                              <Info className="w-4 h-4 text-blue-600" />
+                              <AlertDescription className="text-blue-900 text-sm">
+                                <strong>Recommendation:</strong> {item.recommendation}
+                              </AlertDescription>
+                            </Alert>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* GG Section Analysis */}
+              {oasisResults.gg_section_analysis && (
+                <div className="bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200">
+                  <h4 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                    <FileCheck className="w-5 h-5" />
+                    Section GG Functional Analysis
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    {oasisResults.gg_section_analysis.gg0130_self_care_summary && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-indigo-700 mb-1">GG0130 Self-Care</p>
+                        <p className="text-gray-700">{oasisResults.gg_section_analysis.gg0130_self_care_summary}</p>
+                      </div>
+                    )}
+                    {oasisResults.gg_section_analysis.gg0170_mobility_summary && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-indigo-700 mb-1">GG0170 Mobility</p>
+                        <p className="text-gray-700">{oasisResults.gg_section_analysis.gg0170_mobility_summary}</p>
+                      </div>
+                    )}
+                    {oasisResults.gg_section_analysis.goal_appropriateness && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-indigo-700 mb-1">Discharge Goal Assessment</p>
+                        <p className="text-gray-700">{oasisResults.gg_section_analysis.goal_appropriateness}</p>
+                      </div>
+                    )}
+                    {oasisResults.gg_section_analysis.functional_improvement_potential && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-indigo-700 mb-1">Improvement Potential</p>
+                        <p className="text-gray-700">{oasisResults.gg_section_analysis.functional_improvement_potential}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Underscoring Opportunities */}
               {oasisResults.underscoring_opportunities && oasisResults.underscoring_opportunities.length > 0 && (
                 <div className="space-y-3">
