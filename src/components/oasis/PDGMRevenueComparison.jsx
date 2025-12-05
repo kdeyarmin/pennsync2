@@ -22,7 +22,11 @@ import {
   Stethoscope,
   ClipboardList,
   Sliders,
-  Trophy
+  Trophy,
+  AlertTriangle,
+  Building2,
+  Clock,
+  GitCompare
 } from "lucide-react";
 import { calculatePDGM } from "@/functions/calculatePDGM";
 import { generatePDGMComparisonPDF } from "@/functions/generatePDGMComparisonPDF";
@@ -30,6 +34,121 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import PDGMWhatIfBuilder from "./PDGMWhatIfBuilder";
 import TopOptimizationOpportunities from "./TopOptimizationOpportunities";
 import debounce from "lodash/debounce";
+
+function DataValidationWarnings({ validation }) {
+  if (!validation?.hasDiscrepancies) return null;
+
+  return (
+    <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <AlertTriangle className="w-5 h-5 text-yellow-600" />
+        <span className="font-semibold text-yellow-800">Data Validation Warnings</span>
+        <Badge className="bg-yellow-200 text-yellow-800">{validation.discrepancies.length}</Badge>
+      </div>
+      
+      <div className="space-y-2">
+        {validation.discrepancies.map((d, idx) => (
+          <div key={idx} className="bg-white rounded-lg p-3 border border-yellow-200">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-800">{d.message}</p>
+                <div className="flex items-center gap-2 mt-1 text-xs">
+                  <Badge variant="outline" className="text-xs">
+                    Expected: {d.expected}
+                  </Badge>
+                  <ArrowRight className="w-3 h-3 text-gray-400" />
+                  <Badge variant="outline" className="text-xs bg-red-50 text-red-700">
+                    Actual: {d.actual}
+                  </Badge>
+                </div>
+                {d.evidence && (
+                  <p className="text-xs text-gray-500 mt-1">Evidence: {d.evidence}</p>
+                )}
+              </div>
+              <Badge className={`text-xs ${d.severity === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                {d.severity}
+              </Badge>
+            </div>
+            {d.revenueImpact && (
+              <p className="text-xs text-green-700 mt-2 bg-green-50 p-1.5 rounded">
+                💰 {d.revenueImpact}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AlternativeScenarios({ scenarios, currentKey }) {
+  if (!scenarios?.scenarios) return null;
+
+  const scenarioList = Object.entries(scenarios.scenarios);
+  const formatCurrency = (amt) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amt);
+
+  return (
+    <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+      <div className="flex items-center gap-2 mb-3">
+        <GitCompare className="w-4 h-4 text-indigo-600" />
+        <span className="font-semibold text-indigo-800 text-sm">Payment Scenarios Comparison</span>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-2">
+        {scenarioList.map(([key, data]) => {
+          const isCurrent = key === currentKey;
+          const isHighest = key === scenarios.highestScenario;
+          const isLowest = key === scenarios.lowestScenario;
+          
+          return (
+            <div 
+              key={key}
+              className={`p-3 rounded-lg border-2 ${
+                isCurrent ? 'bg-blue-100 border-blue-400' :
+                isHighest ? 'bg-green-50 border-green-300' :
+                isLowest ? 'bg-gray-50 border-gray-300' :
+                'bg-white border-gray-200'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1">
+                  {data.admissionSource === 'institutional' ? (
+                    <Building2 className="w-3 h-3 text-purple-500" />
+                  ) : (
+                    <Activity className="w-3 h-3 text-blue-500" />
+                  )}
+                  <span className="text-xs font-medium capitalize">{data.admissionSource}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-gray-500" />
+                  <span className="text-xs capitalize">{data.episodeTiming}</span>
+                </div>
+              </div>
+              <p className={`text-lg font-bold ${
+                isHighest ? 'text-green-700' : 
+                isLowest ? 'text-gray-600' : 
+                'text-gray-800'
+              }`}>
+                {formatCurrency(data.totalPayment)}
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                {isCurrent && <Badge className="text-xs bg-blue-600">Current</Badge>}
+                {isHighest && <Badge className="text-xs bg-green-600">Highest</Badge>}
+                {isLowest && !isHighest && <Badge className="text-xs bg-gray-500">Lowest</Badge>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      <div className="mt-3 pt-3 border-t border-indigo-200 text-xs text-indigo-700">
+        <p>Payment range: {formatCurrency(scenarios.minPayment)} - {formatCurrency(scenarios.maxPayment)} 
+          <span className="font-semibold ml-1">(Δ {formatCurrency(scenarios.paymentRange)})</span>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function CaseMixBreakdown({ original, corrected }) {
   if (!original) return null;
@@ -269,6 +388,8 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
   const [whatIfScenario, setWhatIfScenario] = useState(null);
   const [whatIfRevenue, setWhatIfRevenue] = useState(null);
   const [isCalculatingWhatIf, setIsCalculatingWhatIf] = useState(false);
+  const [dataValidation, setDataValidation] = useState(null);
+  const [alternativeScenarios, setAlternativeScenarios] = useState(null);
 
   // Auto-calculate when pdgmData becomes available
   useEffect(() => {
@@ -340,13 +461,21 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
       });
 
       setRevenueData(response.data);
-    } catch (err) {
-      console.error("Error calculating PDGM:", err);
-      setError("Failed to calculate PDGM revenue. Please try again.");
-    }
 
-    setIsCalculating(false);
-  };
+              // Store validation and scenarios data
+              if (response.data?.dataValidation) {
+                setDataValidation(response.data.dataValidation);
+              }
+              if (response.data?.alternativeScenarios) {
+                setAlternativeScenarios(response.data.alternativeScenarios);
+              }
+            } catch (err) {
+              console.error("Error calculating PDGM:", err);
+              setError("Failed to calculate PDGM revenue. Please try again.");
+            }
+
+            setIsCalculating(false);
+          };
 
   const buildCorrectedPdgmData = (original, analysis) => {
     const corrected = JSON.parse(JSON.stringify(original)); // Deep clone
@@ -625,8 +754,21 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
 
               {/* Analysis Tab */}
               <TabsContent value="analysis" className="mt-4 space-y-4">
-            {/* Revenue Comparison */}
-            <div className="grid grid-cols-2 gap-4">
+                                {/* Data Validation Warnings */}
+                                {dataValidation?.hasDiscrepancies && (
+                                  <DataValidationWarnings validation={dataValidation} />
+                                )}
+
+                                {/* Alternative Scenarios Comparison */}
+                                {alternativeScenarios && (
+                                  <AlternativeScenarios 
+                                    scenarios={alternativeScenarios} 
+                                    currentKey={revenueData.original?.sourceTimingKey} 
+                                  />
+                                )}
+
+                                {/* Revenue Comparison */}
+                                <div className="grid grid-cols-2 gap-4">
               {/* Original Revenue */}
               <div className="p-4 bg-gray-50 rounded-lg border">
                 <p className="text-xs text-gray-500 mb-1">Current Documentation</p>
