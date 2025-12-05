@@ -205,27 +205,14 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
 
       // Merge validation results into analysis
       analysisResult.validation_summary = {
-        data_quality_score: validationResult.data_quality_score,
-        critical_issues_found: validationResult.critical_issues?.length || 0,
-        warnings_found: validationResult.warnings?.length || 0,
-        issues: validationResult.critical_issues || [],
-        warnings: validationResult.warnings || [],
-        recommendation: validationResult.recommendation,
-        pdgm_readiness: validationResult.pdgm_readiness || null,
-        validated_pdgm_items: validationResult.validated_pdgm_items || null
+        data_quality_score: validationResult?.data_quality_score || 75,
+        critical_issues_found: validationResult?.critical_issues?.length || 0,
+        warnings_found: validationResult?.warnings?.length || 0,
+        issues: validationResult?.critical_issues || [],
+        warnings: validationResult?.warnings || [],
+        recommendation: validationResult?.recommendation || '',
+        pdgm_readiness: validationResult?.pdgm_readiness || null
       };
-
-      // Use validated PDGM items if available
-      if (validationResult.validated_pdgm_items && analysisResult.pdgm_data) {
-        analysisResult.pdgm_data.functional_scores = {
-          ...analysisResult.pdgm_data.functional_scores,
-          ...Object.fromEntries(
-            Object.entries(validationResult.validated_pdgm_items)
-              .filter(([_, v]) => v !== null && v !== undefined && !isNaN(parseInt(v)))
-              .map(([k, v]) => [k, parseInt(v)])
-          )
-        };
-      }
 
       setUploadProgress(100);
       setAnalysisResults(analysisResult);
