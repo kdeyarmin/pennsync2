@@ -65,6 +65,7 @@ import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerat
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import PDGMPredictiveForecaster from "../components/oasis/PDGMPredictiveForecaster";
+import PatientMatchSelector from "../components/oasis/PatientMatchSelector";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -87,6 +88,7 @@ export default function OASISAnalyzer() {
   const [navigationData, setNavigationData] = useState(null);
   const [qualityScore, setQualityScore] = useState(null);
   const [triggeredPathways, setTriggeredPathways] = useState([]);
+  const [matchResults, setMatchResults] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -125,85 +127,208 @@ export default function OASISAnalyzer() {
         setPatientName(extractedName);
       setSavedToPatient(false);
       
-      // Enhanced auto-match patient by name with improved fuzzy matching
+      // Advanced fuzzy matching algorithm with multiple strategies
       if (extractedName && extractedName !== "Unknown Patient" && extractedName !== "Unknown Patient - Verify Document" && patients.length > 0) {
-        const extractedNameClean = extractedName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
-        const nameParts = extractedNameClean.split(/\s+/).filter(p => p.length > 1);
+        const extractedDOB = analysisResults.pdgm_data?.patient_info?.dob;
         
-        // Try multiple matching strategies
-        let matchedPatient = null;
-        let matchScore = 0;
+        const matchedPatients = patients.map(patient => {
+          const score = calculatePatientMatchScore(extractedName, patient, extractedDOB);
+          return { patient, ...score };
+        })
+        .filter(m => m.confidence >= 40) // Only show matches with at least 40% confidence
+        .sort((a, b) => b.confidence - a.confidence);
         
-        patients.forEach(p => {
-          const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
-          const firstName = (p.first_name || '').toLowerCase();
-          const lastName = (p.last_name || '').toLowerCase();
-          let currentScore = 0;
-          
-          // Strategy 1: Exact full name match (highest priority)
-          if (fullName === extractedNameClean || extractedNameClean === fullName) {
-            currentScore = 100;
-          }
-          
-          // Strategy 2: Handle "LastName, FirstName" format
-          else if (extractedName.includes(',')) {
-            const [lastPart, firstPart] = extractedName.split(',').map(s => s.trim().toLowerCase());
-            if (lastPart === lastName && firstPart.startsWith(firstName)) {
-              currentScore = 95;
-            }
-          }
-          
-          // Strategy 3: Both first and last name match (high confidence)
-          else if (nameParts.length >= 2) {
-            const firstNameMatch = nameParts.some(part => 
-              part === firstName || firstName === part || 
-              firstName.startsWith(part) || part.startsWith(firstName)
-            );
-            const lastNameMatch = nameParts.some(part => 
-              part === lastName || lastName === part ||
-              lastName.startsWith(part) || part.startsWith(lastName)
-            );
-            
-            if (firstNameMatch && lastNameMatch) {
-              // Check for exact matches vs partial
-              const exactFirst = nameParts.includes(firstName);
-              const exactLast = nameParts.includes(lastName);
-              currentScore = (exactFirst && exactLast) ? 90 : 80;
-            }
-          }
-          
-          // Strategy 4: Last name match with first initial (medium confidence)
-          else if (nameParts.length >= 2) {
-            const possibleLastName = nameParts[nameParts.length - 1];
-            const possibleFirstName = nameParts[0];
-            if (possibleLastName === lastName && possibleFirstName.startsWith(firstName.charAt(0))) {
-              currentScore = 70;
-            }
-          }
-          
-          // Strategy 5: Contains match (lower confidence)
-          else if (extractedNameClean.includes(fullName) || fullName.includes(extractedNameClean)) {
-            currentScore = 60;
-          }
-          
-          // Select best match
-          if (currentScore > matchScore) {
-            matchScore = currentScore;
-            matchedPatient = p;
-          }
-        });
+        const results = {
+          extractedName,
+          extractedDOB,
+          matches: matchedPatients
+        };
         
-        // Only auto-select if confidence is high enough (>= 70%)
-        if (matchedPatient && matchScore >= 70) {
-          setSelectedPatientId(matchedPatient.id);
-          console.log(`Auto-matched patient with ${matchScore}% confidence:`, matchedPatient.first_name, matchedPatient.last_name);
-        } else if (matchedPatient && matchScore >= 50) {
-          // Lower confidence - don't auto-select but log suggestion
-          console.log(`Possible patient match (${matchScore}% confidence):`, matchedPatient.first_name, matchedPatient.last_name, '- not auto-selected due to low confidence');
-        } else {
-          console.log('No confident patient match found for:', extractedName, '- Extracted parts:', nameParts);
+        setMatchResults(results);
+        
+        // Auto-select if confidence is very high (>= 85%)
+        const bestMatch = matchedPatients[0];
+        if (bestMatch && bestMatch.confidence >= 85) {
+          setSelectedPatientId(bestMatch.patient.id);
+          console.log(`Auto-matched patient with ${bestMatch.confidence}% confidence:`, bestMatch.patient.first_name, bestMatch.patient.last_name);
+        } else if (bestMatch) {
+          console.log(`Best match (${bestMatch.confidence}% confidence):`, bestMatch.patient.first_name, bestMatch.patient.last_name, '- awaiting manual confirmation');
         }
       }
+    }
+  }, [analysisResults, patients]);
+
+  // Sophisticated patient matching algorithm
+  const calculatePatientMatchScore = (extractedName, patient, extractedDOB) => {
+    let confidence = 0;
+    const matchFactors = [];
+    let dobMatch = false;
+    
+    const extractedNameClean = extractedName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+    const nameParts = extractedNameClean.split(/\s+/).filter(p => p.length > 1);
+    
+    const fullName = `${patient.first_name} ${patient.last_name}`.toLowerCase();
+    const firstName = (patient.first_name || '').toLowerCase();
+    const lastName = (patient.last_name || '').toLowerCase();
+    
+    // Levenshtein distance for typo tolerance
+    const levenshteinDistance = (a, b) => {
+      const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+      for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+      for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+      for (let j = 1; j <= b.length; j++) {
+        for (let i = 1; i <= a.length; i++) {
+          const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+          matrix[j][i] = Math.min(
+            matrix[j][i - 1] + 1,
+            matrix[j - 1][i] + 1,
+            matrix[j - 1][i - 1] + indicator
+          );
+        }
+      }
+      return matrix[b.length][a.length];
+    };
+    
+    const similarity = (a, b) => {
+      const distance = levenshteinDistance(a, b);
+      const maxLen = Math.max(a.length, b.length);
+      return maxLen > 0 ? ((maxLen - distance) / maxLen) * 100 : 0;
+    };
+    
+    // Strategy 1: Exact full name match
+    if (fullName === extractedNameClean) {
+      confidence += 50;
+      matchFactors.push('Exact name match');
+    } else {
+      // Check similarity with typo tolerance
+      const fullNameSimilarity = similarity(fullName, extractedNameClean);
+      if (fullNameSimilarity >= 90) {
+        confidence += 45;
+        matchFactors.push('Near-exact match (minor typo tolerance)');
+      } else if (fullNameSimilarity >= 80) {
+        confidence += 35;
+        matchFactors.push('High name similarity');
+      }
+    }
+    
+    // Strategy 2: Handle "LastName, FirstName" format
+    if (extractedName.includes(',')) {
+      const [lastPart, firstPart] = extractedName.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z\s]/g, ''));
+      const lastSim = similarity(lastPart, lastName);
+      const firstSim = similarity(firstPart, firstName);
+      
+      if (lastSim >= 90 && firstSim >= 90) {
+        confidence += 45;
+        matchFactors.push('Comma-separated format match');
+      } else if (lastSim >= 80 && firstSim >= 80) {
+        confidence += 35;
+        matchFactors.push('Comma-separated format (partial)');
+      }
+    }
+    
+    // Strategy 3: Component name matching
+    if (nameParts.length >= 2) {
+      let firstNameMatched = false;
+      let lastNameMatched = false;
+      
+      nameParts.forEach(part => {
+        const firstSim = similarity(part, firstName);
+        const lastSim = similarity(part, lastName);
+        
+        if (firstSim >= 90) {
+          firstNameMatched = true;
+          confidence += 20;
+        } else if (firstSim >= 80) {
+          firstNameMatched = true;
+          confidence += 15;
+        }
+        
+        if (lastSim >= 90) {
+          lastNameMatched = true;
+          confidence += 20;
+        } else if (lastSim >= 80) {
+          lastNameMatched = true;
+          confidence += 15;
+        }
+      });
+      
+      if (firstNameMatched && lastNameMatched) {
+        matchFactors.push('First and last name matched');
+      } else if (lastNameMatched) {
+        matchFactors.push('Last name matched');
+      } else if (firstNameMatched) {
+        matchFactors.push('First name matched');
+      }
+    }
+    
+    // Strategy 4: Initial matching (e.g., "J. Smith")
+    const initials = nameParts.map(p => p.charAt(0)).join('');
+    const patientInitials = (firstName.charAt(0) + lastName.charAt(0));
+    if (initials === patientInitials || initials.includes(patientInitials)) {
+      confidence += 10;
+      matchFactors.push('Initials match');
+    }
+    
+    // Strategy 5: Soundex/phonetic matching for common misspellings
+    const soundex = (str) => {
+      const code = str.toUpperCase().charAt(0);
+      const mapping = { B: 1, F: 1, P: 1, V: 1, C: 2, G: 2, J: 2, K: 2, Q: 2, S: 2, X: 2, Z: 2, D: 3, T: 3, L: 4, M: 5, N: 5, R: 6 };
+      return code + str.slice(1).toUpperCase().replace(/[^A-Z]/g, '').split('').map(c => mapping[c] || '').filter((v, i, a) => i === 0 || v !== a[i - 1]).join('').substring(0, 3).padEnd(3, '0');
+    };
+    
+    if (lastName.length >= 3 && nameParts.length > 0) {
+      const lastPartSoundex = soundex(nameParts[nameParts.length - 1]);
+      const lastNameSoundex = soundex(lastName);
+      if (lastPartSoundex === lastNameSoundex) {
+        confidence += 10;
+        matchFactors.push('Phonetic match (sounds like)');
+      }
+    }
+    
+    // DOB Verification (CRITICAL - can add or subtract confidence)
+    if (extractedDOB && patient.date_of_birth) {
+      const normalizeDOB = (dob) => {
+        // Handle various date formats
+        const cleaned = dob.replace(/[^\d]/g, '');
+        if (cleaned.length >= 6) {
+          return cleaned.substring(0, 8); // MMDDYYYY or YYYYMMDD
+        }
+        return cleaned;
+      };
+      
+      const extractedDOBNorm = normalizeDOB(extractedDOB);
+      const patientDOBNorm = normalizeDOB(patient.date_of_birth);
+      
+      if (extractedDOBNorm === patientDOBNorm) {
+        confidence += 30; // Major confidence boost
+        dobMatch = true;
+        matchFactors.push('✓ Date of birth verified');
+      } else if (extractedDOBNorm && patientDOBNorm) {
+        // Check if year matches
+        const extractedYear = extractedDOB.match(/\d{4}/)?.[0];
+        const patientYear = patient.date_of_birth.match(/\d{4}/)?.[0];
+        
+        if (extractedYear === patientYear) {
+          confidence += 10;
+          matchFactors.push('Birth year matches');
+        } else {
+          // DOB mismatch is a red flag
+          confidence -= 20;
+          matchFactors.push('⚠ Date of birth does NOT match');
+        }
+      }
+    }
+    
+    // Cap confidence at 100
+    confidence = Math.min(100, Math.max(0, confidence));
+    
+    return { confidence: Math.round(confidence), matchFactors, dobMatch };
+  };
+
+  // Reset match results when starting new analysis
+  useEffect(() => {
+    if (!analysisResults) {
+      setMatchResults(null);
     }
   }, [analysisResults, patients]);
 
@@ -1238,67 +1363,45 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       {/* Analysis Results */}
       {analysisResults && (
         <div className="space-y-6">
-          {/* Save to Patient Card */}
-          <Card className="border-2 border-blue-200 bg-blue-50">
+          {/* Patient Match Selector - Enhanced with Confidence Scoring */}
+          <PatientMatchSelector
+            extractedName={patientName}
+            extractedDOB={pdgmData?.patient_info?.dob}
+            matchResults={matchResults}
+            selectedPatientId={selectedPatientId}
+            onSelectPatient={(patientId) => setSelectedPatientId(patientId)}
+            allPatients={patients}
+          />
+
+          {/* Save to Patient Action */}
+          <Card className="border-2 border-blue-200">
             <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-blue-600" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Link to Patient Record</p>
-                    <p className="text-xs text-gray-500">Save this OASIS analysis for future comparison</p>
+                    <p className="text-sm font-medium text-gray-700">Save OASIS Analysis</p>
+                    <p className="text-xs text-gray-500">
+                      {selectedPatientId && patients.find(p => p.id === selectedPatientId)
+                        ? `Link to ${patients.find(p => p.id === selectedPatientId)?.first_name} ${patients.find(p => p.id === selectedPatientId)?.last_name}`
+                        : 'Save as standalone record'}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <Select value={selectedPatientId || "none"} onValueChange={(v) => setSelectedPatientId(v === "none" ? "" : v)}>
-                    <SelectTrigger className="w-full sm:w-[200px] bg-white">
-                      <SelectValue placeholder="Select patient..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No patient (save standalone)</SelectItem>
-                      {patients.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.first_name} {p.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    onClick={handleSaveToPatient}
-                    disabled={isSaving || savedToPatient || !uploadedFileUrl}
-                    className={savedToPatient ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}
-                  >
-                    {isSaving ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
-                    ) : savedToPatient ? (
-                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Saved</>
-                    ) : (
-                      <><Save className="w-4 h-4 mr-2" /> Save OASIS</>
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleSaveToPatient}
+                  disabled={isSaving || savedToPatient || !uploadedFileUrl}
+                  className={savedToPatient ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}
+                >
+                  {isSaving ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                  ) : savedToPatient ? (
+                    <><CheckCircle2 className="w-4 h-4 mr-2" /> Saved</>
+                  ) : (
+                    <><Save className="w-4 h-4 mr-2" /> Save OASIS</>
+                  )}
+                </Button>
               </div>
-              {patientName && (
-                <div className="mt-3 p-2 rounded border border-blue-200 bg-white">
-                  <p className="text-xs text-gray-600 mb-1">Extracted from OASIS:</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {patientName !== "Unknown Patient" && patientName !== "NOT FOUND - CHECK DOCUMENT HEADER" 
-                      ? patientName 
-                      : <span className="text-red-600">⚠ Patient name not found in document</span>}
-                  </p>
-                  {selectedPatientId && patients.find(p => p.id === selectedPatientId) && (
-                    <p className="text-xs text-green-700 mt-1 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Auto-matched to: {patients.find(p => p.id === selectedPatientId)?.first_name} {patients.find(p => p.id === selectedPatientId)?.last_name}
-                    </p>
-                  )}
-                  {!selectedPatientId && patientName !== "Unknown Patient" && patientName !== "NOT FOUND - CHECK DOCUMENT HEADER" && (
-                    <p className="text-xs text-orange-600 mt-1">
-                      ⚠ No matching patient found - please select manually or create new patient
-                    </p>
-                  )}
-                </div>
-              )}
             </CardContent>
           </Card>
 
