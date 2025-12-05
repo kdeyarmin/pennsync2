@@ -44,7 +44,8 @@ export default function OASISScrubber({
   visit,
   narrativeText, 
   vitalSigns,
-  onFixSuggestion 
+  onFixSuggestion,
+  uploadedOasisData // New prop for uploaded OASIS PDF data
 }) {
   const [showDialog, setShowDialog] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
@@ -53,6 +54,9 @@ export default function OASISScrubber({
   const [activeTab, setActiveTab] = useState("results");
   const [acceptedSuggestions, setAcceptedSuggestions] = useState([]);
   const [feedbackStats, setFeedbackStats] = useState({ accepted: 0, rejected: 0, modified: 0 });
+  const [oasisFile, setOasisFile] = useState(null);
+  const [isUploadingOasis, setIsUploadingOasis] = useState(false);
+  const [extractedOasisData, setExtractedOasisData] = useState(uploadedOasisData || null);
 
   const isHomeHealth = patient?.care_type === 'home_health';
   const isOASISVisit = ['admission', 'recertification', 'discharge'].includes(visit?.visit_type);
