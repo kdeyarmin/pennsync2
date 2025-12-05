@@ -25,6 +25,7 @@ import OASISAnalyzer from './pages/OASISAnalyzer';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import OASISAuditDashboard from './pages/OASISAuditDashboard';
 import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
+import AgencySettings from './pages/AgencySettings';
 import __Layout from './Layout.jsx';
 
 
@@ -56,6 +57,7 @@ export const PAGES = {
     "AnalyticsDashboard": AnalyticsDashboard,
     "OASISAuditDashboard": OASISAuditDashboard,
     "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
+    "AgencySettings": AgencySettings,
 }
 
 export const pagesConfig = {

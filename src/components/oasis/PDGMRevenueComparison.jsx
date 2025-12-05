@@ -452,17 +452,13 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
     setError(null);
 
     try {
-      // Get wage index from agency settings
-      const savedCosts = localStorage.getItem('pdgm_agency_costs');
-      const agencyCosts = savedCosts ? JSON.parse(savedCosts) : { wageIndex: 1.0 };
-      
       // Build corrected PDGM data based on AI recommendations
       const correctedPdgmData = buildCorrectedPdgmData(pdgmData, analysisResults);
 
+      // Backend will fetch wage index from agency settings
       const response = await calculatePDGM({
         pdgmData: pdgmData,
-        correctedPdgmData: correctedPdgmData,
-        wageIndex: agencyCosts.wageIndex || 1.0
+        correctedPdgmData: correctedPdgmData
       });
 
       setRevenueData(response.data);

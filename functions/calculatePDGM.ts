@@ -533,8 +533,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No PDGM data provided' }, { status: 400 });
     }
 
-    // Apply wage index adjustment (defaults to 1.0 if not provided)
-    const appliedWageIndex = wageIndex || 1.0;
+    // Fetch agency settings for wage index
+    let appliedWageIndex = wageIndex || 1.0;
+    try {
+      const agencySettings = await base44.asServiceRole.entities.AgencySettings.list();
+      if (agencySettings && agencySettings.length > 0 && agencySettings[0].wage_index) {
+        appliedWageIndex = agencySettings[0].wage_index;
+      }
+    } catch (e) {
+      // If no settings found, use default or provided value
+      console.log('No agency settings found, using default wage index');
+    }
 
     // Validate primary diagnosis code
     const diagnosisValidation = validatePrimaryDiagnosis(pdgmData);

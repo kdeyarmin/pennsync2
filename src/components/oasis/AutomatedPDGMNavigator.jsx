@@ -35,7 +35,8 @@ import {
   FileJson,
   FileDown,
   FileSpreadsheet,
-  BarChart3
+  BarChart3,
+  ExternalLink
 } from "lucide-react";
 import PDGMAnalyticsDashboard from "./PDGMAnalyticsDashboard";
 import {
@@ -76,18 +77,24 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [financialPredictions, setFinancialPredictions] = useState({});
   const [loadingPrediction, setLoadingPrediction] = useState(null);
   const [showCostSettings, setShowCostSettings] = useState(false);
-  const [agencyCosts, setAgencyCosts] = useState(() => {
-    const saved = localStorage.getItem('pdgm_agency_costs');
-    return saved ? JSON.parse(saved) : {
-      avgStaffHourlyRate: 45,
-      trainingCostPerHour: 35,
-      documentationTimePerEpisode: 0.5,
-      auditStaffHourlyRate: 50,
-      avgEpisodesPerYear: 50,
-      wageIndex: 1.0,
-      zipCode: ''
-    };
+  
+  // Fetch agency settings for cost analysis
+  const { data: agencySettings } = useQuery({
+    queryKey: ['agencySettings'],
+    queryFn: async () => {
+      const result = await base44.entities.AgencySettings.list();
+      return result[0] || null;
+    }
   });
+
+  const agencyCosts = agencySettings || {
+    avg_staff_hourly_rate: 45,
+    training_cost_per_hour: 35,
+    documentation_time_per_episode: 0.5,
+    audit_staff_hourly_rate: 50,
+    avg_episodes_per_year: 50,
+    wage_index: 1.0
+  };
 
   // Auto-analyze when data is available
   useEffect(() => {
@@ -318,26 +325,7 @@ Return JSON:
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
   };
 
-  const handleCostChange = (field, value) => {
-    const numValue = parseFloat(value) || 0;
-    const updated = { ...agencyCosts, [field]: numValue };
-    setAgencyCosts(updated);
-    localStorage.setItem('pdgm_agency_costs', JSON.stringify(updated));
-  };
 
-  const resetCosts = () => {
-    const defaults = {
-      avgStaffHourlyRate: 45,
-      trainingCostPerHour: 35,
-      documentationTimePerEpisode: 0.5,
-      auditStaffHourlyRate: 50,
-      avgEpisodesPerYear: 50,
-      wageIndex: 1.0,
-      zipCode: ''
-    };
-    setAgencyCosts(defaults);
-    localStorage.setItem('pdgm_agency_costs', JSON.stringify(defaults));
-  };
 
   const exportJSON = () => {
     const exportData = {
@@ -429,11 +417,11 @@ Base Payment: ${revenueData?.original?.totalPayment || navigation?.case_mix_calc
 Current Case-Mix: ${revenueData?.original?.caseMixWeight || navigation?.case_mix_calculation?.final_case_mix_weight || 1.0}
 
 AGENCY-SPECIFIC COST DATA (use these values for calculations):
-- Average Staff Hourly Rate: $${agencyCosts.avgStaffHourlyRate}
-- Training Cost Per Hour: $${agencyCosts.trainingCostPerHour}
-- Documentation Time Per Episode: ${agencyCosts.documentationTimePerEpisode} hours
-- Audit Staff Hourly Rate: $${agencyCosts.auditStaffHourlyRate}
-- Average Similar Episodes Per Year: ${agencyCosts.avgEpisodesPerYear}
+- Average Staff Hourly Rate: $${agencyCosts.avg_staff_hourly_rate || 45}
+- Training Cost Per Hour: $${agencyCosts.training_cost_per_hour || 35}
+- Documentation Time Per Episode: ${agencyCosts.documentation_time_per_episode || 0.5} hours
+- Audit Staff Hourly Rate: $${agencyCosts.audit_staff_hourly_rate || 50}
+- Average Similar Episodes Per Year: ${agencyCosts.avg_episodes_per_year || 50}
 - Current documentation pattern: likely to repeat
 - Industry average correction rate: 65% if addressed proactively
 
@@ -447,7 +435,7 @@ Provide a detailed financial impact analysis:
    - Net gain per episode
 
 2. ANNUAL PROJECTION (1 YEAR)
-   - Use ${agencyCosts.avgEpisodesPerYear} episodes/year based on agency data
+   - Use ${agencyCosts.avg_episodes_per_year || 50} episodes/year based on agency data
    - Total revenue if unaddressed
    - Total revenue if corrected
    - Total opportunity cost
@@ -468,10 +456,10 @@ Provide a detailed financial impact analysis:
 5. BREAKEVEN ANALYSIS
    - Time to implement correction (in hours)
    - Cost to implement using agency rates:
-     * Staff time at $${agencyCosts.avgStaffHourlyRate}/hour
-     * Training at $${agencyCosts.trainingCostPerHour}/hour
-     * Documentation updates at ${agencyCosts.documentationTimePerEpisode} hours/episode
-     * Audit/review at $${agencyCosts.auditStaffHourlyRate}/hour
+     * Staff time at $${agencyCosts.avg_staff_hourly_rate || 45}/hour
+     * Training at $${agencyCosts.training_cost_per_hour || 35}/hour
+     * Documentation updates at ${agencyCosts.documentation_time_per_episode || 0.5} hours/episode
+     * Audit/review at $${agencyCosts.audit_staff_hourly_rate || 50}/hour
    - Breakeven point (# of episodes)
    - Net benefit after 1 year
 
@@ -485,7 +473,7 @@ Return JSON:
     "explanation": "why this gap exists"
   },
   "annual_projection": {
-    "similar_episodes_per_year": ${agencyCosts.avgEpisodesPerYear},
+    "similar_episodes_per_year": ${agencyCosts.avg_episodes_per_year || 50},
     "total_current_revenue": 0,
     "total_corrected_revenue": 0,
     "total_opportunity": 0,
@@ -724,116 +712,16 @@ Return JSON:
             Automated PDGM Navigator
           </div>
           <div className="flex items-center gap-2">
-            <Dialog open={showCostSettings} onOpenChange={setShowCostSettings}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Settings className="w-3 h-3" />
-                  Agency Costs
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Agency Cost Settings</DialogTitle>
-                  <DialogDescription>
-                    Customize cost data for more accurate ROI calculations
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="staffRate">Average Staff Hourly Rate ($)</Label>
-                    <Input
-                      id="staffRate"
-                      type="number"
-                      step="0.01"
-                      value={agencyCosts.avgStaffHourlyRate}
-                      onChange={(e) => handleCostChange('avgStaffHourlyRate', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="trainingRate">Training Cost Per Hour ($)</Label>
-                    <Input
-                      id="trainingRate"
-                      type="number"
-                      step="0.01"
-                      value={agencyCosts.trainingCostPerHour}
-                      onChange={(e) => handleCostChange('trainingCostPerHour', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="docTime">Documentation Time Per Episode (hours)</Label>
-                    <Input
-                      id="docTime"
-                      type="number"
-                      step="0.1"
-                      value={agencyCosts.documentationTimePerEpisode}
-                      onChange={(e) => handleCostChange('documentationTimePerEpisode', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="auditRate">Audit Staff Hourly Rate ($)</Label>
-                    <Input
-                      id="auditRate"
-                      type="number"
-                      step="0.01"
-                      value={agencyCosts.auditStaffHourlyRate}
-                      onChange={(e) => handleCostChange('auditStaffHourlyRate', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="episodes">Avg Similar Episodes Per Year</Label>
-                    <Input
-                      id="episodes"
-                      type="number"
-                      value={agencyCosts.avgEpisodesPerYear}
-                      onChange={(e) => handleCostChange('avgEpisodesPerYear', e.target.value)}
-                    />
-                  </div>
-                  <div className="border-t pt-4 space-y-3">
-                    <h4 className="text-sm font-semibold text-gray-900">Location-Based Adjustments</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="zipCode">Office ZIP Code</Label>
-                      <Input
-                        id="zipCode"
-                        type="text"
-                        placeholder="e.g., 19104"
-                        value={agencyCosts.zipCode}
-                        onChange={(e) => setAgencyCosts(prev => {
-                          const updated = { ...prev, zipCode: e.target.value };
-                          localStorage.setItem('pdgm_agency_costs', JSON.stringify(updated));
-                          return updated;
-                        })}
-                      />
-                      <p className="text-xs text-gray-500">Used to determine wage index for your area</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="wageIndex">
-                        CMS Wage Index
-                        <span className="text-xs text-gray-500 ml-2">(Default: 1.0 = National Average)</span>
-                      </Label>
-                      <Input
-                        id="wageIndex"
-                        type="number"
-                        step="0.0001"
-                        placeholder="1.0000"
-                        value={agencyCosts.wageIndex}
-                        onChange={(e) => handleCostChange('wageIndex', e.target.value)}
-                      />
-                      <p className="text-xs text-gray-500">
-                        Find your wage index at <a href="https://www.cms.gov/medicare/payment/prospective-payment-systems/home-health/home-health-pps-wage-index" target="_blank" className="text-blue-600 hover:underline">CMS.gov</a>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={resetCosts} variant="outline" className="flex-1">
-                      Reset to Defaults
-                    </Button>
-                    <Button onClick={() => setShowCostSettings(false)} className="flex-1">
-                      Save & Close
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2"
+              onClick={() => window.location.href = '/agency-settings'}
+            >
+              <Settings className="w-3 h-3" />
+              Agency Settings
+              <ExternalLink className="w-3 h-3" />
+            </Button>
             {navigation?.summary?.payment_amount && (
               <Badge className="bg-green-600 text-white text-lg px-3 py-1">
                 {formatCurrency(navigation.summary.payment_amount)}
@@ -1015,10 +903,10 @@ Return JSON:
                   <p className="text-xs text-gray-500">
                     Source/Timing: <span className="font-mono">{navigation.case_mix_calculation.source_timing_key}</span>
                   </p>
-                  {agencyCosts.wageIndex && agencyCosts.wageIndex !== 1.0 && (
+                  {agencyCosts.wage_index && agencyCosts.wage_index !== 1.0 && (
                     <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
                       <Info className="w-3 h-3" />
-                      Wage Index: {agencyCosts.wageIndex.toFixed(4)} applied
+                      Wage Index: {agencyCosts.wage_index.toFixed(4)} applied
                     </p>
                   )}
                 </div>
