@@ -53,39 +53,56 @@ export default function EnhancedOASISScrubber({
     setShowDialog(true);
 
     try {
-      const prompt = `You are an expert OASIS assessor and PDGM reimbursement specialist. Analyze this home health visit documentation to provide intelligent OASIS guidance and identify reimbursement optimization opportunities.
+      const prompt = `You are a CMS-certified OASIS-E expert and PDGM reimbursement specialist with deep knowledge of 2024 Medicare home health regulations. Analyze this documentation using EXACT OASIS-E item response options.
 
-PATIENT INFORMATION:
-- Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
-- Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
+PATIENT DATA:
+- Primary Dx: ${patient.primary_diagnosis || 'Not specified'}
+- Secondary Dx: ${patient.secondary_diagnoses?.join(', ') || 'None'}
 - Visit Type: ${visit.visit_type.replace(/_/g, ' ')}
 
-CURRENT DOCUMENTATION:
-${narrativeText || '[No documentation yet]'}
+DOCUMENTATION:
+${narrativeText || '[No documentation]'}
 
-VITAL SIGNS:
-${Object.keys(vitalSigns).length > 0 ? Object.entries(vitalSigns).map(([key, value]) => `${key}: ${value}`).join('\n') : 'None documented'}
+VITALS:
+${Object.keys(vitalSigns).length > 0 ? Object.entries(vitalSigns).map(([key, value]) => `${key}: ${value}`).join('\n') : 'None'}
 
 ---
 
-YOUR TASK:
+CRITICAL OASIS-E RESPONSE SCALES (use EXACT values):
 
-Analyze the clinical documentation and provide comprehensive OASIS guidance covering:
+**M1800 Grooming**: 0=Independent, 1=With setup/supplies, 2=Someone assists, 3=Dependent
+**M1810 Dress Upper**: 0=Independent, 1=With setup, 2=Someone assists, 3=Dependent  
+**M1820 Dress Lower**: 0=Independent, 1=With setup, 2=Someone assists, 3=Dependent
+**M1830 Bathing**: 0=Independent, 1=With setup, 2=Minimal assist, 3=Moderate assist, 4=Max assist, 5=Unable, 6=Not performed
+**M1840 Toilet Transfer**: 0=Independent, 1=With setup, 2=Moderate assist, 3=Unable, 4=Not ambulatory
+**M1850 Transferring**: 0=Independent, 1=With setup, 2=Minimal assist, 3=Moderate assist, 4=Max assist, 5=Dependent
+**M1860 Ambulation**: 0=Independent, 1=With device, 2=Verbal cue, 3=Minimal assist, 4=Max assist, 5=Wheelchair, 6=Bedbound
 
-1. **Suggested OASIS Responses** - Based on documented clinical findings
-2. **Reimbursement Opportunities** - Where documentation supports higher acuity but may not be captured
-3. **Documentation Gaps** - What's missing to support optimal OASIS scoring
-4. **Narrative Enhancements** - Specific text to add that supports OASIS answers
+**PDGM CLINICAL GROUPING** - Match diagnosis to:
+- MMTA-Surgical Aftercare (joint replacements, post-op)
+- MMTA-Cardiac/Circulatory (CHF, HTN, AFib)
+- MMTA-Endocrine (Diabetes, Thyroid)
+- MMTA-GI/GU (Bowel/bladder issues)
+- MMTA-Infectious (UTI, Cellulitis, Sepsis)
+- MMTA-Respiratory (COPD, Pneumonia)
+- MMTA-Neuro/Rehab (Stroke, Parkinson's)
+- MMTA-Wounds (Pressure ulcers, surgical wounds)
+- MMTA-Complex Nursing (IV, Trach, Ostomy)
+- MMTA-Behavioral (Depression, Anxiety)
+- MMTA-Medication Mgmt
 
-Focus on key OASIS areas:
-- **Functional Status (M1800-M1890)**: ADL assistance levels (bathing, dressing, toileting, transferring, ambulation, feeding)
-- **Clinical Status (M1200-M1350)**: Vision, cognitive function, behavior, pain
-- **Respiratory Status (M1400-M1410)**: Dyspnea, oxygen use
-- **Wounds (M1300-M1342)**: Pressure ulcers, surgical wounds
-- **Medications (M2001-M2020)**: Drug regimen review, high-risk drugs
-- **Risk Factors**: Fall risk, depression screening
+**FUNCTIONAL LEVEL THRESHOLDS**:
+- LOW: Total functional points 0-9
+- MEDIUM: Total functional points 10-17
+- HIGH: Total functional points 18+
 
-Return detailed JSON analysis:
+Analyze for:
+1. OASIS responses using EXACT scale values above
+2. Functional score optimization (higher = more reimbursement)
+3. Comorbidity capture for case-mix adjustment
+4. Documentation gaps affecting PDGM grouping
+
+Return JSON:
 
 {
   "overall_oasis_readiness": "excellent" | "good" | "needs_work" | "insufficient",

@@ -58,99 +58,85 @@ export default function OASISScrubber({
 
       const visitType = visit.visit_type.replace(/_/g, ' ').toUpperCase();
 
-      let prompt = `You are an OASIS (Outcome and Assessment Information Set) compliance expert for Medicare home health. Perform a comprehensive OASIS assessment data completeness check for this ${visitType} visit.
+      let prompt = `You are a CMS-certified OASIS-E compliance auditor with expertise in 2024 Medicare home health CoP regulations. Perform RIGOROUS completeness and accuracy check for ${visitType}.
 
-PATIENT INFORMATION:
+PATIENT:
 - Visit Type: ${visitType}
-- Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
-- Visit Date: ${visit.visit_date}
+- Primary Dx: ${patient.primary_diagnosis || 'Not specified'}
+- Date: ${visit.visit_date}
 
-VISIT DOCUMENTATION:
-${narrativeText || '[No documentation provided]'}
+DOCUMENTATION:
+${narrativeText || '[No documentation]'}
 
-VITAL SIGNS DOCUMENTED:
-${Object.keys(vitalSigns).length > 0 ? JSON.stringify(vitalSigns, null, 2) : 'None documented'}
+VITALS:
+${Object.keys(vitalSigns).length > 0 ? JSON.stringify(vitalSigns, null, 2) : 'None'}
 
 ---
 
-OASIS DATA ELEMENTS TO CHECK (${visitType} Requirements):
+OASIS-E 2024 REQUIRED ELEMENTS (${visitType}):
 
-**SECTION A: DEMOGRAPHIC INFORMATION**
-- M1005: Medicare ID
-- M1010/1016: Birth Date, Gender
-- M1018: Primary referring physician
-- M1034: Race/Ethnicity
+**SECTION GG: FUNCTIONAL ABILITIES (PDGM CRITICAL - affects payment)**
+GG0130: Self-Care
+- A. Eating (01-06, 07=refused, 09=NA, 10=not attempted, 88=prior)
+- B. Oral hygiene (01-06)
+- C. Toileting hygiene (01-06)
+- E. Shower/bathe self (01-06)
+- F. Upper body dressing (01-06)
+- G. Lower body dressing (01-06)
+- H. Putting on/taking off footwear (01-06)
 
-**SECTION B: PRIMARY CAREGIVER**
-- M1100: Living arrangements
-- M1110: Primary caregiver present
+GG0170: Mobility
+- B. Sit to lying (01-06)
+- C. Lying to sitting (01-06)
+- D. Sit to stand (01-06)
+- E. Chair/bed-to-chair transfer (01-06)
+- F. Toilet transfer (01-06)
+- I. Walk 10 feet (01-06)
+- J. Walk 50 feet with 2 turns (01-06)
+- K. Walk 150 feet (01-06)
+- L. Walk 10 feet uneven (01-06)
+- M. 1 step curb (01-06)
+- N. 4 steps (01-06)
+- O. 12 steps (01-06)
+- P. Picking up object (01-06)
+- R. Wheel 50 feet (01-06)
+- RR. Wheel 150 feet (01-06)
 
-**SECTION C: CLINICAL RECORD ITEMS**
-- M1021-M1028: Primary/Secondary diagnoses with ICD-10 codes
-- M1030: Therapy need
-- M1032: Risk for hospitalization
+**GG SCORING SCALE** (use exact codes):
+06=Independent, 05=Setup/cleanup, 04=Supervision/touching, 03=Partial/moderate, 02=Substantial/maximal, 01=Dependent
 
-**SECTION D: SENSORY STATUS**
-- M1200: Vision
-- M1242: Pain frequency
-- M1200: Hearing
+**M1800-M1860 FUNCTIONAL STATUS (Legacy - still required)**
+- M1800 Grooming (0-3): 0=Indep, 1=Setup, 2=Assist, 3=Dependent
+- M1810 Dress Upper (0-3)
+- M1820 Dress Lower (0-3)
+- M1830 Bathing (0-6): Higher=more impaired
+- M1840 Toilet Transfer (0-4)
+- M1850 Transferring (0-5)
+- M1860 Ambulation (0-6)
 
-**SECTION E: INTEGUMENTARY STATUS**
-- M1306: Unhealed pressure ulcers
-- M1307-M1324: Pressure ulcer details (if present)
-- M1330-M1334: Stasis ulcers
-- M1340-M1342: Surgical wounds
+**CLINICAL ITEMS (ICD-10 Required)**
+- M1021: Primary Dx (must be valid ICD-10, symptom-level)
+- M1023: Secondary Dx (up to 24, affects comorbidity adjustment)
+- M1028: Active Dx list
+- M1030: Therapy need at SOC/ROC
+- M1033: Risk for hospitalization (LACE score factors)
 
-**SECTION F: RESPIRATORY STATUS**
-- M1400: Dyspnea
+**INTEGUMENTARY (Wound documentation)**
+- M1306: Unhealed pressure ulcers (Yes/No)
+- M1311: Current number of stage 2-4 PU
+- M1322: Stage of most problematic PU
+- M1324: Stage 2 PU that was present at SOC/ROC
+- M1330: Stasis ulcer present
+- M1340: Surgical wound present
+- M1342: Surgical wound status
 
-**SECTION G: ELIMINATION STATUS**
-- M1600: Urinary incontinence
-- M1610: Urinary catheter
-- M1615: Bowel incontinence
-- M1620: Ostomy
-
-**SECTION H: NEURO/EMOTIONAL/BEHAVIORAL STATUS**
-- M1700: Cognitive functioning
-- M1710: Confusion frequency
-- M1720: Anxiety frequency
-- M1730: Depression screening
-- M1740: Cognitive/behavioral symptoms
-- M1745: Behaviors demonstrated
-
-**SECTION I: ADL/IADL**
-CRITICAL FOR REIMBURSEMENT - Must document current ability:
-- M1800: Grooming
-- M1810: Dress upper body
-- M1820: Dress lower body
-- M1830: Bathing
-- M1840: Toilet transferring
-- M1845: Toileting hygiene
-- M1850: Transferring
-- M1860: Ambulation/locomotion
-- M1870: Feeding/eating
-- M1880: Meal preparation
-- M1890: Phone use
-- M1900: Medication management
-
-**SECTION J: MEDICATIONS**
-- M2001: Drug regimen review
-- M2003: Medication follow-up
-- M2005: Medication intervention
-- M2010: High-risk drug classes
-- M2020: Management of injectable meds
-- M2030: Medication reconciliation
-
-**SECTION K: EQUIPMENT**
-- M2100: Types of equipment
-
-**SECTION L: CARE MANAGEMENT**
-- M2200: Therapy need
-- M2250: Plan of care synopsis
-- M2300: Emergent care
-- M2310: Reason for emergent care
-- M2400: Intervention synopsis
-- M2410: Discharge disposition
+**MEDICATIONS (High-risk drug review)**
+- M2001: Drug regimen review conducted
+- M2003: Medication follow-up (if issues found)
+- M2005: Medication intervention (education provided)
+- M2010: Patient receiving HIGH-RISK drugs
+- M2020: Management of oral meds
+- M2030: Management of injectable meds
 
 ---
 
