@@ -13,7 +13,13 @@ import {
   FileDown,
   ArrowRight,
   CheckCircle2,
-  Info
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Wrench,
+  Activity,
+  Stethoscope,
+  ClipboardList
 } from "lucide-react";
 import { calculatePDGM } from "@/functions/calculatePDGM";
 import { generatePDGMComparisonPDF } from "@/functions/generatePDGMComparisonPDF";
@@ -24,6 +30,7 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
   const [hasAutoCalculated, setHasAutoCalculated] = useState(false);
+  const [showCorrections, setShowCorrections] = useState(false);
 
   // Auto-calculate when pdgmData becomes available
   useEffect(() => {
@@ -380,14 +387,94 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData }) {
               </div>
             )}
 
-            {/* Applied Corrections Summary */}
+            {/* Applied Corrections Detail */}
             {revenueData.corrected?._correctionCount > 0 && (
-              <Alert className="bg-purple-50 border-purple-200">
-                <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                <AlertDescription className="text-purple-800 text-sm">
-                  <strong>{revenueData.corrected._correctionCount} corrections</strong> automatically applied from analysis recommendations to generate the optimized revenue figure.
-                </AlertDescription>
-              </Alert>
+              <div className="border border-purple-200 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowCorrections(!showCorrections)}
+                  className="w-full flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Wrench className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-800">
+                      {revenueData.corrected._correctionCount} Corrections Applied
+                    </span>
+                  </div>
+                  {showCorrections ? (
+                    <ChevronUp className="w-4 h-4 text-purple-600" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-purple-600" />
+                  )}
+                </button>
+                
+                {showCorrections && revenueData.corrected._appliedCorrections && (
+                  <div className="p-3 bg-white space-y-2 max-h-64 overflow-y-auto">
+                    {revenueData.corrected._appliedCorrections.map((correction, idx) => (
+                      <div key={idx} className="flex items-start gap-2 p-2 bg-gray-50 rounded text-xs">
+                        {correction.type === 'functional' && (
+                          <Activity className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                        )}
+                        {(correction.type === 'diagnosis' || correction.type === 'accuracy_diagnosis' || correction.type === 'documentation_casemix') && (
+                          <Stethoscope className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                        )}
+                        {(correction.type === 'accuracy' || correction.type === 'validation' || correction.type === 'documentation') && (
+                          <ClipboardList className="w-3.5 h-3.5 text-orange-500 mt-0.5 flex-shrink-0" />
+                        )}
+                        {(correction.type === 'therapy' || correction.type === 'admission' || correction.type === 'other') && (
+                          <Wrench className="w-3.5 h-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs py-0 capitalize">
+                              {correction.type.replace('_', ' ')}
+                            </Badge>
+                            {correction.item && correction.item !== 'multiple' && (
+                              <span className="font-mono text-purple-700">{correction.item}</span>
+                            )}
+                            {correction.change && (
+                              <span className="text-green-600 font-medium">{correction.change}</span>
+                            )}
+                            {correction.value !== undefined && (
+                              <span className="text-green-600 font-medium">→ {correction.value}</span>
+                            )}
+                            {correction.severity && (
+                              <Badge className={`text-xs py-0 ${
+                                correction.severity === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {correction.severity}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-gray-600 mt-0.5">
+                            {correction.type === 'functional' && correction.item === 'multiple' && 
+                              'Increased functional impairment scores (bathing, ambulation, transferring)'}
+                            {correction.type === 'functional' && correction.item !== 'multiple' && 
+                              `Functional score adjusted based on revenue optimization tip`}
+                            {correction.type === 'diagnosis' && 
+                              `Added comorbidity: ${correction.item}`}
+                            {correction.type === 'accuracy' && 
+                              `Corrected ${correction.item} based on accuracy issue`}
+                            {correction.type === 'accuracy_diagnosis' && 
+                              `Added diagnosis from accuracy recommendation: ${correction.item}`}
+                            {correction.type === 'therapy' && 
+                              'Adjusted ambulation/transfer scores for therapy needs'}
+                            {correction.type === 'admission' && 
+                              `Changed admission source to ${correction.change}`}
+                            {correction.type === 'documentation' && 
+                              `Updated ${correction.item} per documentation improvement`}
+                            {correction.type === 'documentation_casemix' && 
+                              'Added case-mix relevant condition from documentation'}
+                            {correction.type === 'validation' && 
+                              `Applied validation correction to ${correction.item}`}
+                            {correction.type === 'other' && 
+                              'Applied additional optimization adjustment'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Breakdown */}
