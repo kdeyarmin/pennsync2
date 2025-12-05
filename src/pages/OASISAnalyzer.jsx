@@ -368,6 +368,12 @@ export default function OASISAnalyzer() {
       let oasisTextContent = "";
 
       if (output) {
+        // Build detailed diagnosis section
+        const primaryDxCode = output.m1021_primary_diagnosis_code || output.primary_diagnosis_code || 'NOT FOUND';
+        const primaryDxDesc = output.m1021_primary_diagnosis_description || output.primary_diagnosis_description || 'NOT FOUND';
+        const otherDx = output.m1023_other_diagnoses || output.secondary_diagnoses || 'NOT FOUND';
+        const comorbidities = output.comorbidities_text || 'NOT FOUND';
+
         oasisTextContent = `PATIENT DEMOGRAPHICS:
       Name: ${output.patient_name || 'Unknown'}
       DOB: ${output.patient_dob || '?'}
@@ -379,12 +385,23 @@ export default function OASISAnalyzer() {
       Type: ${output.assessment_type || '?'}
       Reason (M0100): ${output.assessment_reason || '?'}
 
-      DIAGNOSES:
-      M1021 Primary Diagnosis: ${output.m1021_primary_diagnosis_code || output.primary_diagnosis_code || '?'} - ${output.m1021_primary_diagnosis_description || output.primary_diagnosis_description || 'Not found'}
-      M1023 Other Diagnoses: ${output.m1023_other_diagnoses || 'None documented'}
-      Secondary Diagnoses: ${output.secondary_diagnoses || 'None documented'}
-      Comorbidities: ${output.comorbidities_text || 'None extracted'}
-      Severity Indicators: ${output.diagnosis_severity || 'None noted'}
+      ===== DIAGNOSES (CRITICAL FOR PDGM) =====
+
+      M1021 PRIMARY DIAGNOSIS:
+      Code: ${primaryDxCode}
+      Description: ${primaryDxDesc}
+      Severity: ${output.diagnosis_severity || 'Not specified'}
+
+      M1023 OTHER DIAGNOSES:
+      ${otherDx}
+
+      ADDITIONAL SECONDARY DIAGNOSES:
+      ${output.secondary_diagnoses !== otherDx ? output.secondary_diagnoses || 'None' : 'See M1023 above'}
+
+      ALL COMORBIDITIES & CONDITIONS MENTIONED:
+      ${comorbidities}
+
+      ==========================================
 
       ADMISSION/EPISODE:
       M1000 Admission Source: ${output.m1000_admission_source || '?'}
@@ -600,24 +617,33 @@ export default function OASISAnalyzer() {
           base44.integrations.Core.InvokeLLM({
             prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly and provide HIGHLY SPECIFIC, ACTIONABLE recommendations.
 
-      PRE-EXTRACTED STRUCTURED DATA:
-      ${JSON.stringify(structuredPdgmData, null, 2)}
+        PRE-EXTRACTED STRUCTURED DATA:
+        ${JSON.stringify(structuredPdgmData, null, 2)}
 
-      FULL OASIS DOCUMENT CONTENT:
-      ${truncatedContent}
+        FULL OASIS DOCUMENT CONTENT:
+        ${truncatedContent}
 
-      ANALYSIS INSTRUCTIONS:
-      1. Verify the pre-extracted data against the full document content
-      2. Identify any missing or incorrectly extracted OASIS items
-      3. Check for internal consistency (e.g., functional scores should match narrative descriptions)
-      4. Identify PDGM revenue optimization opportunities with SPECIFIC dollar impacts
-      5. Flag compliance concerns and audit risks
-      6. Provide EXACT wording suggestions for documentation improvements
-      7. Identify SPECIFIC M-items that could be rescored based on clinical evidence
+        CRITICAL ANALYSIS REQUIREMENTS:
 
-      CRITICAL: Be extremely specific in your recommendations. Instead of "improve functional documentation", say exactly WHAT to document and HOW it would change the score.
+        1. DIAGNOSES VERIFICATION (HIGHEST PRIORITY):
+         - Verify M1021 Primary Diagnosis code and description are correctly extracted
+         - Verify M1023 Other Diagnoses are ALL captured
+         - If diagnoses show "NOT FOUND", search the entire document again for ANY diagnosis information
+         - Check for diagnosis codes in formats: I50.9, E11.65, J44.1, etc.
+         - Look in sections: "Diagnoses", "ICD-10", "Primary", "Secondary", "Comorbidities", "Medical History"
+         - PDGM clinical grouping REQUIRES accurate diagnosis - this is CRITICAL
 
-      Return JSON:
+        2. Verify the pre-extracted data against the full document content
+        3. Identify any missing or incorrectly extracted OASIS items
+        4. Check for internal consistency (e.g., functional scores should match narrative descriptions)
+        5. Identify PDGM revenue optimization opportunities with SPECIFIC dollar impacts
+        6. Flag compliance concerns and audit risks
+        7. Provide EXACT wording suggestions for documentation improvements
+        8. Identify SPECIFIC M-items that could be rescored based on clinical evidence
+
+        CRITICAL: Be extremely specific in your recommendations. Instead of "improve functional documentation", say exactly WHAT to document and HOW it would change the score.
+
+        Return JSON:
       {
       "overall_score": 0-100,
       "accuracy_score": 0-100,
@@ -625,9 +651,10 @@ export default function OASISAnalyzer() {
       "revenue_optimization_score": 0-100,
       "summary": "comprehensive summary of findings",
       "pdgm_data": {
-      "primary_diagnosis": "exact diagnosis from document",
-      "primary_diagnosis_code": "ICD-10 code if found",
-      "comorbidities": ["all secondary diagnoses found"],
+      "primary_diagnosis": "MUST extract - exact diagnosis name from M1021 section",
+      "primary_diagnosis_code": "MUST extract - ICD-10 code from M1021 (e.g., I50.9)",
+      "primary_diagnosis_description": "Full description of primary diagnosis",
+      "comorbidities": ["MUST extract ALL from M1023 and secondary diagnosis sections - include ICD-10 codes and descriptions"],
       "admission_source": "community or institutional",
       "episode_timing": "early or late",
       "functional_scores": {
@@ -647,7 +674,9 @@ export default function OASISAnalyzer() {
       "extracted_items": {
       "items_found": ["list of M-items successfully extracted"],
       "items_missing": ["list of expected M-items not found"],
-      "extraction_confidence": "high/medium/low"
+      "extraction_confidence": "high/medium/low",
+      "diagnosis_extraction_status": "CRITICAL - specify if M1021 and M1023 were successfully found",
+      "diagnosis_issues": ["list any problems finding or reading diagnosis information"]
       },
       "accuracy_issues": [{"item": "M-item code", "issue": "specific issue description", "severity": "high/medium/low", "recommendation": "specific fix", "document_evidence": "quote from document", "correct_score": "what score should be based on evidence", "scoring_rationale": "why this score is correct per CMS guidelines"}],
       "compliance_concerns": [{"area": "area", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix", "cms_reference": "regulation reference", "exact_documentation_needed": "specific text to add"}],
