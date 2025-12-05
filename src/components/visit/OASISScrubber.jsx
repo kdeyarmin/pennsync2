@@ -41,6 +41,7 @@ import {
 import { logSecurityEvent } from "../utils/security";
 import OASISFeedbackPanel from "../oasis/OASISFeedbackPanel";
 import CMSComplianceReference from "../oasis/CMSComplianceReference";
+import OASISPDFUploader from "../oasis/OASISPDFUploader";
 
 export default function OASISScrubber({ 
   patient, 
@@ -57,9 +58,8 @@ export default function OASISScrubber({
   const [activeTab, setActiveTab] = useState("results");
   const [acceptedSuggestions, setAcceptedSuggestions] = useState([]);
   const [feedbackStats, setFeedbackStats] = useState({ accepted: 0, rejected: 0, modified: 0 });
-  const [oasisFile, setOasisFile] = useState(null);
-  const [isUploadingOasis, setIsUploadingOasis] = useState(false);
   const [extractedOasisData, setExtractedOasisData] = useState(uploadedOasisData || null);
+  const [showUploader, setShowUploader] = useState(false);
 
   const isHomeHealth = patient?.care_type === 'home_health';
   const isOASISVisit = ['admission', 'recertification', 'discharge'].includes(visit?.visit_type);
