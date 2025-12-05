@@ -61,6 +61,9 @@ import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
 import ComplianceEducationPanel from "../components/smartNote/ComplianceEducationPanel";
 import DocumentationPracticeScenarios from "../components/smartNote/DocumentationPracticeScenarios";
 import LearningDashboard from "../components/smartNote/LearningDashboard";
+import AIPatientHistorySummarizer from "../components/smartNote/AIPatientHistorySummarizer";
+import AIRiskAndGapDetector from "../components/smartNote/AIRiskAndGapDetector";
+import AIGrammarTerminologyCorrector from "../components/smartNote/AIGrammarTerminologyCorrector";
 
 // Common diagnoses list
 const commonDiagnoses = [
