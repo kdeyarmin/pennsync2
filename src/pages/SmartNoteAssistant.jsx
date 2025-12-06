@@ -248,6 +248,7 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
 export default function SmartNoteAssistant() {
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
+  const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0]);
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
   const [vitalSigns, setVitalSigns] = useState({ bp: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
@@ -416,10 +417,35 @@ Return JSON:
       setEnhancedNote(result.enhanced_note);
       setAuditResults(result);
 
+      // Save enhanced note to patient's visit record
+      if (selectedPatientId) {
+        try {
+          await base44.entities.Visit.create({
+            patient_id: selectedPatientId,
+            visit_date: visitDate,
+            visit_type: visitType,
+            status: 'completed',
+            nurse_notes: result.enhanced_note,
+            vital_signs: {
+              blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
+              blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
+              heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
+              temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
+              oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
+              pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null,
+              weight: vitalSigns.weight ? parseFloat(vitalSigns.weight) : null
+            }
+          });
+        } catch (saveError) {
+          console.error("Error saving visit note:", saveError);
+        }
+      }
+
       // Log note enhancement activity
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
         visit_type: visitType,
+        visit_date: visitDate,
         diagnosis: finalDiagnosis,
         rough_note_length: roughNote.length,
         enhanced_note_length: result.enhanced_note?.length,
@@ -492,6 +518,7 @@ Return JSON:
     setDismissedElementNames([]);
     setRoughNoteCompliance(null);
     setEnhancedNoteCompliance(null);
+    setVisitDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleInsertPhrase = (text) => {
@@ -595,7 +622,7 @@ Return JSON:
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs">Patient</Label>
                   <Select value={selectedPatientId || "none"} onValueChange={(v) => setSelectedPatientId(v === "none" ? "" : v)}>
@@ -607,6 +634,15 @@ Return JSON:
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Visit Date</Label>
+                  <Input 
+                    type="date" 
+                    value={visitDate} 
+                    onChange={(e) => setVisitDate(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Visit Type</Label>
