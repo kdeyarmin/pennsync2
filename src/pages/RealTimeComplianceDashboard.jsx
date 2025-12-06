@@ -530,22 +530,22 @@ export default function RealTimeComplianceDashboard() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <Shield className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Real-Time Compliance Dashboard</h1>
-              <p className="text-sm text-gray-600">Aggregated compliance insights across all features</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Real-Time Compliance</h1>
+              <p className="text-xs sm:text-sm text-gray-600">Aggregated insights across all features</p>
             </div>
           </div>
-          <Button onClick={exportComplianceData} variant="outline" className="gap-2">
+          <Button onClick={exportComplianceData} variant="outline" className="gap-2 w-full sm:w-auto">
             <Download className="w-4 h-4" />
-            Export
+            <span className="sm:inline">Export</span>
           </Button>
         </div>
       </div>
@@ -597,31 +597,31 @@ export default function RealTimeComplianceDashboard() {
 
       {/* Overall Compliance Score */}
       <Card className={`mb-6 bg-gradient-to-r ${getScoreBg(overallComplianceScore)} text-white`}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/80 mb-1">Overall Agency Compliance Score</p>
-              <p className="text-5xl font-bold">{overallComplianceScore}%</p>
-              <div className="flex items-center gap-2 mt-2">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4">
+            <div className="text-center sm:text-left w-full sm:w-auto">
+              <p className="text-white/80 mb-1 text-sm sm:text-base">Overall Agency Compliance Score</p>
+              <p className="text-4xl sm:text-5xl font-bold">{overallComplianceScore}%</p>
+              <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                 {overallComplianceScore >= 85 ? (
                   <>
-                    <TrendingUp className="w-5 h-5" />
-                    <span className="text-sm">Excellent Performance</span>
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">Excellent Performance</span>
                   </>
                 ) : overallComplianceScore >= 75 ? (
                   <>
-                    <Activity className="w-5 h-5" />
-                    <span className="text-sm">Good - Room for Improvement</span>
+                    <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">Good - Room for Improvement</span>
                   </>
                 ) : (
                   <>
-                    <TrendingDown className="w-5 h-5" />
-                    <span className="text-sm">Needs Attention</span>
+                    <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">Needs Attention</span>
                   </>
                 )}
               </div>
             </div>
-            <Shield className="w-24 h-24 opacity-20" />
+            <Shield className="w-16 h-16 sm:w-24 sm:h-24 opacity-20" />
           </div>
         </CardContent>
       </Card>
@@ -695,11 +695,11 @@ export default function RealTimeComplianceDashboard() {
 
       {/* Feature-Specific Compliance */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-indigo-600" />
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
           Feature-Specific Compliance
         </h2>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {featureCompliance.map((feature, idx) => (
             <Card key={idx} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
@@ -828,12 +828,12 @@ export default function RealTimeComplianceDashboard() {
       {/* Nurse Performance Drill-Down */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             Nurse Performance - Compliance Breakdown
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6">
           {displayedNurses.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No performance data available</p>
           ) : (
@@ -854,27 +854,27 @@ export default function RealTimeComplianceDashboard() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
                     <div className="bg-purple-50 p-2 rounded text-center">
-                      <p className="text-xs text-purple-600 mb-1">Smart Notes</p>
-                      <p className={`text-xl font-bold ${getScoreColor(nurse.noteAvgScore)}`}>
+                      <p className="text-[10px] sm:text-xs text-purple-600 mb-1">Smart Notes</p>
+                      <p className={`text-lg sm:text-xl font-bold ${getScoreColor(nurse.noteAvgScore)}`}>
                         {nurse.noteAvgScore || '--'}
                       </p>
-                      <p className="text-xs text-gray-500">{nurse.noteCount} checks</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{nurse.noteCount} checks</p>
                     </div>
                     <div className="bg-blue-50 p-2 rounded text-center">
-                      <p className="text-xs text-blue-600 mb-1">OASIS</p>
-                      <p className={`text-xl font-bold ${getScoreColor(nurse.oasisAvgScore)}`}>
+                      <p className="text-[10px] sm:text-xs text-blue-600 mb-1">OASIS</p>
+                      <p className={`text-lg sm:text-xl font-bold ${getScoreColor(nurse.oasisAvgScore)}`}>
                         {nurse.oasisAvgScore || '--'}
                       </p>
-                      <p className="text-xs text-gray-500">{nurse.oasisCount} uploads</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{nurse.oasisCount} uploads</p>
                     </div>
                     <div className="bg-green-50 p-2 rounded text-center">
-                      <p className="text-xs text-green-600 mb-1">Audits</p>
-                      <p className={`text-xl font-bold ${getScoreColor(nurse.auditAvgScore)}`}>
+                      <p className="text-[10px] sm:text-xs text-green-600 mb-1">Audits</p>
+                      <p className={`text-lg sm:text-xl font-bold ${getScoreColor(nurse.auditAvgScore)}`}>
                         {nurse.auditAvgScore || '--'}
                       </p>
-                      <p className="text-xs text-gray-500">{nurse.auditCount} audits</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{nurse.auditCount} audits</p>
                     </div>
                   </div>
 
@@ -896,16 +896,16 @@ export default function RealTimeComplianceDashboard() {
                     </div>
                   )}
 
-                  <div className="flex gap-2 mt-3">
-                    <Link to={`${createPageUrl('NursePerformanceDashboard')}?nurse=${nurse.email}`}>
-                      <Button size="sm" variant="outline" className="gap-1">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                    <Link to={`${createPageUrl('NursePerformanceDashboard')}?nurse=${nurse.email}`} className="w-full sm:w-auto">
+                      <Button size="sm" variant="outline" className="gap-1 w-full">
                         <BarChart3 className="w-3 h-3" />
                         View Details
                       </Button>
                     </Link>
                     {nurse.trainingNeeds.length > 0 && (
-                      <Link to={createPageUrl('StaffTrainingHub')}>
-                        <Button size="sm" className="gap-1 bg-purple-600">
+                      <Link to={createPageUrl('StaffTrainingHub')} className="w-full sm:w-auto">
+                        <Button size="sm" className="gap-1 bg-purple-600 w-full">
                           <GraduationCap className="w-3 h-3" />
                           Assign Training
                         </Button>

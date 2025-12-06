@@ -42,9 +42,11 @@ import {
   Copy,
   RotateCcw,
   Lightbulb,
-  MessageCircle
+  MessageCircle,
+  Save
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
+import { useQueryClient } from "@tanstack/react-query";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
@@ -246,6 +248,7 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
 }
 
 export default function SmartNoteAssistant() {
+  const queryClient = useQueryClient();
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0]);
@@ -266,6 +269,8 @@ export default function SmartNoteAssistant() {
   const [complianceIssues, setComplianceIssues] = useState([]);
   const [oasisLinkedItems, setOasisLinkedItems] = useState([]);
   const [oasisDiscrepancies, setOasisDiscrepancies] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -417,30 +422,6 @@ Return JSON:
       setEnhancedNote(result.enhanced_note);
       setAuditResults(result);
 
-      // Save enhanced note to patient's visit record
-      if (selectedPatientId) {
-        try {
-          await base44.entities.Visit.create({
-            patient_id: selectedPatientId,
-            visit_date: visitDate,
-            visit_type: visitType,
-            status: 'completed',
-            nurse_notes: result.enhanced_note,
-            vital_signs: {
-              blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
-              blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
-              heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
-              temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
-              oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
-              pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null,
-              weight: vitalSigns.weight ? parseFloat(vitalSigns.weight) : null
-            }
-          });
-        } catch (saveError) {
-          console.error("Error saving visit note:", saveError);
-        }
-      }
-
       // Log note enhancement activity
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
@@ -525,29 +506,70 @@ Return JSON:
     setRoughNote(prev => prev ? prev + ' ' + text : text);
   };
 
+  const handleSaveNote = async () => {
+    if (!selectedPatientId || !enhancedNote) return;
+    
+    setIsSaving(true);
+    try {
+      await base44.entities.Visit.create({
+        patient_id: selectedPatientId,
+        visit_date: visitDate,
+        visit_type: visitType,
+        status: 'completed',
+        nurse_notes: enhancedNote,
+        vital_signs: {
+          blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
+          blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
+          heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
+          temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
+          oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
+          pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null,
+          weight: vitalSigns.weight ? parseFloat(vitalSigns.weight) : null
+        }
+      });
+
+      setSavedSuccessfully(true);
+      setTimeout(() => setSavedSuccessfully(false), 3000);
+
+      // Refresh recent visits to include this one
+      queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
+
+      logActivity(ActivityActions.VISIT_DOCUMENT, {
+        patient_id: selectedPatientId,
+        visit_date: visitDate,
+        visit_type: visitType,
+        note_length: enhancedNote.length,
+        page: 'SmartNoteAssistant'
+      });
+    } catch (error) {
+      console.error("Error saving note:", error);
+    }
+    setIsSaving(false);
+  };
+
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <div className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto">
+      <div className="mb-4 flex items-start sm:items-center justify-between gap-2">
+        <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
           {currentStep !== 'patient' && (
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleGoBack}
-              className="gap-1 text-gray-600 hover:text-gray-900"
+              className="gap-1 text-gray-600 hover:text-gray-900 flex-shrink-0"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Back</span>
             </Button>
           )}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Smart Note Assistant</h1>
-            <p className="text-sm text-gray-600">Transform rough notes into Medicare-compliant documentation</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Smart Note Assistant</h1>
+            <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Transform rough notes into Medicare-compliant documentation</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" className="text-gray-500 gap-1">
+        <Button variant="ghost" size="sm" className="text-gray-500 gap-1 flex-shrink-0">
           <HelpCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">Help</span>
+          <span className="hidden lg:inline">Help</span>
         </Button>
       </div>
 
@@ -609,8 +631,8 @@ Return JSON:
         </>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="lg:col-span-3 space-y-3 sm:space-y-4">
           
           {/* Step 1: Patient Selection */}
           <Card id="step-patient" className={`border-2 ${currentStep === 'patient' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
@@ -883,12 +905,27 @@ Return JSON:
                   copied={copied}
                   qualityScore={auditResults?.quality_score}
                 />
-                <Alert className="bg-green-100 border-green-300 mt-4">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    Ready to copy into your EHR system! Use the Copy button above for plain text.
-                  </AlertDescription>
-                </Alert>
+                <div className="flex gap-3 mt-4">
+                  <Alert className="bg-green-100 border-green-300 flex-1">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      Ready to copy into your EHR system!
+                    </AlertDescription>
+                  </Alert>
+                  <Button 
+                    onClick={handleSaveNote} 
+                    disabled={isSaving || savedSuccessfully}
+                    className="bg-blue-600 hover:bg-blue-700 gap-2"
+                  >
+                    {isSaving ? (
+                      <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Saving...</>
+                    ) : savedSuccessfully ? (
+                      <><CheckCircle2 className="w-4 h-4" /> Saved!</>
+                    ) : (
+                      <><Save className="w-4 h-4" /> Save to Chart</>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -944,7 +981,7 @@ Return JSON:
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <ContextualAITools
             currentStep={currentStep}
             hasPatient={!!selectedPatientId}

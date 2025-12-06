@@ -181,35 +181,37 @@ export default function PatientDetails() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <Button
         variant="outline"
         onClick={() => navigate(createPageUrl("Patients"))}
-        className="mb-6"
+        className="mb-4 sm:mb-6"
+        size="sm"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Patients
+        <span className="hidden sm:inline">Back to Patients</span>
+        <span className="sm:hidden">Back</span>
       </Button>
 
-      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardContent className="p-4 md:p-6">
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-              <User className="w-6 h-6 md:w-8 md:h-8 text-white" />
+      <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+              <User className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+            <div className="flex-1 min-w-0 w-full">
+              <div className="flex flex-col gap-3">
                 <div className="min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 truncate">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 break-words">
                     {sanitizeInput(patient.first_name)} {sanitizeInput(patient.last_name)}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-600">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                     <span>MRN: {sanitizeInput(patient.medical_record_number) || 'N/A'}</span>
                     <span className="hidden sm:inline">•</span>
-                    <span>DOB: {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
+                    <span className="block sm:inline w-full sm:w-auto">DOB: {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row items-end gap-2">
+                <div className="flex flex-wrap items-start gap-2">
                   <Badge 
                     className={`flex-shrink-0 ${patient.care_type === 'hospice' 
                       ? 'bg-purple-100 text-purple-800 border-purple-200' 
@@ -273,7 +275,7 @@ export default function PatientDetails() {
 
       {/* AI Care Plan Tools */}
       {patient && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
           <AICarePlanSuggestions 
             patient={patient} 
             existingCarePlans={carePlans}
@@ -286,10 +288,10 @@ export default function PatientDetails() {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Patient Information</CardTitle>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Patient Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>

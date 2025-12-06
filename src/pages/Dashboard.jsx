@@ -123,28 +123,28 @@ export default function Dashboard() {
   const firstName = currentUser?.full_name?.split(' ')[0] || 'there';
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Welcome Banner */}
-      <Card className="mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white border-none shadow-xl overflow-hidden">
-        <CardContent className="p-6 md:p-8 relative">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+      <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white border-none shadow-xl overflow-hidden">
+        <CardContent className="p-4 sm:p-6 md:p-8 relative">
+          <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
           <div className="relative z-10">
-            <h1 className="text-2xl md:text-4xl font-bold mb-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
               {getGreeting()}, {firstName}! 👋
             </h1>
-            <p className="text-white/80 text-sm md:text-base">
+            <p className="text-white/80 text-xs sm:text-sm md:text-base">
               {format(new Date(), 'EEEE, MMMM d, yyyy')} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <div className="mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Today's Visits</h2>
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Today's Visits</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -183,7 +183,7 @@ export default function Dashboard() {
       </div>
 
       {/* Smart Route Optimizer & Task Prioritization */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <SmartRouteOptimizer
           visits={visits.filter(v => v.status === 'scheduled')}
           patients={patients}
@@ -257,48 +257,47 @@ export default function Dashboard() {
             const patient = getPatient(visit.patient_id);
             return (
               <Card key={visit.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <CardContent className="p-3 sm:p-4 md:p-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
                     <div className="flex-1">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
-                          <User className="w-6 h-6 text-white" />
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                          <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-gray-900 mb-1">
+                          <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1 truncate">
                             {patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient'}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                             <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
+                              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                               <span>{visit.visit_time || 'Time TBD'}</span>
                             </div>
                             {patient?.address && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-4 h-4" />
-                                <span className="truncate max-w-xs">{patient.address}</span>
+                              <div className="flex items-center gap-1 min-w-0">
+                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                                <span className="truncate max-w-[150px] sm:max-w-xs">{patient.address}</span>
                               </div>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-2 mt-3">
+                          <div className="flex flex-wrap gap-2 mt-2 sm:mt-3">
                             <Badge className={getStatusColor(visit.status)}>
                               {visit.status.replace('_', ' ')}
                             </Badge>
-                            <Badge variant="outline" className="border-blue-200 text-blue-700">
+                            <Badge variant="outline" className="border-blue-200 text-blue-700 text-xs">
                               {getVisitTypeLabel(visit.visit_type)}
                             </Badge>
-
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Link to={`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`}>
+                    <div className="flex gap-2 w-full md:w-auto">
+                      <Link to={`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`} className="flex-1 md:flex-initial">
                         <Button
-                          className="bg-blue-600 hover:bg-blue-700"
+                          className="bg-blue-600 hover:bg-blue-700 w-full text-sm sm:text-base"
                           disabled={visit.status === 'completed'}
                         >
-                          {visit.status === 'completed' ? 'View Documentation' : 'Start Documentation'}
+                          {visit.status === 'completed' ? 'View' : 'Document'}
                         </Button>
                       </Link>
                     </div>
