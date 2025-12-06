@@ -30,7 +30,8 @@ import {
   LineChart,
   Layers,
   BookOpen,
-  CheckCircle2
+  CheckCircle2,
+  Lightbulb
 } from "lucide-react";
 
 export default function FeaturesPage() {
