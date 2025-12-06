@@ -67,6 +67,7 @@ import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import PDGMPredictiveForecaster from "../components/oasis/PDGMPredictiveForecaster";
 import PatientMatchSelector from "../components/oasis/PatientMatchSelector";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import InlineDocumentationAssistant from "../components/oasis/InlineDocumentationAssistant";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1915,17 +1916,22 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     {analysisResults.accuracy_issues.map((issue, idx) => (
-                      <div key={idx} className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="font-mono">{issue.item}</Badge>
-                          <Badge className={getSeverityBadge(issue.severity)}>{issue.severity}</Badge>
-                        </div>
-                        <p className="text-sm text-gray-800 mb-2">{issue.issue}</p>
-                        <div className="bg-white p-2 rounded border">
-                          <p className="text-xs text-gray-500 mb-1">Recommendation:</p>
-                          <p className="text-sm text-green-700">{issue.recommendation}</p>
-                        </div>
-                      </div>
+                     <div key={idx} className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                       <div className="flex items-center justify-between mb-2">
+                         <Badge variant="outline" className="font-mono">{issue.item}</Badge>
+                         <Badge className={getSeverityBadge(issue.severity)}>{issue.severity}</Badge>
+                       </div>
+                       <p className="text-sm text-gray-800 mb-2">{issue.issue}</p>
+                       <div className="bg-white p-2 rounded border">
+                         <p className="text-xs text-gray-500 mb-1">Recommendation:</p>
+                         <p className="text-sm text-green-700">{issue.recommendation}</p>
+                       </div>
+                       <InlineDocumentationAssistant 
+                         issue={issue} 
+                         issueType="accuracy"
+                         pdgmData={pdgmData}
+                       />
+                     </div>
                     ))}
                   </div>
                 </AccordionContent>
@@ -1944,20 +1950,25 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     {analysisResults.compliance_concerns.map((concern, idx) => (
-                      <div key={idx} className="p-3 bg-red-50 rounded-lg border border-red-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-red-900">{concern.area}</span>
-                          <Badge className={getSeverityBadge(concern.severity)}>{concern.severity}</Badge>
-                        </div>
-                        <p className="text-sm text-gray-800 mb-2">{concern.issue}</p>
-                        {concern.cms_reference && (
-                          <p className="text-xs text-gray-500 mb-2">CMS Reference: {concern.cms_reference}</p>
-                        )}
-                        <div className="bg-white p-2 rounded border">
-                          <p className="text-xs text-gray-500 mb-1">Recommendation:</p>
-                          <p className="text-sm text-green-700">{concern.recommendation}</p>
-                        </div>
-                      </div>
+                     <div key={idx} className="p-3 bg-red-50 rounded-lg border border-red-200">
+                       <div className="flex items-center justify-between mb-2">
+                         <span className="font-semibold text-red-900">{concern.area}</span>
+                         <Badge className={getSeverityBadge(concern.severity)}>{concern.severity}</Badge>
+                       </div>
+                       <p className="text-sm text-gray-800 mb-2">{concern.issue}</p>
+                       {concern.cms_reference && (
+                         <p className="text-xs text-gray-500 mb-2">CMS Reference: {concern.cms_reference}</p>
+                       )}
+                       <div className="bg-white p-2 rounded border">
+                         <p className="text-xs text-gray-500 mb-1">Recommendation:</p>
+                         <p className="text-sm text-green-700">{concern.recommendation}</p>
+                       </div>
+                       <InlineDocumentationAssistant 
+                         issue={concern} 
+                         issueType="compliance"
+                         pdgmData={pdgmData}
+                       />
+                     </div>
                     ))}
                   </div>
                 </AccordionContent>
@@ -1976,32 +1987,37 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     {analysisResults.revenue_tips.map((tip, idx) => (
-                      <div key={idx} className="p-3 bg-green-50 rounded-lg border border-green-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="bg-white">{tip.category}</Badge>
-                          <Badge className={`${tip.potential_impact === 'high' ? 'bg-green-600' : tip.potential_impact === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'} text-white`}>
-                            <TrendingUp className="w-3 h-3 mr-1" />
-                            {tip.potential_impact} impact
-                          </Badge>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <p className="text-xs text-gray-500">Current Documentation:</p>
-                            <p className="text-gray-700">{tip.current_documentation}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Opportunity:</p>
-                            <p className="text-green-700">{tip.opportunity}</p>
-                          </div>
-                          <div className="bg-white p-2 rounded border">
-                            <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                              <Lightbulb className="w-3 h-3 text-yellow-500" />
-                              Specific Action:
-                            </p>
-                            <p className="text-green-800 font-medium">{tip.specific_action}</p>
-                          </div>
-                        </div>
-                      </div>
+                     <div key={idx} className="p-3 bg-green-50 rounded-lg border border-green-200">
+                       <div className="flex items-center justify-between mb-2">
+                         <Badge variant="outline" className="bg-white">{tip.category}</Badge>
+                         <Badge className={`${tip.potential_impact === 'high' ? 'bg-green-600' : tip.potential_impact === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'} text-white`}>
+                           <TrendingUp className="w-3 h-3 mr-1" />
+                           {tip.potential_impact} impact
+                         </Badge>
+                       </div>
+                       <div className="space-y-2 text-sm">
+                         <div>
+                           <p className="text-xs text-gray-500">Current Documentation:</p>
+                           <p className="text-gray-700">{tip.current_documentation}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-gray-500">Opportunity:</p>
+                           <p className="text-green-700">{tip.opportunity}</p>
+                         </div>
+                         <div className="bg-white p-2 rounded border">
+                           <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                             <Lightbulb className="w-3 h-3 text-yellow-500" />
+                             Specific Action:
+                           </p>
+                           <p className="text-green-800 font-medium">{tip.specific_action}</p>
+                         </div>
+                       </div>
+                       <InlineDocumentationAssistant 
+                         issue={tip} 
+                         issueType="revenue"
+                         pdgmData={pdgmData}
+                       />
+                     </div>
                     ))}
                   </div>
                 </AccordionContent>
@@ -2049,33 +2065,38 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     {analysisResults.documentation_improvements.map((imp, idx) => (
-                      <div key={idx} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-blue-900">{imp.item}</p>
-                          {imp.m_item_impact && (
-                            <Badge className="bg-purple-100 text-purple-800 text-xs">
-                              Affects: {imp.m_item_impact}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-3">
-                          <div className="bg-red-50 p-2 rounded border border-red-200">
-                            <p className="text-xs text-red-600 mb-1">Current:</p>
-                            <p className="text-sm text-red-800">{imp.current_state}</p>
-                          </div>
-                          <div className="bg-green-50 p-2 rounded border border-green-200">
-                            <p className="text-xs text-green-600 mb-1">Improved:</p>
-                            <p className="text-sm text-green-800">{imp.improved_state}</p>
-                          </div>
-                        </div>
-                        {imp.exact_text_to_add && (
-                          <div className="mt-2 p-2 bg-white rounded border border-blue-300">
-                            <p className="text-xs text-blue-600 mb-1 font-medium">📝 Exact Text to Add:</p>
-                            <p className="text-sm text-blue-900 italic">"{imp.exact_text_to_add}"</p>
-                          </div>
-                        )}
-                        <p className="text-xs text-gray-600 mt-2 italic">{imp.rationale}</p>
-                      </div>
+                     <div key={idx} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                       <div className="flex items-center justify-between mb-2">
+                         <p className="font-semibold text-blue-900">{imp.item}</p>
+                         {imp.m_item_impact && (
+                           <Badge className="bg-purple-100 text-purple-800 text-xs">
+                             Affects: {imp.m_item_impact}
+                           </Badge>
+                         )}
+                       </div>
+                       <div className="grid md:grid-cols-2 gap-3">
+                         <div className="bg-red-50 p-2 rounded border border-red-200">
+                           <p className="text-xs text-red-600 mb-1">Current:</p>
+                           <p className="text-sm text-red-800">{imp.current_state}</p>
+                         </div>
+                         <div className="bg-green-50 p-2 rounded border border-green-200">
+                           <p className="text-xs text-green-600 mb-1">Improved:</p>
+                           <p className="text-sm text-green-800">{imp.improved_state}</p>
+                         </div>
+                       </div>
+                       {imp.exact_text_to_add && (
+                         <div className="mt-2 p-2 bg-white rounded border border-blue-300">
+                           <p className="text-xs text-blue-600 mb-1 font-medium">📝 Exact Text to Add:</p>
+                           <p className="text-sm text-blue-900 italic">"{imp.exact_text_to_add}"</p>
+                         </div>
+                       )}
+                       <p className="text-xs text-gray-600 mt-2 italic">{imp.rationale}</p>
+                       <InlineDocumentationAssistant 
+                         issue={imp} 
+                         issueType="documentation_improvement"
+                         pdgmData={pdgmData}
+                       />
+                     </div>
                     ))}
                   </div>
                 </AccordionContent>
@@ -2095,32 +2116,37 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     {analysisResults.specific_rescore_opportunities.map((opp, idx) => (
-                      <div key={idx} className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-300">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge className="bg-green-700 text-white font-mono">{opp.m_item}</Badge>
-                          {opp.revenue_impact && (
-                            <Badge className="bg-emerald-600 text-white">{opp.revenue_impact}</Badge>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 mb-2">
-                          <div className="bg-red-100 p-2 rounded text-center">
-                            <p className="text-xs text-red-600">Current Score</p>
-                            <p className="text-xl font-bold text-red-800">{opp.current_score}</p>
-                          </div>
-                          <div className="bg-green-100 p-2 rounded text-center">
-                            <p className="text-xs text-green-600">Recommended Score</p>
-                            <p className="text-xl font-bold text-green-800">{opp.recommended_score}</p>
-                          </div>
-                        </div>
-                        <div className="bg-white p-2 rounded border mb-2">
-                          <p className="text-xs text-gray-500 mb-1">Clinical Evidence:</p>
-                          <p className="text-sm text-gray-800">{opp.clinical_evidence}</p>
-                        </div>
-                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                          <p className="text-xs text-blue-600 mb-1 font-medium">✅ Action Required:</p>
-                          <p className="text-sm text-blue-900">{opp.action_required}</p>
-                        </div>
-                      </div>
+                     <div key={idx} className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-300">
+                       <div className="flex items-center justify-between mb-2">
+                         <Badge className="bg-green-700 text-white font-mono">{opp.m_item}</Badge>
+                         {opp.revenue_impact && (
+                           <Badge className="bg-emerald-600 text-white">{opp.revenue_impact}</Badge>
+                         )}
+                       </div>
+                       <div className="grid grid-cols-2 gap-2 mb-2">
+                         <div className="bg-red-100 p-2 rounded text-center">
+                           <p className="text-xs text-red-600">Current Score</p>
+                           <p className="text-xl font-bold text-red-800">{opp.current_score}</p>
+                         </div>
+                         <div className="bg-green-100 p-2 rounded text-center">
+                           <p className="text-xs text-green-600">Recommended Score</p>
+                           <p className="text-xl font-bold text-green-800">{opp.recommended_score}</p>
+                         </div>
+                       </div>
+                       <div className="bg-white p-2 rounded border mb-2">
+                         <p className="text-xs text-gray-500 mb-1">Clinical Evidence:</p>
+                         <p className="text-sm text-gray-800">{opp.clinical_evidence}</p>
+                       </div>
+                       <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                         <p className="text-xs text-blue-600 mb-1 font-medium">✅ Action Required:</p>
+                         <p className="text-sm text-blue-900">{opp.action_required}</p>
+                       </div>
+                       <InlineDocumentationAssistant 
+                         issue={opp} 
+                         issueType="rescore"
+                         pdgmData={pdgmData}
+                       />
+                     </div>
                     ))}
                   </div>
                 </AccordionContent>
@@ -2139,21 +2165,26 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     {analysisResults.missing_high_value_documentation.map((doc, idx) => (
-                      <div key={idx} className="p-3 bg-amber-50 rounded-lg border border-amber-300">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-amber-900">{doc.area}</p>
-                          {doc.potential_value && (
-                            <Badge className="bg-amber-600 text-white">{doc.potential_value}</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-700 mb-2">{doc.why_it_matters}</p>
-                        {doc.suggested_text && (
-                          <div className="bg-white p-2 rounded border border-amber-200">
-                            <p className="text-xs text-amber-600 mb-1 font-medium">📝 Suggested Documentation:</p>
-                            <p className="text-sm text-gray-800 italic">"{doc.suggested_text}"</p>
-                          </div>
-                        )}
-                      </div>
+                     <div key={idx} className="p-3 bg-amber-50 rounded-lg border border-amber-300">
+                       <div className="flex items-center justify-between mb-2">
+                         <p className="font-semibold text-amber-900">{doc.area}</p>
+                         {doc.potential_value && (
+                           <Badge className="bg-amber-600 text-white">{doc.potential_value}</Badge>
+                         )}
+                       </div>
+                       <p className="text-sm text-gray-700 mb-2">{doc.why_it_matters}</p>
+                       {doc.suggested_text && (
+                         <div className="bg-white p-2 rounded border border-amber-200">
+                           <p className="text-xs text-amber-600 mb-1 font-medium">📝 Suggested Documentation:</p>
+                           <p className="text-sm text-gray-800 italic">"{doc.suggested_text}"</p>
+                         </div>
+                       )}
+                       <InlineDocumentationAssistant 
+                         issue={doc} 
+                         issueType="missing_documentation"
+                         pdgmData={pdgmData}
+                       />
+                     </div>
                     ))}
                   </div>
                 </AccordionContent>
