@@ -28,6 +28,7 @@ import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
 import AgencySettings from './pages/AgencySettings';
 import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
 import UserActivityLog from './pages/UserActivityLog';
+import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -62,6 +63,7 @@ export const PAGES = {
     "AgencySettings": AgencySettings,
     "ClinicalPathwayManager": ClinicalPathwayManager,
     "UserActivityLog": UserActivityLog,
+    "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
 }
 
 export const pagesConfig = {
