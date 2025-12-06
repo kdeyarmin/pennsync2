@@ -68,6 +68,7 @@ import PDGMPredictiveForecaster from "../components/oasis/PDGMPredictiveForecast
 import PatientMatchSelector from "../components/oasis/PatientMatchSelector";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import InlineDocumentationAssistant from "../components/oasis/InlineDocumentationAssistant";
+import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1870,7 +1871,19 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             />
           </div>
 
-          {/* Clinical Pathway Trigger - Full Width */}
+          {/* AI Pathway Recommender - Proactive pathway suggestions */}
+          <AIPathwayRecommender
+            pdgmData={pdgmData}
+            analysisResults={analysisResults}
+            navigationData={navigationData}
+            patientId={selectedPatientId}
+            onPathwaysActivated={(pathways) => {
+              setTriggeredPathways(pathways);
+              console.log(`${pathways.length} pathways activated`);
+            }}
+          />
+
+          {/* Clinical Pathway Trigger - Existing pathway matching */}
           <ClinicalPathwayTrigger
             pdgmData={pdgmData}
             analysisResults={analysisResults}
