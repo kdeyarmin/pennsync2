@@ -65,6 +65,7 @@ import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerat
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import PDGMPredictiveForecaster from "../components/oasis/PDGMPredictiveForecaster";
+import PDGMImpactAnalyzer from "../components/oasis/PDGMImpactAnalyzer";
 import PatientMatchSelector from "../components/oasis/PatientMatchSelector";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import InlineDocumentationAssistant from "../components/oasis/InlineDocumentationAssistant";
