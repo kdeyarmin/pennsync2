@@ -106,7 +106,7 @@ export default function UserActivityLog() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -125,6 +125,19 @@ export default function UserActivityLog() {
               <div>
                 <p className="text-xs text-gray-500">Active Users</p>
                 <p className="text-2xl font-bold">{new Set(activities.map(a => a.user_email)).size}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-indigo-50 to-purple-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <FileText className="w-8 h-8 text-indigo-600" />
+              <div>
+                <p className="text-xs text-indigo-700 font-medium">Notes Enhanced</p>
+                <p className="text-2xl font-bold text-indigo-900">
+                  {(actionStats['note_enhanced'] || 0) + (actionStats['note_ai_generated'] || 0)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -152,6 +165,46 @@ export default function UserActivityLog() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Note Enhancement Stats by User */}
+      <Card className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="w-5 h-5 text-indigo-600" />
+            AI Note Enhancement Statistics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {users.map(user => {
+              const userEnhancements = activities.filter(a => 
+                a.user_email === user.email && 
+                (a.action === 'note_enhanced' || a.action === 'note_ai_generated')
+              );
+              
+              if (userEnhancements.length === 0) return null;
+              
+              return (
+                <div key={user.id} className="bg-white p-3 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                      <p className="text-xs text-gray-500">{user.role}</p>
+                    </div>
+                    <Badge className="bg-indigo-600 text-white text-lg">
+                      {userEnhancements.length}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-gray-600 space-y-0.5">
+                    <p>Enhanced: {userEnhancements.filter(a => a.action === 'note_enhanced').length}</p>
+                    <p>AI Generated: {userEnhancements.filter(a => a.action === 'note_ai_generated').length}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card className="mb-6">

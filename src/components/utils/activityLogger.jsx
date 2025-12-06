@@ -39,7 +39,10 @@ export const ActivityActions = {
   CARE_PLAN_CREATE: 'care_plan_create',
   TASK_CREATE: 'task_create',
   INCIDENT_REPORT: 'incident_report',
-  TRAINING_COMPLETE: 'training_complete'
+  TRAINING_COMPLETE: 'training_complete',
+  NOTE_ENHANCED: 'note_enhanced',
+  NOTE_AI_GENERATED: 'note_ai_generated',
+  NOTE_COMPLIANCE_CHECK: 'note_compliance_check'
 };
 
 export const logError = async (errorMessage, errorDetails = {}) => {
