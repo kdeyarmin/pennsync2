@@ -28,13 +28,17 @@ import {
   MessageSquare,
   ChevronDown
 } from "lucide-react";
+import { logActivity, ActivityActions } from "../utils/activityLogger";
 
 export default function AINoteDraftingAssistant({
   vitalSigns,
   diagnosis,
   patientContext,
   symptoms,
-  onInsertText
+  onInsertText,
+  patientId,
+  previousVisits,
+  patientData
 }) {
   const [activeTab, setActiveTab] = useState("assessment");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -49,28 +53,58 @@ export default function AINoteDraftingAssistant({
   const generateAssessment = async () => {
     setIsGenerating(true);
     try {
+      // Build comprehensive patient history context
+      const previousVisitsContext = previousVisits?.slice(0, 3).map((v, idx) => 
+        `Visit ${idx + 1} (${v.visit_date}): ${v.nurse_notes?.substring(0, 200) || 'No notes'}`
+      ).join('\n') || 'No previous visits';
+
+      const vitalsTrend = previousVisits?.length > 0 && previousVisits[0].vital_signs ? 
+        `Previous Vitals: BP ${previousVisits[0].vital_signs?.blood_pressure_systolic}/${previousVisits[0].vital_signs?.blood_pressure_diastolic}, HR ${previousVisits[0].vital_signs?.heart_rate}, O2 ${previousVisits[0].vital_signs?.oxygen_saturation}%` : 
+        'No previous vitals on record';
+
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate objective assessment findings for a home health nursing visit note.
 
-VITAL SIGNS:
+CURRENT VITAL SIGNS:
 ${vitalSigns?.bp ? `- Blood Pressure: ${vitalSigns.bp}` : ''}
-${vitalSigns?.hr ? `- Heart Rate: ${vitalSigns.hr}` : ''}
-${vitalSigns?.temp ? `- Temperature: ${vitalSigns.temp}` : ''}
-${vitalSigns?.o2 ? `- Oxygen Saturation: ${vitalSigns.o2}` : ''}
-${vitalSigns?.pain ? `- Pain Level: ${vitalSigns.pain}` : ''}
+${vitalSigns?.hr ? `- Heart Rate: ${vitalSigns.hr} bpm` : ''}
+${vitalSigns?.temp ? `- Temperature: ${vitalSigns.temp}°F` : ''}
+${vitalSigns?.o2 ? `- Oxygen Saturation: ${vitalSigns.o2}%${vitalSigns.o2Source === 'on_oxygen' ? ' on supplemental oxygen' : ' on room air'}` : ''}
+${vitalSigns?.pain ? `- Pain Level: ${vitalSigns.pain}/10` : ''}
+${vitalSigns?.weight ? `- Weight: ${vitalSigns.weight} lbs` : ''}
 
-DIAGNOSIS: ${diagnosis || 'Not specified'}
+PREVIOUS VITALS FOR COMPARISON:
+${vitalsTrend}
 
-PATIENT CONTEXT: ${patientContext || 'Home health patient'}
+CURRENT DIAGNOSIS: ${diagnosis || 'Not specified'}
 
-Write professional, objective clinical assessment findings in narrative format. Include:
-1. General appearance and mental status
-2. Vital signs interpretation (normal/abnormal findings)
-3. System-specific assessments relevant to diagnosis
-4. Functional status observations
-5. Safety assessment of home environment
+PATIENT INFORMATION:
+${patientData ? `- Name: ${patientData.first_name} ${patientData.last_name}
+- Age/DOB: ${patientData.date_of_birth || 'Not specified'}
+- Primary Diagnosis: ${patientData.primary_diagnosis || diagnosis}
+- Secondary Diagnoses: ${patientData.secondary_diagnoses?.join(', ') || 'None documented'}
+- Allergies: ${patientData.allergies || 'NKDA'}
+- Current Status: ${patientData.status}` : patientContext || 'Home health patient'}
 
-Use proper medical terminology. Be concise but thorough.`,
+RECENT VISIT HISTORY (Last 3 Visits):
+${previousVisitsContext}
+
+CURRENT OBSERVATIONS/SYMPTOMS:
+${symptoms || 'Standard assessment performed'}
+
+Based on the complete patient history and current findings, write professional, objective clinical assessment findings in narrative format. 
+
+REQUIREMENTS:
+1. Compare current vitals to previous visit trends - note any significant changes or concerning trends
+2. Reference relevant aspects of patient's medical history and secondary diagnoses
+3. Include general appearance and mental status
+4. Provide clinical interpretation of vital signs (note if stable, improved, or worsened from last visit)
+5. System-specific assessments relevant to ALL diagnoses (primary + secondary)
+6. Functional status observations compared to baseline
+7. Safety assessment of home environment
+8. Note any reported symptoms or changes since last visit
+
+Use proper medical terminology. Be thorough and context-aware, incorporating patient history to show continuity of care.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -95,26 +129,48 @@ Use proper medical terminology. Be concise but thorough.`,
   const generateInterventions = async () => {
     setIsGenerating(true);
     try {
+      const previousInterventionsContext = previousVisits?.length > 0 ?
+        previousVisits.map(v => {
+          const noteMatch = v.nurse_notes?.match(/intervention|skilled|teaching|education|assess|monitor/gi);
+          return noteMatch ? `Previous visit: ${v.nurse_notes.substring(0, 300)}` : null;
+        }).filter(Boolean).join('\n') :
+        'No previous intervention history';
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate appropriate nursing interventions for a home health visit note.
+        prompt: `Generate appropriate skilled nursing interventions for a home health visit note.
 
-DIAGNOSIS: ${diagnosis || 'Not specified'}
-SYMPTOMS/OBSERVATIONS: ${symptoms || 'Standard assessment'}
-PATIENT CONTEXT: ${patientContext || 'Home health patient'}
+CURRENT DIAGNOSIS: ${diagnosis || 'Not specified'}
+CURRENT SYMPTOMS/OBSERVATIONS: ${symptoms || 'Standard assessment'}
 
-VITAL SIGNS:
+PATIENT INFORMATION:
+${patientData ? `- Name: ${patientData.first_name} ${patientData.last_name}
+- Primary Diagnosis: ${patientData.primary_diagnosis}
+- Secondary Diagnoses: ${patientData.secondary_diagnoses?.join(', ') || 'None'}
+- Allergies: ${patientData.allergies || 'NKDA'}` : patientContext || 'Home health patient'}
+
+CURRENT VITAL SIGNS:
 ${vitalSigns?.bp ? `- Blood Pressure: ${vitalSigns.bp}` : ''}
-${vitalSigns?.hr ? `- Heart Rate: ${vitalSigns.hr}` : ''}
-${vitalSigns?.o2 ? `- Oxygen Saturation: ${vitalSigns.o2}` : ''}
+${vitalSigns?.hr ? `- Heart Rate: ${vitalSigns.hr} bpm` : ''}
+${vitalSigns?.temp ? `- Temperature: ${vitalSigns.temp}°F` : ''}
+${vitalSigns?.o2 ? `- Oxygen Saturation: ${vitalSigns.o2}%` : ''}
+${vitalSigns?.pain ? `- Pain Level: ${vitalSigns.pain}/10` : ''}
+
+PREVIOUS INTERVENTIONS PATTERN (Last 3 Visits):
+${previousInterventionsContext}
 
 Generate skilled nursing interventions that:
-1. Address the primary diagnosis
-2. Are Medicare-compliant (require RN skill/judgment)
-3. Include specific actions taken during visit
-4. Document any wound care, medication management, or disease teaching
-5. Note coordination with other team members if applicable
+1. Build upon and reference previous interventions (show continuity of care)
+2. Address the primary AND relevant secondary diagnoses
+3. Are Medicare-compliant (require RN skill, knowledge, and clinical judgment)
+4. Include specific actions taken during THIS visit
+5. Document disease-specific monitoring and assessment
+6. Include medication review/management if applicable
+7. Document patient/caregiver teaching specific to conditions
+8. Note wound care specifics if applicable
+9. Document coordination with physician or other team members
+10. Reference progress toward care plan goals if improvements noted
 
-Format as a narrative paragraph suitable for clinical documentation.`,
+Be specific about skilled interventions performed. Show clinical expertise and judgment. Format as a detailed narrative paragraph suitable for Medicare reimbursement.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -132,30 +188,58 @@ Format as a narrative paragraph suitable for clinical documentation.`,
   const generatePatientResponse = async () => {
     setIsGenerating(true);
     try {
+      const previousResponseContext = previousVisits?.length > 0 ?
+        `Previous patient response patterns: ${previousVisits[0]?.nurse_notes?.match(/patient (verbalized|demonstrated|states|reports|tolerated).{0,100}/gi)?.join('; ') || 'No previous response documentation'}` :
+        'First visit - no previous response data';
+
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate patient response and education documentation for a home health nursing note.
 
-DIAGNOSIS: ${diagnosis || 'Not specified'}
-PATIENT CONTEXT: ${patientContext || 'Home health patient'}
+CURRENT DIAGNOSIS: ${diagnosis || 'Not specified'}
 
-Generate documentation that includes:
+PATIENT INFORMATION:
+${patientData ? `- Name: ${patientData.first_name} ${patientData.last_name}
+- Primary Diagnosis: ${patientData.primary_diagnosis}
+- Allergies: ${patientData.allergies || 'NKDA'}
+- Caregiver: ${patientData.caregiver_name || 'None identified'}` : patientContext || 'Home health patient'}
+
+PREVIOUS PATIENT RESPONSE PATTERNS:
+${previousResponseContext}
+
+CURRENT OBSERVATIONS:
+${symptoms || 'Standard visit completed'}
+
+Generate comprehensive documentation that includes:
 
 1. PATIENT RESPONSE TO INTERVENTIONS:
-   - How patient tolerated procedures/care
-   - Patient's reported symptoms/comfort level
-   - Any changes from previous visit
+   - How patient tolerated procedures/care TODAY
+   - Patient's reported symptoms/comfort level compared to previous visit
+   - Specific changes from last documented visit (improvements or declines)
+   - Response to any medication changes
+   - Pain management effectiveness if applicable
 
-2. PATIENT/CAREGIVER EDUCATION:
-   - Topics taught during visit
-   - Teaching methods used
-   - Patient's understanding level (use teach-back documentation)
+2. PATIENT/CAREGIVER EDUCATION PROVIDED:
+   - Specific topics taught during THIS visit
+   - Disease-specific education (tailored to primary + secondary diagnoses)
+   - Medication education if changes occurred
+   - Safety teaching provided
+   - Teaching methods used (demonstration, verbal instruction, written materials)
+   - Caregiver involvement if applicable
 
-3. PATIENT RESPONSE TO EDUCATION:
-   - Evidence of comprehension
-   - Ability to demonstrate skills if applicable
-   - Need for reinforcement
+3. COMPREHENSION & TEACH-BACK DOCUMENTATION:
+   - Evidence of patient understanding using teach-back method
+   - Specific examples: "Patient able to verbalize/demonstrate..."
+   - Ability to demonstrate skills (medication administration, glucose monitoring, etc.)
+   - Areas requiring reinforcement or follow-up teaching
+   - Caregiver's understanding and ability to assist
 
-Format as narrative paragraphs suitable for Medicare-compliant clinical documentation. Include specific teach-back responses.`,
+4. PATIENT ENGAGEMENT & GOALS:
+   - Patient's engagement with care plan
+   - Progress toward documented care plan goals
+   - Patient's stated concerns or questions
+   - Motivational level and barriers to care
+
+Format as detailed narrative paragraphs suitable for Medicare-compliant clinical documentation. Include SPECIFIC teach-back examples showing patient comprehension.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -174,17 +258,31 @@ Format as narrative paragraphs suitable for Medicare-compliant clinical document
     if (!customPrompt.trim()) return;
     setIsGenerating(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a clinical documentation assistant for home health nursing. 
+      const previousNotesContext = previousVisits?.slice(0, 2).map((v, idx) => 
+        `Visit ${idx + 1} (${v.visit_date}): ${v.nurse_notes?.substring(0, 250) || 'No notes'}`
+      ).join('\n\n') || 'No previous visits';
 
-CONTEXT:
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a clinical documentation assistant for home health nursing with access to complete patient history.
+
+CURRENT PATIENT CONTEXT:
 - Diagnosis: ${diagnosis || 'Not specified'}
 - Patient: ${patientContext || 'Home health patient'}
-- Vitals: ${JSON.stringify(vitalSigns || {})}
+- Current Vitals: ${JSON.stringify(vitalSigns || {})}
+
+PATIENT MEDICAL HISTORY:
+${patientData ? `- Primary Diagnosis: ${patientData.primary_diagnosis}
+- Secondary Diagnoses: ${patientData.secondary_diagnoses?.join(', ') || 'None'}
+- Allergies: ${patientData.allergies || 'NKDA'}
+- Address: ${patientData.address || 'Not specified'}
+- Phone: ${patientData.phone || 'Not specified'}` : 'Limited patient data available'}
+
+PREVIOUS VISIT NOTES (Last 2 Visits):
+${previousNotesContext}
 
 USER REQUEST: ${customPrompt}
 
-Generate professional, Medicare-compliant clinical documentation based on the request. Use proper medical terminology and be specific.`,
+Generate professional, Medicare-compliant clinical documentation based on the request. Use proper medical terminology and be specific. Reference patient history when relevant to show continuity of care and clinical expertise.`,
         response_json_schema: {
           type: "object",
           properties: {

@@ -925,6 +925,9 @@ Return JSON:
                             diagnosis={finalDiagnosis}
                             patientContext={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}, ${selectedPatient.primary_diagnosis || 'home health patient'}` : ''}
                             symptoms={roughNote}
+                            patientId={selectedPatientId}
+                            previousVisits={recentVisits}
+                            patientData={selectedPatient}
                             onInsertText={(text) => {
                               if (enhancedNote) {
                                 setEnhancedNote(prev => prev + '\n\n' + text);
