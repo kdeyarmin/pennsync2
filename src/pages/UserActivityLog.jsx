@@ -18,7 +18,19 @@ import {
   Plus,
   AlertTriangle,
   Clock,
-  Filter
+  Filter,
+  LogIn,
+  Upload,
+  BarChart3,
+  Save,
+  UserCheck,
+  Target,
+  ClipboardList,
+  AlertCircle,
+  GraduationCap,
+  Sparkles,
+  Brain,
+  Shield
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -79,7 +91,20 @@ export default function UserActivityLog() {
       'generate': FileText,
       'error': AlertTriangle,
       'page_visit': Activity,
-      'login': User
+      'login': LogIn,
+      'oasis_upload': Upload,
+      'oasis_analyze': BarChart3,
+      'oasis_save': Save,
+      'patient_match': UserCheck,
+      'dispute_match': AlertTriangle,
+      'visit_document': FileText,
+      'care_plan_create': Target,
+      'task_create': ClipboardList,
+      'incident_report': AlertCircle,
+      'training_complete': GraduationCap,
+      'note_enhanced': Sparkles,
+      'note_ai_generated': Brain,
+      'note_compliance_check': Shield
     };
     const Icon = icons[action] || Activity;
     return <Icon className="w-4 h-4" />;
@@ -93,7 +118,21 @@ export default function UserActivityLog() {
       'export': 'bg-purple-100 text-purple-800',
       'error': 'bg-red-600 text-white',
       'view': 'bg-gray-100 text-gray-800',
-      'generate': 'bg-indigo-100 text-indigo-800'
+      'generate': 'bg-indigo-100 text-indigo-800',
+      'login': 'bg-purple-100 text-purple-800',
+      'oasis_upload': 'bg-cyan-100 text-cyan-800',
+      'oasis_analyze': 'bg-teal-100 text-teal-800',
+      'oasis_save': 'bg-emerald-100 text-emerald-800',
+      'patient_match': 'bg-violet-100 text-violet-800',
+      'dispute_match': 'bg-orange-100 text-orange-800',
+      'visit_document': 'bg-sky-100 text-sky-800',
+      'care_plan_create': 'bg-lime-100 text-lime-800',
+      'task_create': 'bg-amber-100 text-amber-800',
+      'incident_report': 'bg-rose-100 text-rose-800',
+      'training_complete': 'bg-fuchsia-100 text-fuchsia-800',
+      'note_enhanced': 'bg-indigo-100 text-indigo-800',
+      'note_ai_generated': 'bg-purple-100 text-purple-800',
+      'note_compliance_check': 'bg-blue-100 text-blue-800'
     };
     return colors[action] || 'bg-gray-100 text-gray-800';
   };
@@ -363,12 +402,33 @@ export default function UserActivityLog() {
                           </p>
                         )}
                         
-                        {activity.details && Object.keys(activity.details).length > 0 && (
+                        {/* Enhanced detail display for specific actions */}
+                        {activity.action === 'login' && activity.details?.login_time && (
+                          <p className="text-xs text-purple-700 mt-1">
+                            Session started at {new Date(activity.details.login_time).toLocaleTimeString()}
+                          </p>
+                        )}
+                        
+                        {activity.action === 'note_enhanced' && activity.details && (
+                          <div className="mt-1 text-xs text-gray-600 space-y-0.5">
+                            {activity.details.quality_score && (
+                              <p>Quality Score: <Badge className="bg-green-600 text-white text-xs">{activity.details.quality_score}%</Badge></p>
+                            )}
+                            {activity.details.rough_note_length && activity.details.enhanced_note_length && (
+                              <p className="text-[10px] text-gray-500">
+                                {activity.details.rough_note_length} → {activity.details.enhanced_note_length} characters
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        
+                        {activity.details && Object.keys(activity.details).length > 0 && 
+                         activity.action !== 'login' && activity.action !== 'note_enhanced' && (
                           <details className="mt-2">
                             <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-700">
                               View Details
                             </summary>
-                            <div className="mt-2 p-2 bg-gray-50 rounded text-xs font-mono text-gray-700 overflow-x-auto">
+                            <div className="mt-2 p-2 bg-gray-50 rounded text-xs font-mono text-gray-700 overflow-x-auto max-h-40">
                               {JSON.stringify(activity.details, null, 2)}
                             </div>
                           </details>
