@@ -36,6 +36,7 @@ import {
 export default function FeaturesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isGeneratingManual, setIsGeneratingManual] = useState(false);
 
   const features = [
     {
@@ -491,6 +492,628 @@ export default function FeaturesPage() {
     setIsGeneratingPDF(false);
   };
 
+  const generateUserManual = async () => {
+    setIsGeneratingManual(true);
+    try {
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Penn Sync User Manual</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+    h1 { color: #4F46E5; text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 10px; page-break-after: avoid; }
+    h2 { color: #6366F1; margin-top: 30px; border-left: 4px solid #6366F1; padding-left: 10px; page-break-after: avoid; }
+    h3 { color: #1F2937; margin-top: 20px; page-break-after: avoid; }
+    h4 { color: #4B5563; margin-top: 15px; }
+    .section { page-break-inside: avoid; margin-bottom: 30px; }
+    .step { background: #F9FAFB; border-left: 4px solid #3B82F6; padding: 15px; margin: 10px 0; border-radius: 4px; }
+    .step-number { display: inline-block; background: #3B82F6; color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold; margin-right: 8px; }
+    .tip { background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px; margin: 10px 0; border-radius: 4px; }
+    .tip-icon { color: #F59E0B; font-weight: bold; }
+    .warning { background: #FEE2E2; border-left: 4px solid #DC2626; padding: 12px; margin: 10px 0; border-radius: 4px; }
+    .warning-icon { color: #DC2626; font-weight: bold; }
+    .toc { background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0; page-break-inside: avoid; }
+    .toc-item { margin: 5px 0; padding-left: 20px; }
+    .toc-section { font-weight: bold; margin-top: 15px; margin-bottom: 5px; color: #1F2937; }
+    .header-info { text-align: center; color: #6B7280; margin-bottom: 30px; }
+    .role-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-right: 8px; }
+    .nurse-badge { background: #DBEAFE; color: #1E40AF; }
+    .admin-badge { background: #FEE2E2; color: #991B1B; }
+    .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB; color: #6B7280; page-break-before: always; }
+    .quick-ref { background: #EFF6FF; padding: 15px; border-radius: 8px; margin: 20px 0; page-break-inside: avoid; }
+    .quick-ref-title { font-weight: bold; color: #1E40AF; margin-bottom: 10px; }
+    .screenshot-note { font-style: italic; color: #6B7280; font-size: 12px; margin-top: 5px; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+  <h1>📚 Penn Sync User Manual</h1>
+  <p class="header-info">Complete Guide for Nurses and Administrators<br>Generated: ${new Date().toLocaleDateString()}</p>
+  
+  <div class="toc">
+    <h3>📑 Table of Contents</h3>
+    
+    <div class="toc-section">Part 1: Nurse User Guide</div>
+    <div class="toc-item">1. Getting Started</div>
+    <div class="toc-item">2. Smart Note Assistant</div>
+    <div class="toc-item">3. OASIS Documentation</div>
+    <div class="toc-item">4. Patient Care Management</div>
+    <div class="toc-item">5. Incident Reporting</div>
+    <div class="toc-item">6. Training & Development</div>
+    
+    <div class="toc-section">Part 2: Administrator User Guide</div>
+    <div class="toc-item">7. System Administration</div>
+    <div class="toc-item">8. Clinical Pathway Management</div>
+    <div class="toc-item">9. Compliance & Monitoring</div>
+    <div class="toc-item">10. Analytics & Reporting</div>
+    <div class="toc-item">11. User Management</div>
+  </div>
+
+  <!-- PART 1: NURSE GUIDE -->
+  <div class="page-break"></div>
+  <h1 style="background: #DBEAFE; padding: 20px; border-radius: 8px;">Part 1: Nurse User Guide</h1>
+  <p style="font-size: 16px; color: #1E40AF; font-weight: bold;">This section covers all features available to nurses for daily documentation and patient care.</p>
+
+  <div class="section">
+    <h2>1. Getting Started</h2>
+    
+    <h3>1.1 Logging In</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to the Penn Sync login page
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Enter your email address and password
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click "Sign In"
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡 TIP:</span> Your login activity is automatically tracked for security and compliance purposes. You'll see a timestamp of your last login on the dashboard.
+    </div>
+
+    <h3>1.2 Dashboard Overview</h3>
+    <p>After logging in, you'll see the main dashboard with:</p>
+    <ul>
+      <li><strong>Navigation Menu:</strong> Access all features from the left sidebar</li>
+      <li><strong>Patient Alerts:</strong> Critical patient issues requiring immediate attention</li>
+      <li><strong>Today's Schedule:</strong> Your assigned visits for the day</li>
+      <li><strong>Pending Tasks:</strong> Follow-up items and care plan tasks</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>2. Smart Note Assistant</h2>
+    <p><span class="role-badge nurse-badge">NURSE</span>Your primary tool for visit documentation</p>
+
+    <h3>2.1 Starting a New Note</h3>
+    <div class="step">
+      <span class="step-number">1</span>Click <strong>"Smart Notes"</strong> in the left navigation menu
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Select the patient from the dropdown or search by name
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click <strong>"Start New Note"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Select visit type (Skilled Nursing, Admission, Recertification, etc.)
+    </div>
+
+    <h3>2.2 Using Voice Dictation</h3>
+    <div class="step">
+      <span class="step-number">1</span>Click the microphone icon in the rough notes section
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Speak naturally - describe what you observed during the visit
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>AI will transcribe your speech in real-time
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Click the microphone again to stop recording
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡 TIP:</span> Speak clearly and use medical terminology naturally. The AI understands clinical language and will format it properly.
+    </div>
+
+    <h3>2.3 Voice Vitals Entry</h3>
+    <div class="step">
+      <span class="step-number">1</span>Click the vitals microphone icon in the vitals section
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Say vital signs naturally: "Blood pressure 120 over 80"
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>AI automatically fills the corresponding fields
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Verify all values are correct
+    </div>
+    <p class="screenshot-note">Example phrases: "heart rate 72", "temperature ninety-eight point six", "oxygen saturation 96 on room air"</p>
+
+    <h3>2.4 Enhancing Notes with AI</h3>
+    <div class="step">
+      <span class="step-number">1</span>After completing your rough note (typed or dictated), review the content
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Click the <strong>"Enhance with AI"</strong> button
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>AI will transform your rough note into a polished, Medicare-compliant narrative
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Review the enhanced note in the preview panel
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>Make any necessary edits
+    </div>
+    <div class="warning">
+      <span class="warning-icon">⚠️ IMPORTANT:</span> Always review AI-enhanced content for accuracy. You are responsible for the final documentation.
+    </div>
+
+    <h3>2.5 Compliance Checking</h3>
+    <p>The system continuously checks your documentation for Medicare compliance.</p>
+    <div class="step">
+      <span class="step-number">1</span>Watch the compliance score indicator as you document
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Click on flagged issues to see what's missing
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click <strong>"Add"</strong> next to suggested fixes to insert compliant text
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Click <strong>"Fix All & Re-Enhance"</strong> to add all missing elements at once
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡 TIP:</span> Aim for a compliance score of 85% or higher before finalizing your note.
+    </div>
+
+    <h3>2.6 Copying to EHR</h3>
+    <div class="step">
+      <span class="step-number">1</span>Once your note reaches 85%+ compliance, it's ready to copy
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Click <strong>"Copy to EHR"</strong> button
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Note is copied to your clipboard
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Paste into your agency's EHR system
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. OASIS Documentation</h2>
+    <p><span class="role-badge nurse-badge">NURSE</span>For SOC, ROC, and Discharge OASIS assessments</p>
+
+    <h3>3.1 Uploading OASIS PDF</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"OASIS Analyzer"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Click <strong>"Upload OASIS PDF"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Select your completed OASIS PDF file
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>AI extracts all data and matches to patient
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>Confirm or dispute the patient match
+    </div>
+
+    <h3>3.2 Reviewing PDGM Analysis</h3>
+    <div class="step">
+      <span class="step-number">1</span>After upload, view the automated PDGM analysis
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Review clinical grouping, functional level, and comorbidity adjustments
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Check projected payment amount
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Review flagged documentation issues
+    </div>
+
+    <h3>3.3 Revenue Optimization Tips</h3>
+    <div class="step">
+      <span class="step-number">1</span>Scroll to "Revenue Optimization Opportunities"
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Review suggested M-item changes
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Each tip shows potential payment increase
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Implement clinically appropriate suggestions
+    </div>
+    <div class="warning">
+      <span class="warning-icon">⚠️ IMPORTANT:</span> Only implement suggestions that accurately reflect the patient's clinical condition. Never inflate scores.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>4. Patient Care Management</h2>
+    <p><span class="role-badge nurse-badge">NURSE</span>Managing patient records, care plans, and tasks</p>
+
+    <h3>4.1 Viewing Patient Records</h3>
+    <div class="step">
+      <span class="step-number">1</span>Click <strong>"Patients"</strong> in the navigation menu
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Search or browse patient list
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click patient name to view details
+    </div>
+
+    <h3>4.2 Care Plan Management</h3>
+    <div class="step">
+      <span class="step-number">1</span>On patient details page, scroll to <strong>"Care Plans"</strong> section
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>View active care plans with goals and interventions
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click <strong>"Update Progress"</strong> to document goal achievement
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Mark goals as "Met", "In Progress", or "Not Met"
+    </div>
+
+    <h3>4.3 Task Management</h3>
+    <div class="step">
+      <span class="step-number">1</span>View your assigned tasks on the Dashboard
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Click a task to view details
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Complete the required action
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Click <strong>"Mark Complete"</strong> and add completion notes
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>5. Incident Reporting</h2>
+    <p><span class="role-badge nurse-badge">NURSE</span>Quick reporting for falls, hospitalizations, and medication errors</p>
+
+    <h3>5.1 Reporting an Incident</h3>
+    <div class="step">
+      <span class="step-number">1</span>During visit documentation, click the incident type button (Fall, Hospitalization, Med Error)
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Complete the guided incident form with all required details
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>AI generates a comprehensive incident report
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Review and click <strong>"Submit Report"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>Appropriate notifications are sent automatically
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡 TIP:</span> Report incidents as soon as possible. The system tracks reporting time for compliance.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>6. Training & Development</h2>
+    <p><span class="role-badge nurse-badge">NURSE</span>Personalized learning and skill development</p>
+
+    <h3>6.1 Viewing Your Learning Path</h3>
+    <div class="step">
+      <span class="step-number">1</span>Click <strong>"Training Hub"</strong> in navigation
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>View your personalized learning path
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Complete recommended modules in order
+    </div>
+
+    <h3>6.2 Completing Training Scenarios</h3>
+    <div class="step">
+      <span class="step-number">1</span>Select a scenario from the Training Hub
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Read the patient case
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Respond to each clinical question
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Receive AI feedback on your responses
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>Review learning points and best practices
+    </div>
+  </div>
+
+  <!-- PART 2: ADMIN GUIDE -->
+  <div class="page-break"></div>
+  <h1 style="background: #FEE2E2; padding: 20px; border-radius: 8px;">Part 2: Administrator User Guide</h1>
+  <p style="font-size: 16px; color: #991B1B; font-weight: bold;">This section covers administrative features for system configuration, monitoring, and reporting.</p>
+
+  <div class="section">
+    <h2>7. System Administration</h2>
+    <p><span class="role-badge admin-badge">ADMIN</span>Overall system management and configuration</p>
+
+    <h3>7.1 Accessing Admin Dashboard</h3>
+    <div class="step">
+      <span class="step-number">1</span>Click <strong>"Admin Dashboard"</strong> in the navigation menu (admin users only)
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>View system-wide statistics and recent activity
+    </div>
+
+    <h3>7.2 Agency Settings Configuration</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"Agency Settings"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Configure agency information:
+      <ul>
+        <li>Agency name and contact information</li>
+        <li>Average episodes per year (for PDGM forecasting)</li>
+        <li>Wage index (for payment calculations)</li>
+        <li>Default visit types and care types</li>
+      </ul>
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click <strong>"Save Settings"</strong>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>8. Clinical Pathway Management</h2>
+    <p><span class="role-badge admin-badge">ADMIN</span>Create and manage evidence-based clinical pathways</p>
+
+    <h3>8.1 Creating a New Pathway</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"Clinical Pathway Manager"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Click <strong>"Create New Pathway"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Enter pathway details:
+      <ul>
+        <li>Pathway name (e.g., "CHF Management Protocol")</li>
+        <li>Description</li>
+        <li>Priority level (Critical, High, Medium, Low)</li>
+      </ul>
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Configure trigger conditions:
+      <ul>
+        <li>Diagnosis codes or keywords</li>
+        <li>Functional score thresholds</li>
+        <li>Comorbidity presence</li>
+      </ul>
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>Add documentation prompts with affected M-items
+    </div>
+    <div class="step">
+      <span class="step-number">6</span>Configure rescore opportunities
+    </div>
+    <div class="step">
+      <span class="step-number">7</span>Add recommended tasks
+    </div>
+    <div class="step">
+      <span class="step-number">8</span>Click <strong>"Save Pathway"</strong>
+    </div>
+
+    <h3>8.2 Managing Existing Pathways</h3>
+    <div class="step">
+      <span class="step-number">1</span>View all pathways in the Clinical Pathway Manager
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Click <strong>"Edit"</strong> to modify a pathway
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click <strong>"Duplicate"</strong> to create a similar pathway
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Toggle <strong>"Active"</strong> status to enable/disable pathways
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>9. Compliance & Monitoring</h2>
+    <p><span class="role-badge admin-badge">ADMIN</span>Monitor compliance and audit documentation quality</p>
+
+    <h3>9.1 Reviewing User Activity</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"User Activity Log"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Review login activity, note enhancements, and system usage
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Use filters to focus on specific users, actions, or date ranges
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Export activity logs for audits
+    </div>
+
+    <h3>9.2 Compliance Auditing</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"Compliance Dashboard"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Review compliance audit results by nurse
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Click individual audits to see detailed findings
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Assign training to nurses with low compliance scores
+    </div>
+
+    <h3>9.3 OASIS Auditing</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"OASIS Audit Dashboard"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Review all uploaded OASIS assessments
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Filter by nurse, quality score, or date range
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Click assessments to review detailed analysis
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>Mark assessments for detailed audit review
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>10. Analytics & Reporting</h2>
+    <p><span class="role-badge admin-badge">ADMIN</span>System-wide analytics and performance metrics</p>
+
+    <h3>10.1 Analytics Dashboard</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"Analytics Dashboard"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>View key metrics:
+      <ul>
+        <li>Total notes enhanced</li>
+        <li>Average time savings per visit</li>
+        <li>Compliance score trends</li>
+        <li>OASIS quality metrics</li>
+      </ul>
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Use date range filters to analyze trends
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Export reports for leadership
+    </div>
+
+    <h3>10.2 Nurse Performance Dashboard</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to <strong>"Nurse Performance Dashboard"</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Review individual nurse metrics
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Identify top performers and training needs
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Track improvement over time
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>11. User Management</h2>
+    <p><span class="role-badge admin-badge">ADMIN</span>Managing staff access and permissions</p>
+
+    <h3>11.1 Inviting New Users</h3>
+    <div class="step">
+      <span class="step-number">1</span>Users must be invited through the Base44 platform
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>Contact your system administrator to invite new nurses
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Users receive an email invitation
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>Upon signup, users appear in your agency automatically
+    </div>
+
+    <h3>11.2 Managing User Roles</h3>
+    <div class="step">
+      <span class="step-number">1</span>Navigate to Admin Dashboard
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>View user list with current roles
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>Contact Base44 support to modify user roles (admin vs user)
+    </div>
+  </div>
+
+  <!-- QUICK REFERENCE SECTION -->
+  <div class="page-break"></div>
+  <h2>Quick Reference Guide</h2>
+
+  <div class="quick-ref">
+    <div class="quick-ref-title">🎤 Voice Commands for Nurses</div>
+    <p><strong>"Insert cardiovascular"</strong> - Adds cardiovascular assessment section</p>
+    <p><strong>"Insert respiratory"</strong> - Adds respiratory assessment section</p>
+    <p><strong>"Add homebound status"</strong> - Adds homebound justification</p>
+    <p><strong>"Add skilled need"</strong> - Adds skilled nursing necessity documentation</p>
+    <p><strong>"Save documentation"</strong> - Saves current note</p>
+  </div>
+
+  <div class="quick-ref">
+    <div class="quick-ref-title">⌨️ Text Expanders</div>
+    <p><strong>wnl</strong> → within normal limits</p>
+    <p><strong>nka</strong> → no known allergies</p>
+    <p><strong>sob</strong> → shortness of breath</p>
+    <p><strong>adl</strong> → activities of daily living</p>
+    <p><strong>pt</strong> → patient</p>
+  </div>
+
+  <div class="quick-ref">
+    <div class="quick-ref-title">📊 Compliance Score Guidelines</div>
+    <p><strong>85-100%</strong> - Ready to copy to EHR (green)</p>
+    <p><strong>70-84%</strong> - Review and add suggested fixes (yellow)</p>
+    <p><strong>Below 70%</strong> - Needs significant improvement (red)</p>
+  </div>
+
+  <div class="quick-ref">
+    <div class="quick-ref-title">🚨 When to Contact Support</div>
+    <p>• System not responding or errors</p>
+    <p>• Cannot access patient records</p>
+    <p>• AI enhancement producing inaccurate results</p>
+    <p>• OASIS upload failing</p>
+    <p>• Questions about features or functionality</p>
+  </div>
+
+  <div class="footer">
+    <h3>Need Help?</h3>
+    <p><strong>Technical Support:</strong> Contact your system administrator</p>
+    <p><strong>Training Questions:</strong> Reach out to your clinical supervisor</p>
+    <p><strong>Feature Requests:</strong> Submit through your administrator</p>
+    <br>
+    <p style="font-size: 12px;">© Penn Sync - AI-Powered Home Health Documentation</p>
+    <p style="font-size: 12px;">User Manual Version 1.0 - ${new Date().toLocaleDateString()}</p>
+  </div>
+</body>
+</html>`;
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+
+    } catch (error) {
+      console.error('Error generating user manual:', error);
+      alert('Error generating manual. Please try again.');
+    }
+    setIsGeneratingManual(false);
+  };
+
   const totalTimeSavedPerVisit = 110;
   const totalTimeSavedPerWeek = totalTimeSavedPerVisit * 5;
   const totalTimeSavedPerMonth = totalTimeSavedPerWeek * 4;
@@ -538,18 +1161,32 @@ export default function FeaturesPage() {
           AI-powered home health documentation, OASIS analytics, and clinical decision support
         </p>
         
-        {/* Download Button */}
-        <Button 
-          onClick={generateFeaturesPDF}
-          disabled={isGeneratingPDF}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 mb-6"
-        >
-          {isGeneratingPDF ? (
-            <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-          ) : (
-            <><Download className="w-4 h-4 mr-2" /> Download Features Guide</>
-          )}
-        </Button>
+        {/* Download Buttons */}
+        <div className="flex flex-wrap gap-3 justify-center mb-6">
+          <Button 
+            onClick={generateFeaturesPDF}
+            disabled={isGeneratingPDF}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          >
+            {isGeneratingPDF ? (
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+            ) : (
+              <><Download className="w-4 h-4 mr-2" /> Features Guide</>
+            )}
+          </Button>
+          
+          <Button 
+            onClick={generateUserManual}
+            disabled={isGeneratingManual}
+            className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+          >
+            {isGeneratingManual ? (
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+            ) : (
+              <><BookOpen className="w-4 h-4 mr-2" /> User Manual</>
+            )}
+          </Button>
+        </div>
         
         {/* Time Saved Hero Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
