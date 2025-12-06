@@ -166,45 +166,92 @@ export default function UserActivityLog() {
         </Card>
       </div>
 
-      {/* Note Enhancement Stats by User */}
-      <Card className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-indigo-600" />
-            AI Note Enhancement Statistics
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {users.map(user => {
-              const userEnhancements = activities.filter(a => 
-                a.user_email === user.email && 
-                (a.action === 'note_enhanced' || a.action === 'note_ai_generated')
-              );
-              
-              if (userEnhancements.length === 0) return null;
-              
-              return (
-                <div key={user.id} className="bg-white p-3 rounded-lg border">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-                      <p className="text-xs text-gray-500">{user.role}</p>
+      {/* Enhanced Activity Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Note Enhancement Stats by User */}
+        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FileText className="w-5 h-5 text-indigo-600" />
+              AI Note Enhancement Statistics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {users.map(user => {
+                const userEnhancements = activities.filter(a => 
+                  a.user_email === user.email && 
+                  (a.action === 'note_enhanced' || a.action === 'note_ai_generated')
+                );
+                
+                if (userEnhancements.length === 0) return null;
+                
+                return (
+                  <div key={user.id} className="bg-white p-3 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                        <p className="text-xs text-gray-500">{user.role}</p>
+                      </div>
+                      <Badge className="bg-indigo-600 text-white text-lg">
+                        {userEnhancements.length}
+                      </Badge>
                     </div>
-                    <Badge className="bg-indigo-600 text-white text-lg">
-                      {userEnhancements.length}
-                    </Badge>
+                    <div className="text-xs text-gray-600 space-y-0.5">
+                      <p>Enhanced: {userEnhancements.filter(a => a.action === 'note_enhanced').length}</p>
+                      <p>AI Generated: {userEnhancements.filter(a => a.action === 'note_ai_generated').length}</p>
+                      <p>Compliance Checks: {activities.filter(a => a.user_email === user.email && a.action === 'note_compliance_check').length}</p>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-600 space-y-0.5">
-                    <p>Enhanced: {userEnhancements.filter(a => a.action === 'note_enhanced').length}</p>
-                    <p>AI Generated: {userEnhancements.filter(a => a.action === 'note_ai_generated').length}</p>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Login Activity Stats */}
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <LogIn className="w-5 h-5 text-purple-600" />
+              Login Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {users.map(user => {
+                const userLogins = activities.filter(a => 
+                  a.user_email === user.email && a.action === 'login'
+                );
+                
+                if (userLogins.length === 0) return null;
+
+                const lastLogin = userLogins.sort((a, b) => 
+                  new Date(b.created_date) - new Date(a.created_date)
+                )[0];
+                
+                return (
+                  <div key={user.id} className="bg-white p-3 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                        <p className="text-xs text-gray-500">{user.role}</p>
+                      </div>
+                      <Badge className="bg-purple-600 text-white">
+                        {userLogins.length} logins
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      <p>Last login: {new Date(lastLogin.created_date).toLocaleString()}</p>
+                      <p className="text-[10px] text-gray-500 mt-1">Total sessions: {userLogins.length}</p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Filters */}
       <Card className="mb-6">
