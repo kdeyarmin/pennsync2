@@ -33,8 +33,21 @@ export default function PatientMatchSelector({
     }
   });
 
-  const handleConfirmMatch = (patientId, isCorrect = true) => {
+  const handleConfirmMatch = async (patientId, isCorrect = true) => {
     onSelectPatient(patientId);
+    
+    // Log patient match activity
+    const { logActivity, ActivityActions } = await import("@/components/utils/activityLogger");
+    const selectedPatient = allPatients.find(p => p.id === patientId);
+    
+    logActivity(ActivityActions.PATIENT_MATCH, {
+      extracted_name: extractedName,
+      matched_patient_id: patientId,
+      matched_patient_name: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : 'Unknown',
+      confidence: matchResults.matches?.find(m => m.patient.id === patientId)?.confidence,
+      is_correct_match: isCorrect,
+      page: 'OASISAnalyzer'
+    });
     
     // Submit feedback
     if (matchResults && oasisUploadId) {
@@ -52,7 +65,18 @@ export default function PatientMatchSelector({
     }
   };
 
-  const handleDispute = () => {
+  const handleDispute = async () => {
+    // Log dispute activity
+    const { logActivity, ActivityActions } = await import("@/components/utils/activityLogger");
+    
+    logActivity(ActivityActions.DISPUTE_MATCH, {
+      extracted_name: extractedName,
+      suggested_patient_id: matchResults.matches?.[0]?.patient?.id,
+      suggested_confidence: matchResults.matches?.[0]?.confidence,
+      dispute_notes: disputeNotes,
+      page: 'OASISAnalyzer'
+    });
+    
     if (matchResults && oasisUploadId) {
       feedbackMutation.mutate({
         oasis_upload_id: oasisUploadId,

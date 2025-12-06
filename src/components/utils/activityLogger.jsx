@@ -29,7 +29,17 @@ export const ActivityActions = {
   PAGE_VISIT: 'page_visit',
   EXPORT: 'export',
   GENERATE: 'generate',
-  ERROR: 'error'
+  ERROR: 'error',
+  OASIS_UPLOAD: 'oasis_upload',
+  OASIS_ANALYZE: 'oasis_analyze',
+  OASIS_SAVE: 'oasis_save',
+  PATIENT_MATCH: 'patient_match',
+  DISPUTE_MATCH: 'dispute_match',
+  VISIT_DOCUMENT: 'visit_document',
+  CARE_PLAN_CREATE: 'care_plan_create',
+  TASK_CREATE: 'task_create',
+  INCIDENT_REPORT: 'incident_report',
+  TRAINING_COMPLETE: 'training_complete'
 };
 
 export const logError = async (errorMessage, errorDetails = {}) => {

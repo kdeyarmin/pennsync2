@@ -1,0 +1,294 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Activity, 
+  Calendar, 
+  User, 
+  FileText, 
+  Search,
+  Download,
+  Eye,
+  Edit,
+  Trash2,
+  Plus,
+  AlertTriangle,
+  Clock,
+  Filter
+} from "lucide-react";
+import { format } from "date-fns";
+
+export default function UserActivityLog() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [actionFilter, setActionFilter] = useState("all");
+  const [userFilter, setUserFilter] = useState("all");
+  const [dateRange, setDateRange] = useState("7");
+
+  const { data: activities = [], isLoading } = useQuery({
+    queryKey: ['userActivities'],
+    queryFn: () => base44.entities.UserActivity.list('-created_date', 500),
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+  });
+
+  // Filter activities
+  const filteredActivities = activities.filter(activity => {
+    const matchesSearch = searchQuery === "" || 
+      activity.user_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.action?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.page?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesAction = actionFilter === "all" || activity.action === actionFilter;
+    const matchesUser = userFilter === "all" || activity.user_email === userFilter;
+    
+    // Date filter
+    const matchesDate = dateRange === "all" || (() => {
+      const activityDate = new Date(activity.created_date);
+      const daysAgo = parseInt(dateRange);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+      return activityDate >= cutoffDate;
+    })();
+    
+    return matchesSearch && matchesAction && matchesUser && matchesDate;
+  });
+
+  // Get unique actions for filter
+  const uniqueActions = [...new Set(activities.map(a => a.action))].filter(Boolean);
+
+  // Action stats
+  const actionStats = activities.reduce((acc, activity) => {
+    acc[activity.action] = (acc[activity.action] || 0) + 1;
+    return acc;
+  }, {});
+
+  const getActionIcon = (action) => {
+    const icons = {
+      'view': Eye,
+      'create': Plus,
+      'update': Edit,
+      'delete': Trash2,
+      'export': Download,
+      'generate': FileText,
+      'error': AlertTriangle,
+      'page_visit': Activity,
+      'login': User
+    };
+    const Icon = icons[action] || Activity;
+    return <Icon className="w-4 h-4" />;
+  };
+
+  const getActionColor = (action) => {
+    const colors = {
+      'create': 'bg-green-100 text-green-800',
+      'update': 'bg-blue-100 text-blue-800',
+      'delete': 'bg-red-100 text-red-800',
+      'export': 'bg-purple-100 text-purple-800',
+      'error': 'bg-red-600 text-white',
+      'view': 'bg-gray-100 text-gray-800',
+      'generate': 'bg-indigo-100 text-indigo-800'
+    };
+    return colors[action] || 'bg-gray-100 text-gray-800';
+  };
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">User Activity Log</h1>
+        <p className="text-sm text-gray-600">Monitor all user actions across the system</p>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Activity className="w-8 h-8 text-blue-600" />
+              <div>
+                <p className="text-xs text-gray-500">Total Activities</p>
+                <p className="text-2xl font-bold">{activities.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <User className="w-8 h-8 text-purple-600" />
+              <div>
+                <p className="text-xs text-gray-500">Active Users</p>
+                <p className="text-2xl font-bold">{new Set(activities.map(a => a.user_email)).size}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <FileText className="w-8 h-8 text-green-600" />
+              <div>
+                <p className="text-xs text-gray-500">Documents Created</p>
+                <p className="text-2xl font-bold">{actionStats['create'] || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div>
+                <p className="text-xs text-gray-500">Errors</p>
+                <p className="text-2xl font-bold">{actionStats['error'] || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Actions</SelectItem>
+                {uniqueActions.map(action => (
+                  <SelectItem key={action} value={action}>
+                    {action} ({actionStats[action]})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={userFilter} onValueChange={setUserFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Users" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                {users.map(user => (
+                  <SelectItem key={user.id} value={user.email}>
+                    {user.full_name} ({user.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Date Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Last 24 hours</SelectItem>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+                <SelectItem value="all">All time</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Activity Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Activity Timeline ({filteredActivities.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-center text-gray-500 py-8">Loading activities...</p>
+          ) : filteredActivities.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No activities found</p>
+          ) : (
+            <div className="space-y-3">
+              {filteredActivities.map((activity) => (
+                <div 
+                  key={activity.id} 
+                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className={`p-2 rounded-lg ${getActionColor(activity.action)}`}>
+                        {getActionIcon(activity.action)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <Badge className={getActionColor(activity.action)}>
+                            {activity.action}
+                          </Badge>
+                          <p className="text-sm font-medium text-gray-900">
+                            {activity.user_name}
+                          </p>
+                          <span className="text-xs text-gray-400">({activity.user_email})</span>
+                        </div>
+                        
+                        {activity.page && (
+                          <p className="text-xs text-gray-600 mb-1">
+                            Page: <span className="font-mono bg-gray-100 px-1 rounded">{activity.page}</span>
+                          </p>
+                        )}
+                        
+                        {activity.entity_type && (
+                          <p className="text-xs text-gray-600 mb-1">
+                            Entity: <span className="font-medium">{activity.entity_type}</span>
+                            {activity.entity_id && <span className="text-gray-400"> (ID: {activity.entity_id.substring(0, 8)}...)</span>}
+                          </p>
+                        )}
+                        
+                        {activity.details && Object.keys(activity.details).length > 0 && (
+                          <details className="mt-2">
+                            <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-700">
+                              View Details
+                            </summary>
+                            <div className="mt-2 p-2 bg-gray-50 rounded text-xs font-mono text-gray-700 overflow-x-auto">
+                              {JSON.stringify(activity.details, null, 2)}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="text-right text-xs text-gray-500 ml-4">
+                      <p className="flex items-center gap-1 whitespace-nowrap">
+                        <Clock className="w-3 h-3" />
+                        {format(new Date(activity.created_date), 'MMM d, h:mm a')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

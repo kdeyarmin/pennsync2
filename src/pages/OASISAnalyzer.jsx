@@ -66,6 +66,7 @@ import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import PDGMPredictiveForecaster from "../components/oasis/PDGMPredictiveForecaster";
 import PatientMatchSelector from "../components/oasis/PatientMatchSelector";
+import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -444,13 +445,24 @@ export default function OASISAnalyzer() {
         status: 'analyzed'
       });
 
+      // Log save activity
+      logActivity(ActivityActions.OASIS_SAVE, {
+        patient_id: patientIdToUse,
+        patient_name: patientFullName,
+        overall_score: analysisResults.overall_score,
+        estimated_payment: originalPayment,
+        entity_type: 'OASISUpload',
+        entity_id: savedOASIS.id,
+        page: 'OASISAnalyzer'
+      });
+
       // Auto-flag for audit if below thresholds
       if (savedOASIS) {
         autoFlagMutation.mutate({
           oasisUpload: { 
             ...savedOASIS, 
             patient_name: patientFullName,
-            patient_id: selectedPatientId 
+            patient_id: patientIdToUse 
           },
           analysisResults: analysisResults
         });
@@ -506,6 +518,13 @@ export default function OASISAnalyzer() {
       
       setUploadedFileUrl(file_url);
       setUploadProgress(40);
+
+      // Log upload activity
+      logActivity(ActivityActions.OASIS_UPLOAD, {
+        file_name: file.name,
+        file_size: file.size,
+        page: 'OASISAnalyzer'
+      });
 
       // Enhanced extraction schema - simplified for better reliability
       let extractedData;
@@ -1222,6 +1241,15 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       setUploadProgress(100);
       setAnalysisResults(analysisResult);
 
+      // Log analysis activity
+      logActivity(ActivityActions.OASIS_ANALYZE, {
+        file_name: file.name,
+        overall_score: analysisResult.overall_score,
+        accuracy_score: analysisResult.accuracy_score,
+        compliance_score: analysisResult.compliance_score,
+        page: 'OASISAnalyzer'
+      });
+
       // Auto-flag for audit if scores below threshold
       const shouldFlag = 
         (analysisResult.accuracy_score < THRESHOLDS.accuracy) ||
@@ -1252,10 +1280,18 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       analysisResult.pdgm_data = finalPdgmData;
       setPdgmData(finalPdgmData);
     } catch (err) {
-      console.error("Error analyzing OASIS:", err);
-      
-      // Provide more specific error messages
-      let errorMessage = "Failed to analyze the OASIS document. ";
+    console.error("Error analyzing OASIS:", err);
+
+    // Log error activity
+    logActivity(ActivityActions.ERROR, {
+      error_message: err.message,
+      file_name: file?.name,
+      component: 'OASISAnalyzer',
+      page: 'OASISAnalyzer'
+    });
+
+    // Provide more specific error messages
+    let errorMessage = "Failed to analyze the OASIS document. ";
       
       if (err.message?.includes('timeout')) {
         errorMessage += "The request timed out. The file may be too large or complex. Try a smaller file or try again.";
