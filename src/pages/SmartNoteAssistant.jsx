@@ -1054,6 +1054,9 @@ Return JSON:
                             discrepancies={oasisDiscrepancies}
                             carePlanNeeds={carePlans.filter(cp => cp.status === 'active')}
                             vitalSigns={vitalSigns}
+                            patientData={selectedPatient}
+                            previousVisits={recentVisits}
+                            allCarePlans={carePlans}
                             onInsertText={(text) => {
                               if (enhancedNote) {
                                 setEnhancedNote(prev => prev + '\n\n' + text);
