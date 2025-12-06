@@ -1772,6 +1772,38 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             onNavigationComplete={(navData) => setNavigationData(navData)}
           />
 
+          {/* Enhanced Case-Mix Component Analyzer */}
+          {navigationData && (
+            <EnhancedPDGMCaseMixAnalyzer
+              pdgmData={pdgmData}
+              navigationData={navigationData}
+            />
+          )}
+
+          {/* PDGM Impact Analyzer */}
+          {analysisResults?.specific_rescore_opportunities?.length > 0 && (
+            <PDGMImpactAnalyzer
+              currentPdgmData={pdgmData}
+              suggestedChanges={{
+                functional_improvements: analysisResults.specific_rescore_opportunities
+                  ?.filter(opp => opp.category === 'functional')
+                  ?.reduce((acc, opp) => {
+                    if (opp.m_item && opp.suggested_score !== undefined) {
+                      acc[opp.m_item] = opp.suggested_score;
+                    }
+                    return acc;
+                  }, {}),
+                comorbidity_additions: analysisResults.specific_rescore_opportunities
+                  ?.filter(opp => opp.category === 'comorbidity')
+                  ?.map(opp => opp.comorbidity),
+                clinical_items: {}
+              }}
+              onAnalysisComplete={(analysis) => {
+                console.log('PDGM Impact Analysis:', analysis);
+              }}
+            />
+          )}
+
           {/* PDGM Revenue Analysis */}
           <PDGMRevenueComparison 
             analysisResults={analysisResults} 
