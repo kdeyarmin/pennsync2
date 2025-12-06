@@ -69,6 +69,7 @@ import OASISIntegratedClinicalSupport from "../components/smartNote/OASISIntegra
 import OASISTriggeredTemplates from "../components/smartNote/OASISTriggeredTemplates";
 import OASISItemLinker from "../components/smartNote/OASISItemLinker";
 import AIDocumentationSuggester from "../components/smartNote/AIDocumentationSuggester";
+import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -414,6 +415,17 @@ Return JSON:
       });
       setEnhancedNote(result.enhanced_note);
       setAuditResults(result);
+
+      // Log note enhancement activity
+      logActivity(ActivityActions.NOTE_ENHANCED, {
+        patient_id: selectedPatientId,
+        visit_type: visitType,
+        diagnosis: finalDiagnosis,
+        rough_note_length: roughNote.length,
+        enhanced_note_length: result.enhanced_note?.length,
+        quality_score: result.quality_score,
+        page: 'SmartNoteAssistant'
+      });
 
       // Track note conversion for admin reporting
       const conversionTime = Date.now() - startTime;
