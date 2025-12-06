@@ -79,6 +79,13 @@ Use proper medical terminology. Be concise but thorough.`,
         }
       });
       setGeneratedContent(prev => ({ ...prev, assessment: result.assessment }));
+
+      // Log AI generation
+      logActivity(ActivityActions.NOTE_AI_GENERATED, {
+        content_type: 'assessment',
+        diagnosis: diagnosis,
+        page: 'SmartNoteAssistant'
+      });
     } catch (error) {
       console.error("Error generating assessment:", error);
     }

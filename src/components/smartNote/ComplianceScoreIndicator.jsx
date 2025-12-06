@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import {
   Popover,
   PopoverContent,
@@ -583,6 +584,14 @@ Return JSON:
       if (onEnhancedNoteCompliance) {
         onEnhancedNoteCompliance(result);
       }
+
+      // Log compliance check
+      logActivity(ActivityActions.NOTE_COMPLIANCE_CHECK, {
+        note_type: 'enhanced',
+        overall_score: result.overall_score,
+        flagged_issues: result.flagged_issues?.length,
+        page: 'SmartNoteAssistant'
+      });
     } catch (error) {
       console.error("Enhanced compliance analysis error:", error);
     }
