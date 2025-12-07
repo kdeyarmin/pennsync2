@@ -1362,7 +1362,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto pb-20">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">OASIS Analyzer</h1>
         <p className="text-sm text-gray-600">Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips</p>
