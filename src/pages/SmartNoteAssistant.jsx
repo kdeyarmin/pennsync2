@@ -75,6 +75,7 @@ import AIDocumentationSuggester from "../components/smartNote/AIDocumentationSug
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
 import { todayEastern } from "../components/utils/timezone";
+import AIFeedbackPanel from "../components/smartNote/AIFeedbackPanel";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -970,6 +971,17 @@ Return JSON:
             diagnosis={finalDiagnosis}
             complianceScore={enhancedNoteCompliance?.overall_score}
           />
+
+          {/* AI Feedback Panel */}
+          {enhancedNote && (
+            <AIFeedbackPanel
+              generatedContent={enhancedNote}
+              contentType="enhanced_note"
+              onFeedbackSubmitted={(feedback) => {
+                console.log("Feedback received:", feedback);
+              }}
+            />
+          )}
 
           {/* AI Note Drafting Assistant */}
                           <AINoteDraftingAssistant

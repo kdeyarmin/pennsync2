@@ -25,6 +25,7 @@ import DuplicatePatientManager from "../components/patient/DuplicatePatientManag
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
 import BulkPatientActions from "../components/patient/BulkPatientActions";
 import PatientMergeDialog from "../components/patient/PatientMergeDialog";
+import PaginatedPatientList from "../components/patient/PaginatedPatientList";
 import {
   AlertDialog,
   AlertDialogAction,
