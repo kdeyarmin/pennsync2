@@ -145,14 +145,14 @@ export default function UserActivityLog() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <Activity className="w-8 h-8 text-blue-600" />
               <div>
                 <p className="text-xs text-gray-500">Total Activities</p>
-                <p className="text-2xl font-bold">{activities.length}</p>
+                <p className="text-2xl font-bold">{filteredActivities.length}</p>
               </div>
             </div>
           </CardContent>
@@ -163,7 +163,7 @@ export default function UserActivityLog() {
               <User className="w-8 h-8 text-purple-600" />
               <div>
                 <p className="text-xs text-gray-500">Active Users</p>
-                <p className="text-2xl font-bold">{new Set(activities.map(a => a.user_email)).size}</p>
+                <p className="text-2xl font-bold">{new Set(filteredActivities.map(a => a.user_email)).size}</p>
               </div>
             </div>
           </CardContent>
@@ -175,7 +175,20 @@ export default function UserActivityLog() {
               <div>
                 <p className="text-xs text-indigo-700 font-medium">Notes Enhanced</p>
                 <p className="text-2xl font-bold text-indigo-900">
-                  {(actionStats['note_enhanced'] || 0) + (actionStats['note_ai_generated'] || 0)}
+                  {filteredActivities.filter(a => a.action === 'note_enhanced' || a.action === 'note_ai_generated').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-cyan-50 to-teal-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="w-8 h-8 text-cyan-600" />
+              <div>
+                <p className="text-xs text-cyan-700 font-medium">OASIS Analyzed</p>
+                <p className="text-2xl font-bold text-cyan-900">
+                  {filteredActivities.filter(a => a.action === 'oasis_analyze').length}
                 </p>
               </div>
             </div>
@@ -186,8 +199,8 @@ export default function UserActivityLog() {
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-green-600" />
               <div>
-                <p className="text-xs text-gray-500">Documents Created</p>
-                <p className="text-2xl font-bold">{actionStats['create'] || 0}</p>
+                <p className="text-xs text-gray-500">Created</p>
+                <p className="text-2xl font-bold">{filteredActivities.filter(a => a.action === 'create').length}</p>
               </div>
             </div>
           </CardContent>
@@ -198,7 +211,7 @@ export default function UserActivityLog() {
               <AlertTriangle className="w-8 h-8 text-red-600" />
               <div>
                 <p className="text-xs text-gray-500">Errors</p>
-                <p className="text-2xl font-bold">{actionStats['error'] || 0}</p>
+                <p className="text-2xl font-bold">{filteredActivities.filter(a => a.action === 'error').length}</p>
               </div>
             </div>
           </CardContent>
