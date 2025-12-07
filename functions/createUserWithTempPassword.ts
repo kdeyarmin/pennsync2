@@ -94,9 +94,10 @@ Deno.serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f9fafb; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px; }
+    .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px; text-align: center; border-radius: 8px; }
+    .logo { width: 80px; height: 80px; margin: 0 auto 15px; }
     .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 20px; }
     .credentials { background: #f3f4f6; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4f46e5; }
     .password-box { background: #fef3c7; padding: 15px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; border: 2px dashed #f59e0b; }
@@ -110,7 +111,8 @@ Deno.serve(async (req) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin: 0; font-size: 28px;">✨ Welcome to Penn Sync!</h1>
+      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" alt="Penn Sync Logo" class="logo" />
+      <h1 style="margin: 0; font-size: 28px;">Welcome to Penn Sync!</h1>
       <p style="margin: 10px 0 0 0; opacity: 0.9;">AI-Powered Home Health Documentation</p>
     </div>
     

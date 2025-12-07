@@ -403,6 +403,8 @@ export default function FeaturesPage() {
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
     h1 { color: #4F46E5; text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 10px; }
+    .logo-header { text-align: center; margin-bottom: 20px; }
+    .logo-header img { width: 100px; height: 100px; margin-bottom: 10px; }
     h2 { color: #6366F1; margin-top: 30px; border-left: 4px solid #6366F1; padding-left: 10px; }
     h3 { color: #1F2937; margin-top: 20px; }
     .feature { background: #F9FAFB; border-radius: 8px; padding: 15px; margin: 15px 0; border: 1px solid #E5E7EB; page-break-inside: avoid; }
@@ -425,7 +427,10 @@ export default function FeaturesPage() {
   </style>
 </head>
 <body>
-  <h1>🏥 Penn Sync Features Guide</h1>
+  <div class="logo-header">
+    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" alt="Penn Sync Logo" />
+  </div>
+  <h1>Penn Sync Features Guide</h1>
   <p class="header-info">AI-Powered Home Health Documentation & OASIS Analytics<br>Generated: ${new Date().toLocaleDateString()}</p>
   
   <div class="impact-summary">
@@ -505,6 +510,8 @@ export default function FeaturesPage() {
   <style>
     body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
     h1 { color: #4F46E5; text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 10px; page-break-after: avoid; }
+    .logo-header { text-align: center; margin-bottom: 20px; page-break-inside: avoid; }
+    .logo-header img { width: 100px; height: 100px; margin-bottom: 10px; }
     h2 { color: #6366F1; margin-top: 30px; border-left: 4px solid #6366F1; padding-left: 10px; page-break-after: avoid; }
     h3 { color: #1F2937; margin-top: 20px; page-break-after: avoid; }
     h4 { color: #4B5563; margin-top: 15px; }
@@ -530,7 +537,10 @@ export default function FeaturesPage() {
   </style>
 </head>
 <body>
-  <h1>📚 Penn Sync User Manual</h1>
+  <div class="logo-header">
+    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" alt="Penn Sync Logo" />
+  </div>
+  <h1>Penn Sync User Manual</h1>
   <p class="header-info">Complete Guide for Nurses and Administrators<br>Generated: ${new Date().toLocaleDateString()}</p>
   
   <div class="toc">
