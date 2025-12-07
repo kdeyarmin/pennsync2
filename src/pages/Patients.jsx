@@ -22,6 +22,9 @@ import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
+import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
+import BulkPatientActions from "../components/patient/BulkPatientActions";
+import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,16 +40,32 @@ export default function Patients() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({});
   const [editingPatient, setEditingPatient] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [summaryPatient, setSummaryPatient] = useState(null);
+  const [selectedPatients, setSelectedPatients] = useState([]);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
 
   const { data: patients, isLoading, error: patientsError } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list('-created_date'),
+    initialData: [],
+  });
+
+  const { data: allVisits = [] } = useQuery({
+    queryKey: ['allVisits'],
+    queryFn: () => base44.entities.Visit.list(),
+    initialData: [],
+  });
+
+  const { data: allCarePlans = [] } = useQuery({
+    queryKey: ['allCarePlans'],
+    queryFn: () => base44.entities.CarePlan.list(),
     initialData: [],
   });
 
@@ -151,15 +170,81 @@ export default function Patients() {
     { type: 'recertification', label: 'Recertification', icon: '📝' },
   ];
 
+  const calculateAge = (dob) => {
+    if (!dob) return null;
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const filteredPatients = (patients || []).filter(patient => {
     if (!patient) return false;
-    const searchLower = (searchTerm || '').toLowerCase();
-    return (
+    
+    // Text search
+    const searchLower = (filters.search || searchTerm || '').toLowerCase();
+    const matchesSearch = !searchLower || 
       (patient.first_name || '').toLowerCase().includes(searchLower) ||
       (patient.last_name || '').toLowerCase().includes(searchLower) ||
-      (patient.medical_record_number || '').toLowerCase().includes(searchLower)
-    );
+      (patient.medical_record_number || '').toLowerCase().includes(searchLower) ||
+      (patient.phone || '').toLowerCase().includes(searchLower) ||
+      (patient.address || '').toLowerCase().includes(searchLower);
+
+    // Status filter
+    const matchesStatus = !filters.status || filters.status === 'all' || patient.status === filters.status;
+
+    // Diagnosis filter
+    const matchesDiagnosis = !filters.diagnosis || 
+      (patient.primary_diagnosis || '').toLowerCase().includes(filters.diagnosis.toLowerCase());
+
+    // Age filter
+    const patientAge = calculateAge(patient.date_of_birth);
+    const matchesAgeMin = !filters.ageMin || (patientAge !== null && patientAge >= parseInt(filters.ageMin));
+    const matchesAgeMax = !filters.ageMax || (patientAge !== null && patientAge <= parseInt(filters.ageMax));
+
+    // Visit filter
+    const patientVisits = allVisits.filter(v => v.patient_id === patient.id);
+    const matchesVisits = !filters.hasVisits || filters.hasVisits === 'all' ||
+      (filters.hasVisits === 'yes' && patientVisits.length > 0) ||
+      (filters.hasVisits === 'no' && patientVisits.length === 0);
+
+    // Care plan filter
+    const patientCarePlans = allCarePlans.filter(cp => cp.patient_id === patient.id);
+    const matchesCarePlans = !filters.hasCarePlans || filters.hasCarePlans === 'all' ||
+      (filters.hasCarePlans === 'yes' && patientCarePlans.length > 0) ||
+      (filters.hasCarePlans === 'no' && patientCarePlans.length === 0);
+
+    // Date range filter
+    const createdDate = new Date(patient.created_date);
+    const matchesAfter = !filters.createdAfter || createdDate >= new Date(filters.createdAfter);
+    const matchesBefore = !filters.createdBefore || createdDate <= new Date(filters.createdBefore);
+
+    return matchesSearch && matchesStatus && matchesDiagnosis && 
+           matchesAgeMin && matchesAgeMax && matchesVisits && 
+           matchesCarePlans && matchesAfter && matchesBefore;
   });
+
+  const togglePatientSelection = (patient) => {
+    setSelectedPatients(prev => {
+      const isSelected = prev.some(p => p.id === patient.id);
+      if (isSelected) {
+        return prev.filter(p => p.id !== patient.id);
+      } else {
+        return [...prev, patient];
+      }
+    });
+  };
+
+  const handleMergeSelected = () => {
+    if (selectedPatients.length === 2) {
+      setPatientsToMerge({ patient1: selectedPatients[0], patient2: selectedPatients[1] });
+      setMergeDialogOpen(true);
+    }
+  };
 
   // Voice command handler
   const handleVoiceCommand = (action, spokenText) => {
@@ -229,19 +314,31 @@ export default function Patients() {
       {/* Duplicate Detection Alert */}
       <DuplicatePatientManager />
 
-      <Card className="mb-6 mt-4">
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <Input
-              placeholder="Search patients by name or MRN..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Advanced Filters */}
+      <div className="mb-4">
+        <AdvancedPatientFilters 
+          onFilterChange={setFilters}
+          activeFilters={filters}
+        />
+      </div>
+
+      {/* Bulk Actions Bar */}
+      {selectedPatients.length > 0 && (
+        <div className="mb-4">
+          <BulkPatientActions
+            selectedPatients={selectedPatients}
+            onClearSelection={() => setSelectedPatients([])}
+          />
+          {selectedPatients.length === 2 && (
+            <Button
+              onClick={handleMergeSelected}
+              className="mt-2 bg-purple-600 hover:bg-purple-700"
+            >
+              Merge Selected Patients
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {isLoading ? (
@@ -270,13 +367,23 @@ export default function Patients() {
             </CardContent>
           </Card>
         ) : (
-          filteredPatients.map((patient) => (
+          filteredPatients.map((patient) => {
+            const isSelected = selectedPatients.some(p => p.id === patient.id);
+            return (
             <Card 
               key={patient.id} 
-              className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500"
+              className={`hover:shadow-lg transition-all duration-200 border-l-4 ${
+                isSelected ? 'border-l-green-500 bg-green-50' : 'border-l-blue-500'
+              }`}
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => togglePatientSelection(patient)}
+                    className="mt-1 mr-3 w-4 h-4"
+                  />
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
                       <User className="w-6 h-6 text-white" />
@@ -379,9 +486,22 @@ export default function Patients() {
                 </div>
               </CardContent>
             </Card>
-          ))
+          );})
         )}
       </div>
+
+      {/* Patient Merge Dialog */}
+      <PatientMergeDialog
+        open={mergeDialogOpen}
+        onOpenChange={(open) => {
+          setMergeDialogOpen(open);
+          if (!open) {
+            setSelectedPatients([]);
+          }
+        }}
+        patient1={patientsToMerge.patient1}
+        patient2={patientsToMerge.patient2}
+      />
 
       {/* Voice Commands */}
       <VoiceCommandListener
