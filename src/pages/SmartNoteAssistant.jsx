@@ -254,6 +254,7 @@ export default function SmartNoteAssistant() {
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list(),
+    initialData: [],
   });
 
   const { data: carePlans = [] } = useQuery({
