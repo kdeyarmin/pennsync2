@@ -541,34 +541,6 @@ Return JSON:
         </Button>
       </div>
 
-      {/* Getting Started Banner - Only show if no patient selected */}
-      {!selectedPatientId && (
-        <Card className="mb-4 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="bg-indigo-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">
-                👋
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-indigo-900 mb-1">Let's Get Started</h3>
-                <p className="text-sm text-indigo-700 mb-2 font-medium">Step 1 of 4</p>
-                <ul className="space-y-1 text-sm text-indigo-800">
-                  <li className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Select a patient from the dropdown
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <ClipboardList className="w-4 h-4" />
-                    Choose visit type and diagnosis
-                  </li>
-                </ul>
-                <p className="text-xs text-indigo-600 mt-2 italic">💡 This helps AI tailor your documentation</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <ImprovedStepIndicator 
         currentStep={currentStep} 
         completedSteps={completedSteps}
