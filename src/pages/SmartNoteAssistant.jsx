@@ -617,7 +617,7 @@ Return JSON:
                   <Label className="text-xs">Patient</Label>
                   <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
                     <SelectTrigger><SelectValue placeholder="Select patient..." /></SelectTrigger>
-                    <SelectContent className="z-[100]">
+                    <SelectContent position="popper" className="z-[200] max-h-[300px] overflow-y-auto">
                       {patients.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
                       ))}
