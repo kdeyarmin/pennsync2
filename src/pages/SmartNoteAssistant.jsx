@@ -622,7 +622,7 @@ Return JSON:
                   <Label className="text-xs">Patient</Label>
                   <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
                     <SelectTrigger><SelectValue placeholder="Select patient..." /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[100]">
                       {patients.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
                       ))}
