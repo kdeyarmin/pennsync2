@@ -79,6 +79,8 @@ import AIFeedbackPanel from "../components/smartNote/AIFeedbackPanel";
 import PDGMDocumentationImpactAnalyzer from "../components/pdgm/PDGMDocumentationImpactAnalyzer";
 import CaseMixOptimizationPanel from "../components/pdgm/CaseMixOptimizationPanel";
 import OASISDataDisplay from "../components/patient/OASISDataDisplay";
+import ClinicalGuidelinesAssistant from "../components/smartNote/ClinicalGuidelinesAssistant";
+import OneClickComplianceFixer from "../components/smartNote/OneClickComplianceFixer";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1140,6 +1142,50 @@ export default function SmartNoteAssistant() {
               onFeedbackSubmitted={(feedback) => {
                 console.log("Feedback received:", feedback);
               }}
+            />
+          )}
+
+          {/* Clinical Guidelines Assistant */}
+          <ClinicalGuidelinesAssistant
+            diagnosis={finalDiagnosis}
+            patientData={selectedPatient}
+            vitalSigns={vitalSigns}
+            onInsertGuideline={(text) => {
+              if (enhancedNote) {
+                setEnhancedNote(prev => prev + '\n\n' + text);
+              } else {
+                setRoughNote(prev => prev + '\n\n' + text);
+              }
+            }}
+          />
+
+          {/* One-Click Compliance Fixer */}
+          {complianceIssues.length > 0 && (
+            <OneClickComplianceFixer
+              complianceIssues={complianceIssues}
+              currentNote={enhancedNote || roughNote}
+              onApplyFix={(text, elementName) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
+                if (elementName) {
+                  setAppliedFixes(prev => [...prev, elementName]);
+                }
+              }}
+              onFixAll={(fixes) => {
+                const combinedText = fixes.join('\n\n');
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + combinedText);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + combinedText);
+                }
+                setAppliedFixes(prev => [...prev, ...complianceIssues.map(i => i.element || i.name)]);
+              }}
+              patientData={selectedPatient}
+              vitalSigns={vitalSigns}
+              diagnosis={finalDiagnosis}
             />
           )}
 
