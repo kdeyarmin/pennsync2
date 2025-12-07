@@ -108,7 +108,7 @@ const getStatusIcon = (status) => {
     return <AlertTriangle className="w-3 h-3 text-orange-500" />;
 };
 
-const VitalInput = ({ field, label, icon: Icon, placeholder, value, onChangeValue }) => {
+const VitalInput = React.memo(({ field, label, icon: Icon, placeholder, value, onChangeValue }) => {
   const range = vitalRanges[field];
   const parsed = range.parse(value);
   const status = range.validate(parsed);
@@ -156,29 +156,37 @@ const VitalInput = ({ field, label, icon: Icon, placeholder, value, onChangeValu
       )}
     </div>
   );
-};
+});
 
 export default function SmartVitalsInput({ vitalSigns, onChange }) {
-  const handleChange = useCallback((field, value) => {
+  const handleFieldChange = useCallback((field) => (value) => {
     onChange({ ...vitalSigns, [field]: value });
+  }, [vitalSigns, onChange]);
+
+  const handleO2SourceChange = useCallback((value) => {
+    onChange({ ...vitalSigns, o2Source: value });
+  }, [vitalSigns, onChange]);
+
+  const handleO2FlowChange = useCallback((e) => {
+    onChange({ ...vitalSigns, o2Flow: e.target.value });
   }, [vitalSigns, onChange]);
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <VitalInput field="bp" label="Blood Pressure" icon={Heart} placeholder="120/80" value={vitalSigns.bp || ''} onChangeValue={(v) => handleChange('bp', v)} />
-        <VitalInput field="hr" label="Heart Rate" icon={Activity} placeholder="72" value={vitalSigns.hr || ''} onChangeValue={(v) => handleChange('hr', v)} />
-        <VitalInput field="temp" label="Temperature" icon={Thermometer} placeholder="98.6" value={vitalSigns.temp || ''} onChangeValue={(v) => handleChange('temp', v)} />
-        <VitalInput field="pain" label="Pain Level" icon={Activity} placeholder="0-10" value={vitalSigns.pain || ''} onChangeValue={(v) => handleChange('pain', v)} />
+        <VitalInput field="bp" label="Blood Pressure" icon={Heart} placeholder="120/80" value={vitalSigns.bp || ''} onChangeValue={handleFieldChange('bp')} />
+        <VitalInput field="hr" label="Heart Rate" icon={Activity} placeholder="72" value={vitalSigns.hr || ''} onChangeValue={handleFieldChange('hr')} />
+        <VitalInput field="temp" label="Temperature" icon={Thermometer} placeholder="98.6" value={vitalSigns.temp || ''} onChangeValue={handleFieldChange('temp')} />
+        <VitalInput field="pain" label="Pain Level" icon={Activity} placeholder="0-10" value={vitalSigns.pain || ''} onChangeValue={handleFieldChange('pain')} />
       </div>
       
       <div className="grid grid-cols-3 gap-3">
-        <VitalInput field="o2" label="O2 Saturation" icon={Wind} placeholder="98" value={vitalSigns.o2 || ''} onChangeValue={(v) => handleChange('o2', v)} />
+        <VitalInput field="o2" label="O2 Saturation" icon={Wind} placeholder="98" value={vitalSigns.o2 || ''} onChangeValue={handleFieldChange('o2')} />
         <div>
           <Label className="text-xs mb-1 block">O2 Source</Label>
           <Select 
             value={vitalSigns.o2Source || 'room_air'} 
-            onValueChange={(v) => handleChange('o2Source', v)}
+            onValueChange={handleO2SourceChange}
           >
             <SelectTrigger className="text-sm">
               <SelectValue />
@@ -195,7 +203,7 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
             <Input
               placeholder="L/min"
               value={vitalSigns.o2Flow || ''}
-              onChange={(e) => handleChange('o2Flow', e.target.value)}
+              onChange={handleO2FlowChange}
               className="text-sm"
             />
           </div>
