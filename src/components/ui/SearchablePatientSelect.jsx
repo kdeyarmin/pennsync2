@@ -172,7 +172,7 @@ export default function SearchablePatientSelect({
         >
           <span className="truncate">
             {value && selectedPatient
-              ? `${selectedPatient.first_name} ${selectedPatient.last_name}`
+              ? `${selectedPatient.first_name}${selectedPatient.middle_name ? ` ${selectedPatient.middle_name}` : ''} ${selectedPatient.last_name}`
               : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -225,15 +225,15 @@ export default function SearchablePatientSelect({
                           value === patient.id ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {patient.first_name} {patient.last_name}
-                        </p>
-                        {patient.medical_record_number && (
-                          <p className="text-xs text-muted-foreground">
-                            MRN: {patient.medical_record_number}
-                          </p>
-                        )}
+                      <div className="flex-1">
+                       <p className="font-medium">
+                         {patient.first_name} {patient.middle_name ? `${patient.middle_name} ` : ''}{patient.last_name}
+                       </p>
+                       {patient.medical_record_number && (
+                         <p className="text-xs text-muted-foreground">
+                           MRN: {patient.medical_record_number}
+                         </p>
+                       )}
                       </div>
                     </div>
                     <Button
@@ -267,15 +267,15 @@ export default function SearchablePatientSelect({
                         )}
                       />
                       <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {patient.first_name} {patient.last_name}
-                        </p>
-                        {patient.medical_record_number && (
-                          <p className="text-xs text-muted-foreground">
-                            MRN: {patient.medical_record_number}
-                          </p>
-                        )}
+                      <div className="flex-1">
+                       <p className="font-medium">
+                         {patient.first_name} {patient.middle_name ? `${patient.middle_name} ` : ''}{patient.last_name}
+                       </p>
+                       {patient.medical_record_number && (
+                         <p className="text-xs text-muted-foreground">
+                           MRN: {patient.medical_record_number}
+                         </p>
+                       )}
                       </div>
                     </div>
                     <Button
@@ -313,15 +313,15 @@ export default function SearchablePatientSelect({
                           value === patient.id ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {patient.first_name} {patient.last_name}
-                        </p>
-                        {patient.medical_record_number && (
-                          <p className="text-xs text-muted-foreground">
-                            MRN: {patient.medical_record_number}
-                          </p>
-                        )}
+                      <div className="flex-1">
+                       <p className="font-medium">
+                         {patient.first_name} {patient.middle_name ? `${patient.middle_name} ` : ''}{patient.last_name}
+                       </p>
+                       {patient.medical_record_number && (
+                         <p className="text-xs text-muted-foreground">
+                           MRN: {patient.medical_record_number}
+                         </p>
+                       )}
                       </div>
                     </div>
                     <Button
