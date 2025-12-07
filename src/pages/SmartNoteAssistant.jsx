@@ -130,16 +130,7 @@ function VoiceHub({ onTranscription }) {
 function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote, onAction, diagnosis, complianceScore }) {
   const getTools = () => {
     if (!hasPatient) return null;
-    if (!hasNotes) return { 
-      title: "📝 Ready to Document", 
-      subtitle: "Step 2 of 4",
-      items: [
-        { label: "Use Voice button to dictate", type: "tip", icon: Mic },
-        { label: "Or type your observations", type: "tip", icon: Wand2 },
-        { label: "Try: 'lungs clear, no edema'", type: "example" }
-      ],
-      hint: "Be brief - AI will expand your notes"
-    };
+    if (!hasNotes) return null;
     if (!hasEnhancedNote) return { 
       title: "✨ Ready to Enhance", 
       subtitle: "Step 3 of 4",
