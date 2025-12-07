@@ -219,10 +219,7 @@ export default function Dashboard() {
         <NurseRegulatoryAlerts nurseEmail={currentUser?.email} compact={true} />
       </div>
 
-      {/* PDGM Predictive Analytics */}
-      <div className="mb-6">
-        <PDGMPredictiveAnalytics compact={true} />
-      </div>
+
 
       {/* Add Compliance Widget before Visit Schedule */}
       <ComplianceDashboardWidget />
