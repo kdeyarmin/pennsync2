@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
+import { trackAISuggestion, categorizeAISuggestion } from "../training/SuggestionTracker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -705,12 +706,25 @@ Return JSON:
     }
   };
 
-  const insertToRoughNote = (suggestion, issueIdx) => {
+  const insertToRoughNote = async (suggestion, issueIdx) => {
     if (!onInsertElement) return;
     
     // Add the suggestion to the rough note for nurse to edit
     onInsertElement('\n\n' + suggestion.trim());
     setInsertedIssues(prev => new Set([...prev, issueIdx]));
+    
+    // Track this suggestion as a learning opportunity
+    const user = await base44.auth.me();
+    if (user?.email && enhancedComplianceData?.flagged_issues?.[issueIdx]) {
+      const issue = enhancedComplianceData.flagged_issues[issueIdx];
+      trackAISuggestion({
+        nurseEmail: user.email,
+        suggestionType: categorizeAISuggestion(issue.element),
+        suggestionText: `${issue.element}: ${issue.problem}`,
+        context: suggestion.substring(0, 200),
+        source: 'compliance_checker'
+      });
+    }
   };
 
   const handleFixAllAndReEnhance = async () => {
