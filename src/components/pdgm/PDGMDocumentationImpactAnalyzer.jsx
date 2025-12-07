@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,13 @@ export default function PDGMDocumentationImpactAnalyzer({
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showOptimizations, setShowOptimizations] = useState(true);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     if (noteContent && noteContent.length > 100) {
@@ -187,6 +195,10 @@ Return JSON with detailed analysis and actionable recommendations.
       onApplySuggestion(action.text_to_add);
     }
   };
+
+  if (!isAdmin) {
+    return null; // Hide financial data from non-admins
+  }
 
   if (!noteContent || noteContent.length < 100) {
     return (

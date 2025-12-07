@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,8 @@ import {
   FileText,
   Pill,
   Loader2,
-  Target
+  Target,
+  Lightbulb
 } from "lucide-react";
 
 export default function CaseMixOptimizationPanel({
@@ -25,6 +27,13 @@ export default function CaseMixOptimizationPanel({
 }) {
   const [optimization, setOptimization] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   const analyzeOptimization = async () => {
     setIsLoading(true);
@@ -109,6 +118,10 @@ Return JSON:
     if (impact === 'medium') return 'bg-yellow-600 text-white';
     return 'bg-blue-600 text-white';
   };
+
+  if (!isAdmin) {
+    return null; // Hide financial data from non-admins
+  }
 
   return (
     <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
