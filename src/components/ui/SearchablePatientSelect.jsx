@@ -211,12 +211,13 @@ export default function SearchablePatientSelect({
             {favoritesList.length > 0 && (
               <CommandGroup heading="Favorites">
                 {favoritesList.map((patient) => (
-                  <CommandItem
-                    key={patient.id}
-                    value={patient.id}
-                    onSelect={() => handleSelect(patient.id)}
-                    className="flex items-center justify-between py-3"
-                  >
+                 <CommandItem
+                   key={patient.id}
+                   value={patient.id}
+                   onSelect={() => handleSelect(patient.id)}
+                   disabled={false}
+                   className="flex items-center justify-between py-3 cursor-pointer"
+                 >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Check
                         className={cn(
@@ -251,12 +252,13 @@ export default function SearchablePatientSelect({
             {recentList.length > 0 && (
               <CommandGroup heading="Recent">
                 {recentList.map((patient) => (
-                  <CommandItem
-                    key={patient.id}
-                    value={patient.id}
-                    onSelect={() => handleSelect(patient.id)}
-                    className="flex items-center justify-between py-3"
-                  >
+                 <CommandItem
+                   key={patient.id}
+                   value={patient.id}
+                   onSelect={() => handleSelect(patient.id)}
+                   disabled={false}
+                   className="flex items-center justify-between py-3 cursor-pointer"
+                 >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Check
                         className={cn(
@@ -297,12 +299,13 @@ export default function SearchablePatientSelect({
             {allPatientsList.length > 0 && (
               <CommandGroup heading="All Patients">
                 {allPatientsList.map((patient) => (
-                  <CommandItem
-                    key={patient.id}
-                    value={patient.id}
-                    onSelect={() => handleSelect(patient.id)}
-                    className="flex items-center justify-between py-3"
-                  >
+                 <CommandItem
+                   key={patient.id}
+                   value={patient.id}
+                   onSelect={() => handleSelect(patient.id)}
+                   disabled={false}
+                   className="flex items-center justify-between py-3 cursor-pointer"
+                 >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Check
                         className={cn(
