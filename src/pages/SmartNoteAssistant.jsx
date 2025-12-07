@@ -236,6 +236,8 @@ export default function SmartNoteAssistant() {
   const [oasisDiscrepancies, setOasisDiscrepancies] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+  const [detectedComplianceRisks, setDetectedComplianceRisks] = useState([]);
+  const [pdgmOptimizationWarnings, setPdgmOptimizationWarnings] = useState([]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -750,13 +752,16 @@ Return JSON:
               onRoughNoteCompliance={(data) => {
                 setRoughNoteCompliance(data);
                 if (data?.elements) {
-                  setComplianceIssues(data.elements.filter(e => e.status !== 'present'));
+                  const issues = data.elements.filter(e => e.status !== 'present');
+                  setComplianceIssues(issues);
+                  setDetectedComplianceRisks(issues);
                 }
               }}
               onEnhancedNoteCompliance={(data) => {
                 setEnhancedNoteCompliance(data);
                 if (data?.flagged_issues) {
                   setComplianceIssues(data.flagged_issues);
+                  setDetectedComplianceRisks(data.flagged_issues);
                 }
               }}
               onDismissedElements={(names) => setDismissedElementNames(names)}
@@ -989,6 +994,7 @@ Return JSON:
                   setRoughNote(prev => prev + '\n\n' + text);
                 }
               }}
+              onWarningsDetected={(warnings) => setPdgmOptimizationWarnings(warnings)}
             />
           )}
 
@@ -1131,6 +1137,30 @@ Return JSON:
             selectedText=""
           />
 
+          {/* Skill Gap Remediation - Compliance Focused */}
+          {(detectedComplianceRisks.length > 0 || pdgmOptimizationWarnings.length > 0) && (
+            <Card className="border-red-200 bg-red-50">
+              <CardHeader className="py-2">
+                <CardTitle className="text-xs flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 text-red-600" />
+                  Compliance Training Needed
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2">
+                <p className="text-xs text-red-800 mb-2">
+                  {detectedComplianceRisks.length + pdgmOptimizationWarnings.length} risk{(detectedComplianceRisks.length + pdgmOptimizationWarnings.length) > 1 ? 's' : ''} detected
+                </p>
+                <Button
+                  size="sm"
+                  className="w-full bg-red-600 hover:bg-red-700 text-xs"
+                  onClick={() => setShowPracticeScenarios(true)}
+                >
+                  Start Training
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Learning Dashboard - Compact View */}
           <LearningDashboard
             nurseEmail={currentUser?.email}
@@ -1158,7 +1188,12 @@ Return JSON:
         nurseEmail={currentUser?.email}
         isOpen={showPracticeScenarios}
         onOpenChange={setShowPracticeScenarios}
-        onComplete={() => {}}
+        onComplete={() => {
+          setDetectedComplianceRisks([]);
+          setPdgmOptimizationWarnings([]);
+        }}
+        complianceRisks={detectedComplianceRisks}
+        pdgmWarnings={pdgmOptimizationWarnings}
       />
 
       {/* Floating Action Bar */}

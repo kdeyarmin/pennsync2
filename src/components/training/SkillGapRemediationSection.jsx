@@ -21,17 +21,24 @@ import AIComplianceQuizGenerator from "./AIComplianceQuizGenerator";
 
 export default function SkillGapRemediationSection({ 
   nurseEmail,
-  onComplete 
+  onComplete,
+  complianceRisks = [],
+  pdgmWarnings = []
 }) {
   const [analysis, setAnalysis] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeScenario, setActiveScenario] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [completedItems, setCompletedItems] = useState(new Set());
+  const [complianceModules, setComplianceModules] = useState([]);
 
   useEffect(() => {
     loadDeficitAnalysis();
   }, [nurseEmail]);
+
+  useEffect(() => {
+    mapComplianceRisksToTraining();
+  }, [complianceRisks, pdgmWarnings]);
 
   const loadDeficitAnalysis = async () => {
     setIsLoading(true);
@@ -45,6 +52,79 @@ export default function SkillGapRemediationSection({
       console.error("Error loading deficit analysis:", error);
     }
     setIsLoading(false);
+  };
+
+  const mapComplianceRisksToTraining = () => {
+    const modules = [];
+    const riskToTrainingMap = {
+      'homebound': { quiz: 'homebound', scenario: 'homebound_justification', priority: 'critical' },
+      'skilled_need': { quiz: 'skilled_need', scenario: 'skilled_need', priority: 'critical' },
+      'functional': { quiz: 'oasis', scenario: 'vital_signs', priority: 'high' },
+      'comorbidity': { quiz: 'medicare_cop', scenario: 'assessment', priority: 'high' },
+      'therapy': { quiz: 'skilled_need', scenario: 'skilled_need', priority: 'medium' },
+      'documentation': { quiz: 'medicare_cop', scenario: 'homebound_justification', priority: 'high' },
+      'safety': { quiz: 'safety', scenario: 'patient_response', priority: 'high' },
+      'medication': { quiz: 'safety', scenario: 'medication_management', priority: 'medium' },
+      'oasis': { quiz: 'oasis', scenario: 'assessment', priority: 'high' }
+    };
+
+    // Map compliance risks
+    complianceRisks.forEach(risk => {
+      const riskType = risk.element?.toLowerCase() || risk.warning?.toLowerCase() || '';
+      Object.keys(riskToTrainingMap).forEach(key => {
+        if (riskType.includes(key)) {
+          const training = riskToTrainingMap[key];
+          modules.push({
+            type: 'compliance_risk',
+            source: 'compliance_check',
+            priority: training.priority,
+            severity: risk.severity || 'high',
+            description: risk.problem || risk.warning,
+            quiz: training.quiz,
+            scenario: training.scenario,
+            riskDetails: risk
+          });
+        }
+      });
+    });
+
+    // Map PDGM warnings
+    pdgmWarnings.forEach(warning => {
+      const category = warning.category?.toLowerCase() || '';
+      if (category.includes('functional')) {
+        modules.push({
+          type: 'pdgm_risk',
+          source: 'pdgm_analysis',
+          priority: 'critical',
+          severity: 'high',
+          description: warning.warning || warning.description,
+          quiz: 'oasis',
+          scenario: 'vital_signs',
+          paymentImpact: warning.payment_impact
+        });
+      } else if (category.includes('comorbidity')) {
+        modules.push({
+          type: 'pdgm_risk',
+          source: 'pdgm_analysis',
+          priority: 'high',
+          severity: 'medium',
+          description: warning.warning || warning.description,
+          quiz: 'medicare_cop',
+          scenario: 'assessment',
+          paymentImpact: warning.payment_impact
+        });
+      }
+    });
+
+    // Remove duplicates and sort by priority
+    const uniqueModules = modules.filter((module, index, self) =>
+      index === self.findIndex(m => m.quiz === module.quiz && m.scenario === module.scenario)
+    ).sort((a, b) => {
+      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+
+    setComplianceModules(uniqueModules);
   };
 
   const handleScenarioComplete = (scenarioId) => {
@@ -119,6 +199,75 @@ export default function SkillGapRemediationSection({
 
   return (
     <div className="space-y-6">
+      {/* Compliance Risk Modules - High Priority */}
+      {complianceModules.length > 0 && (
+        <Card className="border-red-300 bg-gradient-to-r from-red-50 to-orange-50">
+          <CardHeader className="py-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              Urgent: Compliance Risk Training
+              <Badge className="bg-red-600 text-white animate-pulse">
+                {complianceModules.length} module{complianceModules.length > 1 ? 's' : ''}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Alert className="bg-orange-100 border-orange-300">
+              <AlertTriangle className="w-4 h-4 text-orange-700" />
+              <AlertDescription className="text-sm text-orange-900">
+                <strong>AI detected compliance risks in your documentation.</strong> Complete these modules immediately to address potential audit issues.
+              </AlertDescription>
+            </Alert>
+
+            {complianceModules.map((module, idx) => (
+              <Card key={idx} className="border-2 border-red-200">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <Badge className={
+                        module.priority === 'critical' ? 'bg-red-600 text-white' :
+                        module.priority === 'high' ? 'bg-orange-600 text-white' :
+                        'bg-yellow-600 text-white'
+                      }>
+                        {module.priority} priority
+                      </Badge>
+                      <p className="text-sm font-medium text-gray-900 mt-2">{module.description}</p>
+                      <Badge variant="outline" className="text-xs mt-1">
+                        Source: {module.source.replace(/_/g, ' ')}
+                      </Badge>
+                      {module.paymentImpact && (
+                        <Badge className="text-xs mt-1 ml-1 bg-green-100 text-green-800">
+                          {module.paymentImpact} at risk
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => setActiveScenario(module.scenario)}
+                    >
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Practice Scenario
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700"
+                      onClick={() => setActiveQuiz(module.quiz)}
+                    >
+                      <Brain className="w-3 h-3 mr-1" />
+                      Take Quiz
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header with Progress */}
       <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
         <CardContent className="p-6">

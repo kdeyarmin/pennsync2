@@ -23,7 +23,8 @@ export default function PDGMDocumentationImpactAnalyzer({
   diagnosis,
   vitalSigns,
   carePlans = [],
-  onApplySuggestion
+  onApplySuggestion,
+  onWarningsDetected
 }) {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
