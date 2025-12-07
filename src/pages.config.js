@@ -31,6 +31,7 @@ import UserActivityLog from './pages/UserActivityLog';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import PatientDataManagement from './pages/PatientDataManagement';
 import PatientDashboard from './pages/PatientDashboard';
+import DocumentGenerator from './pages/DocumentGenerator';
 import __Layout from './Layout.jsx';
 
 
@@ -68,6 +69,7 @@ export const PAGES = {
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
     "PatientDataManagement": PatientDataManagement,
     "PatientDashboard": PatientDashboard,
+    "DocumentGenerator": DocumentGenerator,
 }
 
 export const pagesConfig = {
