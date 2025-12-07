@@ -115,9 +115,10 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
     onChange({ ...vitalSigns, [field]: value });
   };
 
-  const VitalInput = ({ field, label, icon: Icon, placeholder }) => {
+  const VitalInput = React.memo(({ field, label, icon: Icon, placeholder }) => {
     const range = vitalRanges[field];
-    const parsed = range.parse(vitalSigns[field]);
+    const value = vitalSigns[field] || '';
+    const parsed = range.parse(value);
     const status = range.validate(parsed);
 
     return (
@@ -126,8 +127,10 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
           <Icon className="w-3 h-3" />
           {label}
           <Popover>
-            <PopoverTrigger>
-              <Info className="w-3 h-3 text-gray-400 cursor-help" />
+            <PopoverTrigger asChild>
+              <button type="button" className="inline-flex">
+                <Info className="w-3 h-3 text-gray-400 cursor-help" />
+              </button>
             </PopoverTrigger>
             <PopoverContent className="w-48 p-2">
               <p className="text-xs">
@@ -139,17 +142,15 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
         <div className="relative">
           <Input
             placeholder={placeholder}
-            value={vitalSigns[field] || ''}
+            value={value}
             onChange={(e) => handleChange(field, e.target.value)}
-            onFocus={() => setFocusedField(field)}
-            onBlur={() => setFocusedField(null)}
             className={`pr-8 text-sm transition-all ${status ? getStatusColor(status) : ''}`}
           />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
             {getStatusIcon(status)}
           </div>
         </div>
-        {status && status !== 'normal' && vitalSigns[field] && (
+        {status && status !== 'normal' && value && (
           <Badge 
             variant="outline" 
             className={`mt-1 text-[10px] ${
@@ -163,7 +164,7 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
         )}
       </div>
     );
-  };
+  });
 
   return (
     <div className="space-y-3">
