@@ -831,7 +831,6 @@ Return JSON:
             )}
             </>
           )}
-          )}
 
           {/* Compliance Summary Report */}
           {enhancedNote && (
