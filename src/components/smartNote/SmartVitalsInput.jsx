@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -24,11 +24,8 @@ import {
   Info
 } from "lucide-react";
 
-export default function SmartVitalsInput({ vitalSigns, onChange }) {
-  const [focusedField, setFocusedField] = useState(null);
-
-  // Vital sign validation and ranges
-  const vitalRanges = {
+// Vital sign validation and ranges - moved outside component
+const vitalRanges = {
     bp: {
       parse: (val) => {
         const match = val?.match(/(\d+)\s*\/\s*(\d+)/);
@@ -93,7 +90,7 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
     }
   };
 
-  const getStatusColor = (status) => {
+const getStatusColor = (status) => {
     switch (status) {
       case 'critical': return 'border-red-500 bg-red-50 ring-2 ring-red-200';
       case 'high': return 'border-orange-400 bg-orange-50';
@@ -102,81 +99,81 @@ export default function SmartVitalsInput({ vitalSigns, onChange }) {
       case 'normal': return 'border-green-400 bg-green-50';
       default: return 'border-gray-200';
     }
-  };
+};
 
-  const getStatusIcon = (status) => {
+const getStatusIcon = (status) => {
     if (!status) return null;
     if (status === 'normal') return <CheckCircle2 className="w-3 h-3 text-green-600" />;
     if (status === 'critical') return <AlertTriangle className="w-3 h-3 text-red-600 animate-pulse" />;
     return <AlertTriangle className="w-3 h-3 text-orange-500" />;
-  };
+};
 
-  const handleChange = (field, value) => {
-    onChange({ ...vitalSigns, [field]: value });
-  };
+const VitalInput = ({ field, label, icon: Icon, placeholder, value, onChangeValue }) => {
+  const range = vitalRanges[field];
+  const parsed = range.parse(value);
+  const status = range.validate(parsed);
 
-  const VitalInput = React.memo(({ field, label, icon: Icon, placeholder }) => {
-    const range = vitalRanges[field];
-    const value = vitalSigns[field] || '';
-    const parsed = range.parse(value);
-    const status = range.validate(parsed);
-
-    return (
+  return (
+    <div className="relative">
+      <Label className="text-xs flex items-center gap-1 mb-1">
+        <Icon className="w-3 h-3" />
+        {label}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button" className="inline-flex">
+              <Info className="w-3 h-3 text-gray-400 cursor-help" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-2">
+            <p className="text-xs">
+              <strong>Normal:</strong> {range.normalRange} {range.unit}
+            </p>
+          </PopoverContent>
+        </Popover>
+      </Label>
       <div className="relative">
-        <Label className="text-xs flex items-center gap-1 mb-1">
-          <Icon className="w-3 h-3" />
-          {label}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button type="button" className="inline-flex">
-                <Info className="w-3 h-3 text-gray-400 cursor-help" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-2">
-              <p className="text-xs">
-                <strong>Normal:</strong> {range.normalRange} {range.unit}
-              </p>
-            </PopoverContent>
-          </Popover>
-        </Label>
-        <div className="relative">
-          <Input
-            placeholder={placeholder}
-            value={value}
-            onChange={(e) => handleChange(field, e.target.value)}
-            className={`pr-8 text-sm transition-all ${status ? getStatusColor(status) : ''}`}
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-            {getStatusIcon(status)}
-          </div>
+        <Input
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChangeValue(e.target.value)}
+          className={`pr-8 text-sm transition-all ${status ? getStatusColor(status) : ''}`}
+        />
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+          {getStatusIcon(status)}
         </div>
-        {status && status !== 'normal' && value && (
-          <Badge 
-            variant="outline" 
-            className={`mt-1 text-[10px] ${
-              status === 'critical' ? 'bg-red-100 text-red-800 border-red-300' :
-              status === 'high' ? 'bg-orange-100 text-orange-800 border-orange-300' :
-              'bg-yellow-100 text-yellow-800 border-yellow-300'
-            }`}
-          >
-            {status === 'critical' ? 'Critical' : status === 'high' ? 'Elevated' : 'Low'}
-          </Badge>
-        )}
       </div>
-    );
-  });
+      {status && status !== 'normal' && value && (
+        <Badge 
+          variant="outline" 
+          className={`mt-1 text-[10px] ${
+            status === 'critical' ? 'bg-red-100 text-red-800 border-red-300' :
+            status === 'high' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+            'bg-yellow-100 text-yellow-800 border-yellow-300'
+          }`}
+        >
+          {status === 'critical' ? 'Critical' : status === 'high' ? 'Elevated' : 'Low'}
+        </Badge>
+      )}
+    </div>
+  );
+};
+
+export default function SmartVitalsInput({ vitalSigns, onChange }) {
+  const handleChange = useCallback((field, value) => {
+    onChange({ ...vitalSigns, [field]: value });
+  }, [vitalSigns, onChange]);
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <VitalInput field="bp" label="Blood Pressure" icon={Heart} placeholder="120/80" />
-        <VitalInput field="hr" label="Heart Rate" icon={Activity} placeholder="72" />
-        <VitalInput field="temp" label="Temperature" icon={Thermometer} placeholder="98.6" />
-        <VitalInput field="pain" label="Pain Level" icon={Activity} placeholder="0-10" />
+        <VitalInput field="bp" label="Blood Pressure" icon={Heart} placeholder="120/80" value={vitalSigns.bp || ''} onChangeValue={(v) => handleChange('bp', v)} />
+        <VitalInput field="hr" label="Heart Rate" icon={Activity} placeholder="72" value={vitalSigns.hr || ''} onChangeValue={(v) => handleChange('hr', v)} />
+        <VitalInput field="temp" label="Temperature" icon={Thermometer} placeholder="98.6" value={vitalSigns.temp || ''} onChangeValue={(v) => handleChange('temp', v)} />
+        <VitalInput field="pain" label="Pain Level" icon={Activity} placeholder="0-10" value={vitalSigns.pain || ''} onChangeValue={(v) => handleChange('pain', v)} />
       </div>
       
       <div className="grid grid-cols-3 gap-3">
-        <VitalInput field="o2" label="O2 Saturation" icon={Wind} placeholder="98" />
+        <VitalInput field="o2" label="O2 Saturation" icon={Wind} placeholder="98" value={vitalSigns.o2 || ''} onChangeValue={(v) => handleChange('o2', v)} />
         <div>
           <Label className="text-xs mb-1 block">O2 Source</Label>
           <Select 
