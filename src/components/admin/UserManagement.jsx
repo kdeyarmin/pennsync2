@@ -40,7 +40,8 @@ import {
   Search,
   CheckCircle2,
   XCircle,
-  Users
+  Users,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -53,8 +54,11 @@ export default function UserManagement({ users, currentUser }) {
   
   const [inviteData, setInviteData] = useState({
     email: "",
+    full_name: "",
     role: "user",
-    careScope: "home_health"
+    care_scope: "home_health",
+    phone: "",
+    credentials: ""
   });
 
   // Update user mutation
@@ -71,54 +75,37 @@ export default function UserManagement({ users, currentUser }) {
     }
   });
 
-  // Send invite mutation
-  const sendInviteMutation = useMutation({
+  // Create user with temp password mutation
+  const createUserMutation = useMutation({
     mutationFn: async (data) => {
-      const careScopeLabel = data.careScope === 'home_health' 
-        ? 'Home Health' 
-        : data.careScope === 'hospice' 
-        ? 'Hospice' 
-        : 'Home Health & Hospice';
-
-      await base44.integrations.Core.SendEmail({
-        to: data.email,
-        subject: 'Invitation to Join Penn Sync',
-        body: `You have been invited to join Penn Sync as a ${data.role === 'admin' ? 'Administrator' : 'User'}.
-
-Care Scope: ${careScopeLabel}
-${data.careScope === 'home_health' ? '\nYou will be documenting Home Health visits and following Home Health Medicare compliance requirements.' : ''}
-${data.careScope === 'hospice' ? '\nYou will be documenting Hospice visits and following Hospice Medicare compliance requirements.' : ''}
-${data.careScope === 'both' ? '\nYou will be able to document both Home Health and Hospice visits.' : ''}
-
-Please visit Penn Sync to create your account and start documenting patient visits.
-
-Role: ${data.role === 'admin' ? 'Administrator' : 'User'}
-
-IMPORTANT: When you first log in, please complete your profile with:
-- Professional credentials (RN, LPN, etc.)
-- License number
-- Contact phone number
-
-If you have any questions, please contact your administrator.`,
-        from_name: 'Penn Sync Admin'
+      const { createUserWithTempPassword } = await import('@/functions/createUserWithTempPassword');
+      const response = await createUserWithTempPassword(data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      alert(`User created successfully! Welcome email sent to ${inviteData.email}\n\nTemporary Password: ${data.temp_password}\n\n(Also sent via email with user manual attached)`);
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      setShowInviteDialog(false);
+      setInviteData({ 
+        email: "", 
+        full_name: "", 
+        role: "user", 
+        care_scope: "home_health",
+        phone: "",
+        credentials: ""
       });
     },
-    onSuccess: () => {
-      alert(`Invitation sent successfully to ${inviteData.email}!`);
-      setShowInviteDialog(false);
-      setInviteData({ email: "", role: "user", careScope: "home_health" });
-    },
     onError: (error) => {
-      alert('Failed to send invitation: ' + error.message);
+      alert('Failed to create user: ' + error.message);
     }
   });
 
-  const handleInviteUser = () => {
-    if (!inviteData.email) {
-      alert('Please enter an email address');
+  const handleCreateUser = () => {
+    if (!inviteData.email || !inviteData.full_name) {
+      alert('Please enter email and full name');
       return;
     }
-    sendInviteMutation.mutate(inviteData);
+    createUserMutation.mutate(inviteData);
   };
 
   const handleEditUser = (user) => {
@@ -172,7 +159,7 @@ If you have any questions, please contact your administrator.`,
               className="bg-blue-600 hover:bg-blue-700"
             >
               <UserPlus className="w-4 h-4 mr-2" />
-              Invite New User
+              Create New User
             </Button>
           </div>
 
@@ -275,54 +262,103 @@ If you have any questions, please contact your administrator.`,
         </CardContent>
       </Card>
 
-      {/* Invite Dialog */}
+      {/* Create User Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Invite New User to Penn Sync</DialogTitle>
+            <DialogTitle>Create New User Account</DialogTitle>
             <DialogDescription>
-              Send an invitation email to add a new user to your Penn Sync account.
+              Create a new user account with temporary password. User will receive a welcome email with login credentials and user manual.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="inviteEmail">Email Address *</Label>
-              <Input
-                id="inviteEmail"
-                type="email"
-                placeholder="user@example.com"
-                value={inviteData.email}
-                onChange={(e) => setInviteData({...inviteData, email: e.target.value})}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="inviteEmail">Email Address *</Label>
+                <Input
+                  id="inviteEmail"
+                  type="email"
+                  placeholder="user@example.com"
+                  value={inviteData.email}
+                  onChange={(e) => setInviteData({...inviteData, email: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="fullName">Full Name *</Label>
+                <Input
+                  id="fullName"
+                  placeholder="John Doe"
+                  value={inviteData.full_name}
+                  onChange={(e) => setInviteData({...inviteData, full_name: e.target.value})}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="inviteRole">Role *</Label>
-              <Select value={inviteData.role} onValueChange={(value) => setInviteData({...inviteData, role: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  placeholder="(555) 123-4567"
+                  value={inviteData.phone}
+                  onChange={(e) => setInviteData({...inviteData, phone: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="credentials">Credentials</Label>
+                <Input
+                  id="credentials"
+                  placeholder="RN, LPN, MSW, etc."
+                  value={inviteData.credentials}
+                  onChange={(e) => setInviteData({...inviteData, credentials: e.target.value})}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="inviteCareScope">Care Scope *</Label>
-              <Select value={inviteData.careScope} onValueChange={(value) => setInviteData({...inviteData, careScope: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="home_health">🏠 Home Health Only</SelectItem>
-                  <SelectItem value="hospice">💜 Hospice Only</SelectItem>
-                  <SelectItem value="both">🏥 Both Home Health & Hospice</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="inviteRole">Role *</Label>
+                <Select value={inviteData.role} onValueChange={(value) => setInviteData({...inviteData, role: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="inviteCareScope">Care Scope *</Label>
+                <Select value={inviteData.care_scope} onValueChange={(value) => setInviteData({...inviteData, care_scope: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="home_health">🏠 Home Health Only</SelectItem>
+                    <SelectItem value="hospice">💜 Hospice Only</SelectItem>
+                    <SelectItem value="both">🏥 Both Home Health & Hospice</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <Alert className="bg-blue-50 border-blue-200">
+              <Mail className="w-4 h-4 text-blue-600" />
+              <AlertDescription className="text-blue-900">
+                <p className="font-semibold mb-1">What happens next:</p>
+                <ul className="text-sm space-y-1">
+                  <li>✓ Account created with secure temporary password</li>
+                  <li>✓ Welcome email sent with login credentials</li>
+                  <li>✓ User manual attached to email (PDF)</li>
+                  <li>✓ User required to change password on first login</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
           </div>
 
           <DialogFooter>
@@ -330,12 +366,15 @@ If you have any questions, please contact your administrator.`,
               Cancel
             </Button>
             <Button
-              onClick={handleInviteUser}
-              disabled={sendInviteMutation.isLoading}
+              onClick={handleCreateUser}
+              disabled={createUserMutation.isPending}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              <Mail className="w-4 h-4 mr-2" />
-              Send Invitation
+              {createUserMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating User...</>
+              ) : (
+                <><UserPlus className="w-4 h-4 mr-2" /> Create User & Send Email</>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
