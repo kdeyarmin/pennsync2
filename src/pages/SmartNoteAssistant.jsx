@@ -350,10 +350,13 @@ export default function SmartNoteAssistant() {
     try {
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
-PATIENT CONTEXT:
-- Diagnosis: ${finalDiagnosis || 'Not specified'}
-- Visit Type: ${visitType.replace(/_/g, ' ')}
-- Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
+      PATIENT CONTEXT:
+      - Name: ${selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : 'Not specified'}
+      - Primary Diagnosis: ${finalDiagnosis || 'Not specified'}
+      - Secondary Diagnoses: ${selectedPatient?.secondary_diagnoses?.join(', ') || 'None'}
+      - Allergies: ${selectedPatient?.allergies || 'None documented'}
+      - Visit Type: ${visitType.replace(/_/g, ' ')}
+      - Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
         if (k === 'o2') {
           const o2Text = `O2 Sat: ${v}`;
           if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
@@ -366,18 +369,47 @@ PATIENT CONTEXT:
         return `${k}: ${v}`;
       }).join(', ') || 'None provided'}
 
-ROUGH NOTES:
-${roughNote}
+      PATIENT HISTORY:
+      ${recentVisits.length > 0 ? `- Last Visit (${recentVisits[0].visit_date}): ${recentVisits[0].visit_type} - ${recentVisits[0].nurse_notes?.substring(0, 200)}...` : '- No previous visits on record'}
 
-Transform into professional EHR-ready narrative with proper medical terminology, Medicare compliance, and integrated vital signs.
+      ACTIVE CARE PLAN GOALS:
+      ${carePlans.filter(cp => cp.status === 'active').map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- No active care plans'}
 
-IMPORTANT: Do NOT include any meta-commentary or closing statements about Medicare compliance standards or documentation adherence at the end. Just provide the clinical narrative itself.
+      OASIS DATA AVAILABLE:
+      ${patientOASIS.length > 0 ? `- OASIS assessment from ${patientOASIS[0].created_date} with PDGM data available` : '- No OASIS data on file'}
 
-Return JSON:
-{
-  "enhanced_note": "The complete clinical narrative",
-  "quality_score": 0-100
-}`;
+      ROUGH NOTES:
+      ${roughNote}
+
+      CRITICAL ENHANCEMENT REQUIREMENTS:
+      1. HOMEBOUND STATUS: If patient has mobility/activity limitations, clearly state why leaving home is taxing (specific symptoms, distances, assistance needed)
+      2. SKILLED NEED: Explicitly state why RN skills are required (complex assessment, clinical judgment, patient education beyond basic instruction)
+      3. PATIENT RESPONSE: Include patient's verbal understanding, teach-back results, or demonstrated competency
+      4. CONDITION-SPECIFIC DETAILS:
+      ${finalDiagnosis?.toUpperCase().includes('CHF') || finalDiagnosis?.toUpperCase().includes('HEART FAILURE') || finalDiagnosis?.toUpperCase().includes('CONGESTIVE') ? '- CHF: Document daily weight, edema grading (0-4+), JVD assessment, bilateral lung sounds for crackles, S3 gallop, fluid status evaluation' : ''}
+      ${finalDiagnosis?.toUpperCase().includes('COPD') || finalDiagnosis?.toUpperCase().includes('CHRONIC OBSTRUCTIVE') ? '- COPD: Document O2 sat on room air vs supplemental O2, respiratory rate, work of breathing, accessory muscle use, cyanosis, lung sounds (wheezes/rhonchi)' : ''}
+      ${finalDiagnosis?.toUpperCase().includes('DIABETES') || finalDiagnosis?.toUpperCase().includes('DIABETIC') ? '- Diabetes: Document blood glucose reading, diabetic foot exam (pedal pulses, sensation, skin integrity between toes), peripheral neuropathy assessment' : ''}
+      ${finalDiagnosis?.toUpperCase().includes('WOUND') || finalDiagnosis?.toUpperCase().includes('PRESSURE') || finalDiagnosis?.toUpperCase().includes('ULCER') ? '- Wound: Document dimensions (L x W x D in cm), wound bed appearance (% granulation/slough/eschar), exudate (type, amount, odor), periwound condition, undermining/tunneling' : ''}
+      ${finalDiagnosis?.toUpperCase().includes('STROKE') || finalDiagnosis?.toUpperCase().includes('CVA') ? '- Stroke: Document LOC, orientation, speech/aphasia, facial symmetry, motor strength bilateral (0-5 grading), sensation, swallowing safety' : ''}
+      5. INTEGRATE CARE PLAN PROGRESS: Reference active care plan goals and document progress toward them
+      6. COMPARE TO BASELINE: If previous visit data available, note changes from last visit
+      7. FUNCTIONAL STATUS: Describe ADL limitations, mobility level, assistance needed
+      8. PLAN OF CARE: State continuing plan, next visit schedule, when to contact nurse/MD
+
+      FORMATTING GUIDELINES:
+      - Use complete sentences with proper medical terminology
+      - Write in narrative paragraph format, not bullet points
+      - Include measurable, objective data
+      - Avoid vague terms like "doing well" or "stable" - be specific
+      - Natural language flow suitable for EHR copy/paste
+
+      IMPORTANT: Do NOT include any meta-commentary or closing statements about Medicare compliance standards or documentation adherence at the end. Just provide the clinical narrative itself.
+
+      Return JSON:
+      {
+      "enhanced_note": "The complete clinical narrative",
+      "quality_score": 0-100
+      }`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
