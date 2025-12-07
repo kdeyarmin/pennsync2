@@ -73,6 +73,7 @@ export default function ImportPatients() {
     // Map common header variations - supports standard format AND agency export format
     const headerMap = {
       'first_name': ['first_name', 'firstname', 'first name', 'fname'],
+      'middle_name': ['middle_name', 'middlename', 'middle name', 'middle_initial', 'mi', 'mname'],
       'last_name': ['last_name', 'lastname', 'last name', 'lname'],
       'patient_name': ['patient', 'patient name', 'patientname'], // Agency format - full name
       'date_of_birth': ['date_of_birth', 'dob', 'dateofbirth', 'birth_date', 'birthdate'],
@@ -101,23 +102,35 @@ export default function ImportPatients() {
       const values = parseCSVLine(lines[i]);
       if (values.length === 0) continue;
 
-      // Handle combined "Patient" column (agency format: "Last, First" or "First Last")
+      // Handle combined "Patient" column (agency format: "Last, First Middle" or "First Middle Last")
       let firstName = values[getColumnIndex('first_name')] || '';
+      let middleName = values[getColumnIndex('middle_name')] || '';
       let lastName = values[getColumnIndex('last_name')] || '';
       
       const patientNameIdx = getColumnIndex('patient_name');
       if (patientNameIdx !== -1 && (!firstName || !lastName)) {
         const fullName = values[patientNameIdx] || '';
         if (fullName.includes(',')) {
-          // Format: "Last, First"
+          // Format: "Last, First Middle" or "Last, First M."
           const parts = fullName.split(',').map(p => p.trim());
           lastName = parts[0] || '';
-          firstName = parts[1] || '';
+          const firstPart = parts[1] || '';
+          const nameParts = firstPart.trim().split(/\s+/);
+          firstName = nameParts[0] || '';
+          middleName = nameParts.slice(1).join(' ') || ''; // Could be "Middle" or "M." or "M"
         } else {
-          // Format: "First Last"
+          // Format: "First Middle Last" or "First M. Last" or "First M Last"
           const parts = fullName.trim().split(/\s+/);
-          firstName = parts[0] || '';
-          lastName = parts.slice(1).join(' ') || '';
+          if (parts.length >= 3) {
+            firstName = parts[0] || '';
+            middleName = parts.slice(1, -1).join(' ') || ''; // Everything between first and last
+            lastName = parts[parts.length - 1] || '';
+          } else if (parts.length === 2) {
+            firstName = parts[0] || '';
+            lastName = parts[1] || '';
+          } else {
+            firstName = parts[0] || '';
+          }
         }
       }
 
@@ -151,6 +164,7 @@ export default function ImportPatients() {
 
       const patient = {
         first_name: firstName,
+        middle_name: middleName,
         last_name: lastName,
         date_of_birth: dob,
         medical_record_number: values[getColumnIndex('medical_record_number')] || '',
@@ -307,6 +321,7 @@ export default function ImportPatients() {
         .filter((_, idx) => selectedRows.has(idx))
         .map(p => ({
           first_name: p.first_name,
+          middle_name: p.middle_name || null,
           last_name: p.last_name,
           date_of_birth: p.date_of_birth || null,
           medical_record_number: p.medical_record_number || null,
@@ -359,7 +374,7 @@ export default function ImportPatients() {
   };
 
   const downloadTemplate = () => {
-    const template = 'first_name,last_name,date_of_birth,medical_record_number,phone,email,address,primary_diagnosis,allergies,status\nJohn,Doe,1950-01-15,MRN001,555-123-4567,john@example.com,"123 Main St, City, ST 12345",CHF,Penicillin,active';
+    const template = 'first_name,middle_name,last_name,date_of_birth,medical_record_number,phone,email,address,primary_diagnosis,allergies,status\nJohn,A,Doe,1950-01-15,MRN001,555-123-4567,john@example.com,"123 Main St, City, ST 12345",CHF,Penicillin,active';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -519,7 +534,7 @@ export default function ImportPatients() {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium">
-                          {patient.first_name} {patient.last_name}
+                          {patient.first_name} {patient.middle_name && `${patient.middle_name} `}{patient.last_name}
                         </TableCell>
                         <TableCell>{patient.date_of_birth || '-'}</TableCell>
                         <TableCell>{patient.medical_record_number || '-'}</TableCell>
