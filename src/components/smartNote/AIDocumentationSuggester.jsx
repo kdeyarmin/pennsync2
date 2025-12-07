@@ -239,7 +239,7 @@ Provide proactive, context-aware suggestions in these categories:
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleInsert = async (text, suggestionType = 'documentation') => {
+  const handleInsert = async (text, suggestionType = 'documentation', elementName = null) => {
     onInsertText?.(text);
     
     // Track AI suggestion usage
@@ -247,11 +247,13 @@ Provide proactive, context-aware suggestions in these categories:
     if (user?.email) {
       trackAISuggestion({
         nurseEmail: user.email,
-        suggestionType: categorizeAISuggestion(text),
-        suggestionText: `AI suggested ${suggestionType}: ${text.substring(0, 100)}...`,
-        context: text.substring(0, 200),
+        suggestionType: categorizeAISuggestion(elementName || text),
+        suggestionText: elementName ? `Missing: ${elementName}` : `AI suggested ${suggestionType}`,
+        context: text,
+        patientId: patientId,
         source: 'ai_documentation_suggester',
-        patientId: patientId
+        elementName: elementName,
+        noteSnippet: noteContent?.substring(0, 500)
       });
     }
   };
@@ -410,7 +412,7 @@ Provide proactive, context-aware suggestions in these categories:
                             size="sm"
                             variant="ghost"
                             className="h-6 w-6 p-0"
-                            onClick={() => handleInsert(`PATIENT EDUCATION: ${edu.topic}\n${edu.content}\nTeach-back: ${edu.teach_back_prompt}`)}
+                            onClick={() => handleInsert(`PATIENT EDUCATION: ${edu.topic}\n${edu.content}\nTeach-back: ${edu.teach_back_prompt}`, 'patient_education', edu.topic)}
                           >
                             <Plus className="w-3 h-3" />
                           </Button>
@@ -458,7 +460,7 @@ Provide proactive, context-aware suggestions in these categories:
                             size="sm"
                             variant="ghost"
                             className="h-6 w-6 p-0"
-                            onClick={() => handleInsert(int.documentation_template)}
+                            onClick={() => handleInsert(int.documentation_template, 'skilled_intervention', int.intervention)}
                           >
                             <Plus className="w-3 h-3" />
                           </Button>
@@ -547,7 +549,7 @@ Provide proactive, context-aware suggestions in these categories:
                             size="sm"
                             variant="ghost"
                             className="h-6 w-6 p-0"
-                            onClick={() => handleInsert(cp.documentation_template)}
+                            onClick={() => handleInsert(cp.documentation_template, 'care_plan_alignment', cp.care_plan_goal)}
                           >
                             <Plus className="w-3 h-3" />
                           </Button>
@@ -595,7 +597,7 @@ Provide proactive, context-aware suggestions in these categories:
                             size="sm"
                             variant="ghost"
                             className="h-6 w-6 p-0"
-                            onClick={() => handleInsert(risk.suggested_documentation)}
+                            onClick={() => handleInsert(risk.suggested_documentation, 'risk_mitigation', risk.risk_area)}
                           >
                             <Plus className="w-3 h-3" />
                           </Button>
@@ -630,7 +632,7 @@ Provide proactive, context-aware suggestions in these categories:
                     size="sm"
                     variant="outline"
                     className="h-6 text-xs"
-                    onClick={() => handleInsert(phrase)}
+                    onClick={() => handleInsert(phrase, 'quick_phrase', 'Quick Phrase')}
                   >
                     {phrase.length > 30 ? phrase.substring(0, 30) + '...' : phrase}
                   </Button>

@@ -6,7 +6,10 @@ export const trackAISuggestion = async ({
   suggestionText,
   context,
   patientId = null,
-  source = 'smart_note'
+  visitId = null,
+  source = 'smart_note',
+  elementName = null,
+  noteSnippet = null
 }) => {
   if (!nurseEmail) return;
 
@@ -18,7 +21,13 @@ export const trackAISuggestion = async ({
       source: source,
       severity: 'medium',
       addressed: false,
-      patient_id: patientId
+      patient_id: patientId,
+      visit_id: visitId,
+      context_data: {
+        element: elementName,
+        note_snippet: noteSnippet || context?.substring(0, 500),
+        full_context: context
+      }
     });
   } catch (error) {
     console.error("Error tracking AI suggestion:", error);

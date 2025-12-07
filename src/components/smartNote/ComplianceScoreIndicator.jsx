@@ -721,8 +721,10 @@ Return JSON:
         nurseEmail: user.email,
         suggestionType: categorizeAISuggestion(issue.element),
         suggestionText: `${issue.element}: ${issue.problem}`,
-        context: suggestion.substring(0, 200),
-        source: 'compliance_checker'
+        context: suggestion,
+        source: 'compliance_checker',
+        elementName: issue.element,
+        noteSnippet: enhancedNote?.substring(0, 500)
       });
     }
   };
