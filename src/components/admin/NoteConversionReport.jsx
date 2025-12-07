@@ -127,7 +127,7 @@ export default function NoteConversionReport() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Note Conversion Report</h2>
+          <h2 className="text-xl font-bold text-gray-900">AI Note Enhancement Statistics</h2>
           <p className="text-sm text-gray-600">Track rough notes enhanced to clinical documentation</p>
         </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
