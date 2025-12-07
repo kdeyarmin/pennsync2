@@ -26,7 +26,7 @@ import {
   LogIn,
   MousePointer
 } from "lucide-react";
-import { format } from "date-fns";
+import { formatEastern } from "../utils/timezone";
 
 export default function UserActivityLog() {
   const [filterUser, setFilterUser] = useState("");
@@ -172,7 +172,7 @@ export default function UserActivityLog() {
                   </div>
                   <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
                     <Calendar className="w-3 h-3" />
-                    {format(new Date(activity.created_date), 'MMM d, yyyy h:mm a')}
+                    {formatEastern(new Date(activity.created_date), 'MMM d, yyyy h:mm a')} ET
                   </div>
                 </div>
               </div>
