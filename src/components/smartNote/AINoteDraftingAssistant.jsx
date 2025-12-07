@@ -308,10 +308,31 @@ Generate professional, Medicare-compliant clinical documentation based on the re
     }
   };
 
-  const handleInsert = (type) => {
+  const handleInsert = async (type) => {
     const content = generatedContent[type];
     if (content && onInsertText) {
       onInsertText(content);
+      
+      // Track AI suggestion usage
+      const user = await base44.auth.me();
+      if (user?.email) {
+        const categoryMap = {
+          'assessment': 'clinical',
+          'interventions': 'clinical',
+          'patientResponse': 'communication',
+          'custom': 'documentation'
+        };
+        
+        const { trackAISuggestion } = await import("../training/SuggestionTracker");
+        trackAISuggestion({
+          nurseEmail: user.email,
+          suggestionType: categoryMap[type] || 'clinical',
+          suggestionText: `Generated ${type} section using AI`,
+          context: content.substring(0, 200),
+          source: 'ai_drafting_assistant',
+          patientId: patientId
+        });
+      }
     }
   };
 
