@@ -88,10 +88,9 @@ const commonDiagnoses = [
 
 
 
-// Voice Hub Component
-function VoiceHub({ onTranscription, onVitalsRecognized }) {
+// Voice Hub Component - Dictation Only
+function VoiceHub({ onTranscription }) {
   const [listening, setListening] = useState(false);
-  const [mode, setMode] = useState('dictate');
 
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -105,16 +104,7 @@ function VoiceHub({ onTranscription, onVitalsRecognized }) {
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      if (mode === 'vitals') {
-        const vitals = {};
-        const bpMatch = transcript.match(/blood pressure\s*(\d+)\s*(?:over|\/)\s*(\d+)/i);
-        if (bpMatch) vitals.bp = `${bpMatch[1]}/${bpMatch[2]}`;
-        const hrMatch = transcript.match(/(?:heart rate|pulse|hr)\s*(\d+)/i);
-        if (hrMatch) vitals.hr = hrMatch[1];
-        if (Object.keys(vitals).length > 0) onVitalsRecognized?.(vitals);
-      } else {
-        onTranscription?.(transcript);
-      }
+      onTranscription?.(transcript);
     };
     recognition.onend = () => setListening(false);
     recognition.onerror = () => setListening(false);
@@ -123,31 +113,15 @@ function VoiceHub({ onTranscription, onVitalsRecognized }) {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        size="sm"
-        variant={listening ? "destructive" : "outline"}
-        onClick={listening ? () => setListening(false) : startListening}
-        className="gap-1"
-      >
-        {listening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-        {listening ? 'Stop' : 'Voice'}
-      </Button>
-      <Badge 
-        variant={mode === 'dictate' ? 'default' : 'outline'} 
-        className="cursor-pointer text-xs"
-        onClick={() => setMode('dictate')}
-      >
-        Dictate
-      </Badge>
-      <Badge 
-        variant={mode === 'vitals' ? 'default' : 'outline'} 
-        className="cursor-pointer text-xs"
-        onClick={() => setMode('vitals')}
-      >
-        Vitals
-      </Badge>
-    </div>
+    <Button
+      size="sm"
+      variant={listening ? "destructive" : "outline"}
+      onClick={listening ? () => setListening(false) : startListening}
+      className="gap-1"
+    >
+      {listening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+      {listening ? 'Stop Dictation' : 'Dictate'}
+    </Button>
   );
 }
 
@@ -480,9 +454,7 @@ Return JSON:
     setRoughNote(prev => prev ? prev + ' ' + text : text);
   };
 
-  const handleVoiceVitals = (vitals) => {
-    setVitalSigns(prev => ({ ...prev, ...vitals }));
-  };
+
 
   const handleContextualAction = (action) => {
     if (action === 'enhance') handleEnhanceNote();
@@ -647,10 +619,9 @@ Return JSON:
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs">Patient</Label>
-                  <Select value={selectedPatientId || "none"} onValueChange={(v) => setSelectedPatientId(v === "none" ? "" : v)}>
+                  <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
                     <SelectTrigger><SelectValue placeholder="Select patient..." /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Select patient...</SelectItem>
                       {patients.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
                       ))}
@@ -723,7 +694,7 @@ Return JSON:
                   3. Your Notes
                   {roughNote.length >= 20 && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                 </div>
-                <VoiceHub onTranscription={handleVoiceTranscription} onVitalsRecognized={handleVoiceVitals} />
+                <VoiceHub onTranscription={handleVoiceTranscription} />
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-3">
