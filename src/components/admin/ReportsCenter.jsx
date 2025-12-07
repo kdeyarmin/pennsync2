@@ -33,6 +33,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
   const [dateRange, setDateRange] = useState("30");
   const [selectedNurse, setSelectedNurse] = useState("all");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [exportFormat, setExportFormat] = useState("pdf");
 
   const generateReport = async () => {
     setIsGenerating(true);
@@ -41,52 +42,72 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       const today = new Date();
       const startDate = format(subDays(today, parseInt(dateRange)), 'yyyy-MM-dd');
       const endDate = format(today, 'yyyy-MM-dd');
-      
-      // Filter data by date range
-      const filteredVisits = visits.filter(v => 
-        v.visit_date >= startDate && v.visit_date <= endDate
-      );
-      
-      const filteredIncidents = incidents.filter(i =>
-        i.incident_date >= startDate && i.incident_date <= endDate
-      );
 
-      let reportContent = '';
-      let fileName = '';
+      if (exportFormat === 'pdf') {
+        // Generate comprehensive PDF using backend function
+        const response = await base44.functions.invoke('generateComprehensiveReport', {
+          reportType,
+          dateRange,
+          includeCharts: false
+        });
 
-      switch (reportType) {
-        case 'productivity':
-          ({ content: reportContent, fileName } = generateProductivityReport(filteredVisits, users, startDate, endDate));
-          break;
-        case 'quality':
-          ({ content: reportContent, fileName } = generateQualityReport(filteredVisits, filteredIncidents, patients, startDate, endDate));
-          break;
-        case 'financial':
-          ({ content: reportContent, fileName } = generateFinancialReport(filteredVisits, patients, startDate, endDate));
-          break;
-        case 'compliance':
-          ({ content: reportContent, fileName } = generateComplianceReport(filteredVisits, patients, startDate, endDate));
-          break;
-        case 'clinical':
-          ({ content: reportContent, fileName } = generateClinicalReport(filteredVisits, patients, startDate, endDate));
-          break;
-        case 'staff':
-          ({ content: reportContent, fileName } = generateStaffPerformanceReport(filteredVisits, users, startDate, endDate));
-          break;
-        default:
-          throw new Error('Unknown report type');
+        // Download PDF
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `penn-sync-${reportType}-report-${endDate}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      } else {
+        // Original CSV export
+        const filteredVisits = visits.filter(v => 
+          v.visit_date >= startDate && v.visit_date <= endDate
+        );
+        
+        const filteredIncidents = incidents.filter(i =>
+          i.incident_date >= startDate && i.incident_date <= endDate
+        );
+
+        let reportContent = '';
+        let fileName = '';
+
+        switch (reportType) {
+          case 'productivity':
+            ({ content: reportContent, fileName } = generateProductivityReport(filteredVisits, users, startDate, endDate));
+            break;
+          case 'quality':
+            ({ content: reportContent, fileName } = generateQualityReport(filteredVisits, filteredIncidents, patients, startDate, endDate));
+            break;
+          case 'financial':
+            ({ content: reportContent, fileName } = generateFinancialReport(filteredVisits, patients, startDate, endDate));
+            break;
+          case 'compliance':
+            ({ content: reportContent, fileName } = generateComplianceReport(filteredVisits, patients, startDate, endDate));
+            break;
+          case 'clinical':
+            ({ content: reportContent, fileName } = generateClinicalReport(filteredVisits, patients, startDate, endDate));
+            break;
+          case 'staff':
+            ({ content: reportContent, fileName } = generateStaffPerformanceReport(filteredVisits, users, startDate, endDate));
+            break;
+          default:
+            throw new Error('Unknown report type');
+        }
+
+        // Download report as CSV
+        const blob = new Blob([reportContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
       }
-
-      // Download report as CSV
-      const blob = new Blob([reportContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
 
     } catch (error) {
       console.error('Error generating report:', error);
@@ -450,6 +471,19 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
             </div>
           </div>
 
+          <div className="mb-6">
+            <Label>Export Format</Label>
+            <Select value={exportFormat} onValueChange={setExportFormat}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pdf">PDF Document</SelectItem>
+                <SelectItem value="csv">CSV Spreadsheet</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {selectedReportType && (
             <Card className="bg-blue-50 border-blue-200 mb-6">
               <CardContent className="p-4">
@@ -472,12 +506,12 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
             {isGenerating ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating Report...
+                Generating {exportFormat.toUpperCase()}...
               </>
             ) : (
               <>
                 <Download className="w-4 h-4 mr-2" />
-                Generate & Download Report
+                Generate {exportFormat.toUpperCase()} Report
               </>
             )}
           </Button>
