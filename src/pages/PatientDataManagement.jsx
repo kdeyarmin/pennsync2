@@ -54,7 +54,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { format } from "date-fns";
+import { formatEastern } from "../components/utils/timezone";
 
 export default function PatientDataManagement() {
   const queryClient = useQueryClient();
@@ -451,7 +451,7 @@ export default function PatientDataManagement() {
                       <div className="flex items-center gap-1 text-sm text-gray-600">
                         <Clock className="w-3 h-3" />
                         {patient.lastActivity ? 
-                          format(new Date(patient.lastActivity), 'MMM d, yyyy') : 
+                          formatEastern(patient.lastActivity, 'MMM d, yyyy') : 
                           'No activity'
                         }
                       </div>

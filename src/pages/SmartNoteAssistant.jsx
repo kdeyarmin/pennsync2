@@ -74,6 +74,7 @@ import OASISItemLinker from "../components/smartNote/OASISItemLinker";
 import AIDocumentationSuggester from "../components/smartNote/AIDocumentationSuggester";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
+import { todayEastern } from "../components/utils/timezone";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -212,7 +213,7 @@ export default function SmartNoteAssistant() {
   const queryClient = useQueryClient();
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
-  const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0]);
+  const [visitDate, setVisitDate] = useState(todayEastern());
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
   const [vitalSigns, setVitalSigns] = useState({ bp: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
@@ -459,7 +460,7 @@ Return JSON:
     setDismissedElementNames([]);
     setRoughNoteCompliance(null);
     setEnhancedNoteCompliance(null);
-    setVisitDate(new Date().toISOString().split('T')[0]);
+    setVisitDate(todayEastern());
   };
 
   const handleInsertPhrase = (text) => {
@@ -620,7 +621,7 @@ Return JSON:
                     type="date" 
                     value={visitDate} 
                     onChange={(e) => setVisitDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
+                    max={todayEastern()}
                     className="h-11 md:h-12 text-base"
                   />
                 </div>

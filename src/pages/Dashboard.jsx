@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
+import { formatEastern, todayEastern } from "../components/utils/timezone";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
@@ -35,13 +35,13 @@ export default function Dashboard() {
     });
 
     const { data: visits, isLoading, error: visitsError } = useQuery({
-    queryKey: ['todayVisits'],
-    queryFn: async () => {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
-    },
-    initialData: [],
-  });
+      queryKey: ['todayVisits'],
+      queryFn: async () => {
+        const today = todayEastern();
+        return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
+      },
+      initialData: [],
+    });
 
   const { data: patients, error: patientsError } = useQuery({
     queryKey: ['patients'],
@@ -140,7 +140,7 @@ export default function Dashboard() {
               {getGreeting()}, {firstName}! 👋
             </h1>
             <p className="text-white/80 text-xs sm:text-sm md:text-base">
-              {format(new Date(), 'EEEE, MMMM d, yyyy')} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
+              {formatEastern(new Date(), 'EEEE, MMMM d, yyyy')} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
             </p>
           </div>
         </CardContent>
