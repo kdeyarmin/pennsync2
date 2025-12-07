@@ -34,7 +34,7 @@ import {
   CheckCircle2,
   Bell
 } from "lucide-react";
-import { format } from "date-fns";
+import { formatEastern } from "../components/utils/timezone";
 
 export default function UserActivityLog() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -312,7 +312,7 @@ export default function UserActivityLog() {
                       </Badge>
                     </div>
                     <div className="text-xs text-gray-600">
-                      <p>Last login: {new Date(lastLogin.created_date).toLocaleString()}</p>
+                      <p>Last login: {formatEastern(new Date(lastLogin.created_date), 'MMM d, yyyy h:mm a')} ET</p>
                       <p className="text-[10px] text-gray-500 mt-1">Total sessions: {userLogins.length}</p>
                     </div>
                   </div>
@@ -436,7 +436,7 @@ export default function UserActivityLog() {
                         {/* Enhanced detail display for specific actions */}
                         {activity.action === 'login' && activity.details?.login_time && (
                           <p className="text-xs text-purple-700 mt-1">
-                            Session started at {new Date(activity.details.login_time).toLocaleTimeString()}
+                            Session started at {formatEastern(new Date(activity.details.login_time), 'h:mm a')} ET
                           </p>
                         )}
                         
@@ -470,7 +470,7 @@ export default function UserActivityLog() {
                     <div className="text-right text-xs text-gray-500 ml-4">
                       <p className="flex items-center gap-1 whitespace-nowrap">
                         <Clock className="w-3 h-3" />
-                        {format(new Date(activity.created_date), 'MMM d, h:mm a')}
+                        {formatEastern(new Date(activity.created_date), 'MMM d, h:mm a')} ET
                       </p>
                     </div>
                   </div>
