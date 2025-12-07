@@ -26,6 +26,8 @@ import PatientFriendlyCarePlanSummary from "../components/carePlan/PatientFriend
 import CarePlanEvolution from "../components/carePlan/CarePlanEvolution";
 import PatientRiskStratification from "../components/patient/PatientRiskStratification";
 import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
+import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
+import QuickActionsPanel from "../components/patient/QuickActionsPanel";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -92,6 +94,13 @@ export default function PatientDetails() {
   const { data: incidents } = useQuery({
     queryKey: ['patientIncidents', patientId],
     queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date'),
+    initialData: [],
+    enabled: !!patientId && hasAccess === true,
+  });
+
+  const { data: tasks } = useQuery({
+    queryKey: ['patientTasks', patientId],
+    queryFn: () => base44.entities.Task.filter({ patient_id: patientId }),
     initialData: [],
     enabled: !!patientId && hasAccess === true,
   });
@@ -253,6 +262,28 @@ export default function PatientDetails() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Patient Dashboard Summary & Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <div className="lg:col-span-2">
+          <AIPatientDashboardSummary
+            patient={patient}
+            visits={visits}
+            carePlans={carePlans}
+            tasks={tasks}
+            incidents={incidents}
+          />
+        </div>
+        <div>
+          <QuickActionsPanel
+            patient={patient}
+            recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
+            upcomingVisits={visits.filter(v => v.status === 'scheduled')}
+            activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
+            pendingTasks={tasks.filter(t => t.status === 'pending')}
+          />
+        </div>
+      </div>
 
       {/* AI Risk Stratification - Prominent */}
       {patient && (
