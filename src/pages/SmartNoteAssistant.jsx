@@ -272,7 +272,7 @@ export default function SmartNoteAssistant() {
   
   // Auto-fill diagnosis when patient is selected
   React.useEffect(() => {
-    if (selectedPatient?.primary_diagnosis) {
+    if (selectedPatient?.primary_diagnosis && selectedPatientId) {
       const matchingDiagnosis = commonDiagnoses.find(dx => 
         selectedPatient.primary_diagnosis.toLowerCase().includes(dx.toLowerCase().split(' ')[0].toLowerCase()) ||
         dx.toLowerCase().includes(selectedPatient.primary_diagnosis.toLowerCase().split(' ')[0].toLowerCase())
@@ -284,7 +284,7 @@ export default function SmartNoteAssistant() {
         setCustomDiagnosis(selectedPatient.primary_diagnosis);
       }
     }
-  }, [selectedPatientId, selectedPatient?.primary_diagnosis]);
+  }, [selectedPatientId]);
 
   const finalDiagnosis = diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis;
 
@@ -616,7 +616,22 @@ Return JSON:
                   <SearchablePatientSelect
                     patients={patients}
                     value={selectedPatientId}
-                    onValueChange={setSelectedPatientId}
+                    onValueChange={(id) => {
+                      setSelectedPatientId(id);
+                      const patient = patients.find(p => p.id === id);
+                      if (patient?.primary_diagnosis) {
+                        const matchingDiagnosis = commonDiagnoses.find(dx => 
+                          patient.primary_diagnosis.toLowerCase().includes(dx.toLowerCase().split(' ')[0].toLowerCase()) ||
+                          dx.toLowerCase().includes(patient.primary_diagnosis.toLowerCase().split(' ')[0].toLowerCase())
+                        );
+                        if (matchingDiagnosis) {
+                          setDiagnosis(matchingDiagnosis);
+                        } else {
+                          setDiagnosis("Custom (type below)");
+                          setCustomDiagnosis(patient.primary_diagnosis);
+                        }
+                      }
+                    }}
                     placeholder="Search patients..."
                   />
                 </div>
