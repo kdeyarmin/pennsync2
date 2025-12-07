@@ -368,7 +368,30 @@ export default function Patients() {
             </CardContent>
           </Card>
         ) : (
-          filteredPatients.map((patient) => {
+          <div className="md:col-span-2">
+            <PaginatedPatientList
+              patients={filteredPatients}
+              showCheckboxes={true}
+              selectedPatients={selectedPatients.map(p => p.id)}
+              onSelectionChange={(ids) => {
+                const selected = filteredPatients.filter(p => ids.includes(p.id));
+                setSelectedPatients(selected);
+              }}
+              onPatientSelect={(patientId) => {
+                const patient = patients.find(p => p.id === patientId);
+                if (patient) {
+                  setEditingPatient(patient);
+                  setShowForm(true);
+                }
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Legacy patient cards - keeping for reference if needed */}
+      <div className="hidden grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        {filteredPatients.map((patient) => {
             const isSelected = selectedPatients.some(p => p.id === patient.id);
             return (
             <Card 
@@ -487,9 +510,7 @@ export default function Patients() {
                 </div>
               </CardContent>
             </Card>
-          );})
-        )}
-      </div>
+          );})}
 
       {/* Patient Merge Dialog */}
       <PatientMergeDialog
