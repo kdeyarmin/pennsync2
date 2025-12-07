@@ -238,6 +238,7 @@ export default function SmartNoteAssistant() {
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [detectedComplianceRisks, setDetectedComplianceRisks] = useState([]);
   const [pdgmOptimizationWarnings, setPdgmOptimizationWarnings] = useState([]);
+  const [noteStartTime, setNoteStartTime] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -344,7 +345,8 @@ export default function SmartNoteAssistant() {
   const handleEnhanceNote = async () => {
     if (!roughNote.trim()) return;
     setIsProcessing(true);
-    const startTime = Date.now();
+    const enhanceStartTime = Date.now();
+    const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
     try {
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
@@ -403,8 +405,7 @@ Return JSON:
         ai_utilization: true // Flag for analytics tracking
       });
 
-      // Track note conversion for admin reporting
-      const conversionTime = Date.now() - startTime;
+      // Track note conversion for admin reporting - use actual doc time from first keystroke
       try {
         await base44.entities.NoteConversion.create({
           nurse_email: currentUser?.email || 'unknown',
@@ -414,7 +415,7 @@ Return JSON:
           rough_note_length: roughNote.length,
           enhanced_note_length: result.enhanced_note?.length || 0,
           quality_score: result.quality_score || null,
-          conversion_time_ms: conversionTime
+          conversion_time_ms: actualDocTime
         });
       } catch (trackError) {
         console.error("Error tracking note conversion:", trackError);
@@ -467,6 +468,7 @@ Return JSON:
     setRoughNoteCompliance(null);
     setEnhancedNoteCompliance(null);
     setVisitDate(todayEastern());
+    setNoteStartTime(null);
   };
 
   const handleInsertPhrase = (text) => {
@@ -715,7 +717,12 @@ Return JSON:
               {/* Smart auto-complete textarea with phrase categories */}
               <SmartAutoComplete
                 value={roughNote}
-                onChange={setRoughNote}
+                onChange={(value) => {
+                  if (!noteStartTime && value.length > 0) {
+                    setNoteStartTime(Date.now());
+                  }
+                  setRoughNote(value);
+                }}
                 placeholder="Type or dictate your notes... Start typing trigger words like 'lungs', 'heart', 'wound' for quick phrases"
                 diagnosis={finalDiagnosis}
                 className="min-h-[150px]"
