@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { canAccessPatient, logSecurityEvent, sanitizeInput } from "@/components/utils/security";
+import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 
 import HospitalReadmissionRisk from "../components/patient/HospitalReadmissionRisk";
 import ClinicalBestPracticeAlerts from "../components/quality/ClinicalBestPracticeAlerts";
@@ -54,6 +55,11 @@ export default function PatientDetails() {
       
       if (access) {
         await logSecurityEvent('PATIENT_DETAILS_ACCESSED', { patient_id: patientId });
+        logActivity(ActivityActions.VIEW, {
+          entity_type: 'Patient',
+          entity_id: patientId,
+          page: 'PatientDetails'
+        });
       } else {
         await logSecurityEvent('UNAUTHORIZED_PATIENT_ACCESS_ATTEMPT', { patient_id: patientId });
       }
@@ -92,14 +98,21 @@ export default function PatientDetails() {
 
   const createCarePlanMutation = useMutation({
     mutationFn: (carePlanData) => base44.entities.CarePlan.create({ ...carePlanData, patient_id: patientId }),
-    onSuccess: () => {
+    onSuccess: (newPlan) => {
       queryClient.invalidateQueries({ queryKey: ['patientCarePlans', patientId] });
+      logActivity(ActivityActions.CARE_PLAN_CREATE, {
+        entity_type: 'CarePlan',
+        entity_id: newPlan.id,
+        patient_id: patientId,
+        problem: newPlan.problem,
+        page: 'PatientDetails'
+      });
     },
   });
 
   const createVisitMutation = useMutation({
     mutationFn: (visitData) => base44.entities.Visit.create({ ...visitData, patient_id: patientId }),
-    onSuccess: () => {
+    onSuccess: (newVisit) => {
       queryClient.invalidateQueries({ queryKey: ['patientVisits', patientId] });
       setShowVisitForm(false);
       setNewVisit({
@@ -107,6 +120,14 @@ export default function PatientDetails() {
         visit_time: '',
         visit_type: 'routine_visit',
         status: 'scheduled'
+      });
+      logActivity(ActivityActions.CREATE, {
+        entity_type: 'Visit',
+        entity_id: newVisit.id,
+        patient_id: patientId,
+        visit_type: newVisit.visit_type,
+        visit_date: newVisit.visit_date,
+        page: 'PatientDetails'
       });
     },
   });

@@ -489,6 +489,14 @@ export default function OASISAnalyzer() {
     setUploadedFileUrl(oasisUpload.file_url);
     setSavedToPatient(true);
     setActiveTab("single");
+    
+    logActivity(ActivityActions.VIEW, {
+      entity_type: 'OASISUpload',
+      entity_id: oasisUpload.id,
+      patient_id: oasisUpload.patient_id,
+      patient_name: oasisUpload.patient_name,
+      page: 'OASISAnalyzer'
+    });
   };
 
   const handleUploadAndAnalyze = async () => {
@@ -1251,6 +1259,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
         overall_score: analysisResult.overall_score,
         accuracy_score: analysisResult.accuracy_score,
         compliance_score: analysisResult.compliance_score,
+        estimated_payment: originalPayment,
         page: 'OASISAnalyzer'
       });
 

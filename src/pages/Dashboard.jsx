@@ -18,10 +18,16 @@ import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
 import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
 import PDGMPredictiveAnalytics from "../components/pdgm/PDGMPredictiveAnalytics";
+import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+
+    // Log page visit once on mount
+    React.useEffect(() => {
+      logActivity(ActivityActions.PAGE_VISIT, { page: 'Dashboard' });
+    }, []);
 
     const { data: currentUser } = useQuery({
       queryKey: ['currentUser'],

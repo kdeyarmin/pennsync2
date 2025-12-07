@@ -98,13 +98,19 @@ export default function UserActivityLog() {
       'patient_match': UserCheck,
       'dispute_match': AlertTriangle,
       'visit_document': FileText,
+      'visit_start': Clock,
+      'visit_complete': CheckCircle2,
       'care_plan_create': Target,
+      'care_plan_update': Edit,
       'task_create': ClipboardList,
+      'task_complete': CheckCircle2,
       'incident_report': AlertCircle,
       'training_complete': GraduationCap,
       'note_enhanced': Sparkles,
       'note_ai_generated': Brain,
-      'note_compliance_check': Shield
+      'note_compliance_check': Shield,
+      'alert_viewed': Bell,
+      'alert_dismissed': AlertTriangle
     };
     const Icon = icons[action] || Activity;
     return <Icon className="w-4 h-4" />;
@@ -119,6 +125,7 @@ export default function UserActivityLog() {
       'error': 'bg-red-600 text-white',
       'view': 'bg-gray-100 text-gray-800',
       'generate': 'bg-indigo-100 text-indigo-800',
+      'page_visit': 'bg-slate-100 text-slate-800',
       'login': 'bg-purple-100 text-purple-800',
       'oasis_upload': 'bg-cyan-100 text-cyan-800',
       'oasis_analyze': 'bg-teal-100 text-teal-800',
@@ -126,13 +133,19 @@ export default function UserActivityLog() {
       'patient_match': 'bg-violet-100 text-violet-800',
       'dispute_match': 'bg-orange-100 text-orange-800',
       'visit_document': 'bg-sky-100 text-sky-800',
+      'visit_start': 'bg-green-100 text-green-800',
+      'visit_complete': 'bg-emerald-100 text-emerald-800',
       'care_plan_create': 'bg-lime-100 text-lime-800',
+      'care_plan_update': 'bg-lime-100 text-lime-800',
       'task_create': 'bg-amber-100 text-amber-800',
+      'task_complete': 'bg-green-100 text-green-800',
       'incident_report': 'bg-rose-100 text-rose-800',
       'training_complete': 'bg-fuchsia-100 text-fuchsia-800',
       'note_enhanced': 'bg-indigo-100 text-indigo-800',
       'note_ai_generated': 'bg-purple-100 text-purple-800',
-      'note_compliance_check': 'bg-blue-100 text-blue-800'
+      'note_compliance_check': 'bg-blue-100 text-blue-800',
+      'alert_viewed': 'bg-yellow-100 text-yellow-800',
+      'alert_dismissed': 'bg-orange-100 text-orange-800'
     };
     return colors[action] || 'bg-gray-100 text-gray-800';
   };

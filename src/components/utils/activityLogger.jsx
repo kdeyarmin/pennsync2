@@ -36,13 +36,19 @@ export const ActivityActions = {
   PATIENT_MATCH: 'patient_match',
   DISPUTE_MATCH: 'dispute_match',
   VISIT_DOCUMENT: 'visit_document',
+  VISIT_START: 'visit_start',
+  VISIT_COMPLETE: 'visit_complete',
   CARE_PLAN_CREATE: 'care_plan_create',
+  CARE_PLAN_UPDATE: 'care_plan_update',
   TASK_CREATE: 'task_create',
+  TASK_COMPLETE: 'task_complete',
   INCIDENT_REPORT: 'incident_report',
   TRAINING_COMPLETE: 'training_complete',
   NOTE_ENHANCED: 'note_enhanced',
   NOTE_AI_GENERATED: 'note_ai_generated',
-  NOTE_COMPLIANCE_CHECK: 'note_compliance_check'
+  NOTE_COMPLIANCE_CHECK: 'note_compliance_check',
+  ALERT_VIEWED: 'alert_viewed',
+  ALERT_DISMISSED: 'alert_dismissed'
 };
 
 export const logError = async (errorMessage, errorDetails = {}) => {
