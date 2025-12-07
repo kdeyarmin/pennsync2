@@ -190,11 +190,11 @@ export default function Layout({ children, currentPageName }) {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white" onClick={(e) => e.stopPropagation()}>
-            <div className="h-14 flex items-center px-4 border-b border-gray-200">
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="h-14 flex items-center px-4 border-b border-gray-200 flex-shrink-0">
               <span className="font-bold text-lg text-gray-900">Menu</span>
             </div>
-            <nav className="py-4 px-2 space-y-1">
+            <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
               {navItems.map((item) => (
                 <Link
                   key={item.page}
@@ -232,7 +232,7 @@ export default function Layout({ children, currentPageName }) {
                 </>
               )}
             </nav>
-            <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-3">
+            <div className="flex-shrink-0 border-t border-gray-200 p-3">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                   {currentUser?.full_name?.charAt(0) || 'U'}
