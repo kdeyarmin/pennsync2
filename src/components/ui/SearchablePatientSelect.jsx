@@ -42,24 +42,34 @@ export default function SearchablePatientSelect({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newPatient, setNewPatient] = useState({ first_name: "", last_name: "" });
   const [creating, setCreating] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
   const queryClient = useQueryClient();
 
-  // Load recent and favorited patients from localStorage
+  // Load current user and their preferences
   useEffect(() => {
-    try {
-      const recent = JSON.parse(localStorage.getItem('recentPatients') || '[]');
-      const favorited = JSON.parse(localStorage.getItem('favoritedPatients') || '[]');
-      setRecentPatients(recent);
-      setFavoritedPatients(favorited);
-    } catch (error) {
-      console.error('Error loading patient preferences:', error);
-    }
+    const loadUserPreferences = async () => {
+      try {
+        const user = await base44.auth.me();
+        const userEmail = user?.email || 'default';
+        setCurrentUserEmail(userEmail);
+        
+        const recent = JSON.parse(localStorage.getItem(`recentPatients_${userEmail}`) || '[]');
+        const favorited = JSON.parse(localStorage.getItem(`favoritedPatients_${userEmail}`) || '[]');
+        setRecentPatients(recent);
+        setFavoritedPatients(favorited);
+      } catch (error) {
+        console.error('Error loading patient preferences:', error);
+      }
+    };
+    loadUserPreferences();
   }, []);
 
   // Save to recent when patient is selected
   const handleSelect = (patientId) => {
     onValueChange(patientId);
     setOpen(false);
+
+    if (!currentUserEmail) return;
 
     // Update recent patients (max 5)
     const updatedRecent = [
@@ -68,12 +78,14 @@ export default function SearchablePatientSelect({
     ].slice(0, 5);
     
     setRecentPatients(updatedRecent);
-    localStorage.setItem('recentPatients', JSON.stringify(updatedRecent));
+    localStorage.setItem(`recentPatients_${currentUserEmail}`, JSON.stringify(updatedRecent));
   };
 
   // Toggle favorite
   const toggleFavorite = (patientId, e) => {
     e.stopPropagation();
+    if (!currentUserEmail) return;
+    
     const isFavorited = favoritedPatients.includes(patientId);
     
     const updatedFavorites = isFavorited
@@ -81,7 +93,7 @@ export default function SearchablePatientSelect({
       : [...favoritedPatients, patientId];
     
     setFavoritedPatients(updatedFavorites);
-    localStorage.setItem('favoritedPatients', JSON.stringify(updatedFavorites));
+    localStorage.setItem(`favoritedPatients_${currentUserEmail}`, JSON.stringify(updatedFavorites));
   };
 
   // Create new patient
