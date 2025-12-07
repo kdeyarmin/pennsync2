@@ -516,14 +516,14 @@ Provide proactive, context-aware suggestions in these categories:
                       </div>
                       <p className="text-xs text-gray-600 mb-1">{item.context}</p>
                       <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
-                        {item.suggested_documentation}
+                       {item.suggested_documentation}
                       </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-gray-500 text-center py-4">No historical continuity prompts available</p>
-                )}
-              </TabsContent>
+                      </div>
+                      ))
+                      ) : (
+                      <p className="text-xs text-gray-500 text-center py-4">No historical continuity prompts available</p>
+                      )}
+                      </TabsContent>
 
               {/* Care Plan Alignment Tab */}
               <TabsContent value="careplans" className="space-y-2 max-h-64 overflow-y-auto">
@@ -556,17 +556,17 @@ Provide proactive, context-aware suggestions in these categories:
                         </div>
                       </div>
                       <p className="text-xs text-teal-700 mb-1">
-                        <strong>Progress:</strong> {cp.progress_note}
+                       <strong>Progress:</strong> {cp.progress_note}
                       </p>
                       <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
-                        {cp.documentation_template}
+                       {cp.documentation_template}
                       </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-gray-500 text-center py-4">No care plan alignment suggestions</p>
-                )}
-              </TabsContent>
+                      </div>
+                      ))
+                      ) : (
+                      <p className="text-xs text-gray-500 text-center py-4">No care plan alignment suggestions</p>
+                      )}
+                      </TabsContent>
 
               {/* Risk Mitigation Tab */}
               <TabsContent value="risks" className="space-y-2 max-h-64 overflow-y-auto">
@@ -604,17 +604,17 @@ Provide proactive, context-aware suggestions in these categories:
                         </div>
                       </div>
                       <p className="text-[10px] text-gray-600 mb-1">
-                        Source: {risk.alert_source}
+                       Source: {risk.alert_source}
                       </p>
                       <p className="text-xs text-gray-700 bg-white p-1.5 rounded border">
-                        {risk.suggested_documentation}
+                       {risk.suggested_documentation}
                       </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-gray-500 text-center py-4">No risk mitigation notes needed</p>
-                )}
-              </TabsContent>
+                      </div>
+                      ))
+                      ) : (
+                      <p className="text-xs text-gray-500 text-center py-4">No risk mitigation notes needed</p>
+                      )}
+                      </TabsContent>
             </Tabs>
           )}
 
