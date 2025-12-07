@@ -1,109 +1,185 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   GraduationCap,
+  Target,
   Award,
-  Sparkles,
-  Building2,
+  TrendingUp,
+  BookOpen,
+  CheckCircle2,
+  AlertCircle,
   Brain,
-  Trophy
+  FileText,
+  BarChart3
 } from "lucide-react";
-
-import SkillsTracker from "../components/training/SkillsTracker";
-import MyTrainingDashboard from "../components/training/MyTrainingDashboard";
-import TrainingRecommendations from "../components/training/TrainingRecommendations";
-import AgencyTrainingManager from "../components/training/AgencyTrainingManager";
-import SkillGapLearningHub from "../components/training/SkillGapLearningHub";
-import GamificationDashboard from "../components/gamification/GamificationDashboard";
-import NurseTrainingSuggestions from "../components/training/NurseTrainingSuggestions";
+import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
+import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
+import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
+import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function NurseTraining() {
+  const [activeTab, setActiveTab] = useState("scenarios");
+
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
+    queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  React.useEffect(() => {
+    logActivity(ActivityActions.PAGE_VISIT, { page: 'NurseTraining' });
+  }, []);
+
+  const { data: trainingProgress = [] } = useQuery({
+    queryKey: ['myTrainingProgress', currentUser?.email],
+    queryFn: () => base44.entities.MicroLearningProgress.filter({ 
+      nurse_email: currentUser?.email 
+    }),
+    enabled: !!currentUser?.email,
+  });
+
+  const { data: recommendations = [] } = useQuery({
+    queryKey: ['myRecommendations', currentUser?.email],
+    queryFn: () => base44.entities.TrainingRecommendation.filter({ 
+      nurse_email: currentUser?.email,
+      addressed: false
+    }),
+    enabled: !!currentUser?.email,
+  });
+
+  const completedCount = trainingProgress.filter(p => p.status === 'completed').length;
+  const avgScore = trainingProgress.length > 0
+    ? trainingProgress.reduce((sum, p) => sum + (p.score || 0), 0) / trainingProgress.length
+    : 0;
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-          Skills & Training
-        </h1>
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <GraduationCap className="w-8 h-8 text-indigo-600" />
+          <h1 className="text-3xl font-bold text-gray-900">Nurse Training Hub</h1>
+        </div>
         <p className="text-gray-600">
-          Track your skills, complete training, and grow your career
+          Improve your documentation skills with AI-powered training and practice scenarios
         </p>
       </div>
 
-      {/* Gamification Header */}
-      <GamificationDashboard userEmail={currentUser?.email} compact={true} />
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-700 font-medium">Completed</p>
+                <p className="text-3xl font-bold text-blue-900">{completedCount}</p>
+              </div>
+              <CheckCircle2 className="w-10 h-10 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-      <Tabs defaultValue="achievements" className="space-y-6">
-        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-6 w-full">
-          <TabsTrigger value="achievements" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Trophy className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Achievements</span>
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-700 font-medium">Avg Score</p>
+                <p className="text-3xl font-bold text-green-900">{avgScore.toFixed(0)}%</p>
+              </div>
+              <Award className="w-10 h-10 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-orange-700 font-medium">In Progress</p>
+                <p className="text-3xl font-bold text-orange-900">
+                  {trainingProgress.filter(p => p.status === 'in_progress').length}
+                </p>
+              </div>
+              <TrendingUp className="w-10 h-10 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-purple-700 font-medium">Recommendations</p>
+                <p className="text-3xl font-bold text-purple-900">{recommendations.length}</p>
+              </div>
+              <Target className="w-10 h-10 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Active Recommendations Banner */}
+      {recommendations.length > 0 && (
+        <Card className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-900 mb-1">
+                  You have {recommendations.length} training recommendation{recommendations.length !== 1 ? 's' : ''}
+                </h3>
+                <p className="text-sm text-amber-700">
+                  Complete practice scenarios and quizzes to address these areas: {' '}
+                  {recommendations.slice(0, 3).map(r => r.recommendation_type).join(', ')}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Training Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger value="scenarios" className="flex items-center gap-2 py-3">
+            <FileText className="w-4 h-4" />
+            <span>Practice Scenarios</span>
           </TabsTrigger>
-          <TabsTrigger value="skill-gaps" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Brain className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Skill Gaps</span>
+          <TabsTrigger value="quizzes" className="flex items-center gap-2 py-3">
+            <Brain className="w-4 h-4" />
+            <span>Compliance Quizzes</span>
           </TabsTrigger>
-          <TabsTrigger value="my-training" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <GraduationCap className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Training</span>
+          <TabsTrigger value="progress" className="flex items-center gap-2 py-3">
+            <BarChart3 className="w-4 h-4" />
+            <span>My Progress</span>
           </TabsTrigger>
-          <TabsTrigger value="skills" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Award className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Skills</span>
-          </TabsTrigger>
-          <TabsTrigger value="recommendations" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">AI Recs</span>
-          </TabsTrigger>
-          {isAdmin && (
-            <TabsTrigger value="admin" className="flex-1 min-w-[60px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-              <Building2 className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Admin</span>
-            </TabsTrigger>
-          )}
         </TabsList>
 
-        <TabsContent value="achievements">
-          <GamificationDashboard userEmail={currentUser?.email} />
+        <TabsContent value="scenarios" className="space-y-6">
+          <InteractiveDocumentationScenarios
+            nurseEmail={currentUser?.email}
+            recommendations={recommendations}
+          />
         </TabsContent>
 
-        <TabsContent value="skill-gaps">
-          <SkillGapLearningHub nurseEmail={currentUser?.email} />
+        <TabsContent value="quizzes" className="space-y-6">
+          <AIComplianceQuizGenerator
+            nurseEmail={currentUser?.email}
+            recommendations={recommendations}
+          />
         </TabsContent>
 
-        <TabsContent value="my-training">
-          <MyTrainingDashboard nurseEmail={currentUser?.email} />
+        <TabsContent value="progress" className="space-y-6">
+          <NurseLearningDashboard
+            nurseEmail={currentUser?.email}
+            trainingProgress={trainingProgress}
+            recommendations={recommendations}
+          />
         </TabsContent>
-
-        <TabsContent value="skills">
-          <SkillsTracker nurseEmail={currentUser?.email} />
-        </TabsContent>
-
-        <TabsContent value="recommendations">
-          <div className="space-y-6">
-            <NurseTrainingSuggestions nurseEmail={currentUser?.email} />
-            <TrainingRecommendations nurseEmail={currentUser?.email} />
-          </div>
-        </TabsContent>
-
-        {isAdmin && (
-          <TabsContent value="admin">
-            <AgencyTrainingManager />
-          </TabsContent>
-        )}
       </Tabs>
     </div>
   );
