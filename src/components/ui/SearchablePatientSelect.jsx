@@ -158,11 +158,12 @@ export default function SearchablePatientSelect({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild disabled={false}>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          disabled={false}
           className={cn(
             "w-full justify-between h-11 md:h-12 text-base",
             !value && "text-muted-foreground",
