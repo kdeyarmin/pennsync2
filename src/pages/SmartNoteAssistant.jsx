@@ -390,7 +390,7 @@ Return JSON:
       setEnhancedNote(result.enhanced_note);
       setAuditResults(result);
 
-      // Log note enhancement activity
+      // Log note enhancement activity - counts as AI utilization
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
         visit_type: visitType,
@@ -399,7 +399,8 @@ Return JSON:
         rough_note_length: roughNote.length,
         enhanced_note_length: result.enhanced_note?.length,
         quality_score: result.quality_score,
-        page: 'SmartNoteAssistant'
+        page: 'SmartNoteAssistant',
+        ai_utilization: true // Flag for analytics tracking
       });
 
       // Track note conversion for admin reporting
