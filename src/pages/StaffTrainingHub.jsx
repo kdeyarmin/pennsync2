@@ -29,6 +29,7 @@ import TargetedLessonGenerator from "../components/training/TargetedLessonGenera
 import AIPersonalizedTrainingPlan from "../components/training/AIPersonalizedTrainingPlan";
 import AIInteractiveQuiz from "../components/training/AIInteractiveQuiz";
 import AIPatientSimulation from "../components/training/AIPatientSimulation";
+import SkillGapRemediationSection from "../components/training/SkillGapRemediationSection";
 
 export default function StaffTrainingHub() {
   const queryClient = useQueryClient();
@@ -176,13 +177,17 @@ export default function StaffTrainingHub() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full mb-6">
+        <TabsList className="grid grid-cols-6 w-full mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="myplan" className="flex items-center gap-2">
+          <TabsTrigger value="remediation" className="flex items-center gap-2">
             <Target className="w-4 h-4" />
+            <span className="hidden sm:inline">Remediation</span>
+          </TabsTrigger>
+          <TabsTrigger value="myplan" className="flex items-center gap-2">
+            <Star className="w-4 h-4" />
             <span className="hidden sm:inline">My Plan</span>
           </TabsTrigger>
           <TabsTrigger value="learn" className="flex items-center gap-2">
@@ -198,6 +203,14 @@ export default function StaffTrainingHub() {
             <span className="hidden sm:inline">Simulate</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Skill Gap Remediation Tab */}
+        <TabsContent value="remediation">
+          <SkillGapRemediationSection
+            nurseEmail={currentUser?.email}
+            onComplete={() => queryClient.invalidateQueries({ queryKey: ['trainingProgress'] })}
+          />
+        </TabsContent>
 
         {/* My Plan Tab - AI-Powered Personalized Training */}
         <TabsContent value="myplan">
