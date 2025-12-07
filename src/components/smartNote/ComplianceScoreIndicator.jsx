@@ -29,7 +29,10 @@ import {
   FileText,
   Zap,
   Info,
-  BookOpen
+  BookOpen,
+  ExternalLink,
+  GraduationCap,
+  Search
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -72,6 +75,7 @@ export default function ComplianceScoreIndicator({
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [selectedEnhancedIssues, setSelectedEnhancedIssues] = useState(new Set());
   const [isFixingAll, setIsFixingAll] = useState(false);
+  const [highlightedText, setHighlightedText] = useState(null);
 
   // Condition-specific assessment requirements
   const conditionSpecificAssessments = {
@@ -168,6 +172,70 @@ export default function ComplianceScoreIndicator({
     };
     
     return [...new Set(detected.map(c => aliasMap[c] || c))];
+  };
+
+  // Educational resources mapping
+  const educationalResources = {
+    "HOMEBOUND STATUS": {
+      title: "Medicare Homebound Requirements",
+      links: [
+        { text: "CMS Homebound Status Guidelines", url: "https://www.cms.gov/medicare/payment/fee-schedules/home-health-pps" },
+        { text: "What Qualifies as Homebound?", url: "https://www.cms.gov/Outreach-and-Education/Medicare-Learning-Network-MLN/MLNProducts/Downloads/HomeHealthAgencyBene-FactSheet-ICN908804.pdf" }
+      ],
+      keyPoints: [
+        "Patient unable to leave home without considerable and taxing effort",
+        "Absences from home must be infrequent and of short duration",
+        "Document specific physical limitations and barriers to leaving home",
+        "Use measurable criteria (distance, assistance level, symptoms)"
+      ]
+    },
+    "SKILLED NEED": {
+      title: "Skilled Nursing Medical Necessity",
+      links: [
+        { text: "Medicare Skilled Nursing Requirements", url: "https://www.cms.gov/medicare/payment/fee-schedules/home-health-pps" },
+        { text: "Documenting Skilled Care", url: "https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/Downloads/bp102c07.pdf" }
+      ],
+      keyPoints: [
+        "Must require skills of a licensed nurse",
+        "Cannot be safely performed by non-professional personnel",
+        "Document clinical judgment and assessment skills",
+        "Show complexity of patient's condition and care needs"
+      ]
+    },
+    "PATIENT RESPONSE": {
+      title: "Patient/Caregiver Teaching Documentation",
+      links: [
+        { text: "Teach-Back Method Requirements", url: "https://www.ahrq.gov/health-literacy/improve/precautions/tool2b.html" }
+      ],
+      keyPoints: [
+        "Document specific teaching provided",
+        "Use teach-back method to verify understanding",
+        "Include patient's verbalization or demonstration",
+        "Note barriers to learning and follow-up plan"
+      ]
+    },
+    "VITAL SIGNS": {
+      title: "Clinical Assessment Documentation",
+      links: [
+        { text: "Home Health Documentation Standards", url: "https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/Downloads/bp102c07.pdf" }
+      ],
+      keyPoints: [
+        "Document complete set of vital signs",
+        "Include condition-specific measurements",
+        "Compare to baseline and previous visits",
+        "Note clinical significance of findings"
+      ]
+    }
+  };
+
+  const getEducationalResource = (elementName) => {
+    const normalized = elementName.toUpperCase();
+    for (const [key, resource] of Object.entries(educationalResources)) {
+      if (normalized.includes(key) || key.includes(normalized.split(' ')[0])) {
+        return resource;
+      }
+    }
+    return null;
   };
 
   // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
@@ -841,28 +909,96 @@ Return JSON:
                   </div>
                   {element.status !== 'present' && (
                     <div className="px-2 pb-2 space-y-2">
-                      {/* Granular explanation section */}
+                      {/* Granular explanation section with educational resources */}
                       <div className="bg-slate-50 p-2 rounded text-xs border border-slate-200">
                         <div className="flex items-center gap-1 mb-1.5">
                           <Info className="w-3 h-3 text-slate-600" />
                           <p className="font-semibold text-slate-700">Why this matters:</p>
                         </div>
-                        <p className="text-slate-600 leading-relaxed">
+                        <p className="text-slate-600 leading-relaxed mb-2">
                           {element.status === 'missing' 
                             ? `This element is completely missing from your documentation. Medicare auditors specifically look for "${element.name.toLowerCase()}" documentation to verify medical necessity and skilled care requirements.`
                             : `This element is partially documented but lacks the specificity required for Medicare compliance. Vague or incomplete documentation can result in claim denials.`
                           }
                         </p>
+                        {(() => {
+                          const resource = getEducationalResource(element.name);
+                          if (resource) {
+                            return (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-1 pt-2 border-t border-slate-300">
+                                  <GraduationCap className="w-3 h-3 text-indigo-600" />
+                                  <p className="font-semibold text-indigo-700">{resource.title}:</p>
+                                </div>
+                                <ul className="space-y-1 ml-4">
+                                  {resource.keyPoints.slice(0, 2).map((point, i) => (
+                                    <li key={i} className="text-slate-600 text-[10px] flex items-start gap-1">
+                                      <span className="text-indigo-500 mt-0.5">•</span>
+                                      <span>{point}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                  {resource.links.map((link, i) => (
+                                    <a
+                                      key={i}
+                                      href={link.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                      {link.text}
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
 
-                      {/* Problematic phrasing callout */}
+                      {/* Problematic phrasing callout with highlighting */}
                       {element.problematic_phrasing && (
                         <div className="bg-red-50 p-2 rounded text-xs border border-red-200">
                           <p className="font-medium text-red-800 mb-1 flex items-center gap-1">
-                            <Ban className="w-3 h-3" /> Non-compliant phrasing found:
+                            <Search className="w-3 h-3" /> Non-compliant text identified:
                           </p>
-                          <p className="text-red-700 italic mb-1">"{element.problematic_phrasing}"</p>
-                          <p className="text-red-600 text-[10px]">This phrasing doesn't meet Medicare's documentation standards because it lacks measurable, objective clinical data.</p>
+                          <div className="bg-red-100 p-2 rounded mb-2 border border-red-300">
+                            <p className="text-red-900 font-mono text-[11px] italic">"{element.problematic_phrasing}"</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-red-700 text-[10px] font-semibold">Why this fails compliance:</p>
+                            <ul className="ml-3 space-y-0.5">
+                              <li className="text-red-600 text-[10px] flex items-start gap-1">
+                                <XCircle className="w-2.5 h-2.5 mt-0.5 flex-shrink-0" />
+                                Lacks measurable, objective clinical data
+                              </li>
+                              <li className="text-red-600 text-[10px] flex items-start gap-1">
+                                <XCircle className="w-2.5 h-2.5 mt-0.5 flex-shrink-0" />
+                                Too vague for Medicare audit requirements
+                              </li>
+                              <li className="text-red-600 text-[10px] flex items-start gap-1">
+                                <XCircle className="w-2.5 h-2.5 mt-0.5 flex-shrink-0" />
+                                Doesn't support medical necessity
+                              </li>
+                            </ul>
+                          </div>
+                          {element.found_text && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 text-[10px] text-red-700 hover:text-red-900 hover:bg-red-100 mt-2 w-full"
+                              onClick={() => {
+                                setHighlightedText(element.found_text);
+                                setTimeout(() => setHighlightedText(null), 5000);
+                              }}
+                            >
+                              <Search className="w-2.5 h-2.5 mr-1" />
+                              Highlight in note
+                            </Button>
+                          )}
                         </div>
                       )}
                       
@@ -1119,12 +1255,31 @@ Return JSON:
                             )}
                           </div>
                           
-                          {/* Granular explanation */}
+                          {/* Granular explanation with educational link */}
                           {!isInserted && (
                             <div className="mt-1.5 bg-white/50 p-2 rounded border border-gray-200">
                               <div className="flex items-start gap-1.5">
                                 <FileText className="w-3 h-3 mt-0.5 text-gray-500 flex-shrink-0" />
-                                <p className="text-xs text-gray-700 leading-relaxed">{getGranularExplanation()}</p>
+                                <div className="flex-1">
+                                  <p className="text-xs text-gray-700 leading-relaxed mb-1.5">{getGranularExplanation()}</p>
+                                  {(() => {
+                                    const resource = getEducationalResource(issue.element);
+                                    if (resource && resource.links.length > 0) {
+                                      return (
+                                        <a
+                                          href={resource.links[0].url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 hover:underline"
+                                        >
+                                          <ExternalLink className="w-2.5 h-2.5" />
+                                          Learn more about {issue.element.toLowerCase()}
+                                        </a>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
                               </div>
                             </div>
                           )}
@@ -1137,14 +1292,67 @@ Return JSON:
                             </p>
                           )}
 
-                          {/* Show suggestion preview */}
+                          {/* Show suggestion preview with copy functionality */}
                           {!isInserted && (
                             <div className="mt-2 bg-green-50 p-2 rounded border border-green-200">
-                              <p className="text-xs font-medium text-green-800 mb-1 flex items-center gap-1">
-                                <Zap className="w-3 h-3" />
-                                AI-Generated Fix:
-                              </p>
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="text-xs font-medium text-green-800 flex items-center gap-1">
+                                  <Zap className="w-3 h-3" />
+                                  AI-Generated Compliant Text:
+                                </p>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(suggestionText);
+                                    setCopiedIdx(idx);
+                                    setTimeout(() => setCopiedIdx(null), 2000);
+                                  }}
+                                  title="Copy suggestion"
+                                >
+                                  {copiedIdx === idx ? (
+                                    <Check className="w-3 h-3 text-green-600" />
+                                  ) : (
+                                    <Copy className="w-3 h-3 text-green-700" />
+                                  )}
+                                </Button>
+                              </div>
                               <p className="text-xs text-green-900 whitespace-pre-wrap line-clamp-3">{suggestionText}</p>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-5 text-[10px] text-green-700 hover:text-green-900 hover:bg-green-100 mt-1 w-full"
+                                  >
+                                    View full suggestion
+                                    <ChevronDown className="w-2.5 h-2.5 ml-1" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-96 max-h-96 overflow-y-auto" align="start">
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-semibold text-gray-700">Full Compliant Text:</p>
+                                    <p className="text-xs text-gray-800 whitespace-pre-wrap">{suggestionText}</p>
+                                    <Button
+                                      size="sm"
+                                      className="w-full"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(suggestionText);
+                                        setCopiedIdx(idx);
+                                        setTimeout(() => setCopiedIdx(null), 2000);
+                                      }}
+                                    >
+                                      {copiedIdx === idx ? (
+                                        <><Check className="w-3 h-3 mr-1" /> Copied!</>
+                                      ) : (
+                                        <><Copy className="w-3 h-3 mr-1" /> Copy to Clipboard</>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
                             </div>
                           )}
                         </div>
