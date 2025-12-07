@@ -20,6 +20,7 @@ import {
 import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
 import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
 import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
+import PersonalizedTrainingRecommender from "../components/training/PersonalizedTrainingRecommender";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function NurseTraining() {
@@ -144,20 +145,33 @@ export default function NurseTraining() {
 
       {/* Main Training Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="personalized" className="flex items-center gap-2 py-3">
+            <Target className="w-4 h-4" />
+            <span>For You</span>
+          </TabsTrigger>
           <TabsTrigger value="scenarios" className="flex items-center gap-2 py-3">
             <FileText className="w-4 h-4" />
-            <span>Practice Scenarios</span>
+            <span>Scenarios</span>
           </TabsTrigger>
           <TabsTrigger value="quizzes" className="flex items-center gap-2 py-3">
             <Brain className="w-4 h-4" />
-            <span>Compliance Quizzes</span>
+            <span>Quizzes</span>
           </TabsTrigger>
           <TabsTrigger value="progress" className="flex items-center gap-2 py-3">
             <BarChart3 className="w-4 h-4" />
-            <span>My Progress</span>
+            <span>Progress</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="personalized" className="space-y-6">
+          <PersonalizedTrainingRecommender
+            nurseEmail={currentUser?.email}
+            onStartTraining={(area, module) => {
+              setActiveTab('scenarios');
+            }}
+          />
+        </TabsContent>
 
         <TabsContent value="scenarios" className="space-y-6">
           <InteractiveDocumentationScenarios
