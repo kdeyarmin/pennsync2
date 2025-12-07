@@ -50,6 +50,7 @@ export default function Layout({ children, currentPageName }) {
 
   const navItems = [
     { name: "Dashboard", icon: Home, page: "Dashboard" },
+    { name: "Patient Dashboard", icon: BarChart3, page: "PatientDashboard" },
     { name: "Patients", icon: Users, page: "Patients" },
     { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
     { name: "OASIS Analyzer", icon: ClipboardList, page: "OASISAnalyzer" },

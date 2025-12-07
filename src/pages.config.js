@@ -30,6 +30,7 @@ import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
 import UserActivityLog from './pages/UserActivityLog';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import PatientDataManagement from './pages/PatientDataManagement';
+import PatientDashboard from './pages/PatientDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -66,6 +67,7 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
     "PatientDataManagement": PatientDataManagement,
+    "PatientDashboard": PatientDashboard,
 }
 
 export const pagesConfig = {
