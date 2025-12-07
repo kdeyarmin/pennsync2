@@ -192,6 +192,12 @@ export default function NurseTraining() {
             nurseEmail={currentUser?.email}
             trainingProgress={trainingProgress}
             recommendations={recommendations}
+            onStartScenario={(scenarioId) => {
+              setActiveTab('scenarios');
+            }}
+            onStartQuiz={(quizId) => {
+              setActiveTab('quizzes');
+            }}
           />
         </TabsContent>
       </Tabs>

@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import {
   BarChart3,
   TrendingUp,
@@ -11,15 +12,35 @@ import {
   CheckCircle2,
   Clock,
   Brain,
-  FileText
+  FileText,
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import { format } from "date-fns";
+import { analyzeNurseDeficits } from "./DeficitAnalyzer";
 
 export default function NurseLearningDashboard({ 
   nurseEmail, 
   trainingProgress = [], 
-  recommendations = [] 
+  recommendations = [],
+  onStartScenario,
+  onStartQuiz
 }) {
+  const [deficitAnalysis, setDeficitAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    if (nurseEmail) {
+      loadDeficitAnalysis();
+    }
+  }, [nurseEmail]);
+
+  const loadDeficitAnalysis = async () => {
+    setIsAnalyzing(true);
+    const analysis = await analyzeNurseDeficits(nurseEmail);
+    setDeficitAnalysis(analysis);
+    setIsAnalyzing(false);
+  };
   // Calculate statistics
   const totalCompleted = trainingProgress.filter(p => p.status === 'completed').length;
   const totalInProgress = trainingProgress.filter(p => p.status === 'in_progress').length;
@@ -59,6 +80,106 @@ export default function NurseLearningDashboard({
 
   return (
     <div className="space-y-6">
+      {/* AI-Identified Deficits with Auto-Recommendations */}
+      {deficitAnalysis?.deficits && deficitAnalysis.deficits.length > 0 && (
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              AI-Detected Documentation Patterns
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white/70 p-3 rounded-lg border border-purple-200">
+              <p className="text-sm text-purple-900 mb-2">
+                Based on {deficitAnalysis.totalSuggestions} AI suggestions from your recent documentation, 
+                we've identified areas where additional training could strengthen your skills:
+              </p>
+            </div>
+
+            {deficitAnalysis.deficits.map((deficit, idx) => (
+              <Card key={idx} className="bg-white hover:shadow-md transition-all">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-lg capitalize">{deficit.category}</h4>
+                        <Badge className={
+                          deficit.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                          deficit.severity === 'high' ? 'bg-orange-100 text-orange-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }>
+                          {deficit.count} AI suggestions
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        AI has provided assistance in this area {deficit.count} times across your recent notes
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Recent examples */}
+                  {deficit.examples.length > 0 && (
+                    <div className="mb-3 space-y-1">
+                      <p className="text-xs font-semibold text-gray-700">Recent examples:</p>
+                      {deficit.examples.slice(0, 2).map((ex, i) => (
+                        <p key={i} className="text-xs text-gray-600 italic pl-3 border-l-2 border-gray-200">
+                          "{ex.text.substring(0, 100)}..." - from {ex.source}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Auto-recommended training */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-200">
+                    <p className="text-xs font-semibold text-blue-900 mb-2 flex items-center gap-1">
+                      <Target className="w-3 h-3" />
+                      Recommended Training:
+                    </p>
+                    <div className="space-y-2">
+                      {deficitAnalysis.recommendations
+                        .find(r => r.category === deficit.category)
+                        ?.suggestedScenarios.slice(0, 2).map((scenarioId, i) => (
+                          <Button
+                            key={i}
+                            size="sm"
+                            variant="outline"
+                            className="w-full justify-between text-xs"
+                            onClick={() => onStartScenario?.(scenarioId)}
+                          >
+                            <span className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              Practice: {scenarioId.replace(/_/g, ' ')}
+                            </span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Button>
+                        ))}
+                      {deficitAnalysis.recommendations
+                        .find(r => r.category === deficit.category)
+                        ?.suggestedQuizzes.slice(0, 1).map((quizId, i) => (
+                          <Button
+                            key={i}
+                            size="sm"
+                            variant="outline"
+                            className="w-full justify-between text-xs"
+                            onClick={() => onStartQuiz?.(quizId)}
+                          >
+                            <span className="flex items-center gap-1">
+                              <Brain className="w-3 h-3" />
+                              Quiz: {quizId.replace(/_/g, ' ')}
+                            </span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Button>
+                        ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
