@@ -71,6 +71,7 @@ import PatientMatchSelector from "../components/oasis/PatientMatchSelector";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import InlineDocumentationAssistant from "../components/oasis/InlineDocumentationAssistant";
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
+import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1596,6 +1597,16 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
 
           {/* Key Takeaways Summary - Most Important */}
           <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
+
+          {/* Automatic Document Review for OASIS */}
+          <AutomaticDocumentReviewer
+            documentType="oasis_assessment"
+            documentContent={JSON.stringify(pdgmData, null, 2)}
+            patientData={patients.find(p => p.id === selectedPatientId)}
+            diagnosis={pdgmData?.primary_diagnosis}
+            autoReview={true}
+            compact={false}
+          />
 
           {/* Score Overview */}
           <Card>

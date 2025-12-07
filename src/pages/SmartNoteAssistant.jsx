@@ -72,6 +72,7 @@ import OASISTriggeredTemplates from "../components/smartNote/OASISTriggeredTempl
 import OASISItemLinker from "../components/smartNote/OASISItemLinker";
 import AIDocumentationSuggester from "../components/smartNote/AIDocumentationSuggester";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -858,48 +859,62 @@ Return JSON:
 
           {/* Step 4: Enhanced Note with Rich Text Editor */}
           {enhancedNote && (
-            <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  4. Enhanced Note
-                  <span className="text-xs text-gray-500 font-normal ml-auto">Click Edit to modify • Ctrl+Z to undo</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <RichTextNoteEditor
-                  value={enhancedNote}
-                  onChange={setEnhancedNote}
-                  onCopy={() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  copied={copied}
-                  qualityScore={auditResults?.quality_score}
-                />
-                <div className="flex gap-3 mt-4">
-                  <Alert className="bg-green-100 border-green-300 flex-1">
+            <>
+              <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    <AlertDescription className="text-green-800">
-                      Ready to copy into your EHR system!
-                    </AlertDescription>
-                  </Alert>
-                  <Button 
-                    onClick={handleSaveNote} 
-                    disabled={isSaving || savedSuccessfully}
-                    className="bg-blue-600 hover:bg-blue-700 gap-2"
-                  >
-                    {isSaving ? (
-                      <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Saving...</>
-                    ) : savedSuccessfully ? (
-                      <><CheckCircle2 className="w-4 h-4" /> Saved!</>
-                    ) : (
-                      <><Save className="w-4 h-4" /> Save to Chart</>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                    4. Enhanced Note
+                    <span className="text-xs text-gray-500 font-normal ml-auto">Click Edit to modify • Ctrl+Z to undo</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <RichTextNoteEditor
+                    value={enhancedNote}
+                    onChange={setEnhancedNote}
+                    onCopy={() => {
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    copied={copied}
+                    qualityScore={auditResults?.quality_score}
+                  />
+                  <div className="flex gap-3 mt-4">
+                    <Alert className="bg-green-100 border-green-300 flex-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <AlertDescription className="text-green-800">
+                        Ready to copy into your EHR system!
+                      </AlertDescription>
+                    </Alert>
+                    <Button 
+                      onClick={handleSaveNote} 
+                      disabled={isSaving || savedSuccessfully}
+                      className="bg-blue-600 hover:bg-blue-700 gap-2"
+                    >
+                      {isSaving ? (
+                        <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Saving...</>
+                      ) : savedSuccessfully ? (
+                        <><CheckCircle2 className="w-4 h-4" /> Saved!</>
+                      ) : (
+                        <><Save className="w-4 h-4" /> Save to Chart</>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Automatic Document Review */}
+              <AutomaticDocumentReviewer
+                documentType="visit_note"
+                documentContent={enhancedNote}
+                patientData={selectedPatient}
+                vitalSigns={vitalSigns}
+                diagnosis={finalDiagnosis}
+                visitType={visitType}
+                autoReview={true}
+                onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+              />
+            </>
           )}
 
           {/* Additional Tools */}
