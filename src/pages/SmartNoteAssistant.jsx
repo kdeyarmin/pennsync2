@@ -115,13 +115,13 @@ function VoiceHub({ onTranscription }) {
 
   return (
     <Button
-      size="sm"
+      size="default"
       variant={listening ? "destructive" : "outline"}
       onClick={listening ? () => setListening(false) : startListening}
-      className="gap-1"
+      className="gap-2 min-h-[44px] px-4 flex-shrink-0"
     >
-      {listening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-      {listening ? 'Stop Dictation' : 'Dictate'}
+      {listening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
+      <span className="text-sm md:text-base">{listening ? 'Stop' : 'Dictate'}</span>
     </Button>
   );
 }
@@ -507,28 +507,28 @@ Return JSON:
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="mb-4 flex items-start sm:items-center justify-between gap-2">
-        <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 md:mb-6 flex items-center justify-between gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
           {currentStep !== 'patient' && (
             <Button 
               variant="outline" 
-              size="sm" 
+              size="default"
               onClick={handleGoBack}
-              className="gap-1 text-gray-600 hover:text-gray-900 flex-shrink-0"
+              className="gap-1 text-gray-600 hover:text-gray-900 flex-shrink-0 min-h-[44px] px-3"
             >
-              <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back</span>
+              <ChevronLeft className="w-5 h-5" />
+              <span className="hidden md:inline">Back</span>
             </Button>
           )}
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Smart Note Assistant</h1>
-            <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Transform rough notes into Medicare-compliant documentation</p>
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Smart Note Assistant</h1>
+            <p className="text-sm md:text-base text-gray-600 hidden md:block">Transform rough notes into Medicare-compliant documentation</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" className="text-gray-500 gap-1 flex-shrink-0">
-          <HelpCircle className="w-4 h-4" />
-          <span className="hidden lg:inline">Help</span>
+        <Button variant="ghost" size="default" className="text-gray-500 gap-1 flex-shrink-0 min-h-[44px]">
+          <HelpCircle className="w-5 h-5" />
+          <span className="hidden xl:inline">Help</span>
         </Button>
       </div>
 
@@ -590,81 +590,87 @@ Return JSON:
         </>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="lg:col-span-3 space-y-3 sm:space-y-4">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
+        <div className="xl:col-span-3 space-y-4 md:space-y-6">
           
           {/* Step 1: Patient Selection */}
           <Card id="step-patient" className={`border-2 ${currentStep === 'patient' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
-            <CardHeader className="py-3 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <User className="w-4 h-4 text-blue-600" />
+            <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
                 1. Select Patient & Visit Type
-                {selectedPatient && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
+                {selectedPatient && <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto" />}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <CardContent className="p-4 md:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <div>
-                  <Label className="text-xs">Patient</Label>
+                  <Label className="text-sm md:text-base mb-2 block">Patient</Label>
                   <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-                    <SelectTrigger><SelectValue placeholder="Select patient..." /></SelectTrigger>
-                    <SelectContent position="popper" className="z-[200] max-h-[300px] overflow-y-auto">
+                    <SelectTrigger className="h-11 md:h-12 text-base"><SelectValue placeholder="Select patient..." /></SelectTrigger>
+                    <SelectContent position="popper" className="z-[200] max-h-[400px] overflow-y-auto">
                       {patients.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
+                        <SelectItem key={p.id} value={p.id} className="text-base py-3">{p.first_name} {p.last_name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">Visit Date</Label>
+                  <Label className="text-sm md:text-base mb-2 block">Visit Date</Label>
                   <Input 
                     type="date" 
                     value={visitDate} 
                     onChange={(e) => setVisitDate(e.target.value)}
                     max={new Date().toISOString().split('T')[0]}
+                    className="h-11 md:h-12 text-base"
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Visit Type</Label>
+                  <Label className="text-sm md:text-base mb-2 block">Visit Type</Label>
                   <Select value={visitType} onValueChange={setVisitType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11 md:h-12 text-base"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admission">Admission</SelectItem>
-                      <SelectItem value="routine_visit">Routine Visit</SelectItem>
-                      <SelectItem value="recertification">Recertification</SelectItem>
-                      <SelectItem value="discharge">Discharge</SelectItem>
-                      <SelectItem value="prn">PRN Visit</SelectItem>
+                      <SelectItem value="admission" className="text-base py-3">Admission</SelectItem>
+                      <SelectItem value="routine_visit" className="text-base py-3">Routine Visit</SelectItem>
+                      <SelectItem value="recertification" className="text-base py-3">Recertification</SelectItem>
+                      <SelectItem value="discharge" className="text-base py-3">Discharge</SelectItem>
+                      <SelectItem value="prn" className="text-base py-3">PRN Visit</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">Diagnosis</Label>
+                  <Label className="text-sm md:text-base mb-2 block">Diagnosis</Label>
                   <Select value={diagnosis} onValueChange={setDiagnosis}>
-                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectTrigger className="h-11 md:h-12 text-base"><SelectValue placeholder="Select..." /></SelectTrigger>
                     <SelectContent>
                       {commonDiagnoses.map((dx) => (
-                        <SelectItem key={dx} value={dx}>{dx}</SelectItem>
+                        <SelectItem key={dx} value={dx} className="text-base py-3">{dx}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               {diagnosis === "Custom (type below)" && (
-                <Input placeholder="Enter custom diagnosis" value={customDiagnosis} onChange={(e) => setCustomDiagnosis(e.target.value)} />
+                <Input 
+                  placeholder="Enter custom diagnosis" 
+                  value={customDiagnosis} 
+                  onChange={(e) => setCustomDiagnosis(e.target.value)}
+                  className="h-11 md:h-12 text-base"
+                />
               )}
             </CardContent>
           </Card>
 
           {/* Step 2: Vitals */}
           <Card id="step-vitals" className={`border-2 ${currentStep === 'vitals' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
-            <CardHeader className="py-3 bg-gradient-to-r from-green-50 to-emerald-50">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Activity className="w-4 h-4 text-green-600" />
+            <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-green-50 to-emerald-50">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <Activity className="w-5 h-5 text-green-600" />
                 2. Vital Signs
-                {(vitalSigns.bp || vitalSigns.hr) && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
+                {(vitalSigns.bp || vitalSigns.hr) && <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto" />}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-4 md:p-6">
               <SmartVitalsInput 
                 vitalSigns={vitalSigns} 
                 onChange={setVitalSigns} 
@@ -674,17 +680,17 @@ Return JSON:
 
           {/* Step 3: Notes */}
           <Card id="step-notes" className={`border-2 ${currentStep === 'notes' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
-            <CardHeader className="py-3 bg-gradient-to-r from-purple-50 to-pink-50">
-              <CardTitle className="text-sm flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Wand2 className="w-4 h-4 text-purple-600" />
-                  3. Your Notes
-                  {roughNote.length >= 20 && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+            <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-purple-50 to-pink-50">
+              <CardTitle className="text-base md:text-lg flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Wand2 className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                  <span className="truncate">3. Your Notes</span>
+                  {roughNote.length >= 20 && <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />}
                 </div>
                 <VoiceHub onTranscription={handleVoiceTranscription} />
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-4 md:p-6 space-y-4">
               {/* Smart auto-complete textarea with phrase categories */}
               <SmartAutoComplete
                 value={roughNote}
@@ -695,24 +701,24 @@ Return JSON:
               />
               
               {/* Character count with progress indicator */}
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <p className={`text-xs ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                  <p className={`text-sm ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
                     {roughNote.length} characters
                   </p>
                   {roughNote.length < 20 && roughNote.length > 0 && (
-                    <p className="text-xs text-orange-500">(min 20 to enhance)</p>
+                    <p className="text-sm text-orange-500">(min 20 to enhance)</p>
                   )}
                 </div>
                 <Button
                   onClick={handleEnhanceNote}
                   disabled={isProcessing || roughNote.length < 20}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto h-11 md:h-12 text-base"
                 >
                   {isProcessing ? (
-                    <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Enhancing...</>
+                    <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Enhancing...</>
                   ) : (
-                    <><Sparkles className="w-4 h-4 mr-2" /> Enhance with AI</>
+                    <><Sparkles className="w-5 h-5 mr-2" /> Enhance with AI</>
                   )}
                 </Button>
               </div>
@@ -845,14 +851,16 @@ Return JSON:
           {enhancedNote && (
             <>
               <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    4. Enhanced Note
-                    <span className="text-xs text-gray-500 font-normal ml-auto">Click Edit to modify • Ctrl+Z to undo</span>
+                <CardHeader className="py-4 md:py-5">
+                  <CardTitle className="text-base md:text-lg flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      <span>4. Enhanced Note</span>
+                    </div>
+                    <span className="text-xs md:text-sm text-gray-500 font-normal sm:ml-auto">Click Edit to modify • Ctrl+Z to undo</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
+                <CardContent className="p-4 md:p-6">
                   <RichTextNoteEditor
                     value={enhancedNote}
                     onChange={setEnhancedNote}
@@ -863,24 +871,24 @@ Return JSON:
                     copied={copied}
                     qualityScore={auditResults?.quality_score}
                   />
-                  <div className="flex gap-3 mt-4">
+                  <div className="flex flex-col md:flex-row gap-3 md:gap-4 mt-4">
                     <Alert className="bg-green-100 border-green-300 flex-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      <AlertDescription className="text-green-800">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      <AlertDescription className="text-green-800 text-sm md:text-base">
                         Ready to copy into your EHR system!
                       </AlertDescription>
                     </Alert>
                     <Button 
                       onClick={handleSaveNote} 
                       disabled={isSaving || savedSuccessfully}
-                      className="bg-blue-600 hover:bg-blue-700 gap-2"
+                      className="bg-blue-600 hover:bg-blue-700 gap-2 w-full md:w-auto h-11 md:h-12 text-base"
                     >
                       {isSaving ? (
-                        <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Saving...</>
+                        <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> Saving...</>
                       ) : savedSuccessfully ? (
-                        <><CheckCircle2 className="w-4 h-4" /> Saved!</>
+                        <><CheckCircle2 className="w-5 h-5" /> Saved!</>
                       ) : (
-                        <><Save className="w-4 h-4" /> Save to Chart</>
+                        <><Save className="w-5 h-5" /> Save to Chart</>
                       )}
                     </Button>
                   </div>
@@ -952,7 +960,7 @@ Return JSON:
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-4 md:space-y-6">
           <ContextualAITools
             currentStep={currentStep}
             hasPatient={!!selectedPatientId}
