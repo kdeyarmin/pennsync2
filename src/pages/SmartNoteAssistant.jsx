@@ -78,6 +78,7 @@ import { todayEastern } from "../components/utils/timezone";
 import AIFeedbackPanel from "../components/smartNote/AIFeedbackPanel";
 import PDGMDocumentationImpactAnalyzer from "../components/pdgm/PDGMDocumentationImpactAnalyzer";
 import CaseMixOptimizationPanel from "../components/pdgm/CaseMixOptimizationPanel";
+import OASISDataDisplay from "../components/patient/OASISDataDisplay";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -269,6 +270,37 @@ export default function SmartNoteAssistant() {
     enabled: !!selectedPatientId,
   });
 
+  // Extract comprehensive OASIS context
+  const oasisContext = React.useMemo(() => {
+    if (!patientOASIS || patientOASIS.length === 0) return null;
+
+    const latest = patientOASIS[0];
+    const pdgm = latest.pdgm_data || {};
+    const extracted = latest.extracted_data || {};
+
+    return {
+      assessmentDate: latest.created_date,
+      admissionSource: pdgm.admission_source || extracted.admission_source,
+      clinicalGroup: pdgm.clinical_grouping || extracted.clinical_group,
+      functionalLevel: pdgm.functional_impairment_level || extracted.functional_level,
+      comorbidities: Array.isArray(pdgm.comorbidity_level) ? pdgm.comorbidity_level : 
+                    Array.isArray(extracted.comorbidities) ? extracted.comorbidities : [],
+      primaryDiagnosis: extracted.primary_diagnosis || pdgm.primary_diagnosis,
+      secondaryDiagnoses: extracted.secondary_diagnoses || [],
+      medications: extracted.medications || [],
+      admissionReason: extracted.admission_reason,
+      priorHospitalization: extracted.prior_hospitalization,
+      livingArrangement: extracted.living_arrangement,
+      visionStatus: extracted.vision,
+      hearingStatus: extracted.hearing,
+      painLevel: extracted.pain_frequency,
+      fallRisk: extracted.fall_risk,
+      cognitiveStatus: extracted.cognitive_functioning,
+      adlStatus: extracted.adl_limitations || {},
+      iadlStatus: extracted.iadl_limitations || {}
+    };
+  }, [patientOASIS]);
+
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   
   // Auto-fill diagnosis when patient is selected
@@ -375,17 +407,51 @@ export default function SmartNoteAssistant() {
       ACTIVE CARE PLAN GOALS:
       ${carePlans.filter(cp => cp.status === 'active').map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- No active care plans'}
 
-      OASIS DATA AVAILABLE:
-      ${patientOASIS.length > 0 ? `- OASIS assessment from ${patientOASIS[0].created_date} with PDGM data available` : '- No OASIS data on file'}
+      OASIS ASSESSMENT DATA (Synced):
+      ${oasisContext ? `
+      - Assessment Date: ${formatEastern(oasisContext.assessmentDate, 'MMM d, yyyy')}
+      - Admission Source: ${oasisContext.admissionSource === '1' || oasisContext.admissionSource?.toLowerCase().includes('community') ? 'Community (home)' : oasisContext.admissionSource === '2' || oasisContext.admissionSource?.toLowerCase().includes('institutional') ? 'Institutional (hospital/SNF discharge)' : oasisContext.admissionSource || 'Unknown'}
+      - Clinical Group: ${oasisContext.clinicalGroup || 'Not specified'}
+      - Functional Impairment Level: ${oasisContext.functionalLevel || 'Not specified'}
+      - Documented Comorbidities: ${oasisContext.comorbidities.length > 0 ? oasisContext.comorbidities.join(', ') : 'None listed'}
+      - OASIS Primary Diagnosis: ${oasisContext.primaryDiagnosis || 'Not specified'}
+      - Secondary Diagnoses: ${oasisContext.secondaryDiagnoses.length > 0 ? oasisContext.secondaryDiagnoses.join(', ') : 'None'}
+      - Current Medications: ${oasisContext.medications.length > 0 ? oasisContext.medications.slice(0, 5).join(', ') + (oasisContext.medications.length > 5 ? ` and ${oasisContext.medications.length - 5} more` : '') : 'Not documented'}
+      - Admission Reason: ${oasisContext.admissionReason || 'Not specified'}
+      - Living Arrangement: ${oasisContext.livingArrangement || 'Not specified'}
+      - Cognitive Status: ${oasisContext.cognitiveStatus || 'Not assessed'}
+      - Fall Risk: ${oasisContext.fallRisk || 'Not assessed'}
+      - Pain Frequency: ${oasisContext.painLevel || 'Not assessed'}
+      - Vision Status: ${oasisContext.visionStatus || 'Not assessed'}
+      - Hearing Status: ${oasisContext.hearingStatus || 'Not assessed'}
+      - ADL Limitations: ${Object.keys(oasisContext.adlStatus || {}).length > 0 ? Object.entries(oasisContext.adlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ') : 'None documented'}
+      - IADL Limitations: ${Object.keys(oasisContext.iadlStatus || {}).length > 0 ? Object.entries(oasisContext.iadlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ') : 'None documented'}
+      ` : '- No OASIS data on file'}
 
       ROUGH NOTES:
       ${roughNote}
 
       CRITICAL ENHANCEMENT REQUIREMENTS:
-      1. HOMEBOUND STATUS: If patient has mobility/activity limitations, clearly state why leaving home is taxing (specific symptoms, distances, assistance needed)
+      1. HOMEBOUND STATUS: ${oasisContext?.functionalLevel ? `Based on OASIS functional level (${oasisContext.functionalLevel}), document specific mobility limitations and why leaving home is taxing.` : 'If patient has mobility/activity limitations, clearly state why leaving home is taxing (specific symptoms, distances, assistance needed)'}
+         ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).filter(k => oasisContext.adlStatus[k]).length > 0 ? `- OASIS shows ADL limitations in: ${Object.keys(oasisContext.adlStatus).filter(k => oasisContext.adlStatus[k]).join(', ')}` : ''}
+
       2. SKILLED NEED: Explicitly state why RN skills are required (complex assessment, clinical judgment, patient education beyond basic instruction)
+         ${oasisContext?.admissionSource === '2' || oasisContext?.admissionSource?.toLowerCase().includes('institutional') ? '- Document post-institutional monitoring and skilled assessment needs' : ''}
+         ${oasisContext?.cognitiveStatus && oasisContext.cognitiveStatus !== 'intact' ? `- Address cognitive impairment (${oasisContext.cognitiveStatus}) requiring skilled nursing oversight` : ''}
+
       3. PATIENT RESPONSE: Include patient's verbal understanding, teach-back results, or demonstrated competency
-      4. CONDITION-SPECIFIC DETAILS:
+         ${oasisContext?.cognitiveStatus ? `- Consider cognitive status (${oasisContext.cognitiveStatus}) when documenting teaching effectiveness` : ''}
+
+      4. FUNCTIONAL ASSESSMENT: ${oasisContext?.adlStatus || oasisContext?.iadlStatus ? 'Document changes in functional abilities compared to OASIS baseline:' : 'Document functional abilities:'}
+         ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).length > 0 ? `- ADL assistance needs per OASIS: ${Object.entries(oasisContext.adlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}
+         ${oasisContext?.iadlStatus && Object.keys(oasisContext.iadlStatus).length > 0 ? `- IADL assistance needs per OASIS: ${Object.entries(oasisContext.iadlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}
+
+      5. SAFETY/RISK FACTORS: 
+         ${oasisContext?.fallRisk ? `- Fall Risk: ${oasisContext.fallRisk} - document fall prevention measures` : ''}
+         ${oasisContext?.visionStatus && oasisContext.visionStatus !== 'adequate' ? `- Vision impairment: ${oasisContext.visionStatus} - address safety implications` : ''}
+         ${oasisContext?.hearingStatus && oasisContext.hearingStatus !== 'adequate' ? `- Hearing impairment: ${oasisContext.hearingStatus} - document communication adaptations` : ''}
+
+      6. CONDITION-SPECIFIC DETAILS:
       ${finalDiagnosis?.toUpperCase().includes('CHF') || finalDiagnosis?.toUpperCase().includes('HEART FAILURE') || finalDiagnosis?.toUpperCase().includes('CONGESTIVE') ? '- CHF: Document daily weight, edema grading (0-4+), JVD assessment, bilateral lung sounds for crackles, S3 gallop, fluid status evaluation' : ''}
       ${finalDiagnosis?.toUpperCase().includes('COPD') || finalDiagnosis?.toUpperCase().includes('CHRONIC OBSTRUCTIVE') ? '- COPD: Document O2 sat on room air vs supplemental O2, respiratory rate, work of breathing, accessory muscle use, cyanosis, lung sounds (wheezes/rhonchi)' : ''}
       ${finalDiagnosis?.toUpperCase().includes('DIABETES') || finalDiagnosis?.toUpperCase().includes('DIABETIC') ? '- Diabetes: Document blood glucose reading, diabetic foot exam (pedal pulses, sensation, skin integrity between toes), peripheral neuropathy assessment' : ''}
@@ -581,14 +647,17 @@ export default function SmartNoteAssistant() {
       />
 
       {selectedPatient && (
-        <>
-          <PatientContextCard
-            patient={selectedPatient}
-            carePlans={carePlans}
-            recentVisit={recentVisits[0]}
-            vitalSigns={vitalSigns}
-            onClear={() => setSelectedPatientId("")}
-          />
+      <>
+        <PatientContextCard
+          patient={selectedPatient}
+          carePlans={carePlans}
+          recentVisit={recentVisits[0]}
+          vitalSigns={vitalSigns}
+          onClear={() => setSelectedPatientId("")}
+        />
+
+        {/* Auto-synced OASIS Data Display */}
+        <OASISDataDisplay oasisData={patientOASIS} compact={false} />
           {/* AI Patient History Summarizer */}
           <AIPatientHistorySummarizer
             patientId={selectedPatientId}
