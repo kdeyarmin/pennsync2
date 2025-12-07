@@ -63,6 +63,7 @@ import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
 import ComplianceEducationPanel from "../components/smartNote/ComplianceEducationPanel";
 import DocumentationPracticeScenarios from "../components/smartNote/DocumentationPracticeScenarios";
 import LearningDashboard from "../components/smartNote/LearningDashboard";
+import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
 import AIPatientHistorySummarizer from "../components/smartNote/AIPatientHistorySummarizer";
 import AIRiskAndGapDetector from "../components/smartNote/AIRiskAndGapDetector";
 import AIGrammarTerminologyCorrector from "../components/smartNote/AIGrammarTerminologyCorrector";
@@ -606,14 +607,12 @@ Return JSON:
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <div>
                   <Label className="text-sm md:text-base mb-2 block">Patient</Label>
-                  <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-                    <SelectTrigger className="h-11 md:h-12 text-base"><SelectValue placeholder="Select patient..." /></SelectTrigger>
-                    <SelectContent position="popper" className="z-[200] max-h-[400px] overflow-y-auto">
-                      {patients.map((p) => (
-                        <SelectItem key={p.id} value={p.id} className="text-base py-3">{p.first_name} {p.last_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchablePatientSelect
+                    patients={patients}
+                    value={selectedPatientId}
+                    onValueChange={setSelectedPatientId}
+                    placeholder="Search patients..."
+                  />
                 </div>
                 <div>
                   <Label className="text-sm md:text-base mb-2 block">Visit Date</Label>

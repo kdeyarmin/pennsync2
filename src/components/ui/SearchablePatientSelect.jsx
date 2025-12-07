@@ -1,0 +1,273 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { Check, ChevronsUpDown, Search, Clock, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+
+export default function SearchablePatientSelect({ 
+  patients = [], 
+  value, 
+  onValueChange,
+  placeholder = "Select patient...",
+  className 
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [recentPatients, setRecentPatients] = useState([]);
+  const [favoritedPatients, setFavoritedPatients] = useState([]);
+
+  // Load recent and favorited patients from localStorage
+  useEffect(() => {
+    try {
+      const recent = JSON.parse(localStorage.getItem('recentPatients') || '[]');
+      const favorited = JSON.parse(localStorage.getItem('favoritedPatients') || '[]');
+      setRecentPatients(recent);
+      setFavoritedPatients(favorited);
+    } catch (error) {
+      console.error('Error loading patient preferences:', error);
+    }
+  }, []);
+
+  // Save to recent when patient is selected
+  const handleSelect = (patientId) => {
+    onValueChange(patientId);
+    setOpen(false);
+
+    // Update recent patients (max 5)
+    const updatedRecent = [
+      patientId,
+      ...recentPatients.filter(id => id !== patientId)
+    ].slice(0, 5);
+    
+    setRecentPatients(updatedRecent);
+    localStorage.setItem('recentPatients', JSON.stringify(updatedRecent));
+  };
+
+  // Toggle favorite
+  const toggleFavorite = (patientId, e) => {
+    e.stopPropagation();
+    const isFavorited = favoritedPatients.includes(patientId);
+    
+    const updatedFavorites = isFavorited
+      ? favoritedPatients.filter(id => id !== patientId)
+      : [...favoritedPatients, patientId];
+    
+    setFavoritedPatients(updatedFavorites);
+    localStorage.setItem('favoritedPatients', JSON.stringify(updatedFavorites));
+  };
+
+  // Get patient by ID
+  const getPatient = (id) => patients.find(p => p.id === id);
+  const selectedPatient = getPatient(value);
+
+  // Filter and organize patients
+  const { favoritesList, recentList, allPatientsList } = useMemo(() => {
+    const searchLower = search.toLowerCase();
+    const filtered = patients.filter(p => {
+      const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+      const mrn = (p.medical_record_number || '').toLowerCase();
+      return fullName.includes(searchLower) || mrn.includes(searchLower);
+    });
+
+    const favorites = filtered.filter(p => favoritedPatients.includes(p.id));
+    const recent = recentPatients
+      .map(id => getPatient(id))
+      .filter(p => p && filtered.includes(p))
+      .slice(0, 3);
+    
+    // All patients excluding favorites and recent
+    const all = filtered.filter(p => 
+      !favoritedPatients.includes(p.id) && 
+      !recent.some(r => r?.id === p.id)
+    );
+
+    return {
+      favoritesList: favorites,
+      recentList: recent,
+      allPatientsList: all
+    };
+  }, [patients, search, favoritedPatients, recentPatients]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "w-full justify-between h-11 md:h-12 text-base",
+            !value && "text-muted-foreground",
+            className
+          )}
+        >
+          <span className="truncate">
+            {value && selectedPatient
+              ? `${selectedPatient.first_name} ${selectedPatient.last_name}`
+              : placeholder}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0" 
+        align="start"
+        sideOffset={4}
+      >
+        <Command shouldFilter={false}>
+          <div className="flex items-center border-b px-3">
+            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            <input
+              placeholder="Search patients..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+          <CommandList className="max-h-[400px]">
+            <CommandEmpty>No patient found.</CommandEmpty>
+            
+            {favoritesList.length > 0 && (
+              <CommandGroup heading="Favorites">
+                {favoritesList.map((patient) => (
+                  <CommandItem
+                    key={patient.id}
+                    value={patient.id}
+                    onSelect={() => handleSelect(patient.id)}
+                    className="flex items-center justify-between py-3"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Check
+                        className={cn(
+                          "h-4 w-4 flex-shrink-0",
+                          value === patient.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {patient.first_name} {patient.last_name}
+                        </p>
+                        {patient.medical_record_number && (
+                          <p className="text-xs text-muted-foreground">
+                            MRN: {patient.medical_record_number}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={(e) => toggleFavorite(patient.id, e)}
+                    >
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    </Button>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {recentList.length > 0 && (
+              <CommandGroup heading="Recent">
+                {recentList.map((patient) => (
+                  <CommandItem
+                    key={patient.id}
+                    value={patient.id}
+                    onSelect={() => handleSelect(patient.id)}
+                    className="flex items-center justify-between py-3"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Check
+                        className={cn(
+                          "h-4 w-4 flex-shrink-0",
+                          value === patient.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {patient.first_name} {patient.last_name}
+                        </p>
+                        {patient.medical_record_number && (
+                          <p className="text-xs text-muted-foreground">
+                            MRN: {patient.medical_record_number}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={(e) => toggleFavorite(patient.id, e)}
+                    >
+                      <Star className={cn(
+                        "h-4 w-4",
+                        favoritedPatients.includes(patient.id) 
+                          ? "fill-yellow-400 text-yellow-400" 
+                          : "text-muted-foreground"
+                      )} />
+                    </Button>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {allPatientsList.length > 0 && (
+              <CommandGroup heading="All Patients">
+                {allPatientsList.map((patient) => (
+                  <CommandItem
+                    key={patient.id}
+                    value={patient.id}
+                    onSelect={() => handleSelect(patient.id)}
+                    className="flex items-center justify-between py-3"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Check
+                        className={cn(
+                          "h-4 w-4 flex-shrink-0",
+                          value === patient.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {patient.first_name} {patient.last_name}
+                        </p>
+                        {patient.medical_record_number && (
+                          <p className="text-xs text-muted-foreground">
+                            MRN: {patient.medical_record_number}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={(e) => toggleFavorite(patient.id, e)}
+                    >
+                      <Star className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
