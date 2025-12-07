@@ -15,19 +15,8 @@ export async function canAccessPatient(patientId) {
   try {
     const user = await base44.auth.me();
     
-    // Admin users can access all patients
-    if (user.role === 'admin') {
-      return true;
-    }
-    
-    // Regular users can only access patients assigned to them
-    // Check if there's a visit record linking this user to this patient
-    const userVisits = await base44.entities.Visit.filter({ 
-      patient_id: patientId,
-      created_by: user.email 
-    });
-    
-    return userVisits.length > 0;
+    // All authenticated users can access all patients
+    return true;
   } catch (error) {
     console.error('Access check failed:', error);
     return false;
