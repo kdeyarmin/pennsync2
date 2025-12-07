@@ -129,15 +129,7 @@ function VoiceHub({ onTranscription }) {
 // Contextual AI Tools Sidebar - Enhanced with better guidance
 function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote, onAction, diagnosis, complianceScore }) {
   const getTools = () => {
-    if (!hasPatient) return { 
-      title: "👋 Let's Get Started", 
-      subtitle: "Step 1 of 4",
-      items: [
-        { label: "Select a patient from the dropdown", type: "tip", icon: User },
-        { label: "Choose visit type and diagnosis", type: "tip", icon: ClipboardList }
-      ],
-      hint: "This helps AI tailor your documentation"
-    };
+    if (!hasPatient) return null;
     if (!hasNotes) return { 
       title: "📝 Ready to Document", 
       subtitle: "Step 2 of 4",
@@ -168,6 +160,8 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
     };
   };
   const tools = getTools();
+
+  if (!tools) return null;
 
   return (
     <Card className="border-2 border-indigo-200 bg-gradient-to-b from-indigo-50 to-white">
