@@ -21,6 +21,7 @@ import InteractiveDocumentationScenarios from "../components/training/Interactiv
 import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
 import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
 import PersonalizedTrainingRecommender from "../components/training/PersonalizedTrainingRecommender";
+import DetailedDeficitReport from "../components/training/DetailedDeficitReport";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function NurseTraining() {
@@ -193,6 +194,18 @@ export default function NurseTraining() {
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-6">
+          <DetailedDeficitReport
+            nurseEmail={currentUser?.email}
+            onStartScenario={(scenarioId) => {
+              setSelectedScenarioId(scenarioId);
+              setActiveTab('scenarios');
+            }}
+            onStartQuiz={(quizId) => {
+              setSelectedQuizId(quizId);
+              setActiveTab('quizzes');
+            }}
+          />
+          
           <NurseLearningDashboard
             nurseEmail={currentUser?.email}
             trainingProgress={trainingProgress}
