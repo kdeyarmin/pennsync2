@@ -77,6 +77,7 @@ import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentRev
 import { todayEastern } from "../components/utils/timezone";
 import AIFeedbackPanel from "../components/smartNote/AIFeedbackPanel";
 import PDGMDocumentationImpactAnalyzer from "../components/pdgm/PDGMDocumentationImpactAnalyzer";
+import CaseMixOptimizationPanel from "../components/pdgm/CaseMixOptimizationPanel";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -988,6 +989,16 @@ Return JSON:
                   setRoughNote(prev => prev + '\n\n' + text);
                 }
               }}
+            />
+          )}
+
+          {/* Case-Mix Optimization Panel */}
+          {enhancedNote && selectedPatientId && (
+            <CaseMixOptimizationPanel
+              patientId={selectedPatientId}
+              currentNote={enhancedNote}
+              diagnosis={finalDiagnosis}
+              onApplyRecommendation={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
             />
           )}
 
