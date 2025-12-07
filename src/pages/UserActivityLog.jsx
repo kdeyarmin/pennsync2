@@ -250,6 +250,12 @@ export default function UserActivityLog() {
                 
                 if (userEnhancements.length === 0) return null;
                 
+                const uniquePatients = new Set(
+                  userEnhancements
+                    .filter(a => a.details?.patient_id)
+                    .map(a => a.details.patient_id)
+                ).size;
+                
                 return (
                   <div key={user.id} className="bg-white p-3 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
@@ -263,6 +269,7 @@ export default function UserActivityLog() {
                     </div>
                     <div className="text-xs text-gray-600 space-y-0.5">
                       <p>Enhanced: {userEnhancements.length}</p>
+                      <p>Patients: {uniquePatients}</p>
                       <p>Compliance Checks: {activities.filter(a => a.user_email === user.email && a.action === 'note_compliance_check').length}</p>
                     </div>
                   </div>
