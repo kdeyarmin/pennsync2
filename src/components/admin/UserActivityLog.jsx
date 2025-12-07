@@ -170,9 +170,9 @@ export default function UserActivityLog() {
                       <span className="ml-2">• {activity.details.description}</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
                     <Calendar className="w-3 h-3" />
-                    {formatEastern(new Date(activity.created_date), 'MMM d, yyyy h:mm a')} ET
+                    {formatEastern(activity.created_date, 'MMM d, yyyy h:mm a')} ET
                   </div>
                 </div>
               </div>
