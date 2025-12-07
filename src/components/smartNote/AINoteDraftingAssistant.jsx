@@ -49,6 +49,7 @@ export default function AINoteDraftingAssistant({
   });
   const [customPrompt, setCustomPrompt] = useState("");
   const [copied, setCopied] = useState(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const generateAssessment = async () => {
     setIsGenerating(true);
@@ -459,7 +460,7 @@ Generate professional, Medicare-compliant clinical documentation based on the re
 
         {/* Quick Actions */}
         <div className="mt-3 pt-3 border-t">
-          <Popover>
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="w-full justify-between">
                 <span className="flex items-center gap-1">
@@ -474,7 +475,7 @@ Generate professional, Medicare-compliant clinical documentation based on the re
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start text-xs"
-                  onClick={() => { setCustomPrompt("Write homebound status justification"); generateCustom(); }}
+                  onClick={() => { setCustomPrompt("Write homebound status justification"); generateCustom(); setPopoverOpen(false); }}
                 >
                   Homebound Status
                 </Button>
@@ -482,7 +483,7 @@ Generate professional, Medicare-compliant clinical documentation based on the re
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start text-xs"
-                  onClick={() => { setCustomPrompt("Write skilled need justification for RN visit"); generateCustom(); }}
+                  onClick={() => { setCustomPrompt("Write skilled need justification for RN visit"); generateCustom(); setPopoverOpen(false); }}
                 >
                   Skilled Need Justification
                 </Button>
@@ -490,7 +491,7 @@ Generate professional, Medicare-compliant clinical documentation based on the re
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start text-xs"
-                  onClick={() => { setCustomPrompt("Write medication reconciliation findings"); generateCustom(); }}
+                  onClick={() => { setCustomPrompt("Write medication reconciliation findings"); generateCustom(); setPopoverOpen(false); }}
                 >
                   Medication Reconciliation
                 </Button>
@@ -498,7 +499,7 @@ Generate professional, Medicare-compliant clinical documentation based on the re
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start text-xs"
-                  onClick={() => { setCustomPrompt("Write care coordination notes"); generateCustom(); }}
+                  onClick={() => { setCustomPrompt("Write care coordination notes"); generateCustom(); setPopoverOpen(false); }}
                 >
                   Care Coordination
                 </Button>
@@ -506,7 +507,7 @@ Generate professional, Medicare-compliant clinical documentation based on the re
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start text-xs"
-                  onClick={() => { setCustomPrompt("Write safety assessment of home environment"); generateCustom(); }}
+                  onClick={() => { setCustomPrompt("Write safety assessment of home environment"); generateCustom(); setPopoverOpen(false); }}
                 >
                   Safety Assessment
                 </Button>
