@@ -109,7 +109,6 @@ export default function UserActivityLog() {
       'incident_report': AlertCircle,
       'training_complete': GraduationCap,
       'note_enhanced': Sparkles,
-      'note_ai_generated': Brain,
       'note_compliance_check': Shield,
       'alert_viewed': Bell,
       'alert_dismissed': AlertTriangle
@@ -144,7 +143,6 @@ export default function UserActivityLog() {
       'incident_report': 'bg-rose-100 text-rose-800',
       'training_complete': 'bg-fuchsia-100 text-fuchsia-800',
       'note_enhanced': 'bg-indigo-100 text-indigo-800',
-      'note_ai_generated': 'bg-purple-100 text-purple-800',
       'note_compliance_check': 'bg-blue-100 text-blue-800',
       'alert_viewed': 'bg-yellow-100 text-yellow-800',
       'alert_dismissed': 'bg-orange-100 text-orange-800'
@@ -190,7 +188,7 @@ export default function UserActivityLog() {
               <div>
                 <p className="text-xs text-indigo-700 font-medium">Notes Enhanced</p>
                 <p className="text-2xl font-bold text-indigo-900">
-                  {filteredActivities.filter(a => a.action === 'note_enhanced' || a.action === 'note_ai_generated').length}
+                  {filteredActivities.filter(a => a.action === 'note_enhanced').length}
                 </p>
               </div>
             </div>
@@ -240,15 +238,14 @@ export default function UserActivityLog() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="w-5 h-5 text-indigo-600" />
-              AI Note Enhancement Statistics
+              Note Enhancement Statistics
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {users.map(user => {
                 const userEnhancements = activities.filter(a => 
-                  a.user_email === user.email && 
-                  (a.action === 'note_enhanced' || a.action === 'note_ai_generated')
+                  a.user_email === user.email && a.action === 'note_enhanced'
                 );
                 
                 if (userEnhancements.length === 0) return null;
@@ -265,8 +262,7 @@ export default function UserActivityLog() {
                       </Badge>
                     </div>
                     <div className="text-xs text-gray-600 space-y-0.5">
-                      <p>Enhanced: {userEnhancements.filter(a => a.action === 'note_enhanced').length}</p>
-                      <p>AI Generated: {userEnhancements.filter(a => a.action === 'note_ai_generated').length}</p>
+                      <p>Enhanced: {userEnhancements.length}</p>
                       <p>Compliance Checks: {activities.filter(a => a.user_email === user.email && a.action === 'note_compliance_check').length}</p>
                     </div>
                   </div>
