@@ -209,7 +209,7 @@ Return JSON:
     }
   };
 
-  const handleCreateAlert = (risk) => {
+  const handleCreateAlert = async (risk) => {
     if (onCreateAlert) {
       onCreateAlert({
         alert_type: risk.risk_type === 'vital_sign' ? 'vital_deterioration' : 
@@ -218,6 +218,20 @@ Return JSON:
         title: risk.title,
         message: risk.description,
         recommended_actions: [risk.recommended_action]
+      });
+    }
+    
+    // Track this as a learning opportunity
+    const user = await base44.auth.me();
+    if (user?.email) {
+      trackAISuggestion({
+        nurseEmail: user.email,
+        suggestionType: 'safety',
+        suggestionText: `Risk identified: ${risk.title}`,
+        context: risk.description,
+        source: 'risk_detector',
+        elementName: risk.risk_type,
+        noteSnippet: risk.evidence
       });
     }
   };
@@ -385,14 +399,30 @@ Return JSON:
                       )}
                       <div className="flex gap-1 mt-2 flex-wrap">
                         {risk.suggested_documentation && onInsertText && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-5 text-xs"
-                            onClick={() => onInsertText(risk.suggested_documentation)}
-                          >
-                            <Plus className="w-2 h-2 mr-1" /> Add to Note
-                          </Button>
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           className="h-5 text-xs"
+                           onClick={async () => {
+                             onInsertText(risk.suggested_documentation);
+
+                             // Track gap suggestion
+                             const user = await base44.auth.me();
+                             if (user?.email) {
+                               trackAISuggestion({
+                                 nurseEmail: user.email,
+                                 suggestionType: categorizeAISuggestion(risk.title),
+                                 suggestionText: `Risk/Gap: ${risk.title}`,
+                                 context: risk.suggested_documentation,
+                                 source: 'risk_detector',
+                                 elementName: risk.risk_type,
+                                 noteSnippet: risk.evidence
+                               });
+                             }
+                           }}
+                         >
+                           <Plus className="w-2 h-2 mr-1" /> Add to Note
+                         </Button>
                         )}
                         {risk.create_alert && onCreateAlert && (
                           <Button
@@ -429,14 +459,30 @@ Return JSON:
                       </div>
                       <p className="text-xs text-yellow-800 mt-1">{gap.description}</p>
                       {gap.suggested_text && onInsertText && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mt-1 h-5 text-xs"
-                          onClick={() => onInsertText(gap.suggested_text)}
-                        >
-                          <Plus className="w-2 h-2 mr-1" /> Add Documentation
-                        </Button>
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         className="mt-1 h-5 text-xs"
+                         onClick={async () => {
+                           onInsertText(gap.suggested_text);
+
+                           // Track care gap suggestion
+                           const user = await base44.auth.me();
+                           if (user?.email) {
+                             trackAISuggestion({
+                               nurseEmail: user.email,
+                               suggestionType: categorizeAISuggestion(gap.gap_type),
+                               suggestionText: `Care gap: ${gap.description}`,
+                               context: gap.suggested_text,
+                               source: 'risk_detector',
+                               elementName: gap.gap_type,
+                               noteSnippet: gap.suggested_action
+                             });
+                           }
+                         }}
+                       >
+                         <Plus className="w-2 h-2 mr-1" /> Add Documentation
+                       </Button>
                       )}
                     </div>
                   ))}
