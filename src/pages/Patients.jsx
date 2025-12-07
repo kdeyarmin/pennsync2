@@ -510,7 +510,9 @@ export default function Patients() {
                 </div>
               </CardContent>
             </Card>
-          );})}
+          );
+        })}
+      </div>
 
       {/* Patient Merge Dialog */}
       <PatientMergeDialog
