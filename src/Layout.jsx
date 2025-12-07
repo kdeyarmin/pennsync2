@@ -252,7 +252,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:overflow-auto pt-14 lg:pt-0">{children}</main>
+      <main className="flex-1 lg:overflow-auto pt-14 lg:pt-0 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100">{children}</main>
     </div>
   );
 }
