@@ -30,7 +30,9 @@ import {
   GraduationCap,
   Sparkles,
   Brain,
-  Shield
+  Shield,
+  CheckCircle2,
+  Bell
 } from "lucide-react";
 import { format } from "date-fns";
 
