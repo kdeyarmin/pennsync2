@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { trackAISuggestion, categorizeAISuggestion } from "../training/SuggestionTracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -238,8 +239,21 @@ Provide proactive, context-aware suggestions in these categories:
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleInsert = (text) => {
+  const handleInsert = async (text, suggestionType = 'documentation') => {
     onInsertText?.(text);
+    
+    // Track AI suggestion usage
+    const user = await base44.auth.me();
+    if (user?.email) {
+      trackAISuggestion({
+        nurseEmail: user.email,
+        suggestionType: categorizeAISuggestion(text),
+        suggestionText: `AI suggested ${suggestionType}: ${text.substring(0, 100)}...`,
+        context: text.substring(0, 200),
+        source: 'ai_documentation_suggester',
+        patientId: patientId
+      });
+    }
   };
 
   const getPriorityColor = (priority) => {

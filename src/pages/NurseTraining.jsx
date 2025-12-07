@@ -24,7 +24,9 @@ import PersonalizedTrainingRecommender from "../components/training/Personalized
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function NurseTraining() {
-  const [activeTab, setActiveTab] = useState("scenarios");
+  const [activeTab, setActiveTab] = useState("personalized");
+  const [selectedScenarioId, setSelectedScenarioId] = useState(null);
+  const [selectedQuizId, setSelectedQuizId] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -168,6 +170,7 @@ export default function NurseTraining() {
           <PersonalizedTrainingRecommender
             nurseEmail={currentUser?.email}
             onStartTraining={(area, module) => {
+              setSelectedScenarioId(module);
               setActiveTab('scenarios');
             }}
           />
@@ -177,6 +180,7 @@ export default function NurseTraining() {
           <InteractiveDocumentationScenarios
             nurseEmail={currentUser?.email}
             recommendations={recommendations}
+            initialScenarioId={selectedScenarioId}
           />
         </TabsContent>
 
@@ -184,6 +188,7 @@ export default function NurseTraining() {
           <AIComplianceQuizGenerator
             nurseEmail={currentUser?.email}
             recommendations={recommendations}
+            initialTopicId={selectedQuizId}
           />
         </TabsContent>
 
@@ -193,9 +198,11 @@ export default function NurseTraining() {
             trainingProgress={trainingProgress}
             recommendations={recommendations}
             onStartScenario={(scenarioId) => {
+              setSelectedScenarioId(scenarioId);
               setActiveTab('scenarios');
             }}
             onStartQuiz={(quizId) => {
+              setSelectedQuizId(quizId);
               setActiveTab('quizzes');
             }}
           />

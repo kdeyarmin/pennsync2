@@ -106,13 +106,23 @@ const scenarioTemplates = [
   }
 ];
 
-export default function InteractiveDocumentationScenarios({ nurseEmail, recommendations = [] }) {
+export default function InteractiveDocumentationScenarios({ nurseEmail, recommendations = [], initialScenarioId = null }) {
   const queryClient = useQueryClient();
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userResponse, setUserResponse] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showHint, setShowHint] = useState(false);
+
+  // Auto-select scenario if provided
+  React.useEffect(() => {
+    if (initialScenarioId && !selectedScenario) {
+      const scenario = scenarioTemplates.find(s => s.id === initialScenarioId);
+      if (scenario) {
+        handleStartScenario(scenario);
+      }
+    }
+  }, [initialScenarioId]);
 
   const savePracticeMutation = useMutation({
     mutationFn: async (practiceData) => {

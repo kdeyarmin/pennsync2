@@ -56,7 +56,7 @@ const quizTopics = [
   }
 ];
 
-export default function AIComplianceQuizGenerator({ nurseEmail, recommendations = [] }) {
+export default function AIComplianceQuizGenerator({ nurseEmail, recommendations = [], initialTopicId = null }) {
   const queryClient = useQueryClient();
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [quiz, setQuiz] = useState(null);
@@ -65,6 +65,16 @@ export default function AIComplianceQuizGenerator({ nurseEmail, recommendations 
   const [userAnswers, setUserAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [quizResults, setQuizResults] = useState(null);
+
+  // Auto-generate quiz if topic provided
+  React.useEffect(() => {
+    if (initialTopicId && !quiz) {
+      const topic = quizTopics.find(t => t.id === initialTopicId);
+      if (topic) {
+        generateQuiz(topic);
+      }
+    }
+  }, [initialTopicId]);
 
   const savePracticeMutation = useMutation({
     mutationFn: async (practiceData) => {
