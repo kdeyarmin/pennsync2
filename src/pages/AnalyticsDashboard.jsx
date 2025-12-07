@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -13,20 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  BarChart3,
-  TrendingUp,
-  TrendingDown,
-  FileText,
-  DollarSign,
-  Target,
-  AlertTriangle,
-  CheckCircle2,
-  Activity,
-  Calendar,
-  Filter,
-  Download,
-  RefreshCw
-} from "lucide-react";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import {
   LineChart,
   Line,
@@ -35,306 +27,524 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Area,
+  AreaChart
 } from "recharts";
+import {
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  CheckCircle2,
+  Zap,
+  Users,
+  FileText,
+  Download,
+  Calendar,
+  Activity,
+  BarChart3,
+  Target,
+  AlertCircle
+} from "lucide-react";
+import { format, subDays, startOfDay, endOfDay } from "date-fns";
 
-import OASISAccuracyTrends from "../components/analytics/OASISAccuracyTrends";
-import ComplianceRatesChart from "../components/analytics/ComplianceRatesChart";
-import RevenueImpactAnalysis from "../components/analytics/RevenueImpactAnalysis";
-import DocumentationGapsReport from "../components/analytics/DocumentationGapsReport";
-import NursePerformanceMetrics from "../components/analytics/NursePerformanceMetrics";
+import PerformanceMetricsCard from "../components/analytics/PerformanceMetricsCard";
+import ComplianceTrendsChart from "../components/analytics/ComplianceTrendsChart";
+import AIUtilizationChart from "../components/analytics/AIUtilizationChart";
+import UserPerformanceTable from "../components/analytics/UserPerformanceTable";
 
 export default function AnalyticsDashboard() {
-  const [dateRange, setDateRange] = useState("30days");
-  const [selectedNurse, setSelectedNurse] = useState("all");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [dateRange, setDateRange] = useState("30");
+  const [selectedUser, setSelectedUser] = useState("all");
+  const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
-  // Fetch OASIS uploads
-  const { data: oasisUploads = [], isLoading: loadingOASIS } = useQuery({
-    queryKey: ['analyticsOASIS', dateRange],
-    queryFn: () => base44.entities.OASISUpload.list('-created_date', 200),
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Fetch all users for admin
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: isAdmin,
   });
 
   // Fetch note conversions
-  const { data: noteConversions = [], isLoading: loadingNotes } = useQuery({
-    queryKey: ['analyticsNotes', dateRange],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date', 500),
+  const { data: noteConversions = [] } = useQuery({
+    queryKey: ['noteConversions', selectedUser, startDate, endDate],
+    queryFn: () => base44.entities.NoteConversion.list('-created_date'),
+    select: (data) => data.filter(nc => {
+      const ncDate = new Date(nc.created_date);
+      const inDateRange = ncDate >= new Date(startDate) && ncDate <= new Date(endDate);
+      const userMatch = selectedUser === 'all' || nc.nurse_email === selectedUser;
+      return inDateRange && userMatch;
+    }),
   });
 
   // Fetch compliance audits
-  const { data: complianceAudits = [], isLoading: loadingAudits } = useQuery({
-    queryKey: ['analyticsAudits', dateRange],
-    queryFn: () => base44.entities.ComplianceAudit.list('-created_date', 200),
+  const { data: complianceAudits = [] } = useQuery({
+    queryKey: ['complianceAudits', selectedUser, startDate, endDate],
+    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date'),
+    select: (data) => data.filter(ca => {
+      const caDate = new Date(ca.created_date);
+      const inDateRange = caDate >= new Date(caDate) && caDate <= new Date(endDate);
+      const userMatch = selectedUser === 'all' || ca.nurse_email === selectedUser;
+      return inDateRange && userMatch;
+    }),
   });
 
-  // Fetch users for filtering
-  const { data: users = [] } = useQuery({
-    queryKey: ['analyticsUsers'],
-    queryFn: () => base44.entities.User.list(),
+  // Fetch user activities
+  const { data: userActivities = [] } = useQuery({
+    queryKey: ['userActivities', selectedUser, startDate, endDate],
+    queryFn: () => base44.entities.UserActivity.list('-created_date'),
+    select: (data) => data.filter(ua => {
+      const uaDate = new Date(ua.created_date);
+      const inDateRange = uaDate >= new Date(startDate) && uaDate <= new Date(endDate);
+      const userMatch = selectedUser === 'all' || ua.user_email === selectedUser;
+      return inDateRange && userMatch;
+    }),
   });
 
-  // Filter data by date range
-  const filterByDateRange = (data, dateField = 'created_date') => {
-    const now = new Date();
-    let cutoff = new Date();
+  // Calculate key metrics
+  const metrics = useMemo(() => {
+    // Documentation time metrics
+    const avgDocTime = noteConversions.length > 0
+      ? noteConversions.reduce((sum, nc) => sum + (nc.conversion_time_ms || 0), 0) / noteConversions.length / 1000 / 60
+      : 0;
+
+    // Compliance score metrics
+    const avgComplianceScore = complianceAudits.length > 0
+      ? complianceAudits.reduce((sum, ca) => sum + (ca.compliance_score || 0), 0) / complianceAudits.length
+      : 0;
+
+    // AI utilization
+    const aiActions = userActivities.filter(ua => 
+      ['note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)
+    );
+    const totalActions = userActivities.filter(ua => 
+      ['visit_document', 'note_enhanced', 'note_ai_generated'].includes(ua.action)
+    );
+    const aiUtilizationRate = totalActions.length > 0 
+      ? (aiActions.length / totalActions.length) * 100 
+      : 0;
+
+    // Quality metrics
+    const avgQualityScore = noteConversions.length > 0
+      ? noteConversions.reduce((sum, nc) => sum + (nc.quality_score || 0), 0) / noteConversions.length
+      : 0;
+
+    // Previous period comparison
+    const midDate = new Date(startDate);
+    midDate.setDate(midDate.getDate() + (new Date(endDate) - new Date(startDate)) / (2 * 24 * 60 * 60 * 1000));
     
-    switch (dateRange) {
-      case '7days': cutoff.setDate(now.getDate() - 7); break;
-      case '30days': cutoff.setDate(now.getDate() - 30); break;
-      case '90days': cutoff.setDate(now.getDate() - 90); break;
-      case 'year': cutoff.setFullYear(now.getFullYear() - 1); break;
-      default: cutoff.setDate(now.getDate() - 30);
+    const recentConversions = noteConversions.filter(nc => new Date(nc.created_date) >= midDate);
+    const olderConversions = noteConversions.filter(nc => new Date(nc.created_date) < midDate);
+    
+    const recentAvgTime = recentConversions.length > 0
+      ? recentConversions.reduce((sum, nc) => sum + (nc.conversion_time_ms || 0), 0) / recentConversions.length / 1000 / 60
+      : avgDocTime;
+    const olderAvgTime = olderConversions.length > 0
+      ? olderConversions.reduce((sum, nc) => sum + (nc.conversion_time_ms || 0), 0) / olderConversions.length / 1000 / 60
+      : avgDocTime;
+    
+    const timeChange = olderAvgTime > 0 ? ((recentAvgTime - olderAvgTime) / olderAvgTime) * 100 : 0;
+
+    return {
+      avgDocTime: avgDocTime.toFixed(1),
+      avgComplianceScore: avgComplianceScore.toFixed(1),
+      aiUtilizationRate: aiUtilizationRate.toFixed(1),
+      avgQualityScore: avgQualityScore.toFixed(1),
+      totalNotes: noteConversions.length,
+      totalAudits: complianceAudits.length,
+      timeChange: timeChange.toFixed(1),
+      aiActionsCount: aiActions.length,
+      totalVisits: userActivities.filter(ua => ua.action === 'visit_document').length
+    };
+  }, [noteConversions, complianceAudits, userActivities, startDate, endDate]);
+
+  // Prepare trend data
+  const trendData = useMemo(() => {
+    const days = {};
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateKey = format(d, 'yyyy-MM-dd');
+      days[dateKey] = {
+        date: format(d, 'MMM dd'),
+        compliance: [],
+        docTime: [],
+        aiUsage: 0,
+        totalActions: 0
+      };
     }
 
-    return data.filter(item => new Date(item[dateField]) >= cutoff);
+    complianceAudits.forEach(ca => {
+      const dateKey = format(new Date(ca.created_date), 'yyyy-MM-dd');
+      if (days[dateKey]) {
+        days[dateKey].compliance.push(ca.compliance_score || 0);
+      }
+    });
+
+    noteConversions.forEach(nc => {
+      const dateKey = format(new Date(nc.created_date), 'yyyy-MM-dd');
+      if (days[dateKey]) {
+        days[dateKey].docTime.push((nc.conversion_time_ms || 0) / 1000 / 60);
+      }
+    });
+
+    userActivities.forEach(ua => {
+      const dateKey = format(new Date(ua.created_date), 'yyyy-MM-dd');
+      if (days[dateKey]) {
+        if (['note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)) {
+          days[dateKey].aiUsage++;
+        }
+        if (['visit_document', 'note_enhanced', 'note_ai_generated'].includes(ua.action)) {
+          days[dateKey].totalActions++;
+        }
+      }
+    });
+
+    return Object.values(days).map(day => ({
+      date: day.date,
+      avgCompliance: day.compliance.length > 0 
+        ? day.compliance.reduce((a, b) => a + b, 0) / day.compliance.length 
+        : null,
+      avgDocTime: day.docTime.length > 0
+        ? day.docTime.reduce((a, b) => a + b, 0) / day.docTime.length
+        : null,
+      aiUtilization: day.totalActions > 0
+        ? (day.aiUsage / day.totalActions) * 100
+        : null,
+      notes: day.docTime.length
+    }));
+  }, [complianceAudits, noteConversions, userActivities, startDate, endDate]);
+
+  // User performance summary
+  const userPerformance = useMemo(() => {
+    if (!isAdmin) return [];
+
+    const userStats = {};
+    
+    allUsers.forEach(user => {
+      userStats[user.email] = {
+        name: user.full_name,
+        email: user.email,
+        notesCount: 0,
+        avgDocTime: 0,
+        avgCompliance: 0,
+        avgQuality: 0,
+        aiUsageCount: 0,
+        totalActions: 0
+      };
+    });
+
+    noteConversions.forEach(nc => {
+      if (userStats[nc.nurse_email]) {
+        userStats[nc.nurse_email].notesCount++;
+        userStats[nc.nurse_email].avgDocTime += (nc.conversion_time_ms || 0) / 1000 / 60;
+        userStats[nc.nurse_email].avgQuality += nc.quality_score || 0;
+      }
+    });
+
+    complianceAudits.forEach(ca => {
+      if (userStats[ca.nurse_email]) {
+        userStats[ca.nurse_email].avgCompliance += ca.compliance_score || 0;
+      }
+    });
+
+    userActivities.forEach(ua => {
+      if (userStats[ua.user_email]) {
+        if (['note_enhanced', 'note_ai_generated', 'template_generated'].includes(ua.action)) {
+          userStats[ua.user_email].aiUsageCount++;
+        }
+        if (['visit_document', 'note_enhanced', 'note_ai_generated'].includes(ua.action)) {
+          userStats[ua.user_email].totalActions++;
+        }
+      }
+    });
+
+    return Object.values(userStats).map(user => ({
+      ...user,
+      avgDocTime: user.notesCount > 0 ? (user.avgDocTime / user.notesCount).toFixed(1) : 0,
+      avgCompliance: user.notesCount > 0 ? (user.avgCompliance / user.notesCount).toFixed(1) : 0,
+      avgQuality: user.notesCount > 0 ? (user.avgQuality / user.notesCount).toFixed(1) : 0,
+      aiUtilization: user.totalActions > 0 ? ((user.aiUsageCount / user.totalActions) * 100).toFixed(1) : 0
+    })).filter(user => user.notesCount > 0);
+  }, [noteConversions, complianceAudits, userActivities, allUsers, isAdmin]);
+
+  // Handle date range change
+  const handleDateRangeChange = (value) => {
+    setDateRange(value);
+    if (value !== 'custom') {
+      const days = parseInt(value);
+      setStartDate(format(subDays(new Date(), days), 'yyyy-MM-dd'));
+      setEndDate(format(new Date(), 'yyyy-MM-dd'));
+    }
   };
 
-  // Filter by nurse
-  const filterByNurse = (data, nurseField = 'created_by') => {
-    if (selectedNurse === 'all') return data;
-    return data.filter(item => item[nurseField] === selectedNurse);
+  // Export report
+  const handleExportReport = () => {
+    const report = {
+      generatedAt: new Date().toISOString(),
+      dateRange: { start: startDate, end: endDate },
+      user: selectedUser === 'all' ? 'All Users' : selectedUser,
+      summary: metrics,
+      dailyTrends: trendData,
+      userPerformance: isAdmin ? userPerformance : null
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics-report-${startDate}-to-${endDate}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
   };
 
-  // Filtered datasets
-  const filteredOASIS = useMemo(() => 
-    filterByNurse(filterByDateRange(oasisUploads)), 
-    [oasisUploads, dateRange, selectedNurse]
-  );
-
-  const filteredNotes = useMemo(() => 
-    filterByNurse(filterByDateRange(noteConversions), 'nurse_email'), 
-    [noteConversions, dateRange, selectedNurse]
-  );
-
-  const filteredAudits = useMemo(() => 
-    filterByNurse(filterByDateRange(complianceAudits), 'nurse_email'), 
-    [complianceAudits, dateRange, selectedNurse]
-  );
-
-  // Calculate summary metrics
-  const summaryMetrics = useMemo(() => {
-    const avgOASISScore = filteredOASIS.length > 0
-      ? filteredOASIS.reduce((sum, o) => sum + (o.scores?.overall || 0), 0) / filteredOASIS.length
-      : 0;
-
-    const avgAccuracy = filteredOASIS.length > 0
-      ? filteredOASIS.reduce((sum, o) => sum + (o.scores?.accuracy || 0), 0) / filteredOASIS.length
-      : 0;
-
-    const avgCompliance = filteredAudits.length > 0
-      ? filteredAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / filteredAudits.length
-      : 0;
-
-    const totalRevenue = filteredOASIS.reduce((sum, o) => sum + (o.estimated_payment || 0), 0);
-
-    const avgNoteQuality = filteredNotes.length > 0
-      ? filteredNotes.reduce((sum, n) => sum + (n.quality_score || 0), 0) / filteredNotes.length
-      : 0;
-
-    const totalNotes = filteredNotes.length;
-    const totalOASIS = filteredOASIS.length;
-
-    return {
-      avgOASISScore: avgOASISScore.toFixed(1),
-      avgAccuracy: avgAccuracy.toFixed(1),
-      avgCompliance: avgCompliance.toFixed(1),
-      totalRevenue,
-      avgNoteQuality: avgNoteQuality.toFixed(1),
-      totalNotes,
-      totalOASIS
-    };
-  }, [filteredOASIS, filteredNotes, filteredAudits]);
-
-  // Trend comparison (vs previous period)
-  const trendComparison = useMemo(() => {
-    // Simplified trend - compare first half vs second half of period
-    const midpoint = Math.floor(filteredOASIS.length / 2);
-    const recentOASIS = filteredOASIS.slice(0, midpoint);
-    const olderOASIS = filteredOASIS.slice(midpoint);
-
-    const recentAvg = recentOASIS.length > 0
-      ? recentOASIS.reduce((s, o) => s + (o.scores?.overall || 0), 0) / recentOASIS.length
-      : 0;
-    const olderAvg = olderOASIS.length > 0
-      ? olderOASIS.reduce((s, o) => s + (o.scores?.overall || 0), 0) / olderOASIS.length
-      : 0;
-
-    return {
-      oasisTrend: olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg * 100).toFixed(1) : 0,
-      isPositive: recentAvg >= olderAvg
-    };
-  }, [filteredOASIS]);
-
-  const isLoading = loadingOASIS || loadingNotes || loadingAudits;
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-sm text-gray-600">OASIS & Documentation Performance Insights</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Performance Analytics</h1>
+          <p className="text-sm text-gray-600 mt-1">Track metrics, trends, and outcomes</p>
         </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-3">
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-32">
-              <Calendar className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7days">Last 7 Days</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="90days">Last 90 Days</SelectItem>
-              <SelectItem value="year">Last Year</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-            <SelectTrigger className="w-40">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="All Nurses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Nurses</SelectItem>
-              {users.filter(u => u.role !== 'admin').map(u => (
-                <SelectItem key={u.id} value={u.email}>{u.full_name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Button onClick={handleExportReport} className="bg-blue-600 hover:bg-blue-700">
+          <Download className="w-4 h-4 mr-2" />
+          Export Report
+        </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <FileText className="w-5 h-5 text-blue-600" />
-              {trendComparison.isPositive ? (
-                <TrendingUp className="w-4 h-4 text-green-600" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-600" />
-              )}
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label className="text-xs mb-1">Date Range</Label>
+              <Select value={dateRange} onValueChange={handleDateRangeChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Last 7 Days</SelectItem>
+                  <SelectItem value="30">Last 30 Days</SelectItem>
+                  <SelectItem value="90">Last 90 Days</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <p className="text-2xl font-bold text-blue-900">{summaryMetrics.avgOASISScore}%</p>
-            <p className="text-xs text-blue-700">Avg OASIS Score</p>
-            <p className="text-xs text-gray-500">{summaryMetrics.totalOASIS} analyses</p>
-          </CardContent>
-        </Card>
+            {dateRange === 'custom' && (
+              <>
+                <div>
+                  <Label className="text-xs mb-1">Start Date</Label>
+                  <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs mb-1">End Date</Label>
+                  <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                </div>
+              </>
+            )}
+            {isAdmin && (
+              <div>
+                <Label className="text-xs mb-1">User</Label>
+                <Select value={selectedUser} onValueChange={setSelectedUser}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    {allUsers.map(user => (
+                      <SelectItem key={user.id} value={user.email}>{user.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Target className="w-5 h-5 text-green-600" />
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-            </div>
-            <p className="text-2xl font-bold text-green-900">{summaryMetrics.avgAccuracy}%</p>
-            <p className="text-xs text-green-700">Avg Accuracy</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle2 className="w-5 h-5 text-purple-600" />
-            </div>
-            <p className="text-2xl font-bold text-purple-900">{summaryMetrics.avgCompliance}%</p>
-            <p className="text-xs text-purple-700">Compliance Rate</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="w-5 h-5 text-amber-600" />
-            </div>
-            <p className="text-2xl font-bold text-amber-900">
-              ${(summaryMetrics.totalRevenue / 1000).toFixed(0)}k
-            </p>
-            <p className="text-xs text-amber-700">Est. Revenue</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Activity className="w-5 h-5 text-cyan-600" />
-            </div>
-            <p className="text-2xl font-bold text-cyan-900">{summaryMetrics.avgNoteQuality}%</p>
-            <p className="text-xs text-cyan-700">Note Quality</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <BarChart3 className="w-5 h-5 text-gray-600" />
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{summaryMetrics.totalNotes}</p>
-            <p className="text-xs text-gray-700">Notes Created</p>
-          </CardContent>
-        </Card>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <PerformanceMetricsCard
+          title="Avg Doc Time"
+          value={`${metrics.avgDocTime} min`}
+          change={metrics.timeChange}
+          icon={Clock}
+          color="blue"
+        />
+        <PerformanceMetricsCard
+          title="Compliance Score"
+          value={`${metrics.avgComplianceScore}%`}
+          icon={CheckCircle2}
+          color="green"
+        />
+        <PerformanceMetricsCard
+          title="AI Utilization"
+          value={`${metrics.aiUtilizationRate}%`}
+          icon={Zap}
+          color="purple"
+        />
+        <PerformanceMetricsCard
+          title="Quality Score"
+          value={`${metrics.avgQualityScore}%`}
+          icon={Target}
+          color="indigo"
+        />
       </div>
 
-      {/* Tabs for detailed views */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-5 mb-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="accuracy">Accuracy</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="gaps">Gaps</TabsTrigger>
+      {/* Charts */}
+      <Tabs defaultValue="compliance" className="mb-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="compliance">Compliance Trends</TabsTrigger>
+          <TabsTrigger value="time">Documentation Time</TabsTrigger>
+          <TabsTrigger value="ai">AI Utilization</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <OASISAccuracyTrends data={filteredOASIS} compact />
-            <ComplianceRatesChart data={filteredAudits} notes={filteredNotes} compact />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RevenueImpactAnalysis data={filteredOASIS} compact />
-            <DocumentationGapsReport oasisData={filteredOASIS} noteData={filteredNotes} compact />
-          </div>
-        </TabsContent>
-
-        {/* Accuracy Tab */}
-        <TabsContent value="accuracy">
-          <OASISAccuracyTrends data={filteredOASIS} />
-        </TabsContent>
-
-        {/* Compliance Tab */}
         <TabsContent value="compliance">
-          <ComplianceRatesChart data={filteredAudits} notes={filteredNotes} />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Compliance Score Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" style={{ fontSize: '12px' }} />
+                  <YAxis domain={[0, 100]} style={{ fontSize: '12px' }} />
+                  <Tooltip />
+                  <Legend />
+                  <Area 
+                    type="monotone" 
+                    dataKey="avgCompliance" 
+                    stroke="#10b981" 
+                    fill="#10b981" 
+                    fillOpacity={0.3}
+                    name="Compliance Score (%)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Revenue Tab */}
-        <TabsContent value="revenue">
-          <RevenueImpactAnalysis data={filteredOASIS} />
+        <TabsContent value="time">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Average Documentation Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" style={{ fontSize: '12px' }} />
+                  <YAxis style={{ fontSize: '12px' }} />
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="avgDocTime" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    name="Doc Time (min)"
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Gaps Tab */}
-        <TabsContent value="gaps">
-          <DocumentationGapsReport oasisData={filteredOASIS} noteData={filteredNotes} />
+        <TabsContent value="ai">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">AI Feature Usage Rate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" style={{ fontSize: '12px' }} />
+                  <YAxis domain={[0, 100]} style={{ fontSize: '12px' }} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar 
+                    dataKey="aiUtilization" 
+                    fill="#8b5cf6" 
+                    name="AI Utilization (%)"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Nurse Performance (Admin view) */}
-      <div className="mt-6">
-        <NursePerformanceMetrics 
-          oasisData={filteredOASIS} 
-          noteData={filteredNotes} 
-          auditData={filteredAudits}
-          users={users}
-        />
+      {/* User Performance Table (Admin Only) */}
+      {isAdmin && userPerformance.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">User Performance Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <UserPerformanceTable users={userPerformance} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">Total Notes</span>
+            </div>
+            <p className="text-2xl font-bold mt-1">{metrics.totalNotes}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">Visits</span>
+            </div>
+            <p className="text-2xl font-bold mt-1">{metrics.totalVisits}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">AI Actions</span>
+            </div>
+            <p className="text-2xl font-bold mt-1">{metrics.aiActionsCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">Audits</span>
+            </div>
+            <p className="text-2xl font-bold mt-1">{metrics.totalAudits}</p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
