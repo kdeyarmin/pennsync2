@@ -28,6 +28,7 @@ import PatientRiskStratification from "../components/patient/PatientRiskStratifi
 import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
 import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
+import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -284,6 +285,17 @@ export default function PatientDetails() {
           />
         </div>
       </div>
+
+      {/* AI Compliance Auditor - Prominent */}
+      {patient && (
+        <div className="mb-6">
+          <AIComplianceAuditor
+            patientId={patientId}
+            autoRun={false}
+            scope="comprehensive"
+          />
+        </div>
+      )}
 
       {/* AI Risk Stratification - Prominent */}
       {patient && (
