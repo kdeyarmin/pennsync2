@@ -851,10 +851,32 @@ export default function SmartNoteAssistant() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          {/* Medicare Compliance Checker - Only show before enhancement */}
-          {!enhancedNote && roughNote.length >= 30 && (
+            {/* One-Click Compliance Fixer - Pre-enhancement */}
+            {!enhancedNote && complianceIssues.length > 0 && (
+            <OneClickComplianceFixer
+              complianceIssues={complianceIssues}
+              currentNote={roughNote}
+              onApplyFix={(text, elementName) => {
+                setRoughNote(prev => prev + '\n\n' + text);
+                if (elementName) {
+                  setAppliedFixes(prev => [...prev, elementName]);
+                }
+              }}
+              onFixAll={(fixes) => {
+                const combinedText = fixes.join('\n\n');
+                setRoughNote(prev => prev + '\n\n' + combinedText);
+                setAppliedFixes(prev => [...prev, ...complianceIssues.map(i => i.element || i.name)]);
+              }}
+              patientData={selectedPatient}
+              vitalSigns={vitalSigns}
+              diagnosis={finalDiagnosis}
+            />
+            )}
+
+            {/* Medicare Compliance Checker - Only show before enhancement */}
+            {!enhancedNote && roughNote.length >= 30 && (
             <>
             <ComplianceScoreIndicator
               roughNote={roughNote}
@@ -1097,28 +1119,6 @@ export default function SmartNoteAssistant() {
                   setRoughNote(prev => prev + '\n\n' + text);
                 }}
               />
-
-              {/* One-Click Compliance Fixer - Pre-enhancement */}
-              {complianceIssues.length > 0 && (
-                <OneClickComplianceFixer
-                  complianceIssues={complianceIssues}
-                  currentNote={roughNote}
-                  onApplyFix={(text, elementName) => {
-                    setRoughNote(prev => prev + '\n\n' + text);
-                    if (elementName) {
-                      setAppliedFixes(prev => [...prev, elementName]);
-                    }
-                  }}
-                  onFixAll={(fixes) => {
-                    const combinedText = fixes.join('\n\n');
-                    setRoughNote(prev => prev + '\n\n' + combinedText);
-                    setAppliedFixes(prev => [...prev, ...complianceIssues.map(i => i.element || i.name)]);
-                  }}
-                  patientData={selectedPatient}
-                  vitalSigns={vitalSigns}
-                  diagnosis={finalDiagnosis}
-                />
-              )}
             </>
           )}
 
