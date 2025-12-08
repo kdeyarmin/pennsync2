@@ -470,7 +470,15 @@ export default function SmartNoteAssistant() {
       - Avoid vague terms like "doing well" or "stable" - be specific
       - Natural language flow suitable for EHR copy/paste
 
-      IMPORTANT: Do NOT include any meta-commentary or closing statements about Medicare compliance standards or documentation adherence at the end. Just provide the clinical narrative itself.
+      CRITICAL - NO META-COMMENTARY:
+      NEVER include sentences about documentation itself, such as:
+      - "Thorough documentation of diagnoses could enhance reimbursement..."
+      - "Recording vital signs will contribute to comprehensive assessments..."
+      - "This documentation aligns with CMS compliance..."
+      - "Further documentation would improve..."
+      - ANY statement about the act of documenting or compliance standards
+      
+      Only write the actual clinical narrative as if it were going directly into the patient's chart. Write ONLY what a nurse would document about the patient visit - observations, assessments, interventions, patient responses. Do NOT write advice to the nurse about how to document.
 
       Return JSON:
       {
@@ -925,7 +933,8 @@ export default function SmartNoteAssistant() {
 
             Transform into professional EHR-ready narrative with proper medical terminology, Medicare compliance, and integrated vital signs.
 
-            IMPORTANT: Do NOT include any meta-commentary or closing statements about Medicare compliance standards or documentation adherence at the end. Just provide the clinical narrative itself.
+            CRITICAL - NO META-COMMENTARY:
+            NEVER include sentences about documentation itself. Only write the actual clinical narrative as if it were going directly into the patient's chart. Do NOT write advice to the nurse about how to document or statements about compliance.
 
             Return JSON:
             {
