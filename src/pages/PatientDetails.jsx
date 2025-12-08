@@ -94,6 +94,13 @@ export default function PatientDetails() {
     enabled: !!patientId,
   });
 
+  const { data: patientOASIS = [] } = useQuery({
+    queryKey: ['patientOASIS', patientId],
+    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date'),
+    initialData: [],
+    enabled: !!patientId,
+  });
+
   const createCarePlanMutation = useMutation({
     mutationFn: (carePlanData) => base44.entities.CarePlan.create({ ...carePlanData, patient_id: patientId }),
     onSuccess: (newPlan) => {
@@ -276,6 +283,19 @@ export default function PatientDetails() {
             incidents={incidents}
             autoGenerate={true}
             prominent={true}
+          />
+        </div>
+      )}
+
+      {/* AI Patient History Analyzer - Comprehensive Analysis with Gap Detection */}
+      {patient && (
+        <div className="mb-6">
+          <AIPatientHistoryAnalyzer
+            patient={patient}
+            visits={visits}
+            carePlans={carePlans}
+            oasisData={patientOASIS}
+            incidents={incidents}
           />
         </div>
       )}
