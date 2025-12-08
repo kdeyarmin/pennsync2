@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import AudioRecorder from "../components/visit/AudioRecorder";
 import VitalSignsForm from "../components/visit/VitalSignsForm";
 import TemplateGenerator from "../components/visit/TemplateGenerator";
+import AIStructuredNoteGenerator from "../components/visit/AIStructuredNoteGenerator";
+import RealTimeDocumentationAssistant from "../components/visit/RealTimeDocumentationAssistant";
 import VitalSignsComparison from "../components/visit/VitalSignsComparison";
 import ClinicalDecisionSupport from "../components/visit/ClinicalDecisionSupport";
 import CarePlanProgress from "../components/visit/CarePlanProgress";
