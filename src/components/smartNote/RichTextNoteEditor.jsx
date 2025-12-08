@@ -107,11 +107,11 @@ export default function RichTextNoteEditor({
   const renderHighlightedText = () => {
     if (!editableText) return null;
     
-    // Split by placeholders and return spans
-    const parts = editableText.split(/(\[nurse to document[^\]]*\])/gi);
+    // Split by placeholders - match [nurse to document...] OR [insert...] OR any bracketed placeholder text
+    const parts = editableText.split(/(\[nurse to document[^\]]*\]|\[insert[^\]]*\]|\[[^\]]*to fill in[^\]]*\]|\[[^\]]*enter[^\]]*\])/gi);
     
     return parts.map((part, idx) => {
-      if (part.match(/\[nurse to document[^\]]*\]/i)) {
+      if (part.match(/\[nurse to document[^\]]*\]|\[insert[^\]]*\]|\[[^\]]*to fill in[^\]]*\]|\[[^\]]*enter[^\]]*\]/i)) {
         return (
           <mark key={idx} className="bg-yellow-300 px-1 rounded">
             {part}
