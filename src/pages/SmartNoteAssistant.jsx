@@ -855,8 +855,8 @@ export default function SmartNoteAssistant() {
             </CardContent>
           </Card>
 
-          {/* Medicare Compliance Checker */}
-          {(roughNote.length >= 30 || enhancedNote) && (
+          {/* Medicare Compliance Checker - Only show before enhancement */}
+          {!enhancedNote && roughNote.length >= 30 && (
             <>
             <ComplianceScoreIndicator
               roughNote={roughNote}
@@ -962,23 +962,7 @@ export default function SmartNoteAssistant() {
             </>
           )}
 
-          {/* Compliance Summary Report */}
-          {enhancedNote && (
-            <div className="flex justify-end">
-              <ComplianceSummaryReport
-                patientId={selectedPatientId}
-                patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
-                visitType={visitType}
-                diagnosis={finalDiagnosis}
-                roughNoteCompliance={roughNoteCompliance}
-                enhancedNoteCompliance={enhancedNoteCompliance}
-                appliedFixes={appliedFixes}
-                dismissedElements={dismissedElementNames}
-                vitalSigns={vitalSigns}
-                nurseEmail={currentUser?.email}
-              />
-            </div>
-          )}
+
 
           {/* Step 4: Enhanced Note with Rich Text Editor */}
           {enhancedNote && (

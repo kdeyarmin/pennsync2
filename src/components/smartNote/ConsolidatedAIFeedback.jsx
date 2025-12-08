@@ -11,7 +11,8 @@ import {
   Wand2,
   FileText,
   TrendingUp,
-  Loader2
+  Loader2,
+  Lightbulb
 } from "lucide-react";
 
 export default function ConsolidatedAIFeedback({
@@ -38,7 +39,10 @@ export default function ConsolidatedAIFeedback({
 
     setIsAnalyzing(true);
     try {
-      const prompt = `Analyze this enhanced clinical note for completeness, compliance, accuracy, and quality. Provide consolidated feedback across all dimensions.
+      const prompt = `Analyze this enhanced clinical note for completeness, Medicare compliance, accuracy, and overall quality. Provide comprehensive consolidated feedback that merges:
+1. Medicare Compliance Assessment (CRITICAL for reimbursement)
+2. Overall Quality Review (clinical accuracy, clarity, grammar)
+3. Risk Identification (undocumented safety concerns)
 
 ENHANCED NOTE:
 ${enhancedNote}
@@ -49,11 +53,18 @@ CONTEXT:
 - Vitals: ${vitalSigns ? JSON.stringify(vitalSigns) : 'Not provided'}
 - Active Care Plans: ${carePlans.filter(cp => cp.status === 'active').length}
 
-Analyze for:
-1. **Critical Issues** - Medicare compliance gaps, missing required elements
-2. **Quality Improvements** - Grammar, terminology, clarity
-3. **Risk Factors** - Undocumented safety concerns, patient risks
-4. **Optimization** - Documentation that could improve outcomes/reimbursement
+ANALYSIS FRAMEWORK:
+1. **Medicare Compliance Score** (0-100): Rate adherence to CMS requirements for home health
+   - Homebound status documentation
+   - Skilled need justification
+   - Patient response to teaching
+   - Functional assessment
+   - Safety assessment
+   
+2. **Critical Issues** - Medicare compliance gaps, missing required elements
+3. **Quality Improvements** - Grammar, terminology, clinical accuracy, clarity
+4. **Risk Factors** - Undocumented safety concerns, patient risks
+5. **Optimization** - Documentation that could improve outcomes/reimbursement
 
 For each issue, provide:
 - Category and severity
@@ -62,7 +73,9 @@ For each issue, provide:
 
 Return as JSON:
 {
-  "overall_score": 0-100,
+  "overall_quality_score": 0-100,
+  "medicare_compliance_score": 0-100,
+  "compliance_status": "compliant|needs_review|non_compliant",
   "critical_issues": [
     {
       "category": "compliance|safety|required_element",
@@ -103,7 +116,9 @@ Return as JSON:
         response_json_schema: {
           type: "object",
           properties: {
-            overall_score: { type: "number" },
+            overall_quality_score: { type: "number" },
+            medicare_compliance_score: { type: "number" },
+            compliance_status: { type: "string" },
             critical_issues: {
               type: "array",
               items: {
@@ -204,15 +219,24 @@ Return as JSON:
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Brain className="w-5 h-5 text-purple-600" />
-            AI Quality Review
+            AI Quality & Compliance Review
           </CardTitle>
-          <Badge className={`${
-            feedback.overall_score >= 90 ? 'bg-green-600' :
-            feedback.overall_score >= 70 ? 'bg-yellow-600' :
-            'bg-red-600'
-          } text-white`}>
-            {feedback.overall_score}% Quality
-          </Badge>
+          <div className="flex gap-2">
+            <Badge className={`${
+              feedback.medicare_compliance_score >= 90 ? 'bg-green-600' :
+              feedback.medicare_compliance_score >= 70 ? 'bg-yellow-600' :
+              'bg-red-600'
+            } text-white`}>
+              {feedback.medicare_compliance_score}% Medicare
+            </Badge>
+            <Badge className={`${
+              feedback.overall_quality_score >= 90 ? 'bg-blue-600' :
+              feedback.overall_quality_score >= 70 ? 'bg-yellow-600' :
+              'bg-red-600'
+            } text-white`}>
+              {feedback.overall_quality_score}% Quality
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
