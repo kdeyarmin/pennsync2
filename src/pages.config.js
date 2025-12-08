@@ -32,6 +32,7 @@ import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import PatientDataManagement from './pages/PatientDataManagement';
 import PatientDashboard from './pages/PatientDashboard';
 import DocumentGenerator from './pages/DocumentGenerator';
+import OASIS from './pages/OASIS';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +71,7 @@ export const PAGES = {
     "PatientDataManagement": PatientDataManagement,
     "PatientDashboard": PatientDashboard,
     "DocumentGenerator": DocumentGenerator,
+    "OASIS": OASIS,
 }
 
 export const pagesConfig = {
