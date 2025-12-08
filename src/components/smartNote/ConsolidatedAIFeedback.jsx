@@ -35,6 +35,12 @@ export default function ConsolidatedAIFeedback({
     risks: [],
     optimizations: []
   });
+  const [appliedSuggestions, setAppliedSuggestions] = useState({
+    critical: [],
+    quality: [],
+    risks: [],
+    optimizations: []
+  });
 
   useEffect(() => {
     if (enhancedNote && !feedback) {
@@ -255,21 +261,31 @@ Return as JSON:
     if (!onApplyFix) return;
     
     const selected = selectedSuggestions[category] || [];
+    const alreadyApplied = appliedSuggestions[category] || [];
+    
+    // Filter out already applied suggestions
+    const newSelections = selected.filter(idx => !alreadyApplied.includes(idx));
+    if (newSelections.length === 0) return;
+    
     let textsToApply = [];
 
     if (category === 'critical') {
-      textsToApply = selected.map(idx => feedback.critical_issues[idx]?.insert_text).filter(Boolean);
+      textsToApply = newSelections.map(idx => feedback.critical_issues[idx]?.insert_text).filter(Boolean);
     } else if (category === 'quality') {
-      textsToApply = selected.map(idx => feedback.quality_improvements[idx]?.improved).filter(Boolean);
+      textsToApply = newSelections.map(idx => feedback.quality_improvements[idx]?.improved).filter(Boolean);
     } else if (category === 'risks') {
-      textsToApply = selected.map(idx => feedback.risk_factors[idx]?.insert_text).filter(Boolean);
+      textsToApply = newSelections.map(idx => feedback.risk_factors[idx]?.insert_text).filter(Boolean);
     } else if (category === 'optimizations') {
-      textsToApply = selected.map(idx => feedback.optimization_opportunities[idx]?.insert_text).filter(Boolean);
+      textsToApply = newSelections.map(idx => feedback.optimization_opportunities[idx]?.insert_text).filter(Boolean);
     }
 
     if (textsToApply.length > 0) {
       const combinedText = textsToApply.join('\n\n');
       onApplyFix(combinedText);
+      setAppliedSuggestions(prev => ({
+        ...prev,
+        [category]: [...prev[category], ...newSelections]
+      }));
       deselectAllInCategory(category);
     }
   };
@@ -376,10 +392,11 @@ Return as JSON:
                     <Button
                       size="sm"
                       onClick={() => applySelected('critical')}
-                      className="bg-red-600 hover:bg-red-700 text-xs h-7"
+                      disabled={selectedSuggestions.critical.every(idx => appliedSuggestions.critical?.includes(idx))}
+                      className="bg-red-600 hover:bg-red-700 text-xs h-7 disabled:opacity-50"
                     >
                       <CheckSquare className="w-3 h-3 mr-1" />
-                      Apply {selectedSuggestions.critical.length} Selected
+                      Apply {selectedSuggestions.critical.filter(idx => !appliedSuggestions.critical?.includes(idx)).length} Selected
                     </Button>
                   )}
                 </div>
@@ -465,10 +482,11 @@ Return as JSON:
                     <Button
                       size="sm"
                       onClick={() => applySelected('quality')}
-                      className="text-xs h-7"
+                      disabled={selectedSuggestions.quality.every(idx => appliedSuggestions.quality?.includes(idx))}
+                      className="text-xs h-7 disabled:opacity-50"
                     >
                       <CheckSquare className="w-3 h-3 mr-1" />
-                      Apply {selectedSuggestions.quality.length} Selected
+                      Apply {selectedSuggestions.quality.filter(idx => !appliedSuggestions.quality?.includes(idx)).length} Selected
                     </Button>
                   )}
                 </div>
@@ -527,10 +545,11 @@ Return as JSON:
                     <Button
                       size="sm"
                       onClick={() => applySelected('risks')}
-                      className="text-xs h-7"
+                      disabled={selectedSuggestions.risks.every(idx => appliedSuggestions.risks?.includes(idx))}
+                      className="text-xs h-7 disabled:opacity-50"
                     >
                       <CheckSquare className="w-3 h-3 mr-1" />
-                      Apply {selectedSuggestions.risks.length} Selected
+                      Apply {selectedSuggestions.risks.filter(idx => !appliedSuggestions.risks?.includes(idx)).length} Selected
                     </Button>
                   )}
                 </div>
@@ -627,9 +646,10 @@ Return as JSON:
                       <Button
                         size="sm"
                         onClick={() => applySelected('optimizations')}
-                        className="text-xs h-6 ml-2"
+                        disabled={selectedSuggestions.optimizations.every(idx => appliedSuggestions.optimizations?.includes(idx))}
+                        className="text-xs h-6 ml-2 disabled:opacity-50"
                       >
-                        Apply {selectedSuggestions.optimizations.length}
+                        Apply {selectedSuggestions.optimizations.filter(idx => !appliedSuggestions.optimizations?.includes(idx)).length}
                       </Button>
                     )}
                   </div>
