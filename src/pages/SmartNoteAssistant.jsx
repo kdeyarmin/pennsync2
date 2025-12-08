@@ -78,6 +78,8 @@ import AIFeedbackPanel from "../components/smartNote/AIFeedbackPanel";
 import OASISDataDisplay from "../components/patient/OASISDataDisplay";
 import ClinicalGuidelinesAssistant from "../components/smartNote/ClinicalGuidelinesAssistant";
 import OneClickComplianceFixer from "../components/smartNote/OneClickComplianceFixer";
+import ConsolidatedAIFeedback from "../components/smartNote/ConsolidatedAIFeedback";
+import NextStepsPanel from "../components/smartNote/NextStepsPanel";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1002,40 +1004,31 @@ export default function SmartNoteAssistant() {
                     copied={copied}
                     qualityScore={auditResults?.quality_score}
                   />
-                  <div className="flex flex-col md:flex-row gap-3 md:gap-4 mt-4">
-                    <Alert className="bg-green-100 border-green-300 flex-1">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      <AlertDescription className="text-green-800 text-sm md:text-base">
-                        Ready to copy into your EHR system!
-                      </AlertDescription>
-                    </Alert>
-                    <Button 
-                      onClick={handleSaveNote} 
-                      disabled={isSaving || savedSuccessfully}
-                      className="bg-blue-600 hover:bg-blue-700 gap-2 w-full md:w-auto h-11 md:h-12 text-base"
-                    >
-                      {isSaving ? (
-                        <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> Saving...</>
-                      ) : savedSuccessfully ? (
-                        <><CheckCircle2 className="w-5 h-5" /> Saved!</>
-                      ) : (
-                        <><Save className="w-5 h-5" /> Save to Chart</>
-                      )}
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* Automatic Document Review */}
-              <AutomaticDocumentReviewer
-                documentType="visit_note"
-                documentContent={enhancedNote}
+              {/* Consolidated AI Feedback - All feedback in one place */}
+              <ConsolidatedAIFeedback
+                enhancedNote={enhancedNote}
+                roughNote={roughNote}
                 patientData={selectedPatient}
-                vitalSigns={vitalSigns}
                 diagnosis={finalDiagnosis}
-                visitType={visitType}
-                autoReview={true}
+                vitalSigns={vitalSigns}
+                carePlans={carePlans}
                 onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+              />
+
+              {/* Next Steps Panel - Clear action-oriented summary */}
+              <NextStepsPanel
+                copied={copied}
+                isSaving={isSaving}
+                savedSuccessfully={savedSuccessfully}
+                onCopy={handleCopy}
+                onSave={handleSaveNote}
+                onGenerateTasks={() => setActiveAccordion('tasks')}
+                onGenerateCarePlans={() => setActiveAccordion('careplans')}
+                onStartNew={handleClearNote}
+                complianceScore={enhancedNoteCompliance?.overall_score}
               />
             </>
           )}
@@ -1090,172 +1083,67 @@ export default function SmartNoteAssistant() {
           )}
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar - Smart visibility based on step */}
         <div className="space-y-4 md:space-y-6">
-          <ContextualAITools
-            currentStep={currentStep}
-            hasPatient={!!selectedPatientId}
-            hasNotes={roughNote.length >= 20}
-            hasEnhancedNote={!!enhancedNote}
-            onAction={handleContextualAction}
-            diagnosis={finalDiagnosis}
-            complianceScore={enhancedNoteCompliance?.overall_score}
-          />
-
-          {/* AI Feedback Panel */}
-          {enhancedNote && (
-            <AIFeedbackPanel
-              generatedContent={enhancedNote}
-              contentType="enhanced_note"
-              onFeedbackSubmitted={(feedback) => {
-                console.log("Feedback received:", feedback);
-              }}
-            />
-          )}
-
-          {/* Clinical Guidelines Assistant */}
-          <ClinicalGuidelinesAssistant
-            diagnosis={finalDiagnosis}
-            patientData={selectedPatient}
-            vitalSigns={vitalSigns}
-            onInsertGuideline={(text) => {
-              if (enhancedNote) {
-                setEnhancedNote(prev => prev + '\n\n' + text);
-              } else {
-                setRoughNote(prev => prev + '\n\n' + text);
-              }
-            }}
-          />
-
-          {/* One-Click Compliance Fixer */}
-          {complianceIssues.length > 0 && (
-            <OneClickComplianceFixer
-              complianceIssues={complianceIssues}
-              currentNote={enhancedNote || roughNote}
-              onApplyFix={(text, elementName) => {
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                } else {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                }
-                if (elementName) {
-                  setAppliedFixes(prev => [...prev, elementName]);
-                }
-              }}
-              onFixAll={(fixes) => {
-                const combinedText = fixes.join('\n\n');
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n\n' + combinedText);
-                } else {
-                  setRoughNote(prev => prev + '\n\n' + combinedText);
-                }
-                setAppliedFixes(prev => [...prev, ...complianceIssues.map(i => i.element || i.name)]);
-              }}
-              patientData={selectedPatient}
-              vitalSigns={vitalSigns}
+          {/* Show contextual tools only before enhancement */}
+          {!enhancedNote && (
+            <ContextualAITools
+              currentStep={currentStep}
+              hasPatient={!!selectedPatientId}
+              hasNotes={roughNote.length >= 20}
+              hasEnhancedNote={!!enhancedNote}
+              onAction={handleContextualAction}
               diagnosis={finalDiagnosis}
+              complianceScore={enhancedNoteCompliance?.overall_score}
             />
           )}
 
-          {/* AI Risk & Gap Detector */}
-                          <AIRiskAndGapDetector
-                            noteContent={enhancedNote || roughNote}
-                            patientData={selectedPatient}
-                            diagnosis={finalDiagnosis}
-                            vitalSigns={vitalSigns}
-                            carePlans={carePlans}
-                            onInsertText={(text) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(prev => prev + '\n\n' + text);
-                              } else {
-                                setRoughNote(prev => prev + '\n\n' + text);
-                              }
-                            }}
-                          />
+          {/* Show these only BEFORE enhancement */}
+          {!enhancedNote && (
+            <>
+              {/* Clinical Guidelines Assistant */}
+              <ClinicalGuidelinesAssistant
+                diagnosis={finalDiagnosis}
+                patientData={selectedPatient}
+                vitalSigns={vitalSigns}
+                onInsertGuideline={(text) => {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }}
+              />
 
-                          {/* AI Grammar & Terminology Corrector */}
-                          <AIGrammarTerminologyCorrector
-                            noteContent={enhancedNote || roughNote}
-                            careType="home_health"
-                            onApplyCorrection={(original, corrected) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(prev => prev.replace(original, corrected));
-                              } else {
-                                setRoughNote(prev => prev.replace(original, corrected));
-                              }
-                            }}
-                            onApplyAll={(correctedNote) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(correctedNote);
-                              } else {
-                                setRoughNote(correctedNote);
-                              }
-                            }}
-                          />
+              {/* One-Click Compliance Fixer - Pre-enhancement */}
+              {complianceIssues.length > 0 && (
+                <OneClickComplianceFixer
+                  complianceIssues={complianceIssues}
+                  currentNote={roughNote}
+                  onApplyFix={(text, elementName) => {
+                    setRoughNote(prev => prev + '\n\n' + text);
+                    if (elementName) {
+                      setAppliedFixes(prev => [...prev, elementName]);
+                    }
+                  }}
+                  onFixAll={(fixes) => {
+                    const combinedText = fixes.join('\n\n');
+                    setRoughNote(prev => prev + '\n\n' + combinedText);
+                    setAppliedFixes(prev => [...prev, ...complianceIssues.map(i => i.element || i.name)]);
+                  }}
+                  patientData={selectedPatient}
+                  vitalSigns={vitalSigns}
+                  diagnosis={finalDiagnosis}
+                />
+              )}
+            </>
+          )}
 
-                          {/* AI Documentation Suggester - Real-time suggestions */}
-                          <AIDocumentationSuggester
-                            patientId={selectedPatientId}
-                            oasisData={patientOASIS[0]?.pdgm_data}
-                            noteContent={enhancedNote || roughNote}
-                            discrepancies={oasisDiscrepancies}
-                            carePlanNeeds={carePlans.filter(cp => cp.status === 'active')}
-                            vitalSigns={vitalSigns}
-                            patientData={selectedPatient}
-                            previousVisits={recentVisits}
-                            allCarePlans={carePlans}
-                            onInsertText={(text) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(prev => prev + '\n\n' + text);
-                              } else {
-                                setRoughNote(prev => prev + '\n\n' + text);
-                              }
-                            }}
-                          />
-
-                          {/* OASIS-Integrated Clinical Decision Support */}
-                          <OASISIntegratedClinicalSupport
-                            patientId={selectedPatientId}
-                            patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-                            noteContent={enhancedNote || roughNote}
-                            diagnosis={finalDiagnosis}
-                            vitalSigns={vitalSigns}
-                            carePlans={carePlans}
-                            onInsertText={(text) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(prev => prev + '\n\n' + text);
-                              } else {
-                                setRoughNote(prev => prev + '\n\n' + text);
-                              }
-                            }}
-                            onCreateTask={(task) => console.log("Task created:", task)}
-                            onUpdateCarePlan={(rec) => console.log("Care plan update:", rec)}
-                            onDiscrepanciesFound={(discrepancies) => setOasisDiscrepancies(discrepancies)}
-                          />
-
-                          {/* Clinical Decision Support */}
-                          <ClinicalDecisionSupport
-                            enhancedNote={enhancedNote}
-                            roughNote={roughNote}
-                            diagnosis={finalDiagnosis}
-                            careType="home_health"
-                            vitalSigns={vitalSigns}
-                            onInsertRecommendation={(text) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(prev => prev + '\n\n' + text);
-                              } else {
-                                setRoughNote(prev => prev + '\n\n' + text);
-                              }
-                            }}
-                          />
-
-          {/* OASIS Item Linker */}
-          <OASISItemLinker
-            linkedItems={oasisLinkedItems}
-            onAddLink={(link) => setOasisLinkedItems(prev => [...prev, link])}
-            onRemoveLink={(idx) => setOasisLinkedItems(prev => prev.filter((_, i) => i !== idx))}
-            selectedText=""
-          />
+          {/* OASIS Item Linker - Always visible if has OASIS data */}
+          {patientOASIS?.length > 0 && (
+            <OASISItemLinker
+              linkedItems={oasisLinkedItems}
+              onAddLink={(link) => setOasisLinkedItems(prev => [...prev, link])}
+              onRemoveLink={(idx) => setOasisLinkedItems(prev => prev.filter((_, i) => i !== idx))}
+              selectedText=""
+            />
+          )}
 
           {/* Skill Gap Remediation - Compliance Focused */}
           {(detectedComplianceRisks.length > 0 || pdgmOptimizationWarnings.length > 0) && (
