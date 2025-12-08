@@ -21,9 +21,14 @@ export default function RichTextNoteEditor({
   const [editableText, setEditableText] = useState(value || '');
   const lastValueRef = useRef(value);
   const textareaRef = useRef(null);
+  const isInternalChange = useRef(false);
 
   useEffect(() => {
-    setEditableText(value);
+    // Only sync from parent if it's not an internal change
+    if (!isInternalChange.current && value !== editableText) {
+      setEditableText(value);
+    }
+    isInternalChange.current = false;
   }, [value]);
 
   // Track changes for undo/redo
@@ -93,6 +98,7 @@ export default function RichTextNoteEditor({
 
   const handleTextChange = (e) => {
     const newText = e.target.value;
+    isInternalChange.current = true;
     setEditableText(newText);
     onChange?.(newText);
   };

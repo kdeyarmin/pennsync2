@@ -984,7 +984,12 @@ export default function SmartNoteAssistant() {
                 diagnosis={finalDiagnosis}
                 vitalSigns={vitalSigns}
                 carePlans={carePlans}
-                onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+                onApplyFix={(text) => {
+                  setEnhancedNote(prev => {
+                    const updated = prev + '\n\n' + text;
+                    return updated;
+                  });
+                }}
               />
 
               <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
