@@ -14,8 +14,9 @@ import { logError } from './activityLogger';
 export async function canAccessPatient(patientId) {
   try {
     const user = await base44.auth.me();
+    if (!user) return false;
     
-    // All authenticated users can access all patients
+    // All authenticated users can access all patients in the system
     return true;
   } catch (error) {
     console.error('Access check failed:', error);
@@ -154,6 +155,7 @@ export function isValidPhone(phone) {
 export async function logSecurityEvent(action, details = {}) {
   try {
     const user = await base44.auth.me();
+    if (!user) return;
     
     const logEntry = {
       timestamp: new Date().toISOString(),
@@ -165,15 +167,13 @@ export async function logSecurityEvent(action, details = {}) {
       user_agent: navigator.userAgent
     };
     
-    // Log to console for debugging (remove in production)
+    // Log to console for debugging
     console.log('[SECURITY AUDIT]', logEntry);
     
-    // Store in SecurityLog entity
-    try {
-      await base44.entities.SecurityLog.create(logEntry);
-    } catch (error) {
-      console.error('Failed to store security log:', error);
-    }
+    // Store in SecurityLog entity - don't await to avoid blocking
+    base44.entities.SecurityLog.create(logEntry).catch(err => {
+      console.error('Failed to store security log:', err);
+    });
   } catch (error) {
     console.error('Failed to log security event:', error);
   }
