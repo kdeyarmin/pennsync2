@@ -28,6 +28,7 @@ import PatientRiskStratification from "../components/patient/PatientRiskStratifi
 import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
 import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
+import AIPatientHistoryAnalyzer from "../components/patient/AIPatientHistoryAnalyzer";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 
 export default function PatientDetails() {
