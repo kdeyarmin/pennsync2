@@ -29,6 +29,7 @@ import PatientAlertsWidget from "../components/dashboard/PatientAlertsWidget";
 import RecentVisitsSummary from "../components/dashboard/RecentVisitsSummary";
 import AIHealthInsights from "../components/dashboard/AIHealthInsights";
 import QuickStatsGrid from "../components/dashboard/QuickStatsGrid";
+import PredictiveHealthAnalytics from "../components/dashboard/PredictiveHealthAnalytics";
 import { formatEastern } from "../components/utils/timezone";
 
 export default function PatientDashboard() {
@@ -168,6 +169,16 @@ export default function PatientDashboard() {
         alerts={activeAlerts}
         incidents={incidents}
         patient={selectedPatient}
+      />
+
+      {/* Predictive Health Analytics */}
+      <PredictiveHealthAnalytics
+        patientId={selectedPatientId}
+        patient={selectedPatient}
+        visits={visits}
+        carePlans={carePlans}
+        alerts={alerts}
+        incidents={incidents}
       />
 
       {/* AI Health Insights - Prominent */}
