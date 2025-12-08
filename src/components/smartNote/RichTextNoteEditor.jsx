@@ -76,8 +76,31 @@ export default function RichTextNoteEditor({
 
 
   const handleCopyPlainText = () => {
-    navigator.clipboard.writeText(value);
+    // Remove highlighting markers before copying
+    const cleanText = value
+      .replace(/\[nurse to document[^\]]*\]/gi, '[nurse to document]')
+      .replace(/<[^>]*>/g, ''); // Remove any HTML tags
+    navigator.clipboard.writeText(cleanText);
     onCopy?.();
+  };
+
+  // Process text to highlight incomplete areas
+  const getHighlightedContent = () => {
+    if (!value) return null;
+    
+    // Split by placeholders and wrap them with highlighting
+    const parts = value.split(/(\[nurse to document[^\]]*\])/gi);
+    
+    return parts.map((part, idx) => {
+      if (part.match(/\[nurse to document[^\]]*\]/i)) {
+        return (
+          <span key={idx} className="bg-yellow-200 px-1 py-0.5 rounded font-semibold">
+            {part}
+          </span>
+        );
+      }
+      return <span key={idx}>{part}</span>;
+    });
   };
 
   return (
@@ -132,11 +155,11 @@ export default function RichTextNoteEditor({
         </div>
       </div>
 
-      {/* Content Display - Plain Text */}
+      {/* Content Display - Plain Text with Highlighting */}
       <div 
         className="bg-white p-4 rounded-lg border min-h-[300px] whitespace-pre-wrap font-sans text-sm leading-relaxed"
       >
-        {value || <span className="text-gray-400">Enhanced note will appear here...</span>}
+        {value ? getHighlightedContent() : <span className="text-gray-400">Enhanced note will appear here...</span>}
       </div>
 
       <p className="text-xs text-gray-500 text-center">

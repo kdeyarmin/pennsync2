@@ -983,7 +983,7 @@ export default function SmartNoteAssistant() {
                       <CheckCircle2 className="w-5 h-5 text-green-600" />
                       <span>4. Enhanced Note</span>
                     </div>
-                    <span className="text-xs md:text-sm text-gray-500 font-normal sm:ml-auto">Click Edit to modify • Ctrl+Z to undo</span>
+                    <span className="text-xs md:text-sm text-gray-500 font-normal sm:ml-auto">Yellow highlights = areas needing completion</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
