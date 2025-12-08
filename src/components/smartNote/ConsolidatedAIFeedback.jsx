@@ -12,8 +12,10 @@ import {
   FileText,
   TrendingUp,
   Loader2,
-  Lightbulb
+  Lightbulb,
+  CheckSquare
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ConsolidatedAIFeedback({
   enhancedNote,
@@ -27,6 +29,12 @@ export default function ConsolidatedAIFeedback({
   const [feedback, setFeedback] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState("critical");
+  const [selectedSuggestions, setSelectedSuggestions] = useState({
+    critical: [],
+    quality: [],
+    risks: [],
+    optimizations: []
+  });
 
   useEffect(() => {
     if (enhancedNote && !feedback) {
@@ -195,6 +203,54 @@ Return as JSON:
     return colors[severity] || colors.low;
   };
 
+  const toggleSuggestion = (category, index) => {
+    setSelectedSuggestions(prev => {
+      const current = prev[category] || [];
+      if (current.includes(index)) {
+        return { ...prev, [category]: current.filter(i => i !== index) };
+      } else {
+        return { ...prev, [category]: [...current, index] };
+      }
+    });
+  };
+
+  const selectAllInCategory = (category, count) => {
+    setSelectedSuggestions(prev => ({
+      ...prev,
+      [category]: Array.from({ length: count }, (_, i) => i)
+    }));
+  };
+
+  const deselectAllInCategory = (category) => {
+    setSelectedSuggestions(prev => ({
+      ...prev,
+      [category]: []
+    }));
+  };
+
+  const applySelected = (category) => {
+    if (!onApplyFix) return;
+    
+    const selected = selectedSuggestions[category] || [];
+    let textsToApply = [];
+
+    if (category === 'critical') {
+      textsToApply = selected.map(idx => feedback.critical_issues[idx]?.insert_text).filter(Boolean);
+    } else if (category === 'quality') {
+      textsToApply = selected.map(idx => feedback.quality_improvements[idx]?.improved).filter(Boolean);
+    } else if (category === 'risks') {
+      textsToApply = selected.map(idx => feedback.risk_factors[idx]?.insert_text).filter(Boolean);
+    } else if (category === 'optimizations') {
+      textsToApply = selected.map(idx => feedback.optimization_opportunities[idx]?.insert_text).filter(Boolean);
+    }
+
+    if (textsToApply.length > 0) {
+      const combinedText = textsToApply.join('\n\n');
+      onApplyFix(combinedText);
+      deselectAllInCategory(category);
+    }
+  };
+
   if (isAnalyzing) {
     return (
       <Card className="border-2 border-purple-200">
@@ -278,28 +334,56 @@ Return as JSON:
                 <p className="text-sm text-green-800 font-medium">No critical issues found!</p>
               </div>
             ) : (
-              feedback.critical_issues.map((issue, idx) => (
-                <div key={idx} className="p-3 rounded-lg border-2 border-red-300 bg-red-50">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex-1">
-                      <Badge variant="outline" className="text-xs mb-1">{issue.category}</Badge>
-                      <p className="font-semibold text-sm text-gray-900">{issue.issue}</p>
-                      <p className="text-xs text-gray-600 mt-1">💡 {issue.recommendation}</p>
-                    </div>
-                    <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <>
+                <div className="flex items-center justify-between gap-2 p-2 bg-white/50 rounded border border-red-200">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedSuggestions.critical?.length === feedback.critical_issues.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          selectAllInCategory('critical', feedback.critical_issues.length);
+                        } else {
+                          deselectAllInCategory('critical');
+                        }
+                      }}
+                    />
+                    <span className="text-xs font-medium">Select All ({selectedSuggestions.critical?.length || 0} selected)</span>
                   </div>
-                  {issue.insert_text && onApplyFix && (
+                  {selectedSuggestions.critical?.length > 0 && (
                     <Button
                       size="sm"
-                      onClick={() => onApplyFix(issue.insert_text)}
-                      className="w-full text-xs mt-2 bg-red-600 hover:bg-red-700"
+                      onClick={() => applySelected('critical')}
+                      className="bg-red-600 hover:bg-red-700 text-xs h-7"
                     >
-                      <Wand2 className="w-3 h-3 mr-1" />
-                      Apply Fix
+                      <CheckSquare className="w-3 h-3 mr-1" />
+                      Apply {selectedSuggestions.critical.length} Selected
                     </Button>
                   )}
                 </div>
-              ))
+                {feedback.critical_issues.map((issue, idx) => (
+                  <div key={idx} className="p-3 rounded-lg border-2 border-red-300 bg-red-50">
+                    <div className="flex items-start gap-2 mb-2">
+                      <Checkbox
+                        checked={selectedSuggestions.critical?.includes(idx)}
+                        onCheckedChange={() => toggleSuggestion('critical', idx)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <Badge variant="outline" className="text-xs mb-1">{issue.category}</Badge>
+                        <p className="font-semibold text-sm text-gray-900">{issue.issue}</p>
+                        <p className="text-xs text-gray-600 mt-1">💡 {issue.recommendation}</p>
+                        {issue.insert_text && (
+                          <div className="mt-2 p-2 bg-white/60 rounded border border-red-200">
+                            <p className="text-xs font-medium text-gray-500 mb-1">AI Suggestion:</p>
+                            <p className="text-xs text-gray-700">{issue.insert_text}</p>
+                          </div>
+                        )}
+                      </div>
+                      <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-1" />
+                    </div>
+                  </div>
+                ))}
+              </>
             )}
           </TabsContent>
 
@@ -310,31 +394,58 @@ Return as JSON:
                 <p className="text-sm text-green-800 font-medium">Quality looks great!</p>
               </div>
             ) : (
-              feedback.quality_improvements.map((improvement, idx) => (
-                <div key={idx} className="p-3 rounded-lg border border-yellow-300 bg-yellow-50">
-                  <Badge variant="outline" className="text-xs mb-2">{improvement.category}</Badge>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <p className="text-xs text-gray-500">Current:</p>
-                      <p className="text-gray-700 line-through">{improvement.current}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Improved:</p>
-                      <p className="text-gray-900 font-medium">{improvement.improved}</p>
-                    </div>
-                    <p className="text-xs text-gray-600 italic">{improvement.rationale}</p>
+              <>
+                <div className="flex items-center justify-between gap-2 p-2 bg-white/50 rounded border border-yellow-200">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedSuggestions.quality?.length === feedback.quality_improvements.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          selectAllInCategory('quality', feedback.quality_improvements.length);
+                        } else {
+                          deselectAllInCategory('quality');
+                        }
+                      }}
+                    />
+                    <span className="text-xs font-medium">Select All ({selectedSuggestions.quality?.length || 0} selected)</span>
                   </div>
-                  {onApplyFix && (
+                  {selectedSuggestions.quality?.length > 0 && (
                     <Button
                       size="sm"
-                      onClick={() => onApplyFix(improvement.improved)}
-                      className="w-full text-xs mt-2"
+                      onClick={() => applySelected('quality')}
+                      className="text-xs h-7"
                     >
-                      Apply Improvement
+                      <CheckSquare className="w-3 h-3 mr-1" />
+                      Apply {selectedSuggestions.quality.length} Selected
                     </Button>
                   )}
                 </div>
-              ))
+                {feedback.quality_improvements.map((improvement, idx) => (
+                  <div key={idx} className="p-3 rounded-lg border border-yellow-300 bg-yellow-50">
+                    <div className="flex items-start gap-2 mb-2">
+                      <Checkbox
+                        checked={selectedSuggestions.quality?.includes(idx)}
+                        onCheckedChange={() => toggleSuggestion('quality', idx)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <Badge variant="outline" className="text-xs mb-2">{improvement.category}</Badge>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <p className="text-xs text-gray-500">Current:</p>
+                            <p className="text-gray-700 line-through">{improvement.current}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Improved:</p>
+                            <p className="text-gray-900 font-medium">{improvement.improved}</p>
+                          </div>
+                          <p className="text-xs text-gray-600 italic">{improvement.rationale}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
             )}
           </TabsContent>
 
@@ -345,28 +456,57 @@ Return as JSON:
                 <p className="text-sm text-green-800 font-medium">No undocumented risks!</p>
               </div>
             ) : (
-              feedback.risk_factors.map((risk, idx) => (
-                <div key={idx} className={`p-3 rounded-lg border-2 ${getSeverityColor(risk.severity)}`}>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs">{risk.severity}</Badge>
-                        <p className="font-semibold text-sm">{risk.risk}</p>
-                      </div>
-                      <p className="text-xs text-gray-600">{risk.mitigation}</p>
-                    </div>
+              <>
+                <div className="flex items-center justify-between gap-2 p-2 bg-white/50 rounded border border-orange-200">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedSuggestions.risks?.length === feedback.risk_factors.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          selectAllInCategory('risks', feedback.risk_factors.length);
+                        } else {
+                          deselectAllInCategory('risks');
+                        }
+                      }}
+                    />
+                    <span className="text-xs font-medium">Select All ({selectedSuggestions.risks?.length || 0} selected)</span>
                   </div>
-                  {risk.insert_text && onApplyFix && (
+                  {selectedSuggestions.risks?.length > 0 && (
                     <Button
                       size="sm"
-                      onClick={() => onApplyFix(risk.insert_text)}
-                      className="w-full text-xs mt-2"
+                      onClick={() => applySelected('risks')}
+                      className="text-xs h-7"
                     >
-                      Add Risk Documentation
+                      <CheckSquare className="w-3 h-3 mr-1" />
+                      Apply {selectedSuggestions.risks.length} Selected
                     </Button>
                   )}
                 </div>
-              ))
+                {feedback.risk_factors.map((risk, idx) => (
+                  <div key={idx} className={`p-3 rounded-lg border-2 ${getSeverityColor(risk.severity)}`}>
+                    <div className="flex items-start gap-2 mb-2">
+                      <Checkbox
+                        checked={selectedSuggestions.risks?.includes(idx)}
+                        onCheckedChange={() => toggleSuggestion('risks', idx)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="text-xs">{risk.severity}</Badge>
+                          <p className="font-semibold text-sm">{risk.risk}</p>
+                        </div>
+                        <p className="text-xs text-gray-600">{risk.mitigation}</p>
+                        {risk.insert_text && (
+                          <div className="mt-2 p-2 bg-white/60 rounded border border-gray-200">
+                            <p className="text-xs font-medium text-gray-500 mb-1">AI Suggestion:</p>
+                            <p className="text-xs text-gray-700">{risk.insert_text}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
             )}
           </TabsContent>
 
@@ -387,27 +527,57 @@ Return as JSON:
             </div>
             {feedback.optimization_opportunities?.length > 0 && (
               <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                  <p className="font-semibold text-blue-900">Optimization Opportunities</p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                    <p className="font-semibold text-blue-900">Optimization Opportunities</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedSuggestions.optimizations?.length === feedback.optimization_opportunities.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          selectAllInCategory('optimizations', feedback.optimization_opportunities.length);
+                        } else {
+                          deselectAllInCategory('optimizations');
+                        }
+                      }}
+                    />
+                    <span className="text-xs">All</span>
+                    {selectedSuggestions.optimizations?.length > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => applySelected('optimizations')}
+                        className="text-xs h-6 ml-2"
+                      >
+                        Apply {selectedSuggestions.optimizations.length}
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-3">
                   {feedback.optimization_opportunities.map((opp, idx) => (
                     <div key={idx} className="bg-white rounded p-2 border border-blue-100">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className="text-xs">{opp.area}</Badge>
-                        <Badge variant="outline" className="text-xs">{opp.impact}</Badge>
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          checked={selectedSuggestions.optimizations?.includes(idx)}
+                          onCheckedChange={() => toggleSuggestion('optimizations', idx)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className="text-xs">{opp.area}</Badge>
+                            <Badge variant="outline" className="text-xs">{opp.impact}</Badge>
+                          </div>
+                          <p className="text-xs text-gray-700 mb-1">{opp.suggestion}</p>
+                          {opp.insert_text && (
+                            <div className="mt-1 p-2 bg-blue-50/50 rounded border border-blue-100">
+                              <p className="text-xs font-medium text-gray-500 mb-1">AI Suggestion:</p>
+                              <p className="text-xs text-gray-700">{opp.insert_text}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-700">{opp.suggestion}</p>
-                      {opp.insert_text && onApplyFix && (
-                        <Button
-                          size="sm"
-                          onClick={() => onApplyFix(opp.insert_text)}
-                          className="w-full text-xs mt-2"
-                        >
-                          Apply Optimization
-                        </Button>
-                      )}
                     </div>
                   ))}
                 </div>
