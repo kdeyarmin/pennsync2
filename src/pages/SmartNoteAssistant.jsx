@@ -667,16 +667,6 @@ export default function SmartNoteAssistant() {
 
         {/* Auto-synced OASIS Data Display */}
         <OASISDataDisplay oasisData={patientOASIS} compact={false} />
-          {/* AI Patient History Summarizer */}
-          <AIPatientHistorySummarizer
-            patientId={selectedPatientId}
-            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
-            diagnosis={finalDiagnosis || selectedPatient.primary_diagnosis}
-            previousVisits={recentVisits}
-            carePlans={carePlans}
-            onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
-            compact={false}
-          />
           {/* OASIS Data Sync */}
           <OASISDataSync
             patientId={selectedPatientId}
@@ -1145,10 +1135,23 @@ export default function SmartNoteAssistant() {
 
 
         </div>
-      </div>
+        </div>
 
-      {/* Practice Scenarios Dialog */}
-      <DocumentationPracticeScenarios
+        {/* AI Patient History Summarizer - Moved to bottom */}
+        {selectedPatient && (
+        <AIPatientHistorySummarizer
+          patientId={selectedPatientId}
+          patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+          diagnosis={finalDiagnosis || selectedPatient.primary_diagnosis}
+          previousVisits={recentVisits}
+          carePlans={carePlans}
+          onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
+          compact={false}
+        />
+        )}
+
+        {/* Practice Scenarios Dialog */}
+        <DocumentationPracticeScenarios
         weakAreas={complianceIssues.map(i => ({ area: i.element || i.name }))}
         recentErrors={complianceIssues}
         nurseEmail={currentUser?.email}
