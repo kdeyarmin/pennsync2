@@ -113,7 +113,7 @@ export default function RichTextNoteEditor({
     return parts.map((part, idx) => {
       if (part.match(/\[nurse to document[^\]]*\]|\[insert[^\]]*\]|\[[^\]]*to fill in[^\]]*\]|\[[^\]]*enter[^\]]*\]/i)) {
         return (
-          <mark key={idx} className="bg-yellow-200/60 px-1 rounded" style={{ color: 'inherit' }}>
+          <mark key={idx} className="bg-yellow-200/60" style={{ color: 'inherit', padding: 0 }}>
             {part}
           </mark>
         );
