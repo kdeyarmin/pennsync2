@@ -51,7 +51,6 @@ import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreInd
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
-import AINoteDraftingAssistant from "../components/smartNote/AINoteDraftingAssistant";
 import ComplianceSummaryReport from "../components/smartNote/ComplianceSummaryReport";
 import FloatingActionBar from "../components/smartNote/FloatingActionBar";
 import QuickPhraseButtons from "../components/smartNote/QuickPhraseButtons";
@@ -1189,25 +1188,7 @@ export default function SmartNoteAssistant() {
             />
           )}
 
-          {/* AI Note Drafting Assistant */}
-                          <AINoteDraftingAssistant
-                            vitalSigns={vitalSigns}
-                            diagnosis={finalDiagnosis}
-                            patientContext={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}, ${selectedPatient.primary_diagnosis || 'home health patient'}` : ''}
-                            symptoms={roughNote}
-                            patientId={selectedPatientId}
-                            previousVisits={recentVisits}
-                            patientData={selectedPatient}
-                            onInsertText={(text) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(prev => prev + '\n\n' + text);
-                              } else {
-                                setRoughNote(prev => prev + '\n\n' + text);
-                              }
-                            }}
-                          />
-
-                          {/* AI Risk & Gap Detector */}
+          {/* AI Risk & Gap Detector */}
                           <AIRiskAndGapDetector
                             noteContent={enhancedNote || roughNote}
                             patientData={selectedPatient}
