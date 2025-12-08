@@ -71,7 +71,7 @@ Provide CONTEXT-AWARE analysis by considering the patient's specific diagnosis, 
 2. **Critical Issues** - For EACH issue, explain:
    - WHY it's a compliance issue (reference specific CMS/Medicare requirements)
    - HOW it relates to THIS patient's diagnosis and condition
-   - WHAT the reimbursement or audit risk is
+   - WHAT audit risks exist if this element is missing
    - Suggested follow-up actions or assessments needed
    
 3. **Quality Improvements** - Grammar, terminology, clinical accuracy, clarity
@@ -96,7 +96,7 @@ Return as JSON:
       "category": "compliance|safety|required_element",
       "issue": "string - the specific issue",
       "why_compliance_issue": "string - explain WHY this is a compliance issue with reference to Medicare/CMS requirements and how it relates to this patient's diagnosis",
-      "reimbursement_risk": "string - explain the specific reimbursement or audit risk",
+      "audit_risk": "string - explain what audit risks exist if this element is missing or incomplete",
       "recommendation": "string - action recommendation",
       "insert_text": "string - ready-to-paste clinical narrative",
       "follow_up_actions": ["string - suggested follow-up assessments or actions"]
@@ -150,7 +150,7 @@ Return as JSON:
                   category: { type: "string" },
                   issue: { type: "string" },
                   why_compliance_issue: { type: "string" },
-                  reimbursement_risk: { type: "string" },
+                  audit_risk: { type: "string" },
                   recommendation: { type: "string" },
                   insert_text: { type: "string" },
                   follow_up_actions: { type: "array", items: { type: "string" } }
@@ -404,10 +404,10 @@ Return as JSON:
                           </div>
                         )}
                         
-                        {issue.reimbursement_risk && (
+                        {issue.audit_risk && (
                           <div className="bg-orange-100/50 rounded p-2 border border-orange-200">
-                            <p className="text-xs font-semibold text-orange-900 mb-1">💰 Reimbursement Risk:</p>
-                            <p className="text-xs text-orange-800">{issue.reimbursement_risk}</p>
+                            <p className="text-xs font-semibold text-orange-900 mb-1">🔍 Audit Risk:</p>
+                            <p className="text-xs text-orange-800">{issue.audit_risk}</p>
                           </div>
                         )}
                         
