@@ -75,8 +75,8 @@ ANALYSIS FRAMEWORK:
 
 For each issue, provide:
 - Category and severity
-- Specific problem
-- Actionable fix with insert-ready text
+- Specific problem description
+- Insert-ready clinical narrative text (NOT instructions - write as if documenting directly in the chart)
 
 Return as JSON:
 {
@@ -88,14 +88,14 @@ Return as JSON:
       "category": "compliance|safety|required_element",
       "issue": "string",
       "recommendation": "string",
-      "insert_text": "string"
+      "insert_text": "string - ready-to-paste clinical narrative, NOT instructions"
     }
   ],
   "quality_improvements": [
     {
       "category": "grammar|terminology|clarity",
       "current": "string - problematic text",
-      "improved": "string - corrected text",
+      "improved": "string - corrected clinical narrative text, ready to replace current",
       "rationale": "string"
     }
   ],
@@ -103,16 +103,16 @@ Return as JSON:
     {
       "risk": "string",
       "severity": "high|medium|low",
-      "mitigation": "string",
-      "insert_text": "string"
+      "mitigation": "string - explanation",
+      "insert_text": "string - ready-to-paste clinical documentation of risk and mitigation"
     }
   ],
   "optimization_opportunities": [
     {
       "area": "string",
-      "suggestion": "string",
+      "suggestion": "string - explanation of opportunity",
       "impact": "clinical|financial|both",
-      "insert_text": "string"
+      "insert_text": "string - ready-to-paste enhanced clinical narrative"
     }
   ],
   "strengths": ["string"]
