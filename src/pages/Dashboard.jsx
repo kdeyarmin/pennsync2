@@ -19,6 +19,7 @@ import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPr
 import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
 import PDGMPredictiveAnalytics from "../components/pdgm/PDGMPredictiveAnalytics";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
+import AITrainingRecommendations from "../components/training/AITrainingRecommendations";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -188,7 +189,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Smart Route Optimizer & Task Prioritization */}
+      {/* Dashboard Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <SmartRouteOptimizer
           visits={visits.filter(v => v.status === 'scheduled')}
@@ -200,6 +201,7 @@ export default function Dashboard() {
           patients={patients}
           onTaskCompleted={() => queryClient.invalidateQueries({ queryKey: ['nurseTasks'] })}
         />
+        <AITrainingRecommendations userId={currentUser?.id} userEmail={currentUser?.email} />
       </div>
 
 
