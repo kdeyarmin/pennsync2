@@ -1129,47 +1129,7 @@ export default function SmartNoteAssistant() {
             />
           )}
 
-          {/* Skill Gap Remediation - Compliance Focused */}
-          {(detectedComplianceRisks.length > 0 || pdgmOptimizationWarnings.length > 0) && (
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader className="py-2">
-                <CardTitle className="text-xs flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3 text-red-600" />
-                  Compliance Training Needed
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
-                <p className="text-xs text-red-800 mb-2">
-                  {detectedComplianceRisks.length + pdgmOptimizationWarnings.length} risk{(detectedComplianceRisks.length + pdgmOptimizationWarnings.length) > 1 ? 's' : ''} detected
-                </p>
-                <Button
-                  size="sm"
-                  className="w-full bg-red-600 hover:bg-red-700 text-xs"
-                  onClick={() => setShowPracticeScenarios(true)}
-                >
-                  Start Training
-                </Button>
-              </CardContent>
-            </Card>
-          )}
 
-          {/* Learning Dashboard - Compact View */}
-          <LearningDashboard
-            nurseEmail={currentUser?.email}
-            onStartTraining={(area) => setShowPracticeScenarios(true)}
-            compact={true}
-          />
-
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-3">
-              <p className="text-xs font-semibold text-blue-900 mb-2">💡 Quick Tips</p>
-              <ul className="space-y-1 text-xs text-gray-600">
-                <li>• Be brief - AI expands your notes</li>
-                <li>• Include key findings</li>
-                <li>• Always review before copying</li>
-              </ul>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
