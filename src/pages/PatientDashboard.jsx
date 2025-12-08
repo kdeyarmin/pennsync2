@@ -182,31 +182,33 @@ export default function PatientDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2">
-          <TabsTrigger value="overview" className="gap-2">
-            <Activity className="w-4 h-4" />
-            <span className="hidden sm:inline">Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="visits" className="gap-2">
-            <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Visits</span>
-          </TabsTrigger>
-          <TabsTrigger value="careplans" className="gap-2">
-            <Target className="w-4 h-4" />
-            <span className="hidden sm:inline">Care Plans</span>
-          </TabsTrigger>
-          <TabsTrigger value="alerts" className="gap-2">
-            <Bell className="w-4 h-4" />
-            <span className="hidden sm:inline">Alerts</span>
-            {activeAlerts.length > 0 && (
-              <Badge className="ml-1 bg-red-500 text-white">{activeAlerts.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2">
-            <Clock className="w-4 h-4" />
-            <span className="hidden sm:inline">History</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-2 min-w-max">
+            <TabsTrigger value="overview" className="gap-2 whitespace-nowrap">
+              <Activity className="w-4 h-4" />
+              <span>Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="visits" className="gap-2 whitespace-nowrap">
+              <FileText className="w-4 h-4" />
+              <span>Visits</span>
+            </TabsTrigger>
+            <TabsTrigger value="careplans" className="gap-2 whitespace-nowrap">
+              <Target className="w-4 h-4" />
+              <span>Care Plans</span>
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="gap-2 whitespace-nowrap">
+              <Bell className="w-4 h-4" />
+              <span>Alerts</span>
+              {activeAlerts.length > 0 && (
+                <Badge className="ml-1 bg-red-500 text-white">{activeAlerts.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-2 whitespace-nowrap">
+              <Clock className="w-4 h-4" />
+              <span>History</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
