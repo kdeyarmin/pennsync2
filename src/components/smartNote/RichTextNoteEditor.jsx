@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import ReactQuill from 'react-quill';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -7,9 +6,7 @@ import {
   Redo2,
   Copy,
   CheckCircle2,
-  Sparkles,
-  Eye,
-  Edit3
+  Sparkles
 } from "lucide-react";
 
 export default function RichTextNoteEditor({
@@ -21,8 +18,6 @@ export default function RichTextNoteEditor({
 }) {
   const [history, setHistory] = useState([value || '']);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
-  const quillRef = useRef(null);
   const lastValueRef = useRef(value);
 
   // Track changes for undo/redo
@@ -78,32 +73,10 @@ export default function RichTextNoteEditor({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo, handleRedo]);
 
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline'],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      [{ 'indent': '-1' }, { 'indent': '+1' }],
-      ['clean']
-    ]
-  };
 
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline',
-    'list', 'bullet', 'indent'
-  ];
-
-  // Strip HTML for plain text copy
-  const getPlainText = () => {
-    const temp = document.createElement('div');
-    temp.innerHTML = value;
-    return temp.textContent || temp.innerText || '';
-  };
 
   const handleCopyPlainText = () => {
-    const plainText = getPlainText();
-    navigator.clipboard.writeText(plainText);
+    navigator.clipboard.writeText(value);
     onCopy?.();
   };
 
@@ -146,15 +119,6 @@ export default function RichTextNoteEditor({
           )}
           <Button
             size="sm"
-            variant={isEditing ? "default" : "outline"}
-            onClick={() => setIsEditing(!isEditing)}
-            className="h-8"
-          >
-            {isEditing ? <Eye className="w-4 h-4 mr-1" /> : <Edit3 className="w-4 h-4 mr-1" />}
-            {isEditing ? 'Preview' : 'Edit'}
-          </Button>
-          <Button
-            size="sm"
             variant="outline"
             onClick={handleCopyPlainText}
             className="h-8"
@@ -168,30 +132,15 @@ export default function RichTextNoteEditor({
         </div>
       </div>
 
-      {/* Editor / Preview */}
-      {isEditing ? (
-        <div className="bg-white rounded-lg border">
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            value={value}
-            onChange={onChange}
-            modules={modules}
-            formats={formats}
-            className="min-h-[300px]"
-            placeholder="Enhanced note will appear here..."
-          />
-        </div>
-      ) : (
-        <div 
-          className="bg-white p-4 rounded-lg border min-h-[300px] prose prose-sm max-w-none cursor-pointer hover:bg-gray-50 transition-colors"
-          onClick={() => setIsEditing(true)}
-          dangerouslySetInnerHTML={{ __html: value || '<p class="text-gray-400">Click to edit...</p>' }}
-        />
-      )}
+      {/* Content Display - Plain Text */}
+      <div 
+        className="bg-white p-4 rounded-lg border min-h-[300px] whitespace-pre-wrap font-sans text-sm leading-relaxed"
+      >
+        {value || <span className="text-gray-400">Enhanced note will appear here...</span>}
+      </div>
 
       <p className="text-xs text-gray-500 text-center">
-        Click "Edit" to format text • Ctrl+Z to undo • Ctrl+Shift+Z to redo
+        Use undo/redo buttons or Ctrl+Z / Ctrl+Shift+Z keyboard shortcuts
       </p>
     </div>
   );
