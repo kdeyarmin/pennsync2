@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { TrendingUp, Sparkles, Download, Copy, CheckCircle2 } from "lucide-react";
+import { TrendingUp, Sparkles } from "lucide-react";
 import { todayEastern } from "../utils/timezone";
+import SmartNotesContextPanel from "./SmartNotesContextPanel";
+import DocumentDraftManager from "./DocumentDraftManager";
 
 export default function ProgressReportGenerator({ patientId, patient }) {
   const [reportDate, setReportDate] = useState(todayEastern());
@@ -16,7 +18,6 @@ export default function ProgressReportGenerator({ patientId, patient }) {
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [generatedReport, setGeneratedReport] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
@@ -115,6 +116,9 @@ Current: ${patient.functional_status?.ambulation || 'Not assessed'} (Ambulation)
 ADL: ${patient.functional_status?.adl_independence || 'Not assessed'}
 Cognitive: ${patient.functional_status?.cognitive_status || 'Not assessed'}
 
+ADDITIONAL CONTEXT FROM SMART NOTES:
+${additionalContext || 'None provided'}
+
 ADDITIONAL NOTES:
 ${additionalNotes || 'None'}
 
@@ -176,126 +180,115 @@ Use professional medical terminology. Be objective and data-driven. Include spec
     setIsGenerating(false);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generatedReport);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownload = () => {
-    const blob = new Blob([generatedReport], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `progress-report-${patient.last_name}-${reportDate}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-green-600" />
-            Progress Report Generator
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <Label>Report Date</Label>
-              <Input 
-                type="date" 
-                value={reportDate} 
-                onChange={(e) => setReportDate(e.target.value)}
-                max={todayEastern()}
-              />
-            </div>
-            <div>
-              <Label>Reporting Period</Label>
-              <select 
-                className="w-full h-10 px-3 border border-gray-300 rounded-md"
-                value={reportPeriod}
-                onChange={(e) => setReportPeriod(e.target.value)}
-              >
-                <option value="7">Last 7 days</option>
-                <option value="14">Last 2 weeks</option>
-                <option value="30">Last 30 days</option>
-                <option value="60">Last 60 days</option>
-                <option value="90">Last 90 days</option>
-              </select>
-            </div>
-            <div>
-              <Label>Recipient</Label>
-              <Input 
-                placeholder="e.g., Dr. Smith" 
-                value={recipient} 
-                onChange={(e) => setRecipient(e.target.value)}
-              />
-            </div>
-          </div>
+    <div className="grid lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-1">
+        <SmartNotesContextPanel
+          patientId={patientId}
+          onInsertSnippet={(text) => setAdditionalContext(prev => prev ? prev + '\n\n' + text : text)}
+        />
+      </div>
 
-          <div>
-            <Label>Additional Notes (Optional)</Label>
-            <Textarea 
-              placeholder="Any additional information to include in the report..."
-              value={additionalNotes}
-              onChange={(e) => setAdditionalNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <p className="text-sm text-green-900">
-              <strong>Data Source:</strong> {visits.length} total visits
-              {carePlans.length > 0 && `, ${carePlans.length} care plans`}
-            </p>
-          </div>
-
-          <Button 
-            onClick={generateReport} 
-            disabled={isGenerating}
-            className="w-full bg-green-600 hover:bg-green-700"
-          >
-            {isGenerating ? (
-              <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
-            ) : (
-              <><Sparkles className="w-5 h-5 mr-2" /> Generate Progress Report</>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {generatedReport && (
-        <Card className="border-green-300 bg-green-50">
+      <div className="lg:col-span-2 space-y-6">
+        <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-green-900">
-                <CheckCircle2 className="w-5 h-5" />
-                Generated Progress Report
-              </CardTitle>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={handleCopy}>
-                  <Copy className="w-4 h-4 mr-2" />
-                  {copied ? 'Copied!' : 'Copy'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleDownload}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+              Progress Report Generator
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <Label>Report Date</Label>
+                <Input 
+                  type="date" 
+                  value={reportDate} 
+                  onChange={(e) => setReportDate(e.target.value)}
+                  max={todayEastern()}
+                />
+              </div>
+              <div>
+                <Label>Reporting Period</Label>
+                <select 
+                  className="w-full h-10 px-3 border border-gray-300 rounded-md"
+                  value={reportPeriod}
+                  onChange={(e) => setReportPeriod(e.target.value)}
+                >
+                  <option value="7">Last 7 days</option>
+                  <option value="14">Last 2 weeks</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="60">Last 60 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+              </div>
+              <div>
+                <Label>Recipient</Label>
+                <Input 
+                  placeholder="e.g., Dr. Smith" 
+                  value={recipient} 
+                  onChange={(e) => setRecipient(e.target.value)}
+                />
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-white p-4 rounded border border-green-200 whitespace-pre-wrap font-mono text-sm">
-              {generatedReport}
+
+            <div>
+              <Label>Additional Notes (Optional)</Label>
+              <Textarea 
+                placeholder="Any additional information to include in the report..."
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                rows={3}
+              />
             </div>
+
+            {additionalContext && (
+              <div>
+                <Label>Context from Smart Notes</Label>
+                <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-sm">
+                  <p className="text-gray-700 whitespace-pre-wrap">{additionalContext}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setAdditionalContext("")}
+                    className="mt-2 text-xs text-purple-600"
+                  >
+                    Clear Context
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <p className="text-sm text-green-900">
+                <strong>Data Source:</strong> {visits.length} total visits
+                {carePlans.length > 0 && `, ${carePlans.length} care plans`}
+              </p>
+            </div>
+
+            <Button 
+              onClick={generateReport} 
+              disabled={isGenerating}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              {isGenerating ? (
+                <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
+              ) : (
+                <><Sparkles className="w-5 h-5 mr-2" /> Generate Progress Report</>
+              )}
+            </Button>
           </CardContent>
         </Card>
-      )}
+
+        {generatedReport && (
+          <DocumentDraftManager
+            generatedContent={generatedReport}
+            documentType="Progress_Report"
+            patientName={`${patient.first_name}_${patient.last_name}`}
+            onContentChange={(content) => setGeneratedReport(content)}
+          />
+        )}
+      </div>
     </div>
   );
 }

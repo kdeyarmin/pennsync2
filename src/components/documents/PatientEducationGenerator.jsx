@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { GraduationCap, Sparkles, Download, Copy, CheckCircle2 } from "lucide-react";
+import { GraduationCap, Sparkles } from "lucide-react";
+import SmartNotesContextPanel from "./SmartNotesContextPanel";
+import DocumentDraftManager from "./DocumentDraftManager";
 
 export default function PatientEducationGenerator({ patientId, patient }) {
   const [topic, setTopic] = useState("");
@@ -12,7 +14,6 @@ export default function PatientEducationGenerator({ patientId, patient }) {
   const [includeImages, setIncludeImages] = useState(false);
   const [generatedMaterial, setGeneratedMaterial] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [additionalContext, setAdditionalContext] = useState("");
 
   const generateEducationMaterial = async () => {
@@ -29,6 +30,9 @@ Cognitive Status: ${patient.functional_status?.cognitive_status || 'Not assessed
 Primary Language: ${patient.social_history?.primary_language || 'English'}
 
 EDUCATION TOPIC: ${topic || patient.primary_diagnosis || 'General Home Health Care'}
+
+ADDITIONAL CONTEXT FROM SMART NOTES:
+${additionalContext || 'None provided'}
 
 REQUIREMENTS:
 - Reading Level: ${readingLevel}
@@ -101,128 +105,115 @@ Keep language at ${readingLevel} reading level. Be encouraging and supportive in
     setIsGenerating(false);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generatedMaterial);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownload = () => {
-    const blob = new Blob([generatedMaterial], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `patient-education-${topic.replace(/\s+/g, '-').toLowerCase()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-purple-600" />
-            Patient Education Material Generator
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Education Topic</Label>
-            <Textarea 
-              placeholder={`e.g., "Managing CHF at home", "Wound care instructions", "Diabetes management"...`}
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              rows={2}
-            />
-            {!topic && patient.primary_diagnosis && (
-              <p className="text-sm text-gray-500 mt-1">
-                Default: {patient.primary_diagnosis}
-              </p>
-            )}
-          </div>
+    <div className="grid lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-1">
+        <SmartNotesContextPanel
+          patientId={patientId}
+          onInsertSnippet={(text) => setAdditionalContext(prev => prev ? prev + '\n\n' + text : text)}
+        />
+      </div>
 
-          <div>
-            <Label>Reading Level</Label>
-            <select 
-              className="w-full h-10 px-3 border border-gray-300 rounded-md"
-              value={readingLevel}
-              onChange={(e) => setReadingLevel(e.target.value)}
-            >
-              <option value="5th-grade">5th Grade (Very Simple)</option>
-              <option value="6th-grade">6th Grade (Simple)</option>
-              <option value="8th-grade">8th Grade (Standard)</option>
-              <option value="high-school">High School</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              id="includeImages"
-              checked={includeImages}
-              onChange={(e) => setIncludeImages(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <Label htmlFor="includeImages" className="cursor-pointer">
-              Include image descriptions
-            </Label>
-          </div>
-
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <p className="text-sm text-purple-900">
-              <strong>Tailored for:</strong> {patient.first_name} {patient.last_name}
-              {patient.functional_status?.cognitive_status && (
-                <> • Cognitive Status: {patient.functional_status.cognitive_status}</>
-              )}
-            </p>
-          </div>
-
-          <Button 
-            onClick={generateEducationMaterial} 
-            disabled={isGenerating}
-            className="w-full bg-purple-600 hover:bg-purple-700"
-          >
-            {isGenerating ? (
-              <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
-            ) : (
-              <><Sparkles className="w-5 h-5 mr-2" /> Generate Education Material</>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {generatedMaterial && (
-        <Card className="border-green-300 bg-green-50">
+      <div className="lg:col-span-2 space-y-6">
+        <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-green-900">
-                <CheckCircle2 className="w-5 h-5" />
-                Patient Education Material
-              </CardTitle>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={handleCopy}>
-                  <Copy className="w-4 h-4 mr-2" />
-                  {copied ? 'Copied!' : 'Copy'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleDownload}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-              </div>
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-purple-600" />
+              Patient Education Material Generator
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="bg-white p-6 rounded border border-green-200 prose max-w-none">
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                {generatedMaterial}
-              </div>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Education Topic</Label>
+              <Textarea 
+                placeholder={`e.g., "Managing CHF at home", "Wound care instructions", "Diabetes management"...`}
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                rows={2}
+              />
+              {!topic && patient.primary_diagnosis && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Default: {patient.primary_diagnosis}
+                </p>
+              )}
             </div>
+
+            <div>
+              <Label>Reading Level</Label>
+              <select 
+                className="w-full h-10 px-3 border border-gray-300 rounded-md"
+                value={readingLevel}
+                onChange={(e) => setReadingLevel(e.target.value)}
+              >
+                <option value="5th-grade">5th Grade (Very Simple)</option>
+                <option value="6th-grade">6th Grade (Simple)</option>
+                <option value="8th-grade">8th Grade (Standard)</option>
+                <option value="high-school">High School</option>
+              </select>
+            </div>
+
+            {additionalContext && (
+              <div>
+                <Label>Context from Smart Notes</Label>
+                <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-sm">
+                  <p className="text-gray-700 whitespace-pre-wrap">{additionalContext}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setAdditionalContext("")}
+                    className="mt-2 text-xs text-purple-600"
+                  >
+                    Clear Context
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="includeImages"
+                checked={includeImages}
+                onChange={(e) => setIncludeImages(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="includeImages" className="cursor-pointer">
+                Include image descriptions
+              </Label>
+            </div>
+
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <p className="text-sm text-purple-900">
+                <strong>Tailored for:</strong> {patient.first_name} {patient.last_name}
+                {patient.functional_status?.cognitive_status && (
+                  <> • Cognitive Status: {patient.functional_status.cognitive_status}</>
+                )}
+              </p>
+            </div>
+
+            <Button 
+              onClick={generateEducationMaterial} 
+              disabled={isGenerating}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              {isGenerating ? (
+                <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
+              ) : (
+                <><Sparkles className="w-5 h-5 mr-2" /> Generate Education Material</>
+              )}
+            </Button>
           </CardContent>
         </Card>
-      )}
+
+        {generatedMaterial && (
+          <DocumentDraftManager
+            generatedContent={generatedMaterial}
+            documentType="Patient_Education"
+            patientName={`${patient.first_name}_${patient.last_name}`}
+            onContentChange={(content) => setGeneratedMaterial(content)}
+          />
+        )}
+      </div>
     </div>
   );
 }

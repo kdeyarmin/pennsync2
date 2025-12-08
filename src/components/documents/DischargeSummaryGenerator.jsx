@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { FileOutput, Sparkles, Download, Copy, CheckCircle2 } from "lucide-react";
-import { formatEastern, todayEastern } from "../utils/timezone";
+import { FileOutput, Sparkles } from "lucide-react";
+import { todayEastern } from "../utils/timezone";
+import SmartNotesContextPanel from "./SmartNotesContextPanel";
+import DocumentDraftManager from "./DocumentDraftManager";
 
 export default function DischargeSummaryGenerator({ patientId, patient }) {
   const [dischargeDate, setDischargeDate] = useState(todayEastern());
@@ -16,7 +18,6 @@ export default function DischargeSummaryGenerator({ patientId, patient }) {
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [generatedSummary, setGeneratedSummary] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
@@ -92,9 +93,12 @@ CURRENT MEDICATIONS:
 ${patient.current_medications?.map(med => `${med.name} ${med.dosage} ${med.frequency}`).join(', ') || 'See medication list'}
 
 FUNCTIONAL STATUS AT DISCHARGE:
-Ambulation: ${patient.functional_status?.ambulation || 'Not assessed'}
-ADL Independence: ${patient.functional_status?.adl_independence || 'Not assessed'}
-Cognitive Status: ${patient.functional_status?.cognitive_status || 'Not assessed'}
+- Ambulation: ${patient.functional_status?.ambulation || 'Not assessed'}
+- ADL Independence: ${patient.functional_status?.adl_independence || 'Not assessed'}
+- Cognitive Status: ${patient.functional_status?.cognitive_status || 'Not assessed'}
+
+ADDITIONAL CONTEXT FROM SMART NOTES:
+${additionalContext || 'None provided'}
 
 ADDITIONAL NOTES: ${additionalNotes || 'None'}
 
@@ -126,112 +130,101 @@ Use professional medical terminology. Be detailed and specific. Include all rele
     setIsGenerating(false);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generatedSummary);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownload = () => {
-    const blob = new Blob([generatedSummary], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `discharge-summary-${patient.last_name}-${dischargeDate}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileOutput className="w-5 h-5 text-blue-600" />
-            Discharge Summary Generator
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label>Discharge Date</Label>
-              <Input 
-                type="date" 
-                value={dischargeDate} 
-                onChange={(e) => setDischargeDate(e.target.value)}
-                max={todayEastern()}
-              />
-            </div>
-            <div>
-              <Label>Discharge Disposition</Label>
-              <Input 
-                placeholder="e.g., Home with family, Assisted living" 
-                value={dischargeDisposition} 
-                onChange={(e) => setDischargeDisposition(e.target.value)}
-              />
-            </div>
-          </div>
+    <div className="grid lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-1">
+        <SmartNotesContextPanel
+          patientId={patientId}
+          onInsertSnippet={(text) => setAdditionalContext(prev => prev ? prev + '\n\n' + text : text)}
+        />
+      </div>
 
-          <div>
-            <Label>Additional Notes (Optional)</Label>
-            <Textarea 
-              placeholder="Any additional information to include..."
-              value={additionalNotes}
-              onChange={(e) => setAdditionalNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-900">
-              <strong>Data Source:</strong> {visits.length} visits, {carePlans.length} care plans
-              {incidents.length > 0 && `, ${incidents.length} incidents`}
-            </p>
-          </div>
-
-          <Button 
-            onClick={generateSummary} 
-            disabled={isGenerating}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            {isGenerating ? (
-              <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
-            ) : (
-              <><Sparkles className="w-5 h-5 mr-2" /> Generate Discharge Summary</>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {generatedSummary && (
-        <Card className="border-green-300 bg-green-50">
+      <div className="lg:col-span-2 space-y-6">
+        <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-green-900">
-                <CheckCircle2 className="w-5 h-5" />
-                Generated Discharge Summary
-              </CardTitle>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={handleCopy}>
-                  <Copy className="w-4 h-4 mr-2" />
-                  {copied ? 'Copied!' : 'Copy'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleDownload}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
+            <CardTitle className="flex items-center gap-2">
+              <FileOutput className="w-5 h-5 text-blue-600" />
+              Discharge Summary Generator
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>Discharge Date</Label>
+                <Input 
+                  type="date" 
+                  value={dischargeDate} 
+                  onChange={(e) => setDischargeDate(e.target.value)}
+                  max={todayEastern()}
+                />
+              </div>
+              <div>
+                <Label>Discharge Disposition</Label>
+                <Input 
+                  placeholder="e.g., Home with family, Assisted living" 
+                  value={dischargeDisposition} 
+                  onChange={(e) => setDischargeDisposition(e.target.value)}
+                />
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-white p-4 rounded border border-green-200 whitespace-pre-wrap font-mono text-sm">
-              {generatedSummary}
+
+            <div>
+              <Label>Additional Notes (Optional)</Label>
+              <Textarea 
+                placeholder="Any additional information to include..."
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                rows={3}
+              />
             </div>
+
+            {additionalContext && (
+              <div>
+                <Label>Context from Smart Notes</Label>
+                <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 text-sm">
+                  <p className="text-gray-700 whitespace-pre-wrap">{additionalContext}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setAdditionalContext("")}
+                    className="mt-2 text-xs text-purple-600"
+                  >
+                    Clear Context
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-900">
+                <strong>Data Source:</strong> {visits.length} visits, {carePlans.length} care plans
+                {incidents.length > 0 && `, ${incidents.length} incidents`}
+              </p>
+            </div>
+
+            <Button 
+              onClick={generateSummary} 
+              disabled={isGenerating}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              {isGenerating ? (
+                <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Generating...</>
+              ) : (
+                <><Sparkles className="w-5 h-5 mr-2" /> Generate Discharge Summary</>
+              )}
+            </Button>
           </CardContent>
         </Card>
-      )}
+
+        {generatedSummary && (
+          <DocumentDraftManager
+            generatedContent={generatedSummary}
+            documentType="Discharge_Summary"
+            patientName={`${patient.first_name}_${patient.last_name}`}
+            onContentChange={(content) => setGeneratedSummary(content)}
+          />
+        )}
+      </div>
     </div>
   );
 }
