@@ -56,14 +56,14 @@ export default function PatientDetails() {
     }
   }, [patientId]);
 
-  const { data: patient, isLoading, error: patientError } = useQuery({
-    queryKey: ['patient', patientId],
-    queryFn: async () => {
-      const patients = await base44.entities.Patient.list();
-      return patients.find(p => p.id === patientId);
-    },
-    enabled: !!patientId,
+  const { data: patients } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.list(),
+    initialData: [],
   });
+
+  const patient = patients?.find(p => p.id === patientId);
+  const isLoading = !patients;
 
   const { data: visits } = useQuery({
     queryKey: ['patientVisits', patientId],
@@ -156,7 +156,7 @@ export default function PatientDetails() {
         <Card>
           <CardContent className="p-12 text-center">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Patient not found</h2>
-            {patientError && <p className="text-sm text-red-600 mb-4">Error: {patientError.message}</p>}
+            <p className="text-sm text-gray-600 mb-4">Patient ID: {patientId}</p>
             <Button onClick={() => navigate(createPageUrl("Patients"))}>
               Return to Patients
             </Button>
