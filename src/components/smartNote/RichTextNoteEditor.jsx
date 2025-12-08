@@ -18,7 +18,13 @@ export default function RichTextNoteEditor({
 }) {
   const [history, setHistory] = useState([value || '']);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const [editableText, setEditableText] = useState(value || '');
   const lastValueRef = useRef(value);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    setEditableText(value);
+  }, [value]);
 
   // Track changes for undo/redo
   useEffect(() => {
@@ -76,27 +82,34 @@ export default function RichTextNoteEditor({
 
 
   const handleCopyPlainText = () => {
-    // Remove highlighting markers before copying
-    const cleanText = value
-      .replace(/\[nurse to document[^\]]*\]/gi, '[nurse to document]')
-      .replace(/<[^>]*>/g, ''); // Remove any HTML tags
+    // Remove all placeholder markers before copying
+    const cleanText = editableText
+      .replace(/\[nurse to document[^\]]*\]/gi, '')
+      .replace(/<[^>]*>/g, '') // Remove any HTML tags
+      .trim();
     navigator.clipboard.writeText(cleanText);
     onCopy?.();
   };
 
-  // Process text to highlight incomplete areas
-  const getHighlightedContent = () => {
-    if (!value) return null;
+  const handleTextChange = (e) => {
+    const newText = e.target.value;
+    setEditableText(newText);
+    onChange?.(newText);
+  };
+
+  // Get text with highlighted placeholders for display overlay
+  const renderHighlightedText = () => {
+    if (!editableText) return null;
     
-    // Split by placeholders and wrap them with highlighting
-    const parts = value.split(/(\[nurse to document[^\]]*\])/gi);
+    // Split by placeholders and return spans
+    const parts = editableText.split(/(\[nurse to document[^\]]*\])/gi);
     
     return parts.map((part, idx) => {
       if (part.match(/\[nurse to document[^\]]*\]/i)) {
         return (
-          <span key={idx} className="bg-yellow-200 px-1 py-0.5 rounded font-semibold">
+          <mark key={idx} className="bg-yellow-300 px-1 rounded">
             {part}
-          </span>
+          </mark>
         );
       }
       return <span key={idx}>{part}</span>;
@@ -155,11 +168,22 @@ export default function RichTextNoteEditor({
         </div>
       </div>
 
-      {/* Content Display - Plain Text with Highlighting */}
-      <div 
-        className="bg-white p-4 rounded-lg border min-h-[300px] whitespace-pre-wrap font-sans text-sm leading-relaxed"
-      >
-        {value ? getHighlightedContent() : <span className="text-gray-400">Enhanced note will appear here...</span>}
+      {/* Editable Content with Highlighting */}
+      <div className="relative bg-white rounded-lg border min-h-[300px]">
+        <textarea
+          ref={textareaRef}
+          value={editableText}
+          onChange={handleTextChange}
+          className="w-full h-full min-h-[300px] p-4 font-sans text-sm leading-relaxed resize-none bg-transparent relative z-10 text-gray-900 focus:outline-none"
+          style={{ caretColor: 'black' }}
+          placeholder="Enhanced note will appear here..."
+        />
+        <div 
+          className="absolute inset-0 p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap pointer-events-none z-0 overflow-hidden"
+          style={{ color: 'transparent' }}
+        >
+          {renderHighlightedText()}
+        </div>
       </div>
 
       <p className="text-xs text-gray-500 text-center">
