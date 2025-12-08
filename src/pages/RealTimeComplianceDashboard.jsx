@@ -26,8 +26,10 @@ import {
   Activity,
   Calendar,
   Zap,
-  Download
+  Download,
+  Search
 } from "lucide-react";
+import GranularComplianceGapAnalyzer from "../components/compliance/GranularComplianceGapAnalyzer";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
 
@@ -60,6 +62,21 @@ export default function RealTimeComplianceDashboard() {
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
+  });
+
+  const { data: allVisits = [] } = useQuery({
+    queryKey: ['allVisits'],
+    queryFn: () => base44.entities.Visit.list('-visit_date', 500),
+  });
+
+  const { data: allPatients = [] } = useQuery({
+    queryKey: ['allPatients'],
+    queryFn: () => base44.entities.Patient.list(),
+  });
+
+  const { data: allCarePlans = [] } = useQuery({
+    queryKey: ['allCarePlans'],
+    queryFn: () => base44.entities.CarePlan.list(),
   });
 
   // Calculate date filter
@@ -751,6 +768,15 @@ export default function RealTimeComplianceDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Granular Gap Analysis */}
+      <GranularComplianceGapAnalyzer
+        visits={allVisits}
+        patients={allPatients}
+        carePlans={allCarePlans}
+        complianceAudits={filteredAudits}
+        dateRange={parseInt(dateRange)}
+      />
 
       {/* Common Compliance Issues */}
       <Card className="mb-6">
