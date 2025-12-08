@@ -68,6 +68,8 @@ import ReportsCenter from "../components/admin/ReportsCenter";
 import SystemSettings from "../components/admin/SystemSettings";
 import UserActivityLog from "../components/admin/UserActivityLog";
 import NoteConversionReport from "../components/admin/NoteConversionReport";
+import AIAutoTagger from "../components/admin/AIAutoTagger";
+import AIKPIReportGenerator from "../components/admin/AIKPIReportGenerator";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -399,6 +401,10 @@ export default function AdminDashboard() {
 
         {/* Reports Tab */}
         <TabsContent value="reports" className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <AIKPIReportGenerator />
+            <AIAutoTagger />
+          </div>
           <NoteConversionReport />
           <ReportsCenter 
             users={users}
