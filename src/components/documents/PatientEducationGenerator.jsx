@@ -13,6 +13,7 @@ export default function PatientEducationGenerator({ patientId, patient }) {
   const [generatedMaterial, setGeneratedMaterial] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [additionalContext, setAdditionalContext] = useState("");
 
   const generateEducationMaterial = async () => {
     setIsGenerating(true);

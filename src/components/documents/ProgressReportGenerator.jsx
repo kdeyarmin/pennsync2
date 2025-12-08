@@ -17,6 +17,7 @@ export default function ProgressReportGenerator({ patientId, patient }) {
   const [generatedReport, setGeneratedReport] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
     queryKey: ['patientVisits', patientId],

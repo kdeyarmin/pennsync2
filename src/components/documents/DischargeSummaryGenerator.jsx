@@ -17,6 +17,7 @@ export default function DischargeSummaryGenerator({ patientId, patient }) {
   const [generatedSummary, setGeneratedSummary] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [additionalContext, setAdditionalContext] = useState("");
 
   const { data: visits = [] } = useQuery({
     queryKey: ['patientVisits', patientId],
