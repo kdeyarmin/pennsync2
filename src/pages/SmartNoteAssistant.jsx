@@ -976,6 +976,17 @@ export default function SmartNoteAssistant() {
           {/* Step 4: Enhanced Note with Rich Text Editor */}
           {enhancedNote && (
             <>
+              {/* Consolidated AI Feedback - All feedback in one place */}
+              <ConsolidatedAIFeedback
+                enhancedNote={enhancedNote}
+                roughNote={roughNote}
+                patientData={selectedPatient}
+                diagnosis={finalDiagnosis}
+                vitalSigns={vitalSigns}
+                carePlans={carePlans}
+                onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+              />
+
               <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
                 <CardHeader className="py-4 md:py-5">
                   <CardTitle className="text-base md:text-lg flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -999,17 +1010,6 @@ export default function SmartNoteAssistant() {
                   />
                 </CardContent>
               </Card>
-
-              {/* Consolidated AI Feedback - All feedback in one place */}
-              <ConsolidatedAIFeedback
-                enhancedNote={enhancedNote}
-                roughNote={roughNote}
-                patientData={selectedPatient}
-                diagnosis={finalDiagnosis}
-                vitalSigns={vitalSigns}
-                carePlans={carePlans}
-                onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
-              />
 
               {/* Next Steps Panel - Clear action-oriented summary */}
               <NextStepsPanel
