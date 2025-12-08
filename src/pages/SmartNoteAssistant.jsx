@@ -975,10 +975,9 @@ export default function SmartNoteAssistant() {
                 vitalSigns={vitalSigns}
                 carePlans={carePlans}
                 onApplyFix={(text) => {
-                  setEnhancedNote(prev => {
-                    const updated = prev + '\n\n' + text;
-                    return updated;
-                  });
+                  setRoughNote(prev => prev + '\n\n' + text);
+                  setEnhancedNote('');
+                  setAuditResults(null);
                 }}
               />
 
