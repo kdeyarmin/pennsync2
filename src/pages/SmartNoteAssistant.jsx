@@ -232,7 +232,6 @@ export default function SmartNoteAssistant() {
   const [enhancedNoteCompliance, setEnhancedNoteCompliance] = useState(null);
   const [appliedFixes, setAppliedFixes] = useState([]);
   const [dismissedElementNames, setDismissedElementNames] = useState([]);
-  const [showPracticeScenarios, setShowPracticeScenarios] = useState(false);
   const [complianceIssues, setComplianceIssues] = useState([]);
   const [oasisLinkedItems, setOasisLinkedItems] = useState([]);
   const [oasisDiscrepancies, setOasisDiscrepancies] = useState([]);
@@ -973,13 +972,7 @@ export default function SmartNoteAssistant() {
               }}
             />
 
-            {/* Educational Panel - Shows Medicare guidelines for issues */}
-            {complianceIssues.length > 0 && (
-              <ComplianceEducationPanel
-                issues={complianceIssues}
-                onStartPractice={() => setShowPracticeScenarios(true)}
-              />
-            )}
+
             </>
           )}
 
@@ -1149,20 +1142,7 @@ export default function SmartNoteAssistant() {
         />
         )}
 
-        {/* Practice Scenarios Dialog */}
-        <DocumentationPracticeScenarios
-        weakAreas={complianceIssues.map(i => ({ area: i.element || i.name }))}
-        recentErrors={complianceIssues}
-        nurseEmail={currentUser?.email}
-        isOpen={showPracticeScenarios}
-        onOpenChange={setShowPracticeScenarios}
-        onComplete={() => {
-          setDetectedComplianceRisks([]);
-          setPdgmOptimizationWarnings([]);
-        }}
-        complianceRisks={detectedComplianceRisks}
-        pdgmWarnings={pdgmOptimizationWarnings}
-      />
+
 
       {/* Floating Action Bar */}
       <FloatingActionBar
