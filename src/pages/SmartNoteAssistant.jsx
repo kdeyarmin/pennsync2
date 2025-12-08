@@ -75,8 +75,6 @@ import { logActivity, ActivityActions } from "../components/utils/activityLogger
 import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
 import { todayEastern } from "../components/utils/timezone";
 import AIFeedbackPanel from "../components/smartNote/AIFeedbackPanel";
-import PDGMDocumentationImpactAnalyzer from "../components/pdgm/PDGMDocumentationImpactAnalyzer";
-import CaseMixOptimizationPanel from "../components/pdgm/CaseMixOptimizationPanel";
 import OASISDataDisplay from "../components/patient/OASISDataDisplay";
 import ClinicalGuidelinesAssistant from "../components/smartNote/ClinicalGuidelinesAssistant";
 import OneClickComplianceFixer from "../components/smartNote/OneClickComplianceFixer";
@@ -1103,35 +1101,6 @@ export default function SmartNoteAssistant() {
             diagnosis={finalDiagnosis}
             complianceScore={enhancedNoteCompliance?.overall_score}
           />
-
-          {/* PDGM Documentation Impact Analyzer */}
-          {(roughNote || enhancedNote) && (
-            <PDGMDocumentationImpactAnalyzer
-              noteContent={enhancedNote || roughNote}
-              patientData={selectedPatient}
-              diagnosis={finalDiagnosis}
-              vitalSigns={vitalSigns}
-              carePlans={carePlans}
-              onApplySuggestion={(text) => {
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                } else {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                }
-              }}
-              onWarningsDetected={(warnings) => setPdgmOptimizationWarnings(warnings)}
-            />
-          )}
-
-          {/* Case-Mix Optimization Panel */}
-          {enhancedNote && selectedPatientId && (
-            <CaseMixOptimizationPanel
-              patientId={selectedPatientId}
-              currentNote={enhancedNote}
-              diagnosis={finalDiagnosis}
-              onApplyRecommendation={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
-            />
-          )}
 
           {/* AI Feedback Panel */}
           {enhancedNote && (
