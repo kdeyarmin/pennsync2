@@ -963,9 +963,6 @@ export default function PDGMRevenueComparison({ analysisResults, pdgmData, onPay
               </div>
             )}
 
-            {/* Case-Mix Weight Breakdown */}
-            <CaseMixBreakdown original={revenueData.original} corrected={revenueData.corrected} />
-
             {/* Download Button */}
             <Button
               onClick={handleDownloadPDF}
