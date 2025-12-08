@@ -113,7 +113,7 @@ export default function RichTextNoteEditor({
     return parts.map((part, idx) => {
       if (part.match(/\[nurse to document[^\]]*\]|\[insert[^\]]*\]|\[[^\]]*to fill in[^\]]*\]|\[[^\]]*enter[^\]]*\]/i)) {
         return (
-          <mark key={idx} className="bg-yellow-300 px-1 rounded">
+          <mark key={idx} className="bg-yellow-200/60 px-1 rounded" style={{ color: 'inherit' }}>
             {part}
           </mark>
         );
@@ -175,12 +175,19 @@ export default function RichTextNoteEditor({
       </div>
 
       {/* Editable Content with Highlighting */}
-      <div className="relative bg-white rounded-lg border min-h-[300px]">
+      <div className="relative bg-white rounded-lg border min-h-[300px] overflow-hidden">
         <textarea
           ref={textareaRef}
           value={editableText}
           onChange={handleTextChange}
-          className="w-full h-full min-h-[300px] p-4 font-sans text-sm leading-relaxed resize-none bg-transparent relative z-10 text-gray-900 focus:outline-none"
+          onScroll={(e) => {
+            const overlay = e.target.nextElementSibling;
+            if (overlay) {
+              overlay.scrollTop = e.target.scrollTop;
+              overlay.scrollLeft = e.target.scrollLeft;
+            }
+          }}
+          className="w-full h-full min-h-[300px] p-4 font-sans text-sm leading-relaxed resize-none bg-transparent relative z-10 text-gray-900 focus:outline-none overflow-auto"
           style={{ caretColor: 'black' }}
           placeholder="Enhanced note will appear here..."
         />
