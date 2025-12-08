@@ -36,7 +36,6 @@ export default function PatientDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const patientId = urlParams.get('patientId');
 
-  const [hasAccess, setHasAccess] = React.useState(null);
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [newVisit, setNewVisit] = useState({
     visit_date: format(new Date(), 'yyyy-MM-dd'),
@@ -45,65 +44,51 @@ export default function PatientDetails() {
     status: 'scheduled'
   });
 
-  // Security: Check access before loading patient data
+  // Log access when component mounts
   React.useEffect(() => {
-    const checkAccess = async () => {
-      if (!patientId) {
-        setHasAccess(false);
-        return;
-      }
-      
-      const access = await canAccessPatient(patientId);
-      setHasAccess(access);
-      
-      if (access) {
-        await logSecurityEvent('PATIENT_DETAILS_ACCESSED', { patient_id: patientId });
-        logActivity(ActivityActions.VIEW, {
-          entity_type: 'Patient',
-          entity_id: patientId,
-          page: 'PatientDetails'
-        });
-      } else {
-        await logSecurityEvent('UNAUTHORIZED_PATIENT_ACCESS_ATTEMPT', { patient_id: patientId });
-      }
-    };
-    
-    checkAccess();
+    if (patientId) {
+      logSecurityEvent('PATIENT_DETAILS_ACCESSED', { patient_id: patientId });
+      logActivity(ActivityActions.VIEW, {
+        entity_type: 'Patient',
+        entity_id: patientId,
+        page: 'PatientDetails'
+      });
+    }
   }, [patientId]);
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ['patient', patientId],
     queryFn: () => base44.entities.Patient.filter({ id: patientId }),
     select: (data) => data[0],
-    enabled: !!patientId && hasAccess === true,
+    enabled: !!patientId,
   });
 
   const { data: visits } = useQuery({
     queryKey: ['patientVisits', patientId],
     queryFn: () => base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date'),
     initialData: [],
-    enabled: !!patientId && hasAccess === true,
+    enabled: !!patientId,
   });
 
   const { data: carePlans } = useQuery({
     queryKey: ['patientCarePlans', patientId],
     queryFn: () => base44.entities.CarePlan.filter({ patient_id: patientId }),
     initialData: [],
-    enabled: !!patientId && hasAccess === true,
+    enabled: !!patientId,
   });
 
   const { data: incidents } = useQuery({
     queryKey: ['patientIncidents', patientId],
     queryFn: () => base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date'),
     initialData: [],
-    enabled: !!patientId && hasAccess === true,
+    enabled: !!patientId,
   });
 
   const { data: tasks } = useQuery({
     queryKey: ['patientTasks', patientId],
     queryFn: () => base44.entities.Task.filter({ patient_id: patientId }),
     initialData: [],
-    enabled: !!patientId && hasAccess === true,
+    enabled: !!patientId,
   });
 
   const createCarePlanMutation = useMutation({
@@ -150,39 +135,6 @@ export default function PatientDetails() {
     };
     createVisitMutation.mutate(sanitizedVisit);
   };
-
-  // Security: Check access status
-  if (hasAccess === null) {
-    return (
-      <div className="p-8 max-w-6xl mx-auto">
-        <Card>
-          <CardContent className="p-12 text-center text-gray-500">
-            Verifying access permissions...
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (hasAccess === false) {
-    return (
-      <div className="p-8 max-w-6xl mx-auto">
-        <Alert className="border-red-300 bg-red-50">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <AlertDescription className="text-red-900">
-            <p className="font-semibold mb-2">Access Denied</p>
-            <p>You do not have permission to view this patient's information. This incident has been logged.</p>
-          </AlertDescription>
-        </Alert>
-        <Button 
-          onClick={() => navigate(createPageUrl("Dashboard"))}
-          className="mt-4"
-        >
-          Return to Dashboard
-        </Button>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
