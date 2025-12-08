@@ -59,7 +59,6 @@ CONTEXT:
 - Patient: ${patientData ? `${patientData.first_name} ${patientData.last_name}` : 'Unknown'}
 - Diagnosis: ${diagnosis || 'Not specified'}
 - Vitals: ${vitalSigns ? JSON.stringify(vitalSigns) : 'Not provided'}
-- Active Care Plans: ${carePlans.filter(cp => cp.status === 'active').length}
 
 ANALYSIS FRAMEWORK:
 1. **Medicare Compliance Score** (0-100): Rate adherence to CMS requirements for home health
