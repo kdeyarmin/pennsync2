@@ -86,40 +86,110 @@ const commonDiagnoses = [
 
 
 
-// Voice Hub Component - Dictation Only
-function VoiceHub({ onTranscription }) {
+// Voice Hub Component - Real-time Dictation
+function VoiceHub({ onTranscription, onInterimTranscription }) {
   const [listening, setListening] = useState(false);
+  const [interimText, setInterimText] = useState('');
+  const recognitionRef = React.useRef(null);
 
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition not supported');
+      alert('Speech recognition not supported in your browser');
       return;
     }
+    
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognitionRef.current = recognition;
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      onTranscription?.(transcript);
+      let interimTranscript = '';
+      let finalTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      
+      if (finalTranscript) {
+        onTranscription?.(finalTranscript.trim());
+        setInterimText('');
+      } else if (interimTranscript) {
+        setInterimText(interimTranscript);
+        onInterimTranscription?.(interimTranscript);
+      }
     };
-    recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
+    
+    recognition.onend = () => {
+      if (listening) {
+        // Auto-restart if still supposed to be listening
+        recognition.start();
+      } else {
+        setListening(false);
+        setInterimText('');
+      }
+    };
+    
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        // Auto-restart on these errors if still listening
+        if (listening) {
+          setTimeout(() => recognition.start(), 100);
+        }
+      } else {
+        setListening(false);
+        setInterimText('');
+      }
+    };
+    
     setListening(true);
     recognition.start();
   };
 
+  const stopListening = () => {
+    setListening(false);
+    setInterimText('');
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
   return (
-    <Button
-      size="default"
-      variant={listening ? "destructive" : "outline"}
-      onClick={listening ? () => setListening(false) : startListening}
-      className="gap-2 min-h-[44px] px-4 flex-shrink-0"
-    >
-      {listening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
-      <span className="text-sm md:text-base">{listening ? 'Stop' : 'Dictate'}</span>
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button
+        size="default"
+        variant={listening ? "destructive" : "outline"}
+        onClick={listening ? stopListening : startListening}
+        className="gap-2 min-h-[44px] px-4 flex-shrink-0"
+      >
+        {listening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
+        <span className="text-sm md:text-base">{listening ? 'Stop Dictating' : 'Start Dictating'}</span>
+      </Button>
+      {listening && (
+        <div className="flex items-center gap-2 animate-pulse">
+          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+          <span className="text-xs text-gray-600">Listening...</span>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -233,6 +303,7 @@ export default function SmartNoteAssistant() {
   const [complianceReviewComplete, setComplianceReviewComplete] = useState(false);
   const [appliedFixesText, setAppliedFixesText] = useState(new Set());
   const [isAnalyzingCompliance, setIsAnalyzingCompliance] = useState(false);
+  const [interimVoiceText, setInterimVoiceText] = useState('');
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -558,7 +629,15 @@ ${guidelinesContext}
   };
 
   const handleVoiceTranscription = (text) => {
+    if (!noteStartTime) {
+      setNoteStartTime(Date.now());
+    }
     setRoughNote(prev => prev ? prev + ' ' + text : text);
+    setInterimVoiceText('');
+  };
+
+  const handleInterimTranscription = (text) => {
+    setInterimVoiceText(text);
   };
 
 
@@ -804,24 +883,36 @@ ${guidelinesContext}
                   <span className="truncate">3. Your Notes</span>
                   {roughNote.length >= 20 && <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />}
                 </div>
-                <VoiceHub onTranscription={handleVoiceTranscription} />
+                <VoiceHub 
+                  onTranscription={handleVoiceTranscription}
+                  onInterimTranscription={handleInterimTranscription}
+                />
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6 space-y-4">
               {/* Smart auto-complete textarea with phrase categories */}
-              <SmartAutoComplete
-                value={roughNote}
-                onChange={(value) => {
-                  if (!noteStartTime && value.length > 0) {
-                    setNoteStartTime(Date.now());
-                  }
-                  setRoughNote(value);
-                }}
-                placeholder="Type or dictate your notes... Start typing trigger words like 'lungs', 'heart', 'wound' for quick phrases"
-                diagnosis={finalDiagnosis}
-                className="min-h-[150px]"
-              />
-              
+              <div className="relative">
+                <SmartAutoComplete
+                  value={roughNote}
+                  onChange={(value) => {
+                    if (!noteStartTime && value.length > 0) {
+                      setNoteStartTime(Date.now());
+                    }
+                    setRoughNote(value);
+                  }}
+                  placeholder="Type or dictate your notes... Start typing trigger words like 'lungs', 'heart', 'wound' for quick phrases"
+                  diagnosis={finalDiagnosis}
+                  className="min-h-[150px]"
+                />
+                {/* Interim voice transcription overlay */}
+                {interimVoiceText && (
+                  <div className="absolute bottom-2 left-2 right-2 bg-blue-100/90 border border-blue-300 rounded px-3 py-2 text-sm text-blue-900 italic pointer-events-none">
+                    <Mic className="w-3 h-3 inline mr-1" />
+                    {interimVoiceText}...
+                  </div>
+                )}
+              </div>
+
               {/* Character count */}
               <div className="flex items-center gap-2">
                 <p className={`text-sm ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
