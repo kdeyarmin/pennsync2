@@ -816,43 +816,31 @@ ${guidelinesContext}
                 className="min-h-[150px]"
               />
               
-              {/* Character count with progress indicator */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <p className={`text-sm ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                    {roughNote.length} characters
-                  </p>
-                  {roughNote.length < 20 && roughNote.length > 0 && (
-                    <p className="text-sm text-orange-500">(min 20 to enhance)</p>
-                  )}
-                </div>
-                <Button
-                  onClick={handleEnhanceNote}
-                  disabled={isProcessing || roughNote.length < 20}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto h-11 md:h-12 text-base"
-                >
-                  {isProcessing ? (
-                    <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Enhancing...</>
-                  ) : (
-                    <><Sparkles className="w-5 h-5 mr-2" /> Enhance with AI</>
-                  )}
-                </Button>
+              {/* Character count */}
+              <div className="flex items-center gap-2">
+                <p className={`text-sm ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                  {roughNote.length} characters
+                </p>
+                {roughNote.length < 20 && roughNote.length > 0 && (
+                  <p className="text-sm text-orange-500">(min 20 required)</p>
+                )}
               </div>
-            </CardContent>
-            </Card>
+              </CardContent>
+              </Card>
 
             {/* Pre-Enhancement Compliance Review */}
-            {!enhancedNote && (
-              <PreEnhancementReview
-                roughNote={roughNote}
-                complianceIssues={complianceIssues}
-                patientData={selectedPatient}
-                vitalSigns={vitalSigns}
-                diagnosis={finalDiagnosis}
-                careType="home_health"
-                visitType={visitType}
-                patientContext={patientContext}
-                appliedFixes={appliedFixes}
+            {!enhancedNote && roughNote.length >= 20 && (
+              <>
+                <PreEnhancementReview
+                  roughNote={roughNote}
+                  complianceIssues={complianceIssues}
+                  patientData={selectedPatient}
+                  vitalSigns={vitalSigns}
+                  diagnosis={finalDiagnosis}
+                  careType="home_health"
+                  visitType={visitType}
+                  patientContext={patientContext}
+                  appliedFixes={appliedFixes}
                 onApplyFix={(text, elementName) => {
                   // Only add if not already applied
                   if (!appliedFixes.includes(elementName)) {
@@ -908,10 +896,10 @@ ${guidelinesContext}
                   try {
                     const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
-            PATIENT CONTEXT:
-            - Diagnosis: ${finalDiagnosis || 'Not specified'}
-            - Visit Type: ${visitType.replace(/_/g, ' ')}
-            - Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
+                PATIENT CONTEXT:
+                - Diagnosis: ${finalDiagnosis || 'Not specified'}
+                - Visit Type: ${visitType.replace(/_/g, ' ')}
+                - Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
                     if (k === 'o2') {
                       const o2Text = `O2 Sat: ${v}`;
                       if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
@@ -924,19 +912,19 @@ ${guidelinesContext}
                     return `${k}: ${v}`;
                   }).join(', ') || 'None provided'}
 
-            ROUGH NOTES:
-            ${newRoughNote}
+                ROUGH NOTES:
+                ${newRoughNote}
 
-            Transform into professional EHR-ready narrative with proper medical terminology, Medicare compliance, and integrated vital signs.
+                Transform into professional EHR-ready narrative with proper medical terminology, Medicare compliance, and integrated vital signs.
 
-            CRITICAL - NO META-COMMENTARY:
-            NEVER include sentences about documentation itself. Only write the actual clinical narrative as if it were going directly into the patient's chart. Do NOT write advice to the nurse about how to document or statements about compliance.
+                CRITICAL - NO META-COMMENTARY:
+                NEVER include sentences about documentation itself. Only write the actual clinical narrative as if it were going directly into the patient's chart. Do NOT write advice to the nurse about how to document or statements about compliance.
 
-            Return JSON:
-            {
-            "enhanced_note": "The complete clinical narrative",
-            "quality_score": 0-100
-            }`;
+                Return JSON:
+                {
+                "enhanced_note": "The complete clinical narrative",
+                "quality_score": 0-100
+                }`;
 
                     const result = await base44.integrations.Core.InvokeLLM({
                       prompt,
@@ -955,8 +943,32 @@ ${guidelinesContext}
                   }
                   setIsProcessing(false);
                 }}
-              />
-            )}
+                />
+
+                {/* Enhance Button - After Compliance Checks */}
+                <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-purple-600" />
+                      <span className="text-sm font-medium">Ready to transform your notes</span>
+                    </div>
+                    <Button
+                      onClick={handleEnhanceNote}
+                      disabled={isProcessing}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto h-11 text-base"
+                    >
+                      {isProcessing ? (
+                        <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" /> Enhancing...</>
+                      ) : (
+                        <><Sparkles className="w-5 h-5 mr-2" /> Enhance with AI</>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+                </Card>
+                </>
+                )}
 
 
 
