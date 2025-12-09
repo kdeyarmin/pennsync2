@@ -73,7 +73,8 @@ export default function Layout({ children, currentPageName }) {
     { name: "Analytics Dashboard", icon: BarChart3, page: "AnalyticsDashboard" },
     { name: "Predictive", icon: BarChart3, page: "PredictiveAnalytics" },
     { name: "Regulatory", icon: ClipboardList, page: "RegulatoryCompliance" },
-  ];
+    { name: "System Jobs", icon: Settings, page: "SystemJobMonitor" },
+    ];
 
   const handleLogout = () => {
     base44.auth.logout();
