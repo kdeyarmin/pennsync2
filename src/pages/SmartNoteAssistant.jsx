@@ -860,41 +860,11 @@ ${guidelinesContext}
                   }
                 }}
                 onFixAll={(fixes, issueElements) => {
-                  const normalizedNote = roughNote.trim().toLowerCase();
-
-                  // Filter out duplicates and already applied fixes
-                  const uniqueFixes = [];
-                  const uniqueElements = [];
-
-                  fixes.forEach((fix, idx) => {
-                    const element = issueElements[idx];
-                    const normalizedFix = fix.trim().toLowerCase();
-
-                    // Check if already applied by element name
-                    if (appliedFixes.includes(element)) {
-                      return;
-                    }
-
-                    // Check if this text already exists in the note
-                    if (normalizedNote.includes(normalizedFix.substring(0, 100))) {
-                      return;
-                    }
-
-                    // Check if already added in this batch
-                    const isDuplicate = uniqueFixes.some(f => 
-                      f.trim().toLowerCase().substring(0, 100) === normalizedFix.substring(0, 100)
-                    );
-
-                    if (!isDuplicate) {
-                      uniqueFixes.push(fix);
-                      uniqueElements.push(element);
-                    }
-                  });
-
-                  if (uniqueFixes.length > 0) {
-                    const combinedText = uniqueFixes.join('\n\n');
+                  // Add all fixes at once - filtering already done in OneClickComplianceFixer
+                  if (fixes.length > 0) {
+                    const combinedText = fixes.join('\n\n');
                     setRoughNote(prev => prev + '\n\n' + combinedText);
-                    setAppliedFixes(prev => [...prev, ...uniqueElements]);
+                    setAppliedFixes(prev => [...prev, ...issueElements]);
                   }
                 }}
                 onInsertElement={(text, elementName) => {
