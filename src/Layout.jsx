@@ -60,6 +60,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "OASIS", icon: ClipboardList, page: "OASIS" },
     { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
     { name: "Alerts", icon: Bell, page: "PatientAlerts" },
+    { name: "Patient Education", icon: FileText, page: "PatientEducationHub" },
     { name: "Compliance", icon: Shield, page: "RealTimeComplianceDashboard" },
     { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
     { name: "Features", icon: FileText, page: "Features" },
