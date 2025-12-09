@@ -144,12 +144,17 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
-      // Create blob and download
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      // Decode base64 PDF and download
+      const binaryString = atob(response.pdf);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${selectedTopic.id}_handout.pdf`;
+      a.download = response.filename || `${selectedTopic.id}_handout.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

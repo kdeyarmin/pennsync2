@@ -650,11 +650,10 @@ Deno.serve(async (req) => {
 
     // Generate PDF
     const pdfBytes = doc.output('arraybuffer');
+    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
 
     // If action is email, send it
     if (action === 'email' && patientEmail) {
-      const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
-      
       await base44.integrations.Core.SendEmail({
         to: patientEmail,
         subject: `Patient Education: ${template.title}`,
@@ -675,13 +674,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Return PDF for download
-    return new Response(pdfBytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${condition}_handout.pdf"`
-      }
+    // Return PDF as base64 for download
+    return Response.json({
+      success: true,
+      pdf: base64Pdf,
+      filename: `${condition}_handout.pdf`
     });
 
   } catch (error) {
