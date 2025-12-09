@@ -63,6 +63,8 @@ export default function ComplianceScoreIndicator({
   const [complianceData, setComplianceData] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAnalyzingRough, setIsAnalyzingRough] = useState(false);
+  const [roughNoteComplianceData, setRoughNoteComplianceData] = useState(null);
   const [enhancedComplianceData, setEnhancedComplianceData] = useState(null);
   const [isAnalyzingEnhanced, setIsAnalyzingEnhanced] = useState(false);
   const [insertedIssues, setInsertedIssues] = useState(new Set());
