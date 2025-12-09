@@ -43,7 +43,8 @@ import {
   RotateCcw,
   Lightbulb,
   MessageCircle,
-  Save
+  Save,
+  Loader2
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import { useQueryClient } from "@tanstack/react-query";
@@ -230,6 +231,7 @@ export default function SmartNoteAssistant() {
   const [noteStartTime, setNoteStartTime] = useState(null);
   const [complianceReviewComplete, setComplianceReviewComplete] = useState(false);
   const [appliedFixesText, setAppliedFixesText] = useState(new Set());
+  const [isAnalyzingCompliance, setIsAnalyzingCompliance] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -828,6 +830,21 @@ ${guidelinesContext}
               </CardContent>
               </Card>
 
+            {/* Compliance Analysis Indicator */}
+            {isAnalyzingCompliance && (
+              <Card className="border-2 border-blue-200 bg-blue-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Analyzing compliance...</p>
+                      <p className="text-xs text-blue-700">This will take a few seconds</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Pre-Enhancement Compliance Review */}
             {!enhancedNote && roughNote.length >= 20 && (
               <>
@@ -877,6 +894,7 @@ ${guidelinesContext}
                 onUpdateEnhancedNote={(updatedNote) => setEnhancedNote(updatedNote)}
                 onRoughNoteCompliance={(data) => {
                   setRoughNoteCompliance(data);
+                  setIsAnalyzingCompliance(false);
                   if (data?.elements) {
                     const issues = data.elements.filter(e => e.status !== 'present');
                     setComplianceIssues(issues);
@@ -891,6 +909,7 @@ ${guidelinesContext}
                   }
                 }}
                 onDismissedElements={(names) => setDismissedElementNames(names)}
+                onAnalysisStateChange={setIsAnalyzingCompliance}
                 onFixAllAndReEnhance={async (suggestions) => {
                   const combinedText = suggestions.join('\n\n');
                   const newRoughNote = roughNote + '\n\n' + combinedText;
