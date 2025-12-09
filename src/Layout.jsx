@@ -42,8 +42,12 @@ export default function Layout({ children, currentPageName }) {
     if (currentUser?.email) {
       const hasTrackedLogin = sessionStorage.getItem('login_tracked');
       if (!hasTrackedLogin) {
-        trackUserLogin().catch(err => console.error('Login tracking failed:', err));
-        sessionStorage.setItem('login_tracked', 'true');
+        trackUserLogin().then(() => {
+          sessionStorage.setItem('login_tracked', 'true');
+        }).catch(err => {
+          console.error('Login tracking failed:', err);
+          sessionStorage.setItem('login_tracked', 'true');
+        });
       }
     }
   }, [currentUser?.email]);
