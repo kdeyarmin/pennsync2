@@ -312,7 +312,7 @@ export default function UserActivityLog() {
                       </Badge>
                     </div>
                     <div className="text-xs text-gray-600">
-                      <p>Last login: {formatEastern(lastLogin.created_date, 'MMM d, yyyy h:mm a')} ET</p>
+                      <p>Last login: {formatEastern(lastLogin.created_date, 'MMM d, yyyy h:mm a')}</p>
                       <p className="text-[10px] text-gray-500 mt-1">Total sessions: {userLogins.length}</p>
                     </div>
                   </div>
