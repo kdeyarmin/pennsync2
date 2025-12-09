@@ -68,6 +68,7 @@ import NextStepsPanel from "../components/smartNote/NextStepsPanel";
 import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOverview";
 import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
 import PreEnhancementReview from "../components/smartNote/PreEnhancementReview";
+import ProactiveQualityAssistant from "../components/smartNote/ProactiveQualityAssistant";
 import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
 
 // Common diagnoses list
