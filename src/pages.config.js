@@ -33,6 +33,7 @@ import PatientDataManagement from './pages/PatientDataManagement';
 import PatientDashboard from './pages/PatientDashboard';
 import DocumentGenerator from './pages/DocumentGenerator';
 import OASIS from './pages/OASIS';
+import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +73,7 @@ export const PAGES = {
     "PatientDashboard": PatientDashboard,
     "DocumentGenerator": DocumentGenerator,
     "OASIS": OASIS,
+    "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
 }
 
 export const pagesConfig = {
