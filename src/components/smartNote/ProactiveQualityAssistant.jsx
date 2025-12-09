@@ -209,8 +209,6 @@ Return JSON with specific suggestions that include before/after examples:
             <p className="text-xs">Note quality looks good</p>
           </div>
         ) : (
-          <>
-
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
             {suggestions.map((suggestion, idx) => {
               const isApplied = appliedSuggestions.has(idx);
