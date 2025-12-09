@@ -19,9 +19,16 @@ import {
   AlertCircle,
   Search,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Settings,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import HandoutCustomizer from "../components/education/HandoutCustomizer";
 
 const educationTopics = [
   {
@@ -90,6 +97,9 @@ export default function PatientEducationHub() {
   const [isEmailing, setIsEmailing] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSections, setSelectedSections] = useState({});
+  const [customNotes, setCustomNotes] = useState("");
+  const [showCustomization, setShowCustomization] = useState(false);
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
@@ -104,6 +114,21 @@ export default function PatientEducationHub() {
     topic.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Initialize selections when topic changes
+  React.useEffect(() => {
+    if (selectedTopic) {
+      const template = educationTopics.find(t => t.id === selectedTopic.id);
+      if (template) {
+        // Auto-select all sections and bullets by default
+        const initialSelections = {};
+        // Since templates are defined in the backend function, we'll handle this dynamically
+        setSelectedSections({});
+        setCustomNotes("");
+        setShowCustomization(false);
+      }
+    }
+  }, [selectedTopic]);
+
   const handleDownload = async () => {
     if (!selectedTopic) return;
     
@@ -114,7 +139,9 @@ export default function PatientEducationHub() {
       const response = await base44.functions.invoke('generatePatientHandout', {
         condition: selectedTopic.id,
         patientName: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null,
-        action: 'download'
+        action: 'download',
+        selectedSections: Object.keys(selectedSections).length > 0 ? selectedSections : null,
+        customNotes: customNotes || null
       });
 
       // Create blob and download
@@ -149,7 +176,9 @@ export default function PatientEducationHub() {
         condition: selectedTopic.id,
         patientName: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null,
         patientEmail,
-        action: 'email'
+        action: 'email',
+        selectedSections: Object.keys(selectedSections).length > 0 ? selectedSections : null,
+        customNotes: customNotes || null
       });
 
       setSuccessMessage(`Handout emailed to ${patientEmail}!`);
@@ -289,6 +318,43 @@ export default function PatientEducationHub() {
                       className="mt-2"
                     />
                   </div>
+
+                  {/* Customization Toggle */}
+                  <div className="pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowCustomization(!showCustomization)}
+                      className="w-full"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      {showCustomization ? 'Hide' : 'Show'} Customization
+                    </Button>
+                  </div>
+
+                  {/* Customization Panel */}
+                  {showCustomization && (
+                    <div className="space-y-4 pt-2">
+                      <HandoutCustomizer
+                        topicId={selectedTopic.id}
+                        selectedSections={selectedSections}
+                        onSelectionChange={setSelectedSections}
+                      />
+                      
+                      <div>
+                        <Label>Custom Notes / Instructions</Label>
+                        <Textarea
+                          placeholder="Add patient-specific instructions or notes here..."
+                          value={customNotes}
+                          onChange={(e) => setCustomNotes(e.target.value)}
+                          className="mt-2 min-h-[100px]"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          These notes will appear at the end of the handout.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pt-4 space-y-2">
                     <Button

@@ -499,7 +499,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { condition, patientName, patientEmail, action } = await req.json();
+    const { condition, patientName, patientEmail, action, selectedSections, customNotes } = await req.json();
     
     if (!condition || !handoutTemplates[condition]) {
       return Response.json({ error: 'Invalid condition' }, { status: 400 });
@@ -552,9 +552,14 @@ Deno.serve(async (req) => {
     yPos += 15;
     doc.setTextColor(0);
 
+    // Filter sections based on selection
+    const sectionsToInclude = selectedSections 
+      ? template.sections.filter(section => selectedSections[section.heading]?.included)
+      : template.sections;
+
     // Content sections
     doc.setFontSize(11);
-    template.sections.forEach(section => {
+    sectionsToInclude.forEach(section => {
       // Check if we need a new page
       if (yPos > pageHeight - 40) {
         doc.addPage();
@@ -585,7 +590,12 @@ Deno.serve(async (req) => {
       }
 
       if (section.bullets) {
-        section.bullets.forEach(bullet => {
+        // Filter bullets based on selection
+        const bulletsToInclude = selectedSections?.[section.heading]?.bullets
+          ? section.bullets.filter((bullet, idx) => selectedSections[section.heading].bullets[idx])
+          : section.bullets;
+        
+        bulletsToInclude.forEach(bullet => {
           if (yPos > pageHeight - 20) {
             doc.addPage();
             yPos = margin;
@@ -601,6 +611,35 @@ Deno.serve(async (req) => {
       
       yPos += 5;
     });
+
+    // Custom notes section
+    if (customNotes && customNotes.trim()) {
+      if (yPos > pageHeight - 60) {
+        doc.addPage();
+        yPos = margin;
+      }
+      
+      yPos += 10;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(59, 130, 246); // Blue color
+      doc.text('Special Instructions from Your Nurse', margin, yPos);
+      yPos += 8;
+      
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      const notesLines = doc.splitTextToSize(customNotes, pageWidth - 2 * margin);
+      notesLines.forEach(line => {
+        if (yPos > pageHeight - 30) {
+          doc.addPage();
+          yPos = margin;
+        }
+        doc.text(line, margin, yPos);
+        yPos += 6;
+      });
+      yPos += 10;
+    }
 
     // Footer
     const footerY = pageHeight - 15;
