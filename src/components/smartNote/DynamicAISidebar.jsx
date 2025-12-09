@@ -34,13 +34,9 @@ export default function DynamicAISidebar({
 }) {
   // Determine which tools to show based on workflow step
   const getContent = () => {
-    // Step 1: No patient selected
+    // Step 1: No patient selected - don't show sidebar
     if (!hasPatient) {
-      return {
-        title: "👋 Get Started",
-        message: "Select a patient to begin documentation",
-        actions: []
-      };
+      return null;
     }
 
     // Step 2-3: Patient selected, working on notes
@@ -73,6 +69,8 @@ export default function DynamicAISidebar({
   };
 
   const content = getContent();
+
+  if (!content) return null;
 
   return (
     <div className="space-y-4">
