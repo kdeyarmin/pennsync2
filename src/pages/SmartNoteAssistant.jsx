@@ -67,8 +67,7 @@ import ConsolidatedAIFeedback from "../components/smartNote/ConsolidatedAIFeedba
 import NextStepsPanel from "../components/smartNote/NextStepsPanel";
 import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOverview";
 import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
-import PreEnhancementReview from "../components/smartNote/PreEnhancementReview";
-import ProactiveQualityAssistant from "../components/smartNote/ProactiveQualityAssistant";
+import UnifiedAISuggestions from "../components/smartNote/UnifiedAISuggestions";
 import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
 
 // Common diagnoses list
@@ -831,161 +830,51 @@ ${guidelinesContext}
               </CardContent>
               </Card>
 
-            {/* Proactive Quality Assistant */}
-            {roughNote.length >= 50 && !enhancedNote && (
-              <ProactiveQualityAssistant
+            {/* Unified AI Suggestions - Compliance + Quality */}
+            {!enhancedNote && roughNote.length >= 100 && (
+              <UnifiedAISuggestions
                 roughNote={roughNote}
                 diagnosis={finalDiagnosis}
                 vitalSigns={vitalSigns}
                 patientData={selectedPatient}
-                onApplyImprovement={(currentText, improvedText) => {
-                  // Replace the weak text with improved version in rough note
-                  setRoughNote(prev => prev.replace(currentText, improvedText));
+                patientContext={patientContext}
+                careType="home_health"
+                visitType={visitType}
+                appliedFixes={appliedFixes}
+                onApplyFix={(textOrUpdatedNote, category, isReplacement) => {
+                  if (isReplacement) {
+                    // Replace entire note with updated version (for quality fixes)
+                    setRoughNote(textOrUpdatedNote);
+                  } else {
+                    // Add text to note (for compliance additions)
+                    const normalizedText = textOrUpdatedNote.trim().toLowerCase();
+                    const normalizedNote = roughNote.trim().toLowerCase();
+                    
+                    if (!normalizedNote.includes(normalizedText.substring(0, 100))) {
+                      setRoughNote(prev => prev + '\n\n' + textOrUpdatedNote);
+                    }
+                  }
+                  
+                  if (category && !appliedFixes.includes(category)) {
+                    setAppliedFixes(prev => [...prev, category]);
+                  }
                 }}
-                onApplyAll={(improvements) => {
-                  // Apply all improvements at once
+                onApplyAll={(replacements, additions) => {
+                  // Apply quality replacements first
                   let updatedNote = roughNote;
-                  improvements.forEach(({ from, to }) => {
+                  replacements.forEach(({ from, to }) => {
                     updatedNote = updatedNote.replace(from, to);
                   });
+                  
+                  // Then add compliance additions
+                  if (additions.length > 0) {
+                    updatedNote = updatedNote + '\n\n' + additions.join('\n\n');
+                  }
+                  
                   setRoughNote(updatedNote);
+                  setAppliedFixes(prev => [...prev, ...additions.map(a => a.split(':')[0].trim())]);
                 }}
               />
-            )}
-
-            {/* AI Analysis Status - Compact */}
-            {isAnalyzingCompliance && (
-              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200 animate-pulse">
-                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                <p className="text-sm text-blue-700">Analyzing compliance...</p>
-              </div>
-            )}
-
-            {/* Pre-Enhancement Compliance Review */}
-            {!enhancedNote && roughNote.length >= 20 && (
-              <>
-                <PreEnhancementReview
-                  roughNote={roughNote}
-                  complianceIssues={complianceIssues}
-                  patientData={selectedPatient}
-                  vitalSigns={vitalSigns}
-                  diagnosis={finalDiagnosis}
-                  careType="home_health"
-                  visitType={visitType}
-                  patientContext={patientContext}
-                  appliedFixes={appliedFixes}
-                onApplyFix={(text, elementName) => {
-                  // Normalize text for comparison
-                  const normalizedText = text.trim().toLowerCase();
-                  const normalizedNote = roughNote.trim().toLowerCase();
-
-                  // Check if this text already exists in the note
-                  if (normalizedNote.includes(normalizedText.substring(0, 100))) {
-                    return; // Don't add duplicate
-                  }
-
-                  // Only add if not already applied
-                  if (!appliedFixes.includes(elementName)) {
-                    setRoughNote(prev => prev + '\n\n' + text);
-                    if (elementName) {
-                      setAppliedFixes(prev => [...prev, elementName]);
-                    }
-                  }
-                }}
-                onFixAll={(fixes, issueElements) => {
-                  // Add all fixes at once - filtering already done in OneClickComplianceFixer
-                  if (fixes.length > 0) {
-                    const combinedText = fixes.join('\n\n');
-                    setRoughNote(prev => prev + '\n\n' + combinedText);
-                    setAppliedFixes(prev => [...prev, ...issueElements]);
-                  }
-                }}
-                onInsertElement={(text, elementName) => {
-                  setRoughNote(prev => prev + '\n\n' + text.trim());
-                  setEnhancedNote('');
-                  if (elementName) {
-                    setAppliedFixes(prev => [...prev, elementName]);
-                  }
-                }}
-                onUpdateEnhancedNote={(updatedNote) => setEnhancedNote(updatedNote)}
-                onRoughNoteCompliance={(data) => {
-                  setRoughNoteCompliance(data);
-                  if (data?.elements) {
-                    const issues = data.elements.filter(e => e.status !== 'present');
-                    setComplianceIssues(issues);
-                    setDetectedComplianceRisks(issues);
-                  }
-                  // Delay to show completion indicator
-                  setTimeout(() => setIsAnalyzingCompliance(false), 1000);
-                }}
-                onEnhancedNoteCompliance={(data) => {
-                  setEnhancedNoteCompliance(data);
-                  if (data?.flagged_issues) {
-                    setComplianceIssues(data.flagged_issues);
-                    setDetectedComplianceRisks(data.flagged_issues);
-                  }
-                }}
-                onDismissedElements={(names) => setDismissedElementNames(names)}
-                onFixAllAndReEnhance={async (suggestions) => {
-                  onAnalysisStateChange={setIsAnalyzingCompliance}
-                  const combinedText = suggestions.join('\n\n');
-                  const newRoughNote = roughNote + '\n\n' + combinedText;
-                  setRoughNote(newRoughNote);
-                  setAppliedFixes(prev => [...prev, ...suggestions.map(s => s.split(':')[0].trim())]);
-                  setEnhancedNote('');
-                  setIsProcessing(true);
-
-                  try {
-                    const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
-
-                PATIENT CONTEXT:
-                - Diagnosis: ${finalDiagnosis || 'Not specified'}
-                - Visit Type: ${visitType.replace(/_/g, ' ')}
-                - Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
-                    if (k === 'o2') {
-                      const o2Text = `O2 Sat: ${v}`;
-                      if (vitalSigns.o2Source === 'on_oxygen' && vitalSigns.o2Flow) {
-                        return `${o2Text} on ${vitalSigns.o2Flow}L O2`;
-                      } else if (vitalSigns.o2Source === 'on_oxygen') {
-                        return `${o2Text} on supplemental O2`;
-                      }
-                      return `${o2Text} on room air`;
-                    }
-                    return `${k}: ${v}`;
-                  }).join(', ') || 'None provided'}
-
-                ROUGH NOTES:
-                ${newRoughNote}
-
-                Transform into professional EHR-ready narrative with proper medical terminology, Medicare compliance, and integrated vital signs.
-
-                CRITICAL - NO META-COMMENTARY:
-                NEVER include sentences about documentation itself. Only write the actual clinical narrative as if it were going directly into the patient's chart. Do NOT write advice to the nurse about how to document or statements about compliance.
-
-                Return JSON:
-                {
-                "enhanced_note": "The complete clinical narrative",
-                "quality_score": 0-100
-                }`;
-
-                    const result = await base44.integrations.Core.InvokeLLM({
-                      prompt,
-                      response_json_schema: {
-                        type: "object",
-                        properties: {
-                          enhanced_note: { type: "string" },
-                          quality_score: { type: "number" }
-                        }
-                      }
-                    });
-                    setEnhancedNote(result.enhanced_note);
-                    setAuditResults(result);
-                  } catch (error) {
-                    console.error("Error re-enhancing note:", error);
-                  }
-                  setIsProcessing(false);
-                }}
-                />
 
                 {/* Enhance Button - After Compliance Checks */}
                 <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
