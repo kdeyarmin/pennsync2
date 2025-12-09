@@ -85,7 +85,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-blue-100 flex">
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'}`}>
         {/* Logo */}
@@ -215,16 +215,16 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-200 h-14 flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-blue-600 shadow-sm border-b border-blue-700 h-14 flex items-center justify-between px-4">
         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" 
             alt="Penn Sync Logo" 
             className="w-8 h-8 rounded-lg"
           />
-          <span className="font-bold text-lg text-gray-900">Penn Sync</span>
+          <span className="font-bold text-lg text-white">Penn Sync</span>
         </Link>
-        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700">
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
       </div>
@@ -294,7 +294,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:overflow-auto pt-14 lg:pt-0 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100">{children}</main>
+      <main className="flex-1 lg:overflow-auto pt-14 lg:pt-0 bg-blue-100">{children}</main>
     </div>
   );
 }
