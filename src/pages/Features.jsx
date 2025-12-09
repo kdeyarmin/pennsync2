@@ -46,6 +46,15 @@ export default function FeaturesPage() {
       color: "purple",
       items: [
         {
+          name: "Unified AI Suggestions (Compliance + Quality)",
+          icon: Sparkles,
+          description: "Single AI panel that analyzes notes for BOTH Medicare compliance gaps AND quality improvements with one 'Fix All' button",
+          timeSaved: "20-25 min/visit",
+          impact: "critical",
+          details: "Combines compliance checking and quality analysis into one streamlined interface. Identifies missing Medicare elements, vague language, weak flow, and generic descriptions all in one place",
+          howToUse: "Type your rough note and watch AI suggestions appear automatically. Review compliance gaps and quality improvements in tabs, then click 'Fix All' to apply everything at once."
+        },
+        {
           name: "AI-Powered Voice Dictation",
           icon: Mic,
           description: "Record clinical observations and AI automatically transcribes, formats, and converts to Medicare-compliant narrative",
@@ -65,7 +74,7 @@ export default function FeaturesPage() {
         },
         {
           name: "AI Note Enhancement",
-          icon: Sparkles,
+          icon: Wand2,
           description: "One-click transformation of rough notes into polished, Medicare-compliant clinical documentation",
           timeSaved: "10-15 min/visit",
           impact: "critical",
@@ -73,22 +82,13 @@ export default function FeaturesPage() {
           howToUse: "Type or dictate rough notes, click 'Enhance with AI', review the polished result."
         },
         {
-          name: "Real-Time Compliance Checking",
-          icon: ShieldCheck,
-          description: "Continuous analysis of documentation for Medicare compliance with flagged issues and instant fixes",
-          timeSaved: "15-20 min/visit",
-          impact: "critical",
-          details: "Identifies missing elements, suggests compliant additions, prevents claim denials",
-          howToUse: "Compliance score updates as you type. Click flagged issues to add suggested compliant text."
-        },
-        {
-          name: "AI Note Drafting Assistant",
-          icon: FileText,
-          description: "Generate complete assessment, interventions, and patient response sections based on patient data",
-          timeSaved: "10-15 min/visit",
+          name: "Smart Auto-Complete",
+          icon: Zap,
+          description: "Type trigger words like 'lungs', 'heart', 'wound' and get instant phrase suggestions specific to diagnosis",
+          timeSaved: "5-10 min/visit",
           impact: "high",
-          details: "Diagnosis-specific content, evidence-based language, ready-to-paste sections",
-          howToUse: "Click AI Assistant panel, select section type, generate and insert into your note."
+          details: "Diagnosis-aware suggestions, common medical phrases, context-based completions",
+          howToUse: "Start typing clinical terms and select from auto-complete suggestions that appear."
         },
         {
           name: "Clinical Decision Support",
@@ -100,6 +100,15 @@ export default function FeaturesPage() {
           howToUse: "System automatically analyzes patient data and displays alerts and recommendations as you document."
         },
         {
+          name: "Patient History AI Summary",
+          icon: FileText,
+          description: "AI automatically generates concise summary of patient's medical history, recent visits, and care plan status",
+          timeSaved: "5-10 min prep",
+          impact: "high",
+          details: "Clinical trajectory, vital patterns, alerts, narrative introduction ready to paste",
+          howToUse: "Select patient and AI summary appears automatically. Click 'Copy Narrative' to use in documentation."
+        },
+        {
           name: "Automated Task Generation",
           icon: ClipboardList,
           description: "AI identifies follow-up tasks from documentation and creates them automatically",
@@ -107,6 +116,15 @@ export default function FeaturesPage() {
           impact: "high",
           details: "Extracts action items, assigns priorities, suggests due dates",
           howToUse: "After enhancing note, click 'Generate Tasks' to auto-create follow-up items."
+        },
+        {
+          name: "Medicare Guidelines Integration",
+          icon: BookOpen,
+          description: "AI retrieves relevant Medicare guidelines and integrates them into compliance suggestions",
+          timeSaved: "10-15 min/visit",
+          impact: "high",
+          details: "Real-time guideline retrieval, context-aware suggestions, CMS manual references",
+          howToUse: "Guidelines automatically inform AI suggestions. Click guideline links in compliance issues for full details."
         }
       ]
     },
@@ -437,7 +455,7 @@ export default function FeaturesPage() {
     <h2 style="color: white; margin-top: 0;">The Penn Sync Impact</h2>
     <p style="opacity: 0.95; font-size: 16px; margin-bottom: 20px;">Revolutionizing home health documentation with AI-powered efficiency</p>
     <div class="impact-stat">
-      <div class="impact-stat-value">110+</div>
+      <div class="impact-stat-value">125+</div>
       <div class="impact-stat-label">Minutes Saved Per Visit</div>
     </div>
     <div class="impact-stat">
@@ -664,23 +682,25 @@ export default function FeaturesPage() {
       <span class="warning-icon">⚠️ IMPORTANT:</span> Always review AI-enhanced content for accuracy. You are responsible for the final documentation.
     </div>
 
-    <h3>2.5 Compliance Checking</h3>
-    <p>The system continuously checks your documentation for Medicare compliance.</p>
+    <h3>2.5 Using AI Suggestions (Compliance + Quality)</h3>
+    <p>NEW! The system now provides unified suggestions for both compliance and quality in one panel.</p>
     <div class="step">
-      <span class="step-number">1</span>Watch the compliance score indicator as you document
+      <span class="step-number">1</span>As you type, AI analyzes your note automatically
     </div>
     <div class="step">
-      <span class="step-number">2</span>Click on flagged issues to see what's missing
+      <span class="step-number">2</span>View the "AI Suggestions" card that shows compliance gaps and quality improvements
     </div>
     <div class="step">
-      <span class="step-number">3</span>Click <strong>"Add"</strong> next to suggested fixes to insert compliant text
+      <span class="step-number">3</span>Click tabs to filter by: All, Compliance, or Quality
     </div>
     <div class="step">
-      <span class="step-number">4</span>Click <strong>"Fix All & Re-Enhance"</strong> to add all missing elements at once
+      <span class="step-number">4</span>Click <strong>"Fix All"</strong> to apply all suggestions at once (both compliance additions and quality replacements)
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>Or click individual <strong>"+"</strong> buttons to apply suggestions one at a time
     </div>
     <div class="tip">
-      <span class="tip-icon">💡 TIP:</span> Aim for a compliance score of 85% or higher before finalizing your note.
-    </div>
+      <span class="tip-icon">💡 TIP:</span> The unified panel combines compliance checking and quality improvements, reducing clutter and making it easier to enhance your documentation. Aim for 85%+ overall score before enhancing.</div>
 
     <h3>2.6 Copying to EHR</h3>
     <div class="step">
@@ -1125,7 +1145,7 @@ export default function FeaturesPage() {
     setIsGeneratingManual(false);
   };
 
-  const totalTimeSavedPerVisit = 110;
+  const totalTimeSavedPerVisit = 125;
   const totalTimeSavedPerWeek = totalTimeSavedPerVisit * 5;
   const totalTimeSavedPerMonth = totalTimeSavedPerWeek * 4;
   const totalTimeSavedPerYear = totalTimeSavedPerMonth * 12;
