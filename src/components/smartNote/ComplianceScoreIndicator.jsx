@@ -241,11 +241,23 @@ export default function ComplianceScoreIndicator({
     return null;
   };
 
-  // Default suggestions for missing elements - comprehensive, Medicare-compliant text with explicit headers
+  // Enhanced default suggestions - context-aware based on diagnosis and vital signs
   const getDefaultSuggestion = (elementName, type, issueType = 'missing', currentDiagnosis = null) => {
     const detectedConditions = detectConditions(currentDiagnosis || diagnosis);
     const primaryCondition = detectedConditions[0];
     const conditionData = primaryCondition ? conditionSpecificAssessments[primaryCondition] : null;
+    
+    // Extract vital signs for context
+    const hasVitals = vitalSigns && Object.keys(vitalSigns).some(k => vitalSigns[k] && k !== 'o2Source' && k !== 'o2Flow');
+    const vitalContext = hasVitals ? {
+      bp: vitalSigns.bp,
+      hr: vitalSigns.hr,
+      temp: vitalSigns.temp,
+      o2: vitalSigns.o2,
+      pain: vitalSigns.pain,
+      o2Source: vitalSigns.o2Source,
+      o2Flow: vitalSigns.o2Flow
+    } : null;
     
     // Build condition-specific additions
     const buildConditionSpecificText = (baseText, conditionKey) => {
@@ -253,27 +265,56 @@ export default function ComplianceScoreIndicator({
       return `${baseText} Condition-specific for ${primaryCondition}: ${conditionData[conditionKey]}`;
     };
 
-    // These suggestions include explicit headers/labels that AI will recognize during enhanced note analysis
+    // Context-aware suggestions with vital signs and diagnosis integration
     const homeHealthDefaults = {
-      "HOMEBOUND STATUS": conditionData?.homebound 
-        ? `HOMEBOUND STATUS: Patient is homebound due to ${conditionData.homebound}. Leaving home requires considerable and taxing effort due to medical condition. Patient unable to safely access transportation without assistance. Any absence from home is infrequent, short duration, and for medical appointments only.`
-        : "HOMEBOUND STATUS: Patient is homebound due to severe dyspnea on exertion, requiring rest after ambulating approximately 15-20 feet. Patient experiences significant fatigue and weakness that limits ability to leave home independently. Leaving home requires considerable and taxing effort due to medical condition. Patient unable to safely access transportation without assistance. Any absence from home is infrequent, short duration, and for medical appointments only.",
+      "HOMEBOUND STATUS": (() => {
+        if (conditionData?.homebound) {
+          return `HOMEBOUND STATUS: Patient is homebound due to ${conditionData.homebound}. Leaving home requires considerable and taxing effort. ${vitalContext?.o2 ? `Current O2 saturation ${vitalContext.o2}% ${vitalContext.o2Source === 'on_oxygen' ? `on ${vitalContext.o2Flow || 'supplemental'} oxygen` : 'on room air'} - requires oxygen therapy for safe ambulation limiting ability to leave home. ` : ''}Patient unable to safely access transportation without maximum assistance. Absences from home are infrequent, of short duration, and require considerable effort (medical appointments only).`;
+        }
+        return `HOMEBOUND STATUS: Patient is homebound due to severe dyspnea on exertion${vitalContext?.o2 ? ` (O2 sat ${vitalContext.o2}% ${vitalContext.o2Source === 'on_oxygen' ? 'requiring supplemental oxygen' : 'on room air'})` : ''}, requiring rest after ambulating 15-20 feet. ${vitalContext?.hr && parseInt(vitalContext.hr) > 100 ? `Tachycardia noted with HR ${vitalContext.hr} bpm at rest. ` : ''}Patient experiences significant fatigue and weakness that limits ability to leave home independently. Leaving home requires considerable and taxing effort due to ${primaryCondition || 'medical condition'}. Patient unable to safely access transportation without assistance. Any absence from home is infrequent, short duration, and for medical appointments only.`;
+      })(),
       
-      "SKILLED NEED": conditionData?.skilled
-        ? `SKILLED NURSING NEED: Skilled nursing services required for ${conditionData.skilled}. Assessment, clinical judgment, and teaching require professional nursing skills that cannot be safely performed by non-skilled personnel.`
-        : "SKILLED NURSING NEED: Skilled nursing services required for comprehensive assessment of cardiopulmonary status including auscultation of heart and lung sounds, evaluation of peripheral edema and skin integrity, medication reconciliation of complex medication regimen, and patient/caregiver education on disease process and warning signs requiring immediate medical attention. Assessment, clinical judgment, and teaching require professional nursing skills that cannot be safely performed by non-skilled personnel.",
+      "SKILLED NEED": (() => {
+        if (conditionData?.skilled) {
+          return `SKILLED NURSING NEED: Skilled nursing services required for ${conditionData.skilled}. ${vitalContext?.bp ? `Blood pressure monitoring and management (current BP ${vitalContext.bp}). ` : ''}${vitalContext?.temp && parseFloat(vitalContext.temp) > 99.5 ? `Monitoring for infection/fever (temp ${vitalContext.temp}°F). ` : ''}Clinical assessment, judgment, and patient education require professional RN skills that cannot be safely performed by non-skilled personnel.`;
+        }
+        return `SKILLED NURSING NEED: Skilled nursing services required for comprehensive assessment of ${primaryCondition ? `${primaryCondition} status` : 'cardiopulmonary status'} including auscultation of heart and lung sounds${vitalContext?.bp ? ` (BP ${vitalContext.bp})` : ''}, evaluation of peripheral edema and skin integrity, medication reconciliation of complex medication regimen${vitalContext?.temp && parseFloat(vitalContext.temp) > 99.5 ? `, and monitoring for infection/fever (temp ${vitalContext.temp}°F)` : ''}. Patient/caregiver education on disease process and warning signs requiring immediate medical attention. Assessment, clinical judgment, and teaching require professional nursing skills that cannot be safely performed by non-skilled personnel.`;
+      })(),
       
       "PATIENT RESPONSE": "PATIENT RESPONSE TO TEACHING/INTERVENTIONS: Patient verbalized understanding of medication schedule, purpose, and potential side effects. Patient correctly demonstrated teach-back of warning signs requiring physician notification. Patient agreed to follow recommended dietary modifications and activity guidelines. Patient expressed commitment to adhering to plan of care and stated understanding of when to contact nurse or physician.",
       
       "FUNCTIONAL STATUS": "FUNCTIONAL STATUS: Patient requires moderate assistance with ADLs including bathing, dressing, and grooming. Ambulates with assistive device (walker/cane) for short distances with supervision due to unsteady gait and fall risk. Limited endurance noted - requires rest periods after 5-10 minutes of activity. Transfers with minimal assistance. Cognitively intact and oriented to person, place, and time.",
       
-      "VITAL SIGNS": conditionData?.vitals
-        ? `VITAL SIGNS: Complete vital signs obtained including ${conditionData.vitals}. Blood pressure within expected parameters for patient's condition. Heart rate regular. Respiratory rate unlabored. Temperature afebrile. Pain assessed using 0-10 scale.`
-        : "VITAL SIGNS: Blood pressure within expected parameters for patient. Heart rate regular. Respiratory rate unlabored. Temperature afebrile. Oxygen saturation adequate on room air. Pain assessed using 0-10 scale - patient reports current pain level.",
+      "VITAL SIGNS": (() => {
+        let vitalText = "VITAL SIGNS: ";
+        if (vitalContext) {
+          if (vitalContext.bp) vitalText += `Blood pressure ${vitalContext.bp} mmHg. `;
+          if (vitalContext.hr) vitalText += `Heart rate ${vitalContext.hr} bpm, regular rhythm. `;
+          if (vitalContext.temp) vitalText += `Temperature ${vitalContext.temp}°F${parseFloat(vitalContext.temp) > 99.5 ? ' - elevated, monitoring for infection' : ' - afebrile'}. `;
+          if (vitalContext.o2) vitalText += `Oxygen saturation ${vitalContext.o2}% ${vitalContext.o2Source === 'on_oxygen' ? `on ${vitalContext.o2Flow || 'supplemental'} oxygen` : 'on room air'}${parseInt(vitalContext.o2) < 92 ? ' - hypoxemia noted' : ''}. `;
+          if (vitalContext.pain) vitalText += `Pain level ${vitalContext.pain}/10 using numeric pain scale. `;
+        }
+        if (conditionData?.vitals) {
+          vitalText += `Condition-specific monitoring for ${primaryCondition}: ${conditionData.vitals}. `;
+        } else {
+          vitalText += "Respiratory rate unlabored. ";
+        }
+        return vitalText.trim();
+      })(),
       
-      "ASSESSMENT FINDINGS": conditionData?.assessment
-        ? `ASSESSMENT FINDINGS: Comprehensive skilled nursing assessment completed. ${conditionData.assessment}. Patient reports current condition compared to previous visit.`
-        : "ASSESSMENT FINDINGS: Comprehensive skilled nursing assessment completed. Cardiovascular: Heart sounds regular, peripheral pulses palpable, edema assessment completed. Respiratory: Lung sounds clear bilaterally, no acute distress, work of breathing normal. Integumentary: Skin intact, no new lesions or wounds noted. Neurological: Alert and oriented, follows commands appropriately. Patient reports current condition stable since last visit.",
+      "ASSESSMENT FINDINGS": (() => {
+        let assessText = "ASSESSMENT FINDINGS: Comprehensive skilled nursing assessment completed. ";
+        if (conditionData?.assessment) {
+          assessText += `${conditionData.assessment}. `;
+        } else {
+          assessText += `Cardiovascular: Heart sounds ${vitalContext?.hr && parseInt(vitalContext.hr) > 100 ? `tachycardic at ${vitalContext.hr} bpm` : 'regular'}, peripheral pulses palpable${vitalContext?.bp ? ` (BP ${vitalContext.bp})` : ''}, edema assessment completed. `;
+          assessText += `Respiratory: Lung sounds ${vitalContext?.o2 && parseInt(vitalContext.o2) < 92 ? 'diminished, hypoxemia present' : 'clear bilaterally'}, ${vitalContext?.o2 ? `O2 sat ${vitalContext.o2}% ${vitalContext.o2Source === 'on_oxygen' ? 'on supplemental oxygen' : 'on room air'}` : 'no acute respiratory distress'}, work of breathing ${vitalContext?.o2 && parseInt(vitalContext.o2) < 92 ? 'increased' : 'normal'}. `;
+          assessText += `Integumentary: Skin ${vitalContext?.temp && parseFloat(vitalContext.temp) > 99.5 ? 'warm to touch, ' : ''}intact, no new lesions or wounds noted. `;
+          assessText += "Neurological: Alert and oriented, follows commands appropriately. ";
+        }
+        assessText += `Patient reports current condition ${vitalContext?.pain && parseInt(vitalContext.pain) > 5 ? 'with increased pain levels requiring intervention' : 'compared to previous visit'}.`;
+        return assessText;
+      })(),
       
       "INTERVENTIONS": conditionData?.skilled
         ? `SKILLED NURSING INTERVENTIONS: Skilled nursing interventions provided including ${conditionData.skilled}. Comprehensive assessment completed, medication reconciliation performed, patient and caregiver education provided on disease management and warning signs, coordination of care with physician and interdisciplinary team.`
@@ -426,14 +467,27 @@ ${careType === 'home_health' ? `
 8. GOALS OF CARE - Patient/family wishes
 `}
 
-CRITICAL INSTRUCTIONS FOR SUGGESTIONS:
-1. READ the rough note carefully and INCORPORATE details mentioned (symptoms, conditions, interventions) into your suggestions
-2. If the note mentions SOB/dyspnea, use that in homebound and skilled need suggestions
-3. If the note mentions wound care, use that in skilled need and intervention suggestions
-4. If the note mentions teaching/education, reference it in patient response suggestions
-5. Use the actual diagnosis "${diagnosis || 'the patient\'s condition'}" in relevant suggestions
-6. Include the vital signs "${vitalsString || 'documented values'}" where appropriate
-7. CRITICAL: Use the PATIENT'S MEDICAL HISTORY to personalize suggestions:
+CRITICAL INSTRUCTIONS FOR CONTEXT-SPECIFIC SUGGESTIONS:
+1. READ the rough note carefully and INCORPORATE actual details mentioned (symptoms, conditions, interventions)
+2. USE ACTUAL VITAL SIGNS in suggestions:
+   - If BP is documented (${vitalsString.includes('Blood Pressure') ? vitalsString.match(/Blood Pressure: ([0-9/]+)/)?.[1] : 'not entered'}), reference it in cardiovascular assessment
+   - If O2 sat is documented (${vitalsString.includes('O2') ? vitalsString.match(/O2 Sat: ([0-9]+)/)?.[1] : 'not entered'}), mention it in respiratory assessment and homebound status
+   - If temp is elevated (${vitalsString.includes('Temperature') ? vitalsString.match(/Temperature: ([0-9.]+)/)?.[1] : 'not entered'}), reference infection monitoring
+   - If pain level is high (${vitalsString.includes('Pain') ? vitalsString.match(/Pain: ([0-9]+)/)?.[1] : 'not entered'}), address pain management
+3. INTEGRATE DIAGNOSIS throughout suggestions:
+   - For ${diagnosis || 'the condition'}, ensure all suggestions reference disease-specific monitoring
+   - If CHF/heart failure mentioned: include weight, edema grading, JVD, lung sounds for fluid overload
+   - If COPD mentioned: include O2 requirements, breathing patterns, accessory muscle use
+   - If Diabetes mentioned: include glucose monitoring, foot exam, peripheral neuropathy check
+   - If wound present: include detailed wound measurements, bed appearance, exudate
+4. CONNECT note details to compliance elements:
+   - If note mentions SOB/dyspnea → use in homebound status and skilled respiratory assessment
+   - If note mentions wound care → detail skilled wound assessment in interventions
+   - If note mentions teaching/education → specify what was taught in patient response
+5. MAKE SUGGESTIONS READY-TO-PASTE with actual values:
+   - Instead of "vital signs documented", write "BP ${vitalsString.includes('Blood Pressure') ? vitalsString.match(/Blood Pressure: ([0-9/]+)/)?.[1] : '___/___'} mmHg, HR ${vitalsString.includes('Heart Rate') ? vitalsString.match(/Heart Rate: ([0-9]+)/)?.[1] : '___'} bpm"
+   - Replace placeholders with entered data when available
+6. CRITICAL: Use the PATIENT'S MEDICAL HISTORY to personalize suggestions:
    - If patient has COPD, mention monitoring for COPD exacerbation signs in respiratory assessments
    - If patient has CHF, include fluid status, weight monitoring, and edema assessment
    - If patient has Diabetes, reference blood glucose monitoring and diabetic foot care
