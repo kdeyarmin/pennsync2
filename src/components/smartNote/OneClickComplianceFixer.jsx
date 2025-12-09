@@ -79,7 +79,21 @@ export default function OneClickComplianceFixer({
     if (onFixAll) {
       const fixes = actionableIssues.map(issue => getFixText(issue));
       const elements = actionableIssues.map(i => i.element || i.name);
-      onFixAll(fixes, elements);
+      
+      // Deduplicate fixes - only keep unique text
+      const uniqueFixes = [];
+      const uniqueElements = [];
+      const seenTexts = new Set();
+      
+      fixes.forEach((fix, idx) => {
+        if (!seenTexts.has(fix)) {
+          seenTexts.add(fix);
+          uniqueFixes.push(fix);
+          uniqueElements.push(elements[idx]);
+        }
+      });
+      
+      onFixAll(uniqueFixes, uniqueElements);
     }
   };
 
