@@ -36,12 +36,7 @@ export default function ConsolidatedAIFeedback({
     risks: [],
     optimizations: []
   });
-  const [appliedSuggestions, setAppliedSuggestions] = useState({
-    critical: [],
-    quality: [],
-    risks: [],
-    optimizations: []
-  });
+  const [stagedFixes, setStagedFixes] = useState([]);
 
   useEffect(() => {
     if (enhancedNote && !feedback) {
@@ -271,36 +266,32 @@ Return as JSON:
     }));
   };
 
-  const applySelected = (category) => {
-    if (!onApplyFix) return;
-    
+  const stageSelected = (category) => {
     const selected = selectedSuggestions[category] || [];
-    const alreadyApplied = appliedSuggestions[category] || [];
+    if (selected.length === 0) return;
     
-    // Filter out already applied suggestions
-    const newSelections = selected.filter(idx => !alreadyApplied.includes(idx));
-    if (newSelections.length === 0) return;
-    
-    let textsToApply = [];
+    let textsToStage = [];
 
     if (category === 'critical') {
-      textsToApply = newSelections.map(idx => feedback.critical_issues[idx]?.insert_text).filter(Boolean);
+      textsToStage = selected.map(idx => feedback.critical_issues[idx]?.insert_text).filter(Boolean);
     } else if (category === 'quality') {
-      textsToApply = newSelections.map(idx => feedback.quality_improvements[idx]?.improved).filter(Boolean);
+      textsToStage = selected.map(idx => feedback.quality_improvements[idx]?.improved).filter(Boolean);
     } else if (category === 'risks') {
-      textsToApply = newSelections.map(idx => feedback.risk_factors[idx]?.insert_text).filter(Boolean);
+      textsToStage = selected.map(idx => feedback.risk_factors[idx]?.insert_text).filter(Boolean);
     } else if (category === 'optimizations') {
-      textsToApply = newSelections.map(idx => feedback.optimization_opportunities[idx]?.insert_text).filter(Boolean);
+      textsToStage = selected.map(idx => feedback.optimization_opportunities[idx]?.insert_text).filter(Boolean);
     }
 
-    if (textsToApply.length > 0) {
-      const combinedText = textsToApply.join('\n\n');
-      onApplyFix(combinedText);
-      setAppliedSuggestions(prev => ({
-        ...prev,
-        [category]: [...prev[category], ...newSelections]
-      }));
+    if (textsToStage.length > 0) {
+      setStagedFixes(prev => [...prev, ...textsToStage]);
       deselectAllInCategory(category);
+    }
+  };
+
+  const handleContinue = () => {
+    if (stagedFixes.length > 0 && onApplyFix) {
+      const combinedText = stagedFixes.join('\n\n');
+      onApplyFix(combinedText);
     }
   };
 
@@ -405,12 +396,11 @@ Return as JSON:
                   {selectedSuggestions.critical?.length > 0 && (
                     <Button
                       size="sm"
-                      onClick={() => applySelected('critical')}
-                      disabled={selectedSuggestions.critical.every(idx => appliedSuggestions.critical?.includes(idx))}
-                      className="bg-red-600 hover:bg-red-700 text-xs h-7 disabled:opacity-50"
+                      onClick={() => stageSelected('critical')}
+                      className="bg-red-600 hover:bg-red-700 text-xs h-7"
                     >
                       <CheckSquare className="w-3 h-3 mr-1" />
-                      Apply {selectedSuggestions.critical.filter(idx => !appliedSuggestions.critical?.includes(idx)).length} Selected
+                      Stage {selectedSuggestions.critical.length} Selected
                     </Button>
                   )}
                 </div>
@@ -495,12 +485,11 @@ Return as JSON:
                   {selectedSuggestions.quality?.length > 0 && (
                     <Button
                       size="sm"
-                      onClick={() => applySelected('quality')}
-                      disabled={selectedSuggestions.quality.every(idx => appliedSuggestions.quality?.includes(idx))}
-                      className="text-xs h-7 disabled:opacity-50"
+                      onClick={() => stageSelected('quality')}
+                      className="text-xs h-7"
                     >
                       <CheckSquare className="w-3 h-3 mr-1" />
-                      Apply {selectedSuggestions.quality.filter(idx => !appliedSuggestions.quality?.includes(idx)).length} Selected
+                      Stage {selectedSuggestions.quality.length} Selected
                     </Button>
                   )}
                 </div>
@@ -558,12 +547,11 @@ Return as JSON:
                   {selectedSuggestions.risks?.length > 0 && (
                     <Button
                       size="sm"
-                      onClick={() => applySelected('risks')}
-                      disabled={selectedSuggestions.risks.every(idx => appliedSuggestions.risks?.includes(idx))}
-                      className="text-xs h-7 disabled:opacity-50"
+                      onClick={() => stageSelected('risks')}
+                      className="text-xs h-7"
                     >
                       <CheckSquare className="w-3 h-3 mr-1" />
-                      Apply {selectedSuggestions.risks.filter(idx => !appliedSuggestions.risks?.includes(idx)).length} Selected
+                      Stage {selectedSuggestions.risks.length} Selected
                     </Button>
                   )}
                 </div>
@@ -659,11 +647,10 @@ Return as JSON:
                     {selectedSuggestions.optimizations?.length > 0 && (
                       <Button
                         size="sm"
-                        onClick={() => applySelected('optimizations')}
-                        disabled={selectedSuggestions.optimizations.every(idx => appliedSuggestions.optimizations?.includes(idx))}
-                        className="text-xs h-6 ml-2 disabled:opacity-50"
+                        onClick={() => stageSelected('optimizations')}
+                        className="text-xs h-6 ml-2"
                       >
-                        Apply {selectedSuggestions.optimizations.filter(idx => !appliedSuggestions.optimizations?.includes(idx)).length}
+                        Stage {selectedSuggestions.optimizations.length}
                       </Button>
                     )}
                   </div>
@@ -723,6 +710,26 @@ Return as JSON:
             <p className="text-sm text-green-700 font-medium">🎉 Excellent documentation!</p>
           </div>
         )}
+
+        {/* Continue Button */}
+        <div className="border-t pt-4 mt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              {stagedFixes.length > 0 && (
+                <Badge className="bg-blue-600 text-white">
+                  {stagedFixes.length} fix{stagedFixes.length !== 1 ? 'es' : ''} staged
+                </Badge>
+              )}
+            </div>
+            <Button
+              onClick={handleContinue}
+              disabled={stagedFixes.length === 0}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {stagedFixes.length > 0 ? `Apply ${stagedFixes.length} Fixes & Continue` : 'Continue Without Changes'}
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
