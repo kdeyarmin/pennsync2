@@ -76,7 +76,6 @@ export default function Layout({ children, currentPageName }) {
       category: "Documentation",
       items: [
         { name: "Documents", icon: FileText, page: "DocumentGenerator" },
-        { name: "OASIS", icon: ClipboardList, page: "OASIS" },
         { name: "Patient Education", icon: FileText, page: "PatientEducationHub" }
       ]
     },
@@ -100,6 +99,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Agency Settings", icon: Settings, page: "AgencySettings" },
     { name: "User Activity", icon: BarChart3, page: "UserActivityLog" },
     { name: "Clinical Pathways", icon: Target, page: "ClinicalPathwayManager" },
+    { name: "OASIS", icon: ClipboardList, page: "OASIS" },
     { name: "OASIS Audits", icon: ClipboardList, page: "OASISAuditDashboard" },
     { name: "Import Patients", icon: Users, page: "ImportPatients" },
     { name: "Performance", icon: BarChart3, page: "NursePerformanceDashboard" },
