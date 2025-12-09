@@ -51,19 +51,48 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [currentUser?.email]);
 
-  const navItems = [
-    { name: "Dashboard", icon: Home, page: "Dashboard" },
-    { name: "Patient Dashboard", icon: BarChart3, page: "PatientDashboard" },
-    { name: "Patients", icon: Users, page: "Patients" },
-    { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
-    { name: "Documents", icon: FileText, page: "DocumentGenerator" },
-    { name: "OASIS", icon: ClipboardList, page: "OASIS" },
-    { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
-    { name: "Alerts", icon: Bell, page: "PatientAlerts" },
-    { name: "Patient Education", icon: FileText, page: "PatientEducationHub" },
-    { name: "Compliance", icon: Shield, page: "RealTimeComplianceDashboard" },
-    { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
-    { name: "Features", icon: FileText, page: "Features" },
+  const navCategories = [
+    {
+      items: [
+        { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" }
+      ]
+    },
+    {
+      category: "Overview",
+      items: [
+        { name: "Dashboard", icon: Home, page: "Dashboard" },
+        { name: "Patient Dashboard", icon: BarChart3, page: "PatientDashboard" }
+      ]
+    },
+    {
+      category: "Patient Care",
+      items: [
+        { name: "Patients", icon: Users, page: "Patients" },
+        { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
+        { name: "Alerts", icon: Bell, page: "PatientAlerts" }
+      ]
+    },
+    {
+      category: "Documentation",
+      items: [
+        { name: "Documents", icon: FileText, page: "DocumentGenerator" },
+        { name: "OASIS", icon: ClipboardList, page: "OASIS" },
+        { name: "Patient Education", icon: FileText, page: "PatientEducationHub" }
+      ]
+    },
+    {
+      category: "Quality & Compliance",
+      items: [
+        { name: "Compliance", icon: Shield, page: "RealTimeComplianceDashboard" },
+        { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" }
+      ]
+    },
+    {
+      category: "Other",
+      items: [
+        { name: "Features", icon: FileText, page: "Features" }
+      ]
+    }
   ];
 
   const adminItems = [
@@ -121,7 +150,8 @@ export default function Layout({ children, currentPageName }) {
                 <Sparkles className="w-3 h-3" /> Favorites
               </p>}
               {currentUser?.favorited_pages?.map((pageName) => {
-                const pageItem = [...navItems, ...adminItems].find(item => item.page === pageName);
+                const allItems = navCategories.flatMap(cat => cat.items).concat(adminItems);
+                const pageItem = allItems.find(item => item.page === pageName);
                 if (!pageItem) return null;
                 return (
                   <Link
@@ -154,20 +184,30 @@ export default function Layout({ children, currentPageName }) {
             </>
           )}
 
-          {navItems.map((item) => (
-            <Link
-              key={item.page}
-              to={createPageUrl(item.page)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive(item.page)
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              }`}
-              title={sidebarCollapsed ? item.name : undefined}
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span>{item.name}</span>}
-            </Link>
+          {navCategories.map((category, catIndex) => (
+            <React.Fragment key={catIndex}>
+              {category.category && !sidebarCollapsed && (
+                <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase mt-3">
+                  {category.category}
+                </p>
+              )}
+              {category.items.map((item) => (
+                <Link
+                  key={item.page}
+                  to={createPageUrl(item.page)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(item.page)
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                  title={sidebarCollapsed ? item.name : undefined}
+                >
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  {!sidebarCollapsed && <span>{item.name}</span>}
+                </Link>
+              ))}
+              {catIndex === 0 && <div className="border-t border-gray-200 my-3" />}
+            </React.Fragment>
           ))}
 
           {isAdmin && (
@@ -241,20 +281,30 @@ export default function Layout({ children, currentPageName }) {
               <span className="font-bold text-lg text-gray-900">Menu</span>
             </div>
             <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.page}
-                  to={createPageUrl(item.page)}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${
-                    isActive(item.page)
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
-                </Link>
+              {navCategories.map((category, catIndex) => (
+                <React.Fragment key={catIndex}>
+                  {category.category && (
+                    <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase mt-3">
+                      {category.category}
+                    </p>
+                  )}
+                  {category.items.map((item) => (
+                    <Link
+                      key={item.page}
+                      to={createPageUrl(item.page)}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${
+                        isActive(item.page)
+                          ? "bg-blue-100 text-blue-700"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {item.name}
+                    </Link>
+                  ))}
+                  {catIndex === 0 && <div className="border-t border-gray-200 my-2" />}
+                </React.Fragment>
               ))}
               {isAdmin && (
                 <>
