@@ -228,6 +228,8 @@ export default function SmartNoteAssistant() {
   const [detectedComplianceRisks, setDetectedComplianceRisks] = useState([]);
   const [pdgmOptimizationWarnings, setPdgmOptimizationWarnings] = useState([]);
   const [noteStartTime, setNoteStartTime] = useState(null);
+  const [complianceReviewComplete, setComplianceReviewComplete] = useState(false);
+  const [appliedFixesText, setAppliedFixesText] = useState(new Set());
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -496,6 +498,7 @@ ${guidelinesContext}
       });
       setEnhancedNote(result.enhanced_note);
       setAuditResults(result);
+      setComplianceReviewComplete(false); // Reset to show compliance review first
 
       // Log note enhancement activity - counts as AI utilization
       logActivity(ActivityActions.NOTE_ENHANCED, {
@@ -574,6 +577,8 @@ ${guidelinesContext}
     setEnhancedNoteCompliance(null);
     setVisitDate(todayEastern());
     setNoteStartTime(null);
+    setComplianceReviewComplete(false);
+    setAppliedFixesText(new Set());
   };
 
   const handleInsertPhrase = (text) => {
@@ -945,30 +950,41 @@ ${guidelinesContext}
 
 
 
-          {/* Step 4: Enhanced Note with Rich Text Editor */}
-          {enhancedNote && (
-            <>
-              {/* Consolidated AI Feedback - All feedback in one place */}
-              <ConsolidatedAIFeedback
-                enhancedNote={enhancedNote}
-                roughNote={roughNote}
-                patientData={selectedPatient}
-                diagnosis={finalDiagnosis}
-                vitalSigns={vitalSigns}
-                carePlans={carePlans}
-                onApplyFix={(text) => {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                  setEnhancedNote('');
-                  setAuditResults(null);
-                }}
-              />
+          {/* Step 4: Enhanced Note - Compliance Review First, Then Final Note */}
+          {enhancedNote && !complianceReviewComplete && (
+            <ConsolidatedAIFeedback
+              enhancedNote={enhancedNote}
+              roughNote={roughNote}
+              patientData={selectedPatient}
+              diagnosis={finalDiagnosis}
+              vitalSigns={vitalSigns}
+              carePlans={carePlans}
+              appliedFixesText={appliedFixesText}
+              onApplyFix={(text, fixesArray) => {
+                setRoughNote(prev => prev + '\n\n' + text);
+                setEnhancedNote('');
+                setAuditResults(null);
+                setComplianceReviewComplete(false);
+                // Track applied fixes to prevent duplicates
+                setAppliedFixesText(prev => {
+                  const newSet = new Set(prev);
+                  fixesArray?.forEach(fix => newSet.add(fix));
+                  return newSet;
+                });
+              }}
+              onComplete={() => setComplianceReviewComplete(true)}
+            />
+          )}
 
+          {/* Show Enhanced Note Only After Compliance Review is Complete */}
+          {enhancedNote && complianceReviewComplete && (
+            <>
               <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
                 <CardHeader className="py-4 md:py-5">
                   <CardTitle className="text-base md:text-lg flex flex-col sm:flex-row items-start sm:items-center gap-2">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      <span>4. Enhanced Note</span>
+                      <span>4. Final Enhanced Note - Ready for EHR</span>
                     </div>
                     <span className="text-xs md:text-sm text-gray-500 font-normal sm:ml-auto">Yellow highlights = areas needing completion</span>
                   </CardTitle>

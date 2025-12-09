@@ -25,7 +25,9 @@ export default function ConsolidatedAIFeedback({
   diagnosis,
   vitalSigns,
   carePlans = [],
-  onApplyFix
+  onApplyFix,
+  onComplete,
+  appliedFixesText = new Set()
 }) {
   const [feedback, setFeedback] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -283,7 +285,9 @@ Return as JSON:
     }
 
     if (textsToStage.length > 0) {
-      setStagedFixes(prev => [...prev, ...textsToStage]);
+      // Filter out already applied fixes
+      const newFixes = textsToStage.filter(text => !appliedFixesText.has(text));
+      setStagedFixes(prev => [...prev, ...newFixes]);
       deselectAllInCategory(category);
     }
   };
@@ -291,7 +295,11 @@ Return as JSON:
   const handleContinue = () => {
     if (stagedFixes.length > 0 && onApplyFix) {
       const combinedText = stagedFixes.join('\n\n');
-      onApplyFix(combinedText);
+      onApplyFix(combinedText, stagedFixes);
+      setStagedFixes([]);
+    }
+    if (onComplete) {
+      onComplete();
     }
   };
 
