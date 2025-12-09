@@ -61,7 +61,6 @@ export default function ComplianceScoreIndicator({
   onEnhancedNoteCompliance,
   onDismissedElements,
   onFixAllAndReEnhance,
-  onAnalysisStateChange,
   appliedFixes = []
 }) {
   const [complianceData, setComplianceData] = useState(null);
@@ -362,6 +361,8 @@ export default function ComplianceScoreIndicator({
         analyzeCompliance();
       }, 1500);
       return () => clearTimeout(timer);
+    } else {
+      setIsAnalyzingRough(false);
     }
   }, [roughNote, careType, visitType]);
 
@@ -582,9 +583,9 @@ Return JSON:
       }
     } catch (error) {
       console.error("Compliance analysis error:", error);
+      setIsAnalyzingRough(false);
     }
     setIsAnalyzing(false);
-    setIsAnalyzingRough(false);
   };
 
   const analyzeEnhancedNote = async () => {

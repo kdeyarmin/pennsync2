@@ -93,7 +93,6 @@ export default function PreEnhancementReview({
         onEnhancedNoteCompliance={onEnhancedNoteCompliance}
         onDismissedElements={onDismissedElements}
         onFixAllAndReEnhance={onFixAllAndReEnhance}
-        onAnalysisStateChange={onAnalysisStateChange}
         appliedFixes={appliedFixes}
       />
     </div>

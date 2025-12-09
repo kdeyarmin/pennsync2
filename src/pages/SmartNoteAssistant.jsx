@@ -831,6 +831,28 @@ ${guidelinesContext}
               </CardContent>
               </Card>
 
+            {/* Proactive Quality Assistant */}
+            {roughNote.length >= 50 && !enhancedNote && (
+              <ProactiveQualityAssistant
+                roughNote={roughNote}
+                diagnosis={finalDiagnosis}
+                vitalSigns={vitalSigns}
+                patientData={selectedPatient}
+                onApplyImprovement={(currentText, improvedText) => {
+                  // Replace the weak text with improved version in rough note
+                  setRoughNote(prev => prev.replace(currentText, improvedText));
+                }}
+                onApplyAll={(improvements) => {
+                  // Apply all improvements at once
+                  let updatedNote = roughNote;
+                  improvements.forEach(({ from, to }) => {
+                    updatedNote = updatedNote.replace(from, to);
+                  });
+                  setRoughNote(updatedNote);
+                }}
+              />
+            )}
+
             {/* Compliance Analysis Indicator - Prominent */}
             {isAnalyzingCompliance && (
               <Card className="border-2 border-blue-400 bg-gradient-to-r from-blue-100 to-indigo-100 shadow-lg">
@@ -916,12 +938,13 @@ ${guidelinesContext}
                 onUpdateEnhancedNote={(updatedNote) => setEnhancedNote(updatedNote)}
                 onRoughNoteCompliance={(data) => {
                   setRoughNoteCompliance(data);
-                  setIsAnalyzingCompliance(false);
                   if (data?.elements) {
                     const issues = data.elements.filter(e => e.status !== 'present');
                     setComplianceIssues(issues);
                     setDetectedComplianceRisks(issues);
                   }
+                  // Delay to show completion indicator
+                  setTimeout(() => setIsAnalyzingCompliance(false), 1000);
                 }}
                 onEnhancedNoteCompliance={(data) => {
                   setEnhancedNoteCompliance(data);
