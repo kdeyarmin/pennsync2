@@ -79,8 +79,9 @@ export default function OneClickComplianceFixer({
   const handleFixAll = async () => {
     if (onFixAll) {
       const fixes = actionableIssues.map(issue => getFixText(issue));
-      onFixAll(fixes);
-      setFixedIssues(actionableIssues.map(i => i.element || i.name));
+      const elements = actionableIssues.map(i => i.element || i.name);
+      onFixAll(fixes, elements);
+      setFixedIssues(elements);
     }
   };
 

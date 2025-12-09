@@ -853,15 +853,24 @@ ${guidelinesContext}
                 visitType={visitType}
                 patientContext={patientContext}
                 onApplyFix={(text, elementName) => {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                  if (elementName) {
-                    setAppliedFixes(prev => [...prev, elementName]);
+                  // Only add if not already applied
+                  if (!appliedFixes.includes(elementName)) {
+                    setRoughNote(prev => prev + '\n\n' + text);
+                    if (elementName) {
+                      setAppliedFixes(prev => [...prev, elementName]);
+                    }
                   }
                 }}
-                onFixAll={(fixes) => {
-                  const combinedText = fixes.join('\n\n');
-                  setRoughNote(prev => prev + '\n\n' + combinedText);
-                  setAppliedFixes(prev => [...prev, ...complianceIssues.map(i => i.element || i.name)]);
+                onFixAll={(fixes, issueElements) => {
+                  // Filter out already applied fixes
+                  const newElements = issueElements.filter(element => !appliedFixes.includes(element));
+                  const newFixes = fixes.filter((_, idx) => !appliedFixes.includes(issueElements[idx]));
+                  
+                  if (newFixes.length > 0) {
+                    const combinedText = newFixes.join('\n\n');
+                    setRoughNote(prev => prev + '\n\n' + combinedText);
+                    setAppliedFixes(prev => [...prev, ...newElements]);
+                  }
                 }}
                 onInsertElement={(text, elementName) => {
                   setRoughNote(prev => prev + '\n\n' + text.trim());
