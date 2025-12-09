@@ -69,6 +69,7 @@ import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOvervi
 import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
 import UnifiedAISuggestions from "../components/smartNote/UnifiedAISuggestions";
 import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
+import FavoriteButton from "../components/navigation/FavoriteButton";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -648,10 +649,13 @@ ${guidelinesContext}
             <p className="text-sm md:text-base text-gray-600 hidden md:block">Transform rough notes into Medicare-compliant documentation</p>
           </div>
         </div>
-        <Button variant="ghost" size="default" className="text-gray-500 gap-1 flex-shrink-0 min-h-[44px]">
-          <HelpCircle className="w-5 h-5" />
-          <span className="hidden xl:inline">Help</span>
-        </Button>
+        <div className="flex gap-2 flex-shrink-0">
+          <FavoriteButton type="page" id="SmartNoteAssistant" name="Smart Note Assistant" />
+          <Button variant="ghost" size="default" className="text-gray-500 gap-1 min-h-[44px]">
+            <HelpCircle className="w-5 h-5" />
+            <span className="hidden xl:inline">Help</span>
+          </Button>
+        </div>
       </div>
 
       <ImprovedStepIndicator 
