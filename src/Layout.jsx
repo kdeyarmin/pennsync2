@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { trackUserLogin } from "@/functions/trackUserLogin";
 import { Button } from "@/components/ui/button";
 import {
   Home,
@@ -42,7 +41,7 @@ export default function Layout({ children, currentPageName }) {
     if (currentUser?.email) {
       const hasTrackedLogin = sessionStorage.getItem('login_tracked');
       if (!hasTrackedLogin) {
-        trackUserLogin().then(() => {
+        base44.functions.invoke('trackUserLogin').then(() => {
           sessionStorage.setItem('login_tracked', 'true');
         }).catch(err => {
           console.error('Login tracking failed:', err);
