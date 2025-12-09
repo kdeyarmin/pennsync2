@@ -16,6 +16,7 @@ import {
   CheckSquare
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "./GuidelineContextRetriever";
 
 export default function ConsolidatedAIFeedback({
   enhancedNote,
@@ -53,6 +54,16 @@ export default function ConsolidatedAIFeedback({
 
     setIsAnalyzing(true);
     try {
+      // Retrieve relevant Medicare guidelines for enhanced compliance analysis
+      const relevantGuidelines = await retrieveRelevantGuidelines({
+        diagnosis: diagnosis,
+        visitType: patientData?.care_type || 'home_health',
+        noteContent: enhancedNote,
+        maxGuidelines: 3
+      });
+
+      const guidelinesContext = formatGuidelinesForPrompt(relevantGuidelines);
+
       const prompt = `Analyze this enhanced clinical note for completeness, Medicare compliance, accuracy, and overall quality. Provide comprehensive consolidated feedback with CONTEXT-AWARE explanations and actionable follow-up suggestions.
 
 ENHANCED NOTE:
@@ -91,6 +102,9 @@ Provide CONTEXT-AWARE analysis by considering the patient's specific diagnosis, 
    - WHY this would improve documentation
    - HOW it relates to patient outcomes or reimbursement
    - What follow-up assessments or actions are recommended
+${guidelinesContext}
+
+CRITICAL: Your analysis must strictly adhere to the Medicare guidelines provided above. Reference specific guideline requirements when identifying compliance issues.
 
 Return as JSON:
 {

@@ -67,6 +67,7 @@ import NextStepsPanel from "../components/smartNote/NextStepsPanel";
 import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOverview";
 import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
 import PreEnhancementReview from "../components/smartNote/PreEnhancementReview";
+import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -367,6 +368,16 @@ export default function SmartNoteAssistant() {
     const enhanceStartTime = Date.now();
     const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
     try {
+      // Retrieve relevant Medicare guidelines for context
+      const relevantGuidelines = await retrieveRelevantGuidelines({
+        diagnosis: finalDiagnosis,
+        visitType: visitType,
+        noteContent: roughNote,
+        maxGuidelines: 3
+      });
+
+      const guidelinesContext = formatGuidelinesForPrompt(relevantGuidelines);
+
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
       PATIENT CONTEXT:
@@ -465,6 +476,7 @@ export default function SmartNoteAssistant() {
       - ANY statement about the act of documenting or compliance standards
       
       Only write the actual clinical narrative as if it were going directly into the patient's chart. Write ONLY what a nurse would document about the patient visit - observations, assessments, interventions, patient responses. Do NOT write advice to the nurse about how to document.
+${guidelinesContext}
 
       Return JSON:
       {
