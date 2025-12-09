@@ -35,6 +35,7 @@ import DocumentGenerator from './pages/DocumentGenerator';
 import OASIS from './pages/OASIS';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
 import SystemJobMonitor from './pages/SystemJobMonitor';
+import PatientEducationHub from './pages/PatientEducationHub';
 import __Layout from './Layout.jsx';
 
 
@@ -76,6 +77,7 @@ export const PAGES = {
     "OASIS": OASIS,
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
     "SystemJobMonitor": SystemJobMonitor,
+    "PatientEducationHub": PatientEducationHub,
 }
 
 export const pagesConfig = {
