@@ -436,7 +436,7 @@ export default function UserActivityLog() {
                         {/* Enhanced detail display for specific actions */}
                         {activity.action === 'login' && activity.details?.login_time && (
                           <p className="text-xs text-purple-700 mt-1">
-                            Session started at {formatEastern(activity.details.login_time, 'h:mm a')} ET
+                            Session started at {formatEastern(activity.details.login_time, 'h:mm a')}
                           </p>
                         )}
                         
