@@ -60,7 +60,8 @@ export default function ComplianceScoreIndicator({
   onRoughNoteCompliance,
   onEnhancedNoteCompliance,
   onDismissedElements,
-  onFixAllAndReEnhance
+  onFixAllAndReEnhance,
+  onAnalysisStateChange
 }) {
   const [complianceData, setComplianceData] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
