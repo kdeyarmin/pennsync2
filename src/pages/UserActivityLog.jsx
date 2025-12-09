@@ -470,7 +470,7 @@ export default function UserActivityLog() {
                     <div className="text-right text-xs text-gray-500 ml-4">
                       <p className="flex items-center gap-1 whitespace-nowrap">
                         <Clock className="w-3 h-3" />
-                        {formatEastern(activity.created_date, 'MMM d, h:mm a')} ET
+                        {formatEastern(activity.created_date, 'MMM d, h:mm a')}
                       </p>
                     </div>
                   </div>
