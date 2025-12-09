@@ -164,144 +164,99 @@ Return JSON with specific suggestions that include before/after examples:
     }
   };
 
-  if (roughNote.length < 100) {
-    return (
-      <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
-        <CardContent className="p-4 text-center">
-          <Sparkles className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-          <p className="text-sm text-purple-700">
-            Keep typing... AI Quality Assistant will activate after 100 characters
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (roughNote.length < 100) return null;
 
   if (isAnalyzing) {
     return (
-      <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-            <div>
-              <p className="text-base font-bold text-purple-900">🎯 Analyzing Note Quality...</p>
-              <p className="text-sm text-purple-700">Checking for clarity, precision, and flow</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+        <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+        <p className="text-sm text-purple-700">Analyzing quality...</p>
+      </div>
     );
   }
 
   const unappliedSuggestions = suggestions.filter((_, idx) => !appliedSuggestions.has(idx));
 
   return (
-    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50">
-      <CardHeader className="pb-3">
+    <Card className="border border-purple-200 bg-white">
+      <CardHeader className="py-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
-            AI Quality Assistant
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-600" />
+            Quality Improvements
+            {unappliedSuggestions.length > 0 && (
+              <Badge variant="outline" className="ml-1 text-xs">
+                {unappliedSuggestions.length}
+              </Badge>
+            )}
           </CardTitle>
-          {unappliedSuggestions.length > 0 && (
-            <Badge className="bg-purple-600 text-white">
-              {unappliedSuggestions.length} suggestion{unappliedSuggestions.length !== 1 ? 's' : ''}
-            </Badge>
+          {unappliedSuggestions.length > 1 && (
+            <Button
+              size="sm"
+              onClick={handleApplyAll}
+              className="bg-purple-600 hover:bg-purple-700 h-7 text-xs"
+            >
+              <Wand2 className="w-3 h-3 mr-1" />
+              Apply All
+            </Button>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="py-3 space-y-2">
         {suggestions.length === 0 ? (
-          <div className="text-center py-4">
-            <CheckCircle2 className="w-10 h-10 text-green-600 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-green-800">Excellent Documentation Quality!</p>
-            <p className="text-xs text-green-700 mt-1">Your note is clear, specific, and professional</p>
+          <div className="flex items-center gap-2 text-green-700 py-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <p className="text-xs">Note quality looks good</p>
           </div>
         ) : (
           <>
-            {/* Apply All Button */}
-            {unappliedSuggestions.length > 1 && (
-              <Button
-                onClick={handleApplyAll}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-              >
-                <Wand2 className="w-4 h-4 mr-2" />
-                Apply All {unappliedSuggestions.length} Quality Improvements
-              </Button>
-            )}
 
-            {/* Individual Suggestions */}
-            <div className="space-y-3">
-              {suggestions.map((suggestion, idx) => {
-                const isApplied = appliedSuggestions.has(idx);
-                
-                return (
-                  <div
-                    key={idx}
-                    className={`rounded-lg border-2 transition-all duration-300 ${
-                      isApplied
-                        ? 'bg-gray-50 border-gray-300 opacity-50'
-                        : 'bg-white border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md'
-                    }`}
-                  >
-                    <div className="p-3">
-                      <div className="flex items-start gap-2 mb-2">
-                        {getIssueIcon(suggestion.issue_type)}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {suggestion.issue_type?.replace(/_/g, ' ')}
-                            </Badge>
-                            <Badge className={`text-xs ${getPriorityColor(suggestion.priority)}`}>
-                              {suggestion.priority} priority
-                            </Badge>
-                            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700">
-                              {suggestion.impact}
-                            </Badge>
-                            {isApplied && (
-                              <Badge className="bg-green-600 text-white text-xs">
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Applied
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          {/* Current (Weak) Text */}
-                          <div className="bg-red-50 border border-red-200 rounded p-2 mb-2">
-                            <p className="text-[10px] font-semibold text-red-800 mb-1">❌ Current (weak):</p>
-                            <p className="text-xs text-red-900 line-through italic">"{suggestion.current_text}"</p>
-                          </div>
-
-                          {/* Improved Text */}
-                          <div className="bg-green-50 border border-green-200 rounded p-2 mb-2">
-                            <p className="text-[10px] font-semibold text-green-800 mb-1">✓ Improved (professional):</p>
-                            <p className="text-xs text-green-900 font-medium">"{suggestion.improved_text}"</p>
-                          </div>
-
-                          {/* Rationale */}
-                          <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                            <p className="text-[10px] font-semibold text-purple-800 mb-1">💡 Why this matters:</p>
-                            <p className="text-xs text-purple-800">{suggestion.rationale}</p>
-                          </div>
-                        </div>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {suggestions.map((suggestion, idx) => {
+              const isApplied = appliedSuggestions.has(idx);
+              
+              return (
+                <div
+                  key={idx}
+                  className={`rounded border p-2 transition-all ${
+                    isApplied ? 'bg-gray-50 opacity-50' : 'bg-purple-50 border-purple-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-[10px] h-5">
+                          {suggestion.issue_type?.replace(/_/g, ' ')}
+                        </Badge>
+                        {suggestion.priority === 'high' && (
+                          <Badge className="text-[10px] h-5 bg-orange-500">High</Badge>
+                        )}
+                        {isApplied && (
+                          <CheckCircle2 className="w-3 h-3 text-green-600 ml-auto" />
+                        )}
                       </div>
-
-                      {!isApplied && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleApply(suggestion, idx)}
-                          className="w-full mt-2 bg-purple-600 hover:bg-purple-700"
-                        >
-                          <Wand2 className="w-3 h-3 mr-1" />
-                          Apply This Improvement
-                        </Button>
-                      )}
+                      
+                      <div className="space-y-1">
+                        <p className="text-xs text-red-800 line-through">"{suggestion.current_text}"</p>
+                        <p className="text-xs text-green-900 font-medium">"{suggestion.improved_text}"</p>
+                      </div>
                     </div>
+
+                    {!isApplied && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleApply(suggestion, idx)}
+                        className="h-7 px-2 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
+                      >
+                        <Wand2 className="w-3 h-3" />
+                      </Button>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          </>
+                </div>
+              );
+            })}
+          </div>
         )}
       </CardContent>
     </Card>

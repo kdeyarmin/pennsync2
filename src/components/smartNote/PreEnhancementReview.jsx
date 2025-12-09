@@ -28,43 +28,8 @@ export default function PreEnhancementReview({
   if (!roughNote || roughNote.length < 30) return null;
 
   return (
-    <div className="space-y-4" id="pre-enhancement-review">
-      <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-white">
-        <CardHeader className="py-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            {complianceIssues.length > 0 ? (
-              <>
-                <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                Pre-Enhancement Compliance Check
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                Compliance Review
-              </>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="py-2">
-          {complianceIssues.length > 0 ? (
-            <div className="space-y-2">
-              <p className="text-xs text-yellow-800">
-                {complianceIssues.length} compliance issue{complianceIssues.length !== 1 ? 's' : ''} detected. 
-                Fix them now for better AI enhancement results.
-              </p>
-              <Badge variant="outline" className="text-xs">
-                Recommended: Fix before enhancing
-              </Badge>
-            </div>
-          ) : (
-            <p className="text-xs text-green-700">
-              Your rough notes look good! Ready to enhance.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* One-Click Fixer */}
+    <div className="space-y-3" id="pre-enhancement-review">
+      {/* One-Click Fixer - Simplified */}
       {complianceIssues.length > 0 && (
         <OneClickComplianceFixer
           complianceIssues={complianceIssues}
@@ -78,7 +43,7 @@ export default function PreEnhancementReview({
         />
       )}
 
-      {/* Detailed Compliance Indicator */}
+      {/* Compliance Indicator - Collapsed by default */}
       <ComplianceScoreIndicator
         roughNote={roughNote}
         enhancedNote=""
