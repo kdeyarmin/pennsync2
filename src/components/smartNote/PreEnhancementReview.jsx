@@ -94,6 +94,7 @@ export default function PreEnhancementReview({
         onDismissedElements={onDismissedElements}
         onFixAllAndReEnhance={onFixAllAndReEnhance}
         onAnalysisStateChange={onAnalysisStateChange}
+        appliedFixes={appliedFixes}
       />
     </div>
   );

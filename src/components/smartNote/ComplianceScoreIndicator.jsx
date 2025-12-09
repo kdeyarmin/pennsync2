@@ -61,7 +61,8 @@ export default function ComplianceScoreIndicator({
   onEnhancedNoteCompliance,
   onDismissedElements,
   onFixAllAndReEnhance,
-  onAnalysisStateChange
+  onAnalysisStateChange,
+  appliedFixes = []
 }) {
   const [complianceData, setComplianceData] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -953,17 +954,19 @@ Return JSON:
               const isSelected = selectedSuggestions.has(idx);
               const suggestion = getSuggestionText(element, idx);
               const isEditing = editingSuggestion === idx;
+              const hasBeenAdded = appliedFixes.includes(element.name);
               
               return (
                 <div 
                   key={idx} 
-                  className={`rounded border ${
+                  className={`rounded border transition-all duration-300 ${
+                    hasBeenAdded ? 'bg-gray-100 border-gray-300 opacity-50' :
                     element.status === 'present' ? 'bg-green-50 border-green-200' : 
                     element.status === 'partial' ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
                   }`}
                 >
                   <div className="flex items-start gap-2 p-2">
-                    {element.status !== 'present' && (
+                    {element.status !== 'present' && !hasBeenAdded && (
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -982,15 +985,24 @@ Return JSON:
                         className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     )}
-                    {getStatusIcon(element.status)}
+                    {hasBeenAdded ? (
+                      <CheckCircle2 className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    ) : (
+                      getStatusIcon(element.status)
+                    )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold">{element.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold">{element.name}</p>
+                        {hasBeenAdded && (
+                          <Badge className="bg-gray-500 text-white text-[10px]">Added</Badge>
+                        )}
+                      </div>
                       {element.found_text && (
                         <p className="text-xs text-gray-600 italic truncate">"{element.found_text}"</p>
                       )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      {element.status !== 'present' && (
+                      {element.status !== 'present' && !hasBeenAdded && (
                         <>
                           <Button
                             size="sm"

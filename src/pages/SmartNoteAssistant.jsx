@@ -830,15 +830,36 @@ ${guidelinesContext}
               </CardContent>
               </Card>
 
-            {/* Compliance Analysis Indicator */}
+            {/* Compliance Analysis Indicator - Prominent */}
             {isAnalyzingCompliance && (
-              <Card className="border-2 border-blue-200 bg-blue-50">
+              <Card className="border-2 border-blue-400 bg-gradient-to-r from-blue-100 to-indigo-100 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+                      <div className="absolute inset-0 w-10 h-10 animate-ping bg-blue-400 rounded-full opacity-20"></div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-lg font-bold text-blue-900 mb-1">🔍 AI Compliance Analysis in Progress</p>
+                      <p className="text-sm text-blue-700">Reviewing your note for Medicare compliance requirements...</p>
+                      <div className="mt-3 bg-blue-200 rounded-full h-2 overflow-hidden">
+                        <div className="bg-blue-600 h-full animate-pulse" style={{ width: '70%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Analysis Complete Indicator */}
+            {!isAnalyzingCompliance && roughNote.length >= 20 && complianceIssues.length > 0 && (
+              <Card className="border-2 border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 animate-in fade-in duration-500">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    <CheckCircle2 className="w-6 h-6 text-green-600" />
                     <div>
-                      <p className="text-sm font-medium text-blue-900">Analyzing compliance...</p>
-                      <p className="text-xs text-blue-700">This will take a few seconds</p>
+                      <p className="text-sm font-bold text-green-900">✓ Analysis Complete</p>
+                      <p className="text-xs text-green-700">{complianceIssues.length} suggestions found below</p>
                     </div>
                   </div>
                 </CardContent>
