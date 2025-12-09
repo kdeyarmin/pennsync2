@@ -909,8 +909,8 @@ ${guidelinesContext}
                   }
                 }}
                 onDismissedElements={(names) => setDismissedElementNames(names)}
-                onAnalysisStateChange={setIsAnalyzingCompliance}
                 onFixAllAndReEnhance={async (suggestions) => {
+                  onAnalysisStateChange={setIsAnalyzingCompliance}
                   const combinedText = suggestions.join('\n\n');
                   const newRoughNote = roughNote + '\n\n' + combinedText;
                   setRoughNote(newRoughNote);

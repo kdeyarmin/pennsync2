@@ -22,7 +22,8 @@ export default function PreEnhancementReview({
   onEnhancedNoteCompliance,
   onDismissedElements,
   onFixAllAndReEnhance,
-  appliedFixes = []
+  appliedFixes = [],
+  onAnalysisStateChange
 }) {
   if (!roughNote || roughNote.length < 30) return null;
 
@@ -92,6 +93,7 @@ export default function PreEnhancementReview({
         onEnhancedNoteCompliance={onEnhancedNoteCompliance}
         onDismissedElements={onDismissedElements}
         onFixAllAndReEnhance={onFixAllAndReEnhance}
+        onAnalysisStateChange={onAnalysisStateChange}
       />
     </div>
   );
