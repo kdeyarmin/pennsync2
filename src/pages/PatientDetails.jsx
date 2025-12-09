@@ -30,6 +30,7 @@ import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardS
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
 import AIPatientHistoryAnalyzer from "../components/patient/AIPatientHistoryAnalyzer";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
+import FavoriteButton from "../components/navigation/FavoriteButton";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -196,9 +197,16 @@ export default function PatientDetails() {
             <div className="flex-1 min-w-0 w-full">
               <div className="flex flex-col gap-3">
                 <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 break-words">
-                    {sanitizeInput(patient.first_name)} {sanitizeInput(patient.last_name)}
-                  </h1>
+                  <div className="flex items-start gap-2">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 break-words flex-1">
+                      {sanitizeInput(patient.first_name)} {sanitizeInput(patient.last_name)}
+                    </h1>
+                    <FavoriteButton 
+                      type="patient" 
+                      id={patient.id} 
+                      name={`${patient.first_name} ${patient.last_name}`} 
+                    />
+                  </div>
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                     <span>MRN: {sanitizeInput(patient.medical_record_number) || 'N/A'}</span>
                     <span className="hidden sm:inline">•</span>
