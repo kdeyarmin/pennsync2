@@ -842,6 +842,15 @@ ${guidelinesContext}
                   patientContext={patientContext}
                   appliedFixes={appliedFixes}
                 onApplyFix={(text, elementName) => {
+                  // Normalize text for comparison
+                  const normalizedText = text.trim().toLowerCase();
+                  const normalizedNote = roughNote.trim().toLowerCase();
+
+                  // Check if this text already exists in the note
+                  if (normalizedNote.includes(normalizedText.substring(0, 100))) {
+                    return; // Don't add duplicate
+                  }
+
                   // Only add if not already applied
                   if (!appliedFixes.includes(elementName)) {
                     setRoughNote(prev => prev + '\n\n' + text);
@@ -851,14 +860,41 @@ ${guidelinesContext}
                   }
                 }}
                 onFixAll={(fixes, issueElements) => {
-                  // Filter out already applied fixes
-                  const newElements = issueElements.filter(element => !appliedFixes.includes(element));
-                  const newFixes = fixes.filter((_, idx) => !appliedFixes.includes(issueElements[idx]));
-                  
-                  if (newFixes.length > 0) {
-                    const combinedText = newFixes.join('\n\n');
+                  const normalizedNote = roughNote.trim().toLowerCase();
+
+                  // Filter out duplicates and already applied fixes
+                  const uniqueFixes = [];
+                  const uniqueElements = [];
+
+                  fixes.forEach((fix, idx) => {
+                    const element = issueElements[idx];
+                    const normalizedFix = fix.trim().toLowerCase();
+
+                    // Check if already applied by element name
+                    if (appliedFixes.includes(element)) {
+                      return;
+                    }
+
+                    // Check if this text already exists in the note
+                    if (normalizedNote.includes(normalizedFix.substring(0, 100))) {
+                      return;
+                    }
+
+                    // Check if already added in this batch
+                    const isDuplicate = uniqueFixes.some(f => 
+                      f.trim().toLowerCase().substring(0, 100) === normalizedFix.substring(0, 100)
+                    );
+
+                    if (!isDuplicate) {
+                      uniqueFixes.push(fix);
+                      uniqueElements.push(element);
+                    }
+                  });
+
+                  if (uniqueFixes.length > 0) {
+                    const combinedText = uniqueFixes.join('\n\n');
                     setRoughNote(prev => prev + '\n\n' + combinedText);
-                    setAppliedFixes(prev => [...prev, ...newElements]);
+                    setAppliedFixes(prev => [...prev, ...uniqueElements]);
                   }
                 }}
                 onInsertElement={(text, elementName) => {
