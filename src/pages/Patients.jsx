@@ -481,7 +481,7 @@ export default function Patients() {
                                           <Trash2 className="w-3 h-3" />
                                         </Button>
                                         <Link 
-                                          to={`${createPageUrl("PatientDetails")}?patientId=${patient.id}`}
+                                          to={`${createPageUrl("PatientDetails")}?id=${patient.id}`}
                                           className="flex-1"
                                         >
                                           <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
