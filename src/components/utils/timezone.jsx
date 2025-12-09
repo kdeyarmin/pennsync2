@@ -14,7 +14,8 @@ export const formatEastern = (date, formatStr = 'MMM d, yyyy h:mm a') => {
   try {
     // Parse the date - handle both ISO strings and Date objects
     const dateObj = date instanceof Date ? date : new Date(date);
-    return formatInTimeZone(dateObj, EASTERN_TIMEZONE, formatStr);
+    // Format in Eastern Time - the date is already in UTC from the database
+    return formatInTimeZone(dateObj, EASTERN_TIMEZONE, formatStr) + ' ET';
   } catch (error) {
     console.error('Error formatting date:', error);
     return '';
