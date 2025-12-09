@@ -21,7 +21,8 @@ export default function PreEnhancementReview({
   onRoughNoteCompliance,
   onEnhancedNoteCompliance,
   onDismissedElements,
-  onFixAllAndReEnhance
+  onFixAllAndReEnhance,
+  appliedFixes = []
 }) {
   if (!roughNote || roughNote.length < 30) return null;
 
@@ -72,6 +73,7 @@ export default function PreEnhancementReview({
           patientData={patientData}
           vitalSigns={vitalSigns}
           diagnosis={diagnosis}
+          appliedFixes={appliedFixes}
         />
       )}
 

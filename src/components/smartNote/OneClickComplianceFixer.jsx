@@ -22,16 +22,16 @@ export default function OneClickComplianceFixer({
   onFixAll,
   patientData,
   vitalSigns,
-  diagnosis
+  diagnosis,
+  appliedFixes = []
 }) {
   const [fixingIssue, setFixingIssue] = useState(null);
-  const [fixedIssues, setFixedIssues] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [wizardMode, setWizardMode] = useState(false);
 
   // Filter for actionable issues
   const actionableIssues = complianceIssues.filter(issue => 
-    issue.status !== 'present' && !fixedIssues.includes(issue.element || issue.name)
+    issue.status !== 'present' && !appliedFixes.includes(issue.element || issue.name)
   );
 
   const getFixText = (issue) => {
@@ -72,7 +72,6 @@ export default function OneClickComplianceFixer({
     const fixText = getFixText(issue);
     onApplyFix?.(fixText, issue.element || issue.name);
     
-    setFixedIssues([...fixedIssues, issue.element || issue.name]);
     setFixingIssue(null);
   };
 
@@ -81,7 +80,6 @@ export default function OneClickComplianceFixer({
       const fixes = actionableIssues.map(issue => getFixText(issue));
       const elements = actionableIssues.map(i => i.element || i.name);
       onFixAll(fixes, elements);
-      setFixedIssues(elements);
     }
   };
 
@@ -260,11 +258,11 @@ export default function OneClickComplianceFixer({
           ))}
         </div>
 
-        {fixedIssues.length > 0 && (
+        {appliedFixes.length > 0 && (
           <Alert className="bg-green-50 border-green-200 mt-3">
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <AlertDescription className="text-xs text-green-800">
-              Fixed {fixedIssues.length} issue{fixedIssues.length > 1 ? 's' : ''}! 
+              Fixed {appliedFixes.length} issue{appliedFixes.length > 1 ? 's' : ''}! 
               {actionableIssues.length > 0 && ` ${actionableIssues.length} remaining.`}
             </AlertDescription>
           </Alert>

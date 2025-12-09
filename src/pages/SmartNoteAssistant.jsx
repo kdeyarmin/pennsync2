@@ -852,6 +852,7 @@ ${guidelinesContext}
                 careType="home_health"
                 visitType={visitType}
                 patientContext={patientContext}
+                appliedFixes={appliedFixes}
                 onApplyFix={(text, elementName) => {
                   // Only add if not already applied
                   if (!appliedFixes.includes(elementName)) {
