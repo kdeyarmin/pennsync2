@@ -82,7 +82,6 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Quality & Compliance",
       items: [
-        { name: "Compliance", icon: Shield, page: "RealTimeComplianceDashboard" },
         { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" }
       ]
     },
@@ -97,6 +96,7 @@ export default function Layout({ children, currentPageName }) {
   const adminItems = [
     { name: "Admin", icon: Settings, page: "AdminDashboard" },
     { name: "Agency Settings", icon: Settings, page: "AgencySettings" },
+    { name: "Compliance", icon: Shield, page: "RealTimeComplianceDashboard" },
     { name: "User Activity", icon: BarChart3, page: "UserActivityLog" },
     { name: "Clinical Pathways", icon: Target, page: "ClinicalPathwayManager" },
     { name: "OASIS", icon: ClipboardList, page: "OASIS" },
