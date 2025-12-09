@@ -127,18 +127,18 @@ export default function Dashboard() {
     return "Good Evening";
   };
 
-  const firstName = currentUser?.full_name?.split(' ')[0] || 'there';
+  const fullName = currentUser?.full_name || 'there';
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Welcome Banner */}
-      <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white border-none shadow-xl overflow-hidden">
+      <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border-none shadow-xl overflow-hidden">
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
           <div className="relative z-10">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
-              {getGreeting()}, {firstName}! 👋
+              {getGreeting()}, {fullName}! 👋
             </h1>
             <p className="text-white/80 text-xs sm:text-sm md:text-base">
               {formatEastern(new Date(), 'EEEE, MMMM d, yyyy')} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
