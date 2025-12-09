@@ -70,7 +70,13 @@ export default function OneClickComplianceFixer({
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const fixText = getFixText(issue);
-    onApplyFix?.(fixText, issue.element || issue.name);
+    const normalizedFix = fixText.trim().toLowerCase();
+    const normalizedNote = currentNote.trim().toLowerCase();
+    
+    // Don't apply if already exists in note
+    if (!normalizedNote.includes(normalizedFix.substring(0, 100))) {
+      onApplyFix?.(fixText, issue.element || issue.name);
+    }
     
     setFixingIssue(null);
   };
@@ -80,14 +86,23 @@ export default function OneClickComplianceFixer({
       const fixes = actionableIssues.map(issue => getFixText(issue));
       const elements = actionableIssues.map(i => i.element || i.name);
       
-      // Deduplicate fixes - only keep unique text
+      // Normalize current note for comparison
+      const normalizedNote = currentNote.trim().toLowerCase();
+      
+      // Deduplicate fixes - only keep unique text that doesn't exist in note
       const uniqueFixes = [];
       const uniqueElements = [];
       const seenTexts = new Set();
       
       fixes.forEach((fix, idx) => {
-        if (!seenTexts.has(fix)) {
-          seenTexts.add(fix);
+        const normalizedFix = fix.trim().toLowerCase();
+        
+        // Check if already exists in note (first 100 chars)
+        const alreadyInNote = normalizedNote.includes(normalizedFix.substring(0, 100));
+        
+        // Check if we've already added this exact text
+        if (!seenTexts.has(normalizedFix) && !alreadyInNote) {
+          seenTexts.add(normalizedFix);
           uniqueFixes.push(fix);
           uniqueElements.push(elements[idx]);
         }
