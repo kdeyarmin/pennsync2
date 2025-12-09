@@ -24,7 +24,6 @@ import {
 import {
   Sparkles,
   CheckCircle2,
-  Wand2,
   User,
   Activity,
   Stethoscope,
@@ -36,15 +35,14 @@ import {
   ChevronLeft,
   Brain,
   HelpCircle,
-  Undo2,
-  Redo2,
   ArrowRight,
   Copy,
   RotateCcw,
   Lightbulb,
   MessageCircle,
   Save,
-  Loader2
+  Loader2,
+  Edit3
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import { useQueryClient } from "@tanstack/react-query";
@@ -879,7 +877,7 @@ ${guidelinesContext}
             <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-purple-50 to-pink-50">
               <CardTitle className="text-base md:text-lg flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Wand2 className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                  <Edit3 className="w-5 h-5 text-purple-600 flex-shrink-0" />
                   <span className="truncate">3. Your Notes</span>
                   {roughNote.length >= 20 && <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />}
                 </div>
