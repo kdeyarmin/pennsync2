@@ -904,34 +904,8 @@ ${guidelinesContext}
 
 
 
-          {/* Step 4: Enhanced Note - Compliance Review First, Then Final Note */}
-          {enhancedNote && !complianceReviewComplete && (
-            <ConsolidatedAIFeedback
-              enhancedNote={enhancedNote}
-              roughNote={roughNote}
-              patientData={selectedPatient}
-              diagnosis={finalDiagnosis}
-              vitalSigns={vitalSigns}
-              carePlans={carePlans}
-              appliedFixesText={appliedFixesText}
-              onApplyFix={(text, fixesArray) => {
-                setRoughNote(prev => prev + '\n\n' + text);
-                setEnhancedNote('');
-                setAuditResults(null);
-                setComplianceReviewComplete(false);
-                // Track applied fixes to prevent duplicates
-                setAppliedFixesText(prev => {
-                  const newSet = new Set(prev);
-                  fixesArray?.forEach(fix => newSet.add(fix));
-                  return newSet;
-                });
-              }}
-              onComplete={() => setComplianceReviewComplete(true)}
-            />
-          )}
-
-          {/* Show Enhanced Note Only After Compliance Review is Complete */}
-          {enhancedNote && complianceReviewComplete && (
+          {/* Step 4: Enhanced Note */}
+          {enhancedNote && (
             <>
               <Card id="step-enhance" className="border-2 border-green-300 bg-green-50">
                 <CardHeader className="py-4 md:py-5">
