@@ -875,9 +875,11 @@ ${guidelinesContext}
                   setAppliedFixes(prev => [...prev, ...additions.map(a => a.split(':')[0].trim())]);
                 }}
               />
+            )}
 
-                {/* Enhance Button - After Compliance Checks */}
-                <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+            {/* Enhance Button - After Compliance Checks */}
+            {!enhancedNote && roughNote.length >= 20 && (
+              <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -897,9 +899,8 @@ ${guidelinesContext}
                     </Button>
                   </div>
                 </CardContent>
-                </Card>
-                </>
-                )}
+              </Card>
+            )}
 
 
 
