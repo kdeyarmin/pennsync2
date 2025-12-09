@@ -33,7 +33,9 @@ import {
   BookOpen,
   ExternalLink,
   GraduationCap,
-  Search
+  Search,
+  Sparkles,
+  Wand2
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -501,6 +503,19 @@ For EACH element, provide:
 - why_needed: Brief Medicare/compliance reason (1 sentence)
 - problematic_phrasing: If partial/weak, quote the EXACT problematic text from the note and explain why it's insufficient
 
+QUALITY & CLARITY ENHANCEMENTS (CRITICAL - analyze beyond compliance):
+Beyond basic compliance, evaluate the note for:
+1. CLARITY: Are sentences clear and unambiguous? Avoid vague terms like "doing well", "stable", "unremarkable"
+2. FLOW: Does the note follow a logical sequence (assessment → findings → interventions → response → plan)?
+3. DESCRIPTIVE LANGUAGE: Use specific, measurable terms instead of generic descriptions
+4. CLINICAL PRECISION: Replace lay terms with appropriate medical terminology
+5. ACTIONABILITY: Are interventions and outcomes clearly stated?
+
+For each quality issue found, provide:
+- The vague/weak text
+- Why it's insufficient
+- Improved phrasing with specific clinical detail
+
 Return JSON:
 {
   "score": 0-100,
@@ -512,6 +527,15 @@ Return JSON:
       "suggested_addition": "PERSONALIZED clinical text incorporating details from the rough note - REQUIRED for missing/partial",
       "why_needed": "Brief explanation of why Medicare requires this element (e.g., 'Medicare requires homebound documentation to justify skilled home health services')",
       "problematic_phrasing": "For partial elements: quote the exact weak/non-compliant text and explain the issue (e.g., 'pt at home' - too vague, doesn't explain WHY patient is homebound or taxing effort required)"
+    }
+  ],
+  "quality_improvements": [
+    {
+      "issue_type": "vague_language" | "weak_flow" | "generic_description" | "lay_terminology" | "unclear_outcome",
+      "current_text": "Exact quote of weak/vague text from note",
+      "improved_text": "Enhanced version with specific clinical detail",
+      "rationale": "Why the improvement matters for clinical documentation quality",
+      "priority": "high" | "medium" | "low"
     }
   ]
 }`,
@@ -530,6 +554,19 @@ Return JSON:
                   suggested_addition: { type: "string" },
                   why_needed: { type: "string" },
                   problematic_phrasing: { type: "string" }
+                }
+              }
+            },
+            quality_improvements: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  issue_type: { type: "string" },
+                  current_text: { type: "string" },
+                  improved_text: { type: "string" },
+                  rationale: { type: "string" },
+                  priority: { type: "string" }
                 }
               }
             }
@@ -1153,6 +1190,68 @@ Return JSON:
               );
             })}
             
+            {/* Quality Improvements Section */}
+            {complianceData?.quality_improvements?.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-indigo-600" />
+                  <p className="text-sm font-semibold text-indigo-800">Quality & Clarity Enhancements</p>
+                  <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700">
+                    {complianceData.quality_improvements.length} suggested
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {complianceData.quality_improvements.map((improvement, idx) => (
+                    <div key={idx} className="bg-indigo-50 border border-indigo-200 rounded p-2">
+                      <div className="flex items-start gap-2 mb-2">
+                        <Lightbulb className="w-3 h-3 text-indigo-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-[10px] capitalize">
+                              {improvement.issue_type?.replace(/_/g, ' ')}
+                            </Badge>
+                            <Badge className={`text-[10px] ${
+                              improvement.priority === 'high' ? 'bg-orange-500 text-white' :
+                              improvement.priority === 'medium' ? 'bg-yellow-500 text-white' :
+                              'bg-blue-500 text-white'
+                            }`}>
+                              {improvement.priority}
+                            </Badge>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="bg-red-50 border border-red-200 rounded p-2">
+                              <p className="text-[10px] font-semibold text-red-800 mb-1">Current (weak):</p>
+                              <p className="text-xs text-red-900 italic line-through">"{improvement.current_text}"</p>
+                            </div>
+                            <div className="bg-green-50 border border-green-200 rounded p-2">
+                              <p className="text-[10px] font-semibold text-green-800 mb-1">Enhanced:</p>
+                              <p className="text-xs text-green-900 font-medium">"{improvement.improved_text}"</p>
+                            </div>
+                            <p className="text-[10px] text-indigo-700 italic">{improvement.rationale}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-full h-6 text-xs text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100 mt-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onInsertElement) {
+                            // Replace the weak text with improved version
+                            onInsertElement(`\n\n${improvement.improved_text}`);
+                          }
+                        }}
+                      >
+                        <Wand2 className="w-3 h-3 mr-1" />
+                        Apply Enhancement
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Show dismissed count with restore option */}
             {dismissedElements.size > 0 && (
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 text-xs text-gray-500">
