@@ -310,6 +310,7 @@ export default function ComplianceScoreIndicator({
   // Debounced analysis for rough note
   useEffect(() => {
     if (roughNote && roughNote.length > 30) {
+      setIsAnalyzingRough(true);
       const timer = setTimeout(() => {
         analyzeCompliance();
       }, 1500);
@@ -480,6 +481,7 @@ Return JSON:
         }
       });
       setComplianceData(result);
+      setRoughNoteComplianceData(result);
       if (onRoughNoteCompliance) {
         onRoughNoteCompliance(result);
       }
@@ -487,6 +489,7 @@ Return JSON:
       console.error("Compliance analysis error:", error);
     }
     setIsAnalyzing(false);
+    setIsAnalyzingRough(false);
   };
 
   const analyzeEnhancedNote = async () => {
@@ -749,6 +752,19 @@ Return JSON:
   // Don't render if no note content
   if ((!roughNote || roughNote.length < 30) && !enhancedNote) {
     return null;
+  }
+
+  // Show analyzing status for rough note
+  if (isAnalyzingRough && !roughNoteComplianceData) {
+    return (
+      <Card className="border-yellow-200 bg-yellow-50 animate-pulse">
+        <CardContent className="p-6 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-yellow-600 mx-auto mb-3" />
+          <p className="text-sm font-medium text-yellow-800">Analyzing compliance...</p>
+          <p className="text-xs text-yellow-600 mt-1">This will take a few seconds</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
