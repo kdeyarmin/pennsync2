@@ -68,6 +68,14 @@ import {
   secureUpdate
 } from "@/components/utils/security";
 
+import {
+  trackAISuggestion,
+  trackDocumentationActivity,
+  trackTemplateUsage,
+  trackVoiceCommand,
+  trackVisitCompletion
+} from "@/components/utils/performanceTracking";
+
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 
@@ -91,7 +99,9 @@ export default function DocumentVisit() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const autoSaveTimerRef = useRef(null);
-  const [hasAccess, setHasAccess] = useState(null); 
+  const [hasAccess, setHasAccess] = useState(null);
+  const [aiToolsUsed, setAiToolsUsed] = useState([]);
+  const documentationStartTime = useRef(new Date()); 
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -234,7 +244,15 @@ export default function DocumentVisit() {
     };
   }, [narrativeText, vitalSigns, startTime, endTime, visit]);
 
-  const handleVoiceCommand = (action, spokenText) => {
+  const handleVoiceCommand = async (action, spokenText) => {
+    // Track voice command usage
+    await trackVoiceCommand({
+      command: action,
+      context: 'documentation',
+      page: 'DocumentVisit',
+      success: true
+    });
+    
     let insertText = "";
     
     switch (action) {
@@ -421,6 +439,8 @@ For questions, please contact your care team.`;
 
   const generateSmartTemplate = async () => {
     setIsGeneratingTemplate(true);
+    setAiToolsUsed(prev => [...prev, 'smart_template']);
+    
     try {
       let prompt = `You are an expert home health and hospice nurse documentation specialist. Generate a comprehensive, Medicare-compliant template for a ${visit.visit_type.replace(/_/g, ' ')} visit.
 
@@ -643,6 +663,16 @@ Generate the complete template now:`;
         nurse_notes: sanitizedTemplate
       });
       await logSecurityEvent('TEMPLATE_GENERATED', { visit_id: visitId });
+      
+      // Track template usage for performance metrics
+      await trackTemplateUsage({
+        visit_id: visitId,
+        patient_id: visit.patient_id,
+        template_type: visit.visit_type,
+        diagnosis: patient.primary_diagnosis,
+        sections_count: template.split('\n\n').length,
+        customized: Object.keys(vitalSigns).length > 0
+      });
 
     } catch (error) {
       console.error("Error generating template:", error);
@@ -775,13 +805,28 @@ Generate the complete clinical narrative based on the audio and context:`;
     setIsProcessing(false);
   };
 
-  const handleAddSuggestion = (suggestionText) => {
+  const handleAddSuggestion = async (suggestionText, sourceComponent = 'unknown') => {
     setNarrativeText(prev => {
       if (prev) {
         return prev + (prev.endsWith('\n') ? '' : '\n') + "\n" + suggestionText;
       }
       return suggestionText;
     });
+    
+    // Track AI suggestion applied
+    await trackAISuggestion({
+      type: 'documentation',
+      text: suggestionText.substring(0, 200),
+      source: sourceComponent,
+      severity: 'medium',
+      patient_id: visit?.patient_id,
+      visit_id: visitId,
+      element: sourceComponent,
+      note_snippet: narrativeText?.substring(0, 100),
+      context: suggestionText
+    });
+    
+    setAiToolsUsed(prev => [...new Set([...prev, sourceComponent])]);
   };
 
   const handleAutoFillVitals = (vitalUpdates) => {
@@ -875,6 +920,26 @@ Generate the complete clinical narrative based on the audio and context:`;
       await logSecurityEvent('VISIT_DOCUMENTATION_COMPLETED', { 
         visit_id: visitId,
         patient_id: visit.patient_id 
+      });
+
+      // Track comprehensive visit completion metrics
+      const visitDuration = startTime && endTime ? 
+        (new Date(`2000-01-01T${endTime}`) - new Date(`2000-01-01T${startTime}`)) / (1000 * 60) : 0;
+      const docTime = (new Date() - documentationStartTime.current) / (1000 * 60);
+      
+      await trackVisitCompletion({
+        visit_id: visitId,
+        patient_id: visit.patient_id,
+        visit_type: visit.visit_type,
+        duration_minutes: visitDuration,
+        documentation_time: docTime,
+        compliance_score: null, // Will be filled by compliance checker
+        ai_tools_used: aiToolsUsed,
+        template_used: hasGeneratedTemplate,
+        voice_dictation_used: aiToolsUsed.includes('voice_dictation'),
+        scribe_used: aiToolsUsed.includes('ai_scribe'),
+        word_count: narrativeText.split(/\s+/).length,
+        vital_signs_count: Object.keys(vitalSigns).length
       });
 
       alert("Visit documentation saved successfully!");
@@ -1124,14 +1189,14 @@ Generate the complete clinical narrative based on the audio and context:`;
                 visit={visit}
                 vitalSigns={vitalSigns}
                 narrativeText={narrativeText}
-                onAddSuggestion={handleAddSuggestion}
+                onAddSuggestion={(text) => handleAddSuggestion(text, 'clinical_decision_support')}
               />
 
               <SmartAssessmentSuggestions
                 patient={patient}
                 narrativeText={narrativeText}
                 vitalSigns={vitalSigns}
-                onAddSuggestion={handleAddSuggestion}
+                onAddSuggestion={(text) => handleAddSuggestion(text, 'smart_assessment')}
               />
 
               <CarePlanProgress
@@ -1144,7 +1209,19 @@ Generate the complete clinical narrative based on the audio and context:`;
 
               <AIDocumentationPolish
                 narrativeText={narrativeText}
-                onPolishedTextGenerated={handlePolishedText}
+                onPolishedTextGenerated={async (text) => {
+                  handlePolishedText(text);
+                  setAiToolsUsed(prev => [...new Set([...prev, 'documentation_polish'])]);
+                  await trackAISuggestion({
+                    type: 'documentation',
+                    text: 'AI-polished documentation applied',
+                    source: 'ai_documentation_polish',
+                    severity: 'low',
+                    patient_id: visit.patient_id,
+                    visit_id: visitId,
+                    element: 'Documentation Polish'
+                  });
+                }}
               />
 
               <AIQualityAssurance
@@ -1152,7 +1229,19 @@ Generate the complete clinical narrative based on the audio and context:`;
                 visit={visit}
                 narrativeText={narrativeText}
                 vitalSigns={vitalSigns}
-                onFixIssue={handleQAFix}
+                onFixIssue={async (text) => {
+                  handleQAFix(text);
+                  setAiToolsUsed(prev => [...new Set([...prev, 'quality_assurance'])]);
+                  await trackAISuggestion({
+                    type: 'compliance',
+                    text: text.substring(0, 200),
+                    source: 'ai_quality_assurance',
+                    severity: 'high',
+                    patient_id: visit.patient_id,
+                    visit_id: visitId,
+                    element: 'Quality Assurance'
+                  });
+                }}
               />
 
               <AIDocumentationAudit
@@ -1160,7 +1249,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                 visit={visit}
                 narrativeText={narrativeText}
                 vitalSigns={vitalSigns}
-                onInsertText={handleAddSuggestion}
+                onInsertText={(text) => handleAddSuggestion(text, 'ai_documentation_audit')}
               />
 
               <NoteScrubber
@@ -1365,7 +1454,7 @@ Generate the complete clinical narrative based on the audio and context:`;
 
               <MedicalScribeAssistant
                 patientId={visit?.patient_id}
-                onDataExtracted={(scribeData) => {
+                onDataExtracted={async (scribeData) => {
                   // Apply narrative
                   if (scribeData.narrative) {
                     setNarrativeText(prev => prev ? `${prev}\n\n${scribeData.narrative}` : scribeData.narrative);
@@ -1392,6 +1481,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                     setVitalSigns(prev => ({ ...prev, ...extractedVitals }));
                   }
                   
+                  setAiToolsUsed(prev => [...new Set([...prev, 'ai_scribe'])]);
                   setHasUnsavedChanges(true);
                 }}
               />
@@ -1488,16 +1578,16 @@ Generate the complete clinical narrative based on the audio and context:`;
         <div className="space-y-6">
           {/* Enhanced AI Clinical Decision Support */}
           {patient && (
-            <EnhancedClinicalDecisionSupport
-              patient={patient}
-              currentNoteText={narrativeText}
-              vitalSigns={vitalSigns}
-              previousVisits={allVisits}
-              carePlans={carePlans}
-              onInsertRecommendation={handleAddSuggestion}
-              onAlertAcknowledged={(alertId) => console.log('Alert acknowledged:', alertId)}
-              autoAnalyze={true}
-            />
+           <EnhancedClinicalDecisionSupport
+             patient={patient}
+             currentNoteText={narrativeText}
+             vitalSigns={vitalSigns}
+             previousVisits={allVisits}
+             carePlans={carePlans}
+             onInsertRecommendation={(text) => handleAddSuggestion(text, 'enhanced_clinical_decision_support')}
+             onAlertAcknowledged={(alertId) => console.log('Alert acknowledged:', alertId)}
+             autoAnalyze={true}
+           />
           )}
 
           {/* Real-Time Clinical Decision Support */}
@@ -1508,7 +1598,7 @@ Generate the complete clinical narrative based on the audio and context:`;
               vitalSigns={vitalSigns}
               narrativeText={narrativeText}
               carePlans={carePlans}
-              onInsertText={handleAddSuggestion}
+              onInsertText={(text) => handleAddSuggestion(text, 'realtime_clinical_support')}
             />
           )}
 
@@ -1521,7 +1611,7 @@ Generate the complete clinical narrative based on the audio and context:`;
               narrativeText={narrativeText}
               carePlans={carePlans}
               previousVisits={allVisits}
-              onInsertText={handleAddSuggestion}
+              onInsertText={(text) => handleAddSuggestion(text, 'ai_documentation_automation')}
             />
           )}
 
@@ -1533,7 +1623,7 @@ Generate the complete clinical narrative based on the audio and context:`;
               vitalSigns={vitalSigns}
               narrativeText={narrativeText}
               carePlans={carePlans}
-              onInsertText={handleAddSuggestion}
+              onInsertText={(text) => handleAddSuggestion(text, 'ai_documentation_assistant')}
             />
           )}
 
@@ -1550,7 +1640,7 @@ Generate the complete clinical narrative based on the audio and context:`;
             visit={visit}
             narrativeText={narrativeText}
             vitalSigns={vitalSigns}
-            onAddJustification={handleAddSuggestion}
+            onAddJustification={(text) => handleAddSuggestion(text, 'skilled_need_justification')}
           />
 
           <EnhancedOASISScrubber
@@ -1558,12 +1648,12 @@ Generate the complete clinical narrative based on the audio and context:`;
             visit={visit}
             narrativeText={narrativeText}
             vitalSigns={vitalSigns}
-            onAddSuggestion={handleAddSuggestion}
+            onAddSuggestion={(text) => handleAddSuggestion(text, 'oasis_scrubber')}
           />
 
           <PatientResponsePrompter
             narrativeText={narrativeText}
-            onAddSuggestion={handleAddSuggestion}
+            onAddSuggestion={(text) => handleAddSuggestion(text, 'patient_response_prompter')}
           />
 
           <EarlyWarningSystem

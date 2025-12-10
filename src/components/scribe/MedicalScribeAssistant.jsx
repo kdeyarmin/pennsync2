@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Stethoscope
 } from "lucide-react";
+import { trackScribeUsage, trackAISuggestion } from "../utils/performanceTracking";
 
 export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -45,9 +46,34 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
       });
       return response.data || response;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setTranscriptionResult(data);
       setEditedNarrative(data.clinical_narrative || '');
+      
+      // Track scribe usage
+      await trackScribeUsage({
+        visit_id: null,
+        patient_id: patientId,
+        transcript_length: data.transcript?.length || 0,
+        fields_extracted: Object.keys(data.structured_data || {}).length,
+        quality_score: 85,
+        applied: false
+      });
+
+      // Track each AI suggestion from structured data
+      if (data.structured_data?.action_items) {
+        for (const actionItem of data.structured_data.action_items) {
+          await trackAISuggestion({
+            type: 'clinical',
+            text: `Action Item: ${actionItem}`,
+            source: 'ai_scribe',
+            severity: 'high',
+            patient_id: patientId,
+            element: 'Action Items',
+            context: data.transcript?.substring(0, 200)
+          });
+        }
+      }
     }
   });
 
@@ -103,8 +129,18 @@ export default function MedicalScribeAssistant({ patientId, onDataExtracted }) {
     }
   };
 
-  const handleApplyData = () => {
+  const handleApplyData = async () => {
     if (!transcriptionResult || !onDataExtracted) return;
+
+    // Track that scribe data was applied
+    await trackScribeUsage({
+      visit_id: null,
+      patient_id: patientId,
+      transcript_length: transcriptionResult.transcript?.length || 0,
+      fields_extracted: Object.keys(transcriptionResult.structured_data || {}).length,
+      quality_score: 90,
+      applied: true
+    });
 
     onDataExtracted({
       narrative: editedNarrative,
