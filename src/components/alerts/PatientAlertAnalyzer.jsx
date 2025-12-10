@@ -140,7 +140,7 @@ ANALYSIS REQUIREMENTS:
 4. Calculate readmission risk based on diagnosis and trends
 5. Identify infection risks or early signs
 6. Check for symptom escalation patterns
-7. Identify care gaps (missed goals, overdue assessments)
+7. Identify care gaps (missed goals)
 8. For hospice: assess comfort and symptom management adequacy
 9. Evaluate caregiver stress indicators if mentioned
 10. Consider social determinants affecting care
