@@ -186,16 +186,22 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
-      if (response?.error) {
-        throw new Error(response.error);
+      console.log('Handout response:', response);
+
+      // Handle axios response wrapper
+      const data = response?.data || response;
+
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
-      if (!response || !response.pdf) {
+      if (!data || !data.pdf) {
+        console.error('Invalid response structure:', data);
         throw new Error('Invalid response from handout generator');
       }
 
       // Decode base64 PDF and download
-      const binaryString = atob(response.pdf);
+      const binaryString = atob(data.pdf);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
@@ -204,7 +210,7 @@ export default function PatientEducationHub() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = response.filename || `${selectedTopic.id}_handout.pdf`;
+      a.download = data.filename || `${selectedTopic.id}_handout.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -237,8 +243,13 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
-      if (response?.error) {
-        throw new Error(response.error);
+      console.log('Email response:', response);
+
+      // Handle axios response wrapper
+      const data = response?.data || response;
+
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       setSuccessMessage(`Handout emailed to ${patientEmail}!`);
