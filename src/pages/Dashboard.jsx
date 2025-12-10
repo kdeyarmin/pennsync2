@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle } from "lucide-react";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
+import { isValid } from "date-fns";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
@@ -141,7 +142,7 @@ export default function Dashboard() {
               {getGreeting()}, {fullName}! 👋
             </h1>
             <p className="text-white/80 text-xs sm:text-sm md:text-base">
-              {formatEastern(new Date(), 'EEEE, MMMM d, yyyy')} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
+              {isValid(new Date()) ? formatEastern(new Date(), 'EEEE, MMMM d, yyyy') : new Date().toLocaleDateString()} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
             </p>
           </div>
         </CardContent>

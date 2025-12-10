@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, User, Phone, MapPin, FileText, X, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { secureDelete, handleSecureError, logSecurityEvent } from "../components/utils/security";
 import {
   Dialog,
