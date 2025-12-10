@@ -46,6 +46,13 @@ const educationTopics = [
     description: 'Breathing techniques, medication management, and lifestyle tips for COPD patients.'
   },
   {
+    id: 'copd_oxygen',
+    title: 'Home Oxygen Therapy',
+    icon: Activity,
+    color: 'from-sky-500 to-blue-500',
+    description: 'Safe use of home oxygen equipment, oxygen therapy guidelines, and troubleshooting.'
+  },
+  {
     id: 'diabetes',
     title: 'Diabetes Management',
     icon: Droplet,
@@ -86,6 +93,41 @@ const educationTopics = [
     icon: AlertCircle,
     color: 'from-pink-500 to-purple-500',
     description: 'Managing pain safely with medications and non-drug approaches.'
+  },
+  {
+    id: 'ckd',
+    title: 'Chronic Kidney Disease',
+    icon: Droplet,
+    color: 'from-amber-500 to-orange-500',
+    description: 'Managing kidney disease, diet modifications, and understanding CKD stages.'
+  },
+  {
+    id: 'osteoporosis',
+    title: 'Osteoporosis & Bone Health',
+    icon: Shield,
+    color: 'from-slate-500 to-gray-500',
+    description: 'Building strong bones, fall prevention, and osteoporosis management.'
+  },
+  {
+    id: 'dementia_care',
+    title: 'Dementia & Memory Care',
+    icon: Brain,
+    color: 'from-violet-500 to-purple-500',
+    description: 'Communication strategies, daily care tips, and caregiver support for dementia.'
+  },
+  {
+    id: 'anticoagulation',
+    title: 'Blood Thinner Management',
+    icon: Droplet,
+    color: 'from-rose-500 to-red-500',
+    description: 'Safe use of blood thinners, diet considerations, and recognizing bleeding risks.'
+  },
+  {
+    id: 'nutrition',
+    title: 'Healthy Eating for Seniors',
+    icon: Heart,
+    color: 'from-lime-500 to-green-500',
+    description: 'Essential nutrients, meal planning, and overcoming common eating challenges.'
   }
 ];
 
