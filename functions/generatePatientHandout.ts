@@ -1162,29 +1162,84 @@ Deno.serve(async (req) => {
         yPos = margin;
       }
 
-      // Section heading
+      // Section heading with color coding
       doc.setFont(undefined, 'bold');
       doc.setFontSize(14);
+      
+      // Color code based on section type
+      if (section.emergency) {
+        doc.setTextColor(220, 38, 38); // Red for emergency
+      } else if (section.important) {
+        doc.setTextColor(234, 88, 12); // Orange for important
+      } else {
+        doc.setTextColor(0);
+      }
+      
       doc.text(section.heading, margin, yPos);
       yPos += 8;
+      doc.setTextColor(0); // Reset color
 
-      // Section content
+      // Section content with optional highlight
       doc.setFont(undefined, 'normal');
       doc.setFontSize(11);
       
       if (section.content) {
-        const lines = doc.splitTextToSize(section.content, pageWidth - 2 * margin);
+        // Highlight box for special content
+        if (section.highlight) {
+          doc.setFillColor(219, 234, 254); // Light blue background
+          const contentHeight = doc.splitTextToSize(section.content, pageWidth - 2 * margin - 10).length * 6 + 6;
+          doc.rect(margin, yPos - 4, pageWidth - 2 * margin, contentHeight, 'F');
+        }
+        
+        const lines = doc.splitTextToSize(section.content, pageWidth - 2 * margin - (section.highlight ? 10 : 0));
         lines.forEach(line => {
           if (yPos > pageHeight - 20) {
             doc.addPage();
             yPos = margin;
           }
-          doc.text(line, margin, yPos);
+          doc.text(line, margin + (section.highlight ? 5 : 0), yPos);
           yPos += 6;
         });
         yPos += 5;
       }
 
+      // Handle subsections
+      if (section.subsections) {
+        section.subsections.forEach(subsection => {
+          if (yPos > pageHeight - 30) {
+            doc.addPage();
+            yPos = margin;
+          }
+          
+          // Subsection heading
+          doc.setFont(undefined, 'bold');
+          doc.setFontSize(12);
+          doc.setTextColor(59, 130, 246); // Blue for subsections
+          doc.text(`  ${subsection.subheading}`, margin, yPos);
+          yPos += 7;
+          doc.setTextColor(0);
+          doc.setFont(undefined, 'normal');
+          doc.setFontSize(11);
+          
+          // Subsection bullets
+          if (subsection.bullets) {
+            subsection.bullets.forEach(bullet => {
+              if (yPos > pageHeight - 20) {
+                doc.addPage();
+                yPos = margin;
+              }
+              const bulletLines = doc.splitTextToSize(`    • ${bullet}`, pageWidth - 2 * margin - 10);
+              bulletLines.forEach((line, idx) => {
+                doc.text(line, margin + (idx === 0 ? 5 : 10), yPos);
+                yPos += 6;
+              });
+            });
+          }
+          yPos += 3;
+        });
+      }
+
+      // Regular bullets
       if (section.bullets) {
         // Filter bullets based on selection
         const bulletsToInclude = selectedSections?.[section.heading]?.bullets
