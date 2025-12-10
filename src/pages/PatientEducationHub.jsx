@@ -144,6 +144,10 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
+      if (!response || !response.pdf) {
+        throw new Error('Invalid response from handout generator');
+      }
+
       // Decode base64 PDF and download
       const binaryString = atob(response.pdf);
       const bytes = new Uint8Array(binaryString.length);
@@ -164,7 +168,8 @@ export default function PatientEducationHub() {
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error('Error downloading handout:', error);
-      alert('Failed to generate handout. Please try again.');
+      const errorMsg = error?.message || 'Failed to generate handout. Please try again.';
+      alert(errorMsg);
     }
     
     setIsGenerating(false);
@@ -190,7 +195,8 @@ export default function PatientEducationHub() {
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (error) {
       console.error('Error emailing handout:', error);
-      alert('Failed to email handout. Please try again.');
+      const errorMsg = error?.message || 'Failed to email handout. Please try again.';
+      alert(errorMsg);
     }
     
     setIsEmailing(false);
