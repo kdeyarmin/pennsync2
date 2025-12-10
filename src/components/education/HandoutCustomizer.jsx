@@ -21,6 +21,16 @@ const templateSections = {
     { heading: 'Breathing Techniques', bullets: 4 },
     { heading: 'Call Your Doctor If:', bullets: 6 }
   ],
+  'copd_oxygen': [
+    { heading: 'Why You Need Oxygen', hasBullets: false },
+    { heading: 'Understanding Your Prescription', bullets: 5 },
+    { heading: 'Types of Oxygen Equipment', hasSubsections: true },
+    { heading: 'Using Your Oxygen Safely', bullets: 8 },
+    { heading: 'Daily Oxygen Use', bullets: 8 },
+    { heading: 'Traveling with Oxygen', bullets: 6 },
+    { heading: 'Troubleshooting', hasSubsections: true },
+    { heading: 'When to Call Your Doctor', bullets: 7 }
+  ],
   'diabetes': [
     { heading: 'Understanding Diabetes', hasBullets: false },
     { heading: 'Blood Sugar Targets', bullets: 4 },
@@ -67,6 +77,47 @@ const templateSections = {
     { heading: 'Medication Safety', bullets: 8 },
     { heading: 'Non-Drug Pain Relief', bullets: 9 },
     { heading: 'When to Call Your Doctor', bullets: 7 }
+  ],
+  'ckd': [
+    { heading: 'What is Chronic Kidney Disease?', hasBullets: false },
+    { heading: 'Understanding Your Stage', bullets: 4 },
+    { heading: 'Managing Your Diet', hasSubsections: true },
+    { heading: 'Daily Management', bullets: 6 },
+    { heading: 'Warning Signs - Call Your Doctor', bullets: 8 }
+  ],
+  'osteoporosis': [
+    { heading: 'Understanding Osteoporosis', hasBullets: false },
+    { heading: 'Risk Factors You Can\'t Change', bullets: 5 },
+    { heading: 'Risk Factors You Can Change', bullets: 6 },
+    { heading: 'Building Strong Bones', hasSubsections: true },
+    { heading: 'Fall Prevention', bullets: 7 },
+    { heading: 'When to Call Your Doctor', bullets: 5 }
+  ],
+  'dementia_care': [
+    { heading: 'Understanding Dementia', hasBullets: false },
+    { heading: 'Common Signs and Symptoms', bullets: 10 },
+    { heading: 'Communication Strategies', hasSubsections: true },
+    { heading: 'Daily Care Tips', bullets: 8 },
+    { heading: 'Managing Challenging Behaviors', hasSubsections: true },
+    { heading: 'Caregiver Self-Care', bullets: 7 },
+    { heading: 'When to Call for Help', bullets: 7 }
+  ],
+  'anticoagulation': [
+    { heading: 'Why You\'re Taking Blood Thinners', hasBullets: false },
+    { heading: 'Common Blood Thinners', bullets: 6 },
+    { heading: 'Taking Your Medication Safely', bullets: 7 },
+    { heading: 'Diet Considerations', hasSubsections: true },
+    { heading: 'Safety Precautions', bullets: 8 },
+    { heading: 'Warning Signs of Bleeding', bullets: 9 },
+    { heading: 'CALL 911 IMMEDIATELY IF:', bullets: 8 }
+  ],
+  'nutrition': [
+    { heading: 'Why Good Nutrition Matters', hasBullets: false },
+    { heading: 'Essential Nutrients', hasSubsections: true },
+    { heading: 'Building a Healthy Plate', bullets: 6 },
+    { heading: 'Overcoming Common Challenges', hasSubsections: true },
+    { heading: 'Meal Planning Tips', bullets: 7 },
+    { heading: 'Staying Hydrated', bullets: 6 }
   ]
 };
 
