@@ -9,7 +9,7 @@ const EASTERN_TIMEZONE = 'America/New_York';
  * @param {string} formatStr - The format string (e.g., 'MMM d, yyyy', 'PPpp')
  * @returns {string} Formatted date string in Eastern Time
  */
-export const formatEastern = (date, formatStr = 'MMM d, yyyy h:mm a') => {
+export const formatEastern = (date, formatStr = 'MMM d, yyyy HH:mm') => {
   if (!date) return '';
   try {
     // Parse the date - handle both ISO strings and Date objects
