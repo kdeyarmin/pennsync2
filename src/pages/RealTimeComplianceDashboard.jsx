@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,6 +38,11 @@ export default function RealTimeComplianceDashboard() {
   const [dateRange, setDateRange] = useState("30");
   const [selectedFeature, setSelectedFeature] = useState("all");
   const [selectedNurse, setSelectedNurse] = useState("all");
+
+  const { data: currentUser, isLoading: userLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
   // Fetch all compliance-related data
   const { data: complianceAudits = [] } = useQuery({
@@ -545,6 +551,37 @@ export default function RealTimeComplianceDashboard() {
     a.click();
     a.remove();
   };
+
+  if (userLoading) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto">
+        <Card>
+          <CardContent className="p-12 text-center text-gray-500">
+            Loading...
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div className="p-8 max-w-4xl mx-auto">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-12 text-center">
+            <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
+            <p className="text-gray-600 mb-4">
+              Only administrators can access the Real-Time Compliance Dashboard.
+            </p>
+            <p className="text-sm text-gray-500">
+              Please contact your administrator if you need access to this feature.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
