@@ -96,17 +96,13 @@ export default function Layout({ children, currentPageName }) {
   const adminItems = [
     { name: "Admin", icon: Settings, page: "AdminDashboard" },
     { name: "Agency Settings", icon: Settings, page: "AgencySettings" },
-    { name: "Compliance", icon: Shield, page: "RealTimeComplianceDashboard" },
-    { name: "User Activity", icon: BarChart3, page: "UserActivityLog" },
+    { name: "Compliance & Regulatory", icon: Shield, page: "ComplianceRegulatory" },
+    { name: "System Monitoring", icon: BarChart3, page: "SystemMonitoring" },
     { name: "Clinical Pathways", icon: Target, page: "ClinicalPathwayManager" },
-    { name: "OASIS", icon: ClipboardList, page: "OASIS" },
-    { name: "OASIS Audits", icon: ClipboardList, page: "OASISAuditDashboard" },
+    { name: "OASIS Management", icon: ClipboardList, page: "OASIS" },
     { name: "Import Patients", icon: Users, page: "ImportPatients" },
-    { name: "Performance", icon: BarChart3, page: "NursePerformanceDashboard" },
-    { name: "Analytics Dashboard", icon: BarChart3, page: "AnalyticsDashboard" },
-    { name: "Predictive", icon: BarChart3, page: "PredictiveAnalytics" },
-    { name: "Regulatory", icon: ClipboardList, page: "RegulatoryCompliance" },
-    { name: "System Jobs", icon: Settings, page: "SystemJobMonitor" },
+    { name: "Nurse Performance", icon: BarChart3, page: "NursePerformanceDashboard" },
+    { name: "Agency Analytics", icon: Brain, page: "AgencyAnalytics" },
     ];
 
   const handleLogout = () => {

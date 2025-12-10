@@ -36,6 +36,9 @@ import OASIS from './pages/OASIS';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
 import SystemJobMonitor from './pages/SystemJobMonitor';
 import PatientEducationHub from './pages/PatientEducationHub';
+import AgencyAnalytics from './pages/AgencyAnalytics';
+import ComplianceRegulatory from './pages/ComplianceRegulatory';
+import SystemMonitoring from './pages/SystemMonitoring';
 import __Layout from './Layout.jsx';
 
 
@@ -78,6 +81,9 @@ export const PAGES = {
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
     "SystemJobMonitor": SystemJobMonitor,
     "PatientEducationHub": PatientEducationHub,
+    "AgencyAnalytics": AgencyAnalytics,
+    "ComplianceRegulatory": ComplianceRegulatory,
+    "SystemMonitoring": SystemMonitoring,
 }
 
 export const pagesConfig = {
