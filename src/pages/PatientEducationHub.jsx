@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import HandoutCustomizer from "../components/education/HandoutCustomizer";
+import HandoutPreview from "../components/education/HandoutPreview";
 
 const educationTopics = [
   {
@@ -184,6 +185,7 @@ export default function PatientEducationHub() {
   const [selectedSections, setSelectedSections] = useState({});
   const [customNotes, setCustomNotes] = useState("");
   const [showCustomization, setShowCustomization] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
@@ -471,6 +473,15 @@ export default function PatientEducationHub() {
                   )}
 
                   <div className="pt-4 space-y-2">
+                    <Button
+                      onClick={() => setShowPreview(true)}
+                      variant="outline"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Preview Handout
+                    </Button>
+
                     <Button
                       onClick={handleDownload}
                       disabled={isGenerating}
