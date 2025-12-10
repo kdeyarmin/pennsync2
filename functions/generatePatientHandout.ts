@@ -1150,8 +1150,23 @@ Deno.serve(async (req) => {
     const FONT_SIZE_BODY = 12;
     const FONT_SIZE_SMALL = 10;
 
-    // Skip logo in Deno environment (FileReader not available)
-    yPos += 10;
+    // Add logo
+    try {
+      const logoResponse = await fetch(LOGO_URL);
+      const logoBlob = await logoResponse.blob();
+      const logoArrayBuffer = await logoBlob.arrayBuffer();
+      const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
+      const logoDataUrl = `data:image/png;base64,${logoBase64}`;
+      
+      // Add logo (centered, reasonable size)
+      const logoWidth = 40;
+      const logoHeight = 15;
+      doc.addImage(logoDataUrl, 'PNG', (pageWidth - logoWidth) / 2, yPos, logoWidth, logoHeight);
+      yPos += logoHeight + 5;
+    } catch (error) {
+      console.log('Logo loading skipped:', error.message);
+      yPos += 10;
+    }
 
     // Title - Accessibility: Large, bold, high contrast
     doc.setFontSize(FONT_SIZE_TITLE);
@@ -1321,11 +1336,12 @@ Deno.serve(async (req) => {
     }
 
     // Footer - Accessibility: Readable font size, sufficient contrast
-    const footerY = pageHeight - 15;
+    const footerY = pageHeight - 20;
     doc.setFontSize(FONT_SIZE_SMALL);
     doc.setTextColor(70, 70, 70); // Dark gray, accessible contrast
-    doc.text('Penn Home Health Inc. | For questions, contact your nurse', pageWidth / 2, footerY, { align: 'center' });
-    doc.text('This information is for educational purposes only. Always follow your doctor\'s advice.', pageWidth / 2, footerY + 5, { align: 'center' });
+    doc.text('Penn Home Health Inc. | Phone: 724-465-0440', pageWidth / 2, footerY, { align: 'center' });
+    doc.text('For questions, contact your nurse', pageWidth / 2, footerY + 5, { align: 'center' });
+    doc.text('This information is for educational purposes only. Always follow your doctor\'s advice.', pageWidth / 2, footerY + 10, { align: 'center' });
 
     // Generate PDF
     console.log('Generating PDF output...');
