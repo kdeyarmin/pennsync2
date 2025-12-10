@@ -234,23 +234,37 @@ export default function PatientEducationHub() {
     try {
       console.log('Requesting PDF generation with diagnostics:', diagnostics);
       
-      const response = await base44.functions.invoke('generatePatientHandout', {
+      const payload = {
         condition: selectedTopic.id,
         patientName: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null,
         action: 'download',
         selectedSections: Object.keys(selectedSections).length > 0 ? selectedSections : null,
         customNotes: customNotes || null
-      });
+      };
+      
+      console.log('Sending payload:', payload);
+      
+      const response = await base44.functions.invoke('generatePatientHandout', payload);
 
       console.log('Raw response:', response);
       console.log('Response type:', typeof response);
       console.log('Response keys:', response ? Object.keys(response) : 'null');
 
-      // Handle axios response wrapper
-      const data = response?.data || response;
+      // Handle axios response wrapper - check multiple levels
+      let data = response;
+      if (response?.data) {
+        data = response.data;
+      }
+      if (data?.data) {
+        data = data.data;
+      }
+      
       console.log('Extracted data:', data);
       console.log('Data type:', typeof data);
       console.log('Data keys:', data ? Object.keys(data) : 'null');
+      console.log('Data.success:', data?.success);
+      console.log('Data.pdf exists:', !!data?.pdf);
+      console.log('Data.error:', data?.error);
 
       if (data?.error) {
         console.error('Backend error:', data.error, data.details);
