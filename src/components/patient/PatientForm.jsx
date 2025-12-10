@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Save } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { X, Save, AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { isValidEmail, isValidPhone, sanitizeObject, handleSecureError, logSecurityEvent } from "../utils/security";
+import { validatePatient, formatPhoneNumber, SEVERITY } from "../utils/patientValidation";
+import ValidationOverrideDialog from "./ValidationOverrideDialog";
 
 export default function PatientForm({ patient, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
@@ -26,6 +29,10 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   });
 
   const [secondaryDiagnosisInput, setSecondaryDiagnosisInput] = useState('');
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [overriddenWarnings, setOverriddenWarnings] = useState({});
+  const [showOverrideDialog, setShowOverrideDialog] = useState(false);
+  const [currentWarning, setCurrentWarning] = useState(null);
 
   useEffect(() => {
     if (patient) {
@@ -42,6 +49,32 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
       ...prev,
       [field]: value
     }));
+    
+    // Real-time validation
+    setTimeout(() => {
+      const errors = validatePatient({ ...formData, [field]: value });
+      setValidationErrors(errors);
+    }, 500);
+  };
+  
+  const handleOverrideWarning = (field, justification) => {
+    setOverriddenWarnings(prev => ({
+      ...prev,
+      [field]: { justification, timestamp: new Date().toISOString() }
+    }));
+  };
+  
+  const getFieldError = (fieldName) => {
+    return validationErrors.find(e => e.field === fieldName && e.severity === SEVERITY.ERROR);
+  };
+  
+  const getFieldWarning = (fieldName) => {
+    if (overriddenWarnings[fieldName]) return null;
+    return validationErrors.find(e => e.field === fieldName && e.severity === SEVERITY.WARNING && e.canOverride);
+  };
+  
+  const getFieldInfo = (fieldName) => {
+    return validationErrors.find(e => e.field === fieldName && e.severity === SEVERITY.INFO);
   };
 
   const addSecondaryDiagnosis = () => {
@@ -64,20 +97,35 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Client-side validation checks before sanitization and submission attempt
-    if (formData.email && !isValidEmail(formData.email)) {
-      alert("Please enter a valid email address");
-      return;
-    }
+    // Enhanced validation
+    const errors = validatePatient(formData);
+    const blockingErrors = errors.filter(e => 
+      e.severity === SEVERITY.ERROR || 
+      (e.severity === SEVERITY.WARNING && e.canOverride && !overriddenWarnings[e.field])
+    );
     
-    if (formData.phone && !isValidPhone(formData.phone)) {
-      alert("Please enter a valid phone number (e.g., +1-555-555-5555 or 555-555-5555)");
+    if (blockingErrors.length > 0) {
+      setValidationErrors(errors);
+      
+      const unovverriddenWarnings = blockingErrors.filter(e => e.severity === SEVERITY.WARNING && e.canOverride);
+      if (unovverriddenWarnings.length > 0) {
+        alert(`Please review and override the following warnings:\n${unovverriddenWarnings.map(w => `• ${w.message}`).join('\n')}`);
+        return;
+      }
+      
+      alert('Please fix validation errors before saving');
       return;
     }
 
     try {
+      // Include override justifications in form data
+      const dataWithOverrides = {
+        ...formData,
+        validation_overrides: overriddenWarnings
+      };
+      
       // Sanitize all input data before submission using the new sanitizeObject
-      const sanitizedData = sanitizeObject(formData);
+      const sanitizedData = sanitizeObject(dataWithOverrides);
       
       if (patient) {
         // Update existing patient
@@ -105,13 +153,79 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
     }
   };
 
+  // Filter and group validation messages
+  const errorMessages = validationErrors.filter(e => e.severity === SEVERITY.ERROR);
+  const warningMessages = validationErrors.filter(e => 
+    e.severity === SEVERITY.WARNING && !overriddenWarnings[e.field]
+  );
+  const infoMessages = validationErrors.filter(e => e.severity === SEVERITY.INFO);
+  
   return (
-    <Card className="mb-6 border-blue-200 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-        <CardTitle>{patient ? 'Edit Patient' : 'Add New Patient'}</CardTitle>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="p-6 space-y-4">
+    <>
+      <Card className="mb-6 border-blue-200 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardTitle>{patient ? 'Edit Patient' : 'Add New Patient'}</CardTitle>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="p-6 space-y-4">
+            {/* Validation Summary */}
+            {errorMessages.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="w-4 h-4" />
+                <AlertDescription>
+                  <strong className="block mb-2">Errors must be fixed:</strong>
+                  <ul className="list-disc ml-4 space-y-1">
+                    {errorMessages.map((err, idx) => (
+                      <li key={idx}>{err.message}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {warningMessages.length > 0 && (
+              <Alert className="border-amber-500 bg-amber-50">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <AlertDescription>
+                  <strong className="block mb-2 text-amber-900">Warnings (can be overridden):</strong>
+                  <ul className="space-y-2">
+                    {warningMessages.map((warning, idx) => (
+                      <li key={idx} className="flex items-start justify-between gap-2">
+                        <span className="text-amber-800">{warning.message}</span>
+                        {warning.canOverride && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setCurrentWarning(warning);
+                              setShowOverrideDialog(true);
+                            }}
+                            className="flex-shrink-0 text-xs"
+                          >
+                            Override
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {infoMessages.length > 0 && (
+              <Alert className="border-blue-500 bg-blue-50">
+                <Info className="w-4 h-4 text-blue-600" />
+                <AlertDescription>
+                  <ul className="space-y-1 text-blue-800">
+                    {infoMessages.map((info, idx) => (
+                      <li key={idx}>{info.message}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+          
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="first_name">First Name *</Label>
@@ -120,7 +234,11 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
                 required
                 value={formData.first_name}
                 onChange={(e) => handleChange('first_name', e.target.value)}
+                className={getFieldError('first_name') ? 'border-red-500' : ''}
               />
+              {getFieldError('first_name') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('first_name').message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="last_name">Last Name *</Label>
@@ -141,7 +259,17 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
                 type="date"
                 value={formData.date_of_birth}
                 onChange={(e) => handleChange('date_of_birth', e.target.value)}
+                className={getFieldError('date_of_birth') ? 'border-red-500' : getFieldWarning('date_of_birth') ? 'border-amber-500' : ''}
               />
+              {getFieldError('date_of_birth') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('date_of_birth').message}</p>
+              )}
+              {getFieldWarning('date_of_birth') && (
+                <p className="text-xs text-amber-600 mt-1">{getFieldWarning('date_of_birth').message}</p>
+              )}
+              {getFieldInfo('date_of_birth') && (
+                <p className="text-xs text-blue-600 mt-1">{getFieldInfo('date_of_birth').message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="medical_record_number">Medical Record Number</Label>
@@ -170,7 +298,15 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="(123) 456-7890"
+                className={getFieldError('phone') ? 'border-red-500' : ''}
               />
+              {getFieldError('phone') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('phone').message}</p>
+              )}
+              {formData.phone && !getFieldError('phone') && (
+                <p className="text-xs text-gray-500 mt-1">Formatted: {formatPhoneNumber(formData.phone)}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
@@ -179,7 +315,14 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
+                className={getFieldError('email') ? 'border-red-500' : getFieldWarning('email') ? 'border-amber-500' : ''}
               />
+              {getFieldError('email') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('email').message}</p>
+              )}
+              {getFieldWarning('email') && (
+                <p className="text-xs text-amber-600 mt-1">{getFieldWarning('email').message}</p>
+              )}
             </div>
           </div>
 
@@ -278,5 +421,13 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
         </CardFooter>
       </form>
     </Card>
+    
+    <ValidationOverrideDialog
+      isOpen={showOverrideDialog}
+      onClose={() => setShowOverrideDialog(false)}
+      warning={currentWarning}
+      onOverride={handleOverrideWarning}
+    />
+    </>
   );
 }
