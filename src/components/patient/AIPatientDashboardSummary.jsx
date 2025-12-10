@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Loader2
 } from "lucide-react";
+import { isValid, parseISO } from "date-fns";
 
 export default function AIPatientDashboardSummary({ 
   patient, 
@@ -39,15 +40,17 @@ export default function AIPatientDashboardSummary({
       // Get recent visits (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentVisits = visits.filter(v => 
-        new Date(v.visit_date) >= thirtyDaysAgo
-      ).slice(0, 10);
+      const recentVisits = visits.filter(v => {
+        const visitDate = new Date(v.visit_date);
+        return isValid(visitDate) && visitDate >= thirtyDaysAgo;
+      }).slice(0, 10);
 
       // Get upcoming visits
       const today = new Date();
-      const upcomingVisits = visits.filter(v => 
-        v.status === 'scheduled' && new Date(v.visit_date) >= today
-      ).slice(0, 5);
+      const upcomingVisits = visits.filter(v => {
+        const visitDate = new Date(v.visit_date);
+        return v.status === 'scheduled' && isValid(visitDate) && visitDate >= today;
+      }).slice(0, 5);
 
       // Get active care plans
       const activeCarePlans = carePlans.filter(cp => cp.status === 'active');

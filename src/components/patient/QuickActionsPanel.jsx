@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 export default function QuickActionsPanel({ 
   patient, 
@@ -26,8 +26,8 @@ export default function QuickActionsPanel({
   pendingTasks = []
 }) {
   const today = format(new Date(), 'yyyy-MM-dd');
-  const todayVisit = upcomingVisits.find(v => v.visit_date === today);
-  const nextVisit = upcomingVisits.find(v => v.visit_date > today);
+  const todayVisit = upcomingVisits.find(v => v.visit_date && isValid(new Date(v.visit_date)) && v.visit_date === today);
+  const nextVisit = upcomingVisits.find(v => v.visit_date && isValid(new Date(v.visit_date)) && v.visit_date > today);
 
   const quickActions = [
     {
