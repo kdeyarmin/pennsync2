@@ -2034,47 +2034,97 @@ Deno.serve(async (req) => {
       throw new Error(`PDF generation failed: ${pdfError.message}`);
     }
 
-    // If action is email, send it
+    // If action is email, send it with PDF attachment
     if (action === 'email' && patientEmail) {
       console.log('Sending email to:', patientEmail);
+      diagnostics.stage = 'sending_email';
+      
       try {
-        await base44.integrations.Core.SendEmail({
+        // Create a data URL for the PDF to include in email
+        const pdfDataUrl = `data:application/pdf;base64,${base64Pdf}`;
+        
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          from_name: 'Penn Home Health',
           to: patientEmail,
           subject: `Patient Education: ${template.title}`,
           body: `
-            <p>Dear ${patientName || 'Patient'},</p>
-            
-            <p>Attached is educational information about ${template.title} from Penn Home Health Inc.</p>
-            
-            <p>Please review this information and contact your nurse if you have any questions.</p>
-            
-            <p>Best regards,<br>Penn Home Health Team</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
+                <h1 style="color: white; margin: 0;">Penn Home Health Inc.</h1>
+              </div>
+              
+              <div style="padding: 30px; background: #f9f9f9;">
+                <p>Dear ${patientName || 'Patient'},</p>
+                
+                <p>Please find attached educational information about <strong>${template.title}</strong>.</p>
+                
+                <p>This handout has been prepared specifically for you by your Penn Home Health care team. Please review this information carefully.</p>
+                
+                <p><strong>What to do:</strong></p>
+                <ul>
+                  <li>Read through the entire handout</li>
+                  <li>Keep it in a safe place for future reference</li>
+                  <li>Contact your nurse if you have any questions</li>
+                  <li>Share with family members who help with your care</li>
+                </ul>
+                
+                <p>If you have any questions or concerns, please don't hesitate to contact us at <strong>724-465-0440</strong>.</p>
+                
+                <p>Best regards,<br>
+                <strong>Penn Home Health Team</strong></p>
+              </div>
+              
+              <div style="background: #667eea; padding: 15px; text-align: center; color: white; font-size: 12px;">
+                <p style="margin: 0;">Penn Home Health Inc. | 724-465-0440 | www.pennhomehealth.com</p>
+              </div>
+            </div>
           `
         });
         console.log('Email sent successfully');
+        diagnostics.stage = 'email_complete';
       } catch (emailError) {
+        diagnostics.emailError = emailError.message;
         console.error('Email send error:', emailError);
+        
+        // Log email error to system
+        try {
+          await base44.asServiceRole.entities.SystemLog.create({
+            job_name: 'PDF Email Error',
+            job_type: 'other',
+            status: 'error',
+            message: `Failed to email ${diagnostics.condition} handout to ${patientEmail}`,
+            details: { ...diagnostics, emailError: emailError.message }
+          });
+        } catch (logErr) {
+          console.error('Failed to log email error:', logErr);
+        }
+        
         throw new Error(`Failed to send email: ${emailError.message}`);
       }
 
-      return new Response(JSON.stringify({ 
+      return Response.json({ 
         success: true, 
         message: `Handout emailed to ${patientEmail}` 
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
       });
     }
 
     // Return PDF as base64 for download
     console.log('Returning PDF response');
-    return new Response(JSON.stringify({
+    console.log('Response diagnostics:', {
+      stage: diagnostics.stage,
+      pdfLength: base64Pdf?.length,
+      filename: `${condition}_handout.pdf`
+    });
+    
+    return Response.json({
       success: true,
       pdf: base64Pdf,
-      filename: `${condition}_handout.pdf`
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      filename: `${condition}_handout.pdf`,
+      diagnostics: {
+        stage: diagnostics.stage,
+        sectionsProcessed: diagnostics.sectionsProcessed,
+        totalSections: diagnostics.totalSections
+      }
     });
 
   } catch (error) {
@@ -2086,10 +2136,10 @@ Deno.serve(async (req) => {
     console.error('Error generating handout:', error);
     console.error('Diagnostics:', JSON.stringify(diagnostics, null, 2));
     
-    // Log error to SystemLog for debugging
+    // Log error to SystemLog and send admin email notification
     try {
       if (base44) {
-        await base44.asServiceRole.entities.SystemLog.create({
+        const errorLog = await base44.asServiceRole.entities.SystemLog.create({
           job_name: 'PDF Generation Error',
           job_type: 'other',
           status: 'error',
@@ -2108,6 +2158,38 @@ Deno.serve(async (req) => {
           error_stack: error.stack
         });
         console.log('Error logged to SystemLog');
+        
+        // Send admin email notification
+        try {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            from_name: 'Penn Sync System',
+            to: 'admin@pennhomehealth.com',
+            subject: `🚨 PDF Generation Error - ${diagnostics.condition || 'Unknown Handout'}`,
+            body: `
+              <h2>PDF Generation Error Report</h2>
+              <p><strong>Timestamp:</strong> ${diagnostics.timestamp}</p>
+              <p><strong>User:</strong> ${user?.email || 'unknown'}</p>
+              <p><strong>Condition:</strong> ${diagnostics.condition || 'unknown'}</p>
+              <p><strong>Failed Stage:</strong> ${diagnostics.stage}</p>
+              <p><strong>Failed Section:</strong> ${diagnostics.failedSection || 'N/A'}</p>
+              
+              <h3>Error Details:</h3>
+              <p><strong>Error Name:</strong> ${error.name}</p>
+              <p><strong>Error Message:</strong> ${error.message}</p>
+              
+              <h3>Diagnostic Information:</h3>
+              <pre>${JSON.stringify(diagnostics, null, 2)}</pre>
+              
+              <h3>Stack Trace:</h3>
+              <pre>${error.stack?.substring(0, 1000)}</pre>
+              
+              <p><a href="https://app.base44.com/app/pennsync">View in Penn Sync Admin</a></p>
+            `
+          });
+          console.log('Admin notification email sent');
+        } catch (emailError) {
+          console.error('Failed to send admin notification email:', emailError);
+        }
       }
     } catch (logError) {
       console.error('Failed to log error to SystemLog:', logError);
@@ -2165,7 +2247,9 @@ Deno.serve(async (req) => {
     
     return Response.json({ 
       error: error.message || 'Unknown error occurred',
-      details: error.stack,
+      details: `Error at stage: ${diagnostics.stage}. ${diagnostics.failedSection ? `Failed section: ${diagnostics.failedSection}` : ''}`,
+      stage: diagnostics.stage,
+      diagnostics: diagnostics,
       type: error.name
     }, { status: 500 });
   }
