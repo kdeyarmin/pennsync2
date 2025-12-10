@@ -529,6 +529,24 @@ export default function PatientEducationHub() {
           </Card>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <HandoutPreview
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        template={selectedTopic}
+        patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
+        selectedSections={selectedSections}
+        customNotes={customNotes}
+        onDownload={() => {
+          setShowPreview(false);
+          handleDownload();
+        }}
+        onEmail={() => {
+          setShowPreview(false);
+          handleEmail();
+        }}
+      />
     </div>
   );
 }
