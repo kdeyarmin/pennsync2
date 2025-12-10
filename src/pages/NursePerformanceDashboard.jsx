@@ -1,220 +1,139 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  LineChart,
-  Line,
-  Legend
-} from "recharts";
+  Cell
+} from 'recharts';
 import {
-  Users,
   TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  BookOpen,
-  Target,
+  TrendingDown,
   Award,
+  AlertTriangle,
+  Target,
+  BookOpen,
+  Activity,
+  CheckCircle2,
+  Clock,
+  Users,
   FileText,
-  Shield,
-  Heart,
-  MessageSquare,
-  Monitor,
-  ChevronRight,
-  RefreshCw
+  Brain,
+  Sparkles,
+  Lightbulb,
+  ChevronRight
 } from "lucide-react";
-import { format, subDays, parseISO, startOfWeek } from "date-fns";
-import AutoAssignTraining from "../components/training/AutoAssignTraining";
-import TrainingCompletionTracker from "../components/training/TrainingCompletionTracker";
-import AutomatedComplianceAuditor from "../components/compliance/AutomatedComplianceAuditor";
-import ComplianceAuditResults from "../components/compliance/ComplianceAuditResults";
-import NurseComplianceRiskIndicator from "../components/compliance/NurseComplianceRiskIndicator";
-import ProactiveRiskAnalyzer from "../components/analytics/ProactiveRiskAnalyzer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const COLORS = {
-  documentation: "#8b5cf6",
-  clinical: "#3b82f6",
-  compliance: "#f97316",
-  safety: "#ef4444",
-  communication: "#22c55e",
-  technology: "#6366f1"
-};
-
-const SEVERITY_COLORS = {
-  critical: "#dc2626",
-  high: "#f97316",
-  medium: "#eab308",
-  low: "#3b82f6"
-};
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export default function NursePerformanceDashboard() {
-  const [timeRange, setTimeRange] = useState("30");
-  const [selectedNurse, setSelectedNurse] = useState("all");
+  const [selectedNurse, setSelectedNurse] = useState('');
+  const [dateRange, setDateRange] = useState('30');
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: recommendations = [], isLoading, refetch } = useQuery({
-    queryKey: ['allRecommendations'],
-    queryFn: () => base44.entities.TrainingRecommendation.list('-created_date', 500),
-  });
-
-  const { data: users = [] } = useQuery({
+  const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     enabled: currentUser?.role === 'admin',
+    initialData: []
   });
 
-  const { data: trainingCompletions = [] } = useQuery({
-    queryKey: ['trainingCompletions'],
-    queryFn: () => base44.entities.TrainingCompletion.list('-completion_date', 200),
+  const nurseEmail = currentUser?.role === 'admin' && selectedNurse 
+    ? selectedNurse 
+    : currentUser?.email;
+
+  const { data: performanceData, isLoading, refetch } = useQuery({
+    queryKey: ['nursePerformance', nurseEmail, dateRange],
+    queryFn: async () => {
+      const response = await base44.functions.invoke('analyzeNursePerformance', {
+        nurse_email: nurseEmail,
+        date_range_days: parseInt(dateRange)
+      });
+      return response.data || response;
+    },
+    enabled: !!nurseEmail
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const metrics = performanceData?.metrics;
+  const insights = performanceData?.insights;
+  const skillGaps = performanceData?.skill_gaps || [];
 
-  // Filter recommendations by time range
-  const filteredRecs = useMemo(() => {
-    const cutoffDate = subDays(new Date(), parseInt(timeRange));
-    return recommendations.filter(rec => {
-      const recDate = new Date(rec.created_date);
-      const matchesTime = recDate >= cutoffDate;
-      const matchesNurse = selectedNurse === "all" || rec.nurse_email === selectedNurse;
-      return matchesTime && matchesNurse;
-    });
-  }, [recommendations, timeRange, selectedNurse]);
+  const getScoreColor = (score) => {
+    if (score >= 90) return 'text-green-600 bg-green-50';
+    if (score >= 80) return 'text-blue-600 bg-blue-50';
+    if (score >= 70) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-600 bg-red-50';
+  };
 
-  // Aggregate by type
-  const typeData = useMemo(() => {
-    const counts = {};
-    filteredRecs.forEach(rec => {
-      counts[rec.recommendation_type] = (counts[rec.recommendation_type] || 0) + 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-      fill: COLORS[name] || "#gray"
-    }));
-  }, [filteredRecs]);
-
-  // Aggregate by severity
-  const severityData = useMemo(() => {
-    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
-    filteredRecs.forEach(rec => {
-      counts[rec.severity] = (counts[rec.severity] || 0) + 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-      fill: SEVERITY_COLORS[name]
-    }));
-  }, [filteredRecs]);
-
-  // Aggregate by nurse (top 10)
-  const nurseData = useMemo(() => {
-    const counts = {};
-    const unaddressed = {};
-    filteredRecs.forEach(rec => {
-      counts[rec.nurse_email] = (counts[rec.nurse_email] || 0) + 1;
-      if (!rec.addressed) {
-        unaddressed[rec.nurse_email] = (unaddressed[rec.nurse_email] || 0) + 1;
-      }
-    });
-    return Object.entries(counts)
-      .map(([email, total]) => {
-        const user = users.find(u => u.email === email);
-        return {
-          name: user?.full_name || email.split('@')[0],
-          email,
-          total,
-          unaddressed: unaddressed[email] || 0,
-          addressed: total - (unaddressed[email] || 0)
-        };
-      })
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 10);
-  }, [filteredRecs, users]);
-
-  // Trend data (weekly)
-  const trendData = useMemo(() => {
-    const weeks = {};
-    filteredRecs.forEach(rec => {
-      const weekStart = format(startOfWeek(new Date(rec.created_date)), 'MM/dd');
-      if (!weeks[weekStart]) {
-        weeks[weekStart] = { week: weekStart, documentation: 0, clinical: 0, compliance: 0, safety: 0, communication: 0, technology: 0 };
-      }
-      weeks[weekStart][rec.recommendation_type] = (weeks[weekStart][rec.recommendation_type] || 0) + 1;
-    });
-    return Object.values(weeks).sort((a, b) => new Date(a.week) - new Date(b.week));
-  }, [filteredRecs]);
-
-  // Critical recommendations needing attention
-  const criticalRecs = useMemo(() => {
-    return filteredRecs
-      .filter(rec => (rec.severity === 'critical' || rec.severity === 'high') && !rec.addressed)
-      .slice(0, 5);
-  }, [filteredRecs]);
-
-  // Summary stats
-  const stats = useMemo(() => {
-    const total = filteredRecs.length;
-    const addressed = filteredRecs.filter(r => r.addressed).length;
-    const critical = filteredRecs.filter(r => r.severity === 'critical').length;
-    const uniqueNurses = new Set(filteredRecs.map(r => r.nurse_email)).size;
-    return { total, addressed, critical, uniqueNurses, addressRate: total > 0 ? Math.round((addressed / total) * 100) : 0 };
-  }, [filteredRecs]);
-
-  const getTypeIcon = (type) => {
-    const icons = {
-      documentation: <FileText className="w-4 h-4" />,
-      clinical: <Heart className="w-4 h-4" />,
-      compliance: <Shield className="w-4 h-4" />,
-      safety: <AlertTriangle className="w-4 h-4" />,
-      communication: <MessageSquare className="w-4 h-4" />,
-      technology: <Monitor className="w-4 h-4" />
-    };
-    return icons[type] || <BookOpen className="w-4 h-4" />;
+  const getGradeColor = (grade) => {
+    if (grade === 'A' || grade === 'A+') return 'bg-green-500';
+    if (grade === 'B' || grade === 'B+') return 'bg-blue-500';
+    if (grade === 'C') return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="p-8 max-w-7xl mx-auto">
+        <Card>
+          <CardContent className="p-12 text-center text-gray-500">
+            Loading performance data...
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Nurse Performance Dashboard</h1>
-          <p className="text-gray-600">Training recommendations and skill gap analysis</p>
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Nurse Performance Dashboard</h1>
+            <p className="text-gray-600 mt-1">AI-powered insights and personalized recommendations</p>
+          </div>
+          {currentUser?.role === 'admin' && (
+            <Select value={selectedNurse} onValueChange={setSelectedNurse}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select nurse..." />
+              </SelectTrigger>
+              <SelectContent>
+                {allUsers.filter(u => u.role === 'user').map(user => (
+                  <SelectItem key={user.email} value={user.email}>
+                    {user.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
-        <div className="flex gap-3">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32">
+
+        <div className="flex gap-2">
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -224,322 +143,499 @@ export default function NursePerformanceDashboard() {
               <SelectItem value="365">Last year</SelectItem>
             </SelectContent>
           </Select>
-          {isAdmin && (
-            <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Nurses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Nurses</SelectItem>
-                {users.map(user => (
-                  <SelectItem key={user.email} value={user.email}>{user.full_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <Button variant="outline" size="icon" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4" />
+          <Button onClick={() => refetch()} variant="outline">
+            Refresh
           </Button>
-          {isAdmin && (
-            <AutoAssignTraining recommendations={recommendations} users={users} />
-          )}
         </div>
       </div>
 
-      {/* Proactive Risk Analysis - Admin Only */}
-      {isAdmin && (
-        <div className="mb-6">
-          <ProactiveRiskAnalyzer users={users} />
-        </div>
-      )}
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-xs">Total Recommendations</p>
-                <p className="text-3xl font-bold">{stats.total}</p>
-              </div>
-              <Target className="w-8 h-8 text-blue-200" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-xs">Address Rate</p>
-                <p className="text-3xl font-bold">{stats.addressRate}%</p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-xs">Critical Issues</p>
-                <p className="text-3xl font-bold">{stats.critical}</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-red-200" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-xs">Nurses Tracked</p>
-                <p className="text-3xl font-bold">{stats.uniqueNurses}</p>
-              </div>
-              <Users className="w-8 h-8 text-purple-200" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-xs">Addressed</p>
-                <p className="text-3xl font-bold">{stats.addressed}</p>
-              </div>
-              <Award className="w-8 h-8 text-orange-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Recommendations by Type */}
+      {!performanceData ? (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-purple-600" />
-              Recommendations by Category
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {typeData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={typeData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {typeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[250px] flex items-center justify-center text-gray-500">
-                No recommendations in this period
-              </div>
-            )}
+          <CardContent className="p-12 text-center text-gray-500">
+            Select a nurse to view performance data
           </CardContent>
         </Card>
-
-        {/* Recommendations by Severity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              Severity Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {severityData.some(d => d.value > 0) ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={severityData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={80} />
-                  <Tooltip />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                    {severityData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[250px] flex items-center justify-center text-gray-500">
-                No recommendations in this period
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Trend Over Time */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-            Weekly Trend by Category
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {trendData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="documentation" stroke={COLORS.documentation} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="clinical" stroke={COLORS.clinical} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="compliance" stroke={COLORS.compliance} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="safety" stroke={COLORS.safety} strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-gray-500">
-              Not enough data to show trends
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Nurses by Recommendations */}
-        {isAdmin && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-600" />
-                Nurses with Most Recommendations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {nurseData.length > 0 ? (
-                <div className="space-y-3">
-                  {nurseData.map((nurse, idx) => (
-                    <div key={nurse.email} className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{nurse.name}</p>
-                        <div className="flex gap-2 mt-1">
-                          <Progress value={(nurse.addressed / nurse.total) * 100} className="flex-1 h-2" />
-                          <span className="text-xs text-gray-500">{Math.round((nurse.addressed / nurse.total) * 100)}%</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline">{nurse.total} total</Badge>
-                        {nurse.unaddressed > 0 && (
-                          <Badge className="ml-1 bg-red-100 text-red-800">{nurse.unaddressed} open</Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+      ) : (
+        <>
+          {/* Performance Grade & Summary */}
+          <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className={`w-20 h-20 rounded-full ${getGradeColor(insights?.performance_grade || 'B')} flex items-center justify-center shadow-lg`}>
+                    <span className="text-3xl font-bold text-white">{insights?.performance_grade || 'B'}</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Overall Performance</h2>
+                    <p className="text-gray-700">{insights?.overall_summary}</p>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-center text-gray-500 py-8">No nurse data available</p>
-              )}
+                <Award className="w-16 h-16 text-blue-300" />
+              </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Critical Recommendations Needing Attention */}
-        <Card className={isAdmin ? "" : "lg:col-span-2"}>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              Critical Issues Needing Attention
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {criticalRecs.length > 0 ? (
-              <div className="space-y-2">
-                {criticalRecs.map((rec, idx) => {
-                  const user = users.find(u => u.email === rec.nurse_email);
-                  return (
-                    <div key={rec.id || idx} className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                      {getTypeIcon(rec.recommendation_type)}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{rec.recommendation_text}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className={`text-xs ${rec.severity === 'critical' ? 'bg-red-600' : 'bg-orange-500'} text-white`}>
-                            {rec.severity}
-                          </Badge>
-                          <span className="text-xs text-gray-500">{user?.full_name || rec.nurse_email}</span>
-                          <span className="text-xs text-gray-400">
-                            {format(new Date(rec.created_date), 'MMM d')}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="capitalize">{rec.recommendation_type}</Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-2" />
-                <p className="text-gray-500">No critical issues pending</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Compliance Auditing & Risk - Admin Only */}
-      {isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <AutomatedComplianceAuditor onAuditComplete={() => refetch()} />
-          <NurseComplianceRiskIndicator users={users} />
-        </div>
-      )}
-
-      {/* Compliance Audit Results - Admin Only */}
-      {isAdmin && (
-        <div className="mt-6">
-          <ComplianceAuditResults users={users} />
-        </div>
-      )}
-
-      {/* Training Completion Tracker - Admin Only */}
-      {isAdmin && (
-        <div className="mt-6">
-          <TrainingCompletionTracker users={users} />
-        </div>
-      )}
-
-      {/* Category Breakdown Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
-        {Object.entries(COLORS).map(([type, color]) => {
-          const count = filteredRecs.filter(r => r.recommendation_type === type).length;
-          const unaddressed = filteredRecs.filter(r => r.recommendation_type === type && !r.addressed).length;
-          return (
-            <Card key={type} className="border-t-4" style={{ borderTopColor: color }}>
-              <CardContent className="p-4 text-center">
-                <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
-                  {getTypeIcon(type)}
+          {/* Key Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Compliance Score</p>
+                    <p className={`text-3xl font-bold ${getScoreColor(metrics?.avg_compliance_score)}`}>
+                      {metrics?.avg_compliance_score || 0}%
+                    </p>
+                  </div>
+                  <CheckCircle2 className="w-8 h-8 text-blue-400" />
                 </div>
-                <p className="text-2xl font-bold">{count}</p>
-                <p className="text-xs text-gray-500 capitalize">{type}</p>
-                {unaddressed > 0 && (
-                  <Badge className="mt-1 text-xs bg-red-100 text-red-700">{unaddressed} open</Badge>
-                )}
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Completed Visits</p>
+                    <p className="text-3xl font-bold text-gray-900">{metrics?.completed_visits || 0}</p>
+                  </div>
+                  <Users className="w-8 h-8 text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">AI Adoption</p>
+                    <p className="text-3xl font-bold text-purple-600">
+                      {metrics?.suggestion_acceptance_rate || 0}%
+                    </p>
+                  </div>
+                  <Brain className="w-8 h-8 text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Avg Doc Time</p>
+                    <p className="text-3xl font-bold text-orange-600">
+                      {metrics?.avg_documentation_time || 0}m
+                    </p>
+                  </div>
+                  <Clock className="w-8 h-8 text-orange-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Tabs defaultValue="insights" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="insights">AI Insights</TabsTrigger>
+              <TabsTrigger value="trends">Trends</TabsTrigger>
+              <TabsTrigger value="suggestions">AI Suggestions</TabsTrigger>
+              <TabsTrigger value="skills">Skill Gaps</TabsTrigger>
+              <TabsTrigger value="activities">Activities</TabsTrigger>
+            </TabsList>
+
+            {/* AI Insights Tab */}
+            <TabsContent value="insights" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Strengths */}
+                <Card className="border-green-200">
+                  <CardHeader className="bg-green-50">
+                    <CardTitle className="flex items-center gap-2 text-green-900">
+                      <Award className="w-5 h-5" />
+                      Key Strengths
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <ul className="space-y-3">
+                      {insights?.strengths?.map((strength, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">{strength}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Areas for Improvement */}
+                <Card className="border-amber-200">
+                  <CardHeader className="bg-amber-50">
+                    <CardTitle className="flex items-center gap-2 text-amber-900">
+                      <Target className="w-5 h-5" />
+                      Growth Opportunities
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <ul className="space-y-4">
+                      {insights?.areas_for_improvement?.map((area, idx) => (
+                        <li key={idx} className="border-l-4 border-amber-400 pl-3">
+                          <p className="font-semibold text-gray-900 mb-1">{area.area}</p>
+                          <p className="text-sm text-gray-600">{area.suggestion}</p>
+                          <Badge className="mt-2 text-xs" variant={area.priority === 'high' ? 'destructive' : 'secondary'}>
+                            {area.priority} priority
+                          </Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Training Recommendations */}
+              <Card className="border-blue-200">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <CardTitle className="flex items-center gap-2 text-blue-900">
+                    <BookOpen className="w-5 h-5" />
+                    Personalized Training Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    {insights?.training_recommendations?.map((rec, idx) => (
+                      <div key={idx} className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{rec.topic}</p>
+                          <p className="text-sm text-gray-600 mt-1">{rec.reason}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant={rec.urgency === 'high' ? 'destructive' : rec.urgency === 'medium' ? 'default' : 'secondary'}>
+                              {rec.urgency} urgency
+                            </Badge>
+                            <Button size="sm" variant="outline" className="ml-auto">
+                              Start Training
+                              <ChevronRight className="w-3 h-3 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Risk Factors */}
+              {insights?.risk_factors?.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="w-4 h-4" />
+                  <AlertDescription>
+                    <strong className="block mb-2">Performance Risk Factors:</strong>
+                    <ul className="list-disc ml-4 space-y-1">
+                      {insights.risk_factors.map((risk, idx) => (
+                        <li key={idx}>{risk}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+
+            {/* Trends Tab */}
+            <TabsContent value="trends" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Compliance Trend */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Compliance Score Trend</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={metrics?.compliance_trend || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="week" />
+                        <YAxis domain={[0, 100]} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="score" stroke="#3B82F6" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Productivity Trend */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Visit Productivity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={metrics?.productivity_trend || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="week" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="visits" fill="#10B981" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* AI Tool Adoption */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">AI Tool Adoption</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={metrics?.ai_adoption_trend || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="week" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="usage" stroke="#8B5CF6" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Visit Types Distribution */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Visit Types</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={Object.entries(metrics?.visits_by_type || {}).map(([type, count]) => ({
+                            name: type.replace(/_/g, ' '),
+                            value: count
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {Object.keys(metrics?.visits_by_type || {}).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Detailed Metrics */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Template Usage Rate</p>
+                    <div className="flex items-center gap-3">
+                      <Progress 
+                        value={(metrics?.template_usage / metrics?.completed_visits * 100) || 0} 
+                        className="flex-1"
+                      />
+                      <span className="text-lg font-semibold">
+                        {Math.round((metrics?.template_usage / metrics?.completed_visits * 100) || 0)}%
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">AI Scribe Adoption</p>
+                    <div className="flex items-center gap-3">
+                      <Progress 
+                        value={(metrics?.ai_scribe_usage / metrics?.completed_visits * 100) || 0} 
+                        className="flex-1"
+                      />
+                      <span className="text-lg font-semibold">
+                        {Math.round((metrics?.ai_scribe_usage / metrics?.completed_visits * 100) || 0)}%
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Voice Commands</p>
+                    <div className="flex items-center gap-3">
+                      <Progress 
+                        value={Math.min((metrics?.voice_command_usage / 20) * 100, 100)} 
+                        className="flex-1"
+                      />
+                      <span className="text-lg font-semibold">{metrics?.voice_command_usage || 0}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* AI Suggestions Tab */}
+            <TabsContent value="suggestions" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Suggestion Stats */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">AI Suggestion Analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                      <span className="text-gray-700">Total Suggestions Received</span>
+                      <span className="text-2xl font-bold text-blue-600">{metrics?.total_suggestions_received}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                      <span className="text-gray-700">Suggestions Applied</span>
+                      <span className="text-2xl font-bold text-green-600">{metrics?.suggestions_applied}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                      <span className="text-gray-700">Acceptance Rate</span>
+                      <span className="text-2xl font-bold text-purple-600">{metrics?.suggestion_acceptance_rate}%</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Suggestions by Source */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Suggestions by Source</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={Object.entries(metrics?.suggestions_by_source || {}).map(([source, count]) => ({
+                        name: source.replace(/_/g, ' '),
+                        count
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#8B5CF6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent Unaddressed Recommendations */}
+              <Card className="border-amber-200">
+                <CardHeader className="bg-amber-50">
+                  <CardTitle className="text-lg flex items-center gap-2 text-amber-900">
+                    <Sparkles className="w-5 h-5" />
+                    Pending AI Suggestions ({performanceData?.recent_recommendations?.length || 0})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ScrollArea className="h-96">
+                    <div className="space-y-3">
+                      {performanceData?.recent_recommendations?.map((rec, idx) => (
+                        <div key={idx} className="p-4 border rounded-lg hover:bg-gray-50">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant={rec.severity === 'critical' ? 'destructive' : rec.severity === 'high' ? 'default' : 'secondary'}>
+                                  {rec.severity}
+                                </Badge>
+                                <Badge variant="outline">{rec.recommendation_type}</Badge>
+                                <span className="text-xs text-gray-500">{rec.source.replace(/_/g, ' ')}</span>
+                              </div>
+                              <p className="text-sm text-gray-900">{rec.recommendation_text}</p>
+                              {rec.context_data?.element && (
+                                <p className="text-xs text-gray-500 mt-1">Context: {rec.context_data.element}</p>
+                              )}
+                            </div>
+                            <Button size="sm" variant="outline">Review</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Skill Gaps Tab */}
+            <TabsContent value="skills" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-red-600" />
+                    Identified Skill Gaps
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {skillGaps.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-500" />
+                      <p>No significant skill gaps identified. Great work!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {skillGaps.map((gap, idx) => (
+                        <div key={idx} className="border rounded-lg p-4 bg-gradient-to-r from-red-50 to-orange-50">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold text-gray-900">{gap.skill}</h3>
+                                <Badge variant="destructive">{gap.gap_severity} priority</Badge>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-3">{gap.recommendation}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500">Current level:</span>
+                                <Badge variant="outline">{gap.current_level.replace(/_/g, ' ')}</Badge>
+                              </div>
+                            </div>
+                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                              Take Training
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Activities Tab */}
+            <TabsContent value="activities">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Recent Activity Log
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ScrollArea className="h-96">
+                    <div className="space-y-2">
+                      {performanceData?.recent_activities?.map((activity, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 border-b hover:bg-gray-50">
+                          <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">
+                              {activity.action.replace(/_/g, ' ')}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(activity.created_date).toLocaleString()}
+                            </p>
+                          </div>
+                          {activity.details?.compliance_score && (
+                            <Badge className={getScoreColor(activity.details.compliance_score)}>
+                              {activity.details.compliance_score}%
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </div>
   );
 }
