@@ -1576,18 +1576,35 @@ const handoutTemplates = {
 
 Deno.serve(async (req) => {
   let doc;
+  let base44, user;
+  const diagnostics = {
+    stage: 'initialization',
+    timestamp: new Date().toISOString(),
+    condition: null,
+    sectionsProcessed: 0,
+    totalSections: 0,
+    failedSection: null,
+    userAgent: req.headers.get('user-agent'),
+    contentLength: 0
+  };
+  
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    base44 = createClientFromRequest(req);
+    user = await base44.auth.me();
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    
+    diagnostics.userId = user.email;
+    diagnostics.stage = 'parsing_request';
 
     const body = await req.json();
     console.log('Request body:', body);
     
     const { condition, patientName, patientEmail, action, selectedSections, customNotes } = body;
+    diagnostics.condition = condition;
+    diagnostics.action = action;
     
     if (!condition) {
       return Response.json({ error: 'Condition is required' }, { status: 400 });
@@ -1598,13 +1615,16 @@ Deno.serve(async (req) => {
     }
 
     const template = handoutTemplates[condition];
+    diagnostics.totalSections = template.sections?.length || 0;
     console.log('Using template:', condition);
-    console.log('Template has', template.sections?.length || 0, 'sections');
+    console.log('Template has', diagnostics.totalSections, 'sections');
     
+    diagnostics.stage = 'creating_pdf_instance';
     // Create PDF with accessibility metadata
     console.log('Creating jsPDF instance...');
     doc = new jsPDF();
     console.log('jsPDF instance created successfully');
+    diagnostics.stage = 'pdf_metadata';
     
     // Set PDF metadata for accessibility
     doc.setProperties({
@@ -1727,6 +1747,7 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Processing ${sectionsToInclude.length} sections for ${condition}`);
+    diagnostics.stage = 'rendering_sections';
 
     // Content sections - Accessibility: Structured, readable body text
     doc.setFontSize(FONT_SIZE_BODY);
@@ -1734,6 +1755,8 @@ Deno.serve(async (req) => {
     // Add try-catch around section rendering to isolate errors
     for (let sectionIdx = 0; sectionIdx < sectionsToInclude.length; sectionIdx++) {
       const section = sectionsToInclude[sectionIdx];
+      diagnostics.currentSection = section.heading;
+      diagnostics.sectionsProcessed = sectionIdx;
       
       try {
       // Check if we need a new page
@@ -1895,6 +1918,8 @@ Deno.serve(async (req) => {
       
       yPos += 5;
       } catch (sectionError) {
+        diagnostics.failedSection = section.heading;
+        diagnostics.sectionError = sectionError.message;
         console.error(`Error rendering section "${section.heading}":`, sectionError);
         // Continue with next section instead of failing entire PDF
         doc.setFontSize(FONT_SIZE_BODY);
@@ -1905,6 +1930,9 @@ Deno.serve(async (req) => {
         doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
       }
     }
+    
+    diagnostics.stage = 'sections_complete';
+    diagnostics.sectionsProcessed = sectionsToInclude.length;
 
     // Custom notes section with error handling
     if (customNotes && typeof customNotes === 'string' && customNotes.trim()) {
@@ -1977,10 +2005,12 @@ Deno.serve(async (req) => {
     doc.text('This information is for educational purposes only. Always follow your healthcare provider\'s advice.', pageWidth / 2, footerY + 12, { align: 'center' });
 
     // Generate PDF with error handling
+    diagnostics.stage = 'generating_pdf_output';
     console.log('Generating PDF output...');
     let pdfBytes, base64Pdf;
     try {
       pdfBytes = doc.output('arraybuffer');
+      diagnostics.pdfSize = pdfBytes.byteLength;
       
       // Convert to base64 in chunks to avoid stack overflow
       const uint8Array = new Uint8Array(pdfBytes);
@@ -1992,9 +2022,14 @@ Deno.serve(async (req) => {
         binary += String.fromCharCode.apply(null, chunk);
       }
       
+      diagnostics.stage = 'encoding_base64';
       base64Pdf = btoa(binary);
+      diagnostics.contentLength = base64Pdf.length;
       console.log('PDF generated successfully, length:', base64Pdf.length);
+      diagnostics.stage = 'complete';
     } catch (pdfError) {
+      diagnostics.stage = 'pdf_output_error';
+      diagnostics.pdfError = pdfError.message;
       console.error('Error generating PDF binary:', pdfError);
       throw new Error(`PDF generation failed: ${pdfError.message}`);
     }
@@ -2043,10 +2078,40 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
+    diagnostics.errorStage = diagnostics.stage;
+    diagnostics.errorMessage = error.message;
+    diagnostics.errorStack = error.stack;
+    diagnostics.errorName = error.name;
+    
     console.error('Error generating handout:', error);
-    console.error('Error stack:', error.stack);
-    console.error('Error name:', error.name);
-    console.error('Error type:', typeof error);
+    console.error('Diagnostics:', JSON.stringify(diagnostics, null, 2));
+    
+    // Log error to SystemLog for debugging
+    try {
+      if (base44) {
+        await base44.asServiceRole.entities.SystemLog.create({
+          job_name: 'PDF Generation Error',
+          job_type: 'other',
+          status: 'error',
+          message: `Failed to generate ${diagnostics.condition || 'unknown'} handout at stage: ${diagnostics.stage}`,
+          details: {
+            ...diagnostics,
+            timestamp: new Date().toISOString(),
+            userEmail: user?.email || 'unknown',
+            browser: diagnostics.userAgent,
+            errorDetails: {
+              message: error.message,
+              name: error.name,
+              stack: error.stack?.substring(0, 500) // Limit stack trace length
+            }
+          },
+          error_stack: error.stack
+        });
+        console.log('Error logged to SystemLog');
+      }
+    } catch (logError) {
+      console.error('Failed to log error to SystemLog:', logError);
+    }
     
     // Try to generate a minimal fallback PDF
     try {
