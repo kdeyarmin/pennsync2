@@ -26,6 +26,7 @@ import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters
 import BulkPatientActions from "../components/patient/BulkPatientActions";
 import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import PaginatedPatientList from "../components/patient/PaginatedPatientList";
+import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import {
   AlertDialog,
