@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Download, Mail, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { handoutTemplates } from "./handoutTemplates";
 
 export default function HandoutPreview({ 
   isOpen, 
@@ -16,9 +17,13 @@ export default function HandoutPreview({
 }) {
   if (!template) return null;
 
+  // Get the full template with sections from handoutTemplates
+  const fullTemplate = handoutTemplates[template.id];
+  if (!fullTemplate || !fullTemplate.sections) return null;
+
   const sectionsToShow = selectedSections && Object.keys(selectedSections).length > 0
-    ? template.sections.filter(section => selectedSections[section.heading]?.included !== false)
-    : template.sections;
+    ? fullTemplate.sections.filter(section => selectedSections[section.heading]?.included !== false)
+    : fullTemplate.sections;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
