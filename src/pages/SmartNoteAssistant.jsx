@@ -728,9 +728,39 @@ ${guidelinesContext}
         </div>
         <div className="flex gap-2 flex-shrink-0">
           <FavoriteButton type="page" id="SmartNoteAssistant" name="Smart Note Assistant" />
-          <Button variant="ghost" size="default" className="text-gray-500 gap-1 min-h-[44px]">
+          <Button 
+            variant="ghost" 
+            size="default" 
+            className="text-gray-500 gap-1 min-h-[44px]"
+            onClick={async () => {
+              try {
+                const response = await base44.functions.invoke('generateSmartNoteGuide');
+                const data = response.data || response;
+                
+                if (data.pdf) {
+                  const binaryString = atob(data.pdf);
+                  const bytes = new Uint8Array(binaryString.length);
+                  for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                  }
+                  const blob = new Blob([bytes], { type: 'application/pdf' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = data.filename || 'Smart_Note_Guide.pdf';
+                  document.body.appendChild(a);
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                  a.remove();
+                }
+              } catch (error) {
+                console.error('Error downloading guide:', error);
+                alert('Failed to download guide. Please try again.');
+              }
+            }}
+          >
             <HelpCircle className="w-5 h-5" />
-            <span className="hidden xl:inline">Help</span>
+            <span className="hidden xl:inline">User Guide</span>
           </Button>
         </div>
       </div>
