@@ -487,6 +487,616 @@ const handoutTemplates = {
         ]
       }
     ]
+  },
+  'ckd': {
+    title: 'Chronic Kidney Disease (CKD)',
+    sections: [
+      {
+        heading: 'What is Chronic Kidney Disease?',
+        content: 'Chronic Kidney Disease means your kidneys are damaged and can\'t filter blood the way they should. This can cause waste to build up in your body and lead to other health problems.',
+        highlight: true
+      },
+      {
+        heading: 'Understanding Your Stage',
+        content: 'CKD has 5 stages based on how well your kidneys work:',
+        bullets: [
+          'Stage 1-2: Mild kidney damage with normal or slightly reduced function',
+          'Stage 3: Moderate kidney damage (3A mild to moderate, 3B moderate to severe)',
+          'Stage 4: Severe kidney damage - prepare for kidney replacement therapy',
+          'Stage 5: Kidney failure - dialysis or transplant needed'
+        ]
+      },
+      {
+        heading: 'Managing Your Diet',
+        subsections: [
+          {
+            subheading: 'Protein',
+            bullets: ['Moderate protein intake as directed by your dietitian', 'Choose high-quality proteins (chicken, fish, eggs)']
+          },
+          {
+            subheading: 'Sodium',
+            bullets: ['Limit to 2,000mg or less per day', 'Avoid processed and canned foods', 'Use herbs and spices instead of salt']
+          },
+          {
+            subheading: 'Potassium',
+            bullets: ['May need to limit high-potassium foods (bananas, oranges, potatoes)', 'Ask your doctor if potassium restriction is needed']
+          },
+          {
+            subheading: 'Phosphorus',
+            bullets: ['Limit dairy, nuts, beans, and dark sodas', 'Take phosphate binders with meals as prescribed']
+          }
+        ]
+      },
+      {
+        heading: 'Daily Management',
+        bullets: [
+          'Take all medications exactly as prescribed',
+          'Monitor blood pressure daily',
+          'Stay hydrated unless fluid restricted',
+          'Exercise regularly (30 minutes most days)',
+          'Avoid NSAIDs (ibuprofen, naproxen) - use acetaminophen instead',
+          'Keep all doctor appointments and lab tests'
+        ]
+      },
+      {
+        heading: 'Warning Signs - Call Your Doctor',
+        important: true,
+        bullets: [
+          'Swelling in legs, ankles, feet, or face',
+          'Shortness of breath',
+          'Extreme fatigue or weakness',
+          'Nausea, vomiting, loss of appetite',
+          'Changes in urination (amount, color, frequency)',
+          'Confusion or difficulty concentrating',
+          'Chest pain or pressure',
+          'Persistent itching'
+        ]
+      }
+    ]
+  },
+  'osteoporosis': {
+    title: 'Osteoporosis and Bone Health',
+    sections: [
+      {
+        heading: 'Understanding Osteoporosis',
+        content: 'Osteoporosis is a condition where bones become weak and brittle, making them more likely to break from minor falls or even simple activities like coughing or bending.',
+        highlight: true
+      },
+      {
+        heading: 'Risk Factors You Can\'t Change',
+        bullets: [
+          'Age over 50',
+          'Female gender (especially after menopause)',
+          'Family history of osteoporosis or fractures',
+          'Small body frame',
+          'Previous fracture after age 50'
+        ]
+      },
+      {
+        heading: 'Risk Factors You Can Change',
+        bullets: [
+          'Low calcium and vitamin D intake',
+          'Lack of exercise',
+          'Smoking',
+          'Excessive alcohol consumption',
+          'Low body weight',
+          'Certain medications (long-term steroids)'
+        ]
+      },
+      {
+        heading: 'Building Strong Bones',
+        subsections: [
+          {
+            subheading: 'Nutrition',
+            bullets: [
+              'Get 1,200mg calcium daily (dairy, leafy greens, fortified foods)',
+              'Take 800-1,000 IU vitamin D daily',
+              'Eat protein at each meal',
+              'Limit caffeine and carbonated drinks'
+            ]
+          },
+          {
+            subheading: 'Exercise',
+            bullets: [
+              'Weight-bearing exercises (walking, dancing, tennis)',
+              'Strength training 2-3 times per week',
+              'Balance exercises to prevent falls',
+              'Tai chi or yoga for flexibility and balance'
+            ]
+          },
+          {
+            subheading: 'Medications',
+            bullets: [
+              'Take osteoporosis medications exactly as prescribed',
+              'Follow special instructions (some must be taken on empty stomach)',
+              'Report any side effects to your doctor',
+              'Don\'t stop medications without consulting your doctor'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Fall Prevention',
+        bullets: [
+          'Remove tripping hazards at home',
+          'Install grab bars in bathroom',
+          'Use non-slip mats',
+          'Ensure good lighting throughout home',
+          'Wear supportive, non-slip shoes',
+          'Have vision checked regularly',
+          'Review medications that may cause dizziness'
+        ]
+      },
+      {
+        heading: 'When to Call Your Doctor',
+        bullets: [
+          'You have a fall, even if no obvious injury',
+          'Sudden severe back pain',
+          'Loss of height or stooped posture',
+          'Difficulty with daily activities due to pain',
+          'Side effects from osteoporosis medications'
+        ]
+      }
+    ]
+  },
+  'dementia_care': {
+    title: 'Dementia and Memory Care',
+    sections: [
+      {
+        heading: 'Understanding Dementia',
+        content: 'Dementia is not a single disease but a general term for a decline in mental ability severe enough to interfere with daily life. Alzheimer\'s disease is the most common type of dementia.',
+        highlight: true
+      },
+      {
+        heading: 'Common Signs and Symptoms',
+        bullets: [
+          'Memory loss that disrupts daily life',
+          'Challenges in planning or solving problems',
+          'Difficulty completing familiar tasks',
+          'Confusion with time or place',
+          'Trouble understanding visual images or spatial relationships',
+          'Problems with words in speaking or writing',
+          'Misplacing things and losing ability to retrace steps',
+          'Decreased or poor judgment',
+          'Withdrawal from work or social activities',
+          'Changes in mood and personality'
+        ]
+      },
+      {
+        heading: 'Communication Strategies',
+        subsections: [
+          {
+            subheading: 'Do',
+            bullets: [
+              'Speak slowly and clearly',
+              'Use simple words and short sentences',
+              'Give one instruction at a time',
+              'Allow plenty of time for response',
+              'Use touch and eye contact',
+              'Show respect and avoid talking down'
+            ]
+          },
+          {
+            subheading: 'Don\'t',
+            bullets: [
+              'Argue or try to convince',
+              'Ask "don\'t you remember?"',
+              'Say "I just told you that"',
+              'Talk about the person as if they aren\'t there',
+              'Raise your voice or use a harsh tone'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Daily Care Tips',
+        bullets: [
+          'Establish a daily routine and stick to it',
+          'Keep environment calm and predictable',
+          'Use memory aids (calendars, labels, photos)',
+          'Simplify tasks - break into small steps',
+          'Reduce clutter and distractions',
+          'Ensure adequate lighting',
+          'Monitor for signs of pain or discomfort',
+          'Encourage independence in safe activities'
+        ]
+      },
+      {
+        heading: 'Managing Challenging Behaviors',
+        subsections: [
+          {
+            subheading: 'Agitation or Aggression',
+            bullets: [
+              'Stay calm and reassuring',
+              'Try to identify triggers',
+              'Redirect attention to something pleasant',
+              'Provide a quiet, calming environment'
+            ]
+          },
+          {
+            subheading: 'Wandering',
+            bullets: [
+              'Ensure doors and windows are secure',
+              'Consider ID bracelet with contact information',
+              'Provide safe space to walk',
+              'Redirect to another activity'
+            ]
+          },
+          {
+            subheading: 'Sundowning (late-day confusion)',
+            bullets: [
+              'Maintain consistent schedule',
+              'Limit caffeine and naps',
+              'Ensure adequate lighting in evening',
+              'Reduce noise and activity in evening'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Caregiver Self-Care',
+        important: true,
+        bullets: [
+          'Take breaks - you can\'t pour from an empty cup',
+          'Accept help from family and friends',
+          'Join a support group',
+          'Maintain your own health appointments',
+          'Stay physically active',
+          'Get adequate sleep',
+          'Seek professional help if feeling overwhelmed'
+        ]
+      },
+      {
+        heading: 'When to Call for Help',
+        bullets: [
+          'Significant changes in behavior or abilities',
+          'Signs of depression or anxiety',
+          'Difficulty managing medications',
+          'Safety concerns at home',
+          'Caregiver stress or burnout',
+          'Physical aggression or threats',
+          'Inability to meet basic needs'
+        ]
+      }
+    ]
+  },
+  'anticoagulation': {
+    title: 'Blood Thinner (Anticoagulation) Management',
+    sections: [
+      {
+        heading: 'Why You\'re Taking Blood Thinners',
+        content: 'Blood thinners (anticoagulants) help prevent blood clots that can cause heart attack, stroke, or other serious conditions. Common reasons include atrial fibrillation, previous blood clots, mechanical heart valves, or other heart conditions.',
+        highlight: true
+      },
+      {
+        heading: 'Common Blood Thinners',
+        bullets: [
+          'Warfarin (Coumadin) - requires regular INR monitoring',
+          'Apixaban (Eliquis)',
+          'Rivaroxaban (Xarelto)',
+          'Dabigatran (Pradaxa)',
+          'Edoxaban (Savaysa)',
+          'Enoxaparin (Lovenox) - injection'
+        ]
+      },
+      {
+        heading: 'Taking Your Medication Safely',
+        important: true,
+        bullets: [
+          'Take exactly as prescribed - never skip or double doses',
+          'Take at the same time every day',
+          'Don\'t stop taking without talking to your doctor',
+          'Tell all healthcare providers you take blood thinners',
+          'Carry a card or wear medical alert jewelry',
+          'Keep all INR monitoring appointments (if on warfarin)',
+          'Report any missed doses to your doctor'
+        ]
+      },
+      {
+        heading: 'Diet Considerations',
+        subsections: [
+          {
+            subheading: 'If Taking Warfarin',
+            bullets: [
+              'Be consistent with vitamin K intake (leafy greens)',
+              'Don\'t make sudden diet changes',
+              'Limit alcohol to 1-2 drinks per day',
+              'Avoid cranberry juice and grapefruit juice'
+            ]
+          },
+          {
+            subheading: 'If Taking Other Blood Thinners',
+            bullets: [
+              'No special diet restrictions',
+              'Limit alcohol consumption',
+              'Stay well hydrated',
+              'Maintain balanced, healthy diet'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Safety Precautions',
+        bullets: [
+          'Use electric razor instead of blade',
+          'Use soft toothbrush and waxed dental floss',
+          'Wear gloves when gardening or doing yard work',
+          'Avoid contact sports and activities with high fall risk',
+          'Be careful with sharp objects (knives, scissors)',
+          'Avoid going barefoot',
+          'Don\'t take aspirin or NSAIDs unless approved by doctor',
+          'Check with doctor before taking any new medications or supplements'
+        ]
+      },
+      {
+        heading: 'Warning Signs of Bleeding',
+        important: true,
+        bullets: [
+          'Unusual bruising or bleeding',
+          'Nosebleeds that won\'t stop',
+          'Bleeding gums',
+          'Blood in urine (pink, red, or dark brown)',
+          'Blood in stool (red or black, tarry stools)',
+          'Vomiting blood or material that looks like coffee grounds',
+          'Coughing up blood',
+          'Heavier than normal menstrual bleeding',
+          'Severe headache or dizziness'
+        ]
+      },
+      {
+        heading: 'CALL 911 IMMEDIATELY IF:',
+        emergency: true,
+        bullets: [
+          'Severe headache or confusion',
+          'Difficulty speaking or vision changes',
+          'Weakness or numbness on one side',
+          'Chest pain or pressure',
+          'Severe shortness of breath',
+          'Severe abdominal pain',
+          'Major fall or head injury',
+          'Uncontrolled bleeding'
+        ]
+      }
+    ]
+  },
+  'nutrition': {
+    title: 'Healthy Eating for Seniors',
+    sections: [
+      {
+        heading: 'Why Good Nutrition Matters',
+        content: 'Proper nutrition helps maintain strength, energy, immune function, and overall health. As we age, our nutritional needs change, and eating well becomes even more important for preventing disease and maintaining independence.',
+        highlight: true
+      },
+      {
+        heading: 'Essential Nutrients',
+        subsections: [
+          {
+            subheading: 'Protein',
+            bullets: [
+              'Builds and maintains muscle mass',
+              'Aim for protein at every meal',
+              'Good sources: lean meats, fish, eggs, dairy, beans, nuts'
+            ]
+          },
+          {
+            subheading: 'Fiber',
+            bullets: [
+              'Promotes digestive health',
+              'Aim for 25-30 grams daily',
+              'Good sources: whole grains, fruits, vegetables, beans'
+            ]
+          },
+          {
+            subheading: 'Calcium and Vitamin D',
+            bullets: [
+              'Essential for bone health',
+              '1,200mg calcium and 800-1,000 IU vitamin D daily',
+              'Sources: dairy, fortified foods, fatty fish, sunshine'
+            ]
+          },
+          {
+            subheading: 'B Vitamins',
+            bullets: [
+              'Support energy and brain function',
+              'Sources: whole grains, leafy greens, eggs, meat',
+              'May need B12 supplement - ask your doctor'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Building a Healthy Plate',
+        bullets: [
+          'Half your plate: colorful fruits and vegetables',
+          'Quarter of your plate: lean protein',
+          'Quarter of your plate: whole grains',
+          'Include low-fat dairy or alternative',
+          'Use healthy fats in moderation (olive oil, nuts, avocado)',
+          'Drink water throughout the day'
+        ]
+      },
+      {
+        heading: 'Overcoming Common Challenges',
+        subsections: [
+          {
+            subheading: 'Loss of Appetite',
+            bullets: [
+              'Eat smaller, more frequent meals',
+              'Choose nutrient-dense foods',
+              'Make meals social and enjoyable',
+              'Try light exercise to stimulate appetite'
+            ]
+          },
+          {
+            subheading: 'Difficulty Chewing or Swallowing',
+            bullets: [
+              'Choose softer foods or modify texture',
+              'Use sauces and gravies to moisten foods',
+              'Cut food into small pieces',
+              'Try smoothies and soups',
+              'See dentist if dental issues'
+            ]
+          },
+          {
+            subheading: 'Changes in Taste',
+            bullets: [
+              'Use herbs and spices for flavor',
+              'Vary food temperature and texture',
+              'Try new foods and recipes',
+              'Limit salt - use lemon, garlic, herbs instead'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Meal Planning Tips',
+        bullets: [
+          'Keep nutritious snacks on hand',
+          'Prepare meals in batches and freeze portions',
+          'Make use of healthy convenience foods',
+          'Consider meal delivery services if needed',
+          'Shop with a list to avoid impulse purchases',
+          'Read nutrition labels',
+          'Stock pantry with staples'
+        ]
+      },
+      {
+        heading: 'Staying Hydrated',
+        important: true,
+        bullets: [
+          'Drink 6-8 glasses of water daily',
+          'Don\'t wait until thirsty to drink',
+          'Limit caffeine and alcohol',
+          'Eat water-rich foods (fruits, vegetables, soups)',
+          'Keep water bottle handy',
+          'Watch for signs of dehydration: dark urine, dizziness, confusion'
+        ]
+      }
+    ]
+  },
+  'copd_oxygen': {
+    title: 'Home Oxygen Therapy for COPD',
+    sections: [
+      {
+        heading: 'Why You Need Oxygen',
+        content: 'Supplemental oxygen helps ensure your body gets the oxygen it needs when your lungs can\'t provide enough on their own. Proper oxygen use can improve your energy, reduce shortness of breath, and protect your heart and other organs.',
+        highlight: true
+      },
+      {
+        heading: 'Understanding Your Prescription',
+        bullets: [
+          'Your doctor prescribes specific oxygen flow rate (liters per minute)',
+          'Follow your prescription exactly - don\'t adjust on your own',
+          'You may have different rates for rest, activity, and sleep',
+          'Keep your prescription information with your equipment',
+          'Oxygen is a medication - treat it as such'
+        ]
+      },
+      {
+        heading: 'Types of Oxygen Equipment',
+        subsections: [
+          {
+            subheading: 'Oxygen Concentrator',
+            bullets: [
+              'Runs on electricity',
+              'Takes oxygen from room air',
+              'Most common for home use',
+              'Keep backup portable system'
+            ]
+          },
+          {
+            subheading: 'Portable Oxygen Concentrator (POC)',
+            bullets: [
+              'Battery powered for mobility',
+              'Lighter weight for travel',
+              'Allows more independence'
+            ]
+          },
+          {
+            subheading: 'Oxygen Tanks',
+            bullets: [
+              'Compressed gas in cylinders',
+              'Portable options available',
+              'Good for backup/emergencies'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Using Your Oxygen Safely',
+        important: true,
+        bullets: [
+          'NO SMOKING - you, visitors, or anyone in the home',
+          'Keep oxygen away from open flames, candles, gas stoves',
+          'Stay at least 5-10 feet from heat sources',
+          'Don\'t use aerosol products near oxygen',
+          'Keep oxygen equipment away from oils and greases',
+          'Post "No Smoking - Oxygen in Use" signs',
+          'Know where fire extinguisher is located',
+          'Have working smoke detectors'
+        ]
+      },
+      {
+        heading: 'Daily Oxygen Use',
+        bullets: [
+          'Use oxygen as prescribed - typically 15+ hours daily',
+          'Wear during sleep if prescribed',
+          'Use during activities and exercise',
+          'Check tubing daily for kinks or damage',
+          'Clean nasal cannula weekly with mild soap and water',
+          'Keep extra supplies on hand (tubing, cannulas)',
+          'Arrange equipment to prevent tripping',
+          'Keep oxygen supplier\'s phone number handy'
+        ]
+      },
+      {
+        heading: 'Traveling with Oxygen',
+        bullets: [
+          'Contact oxygen supplier 2 weeks before travel',
+          'Airlines require advance notice for oxygen',
+          'Bring extra supplies and batteries',
+          'Keep prescription information with you',
+          'Know location of oxygen suppliers at destination',
+          'Plan for power outages with backup system'
+        ]
+      },
+      {
+        heading: 'Troubleshooting',
+        subsections: [
+          {
+            subheading: 'Equipment Not Working',
+            bullets: [
+              'Check power source and connections',
+              'Ensure tubing not kinked',
+              'Switch to backup system if available',
+              'Contact supplier for emergencies'
+            ]
+          },
+          {
+            subheading: 'Still Short of Breath',
+            bullets: [
+              'Verify oxygen is flowing',
+              'Check flow rate matches prescription',
+              'Try pursed-lip breathing',
+              'Rest and use oxygen continuously',
+              'Call doctor if not improving'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'When to Call Your Doctor',
+        bullets: [
+          'Increased shortness of breath despite oxygen',
+          'Needing higher flow rates than prescribed',
+          'Chest pain or irregular heartbeat',
+          'Confusion or extreme drowsiness',
+          'Headaches, especially in morning',
+          'Bluish color to lips or fingernails',
+          'Swelling in ankles or legs'
+        ]
+      }
+    ]
   }
 };
 
