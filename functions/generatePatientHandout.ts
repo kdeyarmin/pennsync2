@@ -1575,6 +1575,7 @@ const handoutTemplates = {
 };
 
 Deno.serve(async (req) => {
+  let doc;
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -1598,9 +1599,12 @@ Deno.serve(async (req) => {
 
     const template = handoutTemplates[condition];
     console.log('Using template:', condition);
+    console.log('Template has', template.sections?.length || 0, 'sections');
     
     // Create PDF with accessibility metadata
-    const doc = new jsPDF();
+    console.log('Creating jsPDF instance...');
+    doc = new jsPDF();
+    console.log('jsPDF instance created successfully');
     
     // Set PDF metadata for accessibility
     doc.setProperties({
@@ -2028,9 +2032,63 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error generating handout:', error);
     console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    console.error('Error type:', typeof error);
+    
+    // Try to generate a minimal fallback PDF
+    try {
+      console.log('Attempting fallback PDF generation...');
+      if (!doc) {
+        doc = new jsPDF();
+      }
+      
+      // Create a simple error PDF
+      const fallbackDoc = new jsPDF();
+      fallbackDoc.setFontSize(16);
+      fallbackDoc.setFont('helvetica', 'bold');
+      fallbackDoc.text('Penn Home Health Inc.', 105, 30, { align: 'center' });
+      
+      fallbackDoc.setFontSize(14);
+      fallbackDoc.setFont('helvetica', 'normal');
+      fallbackDoc.text('Patient Education Handout', 105, 45, { align: 'center' });
+      
+      fallbackDoc.setFontSize(12);
+      fallbackDoc.text('We apologize, but there was an issue generating', 105, 70, { align: 'center' });
+      fallbackDoc.text('the full handout. Please contact your nurse for', 105, 80, { align: 'center' });
+      fallbackDoc.text('this information.', 105, 90, { align: 'center' });
+      
+      fallbackDoc.setFontSize(10);
+      fallbackDoc.text(`Topic: ${error.condition || 'Unknown'}`, 20, 110);
+      fallbackDoc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 120);
+      fallbackDoc.text('Phone: 724-465-0440', 20, 140);
+      
+      const fallbackBytes = fallbackDoc.output('arraybuffer');
+      const fallbackArray = new Uint8Array(fallbackBytes);
+      const chunkSize = 8192;
+      let fallbackBinary = '';
+      
+      for (let i = 0; i < fallbackArray.length; i += chunkSize) {
+        const chunk = fallbackArray.subarray(i, Math.min(i + chunkSize, fallbackArray.length));
+        fallbackBinary += String.fromCharCode.apply(null, chunk);
+      }
+      
+      const fallbackBase64 = btoa(fallbackBinary);
+      console.log('Fallback PDF generated');
+      
+      return Response.json({
+        success: true,
+        pdf: fallbackBase64,
+        filename: 'error_fallback.pdf',
+        warning: 'Generated fallback PDF due to error: ' + error.message
+      });
+    } catch (fallbackError) {
+      console.error('Fallback PDF generation also failed:', fallbackError);
+    }
+    
     return Response.json({ 
       error: error.message || 'Unknown error occurred',
-      details: error.stack 
+      details: error.stack,
+      type: error.name
     }, { status: 500 });
   }
 });
