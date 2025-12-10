@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -38,7 +37,7 @@ import {
   Lightbulb,
   Users
 } from "lucide-react";
-import { differenceInDays, parseISO, subDays } from "date-fns";
+import { differenceInDays, parseISO, subDays, isValid } from "date-fns";
 
 export default function HospitalReadmissionRisk({ patient }) {
   const [showInterventions, setShowInterventions] = useState(false);
@@ -64,14 +63,17 @@ export default function HospitalReadmissionRisk({ patient }) {
     const riskFactors = [];
     
     // Recent hospitalizations (highest predictor)
-    const recentHospitalizations = incidents.filter(i => 
-      i.incident_type === 'hospitalized' &&
-      differenceInDays(today, parseISO(i.incident_date)) <= 180
-    );
+    const recentHospitalizations = incidents.filter(i => {
+      const incidentDate = parseISO(i.incident_date);
+      return i.incident_type === 'hospitalized' &&
+        isValid(incidentDate) &&
+        differenceInDays(today, incidentDate) <= 180;
+    });
     
     if (recentHospitalizations.length > 0) {
       const mostRecent = recentHospitalizations[0];
-      const daysSince = differenceInDays(today, parseISO(mostRecent.incident_date));
+      const mostRecentDate = parseISO(mostRecent.incident_date);
+      const daysSince = isValid(mostRecentDate) ? differenceInDays(today, mostRecentDate) : 0;
       
       if (daysSince <= 30) {
         totalScore += 25;
@@ -107,10 +109,12 @@ export default function HospitalReadmissionRisk({ patient }) {
     }
 
     // ED visits without admission
-    const recentEDVisits = incidents.filter(i => 
-      i.incident_type === 'emergency_visit' &&
-      differenceInDays(today, parseISO(i.incident_date)) <= 90
-    );
+    const recentEDVisits = incidents.filter(i => {
+      const incidentDate = parseISO(i.incident_date);
+      return i.incident_type === 'emergency_visit' &&
+        isValid(incidentDate) &&
+        differenceInDays(today, incidentDate) <= 90;
+    });
     
     if (recentEDVisits.length > 0) {
       totalScore += 8 * recentEDVisits.length;
@@ -166,7 +170,9 @@ export default function HospitalReadmissionRisk({ patient }) {
 
     // Age factor (65+ at higher risk)
     if (patient.date_of_birth) {
-      const age = differenceInDays(today, parseISO(patient.date_of_birth)) / 365;
+      const dob = parseISO(patient.date_of_birth);
+      if (!isValid(dob)) return { totalScore, riskLevel: 'Low', riskColor: 'green', riskPercentage: '< 10%', riskFactors: [] };
+      const age = differenceInDays(today, dob) / 365;
       
       if (age >= 85) {
         totalScore += 10;
@@ -190,10 +196,12 @@ export default function HospitalReadmissionRisk({ patient }) {
     }
 
     // Recent falls
-    const recentFalls = incidents.filter(i => 
-      i.incident_type === 'fall' &&
-      differenceInDays(today, parseISO(i.incident_date)) <= 90
-    );
+    const recentFalls = incidents.filter(i => {
+      const incidentDate = parseISO(i.incident_date);
+      return i.incident_type === 'fall' &&
+        isValid(incidentDate) &&
+        differenceInDays(today, incidentDate) <= 90;
+    });
     
     if (recentFalls.length > 0) {
       totalScore += 6 * recentFalls.length;
@@ -220,10 +228,12 @@ export default function HospitalReadmissionRisk({ patient }) {
     }
 
     // Visit frequency - too few visits may indicate lack of monitoring
-    const last30DaysVisits = visits.filter(v => 
-      v.status === 'completed' &&
-      differenceInDays(today, parseISO(v.visit_date)) <= 30
-    );
+    const last30DaysVisits = visits.filter(v => {
+      const visitDate = parseISO(v.visit_date);
+      return v.status === 'completed' &&
+        isValid(visitDate) &&
+        differenceInDays(today, visitDate) <= 30;
+    });
     
     if (last30DaysVisits.length < 3) {
       totalScore += 5;
@@ -238,7 +248,10 @@ export default function HospitalReadmissionRisk({ patient }) {
 
     // Vital signs instability (from most recent visit)
     const recentVisits = visits
-      .filter(v => v.status === 'completed' && v.vital_signs)
+      .filter(v => {
+        const visitDate = new Date(v.visit_date);
+        return v.status === 'completed' && v.vital_signs && isValid(visitDate);
+      })
       .sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date));
     
     if (recentVisits.length > 0) {

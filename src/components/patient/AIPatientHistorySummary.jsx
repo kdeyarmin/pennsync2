@@ -29,7 +29,7 @@ import {
   History,
   Shield
 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, isValid, parseISO } from "date-fns";
 import PatientRiskStratification from "./PatientRiskStratification";
 
 export default function AIPatientHistorySummary({
@@ -97,7 +97,7 @@ VISIT STATISTICS:
 - Total Completed Visits: ${completedVisits.length}
 - First Visit: ${completedVisits.length > 0 ? completedVisits[completedVisits.length - 1]?.visit_date : 'None'}
 - Last Visit: ${recentVisits[0]?.visit_date || 'None'}
-- Days on Service: ${completedVisits.length > 0 && completedVisits[completedVisits.length - 1]?.visit_date ? differenceInDays(new Date(), new Date(completedVisits[completedVisits.length - 1].visit_date)) : 0}
+- Days on Service: ${completedVisits.length > 0 && completedVisits[completedVisits.length - 1]?.visit_date && isValid(new Date(completedVisits[completedVisits.length - 1].visit_date)) ? differenceInDays(new Date(), new Date(completedVisits[completedVisits.length - 1].visit_date)) : 0}
 
 VITAL SIGNS HISTORY (Last ${vitalHistory.length} readings):
 ${JSON.stringify(vitalHistory, null, 2)}
@@ -353,7 +353,7 @@ Return JSON:
               </div>
               <div className="bg-white p-2 rounded-lg border text-center">
                 <FileText className="w-4 h-4 mx-auto mb-1 text-green-500" />
-                <p className="text-sm font-bold text-gray-900">{summary.stats?.last_visit_date ? format(new Date(summary.stats.last_visit_date), 'MM/dd') : '—'}</p>
+                <p className="text-sm font-bold text-gray-900">{summary.stats?.last_visit_date && isValid(new Date(summary.stats.last_visit_date)) ? format(new Date(summary.stats.last_visit_date), 'MM/dd') : '—'}</p>
                 <p className="text-xs text-gray-500">Last Visit</p>
               </div>
             </div>

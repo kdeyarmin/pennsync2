@@ -21,7 +21,7 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, isValid } from "date-fns";
 
 export default function CarePlanEvolution({ 
   patientId, 
@@ -48,10 +48,14 @@ export default function CarePlanEvolution({
     try {
       // Prepare care plan data with visit progress
       const carePlanData = carePlans.map(cp => {
-        const relatedVisits = visits.filter(v => 
-          v.status === 'completed' && 
-          new Date(v.visit_date) >= new Date(cp.created_date)
-        );
+        const createdDate = new Date(cp.created_date);
+        const relatedVisits = visits.filter(v => {
+          const visitDate = new Date(v.visit_date);
+          return v.status === 'completed' && 
+            isValid(visitDate) && 
+            isValid(createdDate) &&
+            visitDate >= createdDate;
+        });
         
         // Extract progress indicators from visit notes
         const progressNotes = relatedVisits
@@ -71,7 +75,7 @@ export default function CarePlanEvolution({
           target_date: cp.target_date,
           baseline_measurement: cp.baseline_measurement,
           created_date: cp.created_date,
-          days_active: differenceInDays(new Date(), new Date(cp.created_date)),
+          days_active: isValid(createdDate) ? differenceInDays(new Date(), createdDate) : 0,
           visit_count: relatedVisits.length,
           recent_progress: progressNotes.slice(0, 3)
         };

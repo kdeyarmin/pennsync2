@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   Sparkles
 } from "lucide-react";
-import { format, addDays, differenceInDays } from "date-fns";
+import { format, addDays, differenceInDays, isValid } from "date-fns";
 
 export default function CarePlanTimelinePredictor({ patient, carePlans }) {
   const [predictions, setPredictions] = useState(null);
@@ -240,8 +240,8 @@ Return JSON:
                     {/* Timeline Info */}
                     <div className="flex flex-wrap gap-3 text-xs mb-3">
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-gray-500" />
-                        <span>Predicted: {pred.predicted_achievement_date}</span>
+                       <Calendar className="w-3 h-3 text-gray-500" />
+                       <span>Predicted: {pred.predicted_achievement_date && isValid(new Date(pred.predicted_achievement_date)) ? pred.predicted_achievement_date : 'N/A'}</span>
                       </div>
                       <Badge variant="outline" className={
                         pred.days_ahead_or_behind > 0 ? 'border-green-300 text-green-700' :
