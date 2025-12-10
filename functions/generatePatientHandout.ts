@@ -1614,17 +1614,31 @@ Deno.serve(async (req) => {
     
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
+    const margin = 25;
+    const contentWidth = pageWidth - 2 * margin;
     let yPos = margin;
     
+    // Professional color palette
+    const COLORS = {
+      primary: [41, 98, 255],      // Professional blue
+      primaryLight: [232, 239, 255], // Light blue background
+      accent: [0, 150, 136],        // Teal accent
+      text: [33, 33, 33],           // Dark gray text
+      textLight: [100, 100, 100],   // Medium gray
+      emergency: [220, 38, 38],     // Red
+      important: [245, 158, 11],    // Amber
+      success: [16, 185, 129],      // Green
+      divider: [229, 229, 229]      // Light gray
+    };
+    
     // Accessibility: Use consistent, readable font sizes (minimum 12pt for body text)
-    const FONT_SIZE_TITLE = 22;
-    const FONT_SIZE_HEADING = 16;
-    const FONT_SIZE_SUBHEADING = 14;
-    const FONT_SIZE_BODY = 12;
-    const FONT_SIZE_SMALL = 10;
+    const FONT_SIZE_TITLE = 24;
+    const FONT_SIZE_HEADING = 15;
+    const FONT_SIZE_SUBHEADING = 13;
+    const FONT_SIZE_BODY = 11;
+    const FONT_SIZE_SMALL = 9;
 
-    // Add logo
+    // Header with logo and branding
     try {
       const logoResponse = await fetch(LOGO_URL);
       const logoBlob = await logoResponse.blob();
@@ -1632,38 +1646,70 @@ Deno.serve(async (req) => {
       const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
       const logoDataUrl = `data:image/png;base64,${logoBase64}`;
       
-      // Add logo (centered, reasonable size)
-      const logoWidth = 40;
-      const logoHeight = 15;
-      doc.addImage(logoDataUrl, 'PNG', (pageWidth - logoWidth) / 2, yPos, logoWidth, logoHeight);
-      yPos += logoHeight + 5;
+      // Professional header background
+      doc.setFillColor(...COLORS.primaryLight);
+      doc.rect(0, 0, pageWidth, 45, 'F');
+      
+      // Add logo
+      const logoWidth = 45;
+      const logoHeight = 17;
+      doc.addImage(logoDataUrl, 'PNG', margin, yPos + 2, logoWidth, logoHeight);
+      
+      // Header text next to logo
+      doc.setFontSize(FONT_SIZE_SMALL);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(...COLORS.textLight);
+      doc.text('724-465-0440', pageWidth - margin, yPos + 8, { align: 'right' });
+      doc.text('www.pennhomehealth.com', pageWidth - margin, yPos + 14, { align: 'right' });
+      
+      yPos += 35;
     } catch (error) {
       console.log('Logo loading skipped:', error.message);
-      yPos += 10;
+      yPos += 15;
     }
 
-    // Title - Accessibility: Large, bold, high contrast
+    // Title with professional styling
+    yPos += 10;
     doc.setFontSize(FONT_SIZE_TITLE);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(0, 0, 0); // Pure black for maximum contrast
+    doc.setTextColor(...COLORS.primary);
     doc.text(template.title, pageWidth / 2, yPos, { align: 'center' });
-    yPos += 18;
-
-    // Patient name if provided
-    if (patientName) {
-      doc.setFontSize(FONT_SIZE_BODY);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Prepared for: ${patientName}`, margin, yPos);
-      yPos += 10;
-    }
-
-    // Date - Accessibility: Sufficient contrast (WCAG AA: 4.5:1)
-    doc.setFontSize(FONT_SIZE_SMALL);
-    doc.setTextColor(70, 70, 70); // Dark gray, still accessible
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, yPos);
+    
+    // Decorative underline
+    const titleWidth = doc.getTextWidth(template.title);
+    doc.setLineWidth(2);
+    doc.setDrawColor(...COLORS.accent);
+    doc.line((pageWidth - titleWidth) / 2, yPos + 3, (pageWidth + titleWidth) / 2, yPos + 3);
+    
     yPos += 15;
-    doc.setTextColor(0, 0, 0);
+
+    // Patient info card
+    if (patientName) {
+      doc.setFillColor(250, 250, 250);
+      doc.setDrawColor(...COLORS.divider);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(margin, yPos, contentWidth, 18, 3, 3, 'FD');
+      
+      doc.setFontSize(FONT_SIZE_BODY);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(...COLORS.text);
+      doc.text('Prepared for:', margin + 5, yPos + 7);
+      doc.setFont(undefined, 'normal');
+      doc.text(patientName, margin + 5, yPos + 13);
+      
+      doc.setTextColor(...COLORS.textLight);
+      doc.setFontSize(FONT_SIZE_SMALL);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, pageWidth - margin - 5, yPos + 10, { align: 'right' });
+      
+      yPos += 25;
+    } else {
+      doc.setFontSize(FONT_SIZE_SMALL);
+      doc.setTextColor(...COLORS.textLight);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 12;
+    }
+    
+    doc.setTextColor(...COLORS.text);
 
     // Filter sections based on selection
     const sectionsToInclude = selectedSections 
@@ -1679,45 +1725,73 @@ Deno.serve(async (req) => {
         yPos = margin;
       }
 
-      // Section heading - Accessibility: Clear hierarchy, sufficient contrast
+      // Section heading with professional styling
       doc.setFont(undefined, 'bold');
       doc.setFontSize(FONT_SIZE_HEADING);
       
-      // Color code with accessibility in mind (WCAG AA compliant)
+      // Color-coded section indicator
+      let sectionColor = COLORS.primary;
       if (section.emergency) {
-        doc.setTextColor(153, 27, 27); // Darker red for better contrast (WCAG AA)
+        sectionColor = COLORS.emergency;
       } else if (section.important) {
-        doc.setTextColor(180, 52, 3); // Darker orange for better contrast
-      } else {
-        doc.setTextColor(0, 0, 0);
+        sectionColor = COLORS.important;
       }
       
-      doc.text(section.heading, margin, yPos);
+      // Side accent bar
+      doc.setFillColor(...sectionColor);
+      doc.rect(margin, yPos - 4, 3, FONT_SIZE_HEADING, 'F');
+      
+      doc.setTextColor(...sectionColor);
+      doc.text(section.heading, margin + 8, yPos);
+      
+      // Subtle divider line
+      doc.setDrawColor(...COLORS.divider);
+      doc.setLineWidth(0.3);
+      doc.line(margin, yPos + 3, pageWidth - margin, yPos + 3);
+      
       yPos += 10;
-      doc.setTextColor(0, 0, 0); // Reset to black
+      doc.setTextColor(...COLORS.text);
 
       // Section content - Accessibility: Readable font size, proper line spacing
       doc.setFont(undefined, 'normal');
       doc.setFontSize(FONT_SIZE_BODY);
       
       if (section.content) {
-        // Highlight box for special content - Accessibility: Sufficient contrast
+        // Professional highlight box
         if (section.highlight) {
-          doc.setFillColor(232, 243, 255); // Lighter blue, better contrast with text
-          const contentHeight = doc.splitTextToSize(section.content, pageWidth - 2 * margin - 10).length * 7 + 8;
-          doc.rect(margin, yPos - 5, pageWidth - 2 * margin, contentHeight, 'F');
+          doc.setFillColor(...COLORS.primaryLight);
+          doc.setDrawColor(...COLORS.primary);
+          doc.setLineWidth(0.5);
+          const lines = doc.splitTextToSize(section.content, contentWidth - 20);
+          const boxHeight = lines.length * 6 + 12;
+          doc.roundedRect(margin, yPos - 3, contentWidth, boxHeight, 2, 2, 'FD');
+          
+          // Icon for highlighted content
+          doc.setFillColor(...COLORS.primary);
+          doc.circle(margin + 8, yPos + 3, 2, 'F');
+          
+          doc.setFont(undefined, 'normal');
+          lines.forEach(line => {
+            if (yPos > pageHeight - 30) {
+              doc.addPage();
+              yPos = margin + 20;
+            }
+            doc.text(line, margin + 14, yPos);
+            yPos += 6;
+          });
+          yPos += 9;
+        } else {
+          const lines = doc.splitTextToSize(section.content, contentWidth - 5);
+          lines.forEach(line => {
+            if (yPos > pageHeight - 30) {
+              doc.addPage();
+              yPos = margin + 20;
+            }
+            doc.text(line, margin + 3, yPos);
+            yPos += 6;
+          });
+          yPos += 5;
         }
-        
-        const lines = doc.splitTextToSize(section.content, pageWidth - 2 * margin - (section.highlight ? 10 : 0));
-        lines.forEach(line => {
-          if (yPos > pageHeight - 20) {
-            doc.addPage();
-            yPos = margin;
-          }
-          doc.text(line, margin + (section.highlight ? 5 : 0), yPos);
-          yPos += 7; // Better line spacing for readability
-        });
-        yPos += 6;
       }
 
       // Handle subsections
@@ -1728,13 +1802,18 @@ Deno.serve(async (req) => {
             yPos = margin;
           }
           
-          // Subsection heading - Accessibility: Clear hierarchy
+          // Subsection heading with professional styling
           doc.setFont(undefined, 'bold');
           doc.setFontSize(FONT_SIZE_SUBHEADING);
-          doc.setTextColor(0, 51, 153); // Darker blue for better contrast (WCAG AA)
-          doc.text(`  ${subsection.subheading || 'Subsection'}`, margin, yPos);
+          doc.setTextColor(...COLORS.accent);
+          
+          // Small bullet indicator
+          doc.setFillColor(...COLORS.accent);
+          doc.circle(margin + 6, yPos - 2, 1.5, 'F');
+          
+          doc.text(`${subsection.subheading || 'Subsection'}`, margin + 11, yPos);
           yPos += 8;
-          doc.setTextColor(0, 0, 0);
+          doc.setTextColor(...COLORS.text);
           doc.setFont(undefined, 'normal');
           doc.setFontSize(FONT_SIZE_BODY);
           
@@ -1745,10 +1824,17 @@ Deno.serve(async (req) => {
                 doc.addPage();
                 yPos = margin;
               }
-              const bulletLines = doc.splitTextToSize(`    • ${bullet}`, pageWidth - 2 * margin - 10);
+              const bulletLines = doc.splitTextToSize(bullet, contentWidth - 25);
               bulletLines.forEach((line, idx) => {
-                doc.text(line, margin + (idx === 0 ? 5 : 10), yPos);
-                yPos += 7; // Better line spacing
+                if (idx === 0) {
+                  // Professional bullet point
+                  doc.setFillColor(...COLORS.primary);
+                  doc.circle(margin + 18, yPos - 2, 1, 'F');
+                  doc.text(line, margin + 23, yPos);
+                } else {
+                  doc.text(line, margin + 23, yPos);
+                }
+                yPos += 6;
               });
             });
           }
@@ -1768,10 +1854,17 @@ Deno.serve(async (req) => {
             doc.addPage();
             yPos = margin;
           }
-          const bulletLines = doc.splitTextToSize(`• ${bullet}`, pageWidth - 2 * margin - 5);
+          const bulletLines = doc.splitTextToSize(bullet, contentWidth - 15);
           bulletLines.forEach((line, idx) => {
-            doc.text(line, margin + (idx === 0 ? 0 : 5), yPos);
-            yPos += 7; // Improved line spacing for readability
+            if (idx === 0) {
+              // Professional bullet point
+              doc.setFillColor(...COLORS.primary);
+              doc.circle(margin + 6, yPos - 2, 1.2, 'F');
+              doc.text(line, margin + 12, yPos);
+            } else {
+              doc.text(line, margin + 12, yPos);
+            }
+            yPos += 6;
           });
         });
         yPos += 3;
@@ -1788,34 +1881,60 @@ Deno.serve(async (req) => {
       }
       
       yPos += 10;
-      doc.setFont(undefined, 'bold');
-      doc.setFontSize(FONT_SIZE_HEADING);
-      doc.setTextColor(0, 51, 153); // Accessible blue color
-      doc.text('Special Instructions from Your Nurse', margin, yPos);
-      yPos += 10;
       
+      // Professional custom notes section
+      doc.setFillColor(255, 251, 235); // Warm yellow background
+      doc.setDrawColor(...COLORS.important);
+      doc.setLineWidth(1);
+      const notesLines = doc.splitTextToSize(customNotes, contentWidth - 20);
+      const notesHeight = notesLines.length * 6 + 20;
+      doc.roundedRect(margin, yPos - 3, contentWidth, notesHeight, 2, 2, 'FD');
+      
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(FONT_SIZE_SUBHEADING);
+      doc.setTextColor(...COLORS.important);
+      doc.text('📝 Special Instructions from Your Nurse', margin + 8, yPos + 5);
+      
+      yPos += 12;
       doc.setFont(undefined, 'normal');
       doc.setFontSize(FONT_SIZE_BODY);
-      doc.setTextColor(0, 0, 0);
-      const notesLines = doc.splitTextToSize(customNotes, pageWidth - 2 * margin);
+      doc.setTextColor(...COLORS.text);
       notesLines.forEach(line => {
         if (yPos > pageHeight - 30) {
           doc.addPage();
-          yPos = margin;
+          yPos = margin + 20;
         }
-        doc.text(line, margin, yPos);
-        yPos += 7;
+        doc.text(line, margin + 8, yPos);
+        yPos += 6;
       });
-      yPos += 10;
+      yPos += 12;
     }
 
-    // Footer - Accessibility: Readable font size, sufficient contrast
-    const footerY = pageHeight - 20;
+    // Professional footer
+    const footerY = pageHeight - 25;
+    
+    // Footer background
+    doc.setFillColor(248, 248, 248);
+    doc.rect(0, footerY - 5, pageWidth, 30, 'F');
+    
+    // Footer divider line
+    doc.setDrawColor(...COLORS.primary);
+    doc.setLineWidth(1);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+    
+    // Footer content
     doc.setFontSize(FONT_SIZE_SMALL);
-    doc.setTextColor(70, 70, 70); // Dark gray, accessible contrast
-    doc.text('Penn Home Health Inc. | Phone: 724-465-0440', pageWidth / 2, footerY, { align: 'center' });
-    doc.text('For questions, contact your nurse', pageWidth / 2, footerY + 5, { align: 'center' });
-    doc.text('This information is for educational purposes only. Always follow your doctor\'s advice.', pageWidth / 2, footerY + 10, { align: 'center' });
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...COLORS.primary);
+    doc.text('Penn Home Health Inc.', pageWidth / 2, footerY + 2, { align: 'center' });
+    
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...COLORS.textLight);
+    doc.text('📞 724-465-0440  |  For questions, contact your nurse', pageWidth / 2, footerY + 7, { align: 'center' });
+    
+    doc.setFontSize(FONT_SIZE_SMALL - 1);
+    doc.setTextColor(...COLORS.textLight);
+    doc.text('This information is for educational purposes only. Always follow your healthcare provider\'s advice.', pageWidth / 2, footerY + 12, { align: 'center' });
 
     // Generate PDF
     console.log('Generating PDF output...');
