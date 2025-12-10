@@ -3,6 +3,67 @@ import { jsPDF } from 'npm:jspdf@2.5.1';
 
 const LOGO_URL = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/c39653ba3_PennHomeHealthInc.png';
 
+// Interactive elements for handouts
+const interactiveResources = {
+  'chf': [
+    { text: 'Heart Failure Society Patient Resources', url: 'https://www.hfsa.org/patient' },
+    { text: 'American Heart Association - Heart Failure', url: 'https://www.heart.org/en/health-topics/heart-failure' }
+  ],
+  'copd': [
+    { text: 'COPD Foundation Patient Resources', url: 'https://www.copdfoundation.org' },
+    { text: 'American Lung Association - COPD', url: 'https://www.lung.org/lung-health-diseases/lung-disease-lookup/copd' }
+  ],
+  'diabetes': [
+    { text: 'American Diabetes Association', url: 'https://www.diabetes.org' },
+    { text: 'CDC Diabetes Resources', url: 'https://www.cdc.gov/diabetes' }
+  ],
+  'hypertension': [
+    { text: 'American Heart Association - High Blood Pressure', url: 'https://www.heart.org/en/health-topics/high-blood-pressure' }
+  ],
+  'stroke': [
+    { text: 'American Stroke Association', url: 'https://www.stroke.org' },
+    { text: 'National Stroke Association Resources', url: 'https://www.stroke.org/en/about-stroke' }
+  ]
+};
+
+const trackingChecklists = {
+  'chf': [
+    'I weigh myself daily at the same time',
+    'I track my daily weight in my log',
+    'I limit salt intake to less than 2g per day',
+    'I take all medications as prescribed',
+    'I elevate my legs when resting'
+  ],
+  'copd': [
+    'I use my inhalers as prescribed',
+    'I practice pursed-lip breathing daily',
+    'I avoid lung irritants (smoke, dust)',
+    'I do my breathing exercises',
+    'I stay physically active'
+  ],
+  'diabetes': [
+    'I check my blood sugar as directed',
+    'I take my medications at the same time daily',
+    'I inspect my feet daily',
+    'I eat balanced meals',
+    'I exercise 30 minutes most days'
+  ],
+  'hypertension': [
+    'I take my blood pressure daily',
+    'I log my blood pressure readings',
+    'I limit sodium intake',
+    'I take medications as prescribed',
+    'I exercise regularly'
+  ],
+  'wound_care': [
+    'I clean the wound as instructed',
+    'I change dressings properly',
+    'I check for signs of infection',
+    'I keep the wound dry between changes',
+    'I eat protein-rich foods for healing'
+  ]
+};
+
 const handoutTemplates = {
   'chf': {
     title: 'Congestive Heart Failure (CHF)',
@@ -2043,9 +2104,205 @@ Deno.serve(async (req) => {
         console.error('Error rendering custom notes:', notesError);
         // Continue without custom notes
       }
-    }
+      }
 
-    // Professional footer
+      // Add interactive tracking checklist if available
+      const checklist = trackingChecklists[condition];
+      if (checklist && checklist.length > 0) {
+      try {
+        if (yPos > pageHeight - 100) {
+          doc.addPage();
+          yPos = margin;
+        }
+
+        yPos += 10;
+
+        // Checklist header
+        doc.setFillColor(COLORS.primaryLight[0], COLORS.primaryLight[1], COLORS.primaryLight[2]);
+        doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+        doc.setLineWidth(1);
+        doc.rect(margin, yPos - 3, contentWidth, 15, 'FD');
+
+        doc.setFont(fontFamily, 'bold');
+        doc.setFontSize(FONT_SIZE_SUBHEADING);
+        doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+        doc.text('📋 Daily Self-Care Checklist', margin + 8, yPos + 5);
+
+        yPos += 18;
+
+        // Checklist items with checkboxes
+        doc.setFont(fontFamily, 'normal');
+        doc.setFontSize(FONT_SIZE_BODY);
+        doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+
+        checklist.forEach((item, idx) => {
+          if (yPos > pageHeight - 40) {
+            doc.addPage();
+            yPos = margin + 20;
+          }
+
+          // Draw checkbox
+          const checkboxSize = 5;
+          doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+          doc.setLineWidth(0.5);
+          doc.rect(margin + 5, yPos - checkboxSize + 1, checkboxSize, checkboxSize);
+
+          // Add item text
+          const itemLines = doc.splitTextToSize(item, contentWidth - 20);
+          itemLines.forEach((line, lineIdx) => {
+            doc.text(line, margin + 13, yPos + (lineIdx * LINE_SPACING));
+          });
+
+          yPos += Math.max(LINE_SPACING * itemLines.length, 8);
+        });
+
+        yPos += 5;
+
+        // Instructions
+        doc.setFont(fontFamily, 'italic');
+        doc.setFontSize(FONT_SIZE_SMALL);
+        doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
+        doc.text('✓ Check off each item as you complete it daily', margin + 5, yPos);
+        yPos += 10;
+      } catch (checklistError) {
+        console.error('Error rendering checklist:', checklistError);
+      }
+      }
+
+      // Add symptom tracking section
+      try {
+      if (yPos > pageHeight - 80) {
+        doc.addPage();
+        yPos = margin;
+      }
+
+      yPos += 10;
+
+      // Tracking section header
+      doc.setFillColor(COLORS.primaryLight[0], COLORS.primaryLight[1], COLORS.primaryLight[2]);
+      doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      doc.setLineWidth(1);
+      doc.rect(margin, yPos - 3, contentWidth, 15, 'FD');
+
+      doc.setFont(fontFamily, 'bold');
+      doc.setFontSize(FONT_SIZE_SUBHEADING);
+      doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      doc.text('📝 Daily Symptom Tracker', margin + 8, yPos + 5);
+
+      yPos += 20;
+
+      // Create tracking table
+      doc.setFont(fontFamily, 'normal');
+      doc.setFontSize(FONT_SIZE_SMALL);
+      doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+
+      const tableHeaders = ['Date', 'Symptoms', 'Notes'];
+      const colWidth = contentWidth / 3;
+      const rowHeight = 12;
+
+      // Draw header row
+      doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+      doc.rect(margin, yPos, contentWidth, rowHeight, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(fontFamily, 'bold');
+      tableHeaders.forEach((header, idx) => {
+        doc.text(header, margin + 3 + (idx * colWidth), yPos + 7);
+      });
+
+      yPos += rowHeight;
+
+      // Draw empty rows for tracking
+      doc.setDrawColor(COLORS.divider[0], COLORS.divider[1], COLORS.divider[2]);
+      doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+      doc.setFont(fontFamily, 'normal');
+
+      for (let i = 0; i < 7; i++) {
+        // Draw row borders
+        doc.rect(margin, yPos, contentWidth, rowHeight);
+        // Draw column separators
+        doc.line(margin + colWidth, yPos, margin + colWidth, yPos + rowHeight);
+        doc.line(margin + (colWidth * 2), yPos, margin + (colWidth * 2), yPos + rowHeight);
+
+        yPos += rowHeight;
+      }
+
+      yPos += 5;
+
+      // Instructions
+      doc.setFont(fontFamily, 'italic');
+      doc.setFontSize(FONT_SIZE_SMALL);
+      doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
+      doc.text('Record your daily symptoms and bring this log to your appointments', margin + 5, yPos);
+      yPos += 10;
+      } catch (trackingError) {
+      console.error('Error rendering tracking section:', trackingError);
+      }
+
+      // Add helpful resources with clickable links
+      const resources = interactiveResources[condition];
+      if (resources && resources.length > 0) {
+      try {
+        if (yPos > pageHeight - 60) {
+          doc.addPage();
+          yPos = margin;
+        }
+
+        yPos += 10;
+
+        // Resources header
+        doc.setFillColor(COLORS.primaryLight[0], COLORS.primaryLight[1], COLORS.primaryLight[2]);
+        doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+        doc.setLineWidth(1);
+        doc.rect(margin, yPos - 3, contentWidth, 15, 'FD');
+
+        doc.setFont(fontFamily, 'bold');
+        doc.setFontSize(FONT_SIZE_SUBHEADING);
+        doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+        doc.text('🔗 Helpful Online Resources', margin + 8, yPos + 5);
+
+        yPos += 20;
+
+        // Add clickable resource links
+        doc.setFont(fontFamily, 'normal');
+        doc.setFontSize(FONT_SIZE_BODY);
+
+        resources.forEach((resource, idx) => {
+          if (yPos > pageHeight - 30) {
+            doc.addPage();
+            yPos = margin + 20;
+          }
+
+          // Bullet point
+          doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+          doc.text('•', margin + 5, yPos);
+
+          // Resource text (clickable)
+          doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+          doc.textWithLink(resource.text, margin + 10, yPos, { url: resource.url });
+
+          // Add underline to indicate link
+          const textWidth = doc.getTextWidth(resource.text);
+          doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+          doc.setLineWidth(0.3);
+          doc.line(margin + 10, yPos + 1, margin + 10 + textWidth, yPos + 1);
+
+          yPos += LINE_SPACING + 2;
+        });
+
+        yPos += 5;
+
+        // Instructions
+        doc.setFont(fontFamily, 'italic');
+        doc.setFontSize(FONT_SIZE_SMALL);
+        doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
+        doc.text('Click on the blue links above to visit these helpful websites', margin + 5, yPos);
+        yPos += 10;
+      } catch (resourcesError) {
+        console.error('Error rendering resources:', resourcesError);
+      }
+      }
+
+      // Professional footer
     const footerY = pageHeight - 25;
     
     // Footer background
