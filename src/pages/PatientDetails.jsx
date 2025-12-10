@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Shield, Heart, Stethoscope, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -102,6 +102,19 @@ export default function PatientDetails() {
     enabled: !!patientId,
   });
 
+  const { data: activeAlerts = [] } = useQuery({
+    queryKey: ['patientActiveAlerts', patientId],
+    queryFn: () => base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
+    initialData: [],
+    enabled: !!patientId,
+  });
+
+  // Calculate critical indicators
+  const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
+  const hasHighAlerts = activeAlerts.some(a => a.severity === 'high');
+  const criticalAlertCount = activeAlerts.filter(a => a.severity === 'critical').length;
+  const highAlertCount = activeAlerts.filter(a => a.severity === 'high').length;
+
   const createCarePlanMutation = useMutation({
     mutationFn: (carePlanData) => base44.entities.CarePlan.create({ ...carePlanData, patient_id: patientId }),
     onSuccess: (newPlan) => {
@@ -188,11 +201,16 @@ export default function PatientDetails() {
         <span className="sm:hidden">Back</span>
       </Button>
 
-      <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <Card className={`mb-4 sm:mb-6 ${hasCriticalAlerts ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-300' : hasHighAlerts ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-300' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'}`}>
         <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 relative ${hasCriticalAlerts ? 'bg-gradient-to-br from-red-500 to-orange-500' : hasHighAlerts ? 'bg-gradient-to-br from-orange-500 to-yellow-500' : 'bg-gradient-to-br from-blue-500 to-indigo-500'}`}>
               <User className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
+              {(hasCriticalAlerts || hasHighAlerts) && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-600 rounded-full border-2 border-white animate-pulse flex items-center justify-center">
+                  <AlertTriangle className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0 w-full">
               <div className="flex flex-col gap-3">
@@ -222,6 +240,18 @@ export default function PatientDetails() {
                   >
                     {patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
                   </Badge>
+                  {hasCriticalAlerts && (
+                    <Badge className="bg-red-600 text-white animate-pulse">
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      {criticalAlertCount} Critical Alert{criticalAlertCount !== 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                  {hasHighAlerts && !hasCriticalAlerts && (
+                    <Badge className="bg-orange-600 text-white">
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      {highAlertCount} High Alert{highAlertCount !== 1 ? 's' : ''}
+                    </Badge>
+                  )}
                   {patient.status !== 'discharged' && (
                     <DischargeSummaryGenerator 
                       patientId={patientId} 
@@ -336,20 +366,53 @@ export default function PatientDetails() {
         </div>
       )}
 
+      {/* Critical Alerts Banner */}
+      {activeAlerts.length > 0 && (
+        <Alert className={`mb-6 ${hasCriticalAlerts ? 'bg-red-50 border-red-300' : 'bg-orange-50 border-orange-300'}`}>
+          <AlertTriangle className={`w-4 h-4 ${hasCriticalAlerts ? 'text-red-600' : 'text-orange-600'}`} />
+          <AlertDescription>
+            <p className="font-semibold mb-1">Active Patient Alerts ({activeAlerts.length})</p>
+            <div className="space-y-1">
+              {activeAlerts.slice(0, 3).map((alert, idx) => (
+                <p key={idx} className="text-sm">• {alert.title}</p>
+              ))}
+              {activeAlerts.length > 3 && (
+                <p className="text-sm text-gray-600">+ {activeAlerts.length - 3} more alerts</p>
+              )}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <Card>
           <CardHeader className="p-3 sm:p-6">
-            <CardTitle className="text-base sm:text-lg">Patient Information</CardTitle>
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <User className="w-5 h-5 text-blue-600" />
+              Patient Information
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-sm font-medium text-gray-500">Address</p>
+              <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                Address
+              </p>
               <p className="text-gray-900">{sanitizeInput(patient.address) || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Phone</p>
+              <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                <Phone className="w-3 h-3" />
+                Phone
+              </p>
               <p className="text-gray-900">{sanitizeInput(patient.phone) || 'Not specified'}</p>
             </div>
+            {patient.email && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Email</p>
+                <p className="text-gray-900">{sanitizeInput(patient.email)}</p>
+              </div>
+            )}
             <div>
               <p className="text-sm font-medium text-gray-500">Status</p>
               <Badge variant="outline">{patient.status || 'active'}</Badge>
@@ -359,7 +422,119 @@ export default function PatientDetails() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Clinical Information</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-600" />
+              Emergency Contact
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {patient.emergency_contact_name ? (
+              <>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Name</p>
+                  <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_name)}</p>
+                </div>
+                {patient.emergency_contact_relationship && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Relationship</p>
+                    <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_relationship)}</p>
+                  </div>
+                )}
+                {patient.emergency_contact_phone && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      Phone
+                    </p>
+                    <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_phone)}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-gray-500">No emergency contact information on file</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Stethoscope className="w-5 h-5 text-green-600" />
+              Primary Care Physician
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {patient.physician_name ? (
+              <>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Name</p>
+                  <p className="text-gray-900">{sanitizeInput(patient.physician_name)}</p>
+                </div>
+                {patient.physician_phone && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      Phone
+                    </p>
+                    <p className="text-gray-900">{sanitizeInput(patient.physician_phone)}</p>
+                  </div>
+                )}
+                {patient.physician_email && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p className="text-gray-900">{sanitizeInput(patient.physician_email)}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-gray-500">No physician information on file</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-600" />
+              Insurance Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {patient.insurance_primary?.provider ? (
+              <>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Primary Insurance</p>
+                  <p className="text-gray-900">{sanitizeInput(patient.insurance_primary.provider)}</p>
+                  {patient.insurance_primary.policy_number && (
+                    <p className="text-sm text-gray-600">Policy: {sanitizeInput(patient.insurance_primary.policy_number)}</p>
+                  )}
+                </div>
+                {patient.insurance_secondary?.provider && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Secondary Insurance</p>
+                    <p className="text-gray-900">{sanitizeInput(patient.insurance_secondary.provider)}</p>
+                    {patient.insurance_secondary.policy_number && (
+                      <p className="text-sm text-gray-600">Policy: {sanitizeInput(patient.insurance_secondary.policy_number)}</p>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-gray-500">No insurance information on file</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-600" />
+              Clinical Information
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
@@ -380,6 +555,47 @@ export default function PatientDetails() {
               <p className="text-sm font-medium text-gray-500">Allergies</p>
               <p className="text-gray-900">{sanitizeInput(patient.allergies) || 'NKDA'}</p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-indigo-600" />
+              Medical History
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {patient.past_medical_history && patient.past_medical_history.length > 0 ? (
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">Past Medical Conditions</p>
+                <div className="space-y-1">
+                  {patient.past_medical_history.map((condition, index) => (
+                    <p key={index} className="text-sm text-gray-900">• {sanitizeInput(condition)}</p>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No past medical history documented</p>
+            )}
+            {patient.past_hospitalizations && patient.past_hospitalizations.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">Past Hospitalizations</p>
+                <div className="space-y-2">
+                  {patient.past_hospitalizations.slice(0, 3).map((hosp, index) => (
+                    <div key={index} className="text-sm bg-gray-50 p-2 rounded">
+                      <p className="font-medium text-gray-900">{hosp.reason}</p>
+                      <p className="text-xs text-gray-600">
+                        {hosp.date && format(new Date(hosp.date), 'MMM yyyy')} • {hosp.hospital || 'N/A'}
+                      </p>
+                    </div>
+                  ))}
+                  {patient.past_hospitalizations.length > 3 && (
+                    <p className="text-xs text-gray-500">+ {patient.past_hospitalizations.length - 3} more</p>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
