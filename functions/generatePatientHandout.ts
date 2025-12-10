@@ -514,22 +514,8 @@ Deno.serve(async (req) => {
     const margin = 20;
     let yPos = margin;
 
-    // Add logo at top (centered)
-    try {
-      const logoResponse = await fetch(LOGO_URL);
-      const logoBlob = await logoResponse.blob();
-      const logoBase64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(logoBlob);
-      });
-      
-      doc.addImage(logoBase64, 'PNG', pageWidth / 2 - 40, yPos, 80, 25);
-      yPos += 35;
-    } catch (error) {
-      console.error('Error adding logo:', error);
-      yPos += 10;
-    }
+    // Skip logo in Deno environment (FileReader not available)
+    yPos += 10;
 
     // Title
     doc.setFontSize(20);
