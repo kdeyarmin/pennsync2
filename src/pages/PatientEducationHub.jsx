@@ -264,8 +264,8 @@ export default function PatientEducationHub() {
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error('Error downloading handout:', error);
-      const errorMsg = error?.message || 'Failed to generate handout. Please try again.';
-      alert(errorMsg);
+      const errorDetails = error?.response?.data?.error || error?.response?.data?.details || error?.message || 'Failed to generate handout. Please try again.';
+      alert(`Error generating handout:\n\n${errorDetails}`);
     }
     
     setIsGenerating(false);
@@ -300,8 +300,8 @@ export default function PatientEducationHub() {
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (error) {
       console.error('Error emailing handout:', error);
-      const errorMsg = error?.message || 'Failed to email handout. Please try again.';
-      alert(errorMsg);
+      const errorDetails = error?.response?.data?.error || error?.response?.data?.details || error?.message || 'Failed to email handout. Please try again.';
+      alert(`Error emailing handout:\n\n${errorDetails}`);
     }
     
     setIsEmailing(false);
