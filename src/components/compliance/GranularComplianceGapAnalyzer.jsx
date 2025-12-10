@@ -40,7 +40,6 @@ export default function GranularComplianceGapAnalyzer({
     try {
       // Analyze visit types and missing documentation
       const visitTypeGaps = analyzeVisitTypeGaps();
-      const overdueAssessments = analyzeOverdueAssessments();
       const patientSpecificGaps = analyzePatientSpecificGaps();
 
       // AI-driven recommendations
@@ -51,9 +50,6 @@ IDENTIFIED GAPS:
 
 Visit Type Documentation Gaps:
 ${JSON.stringify(visitTypeGaps, null, 2)}
-
-Overdue Assessments:
-${JSON.stringify(overdueAssessments, null, 2)}
 
 Patient-Specific Gaps:
 ${JSON.stringify(patientSpecificGaps, null, 2)}
@@ -118,7 +114,6 @@ Provide detailed analysis with:
 
       setGapAnalysis({
         visitTypeGaps,
-        overdueAssessments,
         patientSpecificGaps,
         aiRecommendations: result
       });
@@ -165,66 +160,7 @@ Provide detailed analysis with:
     return gaps;
   };
 
-  const analyzeOverdueAssessments = () => {
-    const overdue = [];
-    const today = new Date();
 
-    patients.forEach(patient => {
-      if (patient.status !== 'active') return;
-
-      const patientVisits = visits.filter(v => v.patient_id === patient.id && v.status === 'completed');
-      const lastVisit = patientVisits[0]; // Assuming sorted by date
-      
-      if (!lastVisit) {
-        overdue.push({
-          patient_id: patient.id,
-          patient_name: `${patient.first_name} ${patient.last_name}`,
-          assessment_type: 'Initial Visit',
-          days_overdue: patient.admission_date ? Math.floor((today - new Date(patient.admission_date)) / (1000 * 60 * 60 * 24)) : 0,
-          severity: 'critical'
-        });
-        return;
-      }
-
-      const lastVisitDate = new Date(lastVisit.visit_date);
-      const daysSinceLastVisit = Math.floor((today - lastVisitDate) / (1000 * 60 * 60 * 24));
-
-      // Check for overdue routine visits (should be within 30 days)
-      if (daysSinceLastVisit > 30) {
-        overdue.push({
-          patient_id: patient.id,
-          patient_name: `${patient.first_name} ${patient.last_name}`,
-          assessment_type: 'Routine Visit',
-          days_overdue: daysSinceLastVisit - 30,
-          last_visit_date: lastVisit.visit_date,
-          severity: daysSinceLastVisit > 45 ? 'high' : 'medium'
-        });
-      }
-
-      // Check for overdue recertification (every 60 days)
-      const lastRecert = patientVisits.find(v => v.visit_type === 'recertification');
-      if (patient.admission_date) {
-        const daysSinceAdmission = Math.floor((today - new Date(patient.admission_date)) / (1000 * 60 * 60 * 24));
-        const expectedRecerts = Math.floor(daysSinceAdmission / 60);
-        const actualRecerts = patientVisits.filter(v => v.visit_type === 'recertification').length;
-        
-        if (actualRecerts < expectedRecerts) {
-          overdue.push({
-            patient_id: patient.id,
-            patient_name: `${patient.first_name} ${patient.last_name}`,
-            assessment_type: 'Recertification',
-            days_overdue: daysSinceAdmission - (actualRecerts * 60),
-            severity: 'high'
-          });
-        }
-      }
-    });
-
-    return overdue.sort((a, b) => {
-      const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-      return severityOrder[a.severity] - severityOrder[b.severity];
-    });
-  };
 
   const analyzePatientSpecificGaps = () => {
     const gaps = [];
@@ -314,7 +250,7 @@ Provide detailed analysis with:
 
   if (!gapAnalysis) return null;
 
-  const { visitTypeGaps, overdueAssessments, patientSpecificGaps, aiRecommendations } = gapAnalysis;
+  const { visitTypeGaps, patientSpecificGaps, aiRecommendations } = gapAnalysis;
 
   return (
     <div className="space-y-6">
@@ -396,46 +332,6 @@ Provide detailed analysis with:
           ))}
         </CardContent>
       </Card>
-
-      {/* Overdue Assessments */}
-      {overdueAssessments.length > 0 && (
-        <Card className="border-2 border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-red-600" />
-                Overdue Assessments
-              </div>
-              <Badge className="bg-red-600 text-white">{overdueAssessments.length} overdue</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {overdueAssessments.slice(0, 10).map((assessment, idx) => (
-              <div key={idx} className="bg-white p-3 rounded-lg border border-red-200">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-gray-900">{assessment.patient_name}</p>
-                    <p className="text-sm text-gray-600">{assessment.assessment_type}</p>
-                  </div>
-                  <Badge className={getSeverityColor(assessment.severity)}>
-                    {assessment.severity}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-red-700">
-                  <Clock className="w-4 h-4" />
-                  <span className="font-medium">{assessment.days_overdue} days overdue</span>
-                </div>
-                {assessment.last_visit_date && (
-                  <p className="text-xs text-gray-500 mt-1">Last visit: {assessment.last_visit_date}</p>
-                )}
-              </div>
-            ))}
-            {overdueAssessments.length > 10 && (
-              <p className="text-sm text-center text-gray-600">+ {overdueAssessments.length - 10} more overdue assessments</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Patient-Specific Gaps */}
       {patientSpecificGaps.length > 0 && (
