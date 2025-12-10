@@ -55,6 +55,7 @@ import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
 import ICD10CodeSuggester from "../components/visit/ICD10CodeSuggester";
 import DischargeVisitSummary from "../components/visit/DischargeVisitSummary";
 import ProactiveRiskIdentifier from "../components/alerts/ProactiveRiskIdentifier";
+import MedicalScribeAssistant from "../components/scribe/MedicalScribeAssistant";
 
 import { 
   canAccessVisit, 
@@ -1362,11 +1363,44 @@ Generate the complete clinical narrative based on the audio and context:`;
                 </CardContent>
               </Card>
 
+              <MedicalScribeAssistant
+                patientId={visit?.patient_id}
+                onDataExtracted={(scribeData) => {
+                  // Apply narrative
+                  if (scribeData.narrative) {
+                    setNarrativeText(prev => prev ? `${prev}\n\n${scribeData.narrative}` : scribeData.narrative);
+                  }
+                  
+                  // Auto-fill vitals if available
+                  if (scribeData.structuredData?.vital_signs) {
+                    const extractedVitals = {};
+                    const vs = scribeData.structuredData.vital_signs;
+                    
+                    if (vs.blood_pressure) {
+                      const bpMatch = vs.blood_pressure.match(/(\d+)\/(\d+)/);
+                      if (bpMatch) {
+                        extractedVitals.blood_pressure_systolic = parseInt(bpMatch[1]);
+                        extractedVitals.blood_pressure_diastolic = parseInt(bpMatch[2]);
+                      }
+                    }
+                    if (vs.heart_rate) extractedVitals.heart_rate = parseInt(vs.heart_rate);
+                    if (vs.temperature) extractedVitals.temperature = parseFloat(vs.temperature);
+                    if (vs.respiratory_rate) extractedVitals.respiratory_rate = parseInt(vs.respiratory_rate);
+                    if (vs.oxygen_saturation) extractedVitals.oxygen_saturation = parseInt(vs.oxygen_saturation);
+                    if (vs.pain_level) extractedVitals.pain_level = parseInt(vs.pain_level);
+                    
+                    setVitalSigns(prev => ({ ...prev, ...extractedVitals }));
+                  }
+                  
+                  setHasUnsavedChanges(true);
+                }}
+              />
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Mic className="w-5 h-5" />
-                    Step 4: Voice Dictation
+                    Alternative: Quick Voice Dictation
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
