@@ -1125,44 +1125,64 @@ Deno.serve(async (req) => {
     const template = handoutTemplates[condition];
     console.log('Using template:', condition);
     
-    // Create PDF
+    // Create PDF with accessibility metadata
     const doc = new jsPDF();
+    
+    // Set PDF metadata for accessibility
+    doc.setProperties({
+      title: template.title,
+      subject: 'Patient Education Material',
+      author: 'Penn Home Health Inc.',
+      keywords: 'patient education, healthcare, ' + condition,
+      creator: 'Penn Home Health Documentation System',
+      language: 'en-US'
+    });
+    
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     let yPos = margin;
+    
+    // Accessibility: Use consistent, readable font sizes (minimum 12pt for body text)
+    const FONT_SIZE_TITLE = 22;
+    const FONT_SIZE_HEADING = 16;
+    const FONT_SIZE_SUBHEADING = 14;
+    const FONT_SIZE_BODY = 12;
+    const FONT_SIZE_SMALL = 10;
 
     // Skip logo in Deno environment (FileReader not available)
     yPos += 10;
 
-    // Title
-    doc.setFontSize(20);
+    // Title - Accessibility: Large, bold, high contrast
+    doc.setFontSize(FONT_SIZE_TITLE);
     doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0); // Pure black for maximum contrast
     doc.text(template.title, pageWidth / 2, yPos, { align: 'center' });
-    yPos += 15;
+    yPos += 18;
 
     // Patient name if provided
     if (patientName) {
-      doc.setFontSize(12);
+      doc.setFontSize(FONT_SIZE_BODY);
       doc.setFont(undefined, 'normal');
+      doc.setTextColor(0, 0, 0);
       doc.text(`Prepared for: ${patientName}`, margin, yPos);
       yPos += 10;
     }
 
-    // Date
-    doc.setFontSize(10);
-    doc.setTextColor(100);
+    // Date - Accessibility: Sufficient contrast (WCAG AA: 4.5:1)
+    doc.setFontSize(FONT_SIZE_SMALL);
+    doc.setTextColor(70, 70, 70); // Dark gray, still accessible
     doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, yPos);
     yPos += 15;
-    doc.setTextColor(0);
+    doc.setTextColor(0, 0, 0);
 
     // Filter sections based on selection
     const sectionsToInclude = selectedSections 
       ? template.sections.filter(section => selectedSections[section.heading]?.included)
       : template.sections;
 
-    // Content sections
-    doc.setFontSize(11);
+    // Content sections - Accessibility: Structured, readable body text
+    doc.setFontSize(FONT_SIZE_BODY);
     sectionsToInclude.forEach(section => {
       // Check if we need a new page
       if (yPos > pageHeight - 40) {
@@ -1170,33 +1190,33 @@ Deno.serve(async (req) => {
         yPos = margin;
       }
 
-      // Section heading with color coding
+      // Section heading - Accessibility: Clear hierarchy, sufficient contrast
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(14);
+      doc.setFontSize(FONT_SIZE_HEADING);
       
-      // Color code based on section type
+      // Color code with accessibility in mind (WCAG AA compliant)
       if (section.emergency) {
-        doc.setTextColor(220, 38, 38); // Red for emergency
+        doc.setTextColor(153, 27, 27); // Darker red for better contrast (WCAG AA)
       } else if (section.important) {
-        doc.setTextColor(234, 88, 12); // Orange for important
+        doc.setTextColor(180, 52, 3); // Darker orange for better contrast
       } else {
-        doc.setTextColor(0);
+        doc.setTextColor(0, 0, 0);
       }
       
       doc.text(section.heading, margin, yPos);
-      yPos += 8;
-      doc.setTextColor(0); // Reset color
+      yPos += 10;
+      doc.setTextColor(0, 0, 0); // Reset to black
 
-      // Section content with optional highlight
+      // Section content - Accessibility: Readable font size, proper line spacing
       doc.setFont(undefined, 'normal');
-      doc.setFontSize(11);
+      doc.setFontSize(FONT_SIZE_BODY);
       
       if (section.content) {
-        // Highlight box for special content
+        // Highlight box for special content - Accessibility: Sufficient contrast
         if (section.highlight) {
-          doc.setFillColor(219, 234, 254); // Light blue background
-          const contentHeight = doc.splitTextToSize(section.content, pageWidth - 2 * margin - 10).length * 6 + 6;
-          doc.rect(margin, yPos - 4, pageWidth - 2 * margin, contentHeight, 'F');
+          doc.setFillColor(232, 243, 255); // Lighter blue, better contrast with text
+          const contentHeight = doc.splitTextToSize(section.content, pageWidth - 2 * margin - 10).length * 7 + 8;
+          doc.rect(margin, yPos - 5, pageWidth - 2 * margin, contentHeight, 'F');
         }
         
         const lines = doc.splitTextToSize(section.content, pageWidth - 2 * margin - (section.highlight ? 10 : 0));
@@ -1206,9 +1226,9 @@ Deno.serve(async (req) => {
             yPos = margin;
           }
           doc.text(line, margin + (section.highlight ? 5 : 0), yPos);
-          yPos += 6;
+          yPos += 7; // Better line spacing for readability
         });
-        yPos += 5;
+        yPos += 6;
       }
 
       // Handle subsections
@@ -1219,15 +1239,15 @@ Deno.serve(async (req) => {
             yPos = margin;
           }
           
-          // Subsection heading
+          // Subsection heading - Accessibility: Clear hierarchy
           doc.setFont(undefined, 'bold');
-          doc.setFontSize(12);
-          doc.setTextColor(59, 130, 246); // Blue for subsections
+          doc.setFontSize(FONT_SIZE_SUBHEADING);
+          doc.setTextColor(0, 51, 153); // Darker blue for better contrast (WCAG AA)
           doc.text(`  ${subsection.subheading || 'Subsection'}`, margin, yPos);
-          yPos += 7;
-          doc.setTextColor(0);
+          yPos += 8;
+          doc.setTextColor(0, 0, 0);
           doc.setFont(undefined, 'normal');
-          doc.setFontSize(11);
+          doc.setFontSize(FONT_SIZE_BODY);
           
           // Subsection bullets
           if (subsection.bullets && Array.isArray(subsection.bullets)) {
@@ -1239,7 +1259,7 @@ Deno.serve(async (req) => {
               const bulletLines = doc.splitTextToSize(`    • ${bullet}`, pageWidth - 2 * margin - 10);
               bulletLines.forEach((line, idx) => {
                 doc.text(line, margin + (idx === 0 ? 5 : 10), yPos);
-                yPos += 6;
+                yPos += 7; // Better line spacing
               });
             });
           }
@@ -1262,7 +1282,7 @@ Deno.serve(async (req) => {
           const bulletLines = doc.splitTextToSize(`• ${bullet}`, pageWidth - 2 * margin - 5);
           bulletLines.forEach((line, idx) => {
             doc.text(line, margin + (idx === 0 ? 0 : 5), yPos);
-            yPos += 6;
+            yPos += 7; // Improved line spacing for readability
           });
         });
         yPos += 3;
@@ -1280,14 +1300,14 @@ Deno.serve(async (req) => {
       
       yPos += 10;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(14);
-      doc.setTextColor(59, 130, 246); // Blue color
+      doc.setFontSize(FONT_SIZE_HEADING);
+      doc.setTextColor(0, 51, 153); // Accessible blue color
       doc.text('Special Instructions from Your Nurse', margin, yPos);
-      yPos += 8;
+      yPos += 10;
       
       doc.setFont(undefined, 'normal');
-      doc.setFontSize(11);
-      doc.setTextColor(0);
+      doc.setFontSize(FONT_SIZE_BODY);
+      doc.setTextColor(0, 0, 0);
       const notesLines = doc.splitTextToSize(customNotes, pageWidth - 2 * margin);
       notesLines.forEach(line => {
         if (yPos > pageHeight - 30) {
@@ -1295,15 +1315,15 @@ Deno.serve(async (req) => {
           yPos = margin;
         }
         doc.text(line, margin, yPos);
-        yPos += 6;
+        yPos += 7;
       });
       yPos += 10;
     }
 
-    // Footer
+    // Footer - Accessibility: Readable font size, sufficient contrast
     const footerY = pageHeight - 15;
-    doc.setFontSize(9);
-    doc.setTextColor(100);
+    doc.setFontSize(FONT_SIZE_SMALL);
+    doc.setTextColor(70, 70, 70); // Dark gray, accessible contrast
     doc.text('Penn Home Health Inc. | For questions, contact your nurse', pageWidth / 2, footerY, { align: 'center' });
     doc.text('This information is for educational purposes only. Always follow your doctor\'s advice.', pageWidth / 2, footerY + 5, { align: 'center' });
 
