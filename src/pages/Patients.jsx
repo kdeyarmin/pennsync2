@@ -309,13 +309,19 @@ export default function Patients() {
       {showForm && (
         <PatientForm
           patient={editingPatient}
-          onSubmit={handleSubmit}
+          onSuccess={() => {
+            setShowForm(false);
+            setEditingPatient(null);
+          }}
           onCancel={() => {
             setShowForm(false);
             setEditingPatient(null);
           }}
         />
       )}
+
+      {/* Patient File Update Uploader */}
+      <PatientFileUpdateUploader />
 
       {/* Duplicate Detection Alert */}
       <DuplicatePatientManager />
