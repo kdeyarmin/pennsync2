@@ -19,6 +19,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { validatePatient, validatePhone, validateEmail, validateDate, SEVERITY } from "../components/utils/patientValidation";
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -194,31 +195,44 @@ export default function ImportPatients() {
         const field = FIELD_MAPPINGS[fieldKey];
 
         if (value) {
-          // Type validation
-          if (field.type === 'email' && value && !value.includes('@')) {
-            rowErrors.push(`Invalid email format in ${field.label}`);
-          }
-          
-          if (field.type === 'date' && value) {
-            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-            if (!dateRegex.test(value)) {
-              rowErrors.push(`Invalid date format in ${field.label} (expected YYYY-MM-DD)`);
+          // Enhanced type validation
+          if (field.type === 'email') {
+            const emailError = validateEmail(value);
+            if (emailError && emailError.severity === SEVERITY.ERROR) {
+              rowErrors.push(emailError.message);
             }
           }
           
-          if (field.type === 'enum' && value && !field.options.includes(value)) {
+          if (field.type === 'date') {
+            const dateError = validateDate(value, fieldKey);
+            if (dateError && dateError.severity === SEVERITY.ERROR) {
+              rowErrors.push(dateError.message);
+            }
+          }
+          
+          if (field.type === 'enum' && !field.options.includes(value)) {
             rowErrors.push(`Invalid value "${value}" for ${field.label}. Must be one of: ${field.options.join(', ')}`);
+          }
+          
+          // Phone validation
+          if (fieldKey === 'phone' || fieldKey === 'emergency_contact_phone' || fieldKey === 'physician_phone') {
+            const phoneError = validatePhone(value);
+            if (phoneError) {
+              rowErrors.push(`${field.label}: ${phoneError.message}`);
+            }
           }
           
           patient[fieldKey] = value;
         }
       });
 
-      // Check required fields
-      REQUIRED_FIELDS.forEach(fieldKey => {
-        if (!patient[fieldKey]) {
-          rowErrors.push(`Missing required field: ${FIELD_MAPPINGS[fieldKey].label}`);
-        }
+      // Comprehensive patient validation
+      const validationResults = validatePatient(patient, { skipWarnings: false });
+      
+      // Only add blocking errors
+      const blockingErrors = validationResults.filter(v => v.severity === SEVERITY.ERROR);
+      blockingErrors.forEach(err => {
+        rowErrors.push(err.message);
       });
 
       if (rowErrors.length > 0) {
