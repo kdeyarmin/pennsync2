@@ -221,7 +221,19 @@ export default function PatientEducationHub() {
     setIsGenerating(true);
     setSuccessMessage("");
     
+    const diagnostics = {
+      condition: selectedTopic.id,
+      hasPatient: !!selectedPatient,
+      hasSections: Object.keys(selectedSections).length > 0,
+      hasNotes: !!customNotes,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      browser: navigator.userAgent.match(/(firefox|msie|chrome|safari|trident)/gi)?.[0] || 'unknown'
+    };
+    
     try {
+      console.log('Requesting PDF generation with diagnostics:', diagnostics);
+      
       const response = await base44.functions.invoke('generatePatientHandout', {
         condition: selectedTopic.id,
         patientName: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null,
@@ -230,42 +242,85 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
-      console.log('Handout response:', response);
+      console.log('Raw response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', response ? Object.keys(response) : 'null');
 
       // Handle axios response wrapper
       const data = response?.data || response;
+      console.log('Extracted data:', data);
+      console.log('Data type:', typeof data);
+      console.log('Data keys:', data ? Object.keys(data) : 'null');
 
       if (data?.error) {
-        throw new Error(data.error);
+        console.error('Backend error:', data.error, data.details);
+        throw new Error(`Backend error: ${data.error}${data.details ? '\n\n' + data.details : ''}`);
       }
 
       if (!data || !data.pdf) {
         console.error('Invalid response structure:', data);
-        throw new Error('Invalid response from handout generator');
+        console.error('Data.pdf exists:', !!data?.pdf);
+        console.error('Data.success:', data?.success);
+        throw new Error(`Invalid response from handout generator. Got: ${JSON.stringify(data || {}).substring(0, 200)}`);
       }
 
+      console.log('PDF data length:', data.pdf.length);
+      
       // Decode base64 PDF and download
-      const binaryString = atob(data.pdf);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      try {
+        const binaryString = atob(data.pdf);
+        console.log('Decoded binary length:', binaryString.length);
+        
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        console.log('Blob created, size:', blob.size);
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = data.filename || `${selectedTopic.id}_handout.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        
+        console.log('Download triggered successfully');
+      } catch (decodeError) {
+        console.error('Error decoding/downloading PDF:', decodeError);
+        throw new Error(`Failed to process PDF: ${decodeError.message}`);
       }
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = data.filename || `${selectedTopic.id}_handout.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
 
       setSuccessMessage("Handout downloaded successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error('Error downloading handout:', error);
+      console.error('Error type:', error.constructor.name);
+      console.error('Error stack:', error.stack);
+      
+      // Log to backend for debugging
+      try {
+        await base44.asServiceRole.entities.SystemLog.create({
+          job_name: 'PDF Download Error (Frontend)',
+          job_type: 'other',
+          status: 'error',
+          message: `Frontend PDF download failed for ${selectedTopic.id}`,
+          details: {
+            ...diagnostics,
+            errorMessage: error.message,
+            errorType: error.constructor.name,
+            responseData: error?.response?.data
+          }
+        });
+      } catch (logErr) {
+        console.error('Failed to log frontend error:', logErr);
+      }
+      
       const errorDetails = error?.response?.data?.error || error?.response?.data?.details || error?.message || 'Failed to generate handout. Please try again.';
-      alert(`Error generating handout:\n\n${errorDetails}`);
+      alert(`Error generating handout:\n\n${errorDetails}\n\nCheck console for details.`);
     }
     
     setIsGenerating(false);
