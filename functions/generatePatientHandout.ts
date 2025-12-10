@@ -2002,31 +2002,44 @@ Deno.serve(async (req) => {
     // If action is email, send it
     if (action === 'email' && patientEmail) {
       console.log('Sending email to:', patientEmail);
-      await base44.integrations.Core.SendEmail({
-        to: patientEmail,
-        subject: `Patient Education: ${template.title}`,
-        body: `
-          <p>Dear ${patientName || 'Patient'},</p>
-          
-          <p>Attached is educational information about ${template.title} from Penn Home Health Inc.</p>
-          
-          <p>Please review this information and contact your nurse if you have any questions.</p>
-          
-          <p>Best regards,<br>Penn Home Health Team</p>
-        `
-      });
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: patientEmail,
+          subject: `Patient Education: ${template.title}`,
+          body: `
+            <p>Dear ${patientName || 'Patient'},</p>
+            
+            <p>Attached is educational information about ${template.title} from Penn Home Health Inc.</p>
+            
+            <p>Please review this information and contact your nurse if you have any questions.</p>
+            
+            <p>Best regards,<br>Penn Home Health Team</p>
+          `
+        });
+        console.log('Email sent successfully');
+      } catch (emailError) {
+        console.error('Email send error:', emailError);
+        throw new Error(`Failed to send email: ${emailError.message}`);
+      }
 
-      return Response.json({ 
+      return new Response(JSON.stringify({ 
         success: true, 
         message: `Handout emailed to ${patientEmail}` 
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
       });
     }
 
     // Return PDF as base64 for download
-    return Response.json({
+    console.log('Returning PDF response');
+    return new Response(JSON.stringify({
       success: true,
       pdf: base64Pdf,
       filename: `${condition}_handout.pdf`
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
