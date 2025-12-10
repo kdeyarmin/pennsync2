@@ -167,10 +167,12 @@ export default function HandoutPreview({
               <Download className="w-4 h-4 mr-2" />
               Download PDF
             </Button>
-            <Button onClick={onEmail} variant="outline">
-              <Mail className="w-4 h-4 mr-2" />
-              Email PDF
-            </Button>
+            {onEmail && (
+              <Button onClick={onEmail} variant="outline">
+                <Mail className="w-4 h-4 mr-2" />
+                Email PDF
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
