@@ -128,6 +128,48 @@ const educationTopics = [
     icon: Heart,
     color: 'from-lime-500 to-green-500',
     description: 'Essential nutrients, meal planning, and overcoming common eating challenges.'
+  },
+  {
+    id: 'pneumonia',
+    title: 'Pneumonia Recovery',
+    icon: Activity,
+    color: 'from-cyan-500 to-blue-500',
+    description: 'Recovery tips, breathing exercises, and preventing pneumonia complications.'
+  },
+  {
+    id: 'uti',
+    title: 'UTI Prevention & Care',
+    icon: Droplet,
+    color: 'from-blue-500 to-indigo-500',
+    description: 'Preventing and treating urinary tract infections, catheter care tips.'
+  },
+  {
+    id: 'parkinsons',
+    title: 'Parkinson\'s Disease',
+    icon: Brain,
+    color: 'from-purple-500 to-pink-500',
+    description: 'Living with Parkinson\'s, medication management, and daily living strategies.'
+  },
+  {
+    id: 'catheter_care',
+    title: 'Urinary Catheter Care',
+    icon: Droplet,
+    color: 'from-teal-500 to-cyan-500',
+    description: 'Daily catheter care, preventing infection, and managing drainage bags.'
+  },
+  {
+    id: 'tube_feeding',
+    title: 'Tube Feeding Care',
+    icon: Heart,
+    color: 'from-orange-500 to-amber-500',
+    description: 'Tube feeding instructions, site care, and preventing complications.'
+  },
+  {
+    id: 'hospice_comfort',
+    title: 'Hospice & Comfort Care',
+    icon: Heart,
+    color: 'from-pink-500 to-rose-500',
+    description: 'Comfort measures, symptom management, and supporting loved ones in hospice.'
   }
 ];
 

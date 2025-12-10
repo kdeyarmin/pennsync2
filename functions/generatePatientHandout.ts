@@ -974,6 +974,480 @@ const handoutTemplates = {
       }
     ]
   },
+  'pneumonia': {
+    title: 'Pneumonia Recovery',
+    sections: [
+      {
+        heading: 'What is Pneumonia?',
+        content: 'Pneumonia is an infection that inflames the air sacs in one or both lungs. The air sacs may fill with fluid or pus, causing cough with phlegm, fever, chills, and difficulty breathing.',
+        highlight: true
+      },
+      {
+        heading: 'Recovery at Home',
+        bullets: [
+          'Get plenty of rest - your body needs energy to fight infection',
+          'Take all antibiotics as prescribed, even if you feel better',
+          'Drink plenty of fluids (8-10 glasses of water daily)',
+          'Use a humidifier to ease breathing',
+          'Take fever reducers as recommended',
+          'Eat nutritious meals to support healing'
+        ]
+      },
+      {
+        heading: 'Breathing Techniques',
+        bullets: [
+          'Use an incentive spirometer as directed',
+          'Practice deep breathing exercises hourly',
+          'Cough to clear mucus - support chest with pillow if painful',
+          'Sit upright when possible to ease breathing',
+          'Use oxygen as prescribed'
+        ]
+      },
+      {
+        heading: 'Preventing Pneumonia',
+        bullets: [
+          'Get pneumonia vaccine as recommended',
+          'Get annual flu shot',
+          'Wash hands frequently',
+          'Don\'t smoke - avoid secondhand smoke',
+          'Stay away from sick people when possible',
+          'Keep your mouth clean - brush teeth twice daily'
+        ]
+      },
+      {
+        heading: 'Warning Signs - Call Your Doctor',
+        important: true,
+        bullets: [
+          'Fever over 100.4°F that won\'t go down',
+          'Increased shortness of breath',
+          'Chest pain that worsens',
+          'Coughing up blood',
+          'Confusion or changes in mental awareness',
+          'Blue lips or fingernails',
+          'Inability to keep fluids down'
+        ]
+      }
+    ]
+  },
+  'uti': {
+    title: 'Urinary Tract Infection (UTI) Prevention & Care',
+    sections: [
+      {
+        heading: 'Understanding UTIs',
+        content: 'A urinary tract infection (UTI) is an infection in any part of your urinary system - kidneys, bladder, or urethra. Most infections involve the lower urinary tract (bladder and urethra).',
+        highlight: true
+      },
+      {
+        heading: 'Common Symptoms',
+        bullets: [
+          'Strong, persistent urge to urinate',
+          'Burning sensation when urinating',
+          'Passing frequent, small amounts of urine',
+          'Cloudy or strong-smelling urine',
+          'Pelvic pain (in women)',
+          'Blood in urine (pink or red)',
+          'Fever or confusion (may indicate kidney infection)'
+        ]
+      },
+      {
+        heading: 'Treatment',
+        bullets: [
+          'Take all antibiotics as prescribed',
+          'Drink plenty of water (8-10 glasses daily)',
+          'Urinate frequently - don\'t hold it',
+          'Use heating pad on lower abdomen for comfort',
+          'Avoid caffeine and alcohol',
+          'Cranberry juice or supplements may help prevent future UTIs'
+        ]
+      },
+      {
+        heading: 'Prevention Tips',
+        bullets: [
+          'Drink plenty of water throughout the day',
+          'Urinate after sexual activity',
+          'Wipe front to back after using bathroom',
+          'Avoid irritating feminine products',
+          'Change incontinence products frequently',
+          'Keep genital area clean and dry',
+          'Wear cotton underwear',
+          'Avoid tight-fitting pants'
+        ]
+      },
+      {
+        heading: 'For Catheter Users',
+        bullets: [
+          'Keep drainage bag below bladder level',
+          'Clean around catheter site daily',
+          'Empty bag before it gets full',
+          'Watch for signs of infection',
+          'Keep catheter secured to prevent pulling'
+        ]
+      },
+      {
+        heading: 'When to Seek Help',
+        important: true,
+        bullets: [
+          'Symptoms don\'t improve after 2-3 days of antibiotics',
+          'Fever over 101°F',
+          'Severe back or side pain',
+          'Nausea and vomiting',
+          'Blood in urine',
+          'Confusion or behavioral changes (especially in elderly)'
+        ]
+      }
+    ]
+  },
+  'parkinsons': {
+    title: 'Living with Parkinson\'s Disease',
+    sections: [
+      {
+        heading: 'Understanding Parkinson\'s Disease',
+        content: 'Parkinson\'s disease is a progressive nervous system disorder that affects movement. Symptoms develop gradually, often starting with a barely noticeable tremor in one hand.',
+        highlight: true
+      },
+      {
+        heading: 'Common Symptoms',
+        bullets: [
+          'Tremor (usually starts in hands)',
+          'Slowed movement (bradykinesia)',
+          'Rigid muscles',
+          'Impaired posture and balance',
+          'Loss of automatic movements',
+          'Speech changes',
+          'Writing changes (smaller handwriting)'
+        ]
+      },
+      {
+        heading: 'Medication Management',
+        important: true,
+        bullets: [
+          'Take medications exactly on schedule',
+          'Take with or without food as directed',
+          'Don\'t stop medications suddenly',
+          'Keep medication diary to track effectiveness',
+          'Report "wearing off" effects to doctor',
+          'Store medications properly'
+        ]
+      },
+      {
+        heading: 'Daily Living Strategies',
+        subsections: [
+          {
+            subheading: 'Movement & Exercise',
+            bullets: [
+              'Exercise daily - walking, stretching, tai chi',
+              'Physical therapy as prescribed',
+              'Move slowly and deliberately',
+              'Practice balance exercises',
+              'Use assistive devices as needed'
+            ]
+          },
+          {
+            subheading: 'Speech & Swallowing',
+            bullets: [
+              'Speak slowly and clearly',
+              'Face person when talking',
+              'Take small bites and chew thoroughly',
+              'Sit upright when eating',
+              'Speech therapy if recommended'
+            ]
+          },
+          {
+            subheading: 'Home Safety',
+            bullets: [
+              'Remove tripping hazards',
+              'Install grab bars',
+              'Use non-slip mats',
+              'Keep walkways well-lit',
+              'Wear sturdy shoes with non-slip soles'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Managing Non-Motor Symptoms',
+        bullets: [
+          'Depression and anxiety - talk to your doctor',
+          'Sleep problems - maintain sleep schedule',
+          'Constipation - increase fiber and fluids',
+          'Low blood pressure - rise slowly from sitting/lying',
+          'Fatigue - pace activities, rest when needed'
+        ]
+      },
+      {
+        heading: 'When to Call Your Doctor',
+        bullets: [
+          'New or worsening symptoms',
+          'Medication side effects',
+          'Falls or near-falls',
+          'Difficulty swallowing',
+          'Hallucinations or confusion',
+          'Severe depression or anxiety'
+        ]
+      }
+    ]
+  },
+  'catheter_care': {
+    title: 'Urinary Catheter Care',
+    sections: [
+      {
+        heading: 'About Your Catheter',
+        content: 'A urinary catheter is a tube that drains urine from your bladder into a collection bag. Proper care is essential to prevent infection and ensure comfort.',
+        highlight: true
+      },
+      {
+        heading: 'Daily Catheter Care',
+        bullets: [
+          'Wash hands before and after touching catheter',
+          'Clean around catheter insertion site twice daily with soap and water',
+          'Rinse and pat dry gently',
+          'Keep catheter secured to inner thigh (men) or abdomen (women)',
+          'Avoid pulling or tugging on catheter',
+          'Check for kinks in tubing'
+        ]
+      },
+      {
+        heading: 'Drainage Bag Care',
+        bullets: [
+          'Keep bag below bladder level at all times',
+          'Empty bag when 2/3 full or every 3-4 hours',
+          'Empty into toilet - don\'t let drainage spout touch toilet',
+          'Clean drainage spout with alcohol wipe after emptying',
+          'Use leg bag during day, larger bag at night',
+          'Change bags weekly or as directed'
+        ]
+      },
+      {
+        heading: 'Preventing Infection',
+        important: true,
+        bullets: [
+          'Drink 8-10 glasses of water daily',
+          'Clean catheter site daily',
+          'Never disconnect catheter from bag unnecessarily',
+          'Shower instead of bath',
+          'Take prescribed antibiotics if ordered',
+          'Watch for signs of infection'
+        ]
+      },
+      {
+        heading: 'Lifestyle with Catheter',
+        bullets: [
+          'You can shower with catheter in place',
+          'Secure bag to leg under clothing',
+          'Wear loose-fitting clothes',
+          'Stay active - walking is encouraged',
+          'Empty bag before long trips or activities',
+          'Carry extra supplies when going out'
+        ]
+      },
+      {
+        heading: 'Signs of Problems - Call Your Nurse',
+        bullets: [
+          'No urine output for 4-6 hours',
+          'Urine is very cloudy or has strong odor',
+          'Blood in urine (more than slight pink tinge)',
+          'Fever over 100.4°F',
+          'Leaking around catheter',
+          'Catheter falls out',
+          'Pain, redness, or swelling at insertion site',
+          'Severe bladder spasms'
+        ]
+      }
+    ]
+  },
+  'tube_feeding': {
+    title: 'Tube Feeding Care',
+    sections: [
+      {
+        heading: 'About Tube Feeding',
+        content: 'Tube feeding (enteral nutrition) provides liquid nutrition through a tube placed in your stomach or small intestine. This ensures you get the nutrition you need when you can\'t eat enough by mouth.',
+        highlight: true
+      },
+      {
+        heading: 'Types of Feeding Tubes',
+        bullets: [
+          'NG tube (through nose to stomach) - short term',
+          'G-tube or PEG (directly into stomach) - long term',
+          'J-tube (into small intestine)',
+          'Your nurse will teach you about your specific tube type'
+        ]
+      },
+      {
+        heading: 'Tube Site Care',
+        bullets: [
+          'Wash hands before touching tube or site',
+          'Clean around tube site daily with soap and water',
+          'Rotate tube gently (if instructed) to prevent sticking',
+          'Check for redness, swelling, or drainage',
+          'Keep site dry between cleanings',
+          'Change dressing as instructed (usually 2-3 times per week)',
+          'Secure tube to prevent pulling'
+        ]
+      },
+      {
+        heading: 'Giving Feedings',
+        subsections: [
+          {
+            subheading: 'Before Feeding',
+            bullets: [
+              'Wash hands thoroughly',
+              'Sit upright (30-45 degrees) during and after feeding',
+              'Check tube placement as instructed',
+              'Flush tube with water'
+            ]
+          },
+          {
+            subheading: 'During Feeding',
+            bullets: [
+              'Follow prescribed feeding schedule and amount',
+              'Use feeding at room temperature',
+              'Control feeding rate as instructed',
+              'Never force feeding if resistance felt',
+              'Stay upright during feeding'
+            ]
+          },
+          {
+            subheading: 'After Feeding',
+            bullets: [
+              'Flush tube with prescribed amount of water',
+              'Cap tube securely',
+              'Stay upright for 30-60 minutes',
+              'Clean equipment and store properly'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Preventing Problems',
+        important: true,
+        bullets: [
+          'Flush tube with water before and after feedings',
+          'Flush after giving medications',
+          'Keep head elevated 30-45 degrees during and after feeding',
+          'Give medications separately (crush pills if allowed)',
+          'Provide good mouth care even if not eating',
+          'Store formula properly (refrigerate after opening)',
+          'Discard unused formula after 24 hours'
+        ]
+      },
+      {
+        heading: 'When to Call Your Nurse',
+        bullets: [
+          'Tube comes out or is pulled out',
+          'Tube appears blocked - won\'t flush',
+          'Increased redness, swelling, or drainage at site',
+          'Fever over 100.4°F',
+          'Nausea or vomiting',
+          'Severe abdominal pain or bloating',
+          'Diarrhea (more than 3 loose stools per day)',
+          'Difficulty breathing during feeding'
+        ]
+      }
+    ]
+  },
+  'hospice_comfort': {
+    title: 'Hospice & Comfort Care',
+    sections: [
+      {
+        heading: 'Understanding Hospice Care',
+        content: 'Hospice care focuses on comfort and quality of life when curative treatment is no longer the goal. It provides physical, emotional, and spiritual support for patients and families.',
+        highlight: true
+      },
+      {
+        heading: 'Goals of Hospice Care',
+        bullets: [
+          'Manage pain and other symptoms',
+          'Provide comfort and dignity',
+          'Support emotional and spiritual needs',
+          'Help family members cope',
+          'Allow patient to remain at home if desired',
+          'Provide 24/7 support'
+        ]
+      },
+      {
+        heading: 'Managing Common Symptoms',
+        subsections: [
+          {
+            subheading: 'Pain',
+            bullets: [
+              'Give pain medications on schedule, not waiting for pain',
+              'Report uncontrolled pain immediately',
+              'Use comfort measures (positioning, massage)',
+              'Keep environment calm and quiet'
+            ]
+          },
+          {
+            subheading: 'Breathing',
+            bullets: [
+              'Elevate head of bed',
+              'Use fan for air circulation',
+              'Keep room temperature comfortable',
+              'Use oxygen as prescribed',
+              'Provide reassuring presence'
+            ]
+          },
+          {
+            subheading: 'Mouth Care',
+            bullets: [
+              'Keep mouth moist with swabs or ice chips',
+              'Apply lip balm frequently',
+              'Provide mouth care every 2-4 hours',
+              'Don\'t force food or fluids'
+            ]
+          }
+        ]
+      },
+      {
+        heading: 'Providing Comfort',
+        bullets: [
+          'Keep patient clean and dry',
+          'Turn and reposition every 2 hours',
+          'Use soft pillows for support',
+          'Play soothing music if desired',
+          'Read to patient or talk about happy memories',
+          'Hold hands, gentle touch',
+          'Respect patient\'s wishes for visitors',
+          'Maintain dignity and privacy'
+        ]
+      },
+      {
+        heading: 'When Death is Near',
+        bullets: [
+          'Breathing changes are normal',
+          'Decreased need for food and water',
+          'Increased sleeping',
+          'Restlessness or confusion may occur',
+          'Cool hands and feet are common',
+          'Hearing remains - speak to your loved one',
+          'Your presence brings comfort'
+        ]
+      },
+      {
+        heading: 'Caregiver Self-Care',
+        important: true,
+        bullets: [
+          'Accept help from others',
+          'Take breaks when you can',
+          'Eat regular meals and rest',
+          'Talk about your feelings',
+          'Call hospice team anytime - day or night',
+          'Remember: you are not alone'
+        ]
+      },
+      {
+        heading: 'When to Call Hospice Team',
+        bullets: [
+          'Uncontrolled pain or symptoms',
+          'Anxiety or restlessness',
+          'Questions about medications',
+          'Need for supplies',
+          'You need support or have concerns',
+          'Changes in patient\'s condition',
+          'When death occurs'
+        ]
+      }
+    ]
+  },
   'copd_oxygen': {
     title: 'Home Oxygen Therapy for COPD',
     sections: [
