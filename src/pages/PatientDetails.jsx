@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowLeft, Calendar, Plus, User, FileText, AlertTriangle, Phone, MapPin, Shield, Heart, Stethoscope, Activity } from "lucide-react";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { canAccessPatient, logSecurityEvent, sanitizeInput } from "@/components/utils/security";
@@ -228,7 +228,7 @@ export default function PatientDetails() {
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                     <span>MRN: {sanitizeInput(patient.medical_record_number) || 'N/A'}</span>
                     <span className="hidden sm:inline">•</span>
-                    <span className="block sm:inline w-full sm:w-auto">DOB: {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
+                    <span className="block sm:inline w-full sm:w-auto">DOB: {patient.date_of_birth && isValid(new Date(patient.date_of_birth)) ? format(new Date(patient.date_of_birth), 'MM/dd/yyyy') : 'N/A'}</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-start gap-2">
@@ -586,7 +586,7 @@ export default function PatientDetails() {
                     <div key={index} className="text-sm bg-gray-50 p-2 rounded">
                       <p className="font-medium text-gray-900">{hosp.reason}</p>
                       <p className="text-xs text-gray-600">
-                        {hosp.date && format(new Date(hosp.date), 'MMM yyyy')} • {hosp.hospital || 'N/A'}
+                        {hosp.date && isValid(new Date(hosp.date)) ? format(new Date(hosp.date), 'MMM yyyy') : 'Date unknown'} • {hosp.hospital || 'N/A'}
                       </p>
                     </div>
                   ))}
@@ -682,7 +682,7 @@ export default function PatientDetails() {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {format(new Date(visit.visit_date), 'MMMM d, yyyy')}
+                          {visit.visit_date && isValid(new Date(visit.visit_date)) ? format(new Date(visit.visit_date), 'MMMM d, yyyy') : 'Invalid date'}
                           {visit.visit_time && ` at ${sanitizeInput(visit.visit_time)}`}
                         </p>
                         <div className="flex gap-2 mt-2">
