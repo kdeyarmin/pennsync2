@@ -36,7 +36,7 @@ export default function PatientDetails() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
-  const patientId = urlParams.get('patientId');
+  const patientId = urlParams.get('id') || urlParams.get('patientId');
 
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [newVisit, setNewVisit] = useState({
