@@ -1711,14 +1711,27 @@ Deno.serve(async (req) => {
     
     doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
 
-    // Filter sections based on selection
-    const sectionsToInclude = selectedSections 
-      ? template.sections.filter(section => selectedSections[section.heading]?.included)
-      : template.sections;
+    // Filter sections based on selection - with safety checks
+    let sectionsToInclude = template.sections || [];
+    if (selectedSections && typeof selectedSections === 'object') {
+      sectionsToInclude = sectionsToInclude.filter(section => {
+        // If section heading is not in selectedSections, include it by default
+        if (!selectedSections[section.heading]) return true;
+        // Otherwise check if it's explicitly included
+        return selectedSections[section.heading]?.included !== false;
+      });
+    }
+
+    console.log(`Processing ${sectionsToInclude.length} sections for ${condition}`);
 
     // Content sections - Accessibility: Structured, readable body text
     doc.setFontSize(FONT_SIZE_BODY);
-    sectionsToInclude.forEach(section => {
+    
+    // Add try-catch around section rendering to isolate errors
+    for (let sectionIdx = 0; sectionIdx < sectionsToInclude.length; sectionIdx++) {
+      const section = sectionsToInclude[sectionIdx];
+      
+      try {
       // Check if we need a new page
       if (yPos > pageHeight - 40) {
         doc.addPage();
@@ -1742,7 +1755,9 @@ Deno.serve(async (req) => {
       doc.rect(margin, yPos - 4, 3, FONT_SIZE_HEADING, 'F');
       
       doc.setTextColor(sectionColor[0], sectionColor[1], sectionColor[2]);
-      doc.text(section.heading, margin + 8, yPos);
+      // Sanitize heading to prevent encoding issues
+      const sanitizedHeading = String(section.heading || 'Section').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+      doc.text(sanitizedHeading, margin + 8, yPos);
       
       // Subtle divider line
       doc.setDrawColor(COLORS.divider[0], COLORS.divider[1], COLORS.divider[2]);
@@ -1756,13 +1771,15 @@ Deno.serve(async (req) => {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(FONT_SIZE_BODY);
       
-      if (section.content) {
+      if (section.content && typeof section.content === 'string') {
         // Professional highlight box
         if (section.highlight) {
           doc.setFillColor(232, 239, 255);
           doc.setDrawColor(41, 98, 255);
           doc.setLineWidth(0.5);
-          const lines = doc.splitTextToSize(section.content, contentWidth - 20);
+          // Sanitize content to prevent encoding issues
+          const sanitizedContent = section.content.replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+          const lines = doc.splitTextToSize(sanitizedContent, contentWidth - 20);
           const boxHeight = lines.length * 6 + 12;
           doc.rect(margin, yPos - 3, contentWidth, boxHeight, 'FD');
           
@@ -1777,7 +1794,9 @@ Deno.serve(async (req) => {
           });
           yPos += 9;
         } else {
-          const lines = doc.splitTextToSize(section.content, contentWidth - 5);
+          // Sanitize content to prevent encoding issues
+          const sanitizedContent = section.content.replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+          const lines = doc.splitTextToSize(sanitizedContent, contentWidth - 5);
           lines.forEach(line => {
             if (yPos > pageHeight - 30) {
               doc.addPage();
@@ -1790,9 +1809,10 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Handle subsections
+      // Handle subsections with safety check
       if (section.subsections && Array.isArray(section.subsections)) {
-        section.subsections.forEach(subsection => {
+        for (const subsection of section.subsections) {
+          try {
           if (yPos > pageHeight - 30) {
             doc.addPage();
             yPos = margin;
@@ -1809,50 +1829,82 @@ Deno.serve(async (req) => {
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(FONT_SIZE_BODY);
           
-          // Subsection bullets
+          // Subsection bullets with error handling
           if (subsection.bullets && Array.isArray(subsection.bullets)) {
-            subsection.bullets.forEach(bullet => {
+            for (const bullet of subsection.bullets) {
+              try {
               if (yPos > pageHeight - 20) {
                 doc.addPage();
                 yPos = margin;
               }
-              const bulletLines = doc.splitTextToSize('  • ' + bullet, contentWidth - 25);
-              bulletLines.forEach((line, idx) => {
+              // Sanitize bullet text to prevent encoding issues
+              const sanitizedBullet = String(bullet || '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+              const bulletLines = doc.splitTextToSize('  • ' + sanitizedBullet, contentWidth - 25);
+              bulletLines.forEach((line) => {
                 doc.text(line, margin + 18, yPos);
                 yPos += 6;
               });
-            });
+              } catch (bulletError) {
+                console.error('Error rendering subsection bullet:', bulletError);
+                yPos += 6; // Skip this bullet and continue
+              }
+            }
           }
           yPos += 3;
-        });
+          } catch (subsectionError) {
+            console.error(`Error rendering subsection "${subsection.subheading}":`, subsectionError);
+            yPos += 8; // Skip this subsection
+          }
+        }
       }
 
-      // Regular bullets
-      if (section.bullets) {
+      // Regular bullets with error handling
+      if (section.bullets && Array.isArray(section.bullets)) {
         // Filter bullets based on selection
-        const bulletsToInclude = selectedSections?.[section.heading]?.bullets
-          ? section.bullets.filter((bullet, idx) => selectedSections[section.heading].bullets[idx])
-          : section.bullets;
+        let bulletsToInclude = section.bullets;
+        if (selectedSections?.[section.heading]?.bullets) {
+          bulletsToInclude = section.bullets.filter((bullet, idx) => 
+            selectedSections[section.heading].bullets[idx] !== false
+          );
+        }
         
-        bulletsToInclude.forEach(bullet => {
+        for (const bullet of bulletsToInclude) {
+          try {
           if (yPos > pageHeight - 20) {
             doc.addPage();
             yPos = margin;
           }
-          const bulletLines = doc.splitTextToSize('• ' + bullet, contentWidth - 15);
+          // Sanitize bullet text to prevent encoding issues
+          const sanitizedBullet = String(bullet || '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+          const bulletLines = doc.splitTextToSize('• ' + sanitizedBullet, contentWidth - 15);
           bulletLines.forEach((line) => {
             doc.text(line, margin + 5, yPos);
             yPos += 6;
           });
-        });
+          } catch (bulletError) {
+            console.error('Error rendering bullet:', bulletError);
+            yPos += 6; // Skip and continue
+          }
+        }
         yPos += 3;
       }
       
       yPos += 5;
-    });
+      } catch (sectionError) {
+        console.error(`Error rendering section "${section.heading}":`, sectionError);
+        // Continue with next section instead of failing entire PDF
+        doc.setFontSize(FONT_SIZE_BODY);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(200, 0, 0);
+        doc.text(`[Error rendering section: ${section.heading}]`, margin + 5, yPos);
+        yPos += 10;
+        doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+      }
+    }
 
-    // Custom notes section
-    if (customNotes && customNotes.trim()) {
+    // Custom notes section with error handling
+    if (customNotes && typeof customNotes === 'string' && customNotes.trim()) {
+      try {
       if (yPos > pageHeight - 60) {
         doc.addPage();
         yPos = margin;
@@ -1864,7 +1916,9 @@ Deno.serve(async (req) => {
       doc.setFillColor(255, 251, 235); // Warm yellow background
       doc.setDrawColor(245, 158, 11);
       doc.setLineWidth(1);
-      const notesLines = doc.splitTextToSize(customNotes, contentWidth - 20);
+      // Sanitize custom notes
+      const sanitizedNotes = customNotes.replace(/[^\x20-\x7E\xA0-\xFF\n\r]/g, '');
+      const notesLines = doc.splitTextToSize(sanitizedNotes, contentWidth - 20);
       const notesHeight = notesLines.length * 6 + 20;
       doc.rect(margin, yPos - 3, contentWidth, notesHeight, 'FD');
       
@@ -1886,6 +1940,10 @@ Deno.serve(async (req) => {
         yPos += 6;
       });
       yPos += 12;
+      } catch (notesError) {
+        console.error('Error rendering custom notes:', notesError);
+        // Continue without custom notes
+      }
     }
 
     // Professional footer
@@ -1914,11 +1972,17 @@ Deno.serve(async (req) => {
     doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
     doc.text('This information is for educational purposes only. Always follow your healthcare provider\'s advice.', pageWidth / 2, footerY + 12, { align: 'center' });
 
-    // Generate PDF
+    // Generate PDF with error handling
     console.log('Generating PDF output...');
-    const pdfBytes = doc.output('arraybuffer');
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
-    console.log('PDF generated successfully, length:', base64Pdf.length);
+    let pdfBytes, base64Pdf;
+    try {
+      pdfBytes = doc.output('arraybuffer');
+      base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
+      console.log('PDF generated successfully, length:', base64Pdf.length);
+    } catch (pdfError) {
+      console.error('Error generating PDF binary:', pdfError);
+      throw new Error(`PDF generation failed: ${pdfError.message}`);
+    }
 
     // If action is email, send it
     if (action === 'email' && patientEmail) {
