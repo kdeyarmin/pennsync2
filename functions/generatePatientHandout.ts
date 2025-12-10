@@ -1109,13 +1109,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { condition, patientName, patientEmail, action, selectedSections, customNotes } = await req.json();
+    const body = await req.json();
+    console.log('Request body:', body);
     
-    if (!condition || !handoutTemplates[condition]) {
-      return Response.json({ error: 'Invalid condition' }, { status: 400 });
+    const { condition, patientName, patientEmail, action, selectedSections, customNotes } = body;
+    
+    if (!condition) {
+      return Response.json({ error: 'Condition is required' }, { status: 400 });
+    }
+    
+    if (!handoutTemplates[condition]) {
+      return Response.json({ error: `Invalid condition: ${condition}` }, { status: 400 });
     }
 
     const template = handoutTemplates[condition];
+    console.log('Using template:', condition);
     
     // Create PDF
     const doc = new jsPDF();
@@ -1204,7 +1212,7 @@ Deno.serve(async (req) => {
       }
 
       // Handle subsections
-      if (section.subsections) {
+      if (section.subsections && Array.isArray(section.subsections)) {
         section.subsections.forEach(subsection => {
           if (yPos > pageHeight - 30) {
             doc.addPage();
@@ -1215,14 +1223,14 @@ Deno.serve(async (req) => {
           doc.setFont(undefined, 'bold');
           doc.setFontSize(12);
           doc.setTextColor(59, 130, 246); // Blue for subsections
-          doc.text(`  ${subsection.subheading}`, margin, yPos);
+          doc.text(`  ${subsection.subheading || 'Subsection'}`, margin, yPos);
           yPos += 7;
           doc.setTextColor(0);
           doc.setFont(undefined, 'normal');
           doc.setFontSize(11);
           
           // Subsection bullets
-          if (subsection.bullets) {
+          if (subsection.bullets && Array.isArray(subsection.bullets)) {
             subsection.bullets.forEach(bullet => {
               if (yPos > pageHeight - 20) {
                 doc.addPage();
@@ -1300,11 +1308,14 @@ Deno.serve(async (req) => {
     doc.text('This information is for educational purposes only. Always follow your doctor\'s advice.', pageWidth / 2, footerY + 5, { align: 'center' });
 
     // Generate PDF
+    console.log('Generating PDF output...');
     const pdfBytes = doc.output('arraybuffer');
     const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
+    console.log('PDF generated successfully, length:', base64Pdf.length);
 
     // If action is email, send it
     if (action === 'email' && patientEmail) {
+      console.log('Sending email to:', patientEmail);
       await base44.integrations.Core.SendEmail({
         to: patientEmail,
         subject: `Patient Education: ${template.title}`,
@@ -1334,6 +1345,10 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error generating handout:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Error stack:', error.stack);
+    return Response.json({ 
+      error: error.message || 'Unknown error occurred',
+      details: error.stack 
+    }, { status: 500 });
   }
 });
