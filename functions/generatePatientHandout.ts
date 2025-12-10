@@ -1893,7 +1893,7 @@ Deno.serve(async (req) => {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(FONT_SIZE_SUBHEADING);
       doc.setTextColor(COLORS.important[0], COLORS.important[1], COLORS.important[2]);
-      doc.text('📝 Special Instructions from Your Nurse', margin + 8, yPos + 5);
+      doc.text('Special Instructions from Your Nurse', margin + 8, yPos + 5);
       
       yPos += 12;
       doc.setFont('helvetica', 'normal');
@@ -1930,7 +1930,7 @@ Deno.serve(async (req) => {
     
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
-    doc.text('📞 724-465-0440  |  For questions, contact your nurse', pageWidth / 2, footerY + 7, { align: 'center' });
+    doc.text('Phone: 724-465-0440  |  For questions, contact your nurse', pageWidth / 2, footerY + 7, { align: 'center' });
     
     doc.setFontSize(FONT_SIZE_SMALL - 1);
     doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
