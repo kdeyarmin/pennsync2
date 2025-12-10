@@ -1977,7 +1977,18 @@ Deno.serve(async (req) => {
     let pdfBytes, base64Pdf;
     try {
       pdfBytes = doc.output('arraybuffer');
-      base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
+      
+      // Convert to base64 in chunks to avoid stack overflow
+      const uint8Array = new Uint8Array(pdfBytes);
+      const chunkSize = 8192;
+      let binary = '';
+      
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      
+      base64Pdf = btoa(binary);
       console.log('PDF generated successfully, length:', base64Pdf.length);
     } catch (pdfError) {
       console.error('Error generating PDF binary:', pdfError);
