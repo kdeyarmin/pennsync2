@@ -40,6 +40,7 @@ import AgencyAnalytics from './pages/AgencyAnalytics';
 import ComplianceRegulatory from './pages/ComplianceRegulatory';
 import SystemMonitoring from './pages/SystemMonitoring';
 import UserManagement from './pages/UserManagement';
+import NurseTrainingHub from './pages/NurseTrainingHub';
 import __Layout from './Layout.jsx';
 
 
@@ -86,6 +87,7 @@ export const PAGES = {
     "ComplianceRegulatory": ComplianceRegulatory,
     "SystemMonitoring": SystemMonitoring,
     "UserManagement": UserManagement,
+    "NurseTrainingHub": NurseTrainingHub,
 }
 
 export const pagesConfig = {
