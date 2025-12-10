@@ -1647,7 +1647,7 @@ Deno.serve(async (req) => {
       const logoDataUrl = `data:image/png;base64,${logoBase64}`;
       
       // Professional header background
-      doc.setFillColor(...COLORS.primaryLight);
+      doc.setFillColor(232, 239, 255);
       doc.rect(0, 0, pageWidth, 45, 'F');
       
       // Add logo
@@ -1686,9 +1686,9 @@ Deno.serve(async (req) => {
     // Patient info card
     if (patientName) {
       doc.setFillColor(250, 250, 250);
-      doc.setDrawColor(COLORS.divider[0], COLORS.divider[1], COLORS.divider[2]);
+      doc.setDrawColor(229, 229, 229);
       doc.setLineWidth(0.5);
-      doc.roundedRect(margin, yPos, contentWidth, 18, 3, 3, 'FD');
+      doc.rect(margin, yPos, contentWidth, 18, 'FD');
       
       doc.setFontSize(FONT_SIZE_BODY);
       doc.setFont('helvetica', 'bold');
@@ -1759,16 +1759,12 @@ Deno.serve(async (req) => {
       if (section.content) {
         // Professional highlight box
         if (section.highlight) {
-          doc.setFillColor(COLORS.primaryLight[0], COLORS.primaryLight[1], COLORS.primaryLight[2]);
-          doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+          doc.setFillColor(232, 239, 255);
+          doc.setDrawColor(41, 98, 255);
           doc.setLineWidth(0.5);
           const lines = doc.splitTextToSize(section.content, contentWidth - 20);
           const boxHeight = lines.length * 6 + 12;
-          doc.roundedRect(margin, yPos - 3, contentWidth, boxHeight, 2, 2, 'FD');
-          
-          // Icon for highlighted content
-          doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-          doc.circle(margin + 8, yPos + 3, 2, 'F');
+          doc.rect(margin, yPos - 3, contentWidth, boxHeight, 'FD');
           
           doc.setFont('helvetica', 'normal');
           lines.forEach(line => {
@@ -1776,7 +1772,7 @@ Deno.serve(async (req) => {
               doc.addPage();
               yPos = margin + 20;
             }
-            doc.text(line, margin + 14, yPos);
+            doc.text(line, margin + 10, yPos);
             yPos += 6;
           });
           yPos += 9;
@@ -1805,13 +1801,9 @@ Deno.serve(async (req) => {
           // Subsection heading with professional styling
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(FONT_SIZE_SUBHEADING);
-          doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
+          doc.setTextColor(0, 150, 136);
           
-          // Small bullet indicator
-          doc.setFillColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
-          doc.circle(margin + 6, yPos - 2, 1.5, 'F');
-          
-          doc.text(`${subsection.subheading || 'Subsection'}`, margin + 11, yPos);
+          doc.text(`  ${subsection.subheading || 'Subsection'}`, margin + 5, yPos);
           yPos += 8;
           doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
           doc.setFont('helvetica', 'normal');
@@ -1824,16 +1816,9 @@ Deno.serve(async (req) => {
                 doc.addPage();
                 yPos = margin;
               }
-              const bulletLines = doc.splitTextToSize(bullet, contentWidth - 25);
+              const bulletLines = doc.splitTextToSize('  • ' + bullet, contentWidth - 25);
               bulletLines.forEach((line, idx) => {
-                if (idx === 0) {
-                  // Professional bullet point
-                  doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-                  doc.circle(margin + 18, yPos - 2, 1, 'F');
-                  doc.text(line, margin + 23, yPos);
-                } else {
-                  doc.text(line, margin + 23, yPos);
-                }
+                doc.text(line, margin + 18, yPos);
                 yPos += 6;
               });
             });
@@ -1854,16 +1839,9 @@ Deno.serve(async (req) => {
             doc.addPage();
             yPos = margin;
           }
-          const bulletLines = doc.splitTextToSize(bullet, contentWidth - 15);
-          bulletLines.forEach((line, idx) => {
-            if (idx === 0) {
-              // Professional bullet point
-              doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-              doc.circle(margin + 6, yPos - 2, 1.2, 'F');
-              doc.text(line, margin + 12, yPos);
-            } else {
-              doc.text(line, margin + 12, yPos);
-            }
+          const bulletLines = doc.splitTextToSize('• ' + bullet, contentWidth - 15);
+          bulletLines.forEach((line) => {
+            doc.text(line, margin + 5, yPos);
             yPos += 6;
           });
         });
@@ -1884,11 +1862,11 @@ Deno.serve(async (req) => {
       
       // Professional custom notes section
       doc.setFillColor(255, 251, 235); // Warm yellow background
-      doc.setDrawColor(COLORS.important[0], COLORS.important[1], COLORS.important[2]);
+      doc.setDrawColor(245, 158, 11);
       doc.setLineWidth(1);
       const notesLines = doc.splitTextToSize(customNotes, contentWidth - 20);
       const notesHeight = notesLines.length * 6 + 20;
-      doc.roundedRect(margin, yPos - 3, contentWidth, notesHeight, 2, 2, 'FD');
+      doc.rect(margin, yPos - 3, contentWidth, notesHeight, 'FD');
       
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(FONT_SIZE_SUBHEADING);
