@@ -56,6 +56,7 @@ import ICD10CodeSuggester from "../components/visit/ICD10CodeSuggester";
 import DischargeVisitSummary from "../components/visit/DischargeVisitSummary";
 import ProactiveRiskIdentifier from "../components/alerts/ProactiveRiskIdentifier";
 import MedicalScribeAssistant from "../components/scribe/MedicalScribeAssistant";
+import PatientRiskPredictor from "../components/risk/PatientRiskPredictor";
 
 import { 
   canAccessVisit, 
@@ -1655,6 +1656,8 @@ Generate the complete clinical narrative based on the audio and context:`;
             narrativeText={narrativeText}
             onAddSuggestion={(text) => handleAddSuggestion(text, 'patient_response_prompter')}
           />
+
+          <PatientRiskPredictor patient={patient} compact={true} />
 
           <EarlyWarningSystem
             patient={patient}
