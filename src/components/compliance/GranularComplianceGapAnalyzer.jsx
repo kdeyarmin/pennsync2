@@ -40,7 +40,6 @@ export default function GranularComplianceGapAnalyzer({
     try {
       // Analyze visit types and missing documentation
       const visitTypeGaps = analyzeVisitTypeGaps();
-      const patientSpecificGaps = analyzePatientSpecificGaps();
 
       // AI-driven recommendations
       const result = await base44.integrations.Core.InvokeLLM({
@@ -50,9 +49,6 @@ IDENTIFIED GAPS:
 
 Visit Type Documentation Gaps:
 ${JSON.stringify(visitTypeGaps, null, 2)}
-
-Patient-Specific Gaps:
-${JSON.stringify(patientSpecificGaps, null, 2)}
 
 Recent Compliance Audit Trends:
 ${complianceAudits?.slice(0, 10).map(a => `- ${a.visit_id}: Score ${a.compliance_score}%, Status: ${a.status}, Issues: ${a.issues?.length || 0}`).join('\n') || 'No recent audits'}
@@ -114,7 +110,6 @@ Provide detailed analysis with:
 
       setGapAnalysis({
         visitTypeGaps,
-        patientSpecificGaps,
         aiRecommendations: result
       });
     } catch (error) {
@@ -162,66 +157,7 @@ Provide detailed analysis with:
 
 
 
-  const analyzePatientSpecificGaps = () => {
-    const gaps = [];
 
-    patients.forEach(patient => {
-      if (patient.status !== 'active') return;
-
-      const patientVisits = visits.filter(v => v.patient_id === patient.id);
-      const patientCarePlans = carePlans?.filter(cp => cp.patient_id === patient.id) || [];
-      const patientAudits = complianceAudits?.filter(a => a.patient_id === patient.id) || [];
-
-      const patientGaps = [];
-
-      // Check for missing care plans
-      if (patientCarePlans.length === 0) {
-        patientGaps.push('No documented care plans');
-      } else {
-        const activeCarePlans = patientCarePlans.filter(cp => cp.status === 'active');
-        if (activeCarePlans.length === 0) {
-          patientGaps.push('No active care plans');
-        }
-      }
-
-      // Check for consistently low compliance scores
-      const recentAudits = patientAudits.slice(0, 3);
-      if (recentAudits.length >= 2) {
-        const avgScore = recentAudits.reduce((sum, a) => sum + a.compliance_score, 0) / recentAudits.length;
-        if (avgScore < 75) {
-          patientGaps.push(`Low compliance trend (avg ${Math.round(avgScore)}%)`);
-        }
-      }
-
-      // Check for missing vital signs patterns
-      const visitsWithVitals = patientVisits.filter(v => v.vital_signs && Object.keys(v.vital_signs).length > 0);
-      if (visitsWithVitals.length < patientVisits.length * 0.8) {
-        patientGaps.push('Inconsistent vital signs documentation');
-      }
-
-      // Check for diagnosis-specific documentation requirements
-      if (patient.primary_diagnosis?.toLowerCase().includes('chf') || 
-          patient.primary_diagnosis?.toLowerCase().includes('heart failure')) {
-        const visitsWithWeightTracking = patientVisits.filter(v => v.vital_signs?.weight).length;
-        if (visitsWithWeightTracking < patientVisits.length * 0.9) {
-          patientGaps.push('CHF: Insufficient daily weight tracking');
-        }
-      }
-
-      if (patientGaps.length > 0) {
-        gaps.push({
-          patient_id: patient.id,
-          patient_name: `${patient.first_name} ${patient.last_name}`,
-          diagnosis: patient.primary_diagnosis,
-          gaps: patientGaps,
-          visit_count: patientVisits.length,
-          severity: patientGaps.length >= 3 ? 'high' : 'medium'
-        });
-      }
-    });
-
-    return gaps.sort((a, b) => b.gaps.length - a.gaps.length);
-  };
 
   const toggleExpanded = (key) => {
     setExpandedGaps(prev => ({ ...prev, [key]: !prev[key] }));
@@ -250,7 +186,7 @@ Provide detailed analysis with:
 
   if (!gapAnalysis) return null;
 
-  const { visitTypeGaps, patientSpecificGaps, aiRecommendations } = gapAnalysis;
+  const { visitTypeGaps, aiRecommendations } = gapAnalysis;
 
   return (
     <div className="space-y-6">
@@ -332,44 +268,6 @@ Provide detailed analysis with:
           ))}
         </CardContent>
       </Card>
-
-      {/* Patient-Specific Gaps */}
-      {patientSpecificGaps.length > 0 && (
-        <Card className="border-2 border-yellow-200">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-yellow-600" />
-                Patient-Specific Documentation Gaps
-              </div>
-              <Badge variant="outline">{patientSpecificGaps.length} patients</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {patientSpecificGaps.slice(0, 8).map((patient, idx) => (
-              <div key={idx} className="border rounded-lg p-3">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-gray-900">{patient.patient_name}</p>
-                    <p className="text-sm text-gray-600">{patient.diagnosis}</p>
-                  </div>
-                  <Badge className={getSeverityColor(patient.severity)}>
-                    {patient.gaps.length} gaps
-                  </Badge>
-                </div>
-                <ul className="space-y-1">
-                  {patient.gaps.map((gap, gIdx) => (
-                    <li key={gIdx} className="text-sm text-gray-700 flex items-start gap-2">
-                      <TrendingDown className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                      <span>{gap}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
 
       {/* AI-Driven Recommendations */}
       {aiRecommendations && (
