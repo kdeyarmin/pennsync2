@@ -53,11 +53,6 @@ export default function Layout({ children, currentPageName }) {
 
   const navCategories = [
     {
-      items: [
-        { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" }
-      ]
-    },
-    {
       category: "Overview",
       items: [
         { name: "Dashboard", icon: Home, page: "Dashboard" },
@@ -75,6 +70,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Documentation",
       items: [
+        { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
         { name: "Documents", icon: FileText, page: "DocumentGenerator" },
         { name: "Patient Education", icon: FileText, page: "PatientEducationHub" }
       ]
@@ -82,13 +78,8 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Quality & Compliance",
       items: [
-        { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" }
-      ]
-    },
-    {
-      category: "Other",
-      items: [
-        { name: "Features", icon: FileText, page: "Features" }
+        { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
+        { name: "Features", icon: Sparkles, page: "Features" }
       ]
     }
   ];
