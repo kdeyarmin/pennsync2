@@ -144,6 +144,10 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null
       });
 
+      if (response?.error) {
+        throw new Error(response.error);
+      }
+
       if (!response || !response.pdf) {
         throw new Error('Invalid response from handout generator');
       }
@@ -182,7 +186,7 @@ export default function PatientEducationHub() {
     setSuccessMessage("");
     
     try {
-      await base44.functions.invoke('generatePatientHandout', {
+      const response = await base44.functions.invoke('generatePatientHandout', {
         condition: selectedTopic.id,
         patientName: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null,
         patientEmail,
@@ -190,6 +194,10 @@ export default function PatientEducationHub() {
         selectedSections: Object.keys(selectedSections).length > 0 ? selectedSections : null,
         customNotes: customNotes || null
       });
+
+      if (response?.error) {
+        throw new Error(response.error);
+      }
 
       setSuccessMessage(`Handout emailed to ${patientEmail}!`);
       setTimeout(() => setSuccessMessage(""), 4000);
