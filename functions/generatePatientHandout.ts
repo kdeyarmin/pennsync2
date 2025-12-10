@@ -1602,9 +1602,20 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log('Request body:', body);
     
-    const { condition, patientName, patientEmail, action, selectedSections, customNotes } = body;
+    const { condition, patientName, patientEmail, action, selectedSections, customNotes, styleOptions } = body;
     diagnostics.condition = condition;
     diagnostics.action = action;
+    
+    // Parse style options with defaults
+    const style = {
+      colorScheme: styleOptions?.colorScheme || 'penn_health',
+      fontFamily: styleOptions?.fontFamily || 'helvetica',
+      layout: styleOptions?.layout || 'standard',
+      customHeader: styleOptions?.customHeader || '',
+      customFooter: styleOptions?.customFooter || '',
+      agencyName: styleOptions?.agencyName || 'Penn Home Health Inc.',
+      agencyPhone: styleOptions?.agencyPhone || '724-465-0440'
+    };
     
     if (!condition) {
       return Response.json({ error: 'Condition is required' }, { status: 400 });
@@ -1638,29 +1649,78 @@ Deno.serve(async (req) => {
     
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 25;
+    
+    // Layout-specific settings
+    const layoutConfig = {
+      standard: { margin: 25, lineSpacing: 6, titleSize: 24, headingSize: 15, bodySize: 11 },
+      compact: { margin: 15, lineSpacing: 5, titleSize: 20, headingSize: 13, bodySize: 10 },
+      large_print: { margin: 20, lineSpacing: 8, titleSize: 28, headingSize: 18, bodySize: 14 },
+      two_column: { margin: 20, lineSpacing: 6, titleSize: 22, headingSize: 14, bodySize: 11 }
+    };
+    
+    const config = layoutConfig[style.layout] || layoutConfig.standard;
+    const margin = config.margin;
     const contentWidth = pageWidth - 2 * margin;
     let yPos = margin;
     
-    // Professional color palette
+    // Color scheme mapping
+    const colorSchemes = {
+      penn_health: {
+        primary: [41, 98, 255],
+        primaryLight: [232, 239, 255],
+        accent: [0, 150, 136],
+        text: [33, 33, 33],
+        textLight: [100, 100, 100]
+      },
+      professional_blue: {
+        primary: [21, 101, 192],
+        primaryLight: [227, 242, 253],
+        accent: [2, 119, 189],
+        text: [38, 50, 56],
+        textLight: [96, 125, 139]
+      },
+      warm_care: {
+        primary: [216, 67, 21],
+        primaryLight: [255, 243, 224],
+        accent: [245, 124, 0],
+        text: [62, 39, 35],
+        textLight: [121, 85, 72]
+      },
+      serene_green: {
+        primary: [46, 125, 50],
+        primaryLight: [232, 245, 233],
+        accent: [56, 142, 60],
+        text: [27, 94, 32],
+        textLight: [76, 175, 80]
+      },
+      elegant_purple: {
+        primary: [106, 27, 154],
+        primaryLight: [243, 229, 245],
+        accent: [123, 31, 162],
+        text: [74, 20, 140],
+        textLight: [142, 36, 170]
+      }
+    };
+    
     const COLORS = {
-      primary: [41, 98, 255],      // Professional blue
-      primaryLight: [232, 239, 255], // Light blue background
-      accent: [0, 150, 136],        // Teal accent
-      text: [33, 33, 33],           // Dark gray text
-      textLight: [100, 100, 100],   // Medium gray
-      emergency: [220, 38, 38],     // Red
-      important: [245, 158, 11],    // Amber
-      success: [16, 185, 129],      // Green
-      divider: [229, 229, 229]      // Light gray
+      ...colorSchemes[style.colorScheme],
+      emergency: [220, 38, 38],
+      important: [245, 158, 11],
+      success: [16, 185, 129],
+      divider: [229, 229, 229]
     };
     
     // Accessibility: Use consistent, readable font sizes (minimum 12pt for body text)
-    const FONT_SIZE_TITLE = 24;
-    const FONT_SIZE_HEADING = 15;
-    const FONT_SIZE_SUBHEADING = 13;
-    const FONT_SIZE_BODY = 11;
-    const FONT_SIZE_SMALL = 9;
+    const FONT_SIZE_TITLE = config.titleSize;
+    const FONT_SIZE_HEADING = config.headingSize;
+    const FONT_SIZE_SUBHEADING = config.headingSize - 2;
+    const FONT_SIZE_BODY = config.bodySize;
+    const FONT_SIZE_SMALL = config.bodySize - 2;
+    const LINE_SPACING = config.lineSpacing;
+    
+    // Set font family based on style options
+    const fontFamily = style.fontFamily === 'times' ? 'times' : 
+                       style.fontFamily === 'courier' ? 'courier' : 'helvetica';
 
     // Header with logo and branding
     try {
@@ -1681,10 +1741,17 @@ Deno.serve(async (req) => {
       
       // Header text next to logo
       doc.setFontSize(FONT_SIZE_SMALL);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(fontFamily, 'normal');
       doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
-      doc.text('724-465-0440', pageWidth - margin, yPos + 8, { align: 'right' });
+      doc.text(style.agencyPhone, pageWidth - margin, yPos + 8, { align: 'right' });
       doc.text('www.pennhomehealth.com', pageWidth - margin, yPos + 14, { align: 'right' });
+
+      // Custom header text if provided
+      if (style.customHeader) {
+        doc.setFontSize(FONT_SIZE_SMALL - 1);
+        doc.setFont(fontFamily, 'italic');
+        doc.text(style.customHeader, pageWidth / 2, yPos + 22, { align: 'center' });
+      }
       
       yPos += 35;
     } catch (error) {
@@ -1695,7 +1762,7 @@ Deno.serve(async (req) => {
     // Title with professional styling
     yPos += 10;
     doc.setFontSize(FONT_SIZE_TITLE);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(fontFamily, 'bold');
     doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
     doc.text(template.title, pageWidth / 2, yPos, { align: 'center' });
     
@@ -1715,10 +1782,10 @@ Deno.serve(async (req) => {
       doc.rect(margin, yPos, contentWidth, 18, 'FD');
       
       doc.setFontSize(FONT_SIZE_BODY);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(fontFamily, 'bold');
       doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
       doc.text('Prepared for:', margin + 5, yPos + 7);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(fontFamily, 'normal');
       doc.text(patientName, margin + 5, yPos + 13);
       
       doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
@@ -1766,7 +1833,7 @@ Deno.serve(async (req) => {
       }
 
       // Section heading with professional styling
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(fontFamily, 'bold');
       doc.setFontSize(FONT_SIZE_HEADING);
       
       // Color-coded section indicator
@@ -1795,7 +1862,7 @@ Deno.serve(async (req) => {
       doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
 
       // Section content - Accessibility: Readable font size, proper line spacing
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(fontFamily, 'normal');
       doc.setFontSize(FONT_SIZE_BODY);
       
       if (section.content && typeof section.content === 'string') {
@@ -1807,17 +1874,17 @@ Deno.serve(async (req) => {
           // Sanitize content to prevent encoding issues
           const sanitizedContent = section.content.replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
           const lines = doc.splitTextToSize(sanitizedContent, contentWidth - 20);
-          const boxHeight = lines.length * 6 + 12;
+          const boxHeight = lines.length * LINE_SPACING + 12;
           doc.rect(margin, yPos - 3, contentWidth, boxHeight, 'FD');
-          
-          doc.setFont('helvetica', 'normal');
+
+          doc.setFont(fontFamily, 'normal');
           lines.forEach(line => {
             if (yPos > pageHeight - 30) {
               doc.addPage();
               yPos = margin + 20;
             }
             doc.text(line, margin + 10, yPos);
-            yPos += 6;
+            yPos += LINE_SPACING;
           });
           yPos += 9;
         } else {
@@ -1830,7 +1897,7 @@ Deno.serve(async (req) => {
               yPos = margin + 20;
             }
             doc.text(line, margin + 3, yPos);
-            yPos += 6;
+            yPos += LINE_SPACING;
           });
           yPos += 5;
         }
@@ -1846,14 +1913,14 @@ Deno.serve(async (req) => {
           }
           
           // Subsection heading with professional styling
-          doc.setFont('helvetica', 'bold');
+          doc.setFont(fontFamily, 'bold');
           doc.setFontSize(FONT_SIZE_SUBHEADING);
-          doc.setTextColor(0, 150, 136);
-          
+          doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
+
           doc.text(`  ${subsection.subheading || 'Subsection'}`, margin + 5, yPos);
           yPos += 8;
           doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-          doc.setFont('helvetica', 'normal');
+          doc.setFont(fontFamily, 'normal');
           doc.setFontSize(FONT_SIZE_BODY);
           
           // Subsection bullets with error handling
@@ -1869,7 +1936,7 @@ Deno.serve(async (req) => {
               const bulletLines = doc.splitTextToSize('  • ' + sanitizedBullet, contentWidth - 25);
               bulletLines.forEach((line) => {
                 doc.text(line, margin + 18, yPos);
-                yPos += 6;
+                yPos += LINE_SPACING;
               });
               } catch (bulletError) {
                 console.error('Error rendering subsection bullet:', bulletError);
@@ -1906,7 +1973,7 @@ Deno.serve(async (req) => {
           const bulletLines = doc.splitTextToSize('• ' + sanitizedBullet, contentWidth - 15);
           bulletLines.forEach((line) => {
             doc.text(line, margin + 5, yPos);
-            yPos += 6;
+            yPos += LINE_SPACING;
           });
           } catch (bulletError) {
             console.error('Error rendering bullet:', bulletError);
@@ -1951,16 +2018,16 @@ Deno.serve(async (req) => {
       // Sanitize custom notes
       const sanitizedNotes = customNotes.replace(/[^\x20-\x7E\xA0-\xFF\n\r]/g, '');
       const notesLines = doc.splitTextToSize(sanitizedNotes, contentWidth - 20);
-      const notesHeight = notesLines.length * 6 + 20;
+      const notesHeight = notesLines.length * LINE_SPACING + 20;
       doc.rect(margin, yPos - 3, contentWidth, notesHeight, 'FD');
-      
-      doc.setFont('helvetica', 'bold');
+
+      doc.setFont(fontFamily, 'bold');
       doc.setFontSize(FONT_SIZE_SUBHEADING);
       doc.setTextColor(COLORS.important[0], COLORS.important[1], COLORS.important[2]);
       doc.text('Special Instructions from Your Nurse', margin + 8, yPos + 5);
-      
+
       yPos += 12;
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(fontFamily, 'normal');
       doc.setFontSize(FONT_SIZE_BODY);
       doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
       notesLines.forEach(line => {
@@ -1969,7 +2036,7 @@ Deno.serve(async (req) => {
           yPos = margin + 20;
         }
         doc.text(line, margin + 8, yPos);
-        yPos += 6;
+        yPos += LINE_SPACING;
       });
       yPos += 12;
       } catch (notesError) {
@@ -1992,17 +2059,28 @@ Deno.serve(async (req) => {
     
     // Footer content
     doc.setFontSize(FONT_SIZE_SMALL);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(fontFamily, 'bold');
     doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-    doc.text('Penn Home Health Inc.', pageWidth / 2, footerY + 2, { align: 'center' });
-    
-    doc.setFont('helvetica', 'normal');
+    doc.text(style.agencyName, pageWidth / 2, footerY + 2, { align: 'center' });
+
+    doc.setFont(fontFamily, 'normal');
     doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
-    doc.text('Phone: 724-465-0440  |  For questions, contact your nurse', pageWidth / 2, footerY + 7, { align: 'center' });
-    
-    doc.setFontSize(FONT_SIZE_SMALL - 1);
-    doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
-    doc.text('This information is for educational purposes only. Always follow your healthcare provider\'s advice.', pageWidth / 2, footerY + 12, { align: 'center' });
+    doc.text(`Phone: ${style.agencyPhone}  |  For questions, contact your nurse`, pageWidth / 2, footerY + 7, { align: 'center' });
+
+    // Custom footer if provided
+    if (style.customFooter) {
+      doc.setFontSize(FONT_SIZE_SMALL - 1);
+      const footerLines = doc.splitTextToSize(style.customFooter, contentWidth);
+      let footerYPos = footerY + 11;
+      footerLines.forEach(line => {
+        doc.text(line, pageWidth / 2, footerYPos, { align: 'center' });
+        footerYPos += 4;
+      });
+    } else {
+      doc.setFontSize(FONT_SIZE_SMALL - 1);
+      doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
+      doc.text('This information is for educational purposes only. Always follow your healthcare provider\'s advice.', pageWidth / 2, footerY + 12, { align: 'center' });
+    }
 
     // Generate PDF with error handling
     diagnostics.stage = 'generating_pdf_output';

@@ -30,6 +30,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import HandoutCustomizer from "../components/education/HandoutCustomizer";
 import HandoutPreview from "../components/education/HandoutPreview";
+import HandoutStyleCustomizer from "../components/education/HandoutStyleCustomizer";
 
 const educationTopics = [
   {
@@ -186,6 +187,15 @@ export default function PatientEducationHub() {
   const [customNotes, setCustomNotes] = useState("");
   const [showCustomization, setShowCustomization] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [styleOptions, setStyleOptions] = useState({
+    colorScheme: 'penn_health',
+    fontFamily: 'helvetica',
+    layout: 'standard',
+    customHeader: '',
+    customFooter: '',
+    agencyName: '',
+    agencyPhone: ''
+  });
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
@@ -239,7 +249,8 @@ export default function PatientEducationHub() {
         patientName: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null,
         action: 'download',
         selectedSections: Object.keys(selectedSections).length > 0 ? selectedSections : null,
-        customNotes: customNotes || null
+        customNotes: customNotes || null,
+        styleOptions: styleOptions
       };
       
       console.log('Sending payload:', payload);
@@ -520,12 +531,17 @@ export default function PatientEducationHub() {
                   {/* Customization Panel */}
                   {showCustomization && (
                     <div className="space-y-4 pt-2">
+                      <HandoutStyleCustomizer
+                        styleOptions={styleOptions}
+                        onStyleChange={setStyleOptions}
+                      />
+
                       <HandoutCustomizer
                         topicId={selectedTopic.id}
                         selectedSections={selectedSections}
                         onSelectionChange={setSelectedSections}
                       />
-                      
+
                       <div>
                         <Label>Custom Notes / Instructions</Label>
                         <Textarea
