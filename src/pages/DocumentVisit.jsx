@@ -80,7 +80,6 @@ import {
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import CameraScanner from "../components/mobile/CameraScanner";
-import LocationTracker from "../components/mobile/LocationTracker";
 import offlineStorage from "../components/mobile/OfflineStorage";
 
 export default function DocumentVisit() {
@@ -106,7 +105,6 @@ export default function DocumentVisit() {
   const [hasAccess, setHasAccess] = useState(null);
   const [aiToolsUsed, setAiToolsUsed] = useState([]);
   const documentationStartTime = useRef(new Date());
-  const [visitLocation, setVisitLocation] = useState(null);
   const [scannedDocuments, setScannedDocuments] = useState([]);
   const [isOffline, setIsOffline] = useState(!navigator.onLine); 
 
@@ -933,11 +931,6 @@ Generate the complete clinical narrative based on the audio and context:`;
         status: 'completed'
       };
 
-      // Add location if captured
-      if (visitLocation) {
-        visitData.visit_location = visitLocation;
-      }
-
       // Add scanned documents if any
       if (scannedDocuments.length > 0) {
         visitData.scanned_documents = scannedDocuments;
@@ -1350,22 +1343,13 @@ Generate the complete clinical narrative based on the audio and context:`;
               />
 
               {/* Mobile Features */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <CameraScanner
-                  documentType="visit_document"
-                  onScanComplete={(doc) => {
-                    setScannedDocuments(prev => [...prev, doc]);
-                    alert("Document scanned and attached to visit!");
-                  }}
-                />
-                
-                <LocationTracker
-                  visitId={visitId}
-                  onLocationCaptured={(loc) => {
-                    setVisitLocation(loc);
-                  }}
-                />
-              </div>
+              <CameraScanner
+                documentType="visit_document"
+                onScanComplete={(doc) => {
+                  setScannedDocuments(prev => [...prev, doc]);
+                  alert("Document scanned and attached to visit!");
+                }}
+              />
 
               {/* ICD-10 Code Suggester */}
               <ICD10CodeSuggester
