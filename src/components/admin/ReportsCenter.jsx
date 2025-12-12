@@ -51,8 +51,24 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
           includeCharts: false
         });
 
+        console.log('PDF Response:', response);
+
+        // Check if response is an error
+        if (response?.error || response?.data?.error) {
+          const error = response?.error || response?.data?.error;
+          console.error('Backend error:', error);
+          throw new Error(error);
+        }
+
         // Handle arraybuffer response
         const data = response.data || response;
+        
+        // Verify we have binary data
+        if (!data || !(data instanceof ArrayBuffer || data instanceof Uint8Array)) {
+          console.error('Invalid response data:', data);
+          throw new Error('Invalid PDF data received from server');
+        }
+
         const blob = new Blob([data], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

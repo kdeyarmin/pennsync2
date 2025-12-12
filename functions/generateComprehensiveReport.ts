@@ -281,6 +281,11 @@ Deno.serve(async (req) => {
       }
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Report generation error:', error);
+    return Response.json({ 
+      error: error.message,
+      stack: error.stack,
+      details: 'Failed to generate comprehensive report'
+    }, { status: 500 });
   }
 });
