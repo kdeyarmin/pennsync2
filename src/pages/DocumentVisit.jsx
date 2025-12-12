@@ -79,6 +79,9 @@ import {
 
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
+import CameraScanner from "../components/mobile/CameraScanner";
+import LocationTracker from "../components/mobile/LocationTracker";
+import offlineStorage from "../components/mobile/OfflineStorage";
 
 export default function DocumentVisit() {
   const navigate = useNavigate();
@@ -102,7 +105,10 @@ export default function DocumentVisit() {
   const autoSaveTimerRef = useRef(null);
   const [hasAccess, setHasAccess] = useState(null);
   const [aiToolsUsed, setAiToolsUsed] = useState([]);
-  const documentationStartTime = useRef(new Date()); 
+  const documentationStartTime = useRef(new Date());
+  const [visitLocation, setVisitLocation] = useState(null);
+  const [scannedDocuments, setScannedDocuments] = useState([]);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine); 
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -125,6 +131,20 @@ export default function DocumentVisit() {
   }, [visitId]);
 
   // Cleanup sensitive data on unmount
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     return () => {
       clearSensitiveData({
@@ -905,16 +925,36 @@ Generate the complete clinical narrative based on the audio and context:`;
       
       const sanitizedNarrative = sanitizeInput(narrativeText);
       
+      const visitData = {
+        nurse_notes: sanitizedNarrative,
+        vital_signs: vitalSigns,
+        start_time: startTime,
+        end_time: endTime || now,
+        status: 'completed'
+      };
+
+      // Add location if captured
+      if (visitLocation) {
+        visitData.visit_location = visitLocation;
+      }
+
+      // Add scanned documents if any
+      if (scannedDocuments.length > 0) {
+        visitData.scanned_documents = scannedDocuments;
+      }
+
+      // Save offline if no connection
+      if (isOffline) {
+        offlineStorage.saveUpdate(visitId, visitData);
+        alert("Visit saved offline. Will sync when connection is restored.");
+        navigate(createPageUrl("Dashboard"));
+        return;
+      }
+      
       await secureUpdate(
         base44.entities.Visit,
         visitId,
-        {
-          nurse_notes: sanitizedNarrative,
-          vital_signs: vitalSigns,
-          start_time: startTime,
-          end_time: endTime || now,
-          status: 'completed'
-        },
+        visitData,
         'Visit'
       );
 
@@ -1010,7 +1050,7 @@ Generate the complete clinical narrative based on the audio and context:`;
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
       <VoiceCommandListener
         onCommand={handleVoiceCommand}
         commands={getCommandsForContext('documentation')}
@@ -1028,20 +1068,20 @@ Generate the complete clinical narrative based on the audio and context:`;
         </Button>
 
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-                <User className="w-7 h-7 text-white" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">
                   {patient?.first_name} {patient?.last_name}
                 </h1>
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mt-1">
-                  <span>MRN: {patient?.medical_record_number || 'N/A'}</span>
-                  <span>•</span>
-                  <span>{patient?.primary_diagnosis}</span>
-                  <span>•</span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 mt-1">
+                  <span className="truncate">MRN: {patient?.medical_record_number || 'N/A'}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="truncate">{patient?.primary_diagnosis}</span>
+                  <span className="hidden sm:inline">•</span>
                   <span className="capitalize">{patient?.care_type?.replace('_', ' ')}</span>
                 </div>
               </div>
@@ -1060,15 +1100,15 @@ Generate the complete clinical narrative based on the audio and context:`;
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Tabs defaultValue="document" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="document">Documentation</TabsTrigger>
-              <TabsTrigger value="workflow">AI Workflow</TabsTrigger>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <Tabs defaultValue="document" className="space-y-4 sm:space-y-6">
+            <TabsList className="grid w-full grid-cols-2 h-auto">
+              <TabsTrigger value="document" className="text-sm sm:text-base py-2">Documentation</TabsTrigger>
+              <TabsTrigger value="workflow" className="text-sm sm:text-base py-2">AI Workflow</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="document" className="space-y-6">
+            <TabsContent value="document" className="space-y-4 sm:space-y-6">
               <VoiceDataEntry
                 onVitalsUpdate={handleVoiceVitalsUpdate}
                 onNarrativeUpdate={handleVoiceNarrativeUpdate}
@@ -1309,6 +1349,24 @@ Generate the complete clinical narrative based on the audio and context:`;
                 patientId={visit?.patient_id}
               />
 
+              {/* Mobile Features */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <CameraScanner
+                  documentType="visit_document"
+                  onScanComplete={(doc) => {
+                    setScannedDocuments(prev => [...prev, doc]);
+                    alert("Document scanned and attached to visit!");
+                  }}
+                />
+                
+                <LocationTracker
+                  visitId={visitId}
+                  onLocationCaptured={(loc) => {
+                    setVisitLocation(loc);
+                  }}
+                />
+              </div>
+
               {/* ICD-10 Code Suggester */}
               <ICD10CodeSuggester
                 narrativeText={narrativeText}
@@ -1320,45 +1378,46 @@ Generate the complete clinical narrative based on the audio and context:`;
                 }}
               />
 
-              <div className="flex justify-between gap-3 pb-8">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-3 pb-8">
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     onClick={handleExportPDF}
-                    className="gap-2"
+                    className="gap-2 flex-1 sm:flex-initial text-sm"
                   >
                     <Download className="w-4 h-4" />
-                    Export
+                    <span className="hidden sm:inline">Export</span>
                   </Button>
                   <Button
                     variant="outline"
                     onClick={handleEmailSummary}
-                    className="gap-2"
+                    className="gap-2 flex-1 sm:flex-initial text-sm"
                   >
                     <Mail className="w-4 h-4" />
-                    Email Summary
+                    <span className="hidden sm:inline">Email</span>
                   </Button>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <Button
                     variant="outline"
                     onClick={() => navigate(createPageUrl("Dashboard"))}
+                    className="flex-1 sm:flex-initial text-sm"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleSave}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial text-sm"
                     disabled={!narrativeText || isProcessing}
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Complete Visit
+                    Complete
                   </Button>
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="workflow" className="space-y-6">
+            <TabsContent value="workflow" className="space-y-4 sm:space-y-6">
               <Alert className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
                 <Sparkles className="w-5 h-5 text-blue-600" />
                 <AlertDescription className="text-blue-900">
@@ -1556,16 +1615,17 @@ Generate the complete clinical narrative based on the audio and context:`;
                 </CardContent>
               </Card>
 
-              <div className="flex justify-end gap-3 pb-8">
+              <div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 pb-8">
                 <Button
                   variant="outline"
                   onClick={() => navigate(createPageUrl("Dashboard"))}
+                  className="w-full sm:w-auto text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 w-full sm:w-auto text-sm"
                   disabled={!narrativeText || isProcessing}
                 >
                   <Save className="w-4 h-4 mr-2" />
@@ -1576,7 +1636,7 @@ Generate the complete clinical narrative based on the audio and context:`;
           </Tabs>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Enhanced AI Clinical Decision Support */}
           {patient && (
            <EnhancedClinicalDecisionSupport

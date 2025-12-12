@@ -131,7 +131,7 @@ export default function Dashboard() {
   const fullName = currentUser?.full_name || 'there';
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
       {/* Welcome Banner */}
       <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border-none shadow-xl overflow-hidden">
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
