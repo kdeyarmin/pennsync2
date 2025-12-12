@@ -21,10 +21,9 @@ Deno.serve(async (req) => {
     const checkNewPage = (requiredSpace = 20) => {
       if (yPos + requiredSpace > pageHeight - margin) {
         doc.addPage();
-        yPos = margin;
-        return true;
+        return margin;
       }
-      return false;
+      return yPos;
     };
 
     // Header
@@ -57,14 +56,14 @@ Deno.serve(async (req) => {
       contentWidth
     );
     introLines.forEach(line => {
-      checkNewPage();
+      yPos = checkNewPage();
       doc.text(line, margin, yPos);
       yPos += 6;
     });
     yPos += 5;
 
     // Step 1
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(240, 248, 255);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -85,7 +84,7 @@ Deno.serve(async (req) => {
     ];
 
     step1Items.forEach(item => {
-      checkNewPage(15);
+      yPos = checkNewPage(15);
       doc.setFont('helvetica', 'bold');
       doc.text(`• ${item.label}:`, margin + 3, yPos);
       yPos += 6;
@@ -100,7 +99,7 @@ Deno.serve(async (req) => {
     yPos += 5;
 
     // Step 2
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(240, 253, 244);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -123,7 +122,7 @@ Deno.serve(async (req) => {
     ];
 
     step2Items.forEach(item => {
-      checkNewPage(12);
+      yPos = checkNewPage(12);
       doc.setFont('helvetica', 'bold');
       doc.text(`• ${item.label}:`, margin + 3, yPos);
       yPos += 6;
@@ -138,7 +137,7 @@ Deno.serve(async (req) => {
     yPos += 5;
 
     // Step 3
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(250, 245, 255);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -156,7 +155,7 @@ Deno.serve(async (req) => {
       contentWidth
     );
     step3Lines.forEach(line => {
-      checkNewPage();
+      yPos = checkNewPage();
       doc.text(line, margin + 3, yPos);
       yPos += 6;
     });
@@ -191,7 +190,7 @@ Deno.serve(async (req) => {
     yPos += 5;
 
     // AI Compliance Checks
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(254, 243, 199);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -208,7 +207,7 @@ Deno.serve(async (req) => {
       contentWidth
     );
     aiLines.forEach(line => {
-      checkNewPage();
+      yPos = checkNewPage();
       doc.text(line, margin + 3, yPos);
       yPos += 6;
     });
@@ -237,7 +236,7 @@ Deno.serve(async (req) => {
     ];
 
     aiChecks.forEach(category => {
-      checkNewPage(30);
+      yPos = checkNewPage(30);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(30, 58, 138);
       doc.text(category.title, margin + 3, yPos);
@@ -246,7 +245,7 @@ Deno.serve(async (req) => {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(60, 60, 60);
       category.items.forEach(item => {
-        checkNewPage(10);
+        yPos = checkNewPage(10);
         const itemLines = doc.splitTextToSize(`• ${item}`, contentWidth - 10);
         itemLines.forEach(line => {
           doc.text(line, margin + 6, yPos);
@@ -268,14 +267,14 @@ Deno.serve(async (req) => {
       '4. Suggestions adapt as you make changes to your note'
     ];
     suggestLines.forEach(line => {
-      checkNewPage();
+      yPos = checkNewPage();
       doc.text(line, margin + 6, yPos);
       yPos += 5;
     });
     yPos += 5;
 
     // Step 4
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(243, 232, 255);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -292,7 +291,7 @@ Deno.serve(async (req) => {
       contentWidth
     );
     enhanceLines.forEach(line => {
-      checkNewPage();
+      yPos = checkNewPage();
       doc.text(line, margin + 3, yPos);
       yPos += 6;
     });
@@ -314,7 +313,7 @@ Deno.serve(async (req) => {
     ];
 
     enhanceItems.forEach(item => {
-      checkNewPage(10);
+      yPos = checkNewPage(10);
       const itemLines = doc.splitTextToSize(`• ${item}`, contentWidth - 10);
       itemLines.forEach(line => {
         doc.text(line, margin + 6, yPos);
@@ -325,7 +324,7 @@ Deno.serve(async (req) => {
     yPos += 5;
 
     // Step 5
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(236, 253, 245);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -348,7 +347,7 @@ Deno.serve(async (req) => {
     ];
 
     finalizeItems.forEach(item => {
-      checkNewPage(15);
+      yPos = checkNewPage(15);
       doc.setFont('helvetica', 'bold');
       doc.text(`• ${item.label}:`, margin + 3, yPos);
       yPos += 6;
@@ -363,7 +362,7 @@ Deno.serve(async (req) => {
     yPos += 5;
 
     // Best Practices
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(239, 246, 255);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -388,7 +387,7 @@ Deno.serve(async (req) => {
     ];
 
     tips.forEach(tip => {
-      checkNewPage(12);
+      yPos = checkNewPage(12);
       const tipLines = doc.splitTextToSize(`• ${tip}`, contentWidth - 6);
       tipLines.forEach(line => {
         doc.text(line, margin + 3, yPos);
@@ -399,7 +398,7 @@ Deno.serve(async (req) => {
     yPos += 5;
 
     // Troubleshooting
-    checkNewPage(40);
+    yPos = checkNewPage(40);
     doc.setFillColor(254, 242, 242);
     doc.rect(margin, yPos - 3, contentWidth, 12, 'F');
     doc.setFontSize(14);
@@ -420,7 +419,7 @@ Deno.serve(async (req) => {
     ];
 
     troubleshoot.forEach(item => {
-      checkNewPage(20);
+      yPos = checkNewPage(20);
       doc.setFont('helvetica', 'bold');
       doc.text(`Issue: ${item.issue}`, margin + 3, yPos);
       yPos += 6;
