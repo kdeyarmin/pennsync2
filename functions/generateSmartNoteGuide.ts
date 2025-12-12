@@ -443,13 +443,15 @@ Deno.serve(async (req) => {
 
     // Generate PDF
     const pdfBytes = doc.output('arraybuffer');
+    
+    // Convert to base64 more safely
     const uint8Array = new Uint8Array(pdfBytes);
-    const chunkSize = 8192;
     let binary = '';
+    const chunkSize = 0x8000; // 32KB chunks
     
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
       const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-      binary += String.fromCharCode.apply(null, chunk);
+      binary += String.fromCharCode(...chunk);
     }
     
     const base64Pdf = btoa(binary);
