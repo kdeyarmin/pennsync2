@@ -45,7 +45,7 @@ Penn Sync System
 
     return Response.json({ 
       success: true, 
-      message: 'Notification sent to kdeyarmin@pennhospice.com' 
+      message: `Notification sent to ${admins.length} admin(s)` 
     });
 
   } catch (error) {
