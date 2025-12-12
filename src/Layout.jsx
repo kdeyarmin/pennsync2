@@ -99,9 +99,23 @@ export default function Layout({ children, currentPageName }) {
     { name: "Import Patients", icon: Users, page: "ImportPatients" },
     { name: "Nurse Performance", icon: BarChart3, page: "NursePerformanceDashboard" },
     { name: "Agency Analytics", icon: Brain, page: "AgencyAnalytics" },
+    { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
     ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Log logout before actually logging out
+    try {
+      await base44.entities.UserActivity.create({
+        user_email: currentUser?.email,
+        user_name: currentUser?.full_name,
+        action: 'logout',
+        details: { logout_time: new Date().toISOString() },
+        page: 'logout'
+      });
+    } catch (error) {
+      console.error('Failed to log logout:', error);
+    }
+    
     base44.auth.logout();
   };
 

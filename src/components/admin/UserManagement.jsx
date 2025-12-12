@@ -45,6 +45,7 @@ import {
   Clock
 } from "lucide-react";
 import { format } from "date-fns";
+import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 
 export default function UserManagement({ users, currentUser }) {
   const queryClient = useQueryClient();
@@ -65,8 +66,17 @@ export default function UserManagement({ users, currentUser }) {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      
+      // Log activity
+      await logActivity('user_updated', {
+        entity_type: 'User',
+        entity_id: variables.userId,
+        updated_fields: Object.keys(variables.data),
+        page: 'UserManagement'
+      });
+      
       setShowEditDialog(false);
       setEditingUser(null);
       alert('User updated successfully');
@@ -83,7 +93,15 @@ export default function UserManagement({ users, currentUser }) {
       const response = await createUserWithTempPassword(data);
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Log activity
+      await logActivity('user_created', {
+        entity_type: 'User',
+        user_email: inviteData.email,
+        user_role: inviteData.role,
+        page: 'UserManagement'
+      });
+      
       alert(`User created successfully! Welcome email sent to ${inviteData.email}\n\nTemporary Password: ${data.temp_password}\n\n(Also sent via email with user manual attached)`);
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       setShowInviteDialog(false);
@@ -130,15 +148,29 @@ export default function UserManagement({ users, currentUser }) {
     updateUserMutation.mutate({ userId: id, data: userData });
   };
 
-  const handleApproveUser = (userId) => {
+  const handleApproveUser = async (userId) => {
     if (confirm('Approve this user to access the system?')) {
       updateUserMutation.mutate({ userId, data: { is_approved: true } });
+      
+      // Log approval
+      await logActivity('user_approved', {
+        entity_type: 'User',
+        entity_id: userId,
+        page: 'UserManagement'
+      });
     }
   };
 
-  const handleRevokeAccess = (userId) => {
+  const handleRevokeAccess = async (userId) => {
     if (confirm('Revoke access for this user? They will no longer be able to use the system.')) {
       updateUserMutation.mutate({ userId, data: { is_approved: false } });
+      
+      // Log revocation
+      await logActivity('user_revoked', {
+        entity_type: 'User',
+        entity_id: userId,
+        page: 'UserManagement'
+      });
     }
   };
 
