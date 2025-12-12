@@ -26,6 +26,7 @@ import {
   Brain
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
+import { Lightbulb } from "lucide-react";
 
 export default function AIKPIReportGenerator() {
   const [timeframe, setTimeframe] = useState("30");

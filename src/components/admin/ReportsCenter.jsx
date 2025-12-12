@@ -24,8 +24,11 @@ import {
   Target,
   Award,
   AlertTriangle,
-  Loader2
+  Loader2,
+  PieChart,
+  LineChart
 } from "lucide-react";
+import { BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
 
 export default function ReportsCenter({ users, patients, visits, incidents }) {
@@ -34,6 +37,44 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
   const [selectedNurse, setSelectedNurse] = useState("all");
   const [isGenerating, setIsGenerating] = useState(false);
   const [exportFormat, setExportFormat] = useState("pdf");
+  const [reportPreview, setReportPreview] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const generatePreview = () => {
+    const today = new Date();
+    const startDate = format(subDays(today, parseInt(dateRange)), 'yyyy-MM-dd');
+    const endDate = format(today, 'yyyy-MM-dd');
+
+    const filteredVisits = visits.filter(v => 
+      v.visit_date >= startDate && v.visit_date <= endDate
+    );
+    
+    const filteredIncidents = incidents.filter(i =>
+      i.incident_date >= startDate && i.incident_date <= endDate
+    );
+
+    let previewData = null;
+
+    switch (reportType) {
+      case 'outcomes_by_diagnosis':
+        previewData = generateOutcomesByDiagnosisData(filteredVisits, filteredIncidents, patients);
+        break;
+      case 'staff_comparison':
+        previewData = generateStaffComparisonData(filteredVisits, users);
+        break;
+      case 'financial_detailed':
+        previewData = generateDetailedFinancialData(filteredVisits, patients);
+        break;
+      case 'trend_analysis':
+        previewData = generateTrendAnalysisData(visits, incidents, startDate, endDate);
+        break;
+      default:
+        break;
+    }
+
+    setReportPreview(previewData);
+    setShowPreview(true);
+  };
 
   const generateReport = async () => {
     setIsGenerating(true);
@@ -109,6 +150,18 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
             break;
           case 'staff':
             ({ content: reportContent, fileName } = generateStaffPerformanceReport(filteredVisits, users, startDate, endDate));
+            break;
+          case 'outcomes_by_diagnosis':
+            ({ content: reportContent, fileName } = generateOutcomesByDiagnosisCSV(filteredVisits, filteredIncidents, patients, startDate, endDate));
+            break;
+          case 'staff_comparison':
+            ({ content: reportContent, fileName } = generateStaffComparisonCSV(filteredVisits, users, startDate, endDate));
+            break;
+          case 'financial_detailed':
+            ({ content: reportContent, fileName } = generateDetailedFinancialCSV(filteredVisits, patients, startDate, endDate));
+            break;
+          case 'trend_analysis':
+            ({ content: reportContent, fileName } = generateTrendAnalysisCSV(visits, incidents, startDate, endDate));
             break;
           default:
             throw new Error('Unknown report type');
@@ -427,8 +480,225 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       label: 'Staff Performance Report',
       icon: Users,
       description: 'Individual nurse performance, completion rates, quality scores'
+    },
+    {
+      value: 'outcomes_by_diagnosis',
+      label: 'Patient Outcomes by Diagnosis',
+      icon: Target,
+      description: 'Outcome trends, visit patterns, and incident rates by diagnosis'
+    },
+    {
+      value: 'staff_comparison',
+      label: 'Staff Performance Comparison',
+      icon: Users,
+      description: 'Side-by-side comparison of nurse performance metrics with rankings'
+    },
+    {
+      value: 'financial_detailed',
+      label: 'Detailed Financial Summary',
+      icon: DollarSign,
+      description: 'Comprehensive financial analysis with revenue trends and cost breakdowns'
+    },
+    {
+      value: 'trend_analysis',
+      label: 'Trend Analysis',
+      icon: LineChart,
+      description: 'Historical trends for visits, incidents, and compliance over time'
     }
   ];
+
+  // Data generation for new report types
+  const generateOutcomesByDiagnosisData = (visits, incidents, patients) => {
+    const diagnosisData = {};
+    
+    patients.forEach(p => {
+      const diagnosis = p.primary_diagnosis || 'Unknown';
+      if (!diagnosisData[diagnosis]) {
+        diagnosisData[diagnosis] = {
+          diagnosis,
+          patientCount: 0,
+          visitCount: 0,
+          completedVisits: 0,
+          incidents: 0,
+          falls: 0,
+          hospitalizations: 0
+        };
+      }
+      diagnosisData[diagnosis].patientCount++;
+    });
+
+    visits.forEach(v => {
+      const patient = patients.find(p => p.id === v.patient_id);
+      const diagnosis = patient?.primary_diagnosis || 'Unknown';
+      if (diagnosisData[diagnosis]) {
+        diagnosisData[diagnosis].visitCount++;
+        if (v.status === 'completed') {
+          diagnosisData[diagnosis].completedVisits++;
+        }
+      }
+    });
+
+    incidents.forEach(i => {
+      const patient = patients.find(p => p.id === i.patient_id);
+      const diagnosis = patient?.primary_diagnosis || 'Unknown';
+      if (diagnosisData[diagnosis]) {
+        diagnosisData[diagnosis].incidents++;
+        if (i.incident_type === 'fall') diagnosisData[diagnosis].falls++;
+        if (i.incident_type === 'hospitalized') diagnosisData[diagnosis].hospitalizations++;
+      }
+    });
+
+    return Object.values(diagnosisData).sort((a, b) => b.visitCount - a.visitCount);
+  };
+
+  const generateStaffComparisonData = (visits, users) => {
+    return users.filter(u => u.role === 'user').map(nurse => {
+      const nurseVisits = visits.filter(v => v.created_by === nurse.email);
+      const completed = nurseVisits.filter(v => v.status === 'completed');
+      const withCompleteDoc = completed.filter(v => 
+        v.nurse_notes && v.nurse_notes.length > 100 &&
+        v.vital_signs && Object.keys(v.vital_signs).length > 0
+      );
+
+      return {
+        name: nurse.full_name || nurse.email,
+        totalVisits: nurseVisits.length,
+        completed: completed.length,
+        completionRate: nurseVisits.length > 0 ? Math.round((completed.length / nurseVisits.length) * 100) : 0,
+        docQuality: completed.length > 0 ? Math.round((withCompleteDoc.length / completed.length) * 100) : 0,
+        avgVisitsPerDay: Math.round(nurseVisits.length / parseInt(dateRange))
+      };
+    }).sort((a, b) => b.completionRate - a.completionRate);
+  };
+
+  const generateDetailedFinancialData = (visits, patients) => {
+    const visitTypes = {};
+    const revenuePerType = {
+      'skilled_nursing': 180,
+      'admission': 250,
+      'recertification': 200,
+      'discharge': 150,
+      'routine_visit': 160,
+      'prn': 170
+    };
+
+    visits.forEach(v => {
+      const type = v.visit_type || 'unknown';
+      if (!visitTypes[type]) {
+        visitTypes[type] = { type, count: 0, revenue: 0 };
+      }
+      visitTypes[type].count++;
+      visitTypes[type].revenue += revenuePerType[type] || 160;
+    });
+
+    const totalRevenue = Object.values(visitTypes).reduce((sum, vt) => sum + vt.revenue, 0);
+    const timeSavedHours = visits.filter(v => v.status === 'completed').length * 95 / 60;
+    const costSavings = timeSavedHours * 40;
+
+    return {
+      visitTypes: Object.values(visitTypes),
+      totalRevenue,
+      costSavings,
+      roi: costSavings > 0 ? Math.round((costSavings / totalRevenue) * 100) : 0
+    };
+  };
+
+  const generateTrendAnalysisData = (allVisits, allIncidents, startDate, endDate) => {
+    const days = parseInt(dateRange);
+    const trends = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
+      const dayVisits = allVisits.filter(v => v.visit_date === date);
+      const dayIncidents = allIncidents.filter(i => i.incident_date === date);
+
+      trends.push({
+        date: format(new Date(date), 'MM/dd'),
+        visits: dayVisits.length,
+        completed: dayVisits.filter(v => v.status === 'completed').length,
+        incidents: dayIncidents.length
+      });
+    }
+
+    return trends;
+  };
+
+  // CSV generators for new report types
+  const generateOutcomesByDiagnosisCSV = (visits, incidents, patients, startDate, endDate) => {
+    const data = generateOutcomesByDiagnosisData(visits, incidents, patients);
+    
+    let content = `Patient Outcomes by Diagnosis Report\n`;
+    content += `Date Range: ${startDate} to ${endDate}\n\n`;
+    content += `Diagnosis,Patients,Total Visits,Completed,Incidents,Falls,Hospitalizations,Visit Completion Rate\n`;
+    
+    data.forEach(d => {
+      const completionRate = d.visitCount > 0 ? Math.round((d.completedVisits / d.visitCount) * 100) : 0;
+      content += `${d.diagnosis},${d.patientCount},${d.visitCount},${d.completedVisits},${d.incidents},${d.falls},${d.hospitalizations},${completionRate}%\n`;
+    });
+
+    return {
+      content,
+      fileName: `outcomes-by-diagnosis-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    };
+  };
+
+  const generateStaffComparisonCSV = (visits, users, startDate, endDate) => {
+    const data = generateStaffComparisonData(visits, users);
+    
+    let content = `Staff Performance Comparison Report\n`;
+    content += `Date Range: ${startDate} to ${endDate}\n\n`;
+    content += `Nurse,Total Visits,Completed,Completion Rate %,Documentation Quality %,Avg Visits/Day,Rank\n`;
+    
+    data.forEach((d, idx) => {
+      content += `${d.name},${d.totalVisits},${d.completed},${d.completionRate},${d.docQuality},${d.avgVisitsPerDay},${idx + 1}\n`;
+    });
+
+    return {
+      content,
+      fileName: `staff-comparison-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    };
+  };
+
+  const generateDetailedFinancialCSV = (visits, patients, startDate, endDate) => {
+    const data = generateDetailedFinancialData(visits, patients);
+    
+    let content = `Detailed Financial Summary Report\n`;
+    content += `Date Range: ${startDate} to ${endDate}\n\n`;
+    content += `Visit Type,Count,Revenue Per Visit,Total Revenue\n`;
+    
+    data.visitTypes.forEach(vt => {
+      const revenuePerVisit = vt.count > 0 ? Math.round(vt.revenue / vt.count) : 0;
+      content += `${vt.type.replace(/_/g, ' ')},${vt.count},$${revenuePerVisit},$${vt.revenue}\n`;
+    });
+
+    content += `\nTOTAL REVENUE,$${data.totalRevenue}\n`;
+    content += `COST SAVINGS,$${Math.round(data.costSavings)}\n`;
+    content += `ROI,${data.roi}%\n`;
+
+    return {
+      content,
+      fileName: `financial-detailed-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    };
+  };
+
+  const generateTrendAnalysisCSV = (visits, incidents, startDate, endDate) => {
+    const data = generateTrendAnalysisData(visits, incidents, startDate, endDate);
+    
+    let content = `Trend Analysis Report\n`;
+    content += `Date Range: ${startDate} to ${endDate}\n\n`;
+    content += `Date,Total Visits,Completed Visits,Incidents\n`;
+    
+    data.forEach(d => {
+      content += `${d.date},${d.visits},${d.completed},${d.incidents}\n`;
+    });
+
+    return {
+      content,
+      fileName: `trend-analysis-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    };
+  };
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
   const selectedReportType = reportTypes.find(r => r.value === reportType);
 
@@ -515,23 +785,35 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
             </Card>
           )}
 
-          <Button
-            onClick={generateReport}
-            disabled={isGenerating}
-            className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating {exportFormat.toUpperCase()}...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                Generate {exportFormat.toUpperCase()} Report
-              </>
+          <div className="flex gap-3">
+            {['outcomes_by_diagnosis', 'staff_comparison', 'financial_detailed', 'trend_analysis'].includes(reportType) && (
+              <Button
+                onClick={generatePreview}
+                variant="outline"
+                className="flex-1"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Preview with Charts
+              </Button>
             )}
-          </Button>
+            <Button
+              onClick={generateReport}
+              disabled={isGenerating}
+              className="bg-blue-600 hover:bg-blue-700 flex-1"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download {exportFormat.toUpperCase()}
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -554,6 +836,246 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
           </Card>
         ))}
       </div>
+
+      {/* Report Preview with Charts */}
+      {showPreview && reportPreview && (
+        <Card className="border-2 border-blue-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Report Preview - {selectedReportType?.label}</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>
+                Close
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {reportType === 'outcomes_by_diagnosis' && reportPreview && (
+              <>
+                <div>
+                  <h3 className="font-semibold mb-4">Visit Distribution by Diagnosis</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={reportPreview.slice(0, 8)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="diagnosis" angle={-45} textAnchor="end" height={100} />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="visitCount" fill="#3b82f6" name="Total Visits" />
+                      <Bar dataKey="completedVisits" fill="#10b981" name="Completed" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-4">Incident Rates by Diagnosis</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={reportPreview.slice(0, 8)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="diagnosis" angle={-45} textAnchor="end" height={100} />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="falls" fill="#f59e0b" name="Falls" />
+                      <Bar dataKey="hospitalizations" fill="#ef4444" name="Hospitalizations" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  {reportPreview.slice(0, 3).map((d, idx) => (
+                    <Card key={idx} className="bg-gradient-to-br from-blue-50 to-indigo-50">
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold text-sm mb-2">{d.diagnosis}</h4>
+                        <div className="space-y-1 text-xs">
+                          <div className="flex justify-between">
+                            <span>Patients:</span>
+                            <span className="font-bold">{d.patientCount}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Visits:</span>
+                            <span className="font-bold">{d.visitCount}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Incidents:</span>
+                            <span className="font-bold text-red-600">{d.incidents}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {reportType === 'staff_comparison' && reportPreview && (
+              <>
+                <div>
+                  <h3 className="font-semibold mb-4">Staff Performance Comparison</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={reportPreview}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="completionRate" fill="#3b82f6" name="Completion Rate %" />
+                      <Bar dataKey="docQuality" fill="#10b981" name="Doc Quality %" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">Rank</th>
+                        <th className="text-left p-2">Nurse</th>
+                        <th className="text-right p-2">Visits</th>
+                        <th className="text-right p-2">Completion %</th>
+                        <th className="text-right p-2">Quality %</th>
+                        <th className="text-right p-2">Avg/Day</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportPreview.map((d, idx) => (
+                        <tr key={idx} className="border-b hover:bg-gray-50">
+                          <td className="p-2">
+                            <Badge className={idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-gray-400' : idx === 2 ? 'bg-orange-600' : 'bg-blue-500'}>
+                              #{idx + 1}
+                            </Badge>
+                          </td>
+                          <td className="p-2 font-medium">{d.name}</td>
+                          <td className="p-2 text-right">{d.totalVisits}</td>
+                          <td className="p-2 text-right">{d.completionRate}%</td>
+                          <td className="p-2 text-right">{d.docQuality}%</td>
+                          <td className="p-2 text-right">{d.avgVisitsPerDay}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {reportType === 'financial_detailed' && reportPreview && (
+              <>
+                <div>
+                  <h3 className="font-semibold mb-4">Revenue Distribution by Visit Type</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Pie
+                        data={reportPreview.visitTypes}
+                        dataKey="revenue"
+                        nameKey="type"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={(entry) => `${entry.type}: $${entry.revenue}`}
+                      >
+                        {reportPreview.visitTypes.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50">
+                    <CardContent className="p-6">
+                      <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+                      <p className="text-3xl font-bold text-green-600">${reportPreview.totalRevenue.toLocaleString()}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-50">
+                    <CardContent className="p-6">
+                      <p className="text-sm text-gray-600 mb-1">Cost Savings</p>
+                      <p className="text-3xl font-bold text-blue-600">${Math.round(reportPreview.costSavings).toLocaleString()}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-purple-50 to-pink-50">
+                    <CardContent className="p-6">
+                      <p className="text-sm text-gray-600 mb-1">ROI</p>
+                      <p className="text-3xl font-bold text-purple-600">{reportPreview.roi}%</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-4">Revenue by Visit Type</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={reportPreview.visitTypes}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="type" angle={-45} textAnchor="end" height={100} />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="count" fill="#3b82f6" name="Visit Count" />
+                      <Bar dataKey="revenue" fill="#10b981" name="Revenue ($)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
+            )}
+
+            {reportType === 'trend_analysis' && reportPreview && (
+              <>
+                <div>
+                  <h3 className="font-semibold mb-4">Visit Trends Over Time</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsLineChart data={reportPreview}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="visits" stroke="#3b82f6" strokeWidth={2} name="Total Visits" />
+                      <Line type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} name="Completed" />
+                      <Line type="monotone" dataKey="incidents" stroke="#ef4444" strokeWidth={2} name="Incidents" />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="grid md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-gray-600 mb-1">Avg Daily Visits</p>
+                      <p className="text-2xl font-bold">
+                        {Math.round(reportPreview.reduce((sum, d) => sum + d.visits, 0) / reportPreview.length)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-gray-600 mb-1">Peak Day</p>
+                      <p className="text-2xl font-bold">
+                        {reportPreview.reduce((max, d) => d.visits > max.visits ? d : max, reportPreview[0])?.date}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-gray-600 mb-1">Total Incidents</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {reportPreview.reduce((sum, d) => sum + d.incidents, 0)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-gray-600 mb-1">Completion Rate</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {Math.round((reportPreview.reduce((sum, d) => sum + d.completed, 0) / reportPreview.reduce((sum, d) => sum + d.visits, 0)) * 100)}%
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
