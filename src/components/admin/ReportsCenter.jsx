@@ -51,8 +51,9 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
           includeCharts: false
         });
 
-        // Download PDF
-        const blob = new Blob([response.data], { type: 'application/pdf' });
+        // Handle arraybuffer response
+        const data = response.data || response;
+        const blob = new Blob([data], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
