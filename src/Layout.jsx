@@ -24,6 +24,7 @@ import {
   ChevronRight,
   Sparkles
 } from "lucide-react";
+import OfflineIndicator from "../components/mobile/OfflineIndicator";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -337,6 +338,9 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className="flex-1 lg:overflow-auto pt-14 lg:pt-0 bg-blue-100">{children}</main>
+
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }
