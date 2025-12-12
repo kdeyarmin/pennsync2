@@ -517,40 +517,40 @@ export default function UserManagement({ users, currentUser }) {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {editingUser.role !== 'admin' && (
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <Label className="text-base font-medium">Account Approval</Label>
-                  <p className="text-sm text-gray-600">Allow this user to access the system</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge className={editingUser.is_approved ? 'bg-green-500' : 'bg-yellow-500'}>
-                    {editingUser.is_approved ? (
-                      <>
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Approved
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-3 h-3 mr-1" />
-                        Pending
-                      </>
-                    )}
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant={editingUser.is_approved ? "outline" : "default"}
-                    onClick={() => setEditingUser({...editingUser, is_approved: !editingUser.is_approved})}
-                    className={editingUser.is_approved ? '' : 'bg-green-600 hover:bg-green-700'}
-                  >
-                    {editingUser.is_approved ? 'Revoke Access' : 'Approve User'}
-                  </Button>
-                </div>
               </div>
-            )}
-          </div>
+
+              {editingUser.role !== 'admin' && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label className="text-base font-medium">Account Approval</Label>
+                    <p className="text-sm text-gray-600">Allow this user to access the system</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={editingUser.is_approved ? 'bg-green-500' : 'bg-yellow-500'}>
+                      {editingUser.is_approved ? (
+                        <>
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Approved
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pending
+                        </>
+                      )}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant={editingUser.is_approved ? "outline" : "default"}
+                      onClick={() => setEditingUser({...editingUser, is_approved: !editingUser.is_approved})}
+                      className={editingUser.is_approved ? '' : 'bg-green-600 hover:bg-green-700'}
+                    >
+                      {editingUser.is_approved ? 'Revoke Access' : 'Approve User'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <DialogFooter>
