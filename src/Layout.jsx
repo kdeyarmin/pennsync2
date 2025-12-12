@@ -22,8 +22,10 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Clock
 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
 
 export default function Layout({ children, currentPageName }) {
@@ -36,6 +38,7 @@ export default function Layout({ children, currentPageName }) {
   });
 
   const isAdmin = currentUser?.role === 'admin';
+  const isApproved = currentUser?.is_approved === true || isAdmin;
 
   // Track user login once when user data loads
   useEffect(() => {
@@ -105,6 +108,47 @@ export default function Layout({ children, currentPageName }) {
   const isActive = (pageName) => {
     return currentPageName === pageName;
   };
+
+  // Show pending approval screen for unapproved users
+  if (currentUser && !isApproved) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Card className="border-yellow-300 shadow-xl">
+            <CardContent className="p-8 text-center">
+              <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Clock className="w-10 h-10 text-yellow-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-3">
+                Account Pending Approval
+              </h1>
+              <p className="text-gray-600 mb-6">
+                Your account has been created successfully. Please wait for an administrator to approve your access.
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-900">
+                  <strong>Account Details:</strong><br />
+                  {currentUser.full_name}<br />
+                  {currentUser.email}
+                </p>
+              </div>
+              <p className="text-sm text-gray-500 mb-6">
+                You will receive an email notification once your account is approved.
+              </p>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-blue-100 flex">
