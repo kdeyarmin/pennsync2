@@ -31,7 +31,7 @@ import {
   Activity
 } from "lucide-react";
 import { format } from "date-fns";
-import { formatDateInET } from "@/components/utils/timezone";
+import { formatEastern } from "@/components/utils/timezone";
 
 export default function AuditTrail() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -246,7 +246,7 @@ export default function AuditTrail() {
                   filteredActivities.map((activity) => (
                     <TableRow key={activity.id}>
                       <TableCell className="text-sm">
-                        {formatDateInET(new Date(activity.created_date), 'MMM d, yyyy hh:mm:ss a')} ET
+                        {formatEastern(activity.created_date, 'MMM d, yyyy hh:mm:ss a')}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
