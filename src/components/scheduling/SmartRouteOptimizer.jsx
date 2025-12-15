@@ -43,7 +43,7 @@ export default function SmartRouteOptimizer({
 
     try {
       // Prepare visit data with patient addresses
-      const visitData = visits.map(v => {
+      const visitData = (visits || []).map(v => {
         const patient = getPatient(v.patient_id);
         return {
           visit_id: v.id,

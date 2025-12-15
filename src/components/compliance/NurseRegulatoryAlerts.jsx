@@ -37,7 +37,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
   });
 
   // Filter to recent and unacknowledged updates
-  const relevantUpdates = updates.filter(u => {
+  const relevantUpdates = (updates || []).filter(u => {
     const daysSinceImplemented = differenceInDays(new Date(), new Date(u.reviewed_at || u.created_date));
     return daysSinceImplemented <= 30 && !acknowledgedUpdates.includes(u.id);
   });
@@ -104,7 +104,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
               <p className="text-sm text-gray-600">You're up to date on all regulations!</p>
             </div>
           ) : (
-            relevantUpdates.map(update => (
+            (relevantUpdates || []).map(update => (
               <div 
                 key={update.id}
                 className={`p-3 rounded-lg border ${

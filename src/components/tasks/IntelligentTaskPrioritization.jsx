@@ -63,9 +63,9 @@ export default function IntelligentTaskPrioritization({
 
     try {
       // Enrich tasks with patient context
-      const enrichedTasks = tasks.map(task => {
-        const patient = patients.find(p => p.id === task.patient_id);
-        const relatedAlerts = patientAlerts.filter(a => a.patient_id === task.patient_id);
+      const enrichedTasks = (tasks || []).map(task => {
+        const patient = (patients || []).find(p => p.id === task.patient_id);
+        const relatedAlerts = (patientAlerts || []).filter(a => a.patient_id === task.patient_id);
         
         return {
           id: task.id,

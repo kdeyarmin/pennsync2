@@ -37,10 +37,10 @@ export default function RealTimePatientAlerts({
     const today = new Date();
 
     // Check each patient
-    patients.forEach(patient => {
-      const patientVisits = visits.filter(v => v.patient_id === patient.id);
-      const patientCarePlans = carePlans.filter(cp => cp.patient_id === patient.id);
-      const patientIncidents = incidents.filter(i => i.patient_id === patient.id);
+    (patients || []).forEach(patient => {
+      const patientVisits = (visits || []).filter(v => v.patient_id === patient.id);
+      const patientCarePlans = (carePlans || []).filter(cp => cp.patient_id === patient.id);
+      const patientIncidents = (incidents || []).filter(i => i.patient_id === patient.id);
 
       // Alert: No recent visits (>7 days)
       const lastVisit = patientVisits
@@ -172,7 +172,7 @@ export default function RealTimePatientAlerts({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-2 space-y-2 max-h-[300px] overflow-y-auto">
-        {alerts.map((alert, idx) => (
+        {(alerts || []).map((alert, idx) => (
           <Link 
             key={idx} 
             to={`${createPageUrl("PatientDetails")}?id=${alert.patientId}`}
