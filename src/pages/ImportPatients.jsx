@@ -150,7 +150,7 @@ export default function ImportPatients() {
         
         // Auto-map columns based on header names
         const autoMapping = {};
-        headers.forEach((header, idx) => {
+        (headers || []).forEach((header, idx) => {
           const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_');
           
           // Try exact match
@@ -185,7 +185,7 @@ export default function ImportPatients() {
     const errors = [];
     const valid = [];
 
-    csvData.rows.forEach((row, rowIndex) => {
+    (csvData.rows || []).forEach((row, rowIndex) => {
       const patient = {};
       const rowErrors = [];
 
@@ -360,7 +360,7 @@ export default function ImportPatients() {
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {csvData.headers.map((header, idx) => (
+              {(csvData.headers || []).map((header, idx) => (
                 <div key={idx} className="flex items-center gap-3">
                   <div className="flex-1">
                     <Label className="text-xs text-gray-500 mb-1">CSV Column</Label>
@@ -454,13 +454,13 @@ export default function ImportPatients() {
                   <h3 className="font-semibold text-red-900 mb-3">Errors Found</h3>
                   <ScrollArea className="h-64 border rounded-lg p-4">
                     <div className="space-y-3">
-                      {validationErrors.map((error, idx) => (
+                      {(validationErrors || []).map((error, idx) => (
                         <Alert key={idx} variant="destructive">
                           <AlertCircle className="w-4 h-4" />
                           <AlertDescription>
                             <span className="font-semibold">Row {error.row}</span> ({error.patient})
                             <ul className="mt-1 ml-4 list-disc text-sm">
-                              {error.errors.map((err, errIdx) => (
+                              {(error.errors || []).map((err, errIdx) => (
                                 <li key={errIdx}>{err}</li>
                               ))}
                             </ul>
@@ -546,7 +546,7 @@ export default function ImportPatients() {
                   <h3 className="font-semibold text-red-900 mb-3">Import Errors</h3>
                   <ScrollArea className="h-48 border rounded-lg p-4">
                     <div className="space-y-2">
-                      {importResults.errors.map((error, idx) => (
+                      {(importResults.errors || []).map((error, idx) => (
                         <Alert key={idx} variant="destructive">
                           <AlertDescription>
                             <span className="font-semibold">Row {error.row}</span> ({error.patient}): {error.error}
