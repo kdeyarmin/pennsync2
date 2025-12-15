@@ -158,7 +158,7 @@ export default function PatientFileUpdateUploader() {
                 </h3>
                 <ScrollArea className="h-48 border rounded-lg border-orange-300 bg-orange-50">
                   <div className="p-4 space-y-2">
-                    {results.pendingChanges.map((change, idx) => (
+                    {(results.pendingChanges || []).map((change, idx) => (
                       <div key={idx} className="border rounded-lg p-3 bg-white border-orange-200">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export default function PatientFileUpdateUploader() {
                 </h3>
                 <ScrollArea className="h-64 border rounded-lg">
                   <div className="p-4 space-y-2">
-                    {results.changes.map((change, idx) => (
+                    {(results.changes || []).map((change, idx) => (
                       <Collapsible key={idx} open={expandedPatients[idx]}>
                         <div className="border rounded-lg p-3 bg-green-50">
                           <CollapsibleTrigger
@@ -226,7 +226,7 @@ export default function PatientFileUpdateUploader() {
                           </CollapsibleTrigger>
                           
                           <CollapsibleContent className="mt-3 space-y-2">
-                            {change.changes.map((fieldChange, fieldIdx) => (
+                            {(change.changes || []).map((fieldChange, fieldIdx) => (
                               <div key={fieldIdx} className="pl-6 text-sm">
                                 <p className="font-medium text-gray-700">{fieldChange.field}:</p>
                                 <div className="ml-2 text-xs">
@@ -250,7 +250,7 @@ export default function PatientFileUpdateUploader() {
                 <h3 className="font-semibold text-red-900 mb-3">Errors</h3>
                 <ScrollArea className="h-48 border rounded-lg">
                   <div className="p-4 space-y-2">
-                    {results.errors.map((error, idx) => (
+                    {(results.errors || []).map((error, idx) => (
                       <Alert key={idx} variant="destructive">
                         <AlertCircle className="w-4 h-4" />
                         <AlertDescription>

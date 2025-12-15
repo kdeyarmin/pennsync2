@@ -219,7 +219,7 @@ export default function PendingPatientUpdates() {
                           </Alert>
                         )}
 
-                        {update.field_changes.map((change, changeIdx) => (
+                        {(update.field_changes || []).map((change, changeIdx) => (
                           <div
                             key={changeIdx}
                             className={`p-3 rounded border ${
@@ -316,7 +316,7 @@ export default function PendingPatientUpdates() {
 
                 <div className="space-y-3">
                   <h4 className="font-semibold">Proposed Changes:</h4>
-                  {reviewingUpdate.field_changes.map((change, idx) => (
+                  {(reviewingUpdate.field_changes || []).map((change, idx) => (
                     <div key={idx} className={`p-3 rounded border ${
                       change.is_critical ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
                     }`}>
