@@ -272,11 +272,7 @@ export default function ImportPatients() {
     a.click();
   };
 
-  React.useEffect(() => {
-    if (csvData && Object.keys(columnMapping).length > 0) {
-      validateData();
-    }
-  }, [columnMapping, csvData]);
+  // Auto-validate is removed - user must click "Validate & Continue" button
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -409,15 +405,30 @@ export default function ImportPatients() {
                 <span className="text-red-500">*</span> = Required field
               </p>
             </div>
+
+            {/* Validate Button */}
+            <div className="mt-6 flex justify-end">
+              <Button
+                onClick={validateData}
+                className="bg-blue-600 hover:bg-blue-700"
+                size="lg"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Validate & Continue
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Validation Results */}
       {validationErrors.length > 0 || validRecords.length > 0 ? (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Validation Results</CardTitle>
+        <Card className="mb-6 border-blue-300 border-2">
+          <CardHeader className="bg-blue-50">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
+              Step 3: Review Validation Results
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
