@@ -113,10 +113,14 @@ export default function PatientFileUpdateUploader() {
         {results && (
           <div className="space-y-4">
             {/* Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <div className="p-3 bg-blue-50 rounded-lg">
                 <p className="text-xs text-blue-600 font-semibold mb-1">Processed</p>
                 <p className="text-2xl font-bold text-blue-700">{results.processed}</p>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <p className="text-xs text-purple-600 font-semibold mb-1">New Patients</p>
+                <p className="text-2xl font-bold text-purple-700">{results.created || 0}</p>
               </div>
               <div className="p-3 bg-green-50 rounded-lg">
                 <p className="text-xs text-green-600 font-semibold mb-1">Auto-Applied</p>
