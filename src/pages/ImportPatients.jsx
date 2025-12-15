@@ -517,28 +517,49 @@ export default function ImportPatients() {
 
       {/* Import Results */}
       {importResults && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Import Complete</CardTitle>
+        <Card className="border-green-300 border-2">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100">
+            <CardTitle className="text-2xl flex items-center gap-3 text-green-900">
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+              Import Successfully Completed!
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
-                    <span className="font-semibold text-green-900">Successfully Imported</span>
-                  </div>
-                  <p className="text-2xl font-bold text-green-700">{importResults.success}</p>
-                </div>
+          <CardContent className="pt-6">
+            <div className="space-y-6">
+              {/* Success Banner */}
+              <Alert className="bg-green-50 border-green-300 border-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <AlertDescription className="text-green-900 font-semibold text-lg">
+                  ✅ {importResults.success} new patient{importResults.success !== 1 ? 's' : ''} successfully added to the system!
+                </AlertDescription>
+              </Alert>
 
-                <div className="p-4 bg-red-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                    <span className="font-semibold text-red-900">Failed</span>
-                  </div>
-                  <p className="text-2xl font-bold text-red-700">{importResults.failed}</p>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="bg-green-50 border-green-200 border-2">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-green-600 text-sm font-medium mb-1">Patients Added</p>
+                        <p className="text-5xl font-bold text-green-700">{importResults.success}</p>
+                      </div>
+                      <Users className="w-16 h-16 text-green-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {importResults.failed > 0 && (
+                  <Card className="bg-red-50 border-red-200 border-2">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-red-600 text-sm font-medium mb-1">Failed</p>
+                          <p className="text-5xl font-bold text-red-700">{importResults.failed}</p>
+                        </div>
+                        <AlertCircle className="w-16 h-16 text-red-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {importResults.errors.length > 0 && (
