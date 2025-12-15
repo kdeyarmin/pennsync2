@@ -180,10 +180,10 @@ export default function PendingPatientUpdates() {
                               )}
                             </div>
                             <p className="text-sm text-gray-600">
-                              {update.field_changes.length} field{update.field_changes.length > 1 ? 's' : ''} to review
-                              {update.field_changes.filter(c => c.is_critical).length > 0 && (
+                              {(update.field_changes || []).length} field{(update.field_changes || []).length > 1 ? 's' : ''} to review
+                              {(update.field_changes || []).filter(c => c.is_critical).length > 0 && (
                                 <span className="text-red-600 ml-2">
-                                  • {update.field_changes.filter(c => c.is_critical).length} critical
+                                  • {(update.field_changes || []).filter(c => c.is_critical).length} critical
                                 </span>
                               )}
                             </p>
