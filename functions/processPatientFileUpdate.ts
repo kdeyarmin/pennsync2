@@ -171,10 +171,28 @@ Deno.serve(async (req) => {
         }
 
         if (!matchingPatient) {
-          results.errors.push({
-            patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
-            error: 'No matching patient found in system'
-          });
+          // Create new patient
+          try {
+            const newPatient = await base44.asServiceRole.entities.Patient.create(uploadedPatient);
+            results.created++;
+            
+            await base44.asServiceRole.entities.SystemLog.create({
+              job_name: 'Patient File Update',
+              job_type: 'other',
+              status: 'success',
+              message: `Created new patient ${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
+              details: {
+                patient_id: newPatient.id,
+                uploaded_by: user.email,
+                file_url
+              }
+            });
+          } catch (error) {
+            results.errors.push({
+              patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
+              error: `Failed to create patient: ${error.message}`
+            });
+          }
           continue;
         }
 
