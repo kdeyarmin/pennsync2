@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
     }
 
-    // Extract data from the uploaded file
+    // Extract ALL patient data from the uploaded file - comprehensive schema
     const extractResponse = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({
       file_url,
       json_schema: {
@@ -26,6 +26,7 @@ Deno.serve(async (req) => {
             items: {
               type: 'object',
               properties: {
+                // Basic Info
                 first_name: { type: 'string' },
                 middle_name: { type: 'string' },
                 last_name: { type: 'string' },
@@ -34,25 +35,68 @@ Deno.serve(async (req) => {
                 phone: { type: 'string' },
                 email: { type: 'string' },
                 address: { type: 'string' },
+                
+                // Emergency Contact
                 emergency_contact_name: { type: 'string' },
                 emergency_contact_phone: { type: 'string' },
                 emergency_contact_relationship: { type: 'string' },
+                
+                // Physician
                 physician_name: { type: 'string' },
                 physician_phone: { type: 'string' },
                 physician_email: { type: 'string' },
+                
+                // Caregiver
                 caregiver_name: { type: 'string' },
                 caregiver_email: { type: 'string' },
                 caregiver_phone: { type: 'string' },
+                
+                // Diagnoses & Allergies
                 primary_diagnosis: { type: 'string' },
                 secondary_diagnoses: { type: 'array' },
                 allergies: { type: 'string' },
+                
+                // Medications
                 current_medications: { type: 'array' },
+                
+                // Medical History
                 past_medical_history: { type: 'array' },
+                past_hospitalizations: { type: 'array' },
+                
+                // Baseline Vitals
+                baseline_vitals: { type: 'object' },
+                
+                // Functional Status
+                functional_status: { type: 'object' },
+                
+                // Social History
+                social_history: { type: 'object' },
+                
+                // Mental Health
+                mental_health: { type: 'object' },
+                
+                // Pain Management
+                pain_management: { type: 'object' },
+                
+                // Wounds
+                wounds: { type: 'array' },
+                
+                // Advance Directives
+                advance_directives: { type: 'object' },
+                
+                // Insurance
                 insurance_primary: { type: 'object' },
                 insurance_secondary: { type: 'object' },
+                
+                // Admission/Care Info
                 admission_date: { type: 'string' },
+                discharge_date: { type: 'string' },
                 admission_source: { type: 'string' },
-                care_type: { type: 'string' }
+                discharge_disposition: { type: 'string' },
+                care_type: { type: 'string' },
+                status: { type: 'string' },
+                clinical_notes: { type: 'string' },
+                goals_of_care: { type: 'array' }
               }
             }
           }
