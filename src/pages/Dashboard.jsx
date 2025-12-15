@@ -142,7 +142,7 @@ export default function Dashboard() {
               {getGreeting()}, {fullName}! 👋
             </h1>
             <p className="text-white/80 text-xs sm:text-sm md:text-base">
-              {isValid(new Date()) ? formatEastern(new Date(), 'EEEE, MMMM d, yyyy') : new Date().toLocaleDateString()} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
+              {isValid(new Date()) ? formatEastern(new Date(), 'EEEE, MMMM d, yyyy').replace(' ET', '') : new Date().toLocaleDateString()} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
             </p>
           </div>
         </CardContent>
