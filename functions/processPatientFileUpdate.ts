@@ -71,13 +71,38 @@ Deno.serve(async (req) => {
     const results = {
       processed: 0,
       updated: 0,
+      autoApplied: 0,
+      pendingReview: 0,
       noChanges: 0,
       errors: [],
-      changes: []
+      changes: [],
+      pendingChanges: []
     };
 
     // Get all existing patients
     const existingPatients = await base44.asServiceRole.entities.Patient.list();
+
+    // Define critical fields that require approval
+    const criticalFields = [
+      'date_of_birth',
+      'medical_record_number',
+      'allergies',
+      'primary_diagnosis',
+      'physician_name',
+      'physician_phone',
+      'emergency_contact_name',
+      'emergency_contact_phone'
+    ];
+
+    // Define fields that can be auto-updated
+    const autoUpdateFields = [
+      'phone',
+      'email',
+      'address',
+      'caregiver_name',
+      'caregiver_email',
+      'caregiver_phone'
+    ];
 
     for (const uploadedPatient of uploadedPatients) {
       results.processed++;
@@ -108,50 +133,98 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Compare and detect changes
+        // Compare and detect changes with intelligent merging
         const changes = {};
         const changeLog = [];
+        const criticalChanges = [];
+        const conflicts = [];
 
         for (const [key, value] of Object.entries(uploadedPatient)) {
           if (!value) continue; // Skip empty values
           
           const existingValue = matchingPatient[key];
+          let hasChanges = false;
+          let changeDetail = null;
           
-          // Handle arrays (like medications)
+          // Handle arrays (like medications, diagnoses)
           if (Array.isArray(value)) {
             const existingArray = existingValue || [];
-            const hasChanges = JSON.stringify(existingArray) !== JSON.stringify(value);
             
-            if (hasChanges) {
-              changes[key] = value;
-              changeLog.push({
+            // Intelligent array merging - add new items, keep existing
+            const mergedArray = [...existingArray];
+            let addedItems = [];
+            
+            for (const item of value) {
+              const itemStr = typeof item === 'object' ? JSON.stringify(item) : item;
+              const exists = existingArray.some(existing => {
+                const existingStr = typeof existing === 'object' ? JSON.stringify(existing) : existing;
+                return existingStr === itemStr;
+              });
+              
+              if (!exists) {
+                mergedArray.push(item);
+                addedItems.push(item);
+              }
+            }
+            
+            if (addedItems.length > 0) {
+              hasChanges = true;
+              changes[key] = mergedArray;
+              changeDetail = {
                 field: key,
                 oldValue: existingArray,
-                newValue: value
-              });
+                newValue: mergedArray,
+                addedItems: addedItems,
+                is_critical: criticalFields.includes(key)
+              };
             }
           }
-          // Handle objects
+          // Handle objects (like insurance)
           else if (typeof value === 'object' && value !== null) {
-            const hasChanges = JSON.stringify(existingValue) !== JSON.stringify(value);
+            const existingObj = existingValue || {};
+            const mergedObj = { ...existingObj, ...value };
             
-            if (hasChanges) {
-              changes[key] = value;
-              changeLog.push({
+            const hasObjectChanges = JSON.stringify(existingObj) !== JSON.stringify(mergedObj);
+            
+            if (hasObjectChanges) {
+              hasChanges = true;
+              changes[key] = mergedObj;
+              changeDetail = {
                 field: key,
-                oldValue: existingValue,
-                newValue: value
-              });
+                oldValue: existingObj,
+                newValue: mergedObj,
+                is_critical: criticalFields.includes(key)
+              };
             }
           }
           // Handle primitives
           else if (existingValue !== value) {
+            hasChanges = true;
+            
+            // Detect conflicts - if existing value is not empty and different
+            if (existingValue && existingValue !== '(empty)' && existingValue !== value) {
+              conflicts.push({
+                field: key,
+                existingValue,
+                newValue: value,
+                reason: 'Value exists but differs from uploaded data'
+              });
+            }
+            
             changes[key] = value;
-            changeLog.push({
+            changeDetail = {
               field: key,
               oldValue: existingValue || '(empty)',
-              newValue: value
-            });
+              newValue: value,
+              is_critical: criticalFields.includes(key)
+            };
+          }
+          
+          if (changeDetail) {
+            changeLog.push(changeDetail);
+            if (changeDetail.is_critical) {
+              criticalChanges.push(changeDetail);
+            }
           }
         }
 
@@ -160,16 +233,70 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Update patient with changes
-        await base44.asServiceRole.entities.Patient.update(matchingPatient.id, changes);
-        
+        // Determine change type and whether to auto-apply
+        let changeType = 'minor';
+        let requiresApproval = false;
+
+        if (criticalChanges.length > 0) {
+          changeType = 'critical';
+          requiresApproval = true;
+        } else if (conflicts.length > 0) {
+          changeType = 'moderate';
+          requiresApproval = true;
+        } else if (Object.keys(changes).length > 5) {
+          changeType = 'moderate';
+          requiresApproval = true;
+        }
+
+        if (requiresApproval) {
+          // Create pending update for review
+          await base44.asServiceRole.entities.PendingPatientUpdate.create({
+            patient_id: matchingPatient.id,
+            source_file_url: file_url,
+            change_type: changeType,
+            field_changes: changeLog,
+            proposed_updates: changes,
+            status: 'pending',
+            conflict_detected: conflicts.length > 0,
+            conflict_details: conflicts.length > 0 ? JSON.stringify(conflicts) : null
+          });
+
+          results.pendingReview++;
+          results.pendingChanges.push({
+            patient: `${matchingPatient.first_name} ${matchingPatient.last_name}`,
+            patientId: matchingPatient.id,
+            changeCount: Object.keys(changes).length,
+            changeType,
+            criticalFieldCount: criticalChanges.length,
+            conflictCount: conflicts.length,
+            requiresReview: true
+          });
+        } else {
+          // Auto-apply non-critical changes
+          await base44.asServiceRole.entities.Patient.update(matchingPatient.id, changes);
+          
+          // Log as auto-applied
+          await base44.asServiceRole.entities.PendingPatientUpdate.create({
+            patient_id: matchingPatient.id,
+            source_file_url: file_url,
+            change_type: changeType,
+            field_changes: changeLog,
+            proposed_updates: changes,
+            status: 'auto_applied',
+            conflict_detected: false
+          });
+          
+          results.autoApplied++;
+          results.changes.push({
+            patient: `${matchingPatient.first_name} ${matchingPatient.last_name}`,
+            patientId: matchingPatient.id,
+            changeCount: Object.keys(changes).length,
+            changes: changeLog,
+            autoApplied: true
+          });
+        }
+
         results.updated++;
-        results.changes.push({
-          patient: `${matchingPatient.first_name} ${matchingPatient.last_name}`,
-          patientId: matchingPatient.id,
-          changeCount: Object.keys(changes).length,
-          changes: changeLog
-        });
 
         // Log the update
         await base44.asServiceRole.entities.SystemLog.create({

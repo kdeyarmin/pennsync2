@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, Clock, AlertTriangle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import PendingPatientUpdates from "./PendingPatientUpdates";
 
 export default function PatientFileUpdateUploader() {
   const [file, setFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState(null);
   const [expandedPatients, setExpandedPatients] = useState({});
+  const [showPendingUpdates, setShowPendingUpdates] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -111,14 +113,18 @@ export default function PatientFileUpdateUploader() {
         {results && (
           <div className="space-y-4">
             {/* Summary */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="p-3 bg-blue-50 rounded-lg">
                 <p className="text-xs text-blue-600 font-semibold mb-1">Processed</p>
                 <p className="text-2xl font-bold text-blue-700">{results.processed}</p>
               </div>
               <div className="p-3 bg-green-50 rounded-lg">
-                <p className="text-xs text-green-600 font-semibold mb-1">Updated</p>
-                <p className="text-2xl font-bold text-green-700">{results.updated}</p>
+                <p className="text-xs text-green-600 font-semibold mb-1">Auto-Applied</p>
+                <p className="text-2xl font-bold text-green-700">{results.autoApplied || 0}</p>
+              </div>
+              <div className="p-3 bg-orange-50 rounded-lg">
+                <p className="text-xs text-orange-600 font-semibold mb-1">Pending Review</p>
+                <p className="text-2xl font-bold text-orange-700">{results.pendingReview || 0}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-600 font-semibold mb-1">No Changes</p>
@@ -126,10 +132,76 @@ export default function PatientFileUpdateUploader() {
               </div>
             </div>
 
-            {/* Changes Details */}
+            {/* Info Alert */}
+            {results.pendingReview > 0 && (
+              <Alert className="bg-orange-50 border-orange-300">
+                <AlertTriangle className="w-4 h-4 text-orange-600" />
+                <AlertDescription className="text-orange-900">
+                  {results.pendingReview} update{results.pendingReview > 1 ? 's' : ''} require{results.pendingReview === 1 ? 's' : ''} admin review due to critical field changes or data conflicts.
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto ml-2 text-orange-700 underline"
+                    onClick={() => setShowPendingUpdates(true)}
+                  >
+                    Review now
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Pending Changes requiring review */}
+            {results.pendingChanges && results.pendingChanges.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-orange-900 mb-3 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Pending Review ({results.pendingChanges.length})
+                </h3>
+                <ScrollArea className="h-48 border rounded-lg border-orange-300 bg-orange-50">
+                  <div className="p-4 space-y-2">
+                    {results.pendingChanges.map((change, idx) => (
+                      <div key={idx} className="border rounded-lg p-3 bg-white border-orange-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-orange-600" />
+                            <span className="font-medium text-orange-900">{change.patient}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {change.criticalFieldCount > 0 && (
+                              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                                {change.criticalFieldCount} critical
+                              </span>
+                            )}
+                            {change.conflictCount > 0 && (
+                              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                                {change.conflictCount} conflict{change.conflictCount > 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {change.changeCount} field{change.changeCount > 1 ? 's' : ''} • Requires admin approval
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+                <Button
+                  onClick={() => setShowPendingUpdates(true)}
+                  className="w-full mt-3 bg-orange-600 hover:bg-orange-700"
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Review Pending Updates
+                </Button>
+              </div>
+            )}
+
+            {/* Auto-Applied Changes */}
             {results.changes && results.changes.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Updated Patients</h3>
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  Auto-Applied Updates ({results.changes.length})
+                </h3>
                 <ScrollArea className="h-64 border rounded-lg">
                   <div className="p-4 space-y-2">
                     {results.changes.map((change, idx) => (
@@ -203,6 +275,23 @@ export default function PatientFileUpdateUploader() {
             >
               Upload Another File
             </Button>
+          </div>
+        )}
+
+        {/* Pending Updates Panel */}
+        {showPendingUpdates && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-4 border-b flex items-center justify-between">
+                <h2 className="text-xl font-bold">Review Pending Updates</h2>
+                <Button variant="ghost" onClick={() => setShowPendingUpdates(false)}>
+                  Close
+                </Button>
+              </div>
+              <div className="flex-1 overflow-auto p-4">
+                <PendingPatientUpdates />
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
