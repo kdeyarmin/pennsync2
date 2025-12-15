@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
+import { formatEastern, todayEastern } from "@/components/utils/timezone";
 
 export default function ReportsCenter({ users, patients, visits, incidents }) {
   const [reportType, setReportType] = useState("productivity");
@@ -41,9 +42,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
   const [showPreview, setShowPreview] = useState(false);
 
   const generatePreview = () => {
-    const today = new Date();
-    const startDate = format(subDays(today, parseInt(dateRange)), 'yyyy-MM-dd');
-    const endDate = format(today, 'yyyy-MM-dd');
+    const endDate = todayEastern();
+    const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
 
     const filteredVisits = visits.filter(v => 
       v.visit_date >= startDate && v.visit_date <= endDate
@@ -80,9 +80,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     setIsGenerating(true);
     
     try {
-      const today = new Date();
-      const startDate = format(subDays(today, parseInt(dateRange)), 'yyyy-MM-dd');
-      const endDate = format(today, 'yyyy-MM-dd');
+      const endDate = todayEastern();
+      const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
 
       if (exportFormat === 'pdf') {
         // Generate comprehensive PDF using backend function
@@ -225,7 +224,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     let content = `Penn Sync Productivity Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
-    content += `Generated: ${format(new Date(), 'PPpp')}\n\n`;
+    content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `Nurse,Total Visits,Completed,Scheduled,Cancelled,Completion Rate %,Avg Doc Time (min),Time Saved by Penn Sync (hours)\n`;
     
     Object.values(nurseStats).forEach(stats => {
@@ -234,7 +233,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `penn-sync-productivity-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `penn-sync-productivity-report-${todayEastern()}.csv`
     };
   };
 
@@ -252,7 +251,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     let content = `Penn Sync Quality Metrics Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
-    content += `Generated: ${format(new Date(), 'PPpp')}\n\n`;
+    content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `OVERALL METRICS\n`;
     content += `Total Visits,${visits.length}\n`;
     content += `Completed Visits,${completedVisits.length}\n`;
@@ -267,7 +266,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `penn-sync-quality-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `penn-sync-quality-report-${todayEastern()}.csv`
     };
   };
 
@@ -300,7 +299,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     let content = `Penn Sync Financial Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
-    content += `Generated: ${format(new Date(), 'PPpp')}\n\n`;
+    content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `REVENUE ANALYSIS\n`;
     content += `Visit Type,Count,Est. Revenue Per Visit,Total Revenue\n`;
     
@@ -317,7 +316,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `penn-sync-financial-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `penn-sync-financial-report-${todayEastern()}.csv`
     };
   };
 
@@ -340,7 +339,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     let content = `Penn Sync Medicare Compliance Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
-    content += `Generated: ${format(new Date(), 'PPpp')}\n\n`;
+    content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `DOCUMENTATION COMPLIANCE\n`;
     content += `Total Completed Visits,${completedVisits.length}\n`;
     content += `Visits with Complete Documentation,${visitsWithNotes.length}\n`;
@@ -351,7 +350,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `penn-sync-compliance-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `penn-sync-compliance-report-${todayEastern()}.csv`
     };
   };
 
@@ -383,7 +382,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     let content = `Penn Sync Clinical Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
-    content += `Generated: ${format(new Date(), 'PPpp')}\n\n`;
+    content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `DIAGNOSIS DISTRIBUTION\n`;
     content += `Diagnosis,Patient Count\n`;
     
@@ -399,7 +398,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `penn-sync-clinical-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `penn-sync-clinical-report-${todayEastern()}.csv`
     };
   };
 
@@ -429,7 +428,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     let content = `Penn Sync Staff Performance Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
-    content += `Generated: ${format(new Date(), 'PPpp')}\n\n`;
+    content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `Nurse,Credentials,Care Scope,Total Assigned,Completed,Completion Rate %,Documentation Quality %\n`;
     
     Object.values(nursePerformance)
@@ -440,7 +439,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `penn-sync-staff-performance-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `penn-sync-staff-performance-report-${todayEastern()}.csv`
     };
   };
 
@@ -638,7 +637,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `outcomes-by-diagnosis-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `outcomes-by-diagnosis-${todayEastern()}.csv`
     };
   };
 
@@ -655,7 +654,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `staff-comparison-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `staff-comparison-${todayEastern()}.csv`
     };
   };
 
@@ -677,7 +676,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `financial-detailed-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `financial-detailed-${todayEastern()}.csv`
     };
   };
 
@@ -694,7 +693,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       content,
-      fileName: `trend-analysis-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      fileName: `trend-analysis-${todayEastern()}.csv`
     };
   };
 

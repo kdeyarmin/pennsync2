@@ -618,7 +618,7 @@ export default function NursePerformanceDashboard() {
                               {activity.action.replace(/_/g, ' ')}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {new Date(activity.created_date).toLocaleString()}
+                              {formatEastern(activity.created_date, 'MMM d, yyyy hh:mm a')}
                             </p>
                           </div>
                           {activity.details?.compliance_score && (
