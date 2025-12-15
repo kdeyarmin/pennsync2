@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
     const uploadedPatients = extractResponse.output.patients;
     const results = {
       processed: 0,
+      created: 0,
       updated: 0,
       autoApplied: 0,
       pendingReview: 0,
