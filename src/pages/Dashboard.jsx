@@ -239,12 +239,12 @@ export default function Dashboard() {
 
       <div className="space-y-4">
         {isLoading ? (
-          <Card>
-            <CardContent className="p-8 text-center text-gray-500">
-              Loading visits...
-            </CardContent>
-          </Card>
-        ) : visits.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center text-gray-500">
+                Loading visits...
+              </CardContent>
+            </Card>
+          ) : !visits || visits.length === 0 ? (
           <Card className="border-2 border-dashed border-gray-200">
             <CardContent className="p-12 text-center">
               <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -259,7 +259,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ) : (
-          visits.map((visit) => {
+          (visits || []).map((visit) => {
             const patient = getPatient(visit.patient_id);
             return (
               <Card key={visit.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">

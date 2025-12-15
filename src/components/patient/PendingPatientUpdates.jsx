@@ -150,7 +150,7 @@ export default function PendingPatientUpdates() {
         ) : (
           <ScrollArea className="h-[500px]">
             <div className="space-y-3">
-              {pendingUpdates.map((update, idx) => {
+              {(pendingUpdates || []).map((update, idx) => {
                 const patient = getPatient(update.patient_id);
                 if (!patient) return null;
 
