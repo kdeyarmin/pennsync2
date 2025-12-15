@@ -27,15 +27,32 @@ Deno.serve(async (req) => {
               type: 'object',
               properties: {
                 first_name: { type: 'string' },
+                middle_name: { type: 'string' },
                 last_name: { type: 'string' },
                 medical_record_number: { type: 'string' },
                 date_of_birth: { type: 'string' },
                 phone: { type: 'string' },
                 email: { type: 'string' },
                 address: { type: 'string' },
+                emergency_contact_name: { type: 'string' },
+                emergency_contact_phone: { type: 'string' },
+                emergency_contact_relationship: { type: 'string' },
+                physician_name: { type: 'string' },
+                physician_phone: { type: 'string' },
+                physician_email: { type: 'string' },
+                caregiver_name: { type: 'string' },
+                caregiver_email: { type: 'string' },
+                caregiver_phone: { type: 'string' },
                 primary_diagnosis: { type: 'string' },
+                secondary_diagnoses: { type: 'array' },
                 allergies: { type: 'string' },
-                current_medications: { type: 'array' }
+                current_medications: { type: 'array' },
+                past_medical_history: { type: 'array' },
+                insurance_primary: { type: 'object' },
+                insurance_secondary: { type: 'object' },
+                admission_date: { type: 'string' },
+                admission_source: { type: 'string' },
+                care_type: { type: 'string' }
               }
             }
           }
