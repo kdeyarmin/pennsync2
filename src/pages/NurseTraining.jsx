@@ -27,6 +27,8 @@ import PersonalizedTrainingRecommender from "../components/training/Personalized
 import DetailedDeficitReport from "../components/training/DetailedDeficitReport";
 import OnboardingTracker from "../components/training/OnboardingTracker";
 import TrainingModuleViewer from "../components/training/TrainingModuleViewer";
+import PersonalizedLearningPath from "../components/training/PersonalizedLearningPath";
+import TrainingLibrary from "../components/training/TrainingLibrary";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function NurseTraining() {
@@ -188,7 +190,11 @@ export default function NurseTraining() {
 
       {/* Main Training Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 h-auto">
+        <TabsList className="grid w-full grid-cols-7 h-auto">
+          <TabsTrigger value="learning-path" className="flex items-center gap-2 py-3">
+            <Target className="w-4 h-4" />
+            <span className="hidden md:inline">My Path</span>
+          </TabsTrigger>
           <TabsTrigger value="onboarding" className="flex items-center gap-2 py-3">
             <UserPlus className="w-4 h-4" />
             <span className="hidden md:inline">Onboarding</span>
@@ -214,6 +220,13 @@ export default function NurseTraining() {
             <span className="hidden md:inline">Progress</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="learning-path" className="space-y-6">
+          <PersonalizedLearningPath
+            nurseEmail={currentUser?.email}
+            onStartModule={handleStartModule}
+          />
+        </TabsContent>
 
         <TabsContent value="onboarding" className="space-y-6">
           <OnboardingTracker

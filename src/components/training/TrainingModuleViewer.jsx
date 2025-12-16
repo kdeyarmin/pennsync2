@@ -18,6 +18,8 @@ import {
   Award
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import InteractiveSimulation from "./InteractiveSimulation";
+import GamifiedQuiz from "./GamifiedQuiz";
 
 export default function TrainingModuleViewer({ module, nurseEmail, onComplete, onBack }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -111,6 +113,20 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
   };
 
   const renderContent = () => {
+    // Interactive simulation
+    if (module.content_type === 'interactive' && module.content?.interactive_elements) {
+      const simulationScenario = {
+        description: module.description,
+        steps: module.content.interactive_elements
+      };
+      return (
+        <InteractiveSimulation
+          scenario={simulationScenario}
+          onComplete={handleSubmit}
+        />
+      );
+    }
+
     if (module.content_type === 'video' && module.content?.video_url) {
       return (
         <div className="aspect-video bg-black rounded-lg mb-6">
@@ -151,6 +167,19 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
 
   const renderQuiz = () => {
     if (!hasQuiz) return null;
+
+    // Use gamified quiz for quiz content type
+    if (module.content_type === 'quiz') {
+      return (
+        <GamifiedQuiz
+          questions={questions}
+          title={module.title}
+          onComplete={(percentage, points) => {
+            handleSubmit();
+          }}
+        />
+      );
+    }
 
     if (showResults) {
       const score = calculateScore();

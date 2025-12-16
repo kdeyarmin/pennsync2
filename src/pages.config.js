@@ -42,6 +42,7 @@ import SystemMonitoring from './pages/SystemMonitoring';
 import UserManagement from './pages/UserManagement';
 import NurseTrainingHub from './pages/NurseTrainingHub';
 import AuditTrail from './pages/AuditTrail';
+import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -90,6 +91,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "NurseTrainingHub": NurseTrainingHub,
     "AuditTrail": AuditTrail,
+    "AdminTrainingAnalytics": AdminTrainingAnalytics,
 }
 
 export const pagesConfig = {
