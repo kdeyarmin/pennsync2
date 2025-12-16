@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import confetti from 'canvas-confetti';
 
-export default function GamifiedQuiz({ questions, onComplete, title }) {
+export default function GamifiedQuiz({ questions = [], onComplete, title }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -26,6 +26,17 @@ export default function GamifiedQuiz({ questions, onComplete, title }) {
   const [points, setPoints] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [isComplete, setIsComplete] = useState(false);
+
+  // Safety check for questions
+  if (!questions || questions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          No quiz questions available for this module.
+        </CardContent>
+      </Card>
+    );
+  }
 
   useEffect(() => {
     if (!showFeedback && !isComplete && timeLeft > 0) {
@@ -40,6 +51,8 @@ export default function GamifiedQuiz({ questions, onComplete, title }) {
 
   const handleSubmit = () => {
     const question = questions[currentQuestion];
+    if (!question) return;
+    
     const isCorrect = selectedAnswer === question.correct_answer;
     
     // Calculate points (time bonus + streak multiplier)
@@ -140,6 +153,8 @@ export default function GamifiedQuiz({ questions, onComplete, title }) {
   }
 
   const question = questions[currentQuestion];
+  if (!question) return null;
+  
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const currentAnswer = answers[currentQuestion];
 
@@ -189,7 +204,7 @@ export default function GamifiedQuiz({ questions, onComplete, title }) {
               onValueChange={(value) => handleAnswerSelect(parseInt(value))}
               disabled={showFeedback}
             >
-              {question.options.map((option, idx) => {
+              {question.options?.map((option, idx) => {
                 const isSelected = selectedAnswer === idx;
                 const isCorrect = idx === question.correct_answer;
                 const showCorrect = showFeedback && isCorrect;

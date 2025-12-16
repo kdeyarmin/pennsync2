@@ -23,7 +23,18 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
 
-  const steps = scenario.steps || [];
+  const steps = scenario?.steps || [];
+  
+  // Safety check
+  if (!scenario || !steps || steps.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          No simulation steps available for this module.
+        </CardContent>
+      </Card>
+    );
+  }
   const currentStepData = steps[currentStep];
 
   const handleResponseSubmit = () => {

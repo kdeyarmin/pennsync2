@@ -145,8 +145,8 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
 
       {/* Learning Path */}
       <div className="space-y-4">
-        {learningPath.learning_path?.map((item, idx) => {
-          if (!item.module) return null;
+        {learningPath.learning_path?.length > 0 ? learningPath.learning_path.map((item, idx) => {
+          if (!item?.module) return null;
           
           const completed = isModuleCompleted(item.module.id);
           const isNext = !completed && idx > 0 && learningPath.learning_path.slice(0, idx).every(prev => 
@@ -244,7 +244,14 @@ export default function PersonalizedLearningPath({ nurseEmail, onStartModule }) 
               </CardContent>
             </Card>
           );
-        })}
+        }) : (
+          <Card>
+            <CardContent className="p-8 text-center text-gray-500">
+              <Target className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <p>No learning modules available in your path yet.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
