@@ -189,6 +189,12 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error creating user:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    return Response.json({ 
+      error: 'Failed to create user', 
+      details: error.message,
+      stack: error.stack 
+    }, { status: 500 });
   }
 });

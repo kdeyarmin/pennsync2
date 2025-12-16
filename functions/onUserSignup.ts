@@ -2,15 +2,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   try {
+    console.log('onUserSignup triggered');
     const base44 = createClientFromRequest(req);
     const { user } = await req.json();
+    console.log('User data received:', user?.email);
 
     if (!user || !user.email) {
+      console.error('No user data provided');
       return Response.json({ error: 'No user data provided' }, { status: 400 });
     }
 
     // Get all admin users
+    console.log('Fetching admin users...');
     const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+    console.log('Found admins:', admins.length);
     
     // Send email to all admins
     const emailPromises = admins.map(admin => 
@@ -41,7 +46,9 @@ Penn Sync System
       })
     );
     
+    console.log('Sending emails to admins...');
     await Promise.all(emailPromises);
+    console.log('Signup notification complete');
 
     return Response.json({ 
       success: true, 
@@ -49,7 +56,14 @@ Penn Sync System
     });
 
   } catch (error) {
-    console.error('Error sending signup notification:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Error in onUserSignup:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Return success even if notification fails - don't block signup
+    return Response.json({ 
+      success: true,
+      warning: 'User created but notification failed',
+      error: error.message 
+    });
   }
 });
