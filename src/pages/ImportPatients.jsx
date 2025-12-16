@@ -18,7 +18,9 @@ import {
   ArrowRight,
   GripVertical,
   Eye,
-  X
+  X,
+  RefreshCw,
+  FileDown
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { validatePatient, validatePhone, validateEmail, validateDate, SEVERITY } from "../components/utils/patientValidation";
@@ -103,7 +105,7 @@ export default function ImportPatients() {
 
   const importPatientsMutation = useMutation({
     mutationFn: async (patients) => {
-      const results = { success: 0, failed: 0, errors: [] };
+      const results = { success: 0, failed: 0, errors: [], failedRecords: [] };
       
       for (let i = 0; i < patients.length; i++) {
         try {
@@ -115,6 +117,11 @@ export default function ImportPatients() {
             row: i + 1,
             patient: `${patients[i].first_name} ${patients[i].last_name}`,
             error: error.message
+          });
+          results.failedRecords.push({
+            ...patients[i],
+            error_description: error.message,
+            original_row: i + 1
           });
         }
         setImportProgress(Math.round(((i + 1) / patients.length) * 100));
@@ -338,6 +345,53 @@ export default function ImportPatients() {
     a.href = url;
     a.download = 'patient_import_template.csv';
     a.click();
+  };
+
+  const downloadFailedRows = () => {
+    if (!importResults?.failedRecords || importResults.failedRecords.length === 0) return;
+    
+    // Get all field keys from failed records
+    const fieldKeys = Object.keys(FIELD_MAPPINGS);
+    const headers = [...fieldKeys, 'error_description', 'original_row'];
+    
+    // Create CSV content
+    let csvContent = headers.join(',') + '\n';
+    
+    importResults.failedRecords.forEach(record => {
+      const row = headers.map(header => {
+        const value = record[header] || '';
+        // Escape quotes and wrap in quotes if contains comma or quote
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      });
+      csvContent += row.join(',') + '\n';
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `failed_patients_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleReImportFailed = () => {
+    // Reset to allow re-upload of corrected file
+    setFile(null);
+    setCsvData(null);
+    setColumnMapping({});
+    setMappingErrors({});
+    setValidationErrors([]);
+    setValidRecords([]);
+    setShowPreview(false);
+    setImportResults(null);
+    setImportProgress(0);
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Auto-validate is removed - user must click "Validate & Continue" button
@@ -809,39 +863,86 @@ export default function ImportPatients() {
               </div>
 
               {importResults.errors.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-red-900 mb-3">Import Errors</h3>
-                  <ScrollArea className="h-48 border rounded-lg p-4">
-                    <div className="space-y-2">
-                      {(importResults.errors || []).map((error, idx) => (
-                        <Alert key={idx} variant="destructive">
-                          <AlertDescription>
-                            <span className="font-semibold">Row {error.row}</span> ({error.patient}): {error.error}
-                          </AlertDescription>
-                        </Alert>
-                      ))}
+                <>
+                  <Separator className="my-4" />
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-red-900 flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5" />
+                        Import Errors ({importResults.errors.length} rows failed)
+                      </h3>
+                      <Button
+                        onClick={downloadFailedRows}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-700 border-red-300 hover:bg-red-50"
+                      >
+                        <FileDown className="w-4 h-4 mr-2" />
+                        Download Failed Rows CSV
+                      </Button>
                     </div>
-                  </ScrollArea>
-                </div>
+                    
+                    <Alert className="bg-yellow-50 border-yellow-300 mb-3">
+                      <AlertDescription className="text-sm text-yellow-900">
+                        💡 <strong>Tip:</strong> Download the failed rows CSV, fix the errors described in each row, remove the 'error_description' and 'original_row' columns, then re-upload the corrected file.
+                      </AlertDescription>
+                    </Alert>
+
+                    <ScrollArea className="h-48 border rounded-lg p-4">
+                      <div className="space-y-2">
+                        {(importResults.errors || []).map((error, idx) => (
+                          <Alert key={idx} variant="destructive">
+                            <AlertDescription>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold">Row {error.row}</span>
+                                  <Badge variant="outline" className="bg-red-100 text-red-800">
+                                    {error.patient}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm font-mono bg-red-100 p-2 rounded">{error.error}</p>
+                              </div>
+                            </AlertDescription>
+                          </Alert>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </>
               )}
 
-              <Button
-                onClick={() => {
-                  setFile(null);
-                  setCsvData(null);
-                  setColumnMapping({});
-                  setMappingErrors({});
-                  setValidationErrors([]);
-                  setValidRecords([]);
-                  setShowPreview(false);
-                  setImportResults(null);
-                  setImportProgress(0);
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                Import Another File
-              </Button>
+              <Separator className="my-4" />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Button
+                  onClick={() => {
+                    setFile(null);
+                    setCsvData(null);
+                    setColumnMapping({});
+                    setMappingErrors({});
+                    setValidationErrors([]);
+                    setValidRecords([]);
+                    setShowPreview(false);
+                    setImportResults(null);
+                    setImportProgress(0);
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Another File
+                </Button>
+
+                {importResults.failed > 0 && (
+                  <Button
+                    onClick={handleReImportFailed}
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Re-Import Failed Rows
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
