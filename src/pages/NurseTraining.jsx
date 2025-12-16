@@ -15,19 +15,26 @@ import {
   AlertCircle,
   Brain,
   FileText,
-  BarChart3
+  BarChart3,
+  UserPlus,
+  RefreshCw,
+  Zap
 } from "lucide-react";
 import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
 import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
 import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
 import PersonalizedTrainingRecommender from "../components/training/PersonalizedTrainingRecommender";
 import DetailedDeficitReport from "../components/training/DetailedDeficitReport";
+import OnboardingTracker from "../components/training/OnboardingTracker";
+import TrainingModuleViewer from "../components/training/TrainingModuleViewer";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function NurseTraining() {
-  const [activeTab, setActiveTab] = useState("personalized");
+  const [activeTab, setActiveTab] = useState("onboarding");
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
   const [selectedQuizId, setSelectedQuizId] = useState(null);
+  const [selectedModule, setSelectedModule] = useState(null);
+  const [viewingModule, setViewingModule] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -55,10 +62,43 @@ export default function NurseTraining() {
     enabled: !!currentUser?.email,
   });
 
-  const completedCount = trainingProgress.filter(p => p.status === 'completed').length;
+  const { data: allCompletions = [] } = useQuery({
+    queryKey: ['trainingCompletions', currentUser?.email],
+    queryFn: () => base44.entities.TrainingCompletion.filter({ 
+      nurse_email: currentUser?.email 
+    }),
+    enabled: !!currentUser?.email,
+    initialData: [],
+  });
+
+  const completedCount = trainingProgress.filter(p => p.status === 'completed').length + 
+                         allCompletions.filter(c => c.status === 'completed').length;
   const avgScore = trainingProgress.length > 0
     ? trainingProgress.reduce((sum, p) => sum + (p.score || 0), 0) / trainingProgress.length
     : 0;
+
+  const handleStartModule = (module) => {
+    setSelectedModule(module);
+    setViewingModule(true);
+  };
+
+  const handleModuleComplete = (score) => {
+    setViewingModule(false);
+    setSelectedModule(null);
+  };
+
+  if (viewingModule && selectedModule) {
+    return (
+      <div className="p-4 md:p-8 max-w-5xl mx-auto">
+        <TrainingModuleViewer
+          module={selectedModule}
+          nurseEmail={currentUser?.email}
+          onComplete={handleModuleComplete}
+          onBack={() => setViewingModule(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
@@ -148,32 +188,53 @@ export default function NurseTraining() {
 
       {/* Main Training Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
-          <TabsTrigger value="personalized" className="flex items-center gap-2 py-3">
-            <Target className="w-4 h-4" />
-            <span>For You</span>
+        <TabsList className="grid w-full grid-cols-6 h-auto">
+          <TabsTrigger value="onboarding" className="flex items-center gap-2 py-3">
+            <UserPlus className="w-4 h-4" />
+            <span className="hidden md:inline">Onboarding</span>
+          </TabsTrigger>
+          <TabsTrigger value="ongoing" className="flex items-center gap-2 py-3">
+            <RefreshCw className="w-4 h-4" />
+            <span className="hidden md:inline">Ongoing</span>
+          </TabsTrigger>
+          <TabsTrigger value="skills" className="flex items-center gap-2 py-3">
+            <Zap className="w-4 h-4" />
+            <span className="hidden md:inline">Skills</span>
           </TabsTrigger>
           <TabsTrigger value="scenarios" className="flex items-center gap-2 py-3">
             <FileText className="w-4 h-4" />
-            <span>Scenarios</span>
+            <span className="hidden md:inline">Scenarios</span>
           </TabsTrigger>
           <TabsTrigger value="quizzes" className="flex items-center gap-2 py-3">
             <Brain className="w-4 h-4" />
-            <span>Quizzes</span>
+            <span className="hidden md:inline">Quizzes</span>
           </TabsTrigger>
           <TabsTrigger value="progress" className="flex items-center gap-2 py-3">
             <BarChart3 className="w-4 h-4" />
-            <span>Progress</span>
+            <span className="hidden md:inline">Progress</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="personalized" className="space-y-6">
-          <PersonalizedTrainingRecommender
+        <TabsContent value="onboarding" className="space-y-6">
+          <OnboardingTracker
             nurseEmail={currentUser?.email}
-            onStartTraining={(area, module) => {
-              setSelectedScenarioId(module);
-              setActiveTab('scenarios');
-            }}
+            onStartModule={handleStartModule}
+          />
+        </TabsContent>
+
+        <TabsContent value="ongoing" className="space-y-6">
+          <TrainingLibrary
+            nurseEmail={currentUser?.email}
+            moduleType="ongoing"
+            onStartModule={handleStartModule}
+          />
+        </TabsContent>
+
+        <TabsContent value="skills" className="space-y-6">
+          <TrainingLibrary
+            nurseEmail={currentUser?.email}
+            moduleType="skill_development"
+            onStartModule={handleStartModule}
           />
         </TabsContent>
 
