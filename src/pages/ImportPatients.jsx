@@ -126,7 +126,7 @@ export default function ImportPatients() {
   });
 
   const handleFileUpload = async (event) => {
-    const selectedFile = event.target.files[0];
+    const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
     if (!selectedFile.name.endsWith('.csv')) {
@@ -148,14 +148,20 @@ export default function ImportPatients() {
       // Extract CSV data
       const extractedData = await extractDataMutation.mutateAsync(fileUrl);
       
-      if (extractedData.status === 'success' && extractedData.output) {
-        const { headers, rows } = extractedData.output;
+      if (extractedData?.status === 'success' && extractedData?.output) {
+        const { headers = [], rows = [] } = extractedData.output;
+        
+        if (!headers || headers.length === 0) {
+          alert('No headers found in CSV file');
+          setIsProcessing(false);
+          return;
+        }
         
         setCsvData({ headers, rows });
         
         // Auto-map columns based on header names
         const autoMapping = {};
-        (headers || []).forEach((header, idx) => {
+        headers.forEach((header, idx) => {
           const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_');
           
           // Try exact match
@@ -229,7 +235,10 @@ export default function ImportPatients() {
   };
 
   const validateData = () => {
-    if (!csvData || !csvData.rows) return;
+    if (!csvData?.rows || csvData.rows.length === 0) {
+      alert('No data rows found to validate');
+      return;
+    }
     
     if (!validateMapping(columnMapping)) {
       alert('Please fix mapping errors before validating data');
@@ -239,7 +248,7 @@ export default function ImportPatients() {
     const errors = [];
     const valid = [];
 
-    (csvData.rows || []).forEach((row, rowIndex) => {
+    csvData.rows.forEach((row, rowIndex) => {
       const patient = {};
       const rowErrors = [];
 
@@ -444,7 +453,7 @@ export default function ImportPatients() {
                         }`}
                       >
                         <div className="space-y-2">
-                          {(csvData.headers || []).map((header, idx) => {
+                          {(csvData?.headers || []).map((header, idx) => {
                             const isMapped = columnMapping[idx] !== undefined;
                             if (isMapped) return null;
                             
@@ -468,7 +477,7 @@ export default function ImportPatients() {
                           })}
                         </div>
                         {provided.placeholder}
-                        {Object.keys(columnMapping).length === csvData.headers.length && (
+                        {Object.keys(columnMapping).length === csvData?.headers?.length && (
                           <p className="text-sm text-gray-500 text-center mt-4">All columns mapped</p>
                         )}
                       </div>
@@ -488,7 +497,7 @@ export default function ImportPatients() {
                         const mappedColIndex = Object.keys(columnMapping).find(
                           key => columnMapping[key] === fieldKey
                         );
-                        const mappedColumn = mappedColIndex !== undefined ? csvData.headers[mappedColIndex] : null;
+                        const mappedColumn = mappedColIndex !== undefined ? csvData?.headers?.[mappedColIndex] : null;
 
                         return (
                           <Droppable key={fieldKey} droppableId={fieldKey}>
