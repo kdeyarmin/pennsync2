@@ -193,6 +193,60 @@ export default function AdminDashboard() {
       }, 0) / visitsWithTime.length)
     : 0;
 
+  // Fetch user activities and compliance audits
+  const { data: userActivities = [] } = useQuery({
+    queryKey: ['allUserActivities'],
+    queryFn: () => base44.entities.UserActivity.list('-created_date', 1000),
+    initialData: [],
+    enabled: isAdmin,
+  });
+
+  const { data: complianceAudits = [] } = useQuery({
+    queryKey: ['allComplianceAudits'],
+    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 500),
+    initialData: [],
+    enabled: isAdmin,
+  });
+
+  // Calculate time savings
+  const aiScriberUsage = userActivities.filter(a => a.action === 'ai_scribe_used').length;
+  const templateGenerated = userActivities.filter(a => a.action === 'template_generated').length;
+  const voiceCommandsUsed = userActivities.filter(a => a.action === 'voice_command_used').length;
+  
+  // Estimate time saved (AI scribe saves ~10 min/visit, templates save ~5 min, voice commands save ~2 min)
+  const estimatedTimeSaved = (aiScriberUsage * 10) + (templateGenerated * 5) + (voiceCommandsUsed * 2);
+  const timeSavedHours = Math.round(estimatedTimeSaved / 60);
+
+  // Calculate compliance metrics
+  const recentAudits = complianceAudits.filter(a => {
+    const auditDate = new Date(a.audit_date || a.created_date);
+    return auditDate >= new Date(last30Days);
+  });
+  const avgComplianceScore = recentAudits.length > 0
+    ? Math.round(recentAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / recentAudits.length)
+    : 0;
+
+  // Calculate AI adoption rate
+  const totalVisitsWithActivity = completedVisits;
+  const visitsWithAI = visits.filter(v => 
+    v.status === 'completed' && (v.audio_url || v.raw_transcription || v.ai_tags?.length > 0)
+  ).length;
+  const aiAdoptionRate = totalVisitsWithActivity > 0 
+    ? Math.round((visitsWithAI / totalVisitsWithActivity) * 100)
+    : 0;
+
+  // Calculate documentation quality (based on compliance audits)
+  const passedAudits = recentAudits.filter(a => a.status === 'passed').length;
+  const qualityScore = recentAudits.length > 0
+    ? Math.round((passedAudits / recentAudits.length) * 100)
+    : 0;
+
+  // Calculate incidents trend
+  const recentIncidents = incidents.filter(i => {
+    const incidentDate = new Date(i.incident_date);
+    return incidentDate >= new Date(last30Days);
+  }).length;
+
   // Run encryption verification
   const verifyEncryption = async () => {
     setIsCheckingEncryption(true);
@@ -305,8 +359,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Key Metrics - Row 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -355,6 +409,61 @@ export default function AdminDashboard() {
                 <p className="text-orange-100 text-xs mt-1">minutes per visit</p>
               </div>
               <Clock className="w-12 h-12 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Key Metrics - Row 2: Efficiency & Quality */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-cyan-100 text-sm font-medium mb-1">Time Saved (AI)</p>
+                <p className="text-4xl font-bold">{timeSavedHours}h</p>
+                <p className="text-cyan-100 text-xs mt-1">{estimatedTimeSaved} mins total</p>
+              </div>
+              <TrendingUp className="w-12 h-12 text-cyan-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-100 text-sm font-medium mb-1">Compliance Score</p>
+                <p className="text-4xl font-bold">{avgComplianceScore}%</p>
+                <p className="text-indigo-100 text-xs mt-1">last 30 days avg</p>
+              </div>
+              <Shield className="w-12 h-12 text-indigo-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-pink-100 text-sm font-medium mb-1">AI Adoption</p>
+                <p className="text-4xl font-bold">{aiAdoptionRate}%</p>
+                <p className="text-pink-100 text-xs mt-1">{visitsWithAI} visits with AI</p>
+              </div>
+              <Target className="w-12 h-12 text-pink-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white border-none shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-teal-100 text-sm font-medium mb-1">Quality Score</p>
+                <p className="text-4xl font-bold">{qualityScore}%</p>
+                <p className="text-teal-100 text-xs mt-1">{recentIncidents} incidents</p>
+              </div>
+              <Award className="w-12 h-12 text-teal-200" />
             </div>
           </CardContent>
         </Card>
