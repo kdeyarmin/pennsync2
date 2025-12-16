@@ -179,13 +179,17 @@ export default function AdminDashboard() {
   ).length;
 
   // Calculate avg documentation time
-  const visitsWithTime = visits.filter(v => v.start_time && v.end_time);
+  const visitsWithTime = visits.filter(v => v.start_time && v.end_time && v.status === 'completed');
   const avgDocTime = visitsWithTime.length > 0
     ? Math.round(visitsWithTime.reduce((sum, v) => {
-        const start = new Date(`2000-01-01 ${v.start_time}`);
-        const end = new Date(`2000-01-01 ${v.end_time}`);
-        const diff = (end - start) / 1000 / 60;
-        return sum + diff;
+        try {
+          const start = new Date(`2000-01-01T${v.start_time}`);
+          const end = new Date(`2000-01-01T${v.end_time}`);
+          const diff = (end - start) / 1000 / 60;
+          return sum + (diff > 0 ? diff : 0);
+        } catch (e) {
+          return sum;
+        }
       }, 0) / visitsWithTime.length)
     : 0;
 
