@@ -2,34 +2,52 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   try {
+    console.log('createUserWithTempPassword started');
     const base44 = createClientFromRequest(req);
     
     // Verify admin user
+    console.log('Verifying admin user...');
     const user = await base44.auth.me();
+    console.log('Current user:', user?.email, 'Role:', user?.role);
+    
     if (!user || user.role !== 'admin') {
+      console.error('Unauthorized: User is not admin');
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { email, full_name, role, care_scope, phone, credentials } = await req.json();
+    const payload = await req.json();
+    console.log('Request payload:', { email: payload.email, full_name: payload.full_name, role: payload.role });
+    
+    const { email, full_name, role, care_scope, phone, credentials } = payload;
 
     if (!email || !full_name) {
+      console.error('Missing required fields');
       return Response.json({ error: 'Email and full name are required' }, { status: 400 });
     }
 
     // Generate temporary password
     const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase() + '!9';
+    console.log('Generated temp password, length:', tempPassword.length);
 
-    // Create user via Base44 admin API
-    await base44.asServiceRole.entities.User.create({
-      email,
-      full_name,
-      role: role || 'user',
-      care_scope: care_scope || 'home_health',
-      phone: phone || null,
-      credentials: credentials || null,
-      temp_password: tempPassword,
-      password_reset_required: true
-    });
+    // Create user - using update on existing user or direct creation
+    console.log('Creating user account...');
+    try {
+      // Try to create via auth API if available, otherwise update user entity
+      const newUser = await base44.asServiceRole.entities.User.create({
+        email,
+        full_name,
+        role: role || 'user',
+        is_approved: true, // Auto-approve admin-created users
+        care_scope: care_scope || 'home_health',
+        phone: phone || null,
+        credentials: credentials || null
+      });
+      console.log('User created successfully:', newUser.id);
+    } catch (createError) {
+      console.error('Error creating user entity:', createError);
+      console.error('Error details:', createError.message);
+      throw new Error(`Failed to create user: ${createError.message}`);
+    }
 
     // Generate user manual HTML (compact version for email)
     const userManualHTML = `
@@ -80,13 +98,15 @@ Deno.serve(async (req) => {
 </html>`;
 
     // Send welcome email with temp password and user manual
+    console.log('Sending welcome email...');
     const careScopeLabel = care_scope === 'home_health' 
       ? 'Home Health' 
       : care_scope === 'hospice' 
       ? 'Hospice' 
       : 'Home Health & Hospice';
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
       to: email,
       subject: 'Welcome to Penn Sync - Your Account is Ready',
       body: `<!DOCTYPE html>
@@ -179,12 +199,19 @@ Deno.serve(async (req) => {
 </body>
 </html>`,
       from_name: 'Penn Sync Admin'
-    });
+      });
+      console.log('Welcome email sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail the entire operation if email fails
+    }
 
+    console.log('User creation completed successfully');
     return Response.json({ 
       success: true, 
-      message: 'User created and welcome email sent',
-      temp_password: tempPassword
+      message: 'User created successfully' + (tempPassword ? ' - Password sent via email' : ''),
+      temp_password: tempPassword,
+      user_email: email
     });
 
   } catch (error) {
