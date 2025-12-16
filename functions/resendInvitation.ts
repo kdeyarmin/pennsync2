@@ -48,6 +48,27 @@ Deno.serve(async (req) => {
     });
 
     console.log('✓ Invitation resent successfully');
+    
+    // Log to UserActivity for audit trail
+    try {
+      await base44.asServiceRole.entities.UserActivity.create({
+        user_email: user.email,
+        user_name: user.full_name,
+        action: 'invitation_resent',
+        details: {
+          invited_email: invitation.email,
+          invited_name: invitation.full_name,
+          resend_count: (invitation.resend_count || 0) + 1,
+          new_expires_at: newExpiresAt.toISOString()
+        },
+        page: 'UserManagement',
+        entity_type: 'UserInvitation',
+        entity_id: invitation_id
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
+    }
+    
     return Response.json({ 
       success: true, 
       message: 'Invitation resent successfully',

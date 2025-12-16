@@ -70,6 +70,25 @@ Deno.serve(async (req) => {
             accepted_at: new Date().toISOString()
           });
 
+          // Log auto-approval
+          try {
+            await base44.asServiceRole.entities.UserActivity.create({
+              user_email: user.email,
+              user_name: user.full_name,
+              action: 'user_signup_auto_approved',
+              details: {
+                invitation_id: invitation.id,
+                role: invitation.role,
+                care_scope: invitation.care_scope
+              },
+              page: 'Signup',
+              entity_type: 'User',
+              entity_id: user.id
+            });
+          } catch (logError) {
+            console.error('Failed to log activity:', logError);
+          }
+
           console.log('Auto-approved invited user:', user.email);
           return Response.json({ success: true, auto_approved: true });
         } catch (updateError) {
