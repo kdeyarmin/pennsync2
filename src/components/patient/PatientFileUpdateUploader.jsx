@@ -52,14 +52,19 @@ export default function PatientFileUpdateUploader() {
     try {
       // Upload file
       const fileUrl = await uploadFileMutation.mutateAsync(selectedFile);
-      
+
       // Process file and update patients
       const processResults = await processFileMutation.mutateAsync(fileUrl);
-      
-      setResults(processResults.results);
+
+      if (processResults.success) {
+        setResults(processResults.results);
+      } else {
+        throw new Error(processResults.details || processResults.error || 'Unknown error occurred');
+      }
     } catch (error) {
       console.error('Error processing file:', error);
-      alert('Error processing file: ' + error.message);
+      const errorMessage = error.message || error.response?.data?.details || 'Failed to process file. Please check the file format and try again.';
+      alert('Error: ' + errorMessage);
     }
     
     setIsProcessing(false);
