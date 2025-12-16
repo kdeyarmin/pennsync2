@@ -49,7 +49,10 @@ import {
   UserCheck,
   Mail,
   Calendar,
-  Filter
+  Filter,
+  Send,
+  Clock,
+  AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -81,12 +84,25 @@ export default function UserManagement() {
     enabled: currentUser?.role === 'admin',
   });
 
+  const { data: invitations = [] } = useQuery({
+    queryKey: ['userInvitations'],
+    queryFn: () => base44.entities.UserInvitation.list('-created_date'),
+    enabled: currentUser?.role === 'admin',
+  });
+
   const updateUserMutation = useMutation({
     mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsersManagement'] });
       setShowEditDialog(false);
       setSelectedUser(null);
+    },
+  });
+
+  const resendInvitationMutation = useMutation({
+    mutationFn: (invitationId) => base44.functions.invoke('resendInvitation', { invitation_id: invitationId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
     },
   });
 
@@ -149,6 +165,15 @@ export default function UserManagement() {
   };
 
   // Stats
+  const now = new Date();
+  const pendingInvitations = invitations.filter(i => i.status === 'pending');
+  const expiredInvitations = invitations.filter(i => i.status === 'expired' || (i.status === 'pending' && new Date(i.expires_at) < now));
+  const expiringSoonInvitations = pendingInvitations.filter(i => {
+    const expiresAt = new Date(i.expires_at);
+    const hoursUntilExpiry = (expiresAt - now) / (1000 * 60 * 60);
+    return hoursUntilExpiry > 0 && hoursUntilExpiry <= 24;
+  });
+
   const stats = {
     total: allUsers.length,
     admins: allUsers.filter(u => u.role === 'admin').length,
@@ -305,6 +330,78 @@ export default function UserManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pending Invitations */}
+      {pendingInvitations.length > 0 && (
+        <Card className="mb-6 border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between text-lg">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-yellow-600" />
+                <span>Pending Invitations ({pendingInvitations.length})</span>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {pendingInvitations.map((invitation) => {
+                const expiresAt = new Date(invitation.expires_at);
+                const isExpired = now > expiresAt;
+                const hoursUntilExpiry = (expiresAt - now) / (1000 * 60 * 60);
+                const isExpiringSoon = hoursUntilExpiry > 0 && hoursUntilExpiry <= 24;
+                
+                return (
+                  <div key={invitation.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900">{invitation.full_name}</p>
+                        <Badge className="text-xs">{invitation.role}</Badge>
+                        {isExpiringSoon && (
+                          <Badge className="bg-orange-100 text-orange-800 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Expiring Soon
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">{invitation.email}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Expires: {format(expiresAt, 'MMM d, yyyy')}
+                        </span>
+                        {invitation.resend_count > 0 && (
+                          <span>Resent {invitation.resend_count}x</span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => resendInvitationMutation.mutate(invitation.id)}
+                      disabled={resendInvitationMutation.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      Resend
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Expired Invitations Alert */}
+      {expiredInvitations.length > 0 && (
+        <Alert className="mb-6 border-red-200 bg-red-50">
+          <AlertTriangle className="w-4 h-4 text-red-600" />
+          <AlertDescription className="text-red-900">
+            <strong>{expiredInvitations.length} invitation{expiredInvitations.length > 1 ? 's have' : ' has'} expired.</strong>
+            {' '}These users will need new invitations to sign up.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Users Table */}
       <Card>
