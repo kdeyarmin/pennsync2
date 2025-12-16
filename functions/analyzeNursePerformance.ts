@@ -81,12 +81,35 @@ Deno.serve(async (req) => {
       metrics.visits_by_type[v.visit_type] = (metrics.visits_by_type[v.visit_type] || 0) + 1;
     });
 
-    // Documentation time and word count
+    // Documentation time - calculate from visit start_time and end_time for completed visits
+    const completedVisitsWithTime = visits.filter(v => 
+      v.status === 'completed' && v.start_time && v.end_time
+    );
+    
+    if (completedVisitsWithTime.length > 0) {
+      const totalDocMinutes = completedVisitsWithTime.reduce((sum, v) => {
+        try {
+          const start = new Date(`2000-01-01T${v.start_time}`);
+          const end = new Date(`2000-01-01T${v.end_time}`);
+          const minutes = (end - start) / (1000 * 60);
+          return sum + (minutes > 0 ? minutes : 0);
+        } catch (e) {
+          return sum;
+        }
+      }, 0);
+      metrics.avg_documentation_time = Math.round(totalDocMinutes / completedVisitsWithTime.length);
+    }
+    
+    // Also check activities for documentation time if available
     const docActivities = activities.filter(a => a.action === 'visit_completed' && a.details?.documentation_time_minutes);
-    if (docActivities.length > 0) {
+    if (docActivities.length > 0 && metrics.avg_documentation_time === 0) {
       metrics.avg_documentation_time = Math.round(
         docActivities.reduce((sum, a) => sum + (a.details.documentation_time_minutes || 0), 0) / docActivities.length
       );
+    }
+    
+    // Word count from activities
+    if (docActivities.length > 0) {
       metrics.avg_word_count = Math.round(
         docActivities.reduce((sum, a) => sum + (a.details.word_count || 0), 0) / docActivities.length
       );
