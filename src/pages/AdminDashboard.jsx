@@ -60,6 +60,7 @@ import {
   Phone
 } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { formatEastern } from "@/components/utils/timezone";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import QualityMetricsDashboard from "../components/admin/QualityMetricsDashboard";
@@ -604,7 +605,7 @@ export default function AdminDashboard() {
                     {filteredLogs.slice(0, 50).map((log) => (
                       <TableRow key={log.id}>
                         <TableCell className="text-sm">
-                          {log.timestamp ? format(new Date(log.timestamp), 'MMM d, HH:mm:ss') : 'N/A'}
+                          {log.timestamp ? formatEastern(log.timestamp, 'MMM d, HH:mm:ss') : 'N/A'}
                         </TableCell>
                         <TableCell className="text-sm">{log.user_email}</TableCell>
                         <TableCell>
@@ -737,7 +738,7 @@ export default function AdminDashboard() {
                     )}
 
                     <p className="text-xs text-gray-600 mt-3">
-                      Tested: {encryptionStatus.timestamp ? format(new Date(encryptionStatus.timestamp), 'PPpp') : 'N/A'}
+                      Tested: {encryptionStatus.timestamp ? formatEastern(encryptionStatus.timestamp, 'PPpp') : 'N/A'}
                     </p>
                   </AlertDescription>
                 </Alert>
