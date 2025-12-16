@@ -2,20 +2,26 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   try {
+    console.log('Starting processPatientFileUpdate function');
     const base44 = createClientFromRequest(req);
+    
+    console.log('Authenticating user...');
     const user = await base44.auth.me();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    console.log('User authenticated:', user.email);
 
     const { file_url } = await req.json();
 
     if (!file_url) {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
     }
+    console.log('File URL received:', file_url);
 
     // Extract ALL patient data from the uploaded file - comprehensive schema
+    console.log('Extracting data from file...');
     const extractResponse = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({
       file_url,
       json_schema: {
@@ -105,6 +111,7 @@ Deno.serve(async (req) => {
     });
 
     if (extractResponse.status !== 'success' || !extractResponse.output?.patients) {
+      console.error('Extraction failed:', extractResponse);
       return Response.json({ 
         error: 'Failed to extract patient data from file',
         details: extractResponse.details 
@@ -112,6 +119,8 @@ Deno.serve(async (req) => {
     }
 
     const uploadedPatients = extractResponse.output.patients;
+    console.log('Extracted patients count:', uploadedPatients.length);
+    
     const results = {
       processed: 0,
       created: 0,
@@ -125,7 +134,9 @@ Deno.serve(async (req) => {
     };
 
     // Get all existing patients
+    console.log('Fetching existing patients...');
     const existingPatients = await base44.asServiceRole.entities.Patient.list();
+    console.log('Existing patients count:', existingPatients.length);
 
     // Define critical fields that require approval
     const criticalFields = [
@@ -151,6 +162,7 @@ Deno.serve(async (req) => {
 
     for (const uploadedPatient of uploadedPatients) {
       results.processed++;
+      console.log(`Processing patient ${results.processed}/${uploadedPatients.length}:`, uploadedPatient.first_name, uploadedPatient.last_name);
 
       try {
         // Find matching patient by MRN, or by name + DOB
@@ -172,8 +184,10 @@ Deno.serve(async (req) => {
 
         if (!matchingPatient) {
           // Create new patient
+          console.log('Creating new patient...');
           try {
             const newPatient = await base44.asServiceRole.entities.Patient.create(uploadedPatient);
+            console.log('Patient created successfully:', newPatient.id);
             results.created++;
             
             // Log creation (non-blocking)
@@ -193,6 +207,7 @@ Deno.serve(async (req) => {
               console.error('Failed to create system log:', logError);
             }
           } catch (error) {
+            console.error('Error creating patient:', error);
             results.errors.push({
               patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
               error: `Failed to create patient: ${error.message}`
@@ -200,6 +215,8 @@ Deno.serve(async (req) => {
           }
           continue;
         }
+        
+        console.log('Found matching patient:', matchingPatient.id);
 
         // Compare and detect changes with intelligent merging
         const changes = {};
@@ -318,6 +335,7 @@ Deno.serve(async (req) => {
 
         if (requiresApproval) {
           // Create pending update for review
+          console.log('Creating pending update for review...');
           await base44.asServiceRole.entities.PendingPatientUpdate.create({
             patient_id: matchingPatient.id,
             source_file_url: file_url,
@@ -341,6 +359,7 @@ Deno.serve(async (req) => {
           });
         } else {
           // Auto-apply non-critical changes
+          console.log('Auto-applying changes...');
           await base44.asServiceRole.entities.Patient.update(matchingPatient.id, changes);
           
           // Log as auto-applied
@@ -394,6 +413,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log('Processing complete. Results:', results);
     return Response.json({
       success: true,
       results
