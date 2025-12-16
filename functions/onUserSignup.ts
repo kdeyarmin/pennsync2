@@ -12,7 +12,41 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No user data provided' }, { status: 400 });
     }
 
-    // Get all admin users
+    // Check if user was invited
+    console.log('Checking for invitation...');
+    const invitations = await base44.asServiceRole.entities.UserInvitation.filter({ 
+      email: user.email,
+      status: 'pending'
+    });
+    console.log('Found invitations:', invitations?.length || 0);
+
+    if (invitations && invitations.length > 0) {
+      // User was invited - auto-approve
+      const invitation = invitations[0];
+      console.log('Auto-approving invited user...');
+      
+      try {
+        await base44.asServiceRole.entities.User.update(user.id, {
+          role: invitation.role,
+          care_scope: invitation.care_scope,
+          phone: invitation.phone,
+          credentials: invitation.credentials,
+          is_approved: true
+        });
+
+        await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        });
+
+        console.log('Auto-approved invited user:', user.email);
+        return Response.json({ success: true, auto_approved: true });
+      } catch (updateError) {
+        console.error('Failed to auto-approve user:', updateError);
+      }
+    }
+
+    // Not invited - notify admins for manual approval
     console.log('Fetching admin users...');
     const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
     console.log('Found admins:', admins.length);
