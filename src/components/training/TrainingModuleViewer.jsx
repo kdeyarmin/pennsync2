@@ -20,6 +20,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import InteractiveSimulation from "./InteractiveSimulation";
 import GamifiedQuiz from "./GamifiedQuiz";
+import ModuleFeedbackForm from "./ModuleFeedbackForm";
 
 export default function TrainingModuleViewer({ module, nurseEmail, onComplete, onBack }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -27,6 +28,9 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
   const [showResults, setShowResults] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [completionRecord, setCompletionRecord] = useState(null);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   
   const queryClient = useQueryClient();
 
@@ -54,6 +58,20 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
       ...answers,
       [questionIndex]: answerIndex
     });
+  };
+
+  // Track real-time performance
+  const trackPerformance = async (metricData) => {
+    try {
+      await base44.entities.RealTimePerformanceMetric.create({
+        nurse_email: nurseEmail,
+        training_module_id: module.id,
+        session_id: sessionId,
+        ...metricData
+      });
+    } catch (error) {
+      console.error('Failed to track performance:', error);
+    }
   };
 
   const calculateScore = () => {
@@ -88,15 +106,19 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
         feedback: feedback || undefined
       };
 
+      let completionId;
       if (existingCompletions && existingCompletions.length > 0) {
         await updateCompletionMutation.mutateAsync({
           id: existingCompletions[0].id,
           data: completionData
         });
+        completionId = existingCompletions[0].id;
       } else {
-        await completionMutation.mutateAsync(completionData);
+        const newCompletion = await completionMutation.mutateAsync(completionData);
+        completionId = newCompletion.id;
       }
 
+      setCompletionRecord({ id: completionId });
       setShowResults(true);
     } catch (error) {
       console.error('Error submitting completion:', error);
@@ -107,6 +129,15 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
   };
 
   const handleFinish = () => {
+    // Show feedback form after completion
+    if (completionRecord && !showFeedbackForm) {
+      setShowFeedbackForm(true);
+    } else if (onComplete) {
+      onComplete(calculateScore());
+    }
+  };
+
+  const handleFeedbackSubmit = () => {
     if (onComplete) {
       onComplete(calculateScore());
     }
@@ -233,7 +264,7 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
                 </Button>
               )}
               <Button onClick={handleFinish} className="flex-1">
-                {passed ? 'Continue' : 'Exit'}
+                {passed ? (showFeedbackForm ? 'Skip Feedback' : 'Rate This Module') : 'Exit'}
               </Button>
             </div>
           </CardContent>
@@ -275,6 +306,19 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
                 </div>
               ))}
             </RadioGroup>
+
+            {/* Track answer selection */}
+            {answers[currentQuestionIndex] !== undefined && (
+              React.useEffect(() => {
+                trackPerformance({
+                  metric_type: 'quiz_question_response',
+                  question_difficulty: module.difficulty_level || 'medium',
+                  is_correct: answers[currentQuestionIndex] === currentQuestion.correct_answer,
+                  time_spent_seconds: 0,
+                  attempts: 1
+                });
+              }, [])
+            )}
 
             <div className="flex gap-3 mt-6">
               <Button
@@ -360,7 +404,16 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
       </Card>
 
       {/* Quiz */}
-      {hasQuiz && renderQuiz()}
+      {hasQuiz && !showFeedbackForm && renderQuiz()}
+
+      {/* Feedback Form */}
+      {showFeedbackForm && completionRecord && (
+        <ModuleFeedbackForm
+          completionId={completionRecord.id}
+          moduleTitle={module.title}
+          onSubmit={handleFeedbackSubmit}
+        />
+      )}
     </div>
   );
 }
