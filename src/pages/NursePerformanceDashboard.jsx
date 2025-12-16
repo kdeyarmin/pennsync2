@@ -836,7 +836,7 @@ export default function NursePerformanceDashboard() {
                     <CardTitle className="text-lg">Visit Types</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
+                    <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
                         <Pie
                           data={Object.entries(metrics?.visits_by_type || {}).map(([type, count]) => ({
@@ -844,18 +844,21 @@ export default function NursePerformanceDashboard() {
                             value: count
                           }))}
                           cx="50%"
-                          cy="50%"
-                          outerRadius={70}
+                          cy="40%"
+                          outerRadius={60}
                           fill="#8884d8"
                           dataKey="value"
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                          label={({ percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
                         >
                           {Object.keys(metrics?.visits_by_type || {}).map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip />
-                        <Legend />
+                        <Legend 
+                          wrapperStyle={{ fontSize: '12px' }}
+                          iconType="circle"
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </CardContent>
