@@ -91,12 +91,21 @@ export default function AuditTrail() {
       user_updated: 'bg-yellow-600',
       user_approved: 'bg-green-600',
       user_revoked: 'bg-red-600',
+      user_invitation_sent: 'bg-blue-600',
+      invitation_resent: 'bg-yellow-600',
+      user_signup_auto_approved: 'bg-green-600',
       error: 'bg-red-700'
+    };
+
+    const actionLabels = {
+      user_invitation_sent: 'Invitation Sent',
+      invitation_resent: 'Invitation Resent',
+      user_signup_auto_approved: 'User Auto-Approved'
     };
 
     return (
       <Badge className={actionColors[action] || 'bg-gray-400'}>
-        {action?.replace(/_/g, ' ').toUpperCase()}
+        {actionLabels[action] || action?.replace(/_/g, ' ').toUpperCase()}
       </Badge>
     );
   };
@@ -278,12 +287,38 @@ export default function AuditTrail() {
                       <TableCell className="max-w-xs">
                         {activity.details && Object.keys(activity.details).length > 0 ? (
                           <details className="cursor-pointer">
-                            <summary className="text-xs text-blue-600 hover:underline">
+                            <summary className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                              <Eye className="w-3 h-3" />
                               View details
                             </summary>
-                            <pre className="text-xs bg-gray-50 p-2 rounded mt-2 overflow-auto max-h-40">
-                              {JSON.stringify(activity.details, null, 2)}
-                            </pre>
+                            <div className="text-xs bg-gray-50 p-3 rounded mt-2 border border-gray-200">
+                              {activity.action === 'user_invitation_sent' && (
+                                <div className="space-y-1">
+                                  <p><span className="font-semibold">Invited:</span> {activity.details.invited_name} ({activity.details.invited_email})</p>
+                                  <p><span className="font-semibold">Role:</span> {activity.details.role}</p>
+                                  <p><span className="font-semibold">Care Scope:</span> {activity.details.care_scope}</p>
+                                  <p><span className="font-semibold">Expires:</span> {format(new Date(activity.details.expires_at), 'MMM d, yyyy hh:mm a')}</p>
+                                </div>
+                              )}
+                              {activity.action === 'invitation_resent' && (
+                                <div className="space-y-1">
+                                  <p><span className="font-semibold">Invited:</span> {activity.details.invited_name} ({activity.details.invited_email})</p>
+                                  <p><span className="font-semibold">Resend #:</span> {activity.details.resend_count}</p>
+                                  <p><span className="font-semibold">New Expiration:</span> {format(new Date(activity.details.new_expires_at), 'MMM d, yyyy hh:mm a')}</p>
+                                </div>
+                              )}
+                              {activity.action === 'user_signup_auto_approved' && (
+                                <div className="space-y-1">
+                                  <p><span className="font-semibold">Role:</span> {activity.details.role}</p>
+                                  <p><span className="font-semibold">Care Scope:</span> {activity.details.care_scope}</p>
+                                </div>
+                              )}
+                              {!['user_invitation_sent', 'invitation_resent', 'user_signup_auto_approved'].includes(activity.action) && (
+                                <pre className="overflow-auto max-h-40">
+                                  {JSON.stringify(activity.details, null, 2)}
+                                </pre>
+                              )}
+                            </div>
                           </details>
                         ) : (
                           <span className="text-gray-400 text-sm">-</span>
