@@ -1805,7 +1805,7 @@ Deno.serve(async (req) => {
       doc.setFont(fontFamily, 'normal');
       doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
       doc.text(style.agencyPhone, pageWidth - margin, yPos + 8, { align: 'right' });
-      doc.text('www.pennhomehealth.com', pageWidth - margin, yPos + 14, { align: 'right' });
+      doc.text('www.pennhh.com', pageWidth - margin, yPos + 14, { align: 'right' });
 
       // Custom header text if provided
       if (style.customHeader) {
@@ -2349,7 +2349,7 @@ Deno.serve(async (req) => {
 
     doc.setFont(fontFamily, 'normal');
     doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
-    doc.text(`Phone: ${style.agencyPhone}  |  For questions, contact your nurse`, pageWidth / 2, footerY + 7, { align: 'center' });
+    doc.text(`Phone: ${style.agencyPhone}  |  www.pennhh.com`, pageWidth / 2, footerY + 7, { align: 'center' });
 
     // Custom footer if provided
     if (style.customFooter) {
@@ -2437,7 +2437,7 @@ Deno.serve(async (req) => {
               </div>
               
               <div style="background: #667eea; padding: 15px; text-align: center; color: white; font-size: 12px;">
-                <p style="margin: 0;">Penn Home Health Inc. | 724-465-0440 | www.pennhomehealth.com</p>
+                <p style="margin: 0;">Penn Home Health Inc. | 724-465-0440 | www.pennhh.com</p>
               </div>
             </div>
           `

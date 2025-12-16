@@ -47,7 +47,7 @@ export default function HandoutPreview({
                 </div>
                 <div className="text-right text-sm text-gray-600">
                   <div className="font-semibold">724-465-0440</div>
-                  <div>www.pennhomehealth.com</div>
+                  <div>www.pennhh.com</div>
                 </div>
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function HandoutPreview({
             <div className="px-8 py-6 bg-gray-100 border-t">
               <div className="text-center space-y-2">
                 <div className="font-bold text-blue-700">Penn Home Health Inc.</div>
-                <div className="text-sm text-gray-600">Phone: 724-465-0440 | For questions, contact your nurse</div>
+                <div className="text-sm text-gray-600">Phone: 724-465-0440 | www.pennhh.com</div>
                 <div className="text-xs text-gray-500">
                   This information is for educational purposes only. Always follow your healthcare provider's advice.
                 </div>
