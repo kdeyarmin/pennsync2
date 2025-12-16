@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,7 +38,12 @@ import {
   Brain,
   Sparkles,
   Lightbulb,
-  ChevronRight
+  ChevronRight,
+  Heart,
+  Zap,
+  Plus,
+  Edit2,
+  Trash2
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -47,6 +52,9 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 export default function NursePerformanceDashboard() {
   const [selectedNurse, setSelectedNurse] = useState('');
   const [dateRange, setDateRange] = useState('30');
+  const [showGoalDialog, setShowGoalDialog] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
+  const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -79,6 +87,42 @@ export default function NursePerformanceDashboard() {
   const metrics = performanceData?.metrics;
   const insights = performanceData?.insights;
   const skillGaps = performanceData?.skill_gaps || [];
+  const docQuality = performanceData?.documentation_quality;
+  const patientOutcomes = performanceData?.patient_outcomes;
+  const utilization = performanceData?.utilization;
+  const burnoutRisk = performanceData?.burnout_risk;
+
+  // Fetch nurse goals
+  const { data: nurseGoals = [] } = useQuery({
+    queryKey: ['nurseGoals', nurseEmail],
+    queryFn: () => base44.entities.NurseGoal.filter({ nurse_email: nurseEmail }),
+    enabled: !!nurseEmail,
+    initialData: []
+  });
+
+  // Goal mutations
+  const createGoalMutation = useMutation({
+    mutationFn: (goal) => base44.entities.NurseGoal.create(goal),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nurseGoals'] });
+      setShowGoalDialog(false);
+      setEditingGoal(null);
+    }
+  });
+
+  const updateGoalMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.NurseGoal.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nurseGoals'] });
+      setShowGoalDialog(false);
+      setEditingGoal(null);
+    }
+  });
+
+  const deleteGoalMutation = useMutation({
+    mutationFn: (id) => base44.entities.NurseGoal.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nurseGoals'] })
+  });
 
   const getScoreColor = (score) => {
     if (score >= 90) return 'text-green-600 bg-green-50';
@@ -92,6 +136,21 @@ export default function NursePerformanceDashboard() {
     if (grade === 'B' || grade === 'B+') return 'bg-blue-500';
     if (grade === 'C') return 'bg-yellow-500';
     return 'bg-red-500';
+  };
+
+  const getBurnoutColor = (level) => {
+    if (level === 'low') return 'text-green-600 bg-green-50';
+    if (level === 'moderate') return 'text-yellow-600 bg-yellow-50';
+    if (level === 'high') return 'text-orange-600 bg-orange-50';
+    return 'text-red-600 bg-red-50';
+  };
+
+  const handleSaveGoal = (goalData) => {
+    if (editingGoal) {
+      updateGoalMutation.mutate({ id: editingGoal.id, data: goalData });
+    } else {
+      createGoalMutation.mutate({ ...goalData, nurse_email: nurseEmail });
+    }
   };
 
   if (isLoading) {
@@ -233,13 +292,387 @@ export default function NursePerformanceDashboard() {
           </div>
 
           <Tabs defaultValue="insights" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="insights">AI Insights</TabsTrigger>
-              <TabsTrigger value="trends">Trends</TabsTrigger>
-              <TabsTrigger value="suggestions">AI Suggestions</TabsTrigger>
-              <TabsTrigger value="skills">Skill Gaps</TabsTrigger>
-              <TabsTrigger value="activities">Activities</TabsTrigger>
-            </TabsList>
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="insights">Insights</TabsTrigger>
+            <TabsTrigger value="quality">Quality</TabsTrigger>
+            <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
+            <TabsTrigger value="utilization">Utilization</TabsTrigger>
+            <TabsTrigger value="burnout">Burnout</TabsTrigger>
+            <TabsTrigger value="goals">My Goals</TabsTrigger>
+            <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
+          </TabsList>
+
+            {/* Documentation Quality Tab */}
+            <TabsContent value="quality" className="space-y-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Total Notes</p>
+                    <p className="text-3xl font-bold text-blue-600">{docQuality?.total_notes || 0}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Avg Note Length</p>
+                    <p className="text-3xl font-bold text-green-600">{docQuality?.avg_note_length || 0}</p>
+                    <p className="text-xs text-gray-500 mt-1">characters</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Completeness</p>
+                    <p className="text-3xl font-bold text-purple-600">
+                      {docQuality?.total_notes > 0 
+                        ? Math.round((docQuality.notes_with_vitals / docQuality.total_notes) * 100)
+                        : 0}%
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">notes with vitals</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Quality Indicators</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm">Notes with AI Tags</span>
+                      <span className="font-semibold">{docQuality?.notes_with_tags || 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm">Notes with Vitals</span>
+                      <span className="font-semibold">{docQuality?.notes_with_vitals || 0}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-600" />
+                      Issues Identified
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                      <span className="text-sm">Critical Issues</span>
+                      <Badge variant="destructive">{docQuality?.critical_issues || 0}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                      <span className="text-sm">Flagged for Review</span>
+                      <Badge className="bg-yellow-500">{docQuality?.flagged_issues || 0}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Patient Outcomes Tab */}
+            <TabsContent value="outcomes" className="space-y-6">
+              <div className="grid md:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Patients Managed</p>
+                    <p className="text-3xl font-bold text-blue-600">{patientOutcomes?.total_patients || 0}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Care Plans</p>
+                    <p className="text-3xl font-bold text-green-600">{patientOutcomes?.care_plans_managed || 0}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Goals Met</p>
+                    <p className="text-3xl font-bold text-purple-600">{patientOutcomes?.goals_met || 0}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Achievement Rate</p>
+                    <p className="text-3xl font-bold text-teal-600">{patientOutcomes?.goal_achievement_rate || 0}%</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Care Plan Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Met', value: patientOutcomes?.goals_met || 0 },
+                            { name: 'Active', value: patientOutcomes?.goals_active || 0 }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          <Cell fill="#10B981" />
+                          <Cell fill="#3B82F6" />
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Incident Management</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <span className="text-sm">Total Incidents</span>
+                      <span className="text-2xl font-bold">{patientOutcomes?.incidents_reported || 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                      <span className="text-sm">High Severity</span>
+                      <Badge variant="destructive">{patientOutcomes?.high_severity_incidents || 0}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Utilization Tab */}
+            <TabsContent value="utilization" className="space-y-6">
+              <div className="grid md:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Visits (30d)</p>
+                    <p className="text-3xl font-bold text-blue-600">{utilization?.visits_last_30_days || 0}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Avg Visits/Day</p>
+                    <p className="text-3xl font-bold text-green-600">{utilization?.avg_visits_per_day || 0}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Productive Hours</p>
+                    <p className="text-3xl font-bold text-purple-600">{utilization?.productive_hours || 0}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-2">Utilization Rate</p>
+                    <p className="text-3xl font-bold text-orange-600">{utilization?.utilization_rate || 0}%</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Workload Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm font-medium">Daily Visit Load</span>
+                        <span className="text-sm text-gray-600">{utilization?.avg_visits_per_day || 0} / 6 optimal</span>
+                      </div>
+                      <Progress value={(utilization?.avg_visits_per_day / 6) * 100 || 0} />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm font-medium">Utilization Rate</span>
+                        <span className="text-sm text-gray-600">{utilization?.utilization_rate || 0}%</span>
+                      </div>
+                      <Progress value={utilization?.utilization_rate || 0} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Burnout Risk Tab */}
+            <TabsContent value="burnout" className="space-y-6">
+              <Alert className={getBurnoutColor(burnoutRisk?.risk_level || 'low')}>
+                <Heart className="w-5 h-5" />
+                <AlertDescription>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-bold text-lg">Burnout Risk: {burnoutRisk?.risk_level?.toUpperCase() || 'LOW'}</p>
+                      <p className="text-sm mt-1">Risk Score: {burnoutRisk?.risk_score || 0}/100</p>
+                    </div>
+                    <div className="text-right">
+                      <Progress value={burnoutRisk?.risk_score || 0} className="w-32 mb-2" />
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {burnoutRisk?.warning_signs?.length > 0 && (
+                  <Card className="border-amber-200">
+                    <CardHeader className="bg-amber-50">
+                      <CardTitle className="flex items-center gap-2 text-amber-900">
+                        <AlertTriangle className="w-5 h-5" />
+                        Warning Signs
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-2">
+                        {burnoutRisk.warning_signs.map((sign, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">{sign}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {burnoutRisk?.positive_indicators?.length > 0 && (
+                  <Card className="border-green-200">
+                    <CardHeader className="bg-green-50">
+                      <CardTitle className="flex items-center gap-2 text-green-900">
+                        <CheckCircle2 className="w-5 h-5" />
+                        Positive Indicators
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-2">
+                        {burnoutRisk.positive_indicators.map((indicator, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">{indicator}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {burnoutRisk?.contributing_factors?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Contributing Factors</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {burnoutRisk.contributing_factors.map((factor, idx) => (
+                        <li key={idx} className="p-3 bg-gray-50 rounded-lg text-sm">{factor}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              {burnoutRisk?.recommendations?.length > 0 && (
+                <Card className="border-blue-200">
+                  <CardHeader className="bg-blue-50">
+                    <CardTitle className="flex items-center gap-2 text-blue-900">
+                      <Lightbulb className="w-5 h-5" />
+                      Recommendations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <ul className="space-y-3">
+                      {burnoutRisk.recommendations.map((rec, idx) => (
+                        <li key={idx} className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                          <Zap className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Personal Goals Tab */}
+            <TabsContent value="goals" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">My Performance Goals</h3>
+                  <p className="text-sm text-gray-600">Track your professional development objectives</p>
+                </div>
+                <Button onClick={() => { setEditingGoal(null); setShowGoalDialog(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Goal
+                </Button>
+              </div>
+
+              {nurseGoals.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center text-gray-500">
+                    <Target className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p>No goals set yet. Create your first performance goal!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {nurseGoals.map((goal) => {
+                    const progress = goal.target_value > 0 
+                      ? Math.min(Math.round((goal.current_value / goal.target_value) * 100), 100)
+                      : 0;
+                    
+                    return (
+                      <Card key={goal.id} className={
+                        goal.status === 'achieved' ? 'border-green-300 bg-green-50' :
+                        goal.status === 'missed' ? 'border-red-300 bg-red-50' :
+                        'border-blue-300'
+                      }>
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-lg">{goal.title}</CardTitle>
+                              <p className="text-sm text-gray-600 mt-1">{goal.description}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => { setEditingGoal(goal); setShowGoalDialog(true); }}>
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => deleteGoalMutation.mutate(goal.id)}>
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-sm">
+                              <span>Progress</span>
+                              <span className="font-semibold">{goal.current_value} / {goal.target_value} {goal.unit}</span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                            <div className="flex justify-between text-xs text-gray-600">
+                              <span>Target: {format(new Date(goal.target_date), 'MMM d, yyyy')}</span>
+                              <Badge variant={
+                                goal.status === 'achieved' ? 'default' :
+                                goal.status === 'missed' ? 'destructive' :
+                                'secondary'
+                              }>
+                                {goal.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
 
             {/* AI Insights Tab */}
             <TabsContent value="insights" className="space-y-6">
@@ -598,42 +1031,97 @@ export default function NursePerformanceDashboard() {
               </Card>
             </TabsContent>
 
-            {/* Activities Tab */}
-            <TabsContent value="activities">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5" />
-                    Recent Activity Log
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ScrollArea className="h-96">
-                    <div className="space-y-2">
-                      {performanceData?.recent_activities?.map((activity, idx) => (
-                        <div key={idx} className="flex items-center gap-3 p-3 border-b hover:bg-gray-50">
-                          <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">
-                              {activity.action.replace(/_/g, ' ')}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatEastern(activity.created_date, 'MMM d, yyyy hh:mm a')}
-                            </p>
-                          </div>
-                          {activity.details?.compliance_score && (
-                            <Badge className={getScoreColor(activity.details.compliance_score)}>
-                              {activity.details.compliance_score}%
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
+
+          {/* Goal Dialog */}
+          <Dialog open={showGoalDialog} onOpenChange={setShowGoalDialog}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>{editingGoal ? 'Edit Goal' : 'Create New Goal'}</DialogTitle>
+                <DialogDescription>Set a personal performance goal to track your progress</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                handleSaveGoal({
+                  goal_type: formData.get('goal_type'),
+                  title: formData.get('title'),
+                  description: formData.get('description'),
+                  target_value: parseFloat(formData.get('target_value')),
+                  current_value: parseFloat(formData.get('current_value') || 0),
+                  unit: formData.get('unit'),
+                  target_date: formData.get('target_date'),
+                  priority: formData.get('priority'),
+                  status: editingGoal?.status || 'active'
+                });
+              }}>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Goal Type</Label>
+                      <Select name="goal_type" defaultValue={editingGoal?.goal_type || 'compliance_score'} required>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="compliance_score">Compliance Score</SelectItem>
+                          <SelectItem value="documentation_time">Documentation Time</SelectItem>
+                          <SelectItem value="visits_per_day">Visits per Day</SelectItem>
+                          <SelectItem value="ai_adoption">AI Adoption</SelectItem>
+                          <SelectItem value="patient_outcomes">Patient Outcomes</SelectItem>
+                          <SelectItem value="training_completion">Training Completion</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Priority</Label>
+                      <Select name="priority" defaultValue={editingGoal?.priority || 'medium'} required>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Title</Label>
+                    <Input name="title" defaultValue={editingGoal?.title} required placeholder="e.g., Achieve 95% compliance" />
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Input name="description" defaultValue={editingGoal?.description} placeholder="Detailed description of your goal" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label>Target Value</Label>
+                      <Input name="target_value" type="number" defaultValue={editingGoal?.target_value} required />
+                    </div>
+                    <div>
+                      <Label>Current Value</Label>
+                      <Input name="current_value" type="number" defaultValue={editingGoal?.current_value || 0} />
+                    </div>
+                    <div>
+                      <Label>Unit</Label>
+                      <Input name="unit" defaultValue={editingGoal?.unit || '%'} required placeholder="%, min, count" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Target Date</Label>
+                    <Input name="target_date" type="date" defaultValue={editingGoal?.target_date} required />
+                  </div>
+                </div>
+                <DialogFooter className="mt-6">
+                  <Button type="button" variant="outline" onClick={() => setShowGoalDialog(false)}>Cancel</Button>
+                  <Button type="submit">{editingGoal ? 'Update' : 'Create'} Goal</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>

@@ -18,12 +18,14 @@ Deno.serve(async (req) => {
     dateThreshold.setDate(dateThreshold.getDate() - date_range_days);
 
     // Fetch all relevant data
-    const [activities, recommendations, audits, visits, patients] = await Promise.all([
+    const [activities, recommendations, audits, visits, patients, carePlans, incidents] = await Promise.all([
       base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail }),
       base44.asServiceRole.entities.TrainingRecommendation.filter({ nurse_email: targetEmail }),
       base44.asServiceRole.entities.ComplianceAudit.filter({ nurse_email: targetEmail }),
       base44.asServiceRole.entities.Visit.filter({ created_by: targetEmail }),
-      base44.asServiceRole.entities.Patient.list()
+      base44.asServiceRole.entities.Patient.list(),
+      base44.asServiceRole.entities.CarePlan.list(),
+      base44.asServiceRole.entities.Incident.list()
     ]);
 
     // Calculate metrics
@@ -289,6 +291,112 @@ Provide actionable, specific insights. Be constructive and focus on growth oppor
       });
     }
 
+    // Calculate documentation quality metrics
+    const docQualityMetrics = {
+      total_notes: visits.filter(v => v.nurse_notes).length,
+      avg_note_length: 0,
+      notes_with_vitals: visits.filter(v => v.vital_signs && Object.keys(v.vital_signs).length > 0).length,
+      notes_with_tags: visits.filter(v => v.ai_tags && v.ai_tags.length > 0).length,
+      critical_issues: audits.filter(a => a.status === 'critical').length,
+      flagged_issues: audits.filter(a => a.status === 'flagged').length
+    };
+
+    const notesWithContent = visits.filter(v => v.nurse_notes);
+    if (notesWithContent.length > 0) {
+      docQualityMetrics.avg_note_length = Math.round(
+        notesWithContent.reduce((sum, v) => sum + (v.nurse_notes?.length || 0), 0) / notesWithContent.length
+      );
+    }
+
+    // Calculate patient outcomes
+    const nursePatientIds = [...new Set(visits.map(v => v.patient_id))];
+    const nurseCarePlans = carePlans.filter(cp => nursePatientIds.includes(cp.patient_id));
+    const metGoals = nurseCarePlans.filter(cp => cp.status === 'met').length;
+    const activeGoals = nurseCarePlans.filter(cp => cp.status === 'active').length;
+    
+    const nurseIncidents = incidents.filter(i => 
+      visits.some(v => v.id === i.visit_id)
+    );
+
+    const patientOutcomes = {
+      total_patients: nursePatientIds.length,
+      care_plans_managed: nurseCarePlans.length,
+      goals_met: metGoals,
+      goals_active: activeGoals,
+      goal_achievement_rate: nurseCarePlans.length > 0 ? Math.round((metGoals / nurseCarePlans.length) * 100) : 0,
+      incidents_reported: nurseIncidents.length,
+      high_severity_incidents: nurseIncidents.filter(i => i.severity === 'high').length
+    };
+
+    // Calculate utilization rates
+    const last30DaysDate = new Date(dateThreshold);
+    const recentVisits = visits.filter(v => new Date(v.visit_date) >= last30DaysDate);
+    const workingDays = 22; // Approximate working days in 30 days
+    const avgVisitsPerDay = recentVisits.length / workingDays;
+    
+    const utilizationMetrics = {
+      visits_last_30_days: recentVisits.length,
+      avg_visits_per_day: Math.round(avgVisitsPerDay * 10) / 10,
+      productive_hours: Math.round((visitsWithTime.length * metrics.avg_visit_duration) / 60),
+      patients_managed: nursePatientIds.length,
+      utilization_rate: Math.min(Math.round((avgVisitsPerDay / 6) * 100), 100) // Assuming 6 visits/day is 100%
+    };
+
+    // Predict burnout risk using AI
+    const burnoutPrompt = `Analyze the following nurse workload and performance data to assess burnout risk:
+
+WORKLOAD DATA (Last ${date_range_days} days):
+- Total Visits: ${metrics.total_visits}
+- Avg Visits/Day: ${utilizationMetrics.avg_visits_per_day}
+- Documentation Time: ${metrics.avg_documentation_time} min/visit
+- After-hours Activity: ${activities.filter(a => {
+  const hour = new Date(a.created_date).getHours();
+  return hour < 7 || hour > 19;
+}).length} actions
+
+PERFORMANCE TRENDS:
+- Compliance Score: ${metrics.avg_compliance_score}%
+- Documentation Issues: ${docQualityMetrics.critical_issues} critical, ${docQualityMetrics.flagged_issues} flagged
+- Incidents: ${patientOutcomes.incidents_reported} (${patientOutcomes.high_severity_incidents} high severity)
+- AI Tool Usage: ${metrics.suggestion_acceptance_rate}% acceptance rate
+
+QUALITY INDICATORS:
+- Goal Achievement: ${patientOutcomes.goal_achievement_rate}%
+- Template Usage: ${metrics.template_usage} times
+- Unaddressed Recommendations: ${recommendations.filter(r => !r.addressed).length}
+
+Assess burnout risk (low/moderate/high) and provide specific warning signs and recommendations.`;
+
+    const burnoutAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: burnoutPrompt,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          risk_level: { 
+            type: 'string',
+            enum: ['low', 'moderate', 'high', 'critical']
+          },
+          risk_score: { type: 'number' },
+          warning_signs: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          contributing_factors: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          recommendations: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          positive_indicators: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        }
+      }
+    });
+
     return Response.json({
       success: true,
       nurse_email: targetEmail,
@@ -296,7 +404,11 @@ Provide actionable, specific insights. Be constructive and focus on growth oppor
       insights,
       skill_gaps: skillGaps,
       recent_recommendations: recommendations.filter(r => !r.addressed).slice(0, 10),
-      recent_activities: activities.slice(0, 20)
+      recent_activities: activities.slice(0, 20),
+      documentation_quality: docQualityMetrics,
+      patient_outcomes: patientOutcomes,
+      utilization: utilizationMetrics,
+      burnout_risk: burnoutAnalysis
     });
 
   } catch (error) {
