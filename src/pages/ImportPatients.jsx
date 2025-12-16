@@ -71,6 +71,7 @@ export default function ImportPatients() {
   const [importResults, setImportResults] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [skipErrors, setSkipErrors] = useState(true);
+  const [selectedRowPreview, setSelectedRowPreview] = useState(null);
   
   const queryClient = useQueryClient();
 
@@ -626,6 +627,65 @@ export default function ImportPatients() {
               </p>
             </div>
 
+            {/* Sample Data Preview */}
+            {Object.keys(columnMapping).length > 0 && (
+              <Card className="mt-4 border-purple-200 bg-purple-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    Sample Data Preview (First 3 Rows)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {csvData.rows.slice(0, 3).map((row, rowIdx) => (
+                      <div key={rowIdx} className="p-3 bg-white rounded-lg border text-xs">
+                        <p className="font-semibold mb-2 text-gray-700">Row {rowIdx + 1}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(columnMapping).map(([colIdx, fieldKey]) => {
+                            const value = row[colIdx]?.trim() || '';
+                            const field = FIELD_MAPPINGS[fieldKey];
+                            let validationError = null;
+
+                            if (value) {
+                              if (field.type === 'email') {
+                                const emailError = validateEmail(value);
+                                if (emailError?.severity === SEVERITY.ERROR) {
+                                  validationError = emailError.message;
+                                }
+                              } else if (field.type === 'date') {
+                                const dateError = validateDate(value, fieldKey);
+                                if (dateError?.severity === SEVERITY.ERROR) {
+                                  validationError = dateError.message;
+                                }
+                              } else if (fieldKey.includes('phone')) {
+                                const phoneError = validatePhone(value);
+                                if (phoneError?.severity === SEVERITY.ERROR) {
+                                  validationError = phoneError.message;
+                                }
+                              }
+                            }
+
+                            return (
+                              <div key={fieldKey} className={`p-2 rounded ${validationError ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
+                                <p className="font-medium text-gray-700">{field.label}</p>
+                                <p className={`mt-1 ${validationError ? 'text-red-700' : 'text-gray-900'}`}>
+                                  {value || <span className="text-gray-400 italic">empty</span>}
+                                </p>
+                                {validationError && (
+                                  <p className="text-xs text-red-600 mt-1">⚠️ {validationError}</p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Validate Button */}
             <div className="mt-6 flex justify-end">
               <Button
@@ -746,41 +806,93 @@ export default function ImportPatients() {
                 </div>
               )}
 
-              {/* Data Preview */}
+              {/* Detailed Row Preview */}
               {validRecords.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Preview Valid Records</h3>
-                  <ScrollArea className="h-64 border rounded-lg">
-                    <div className="p-4">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b bg-gray-50">
-                            <th className="text-left p-2 font-semibold">#</th>
-                            <th className="text-left p-2 font-semibold">Name</th>
-                            <th className="text-left p-2 font-semibold">DOB</th>
-                            <th className="text-left p-2 font-semibold">MRN</th>
-                            <th className="text-left p-2 font-semibold">Phone</th>
-                            <th className="text-left p-2 font-semibold">Email</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {validRecords.slice(0, 10).map((record, idx) => (
-                            <tr key={idx} className="border-b hover:bg-gray-50">
-                              <td className="p-2">{idx + 1}</td>
-                              <td className="p-2 font-medium">
-                                {record.first_name} {record.last_name}
-                              </td>
-                              <td className="p-2">{record.date_of_birth || '-'}</td>
-                              <td className="p-2">{record.medical_record_number || '-'}</td>
-                              <td className="p-2">{record.phone || '-'}</td>
-                              <td className="p-2">{record.email || '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      {validRecords.length > 10 && (
-                        <p className="text-sm text-gray-500 text-center mt-3">
-                          Showing first 10 of {validRecords.length} valid records
+                  <h3 className="font-semibold text-gray-900 mb-3">Detailed Row Preview</h3>
+                  <ScrollArea className="h-80 border rounded-lg">
+                    <div className="p-4 space-y-3">
+                      {validRecords.slice(0, 20).map((record, idx) => {
+                        const validationResults = validatePatient(record, { skipWarnings: false });
+                        const warnings = validationResults.filter(v => v.severity === SEVERITY.WARNING);
+                        const infos = validationResults.filter(v => v.severity === SEVERITY.INFO);
+                        const isExpanded = selectedRowPreview === idx;
+                        
+                        return (
+                          <Card 
+                            key={idx} 
+                            className={`cursor-pointer transition-all ${isExpanded ? 'border-blue-500 shadow-md' : 'hover:border-gray-400'}`}
+                            onClick={() => setSelectedRowPreview(isExpanded ? null : idx)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                  <div>
+                                    <p className="font-semibold">
+                                      Row {idx + 1}: {record.first_name} {record.last_name}
+                                    </p>
+                                    <div className="flex gap-2 mt-1">
+                                      {warnings.length > 0 && (
+                                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800">
+                                          {warnings.length} warning{warnings.length > 1 ? 's' : ''}
+                                        </Badge>
+                                      )}
+                                      {infos.length > 0 && (
+                                        <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                                          {infos.length} info
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Eye className="w-4 h-4 text-gray-400" />
+                              </div>
+
+                              {isExpanded && (
+                                <div className="mt-4 pt-4 border-t space-y-3">
+                                  <div className="grid grid-cols-2 gap-3 text-sm">
+                                    {Object.entries(record).map(([key, value]) => {
+                                      const field = FIELD_MAPPINGS[key];
+                                      if (!field) return null;
+                                      
+                                      return (
+                                        <div key={key} className="p-2 bg-gray-50 rounded">
+                                          <p className="text-xs text-gray-600 font-medium">{field.label}</p>
+                                          <p className="mt-1 text-gray-900">{value || <span className="text-gray-400 italic">empty</span>}</p>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+
+                                  {(warnings.length > 0 || infos.length > 0) && (
+                                    <div className="space-y-2">
+                                      {warnings.map((warn, wIdx) => (
+                                        <Alert key={wIdx} className="bg-yellow-50 border-yellow-300">
+                                          <AlertDescription className="text-sm text-yellow-900">
+                                            ⚠️ {warn.message}
+                                            {warn.suggestion && <span className="block mt-1 text-xs">💡 {warn.suggestion}</span>}
+                                          </AlertDescription>
+                                        </Alert>
+                                      ))}
+                                      {infos.map((info, iIdx) => (
+                                        <Alert key={iIdx} className="bg-blue-50 border-blue-300">
+                                          <AlertDescription className="text-sm text-blue-900">
+                                            ℹ️ {info.message}
+                                          </AlertDescription>
+                                        </Alert>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                      {validRecords.length > 20 && (
+                        <p className="text-sm text-gray-500 text-center py-2">
+                          Showing first 20 of {validRecords.length} valid records
                         </p>
                       )}
                     </div>
