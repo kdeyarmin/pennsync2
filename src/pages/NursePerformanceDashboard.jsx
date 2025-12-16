@@ -184,9 +184,9 @@ export default function NursePerformanceDashboard() {
                 <SelectValue placeholder="Select nurse..." />
               </SelectTrigger>
               <SelectContent>
-                {allUsers.filter(u => u.role === 'user').map(user => (
+                {allUsers.filter(u => u.role === 'user' && u.is_approved !== false).map(user => (
                   <SelectItem key={user.email} value={user.email}>
-                    {user.full_name}
+                    {user.full_name || user.email}
                   </SelectItem>
                 ))}
               </SelectContent>
