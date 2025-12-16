@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     const signupUrl = Deno.env.get('APP_URL') || 'https://your-app-url.base44.app';
 
     try {
-      await base44.asServiceRole.integrations.Core.SendEmail({
+      const emailResult = await base44.asServiceRole.integrations.Core.SendEmail({
       to: email,
       subject: 'You\'re Invited to Penn Sync - Create Your Account',
       body: `<!DOCTYPE html>
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
 </html>`,
       from_name: 'Penn Sync Admin'
       });
-      console.log('Invitation email sent successfully');
+      console.log('Invitation email sent successfully:', emailResult);
       
       // Pre-approve the user by storing their info
       // When they sign up, the onUserSignup webhook can auto-approve them
@@ -205,6 +205,29 @@ Deno.serve(async (req) => {
       
     } catch (emailError) {
       console.error('Failed to send invitation email:', emailError);
+      console.error('Email error details:', emailError.message);
+      console.error('Email error stack:', emailError.stack);
+      
+      // Still log the invitation attempt even if email fails
+      try {
+        await base44.asServiceRole.entities.SystemLog.create({
+          job_name: 'User Invitation',
+          job_type: 'other',
+          status: 'error',
+          message: `Failed to send invitation to ${email}: ${emailError.message}`,
+          details: {
+            email,
+            full_name,
+            role: role || 'user',
+            care_scope: care_scope || 'home_health',
+            invited_by: user.email,
+            error: emailError.message
+          }
+        });
+      } catch (logError) {
+        console.error('Failed to log error:', logError);
+      }
+      
       throw new Error(`Failed to send invitation: ${emailError.message}`);
     }
 
