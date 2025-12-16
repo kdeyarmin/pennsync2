@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,10 +15,14 @@ import {
   Download,
   Users,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  GripVertical,
+  Eye,
+  X
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { validatePatient, validatePhone, validateEmail, validateDate, SEVERITY } from "../components/utils/patientValidation";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -56,8 +59,10 @@ export default function ImportPatients() {
   const [file, setFile] = useState(null);
   const [csvData, setCsvData] = useState(null);
   const [columnMapping, setColumnMapping] = useState({});
+  const [mappingErrors, setMappingErrors] = useState({});
   const [validationErrors, setValidationErrors] = useState([]);
   const [validRecords, setValidRecords] = useState([]);
+  const [showPreview, setShowPreview] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResults, setImportResults] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -168,6 +173,7 @@ export default function ImportPatients() {
         });
         
         setColumnMapping(autoMapping);
+        validateMapping(autoMapping);
       } else {
         alert('Failed to extract data from CSV: ' + (extractedData.details || 'Unknown error'));
       }
@@ -179,8 +185,56 @@ export default function ImportPatients() {
     setIsProcessing(false);
   };
 
+  const validateMapping = (mapping) => {
+    const errors = {};
+    const mappedFields = Object.values(mapping);
+    const requiredFieldsMissing = REQUIRED_FIELDS.filter(field => !mappedFields.includes(field));
+    
+    if (requiredFieldsMissing.length > 0) {
+      errors.missing = `Missing required fields: ${requiredFieldsMissing.map(f => FIELD_MAPPINGS[f].label).join(', ')}`;
+    }
+
+    // Check for duplicate mappings
+    const duplicates = mappedFields.filter((item, index) => mappedFields.indexOf(item) !== index);
+    if (duplicates.length > 0) {
+      errors.duplicates = `Duplicate mappings found: ${[...new Set(duplicates)].map(f => FIELD_MAPPINGS[f].label).join(', ')}`;
+    }
+
+    setMappingErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const sourceIndex = parseInt(result.draggableId.split('-')[1]);
+    const destinationField = result.destination.droppableId === 'unassigned' ? null : result.destination.droppableId;
+
+    setColumnMapping(prev => {
+      const newMapping = { ...prev };
+      if (destinationField) {
+        // Remove any existing mapping to this field
+        Object.keys(newMapping).forEach(key => {
+          if (newMapping[key] === destinationField) {
+            delete newMapping[key];
+          }
+        });
+        newMapping[sourceIndex] = destinationField;
+      } else {
+        delete newMapping[sourceIndex];
+      }
+      validateMapping(newMapping);
+      return newMapping;
+    });
+  };
+
   const validateData = () => {
     if (!csvData || !csvData.rows) return;
+    
+    if (!validateMapping(columnMapping)) {
+      alert('Please fix mapping errors before validating data');
+      return;
+    }
 
     const errors = [];
     const valid = [];
@@ -248,6 +302,9 @@ export default function ImportPatients() {
 
     setValidationErrors(errors);
     setValidRecords(valid);
+    if (valid.length > 0) {
+      setShowPreview(true);
+    }
   };
 
   const handleImport = async () => {
@@ -341,68 +398,160 @@ export default function ImportPatients() {
         </CardContent>
       </Card>
 
-      {/* Column Mapping */}
-      {csvData && (
+      {/* Column Mapping with Drag & Drop */}
+      {csvData && !showPreview && (
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ArrowRight className="w-5 h-5" />
-              Step 2: Map Columns
+              Step 2: Map Columns (Drag & Drop)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Map your CSV columns to patient fields. Auto-mapped fields are pre-selected.
+              Drag CSV columns to the corresponding patient fields. Auto-mapped fields are already assigned.
             </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(csvData.headers || []).map((header, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <Label className="text-xs text-gray-500 mb-1">CSV Column</Label>
-                    <div className="p-2 bg-gray-100 rounded text-sm font-medium">
-                      {header}
-                    </div>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <div className="flex-1">
-                    <Label className="text-xs text-gray-500 mb-1">Patient Field</Label>
-                    <Select
-                      value={columnMapping[idx] || 'skip'}
-                      onValueChange={(value) => {
-                        setColumnMapping(prev => {
-                          const newMapping = { ...prev };
-                          if (value === 'skip') {
-                            delete newMapping[idx];
-                          } else {
-                            newMapping[idx] = value;
-                          }
-                          return newMapping;
-                        });
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="skip">
-                          <span className="text-gray-400">Skip this column</span>
-                        </SelectItem>
-                        {Object.entries(FIELD_MAPPINGS).map(([key, field]) => (
-                          <SelectItem key={key} value={key}>
-                            {field.label} {field.required && <span className="text-red-500">*</span>}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+
+            {/* Mapping Errors */}
+            {Object.keys(mappingErrors).length > 0 && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="w-4 h-4" />
+                <AlertDescription>
+                  <ul className="list-disc ml-4">
+                    {Object.values(mappingErrors).map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* CSV Columns (Source) */}
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    CSV Columns
+                  </h3>
+                  <Droppable droppableId="unassigned">
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`border-2 border-dashed rounded-lg p-4 min-h-[400px] ${
+                          snapshot.isDraggingOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          {(csvData.headers || []).map((header, idx) => {
+                            const isMapped = columnMapping[idx] !== undefined;
+                            if (isMapped) return null;
+                            
+                            return (
+                              <Draggable key={`col-${idx}`} draggableId={`col-${idx}`} index={idx}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`p-3 bg-white border rounded-lg flex items-center gap-2 cursor-move ${
+                                      snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-500' : 'hover:shadow-md'
+                                    }`}
+                                  >
+                                    <GripVertical className="w-4 h-4 text-gray-400" />
+                                    <span className="font-medium text-sm">{header}</span>
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          })}
+                        </div>
+                        {provided.placeholder}
+                        {Object.keys(columnMapping).length === csvData.headers.length && (
+                          <p className="text-sm text-gray-500 text-center mt-4">All columns mapped</p>
+                        )}
+                      </div>
+                    )}
+                  </Droppable>
                 </div>
-              ))}
-            </div>
+
+                {/* Patient Fields (Target) */}
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Patient Fields
+                  </h3>
+                  <ScrollArea className="h-[400px] border rounded-lg p-4">
+                    <div className="space-y-2">
+                      {Object.entries(FIELD_MAPPINGS).map(([fieldKey, field]) => {
+                        const mappedColIndex = Object.keys(columnMapping).find(
+                          key => columnMapping[key] === fieldKey
+                        );
+                        const mappedColumn = mappedColIndex !== undefined ? csvData.headers[mappedColIndex] : null;
+
+                        return (
+                          <Droppable key={fieldKey} droppableId={fieldKey}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={`p-3 border-2 rounded-lg ${
+                                  snapshot.isDraggingOver
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : mappedColumn
+                                    ? 'border-green-500 bg-green-50'
+                                    : field.required
+                                    ? 'border-red-200 bg-red-50'
+                                    : 'border-gray-200 bg-gray-50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-medium text-sm">
+                                    {field.label}
+                                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                                  </span>
+                                  {mappedColumn && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setColumnMapping(prev => {
+                                          const newMapping = { ...prev };
+                                          delete newMapping[mappedColIndex];
+                                          validateMapping(newMapping);
+                                          return newMapping;
+                                        });
+                                      }}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                                {mappedColumn ? (
+                                  <div className="p-2 bg-white border border-green-300 rounded flex items-center gap-2">
+                                    <GripVertical className="w-3 h-3 text-gray-400" />
+                                    <span className="text-sm font-medium">{mappedColumn}</span>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-gray-500">Drop column here</p>
+                                )}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            </DragDropContext>
 
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
-                <span className="text-red-500">*</span> = Required field
+                💡 Drag CSV columns from the left to patient fields on the right. Required fields are marked with <span className="text-red-500">*</span>
               </p>
             </div>
 
@@ -410,24 +559,25 @@ export default function ImportPatients() {
             <div className="mt-6 flex justify-end">
               <Button
                 onClick={validateData}
+                disabled={Object.keys(mappingErrors).length > 0}
                 className="bg-blue-600 hover:bg-blue-700"
                 size="lg"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                Validate & Continue
+                Validate & Preview Data
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Validation Results */}
-      {validationErrors.length > 0 || validRecords.length > 0 ? (
+      {/* Preview & Validation Results */}
+      {showPreview && (validationErrors.length > 0 || validRecords.length > 0) ? (
         <Card className="mb-6 border-blue-300 border-2">
           <CardHeader className="bg-blue-50">
             <CardTitle className="text-lg flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-blue-600" />
-              Step 3: Review Validation Results
+              <Eye className="w-5 h-5 text-blue-600" />
+              Step 3: Preview & Validate Data
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -491,6 +641,48 @@ export default function ImportPatients() {
                       Skip rows with errors and import only valid records ({validRecords.length} records)
                     </Label>
                   </div>
+                </div>
+              )}
+
+              {/* Data Preview */}
+              {validRecords.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Preview Valid Records</h3>
+                  <ScrollArea className="h-64 border rounded-lg">
+                    <div className="p-4">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-gray-50">
+                            <th className="text-left p-2 font-semibold">#</th>
+                            <th className="text-left p-2 font-semibold">Name</th>
+                            <th className="text-left p-2 font-semibold">DOB</th>
+                            <th className="text-left p-2 font-semibold">MRN</th>
+                            <th className="text-left p-2 font-semibold">Phone</th>
+                            <th className="text-left p-2 font-semibold">Email</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {validRecords.slice(0, 10).map((record, idx) => (
+                            <tr key={idx} className="border-b hover:bg-gray-50">
+                              <td className="p-2">{idx + 1}</td>
+                              <td className="p-2 font-medium">
+                                {record.first_name} {record.last_name}
+                              </td>
+                              <td className="p-2">{record.date_of_birth || '-'}</td>
+                              <td className="p-2">{record.medical_record_number || '-'}</td>
+                              <td className="p-2">{record.phone || '-'}</td>
+                              <td className="p-2">{record.email || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {validRecords.length > 10 && (
+                        <p className="text-sm text-gray-500 text-center mt-3">
+                          Showing first 10 of {validRecords.length} valid records
+                        </p>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
               )}
 
@@ -595,8 +787,10 @@ export default function ImportPatients() {
                   setFile(null);
                   setCsvData(null);
                   setColumnMapping({});
+                  setMappingErrors({});
                   setValidationErrors([]);
                   setValidRecords([]);
+                  setShowPreview(false);
                   setImportResults(null);
                   setImportProgress(0);
                 }}
