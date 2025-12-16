@@ -86,24 +86,23 @@ export default function UserManagement({ users, currentUser }) {
     }
   });
 
-  // Create user with temp password mutation
+  // Create user invitation mutation
   const createUserMutation = useMutation({
     mutationFn: async (data) => {
-      const { createUserWithTempPassword } = await import('@/functions/createUserWithTempPassword');
-      const response = await createUserWithTempPassword(data);
-      return response.data;
+      return await base44.functions.invoke('createUserWithTempPassword', data);
     },
     onSuccess: async (data) => {
       // Log activity
-      await logActivity('user_created', {
-        entity_type: 'User',
+      await logActivity('user_invited', {
+        entity_type: 'UserInvitation',
         user_email: inviteData.email,
         user_role: inviteData.role,
         page: 'UserManagement'
       });
       
-      alert(`User created successfully! Welcome email sent to ${inviteData.email}\n\nTemporary Password: ${data.temp_password}\n\n(Also sent via email with user manual attached)`);
+      alert(`Invitation sent successfully to ${inviteData.email}!\n\nThe user will receive an email with instructions to create their account.\n\nInvitation expires in 7 days.`);
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
       setShowInviteDialog(false);
       setInviteData({ 
         email: "", 
@@ -115,7 +114,8 @@ export default function UserManagement({ users, currentUser }) {
       });
     },
     onError: (error) => {
-      alert('Failed to create user: ' + error.message);
+      console.error('Failed to send invitation:', error);
+      alert('Failed to send invitation: ' + error.message);
     }
   });
 
@@ -207,8 +207,8 @@ export default function UserManagement({ users, currentUser }) {
               onClick={() => setShowInviteDialog(true)}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Create New User
+              <Mail className="w-4 h-4 mr-2" />
+              Invite New User
             </Button>
           </div>
 
@@ -363,9 +363,9 @@ export default function UserManagement({ users, currentUser }) {
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New User Account</DialogTitle>
+            <DialogTitle>Invite New User</DialogTitle>
             <DialogDescription>
-              Create a new user account with temporary password. User will receive a welcome email with login credentials and user manual.
+              Send an invitation email to a new user. They will create their own account and password when they sign up.
             </DialogDescription>
           </DialogHeader>
 
@@ -449,10 +449,10 @@ export default function UserManagement({ users, currentUser }) {
               <AlertDescription className="text-blue-900">
                 <p className="font-semibold mb-1">What happens next:</p>
                 <ul className="text-sm space-y-1">
-                  <li>✓ Account created with secure temporary password</li>
-                  <li>✓ Welcome email sent with login credentials</li>
-                  <li>✓ User manual attached to email (PDF)</li>
-                  <li>✓ User required to change password on first login</li>
+                  <li>✓ Invitation email sent to the user</li>
+                  <li>✓ User creates their own account and password</li>
+                  <li>✓ Account automatically approved upon signup</li>
+                  <li>✓ Invitation expires in 7 days</li>
                 </ul>
               </AlertDescription>
             </Alert>
@@ -468,9 +468,9 @@ export default function UserManagement({ users, currentUser }) {
               className="bg-blue-600 hover:bg-blue-700"
             >
               {createUserMutation.isPending ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating User...</>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending Invitation...</>
               ) : (
-                <><UserPlus className="w-4 h-4 mr-2" /> Create User & Send Email</>
+                <><Mail className="w-4 h-4 mr-2" /> Send Invitation</>
               )}
             </Button>
           </DialogFooter>
