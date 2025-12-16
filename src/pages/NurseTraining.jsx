@@ -73,10 +73,10 @@ export default function NurseTraining() {
     initialData: [],
   });
 
-  const completedCount = trainingProgress.filter(p => p.status === 'completed').length + 
-                         allCompletions.filter(c => c.status === 'completed').length;
-  const avgScore = trainingProgress.length > 0
-    ? trainingProgress.reduce((sum, p) => sum + (p.score || 0), 0) / trainingProgress.length
+  const completedCount = (trainingProgress?.filter(p => p?.status === 'completed')?.length || 0) + 
+                         (allCompletions?.filter(c => c?.status === 'completed')?.length || 0);
+  const avgScore = trainingProgress?.length > 0
+    ? trainingProgress.reduce((sum, p) => sum + (p?.score || 0), 0) / trainingProgress.length
     : 0;
 
   const handleStartModule = (module) => {
@@ -147,7 +147,7 @@ export default function NurseTraining() {
               <div>
                 <p className="text-sm text-orange-700 font-medium">In Progress</p>
                 <p className="text-3xl font-bold text-orange-900">
-                  {trainingProgress.filter(p => p.status === 'in_progress').length}
+                  {trainingProgress?.filter(p => p?.status === 'in_progress')?.length || 0}
                 </p>
               </div>
               <TrendingUp className="w-10 h-10 text-orange-600" />
@@ -160,7 +160,7 @@ export default function NurseTraining() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-700 font-medium">Recommendations</p>
-                <p className="text-3xl font-bold text-purple-900">{recommendations.length}</p>
+                <p className="text-3xl font-bold text-purple-900">{recommendations?.length || 0}</p>
               </div>
               <Target className="w-10 h-10 text-purple-600" />
             </div>
@@ -169,18 +169,18 @@ export default function NurseTraining() {
       </div>
 
       {/* Active Recommendations Banner */}
-      {recommendations.length > 0 && (
+      {recommendations?.length > 0 && (
         <Card className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <h3 className="font-semibold text-amber-900 mb-1">
-                  You have {recommendations.length} training recommendation{recommendations.length !== 1 ? 's' : ''}
+                  You have {recommendations?.length || 0} training recommendation{recommendations?.length !== 1 ? 's' : ''}
                 </h3>
                 <p className="text-sm text-amber-700">
                   Complete practice scenarios and quizzes to address these areas: {' '}
-                  {recommendations.slice(0, 3).map(r => r.recommendation_type).join(', ')}
+                  {recommendations?.slice(0, 3).map(r => r?.recommendation_type).join(', ')}
                 </p>
               </div>
             </div>
