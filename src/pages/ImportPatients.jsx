@@ -74,34 +74,42 @@ export default function ImportPatients() {
   
   const queryClient = useQueryClient();
 
-  const uploadFileMutation = useMutation({
-    mutationFn: async (file) => {
-      const response = await base44.integrations.Core.UploadFile({ file });
-      return response.file_url;
-    }
-  });
-
-  const extractDataMutation = useMutation({
-    mutationFn: async (fileUrl) => {
-      const response = await base44.integrations.Core.ExtractDataFromUploadedFile({
-        file_url: fileUrl,
-        json_schema: {
-          type: 'object',
-          properties: {
-            headers: { type: 'array', items: { type: 'string' } },
-            rows: { 
-              type: 'array', 
-              items: { 
-                type: 'array',
-                items: { type: 'string' }
-              }
-            }
+  const parseCSV = (text) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    if (lines.length === 0) return { headers: [], rows: [] };
+    
+    const parseCSVLine = (line) => {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
           }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
         }
-      });
-      return response;
-    }
-  });
+      }
+      result.push(current.trim());
+      return result;
+    };
+    
+    const headers = parseCSVLine(lines[0]);
+    const rows = lines.slice(1).map(line => parseCSVLine(line));
+    
+    return { headers, rows };
+  };
 
   const importPatientsMutation = useMutation({
     mutationFn: async (patients) => {
@@ -151,22 +159,23 @@ export default function ImportPatients() {
     setImportResults(null);
 
     try {
-      // Upload file
-      const fileUrl = await uploadFileMutation.mutateAsync(selectedFile);
+      // Read CSV file directly
+      const text = await selectedFile.text();
+      const { headers, rows } = parseCSV(text);
       
-      // Extract CSV data
-      const extractedData = await extractDataMutation.mutateAsync(fileUrl);
+      if (!headers || headers.length === 0) {
+        alert('No headers found in CSV file');
+        setIsProcessing(false);
+        return;
+      }
       
-      if (extractedData?.status === 'success' && extractedData?.output) {
-        const { headers = [], rows = [] } = extractedData.output;
-        
-        if (!headers || headers.length === 0) {
-          alert('No headers found in CSV file');
-          setIsProcessing(false);
-          return;
-        }
-        
-        setCsvData({ headers, rows });
+      if (rows.length === 0) {
+        alert('No data rows found in CSV file');
+        setIsProcessing(false);
+        return;
+      }
+      
+      setCsvData({ headers, rows });
         
         // Auto-map columns based on header names
         const autoMapping = {};
