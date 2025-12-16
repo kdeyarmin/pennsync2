@@ -75,11 +75,11 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
   };
 
   const calculateScore = () => {
-    if (!hasQuiz) return 100;
+    if (!hasQuiz || questions.length === 0) return 100;
     
     let correct = 0;
     questions.forEach((q, idx) => {
-      if (answers[idx] === q.correct_answer) {
+      if (answers[idx] === q?.correct_answer) {
         correct++;
       }
     });
@@ -235,8 +235,8 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
             </div>
 
             <div className="space-y-4 mb-6">
-              {questions.map((q, idx) => {
-                const isCorrect = answers[idx] === q.correct_answer;
+              {questions?.map((q, idx) => {
+                const isCorrect = answers[idx] === q?.correct_answer;
                 return (
                   <div key={idx} className="p-4 bg-white rounded-lg border">
                     <div className="flex items-start gap-2 mb-2">
@@ -245,9 +245,11 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
                       ) : (
                         <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                       )}
-                      <p className="font-medium">{q.question}</p>
+                      <p className="font-medium">{q?.question}</p>
                     </div>
-                    <p className="text-sm text-gray-600 ml-7">{q.explanation}</p>
+                    {q?.explanation && (
+                      <p className="text-sm text-gray-600 ml-7">{q.explanation}</p>
+                    )}
                   </div>
                 );
               })}
@@ -273,6 +275,8 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
     }
 
     const currentQuestion = questions[currentQuestionIndex];
+    if (!currentQuestion) return null;
+    
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
     return (
@@ -291,13 +295,23 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-lg font-medium">{currentQuestion.question}</p>
+            <p className="text-lg font-medium">{currentQuestion?.question}</p>
             
             <RadioGroup
               value={answers[currentQuestionIndex]?.toString()}
-              onValueChange={(value) => handleAnswerChange(currentQuestionIndex, parseInt(value))}
+              onValueChange={(value) => {
+                handleAnswerChange(currentQuestionIndex, parseInt(value));
+                // Track answer selection
+                trackPerformance({
+                  metric_type: 'quiz_question_response',
+                  question_difficulty: module.difficulty_level || 'medium',
+                  is_correct: parseInt(value) === currentQuestion?.correct_answer,
+                  time_spent_seconds: 0,
+                  attempts: 1
+                });
+              }}
             >
-              {currentQuestion.options.map((option, idx) => (
+              {currentQuestion?.options?.map((option, idx) => (
                 <div key={idx} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
                   <RadioGroupItem value={idx.toString()} id={`option-${idx}`} />
                   <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer">
@@ -306,19 +320,6 @@ export default function TrainingModuleViewer({ module, nurseEmail, onComplete, o
                 </div>
               ))}
             </RadioGroup>
-
-            {/* Track answer selection */}
-            {answers[currentQuestionIndex] !== undefined && (
-              React.useEffect(() => {
-                trackPerformance({
-                  metric_type: 'quiz_question_response',
-                  question_difficulty: module.difficulty_level || 'medium',
-                  is_correct: answers[currentQuestionIndex] === currentQuestion.correct_answer,
-                  time_spent_seconds: 0,
-                  attempts: 1
-                });
-              }, [])
-            )}
 
             <div className="flex gap-3 mt-6">
               <Button
