@@ -29,25 +29,10 @@ Deno.serve(async (req) => {
     const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase() + '!9';
     console.log('Generated temp password, length:', tempPassword.length);
 
-    // Create user - using update on existing user or direct creation
-    console.log('Creating user account...');
-    try {
-      // Try to create via auth API if available, otherwise update user entity
-      const newUser = await base44.asServiceRole.entities.User.create({
-        email,
-        full_name,
-        role: role || 'user',
-        is_approved: true, // Auto-approve admin-created users
-        care_scope: care_scope || 'home_health',
-        phone: phone || null,
-        credentials: credentials || null
-      });
-      console.log('User created successfully:', newUser.id);
-    } catch (createError) {
-      console.error('Error creating user entity:', createError);
-      console.error('Error details:', createError.message);
-      throw new Error(`Failed to create user: ${createError.message}`);
-    }
+    // In Base44, users must sign up themselves via the auth system
+    // Admins can only update existing users or send invitations
+    // So we'll send an invitation email with signup instructions
+    console.log('Sending invitation email to new user...');
 
     // Generate user manual HTML (compact version for email)
     const userManualHTML = `
@@ -97,18 +82,20 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    // Send welcome email with temp password and user manual
-    console.log('Sending welcome email...');
+    // Send invitation email with signup link
+    console.log('Preparing invitation email...');
     const careScopeLabel = care_scope === 'home_health' 
       ? 'Home Health' 
       : care_scope === 'hospice' 
       ? 'Hospice' 
       : 'Home Health & Hospice';
+    
+    const signupUrl = Deno.env.get('APP_URL') || 'https://your-app-url.base44.app';
 
     try {
       await base44.asServiceRole.integrations.Core.SendEmail({
       to: email,
-      subject: 'Welcome to Penn Sync - Your Account is Ready',
+      subject: 'You\'re Invited to Penn Sync - Create Your Account',
       body: `<!DOCTYPE html>
 <html>
 <head>
@@ -132,24 +119,20 @@ Deno.serve(async (req) => {
   <div class="container">
     <div class="header">
       <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" alt="Penn Sync Logo" class="logo" />
-      <h1 style="margin: 0; font-size: 28px;">Welcome to Penn Sync!</h1>
+      <h1 style="margin: 0; font-size: 28px;">You're Invited to Penn Sync!</h1>
       <p style="margin: 10px 0 0 0; opacity: 0.9;">AI-Powered Home Health Documentation</p>
     </div>
     
     <div class="content">
       <p>Hello <strong>${full_name}</strong>,</p>
       
-      <p>Your Penn Sync account has been created by your administrator. You now have access to AI-powered clinical documentation, OASIS analytics, and advanced decision support tools.</p>
+      <p>Your administrator has invited you to join Penn Sync! You now have access to AI-powered clinical documentation, OASIS analytics, and advanced decision support tools.</p>
       
       <div class="credentials">
-        <h3 style="margin-top: 0;">Your Login Credentials</h3>
+        <h3 style="margin-top: 0;">Your Account Details</h3>
         <div class="info-row">
           <span class="label">Email:</span> ${email}
         </div>
-        <div class="info-row">
-          <span class="label">Temporary Password:</span>
-        </div>
-        <div class="password-box">${tempPassword}</div>
         <div class="info-row">
           <span class="label">Role:</span> ${role === 'admin' ? 'Administrator' : 'User'}
         </div>
@@ -159,17 +142,18 @@ Deno.serve(async (req) => {
       </div>
       
       <div class="warning">
-        <strong>⚠️ IMPORTANT - First Login:</strong>
+        <strong>⚠️ IMPORTANT - Getting Started:</strong>
         <ul style="margin: 10px 0;">
-          <li>You will be required to change your password on first login</li>
+          <li>Click the button below to create your account</li>
           <li>Choose a strong password with at least 8 characters</li>
           <li>Complete your profile with professional credentials and license number</li>
+          <li>Your account will be pre-approved and ready to use immediately</li>
         </ul>
       </div>
       
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${Deno.env.get('APP_URL') || 'https://your-app-url.base44.app'}" class="button">
-          Log In to Penn Sync
+        <a href="${signupUrl}" class="button">
+          Create Your Account
         </a>
       </div>
       
@@ -200,17 +184,34 @@ Deno.serve(async (req) => {
 </html>`,
       from_name: 'Penn Sync Admin'
       });
-      console.log('Welcome email sent successfully');
+      console.log('Invitation email sent successfully');
+      
+      // Pre-approve the user by storing their info
+      // When they sign up, the onUserSignup webhook can auto-approve them
+      await base44.asServiceRole.entities.SystemLog.create({
+        job_name: 'User Invitation',
+        job_type: 'other',
+        status: 'success',
+        message: `Invitation sent to ${email}`,
+        details: {
+          email,
+          full_name,
+          role: role || 'user',
+          care_scope: care_scope || 'home_health',
+          invited_by: user.email,
+          auto_approve: true
+        }
+      });
+      
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
-      // Don't fail the entire operation if email fails
+      console.error('Failed to send invitation email:', emailError);
+      throw new Error(`Failed to send invitation: ${emailError.message}`);
     }
 
-    console.log('User creation completed successfully');
+    console.log('User invitation completed successfully');
     return Response.json({ 
       success: true, 
-      message: 'User created successfully' + (tempPassword ? ' - Password sent via email' : ''),
-      temp_password: tempPassword,
+      message: 'Invitation sent successfully - User will create their own account',
       user_email: email
     });
 
