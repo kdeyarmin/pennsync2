@@ -845,7 +845,7 @@ export default function ImportPatients() {
             </div>
           </CardContent>
         </Card>
-      ) : null}
+      )}
     </div>
   );
 }
