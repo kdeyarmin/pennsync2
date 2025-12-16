@@ -2,21 +2,34 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   try {
-    console.log('createUserWithTempPassword started');
+    console.log('=== createUserWithTempPassword started ===');
     const base44 = createClientFromRequest(req);
     
     // Verify admin user
-    console.log('Verifying admin user...');
-    const user = await base44.auth.me();
-    console.log('Current user:', user?.email, 'Role:', user?.role);
+    console.log('Step 1: Verifying admin user...');
+    let user;
+    try {
+      user = await base44.auth.me();
+      console.log('Current user:', user?.email, 'Role:', user?.role);
+    } catch (authError) {
+      console.error('Auth error:', authError.message);
+      return Response.json({ error: 'Authentication failed', details: authError.message }, { status: 401 });
+    }
     
     if (!user || user.role !== 'admin') {
       console.error('Unauthorized: User is not admin');
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const payload = await req.json();
-    console.log('Request payload:', { email: payload.email, full_name: payload.full_name, role: payload.role });
+    console.log('Step 2: Parsing request payload...');
+    let payload;
+    try {
+      payload = await req.json();
+      console.log('Request payload:', { email: payload.email, full_name: payload.full_name, role: payload.role });
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError.message);
+      return Response.json({ error: 'Invalid JSON payload', details: parseError.message }, { status: 400 });
+    }
     
     const { email, full_name, role, care_scope, phone, credentials } = payload;
 
@@ -25,15 +38,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email and full name are required' }, { status: 400 });
     }
 
-    // Generate temporary password
-    const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase() + '!9';
-    console.log('Generated temp password, length:', tempPassword.length);
-
-    // Store invitation in database
-    console.log('Creating invitation record...');
-
+    console.log('Step 3: Creating invitation record...');
     try {
-      // Create invitation record
       const invitation = await base44.asServiceRole.entities.UserInvitation.create({
         email,
         full_name,
@@ -44,9 +50,9 @@ Deno.serve(async (req) => {
         invited_by: user.email,
         status: 'pending'
       });
-      console.log('Invitation record created:', invitation.id);
+      console.log('✓ Invitation record created:', invitation.id);
       
-      // Try to send email but don't fail if it doesn't work
+      console.log('Step 4: Sending invitation email...');
       try {
         const signupUrl = `${Deno.env.get('APP_URL') || 'https://app.base44.app'}`;
         
@@ -56,32 +62,40 @@ Deno.serve(async (req) => {
           body: `Hello ${full_name},\n\nYou've been invited to join Penn Sync.\n\nEmail: ${email}\nRole: ${role || 'user'}\n\nPlease visit ${signupUrl} to create your account.\n\nWelcome to Penn Sync!`,
           from_name: 'Penn Sync'
         });
-        console.log('Invitation email sent successfully');
+        console.log('✓ Invitation email sent');
       } catch (emailError) {
         console.error('Email send failed (non-critical):', emailError.message);
-        // Don't throw - email failure is not critical
       }
       
-    } catch (error) {
-      console.error('Failed to create invitation:', error);
-      console.error('Error details:', error.message, error.stack);
-      throw error;
+      console.log('=== User invitation completed successfully ===');
+      return Response.json({ 
+        success: true, 
+        message: 'Invitation sent successfully',
+        user_email: email
+      });
+      
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      console.error('Error name:', dbError.name);
+      console.error('Error message:', dbError.message);
+      console.error('Error stack:', dbError.stack);
+      return Response.json({ 
+        error: 'Failed to create invitation', 
+        details: dbError.message,
+        errorName: dbError.name
+      }, { status: 500 });
     }
 
-    console.log('User invitation completed successfully');
-    return Response.json({ 
-      success: true, 
-      message: 'Invitation sent successfully - User will create their own account',
-      user_email: email
-    });
-
   } catch (error) {
-    console.error('Error creating user:', error);
-    console.error('Error details:', error.message);
+    console.error('=== FATAL ERROR ===');
+    console.error('Error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     return Response.json({ 
-      error: 'Failed to create user', 
+      error: 'Internal server error', 
       details: error.message,
+      errorName: error.name,
       stack: error.stack 
     }, { status: 500 });
   }
