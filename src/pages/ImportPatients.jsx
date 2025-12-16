@@ -23,6 +23,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { validatePatient, validatePhone, validateEmail, validateDate, SEVERITY } from "../components/utils/patientValidation";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import ValidationSummary from "../components/import/ValidationSummary";
+import AIValidationHelper from "../components/import/AIValidationHelper";
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -582,17 +584,35 @@ export default function ImportPatients() {
 
       {/* Preview & Validation Results */}
       {showPreview && (validationErrors.length > 0 || validRecords.length > 0) ? (
-        <Card className="mb-6 border-blue-300 border-2">
-          <CardHeader className="bg-blue-50">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Eye className="w-5 h-5 text-blue-600" />
-              Step 3: Preview & Validate Data
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Summary */}
-              <div className="grid grid-cols-3 gap-4">
+        <>
+          {/* Validation Summary */}
+          <ValidationSummary
+            validationErrors={validationErrors}
+            validRecords={validRecords}
+            totalRows={csvData?.rows?.length || 0}
+          />
+
+          {/* AI Validation Helper */}
+          {validationErrors.length > 0 && (
+            <AIValidationHelper
+              validationErrors={validationErrors}
+              onApplySuggestions={(suggestions) => {
+                console.log('Apply suggestions:', suggestions);
+              }}
+            />
+          )}
+
+          <Card className="mb-6 border-blue-300 border-2">
+            <CardHeader className="bg-blue-50">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Eye className="w-5 h-5 text-blue-600" />
+                Step 3: Review Validation Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Quick Summary Stats */}
+                <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-green-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -618,22 +638,35 @@ export default function ImportPatients() {
                 </div>
               </div>
 
-              {/* Error Details */}
+              {/* Detailed Error List */}
               {validationErrors.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-red-900 mb-3">Errors Found</h3>
+                  <h3 className="font-semibold text-red-900 mb-3 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Detailed Error Report ({validationErrors.length} rows)
+                  </h3>
                   <ScrollArea className="h-64 border rounded-lg p-4">
                     <div className="space-y-3">
                       {(validationErrors || []).map((error, idx) => (
                         <Alert key={idx} variant="destructive">
                           <AlertCircle className="w-4 h-4" />
                           <AlertDescription>
-                            <span className="font-semibold">Row {error.row}</span> ({error.patient})
-                            <ul className="mt-1 ml-4 list-disc text-sm">
-                              {(error.errors || []).map((err, errIdx) => (
-                                <li key={errIdx}>{err}</li>
-                              ))}
-                            </ul>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold">Row {error.row}</span>
+                                <Badge variant="outline" className="bg-red-100">
+                                  {error.patient}
+                                </Badge>
+                              </div>
+                              <ul className="ml-4 space-y-1">
+                                {(error.errors || []).map((err, errIdx) => (
+                                  <li key={errIdx} className="text-sm flex items-start gap-2">
+                                    <span className="text-red-600 mt-0.5">•</span>
+                                    <span>{err}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           </AlertDescription>
                         </Alert>
                       ))}

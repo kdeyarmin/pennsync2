@@ -7,7 +7,7 @@ export const SEVERITY = {
   INFO: 'info'        // Just informational
 };
 
-// Phone number validation
+// Phone number validation with auto-correction suggestions
 export const validatePhone = (phone) => {
   if (!phone) return null;
   
@@ -16,10 +16,18 @@ export const validatePhone = (phone) => {
   
   // Check length
   if (cleaned.length !== 10 && cleaned.length !== 11) {
+    let suggestion = null;
+    if (cleaned.length === 7) {
+      suggestion = 'Consider adding area code';
+    } else if (cleaned.length > 11) {
+      suggestion = `Try: ${cleaned.slice(-10)}`;
+    }
+    
     return {
       severity: SEVERITY.ERROR,
       message: 'Phone number must be 10 digits (or 11 with country code)',
-      field: 'phone'
+      field: 'phone',
+      suggestion
     };
   }
   
@@ -28,14 +36,25 @@ export const validatePhone = (phone) => {
     return {
       severity: SEVERITY.ERROR,
       message: '11-digit phone numbers must start with 1',
-      field: 'phone'
+      field: 'phone',
+      suggestion: `Did you mean: 1${cleaned.slice(0, 10)}?`
+    };
+  }
+  
+  // Check for suspicious patterns (all same digit, sequential)
+  if (/^(\d)\1+$/.test(cleaned)) {
+    return {
+      severity: SEVERITY.WARNING,
+      message: 'Phone number appears to be placeholder (all same digit)',
+      field: 'phone',
+      canOverride: true
     };
   }
   
   return null;
 };
 
-// Email validation
+// Email validation with typo detection
 export const validateEmail = (email) => {
   if (!email) return null;
   
@@ -45,13 +64,38 @@ export const validateEmail = (email) => {
     return {
       severity: SEVERITY.ERROR,
       message: 'Invalid email format',
-      field: 'email'
+      field: 'email',
+      suggestion: 'Must be in format: user@domain.com'
     };
   }
   
-  // Check for common typos
-  const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
+  // Common typos in domain names
+  const domainCorrections = {
+    'gmial.com': 'gmail.com',
+    'gmai.com': 'gmail.com',
+    'yahooo.com': 'yahoo.com',
+    'yaho.com': 'yahoo.com',
+    'hotmial.com': 'hotmail.com',
+    'outlok.com': 'outlook.com',
+    'outloo.com': 'outlook.com'
+  };
+  
   const domain = email.split('@')[1]?.toLowerCase();
+  
+  // Check for exact typo matches
+  if (domain && domainCorrections[domain]) {
+    const corrected = email.replace(domain, domainCorrections[domain]);
+    return {
+      severity: SEVERITY.WARNING,
+      message: `Possible typo in email domain`,
+      field: 'email',
+      suggestion: `Did you mean: ${corrected}?`,
+      canOverride: true
+    };
+  }
+  
+  // Check for common domain similarity
+  const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com'];
   
   if (domain && !commonDomains.includes(domain) && domain.split('.').length === 2) {
     const suggestions = commonDomains.filter(d => 
@@ -59,10 +103,12 @@ export const validateEmail = (email) => {
     );
     
     if (suggestions.length > 0) {
+      const corrected = email.replace(domain, suggestions[0]);
       return {
         severity: SEVERITY.WARNING,
-        message: `Did you mean ${suggestions[0]}?`,
+        message: `Uncommon email domain detected`,
         field: 'email',
+        suggestion: `Did you mean: ${corrected}?`,
         canOverride: true
       };
     }
@@ -71,18 +117,46 @@ export const validateEmail = (email) => {
   return null;
 };
 
-// Date validation
+// Date validation with format conversion suggestions
 export const validateDate = (dateString, fieldName = 'date') => {
   if (!dateString) return null;
   
-  // Check format YYYY-MM-DD
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  // Try to detect common date formats and suggest conversion
+  const formats = [
+    { regex: /^\d{4}-\d{2}-\d{2}$/, format: 'YYYY-MM-DD', valid: true },
+    { regex: /^\d{2}\/\d{2}\/\d{4}$/, format: 'MM/DD/YYYY', valid: false },
+    { regex: /^\d{2}-\d{2}-\d{4}$/, format: 'MM-DD-YYYY', valid: false },
+    { regex: /^\d{4}\/\d{2}\/\d{2}$/, format: 'YYYY/MM/DD', valid: false },
+    { regex: /^\d{1,2}\/\d{1,2}\/\d{2,4}$/, format: 'M/D/YYYY', valid: false }
+  ];
   
-  if (!dateRegex.test(dateString)) {
+  const matchedFormat = formats.find(f => f.regex.test(dateString));
+  
+  if (!matchedFormat) {
     return {
       severity: SEVERITY.ERROR,
-      message: 'Date must be in YYYY-MM-DD format',
-      field: fieldName
+      message: 'Invalid date format',
+      field: fieldName,
+      suggestion: 'Use YYYY-MM-DD format (e.g., 2024-12-16)'
+    };
+  }
+  
+  if (!matchedFormat.valid) {
+    let converted = dateString;
+    // Try to convert MM/DD/YYYY to YYYY-MM-DD
+    if (matchedFormat.format === 'MM/DD/YYYY') {
+      const [month, day, year] = dateString.split('/');
+      converted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    } else if (matchedFormat.format === 'MM-DD-YYYY') {
+      const [month, day, year] = dateString.split('-');
+      converted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    
+    return {
+      severity: SEVERITY.ERROR,
+      message: `Date format detected: ${matchedFormat.format}`,
+      field: fieldName,
+      suggestion: `Convert to: ${converted}`
     };
   }
   
