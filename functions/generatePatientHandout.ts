@@ -1910,8 +1910,11 @@ Deno.serve(async (req) => {
       doc.rect(margin, yPos - 4, 3, FONT_SIZE_HEADING, 'F');
       
       doc.setTextColor(sectionColor[0], sectionColor[1], sectionColor[2]);
-      // Sanitize heading to prevent encoding issues
-      const sanitizedHeading = String(section.heading || 'Section').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+      // Sanitize heading - keep only ASCII printable characters
+      const sanitizedHeading = String(section.heading || 'Section')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\x00-\x7F]/g, '');
       doc.text(sanitizedHeading, margin + 8, yPos);
       
       // Subtle divider line
@@ -1932,8 +1935,11 @@ Deno.serve(async (req) => {
           doc.setFillColor(232, 239, 255);
           doc.setDrawColor(41, 98, 255);
           doc.setLineWidth(0.5);
-          // Sanitize content to prevent encoding issues
-          const sanitizedContent = section.content.replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+          // Sanitize content - keep only ASCII printable characters
+          const sanitizedContent = section.content
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\x00-\x7F]/g, '');
           const lines = doc.splitTextToSize(sanitizedContent, contentWidth - 20);
           const boxHeight = lines.length * LINE_SPACING + 12;
           doc.rect(margin, yPos - 3, contentWidth, boxHeight, 'FD');
@@ -1949,8 +1955,11 @@ Deno.serve(async (req) => {
           });
           yPos += 9;
         } else {
-          // Sanitize content to prevent encoding issues
-          const sanitizedContent = section.content.replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+          // Sanitize content - keep only ASCII printable characters
+          const sanitizedContent = section.content
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\x00-\x7F]/g, '');
           const lines = doc.splitTextToSize(sanitizedContent, contentWidth - 5);
           lines.forEach(line => {
             if (yPos > pageHeight - 30) {
@@ -1978,7 +1987,11 @@ Deno.serve(async (req) => {
           doc.setFontSize(FONT_SIZE_SUBHEADING);
           doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
 
-          doc.text(`  ${subsection.subheading || 'Subsection'}`, margin + 5, yPos);
+          const sanitizedSubheading = String(subsection.subheading || 'Subsection')
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\x00-\x7F]/g, '');
+          doc.text(`  ${sanitizedSubheading}`, margin + 5, yPos);
           yPos += 8;
           doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
           doc.setFont(fontFamily, 'normal');
@@ -1992,8 +2005,11 @@ Deno.serve(async (req) => {
                 doc.addPage();
                 yPos = margin;
               }
-              // Sanitize bullet text to prevent encoding issues
-              const sanitizedBullet = String(bullet || '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+              // Sanitize bullet text - keep only ASCII printable characters
+              const sanitizedBullet = String(bullet || '')
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^\x00-\x7F]/g, '');
               const bulletLines = doc.splitTextToSize('  • ' + sanitizedBullet, contentWidth - 25);
               bulletLines.forEach((line) => {
                 doc.text(line, margin + 18, yPos);
@@ -2029,8 +2045,11 @@ Deno.serve(async (req) => {
             doc.addPage();
             yPos = margin;
           }
-          // Sanitize bullet text to prevent encoding issues
-          const sanitizedBullet = String(bullet || '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+          // Sanitize bullet text - keep only ASCII printable characters
+          const sanitizedBullet = String(bullet || '')
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\x00-\x7F]/g, '');
           const bulletLines = doc.splitTextToSize('• ' + sanitizedBullet, contentWidth - 15);
           bulletLines.forEach((line) => {
             doc.text(line, margin + 5, yPos);
@@ -2126,7 +2145,7 @@ Deno.serve(async (req) => {
         doc.setFont(fontFamily, 'bold');
         doc.setFontSize(FONT_SIZE_SUBHEADING);
         doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-        doc.text('📋 Daily Self-Care Checklist', margin + 8, yPos + 5);
+        doc.text('Daily Self-Care Checklist', margin + 8, yPos + 5);
 
         yPos += 18;
 
@@ -2147,8 +2166,12 @@ Deno.serve(async (req) => {
           doc.setLineWidth(0.5);
           doc.rect(margin + 5, yPos - checkboxSize + 1, checkboxSize, checkboxSize);
 
-          // Add item text
-          const itemLines = doc.splitTextToSize(item, contentWidth - 20);
+          // Add item text - sanitize checklist items
+          const sanitizedItem = String(item)
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\x00-\x7F]/g, '');
+          const itemLines = doc.splitTextToSize(sanitizedItem, contentWidth - 20);
           itemLines.forEach((line, lineIdx) => {
             doc.text(line, margin + 13, yPos + (lineIdx * LINE_SPACING));
           });
@@ -2162,7 +2185,7 @@ Deno.serve(async (req) => {
         doc.setFont(fontFamily, 'italic');
         doc.setFontSize(FONT_SIZE_SMALL);
         doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
-        doc.text('✓ Check off each item as you complete it daily', margin + 5, yPos);
+        doc.text('Check off each item as you complete it daily', margin + 5, yPos);
         yPos += 10;
       } catch (checklistError) {
         console.error('Error rendering checklist:', checklistError);
@@ -2187,7 +2210,7 @@ Deno.serve(async (req) => {
       doc.setFont(fontFamily, 'bold');
       doc.setFontSize(FONT_SIZE_SUBHEADING);
       doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-      doc.text('📝 Daily Symptom Tracker', margin + 8, yPos + 5);
+      doc.text('Daily Symptom Tracker', margin + 8, yPos + 5);
 
       yPos += 20;
 
@@ -2258,7 +2281,7 @@ Deno.serve(async (req) => {
         doc.setFont(fontFamily, 'bold');
         doc.setFontSize(FONT_SIZE_SUBHEADING);
         doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-        doc.text('🔗 Helpful Online Resources', margin + 8, yPos + 5);
+        doc.text('Helpful Online Resources', margin + 8, yPos + 5);
 
         yPos += 20;
 
@@ -2276,9 +2299,13 @@ Deno.serve(async (req) => {
           doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
           doc.text('•', margin + 5, yPos);
 
-          // Resource text (clickable)
+          // Resource text (clickable) - sanitize text
+          const sanitizedResourceText = String(resource.text)
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\x00-\x7F]/g, '');
           doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-          doc.textWithLink(resource.text, margin + 10, yPos, { url: resource.url });
+          doc.textWithLink(sanitizedResourceText, margin + 10, yPos, { url: resource.url });
 
           // Add underline to indicate link
           const textWidth = doc.getTextWidth(resource.text);
