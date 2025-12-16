@@ -55,6 +55,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatEastern } from "@/components/utils/timezone";
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -469,7 +470,7 @@ export default function UserManagement() {
                           {lastActivity ? (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {format(new Date(lastActivity), 'MMM d, yyyy')}
+                              {formatEastern(lastActivity, 'MMM d, yyyy')}
                             </div>
                           ) : (
                             'Never'

@@ -297,14 +297,14 @@ export default function AuditTrail() {
                                   <p><span className="font-semibold">Invited:</span> {activity.details.invited_name} ({activity.details.invited_email})</p>
                                   <p><span className="font-semibold">Role:</span> {activity.details.role}</p>
                                   <p><span className="font-semibold">Care Scope:</span> {activity.details.care_scope}</p>
-                                  <p><span className="font-semibold">Expires:</span> {format(new Date(activity.details.expires_at), 'MMM d, yyyy hh:mm a')}</p>
+                                  <p><span className="font-semibold">Expires:</span> {formatEastern(activity.details.expires_at, 'MMM d, yyyy hh:mm a')}</p>
                                 </div>
                               )}
                               {activity.action === 'invitation_resent' && (
                                 <div className="space-y-1">
                                   <p><span className="font-semibold">Invited:</span> {activity.details.invited_name} ({activity.details.invited_email})</p>
                                   <p><span className="font-semibold">Resend #:</span> {activity.details.resend_count}</p>
-                                  <p><span className="font-semibold">New Expiration:</span> {format(new Date(activity.details.new_expires_at), 'MMM d, yyyy hh:mm a')}</p>
+                                  <p><span className="font-semibold">New Expiration:</span> {formatEastern(activity.details.new_expires_at, 'MMM d, yyyy hh:mm a')}</p>
                                 </div>
                               )}
                               {activity.action === 'user_signup_auto_approved' && (
