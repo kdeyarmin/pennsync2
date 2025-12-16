@@ -37,17 +37,31 @@ Deno.serve(async (req) => {
         
         // Notify admins about expired invitation signup attempt
         const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+        const expiredBody = `User ${user.full_name} (${user.email}) attempted to sign up with an expired invitation.\n\nThe invitation expired on ${expiresAt.toLocaleString()}.\n\nPlease resend the invitation if this user should have access.`;
+
         for (const admin of admins) {
           try {
             await base44.asServiceRole.integrations.Core.SendEmail({
               to: admin.email,
               subject: '⚠️ Expired Invitation Signup Attempt - Penn Sync',
-              body: `User ${user.full_name} (${user.email}) attempted to sign up with an expired invitation.\n\nThe invitation expired on ${expiresAt.toLocaleString()}.\n\nPlease resend the invitation if this user should have access.`,
+              body: expiredBody,
               from_name: 'Penn Sync'
             });
           } catch (e) {
             console.error('Failed to send admin email:', e);
           }
+        }
+
+        // Also notify kdeyarmin@pennhospice.com
+        try {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: 'kdeyarmin@pennhospice.com',
+            subject: '⚠️ Expired Invitation Signup Attempt - Penn Sync',
+            body: expiredBody,
+            from_name: 'Penn Sync'
+          });
+        } catch (e) {
+          console.error('Failed to send notification to kdeyarmin:', e);
         }
         
         // Continue with manual approval process
