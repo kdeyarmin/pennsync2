@@ -21,28 +21,60 @@ Deno.serve(async (req) => {
     console.log('Found invitations:', invitations?.length || 0);
 
     if (invitations && invitations.length > 0) {
-      // User was invited - auto-approve
       const invitation = invitations[0];
-      console.log('Auto-approving invited user...');
       
-      try {
-        await base44.asServiceRole.entities.User.update(user.id, {
-          role: invitation.role,
-          care_scope: invitation.care_scope,
-          phone: invitation.phone,
-          credentials: invitation.credentials,
-          is_approved: true
-        });
-
+      // Check if invitation is expired
+      const now = new Date();
+      const expiresAt = new Date(invitation.expires_at);
+      
+      if (now > expiresAt) {
+        console.log('Invitation expired for:', user.email);
+        
+        // Mark as expired
         await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
+          status: 'expired'
         });
+        
+        // Notify admins about expired invitation signup attempt
+        const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+        for (const admin of admins) {
+          try {
+            await base44.asServiceRole.integrations.Core.SendEmail({
+              to: admin.email,
+              subject: '⚠️ Expired Invitation Signup Attempt - Penn Sync',
+              body: `User ${user.full_name} (${user.email}) attempted to sign up with an expired invitation.\n\nThe invitation expired on ${expiresAt.toLocaleString()}.\n\nPlease resend the invitation if this user should have access.`,
+              from_name: 'Penn Sync'
+            });
+          } catch (e) {
+            console.error('Failed to send admin email:', e);
+          }
+        }
+        
+        // Continue with manual approval process
+        console.log('Proceeding with manual approval for expired invitation');
+      } else {
+        // Valid invitation - auto-approve
+        console.log('Auto-approving invited user...');
+        
+        try {
+          await base44.asServiceRole.entities.User.update(user.id, {
+            role: invitation.role,
+            care_scope: invitation.care_scope,
+            phone: invitation.phone,
+            credentials: invitation.credentials,
+            is_approved: true
+          });
 
-        console.log('Auto-approved invited user:', user.email);
-        return Response.json({ success: true, auto_approved: true });
-      } catch (updateError) {
-        console.error('Failed to auto-approve user:', updateError);
+          await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
+            status: 'accepted',
+            accepted_at: new Date().toISOString()
+          });
+
+          console.log('Auto-approved invited user:', user.email);
+          return Response.json({ success: true, auto_approved: true });
+        } catch (updateError) {
+          console.error('Failed to auto-approve user:', updateError);
+        }
       }
     }
 

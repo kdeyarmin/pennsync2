@@ -40,6 +40,9 @@ Deno.serve(async (req) => {
 
     console.log('Step 3: Creating invitation record...');
     try {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+      
       const invitation = await base44.asServiceRole.entities.UserInvitation.create({
         email,
         full_name,
@@ -48,9 +51,12 @@ Deno.serve(async (req) => {
         phone: phone || null,
         credentials: credentials || null,
         invited_by: user.email,
-        status: 'pending'
+        status: 'pending',
+        expires_at: expiresAt.toISOString(),
+        last_sent_at: now.toISOString(),
+        resend_count: 0
       });
-      console.log('✓ Invitation record created:', invitation.id);
+      console.log('✓ Invitation record created:', invitation.id, 'Expires:', expiresAt.toISOString());
       
       console.log('Step 4: Sending invitation email...');
       try {
@@ -59,7 +65,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: email,
           subject: 'Invitation to Penn Sync',
-          body: `Hello ${full_name},\n\nYou've been invited to join Penn Sync.\n\nEmail: ${email}\nRole: ${role || 'user'}\n\nPlease visit ${signupUrl} to create your account.\n\nWelcome to Penn Sync!`,
+          body: `Hello ${full_name},\n\nYou've been invited to join Penn Sync.\n\nEmail: ${email}\nRole: ${role || 'user'}\n\nPlease visit ${signupUrl} to create your account.\n\n⏰ This invitation expires in 7 days (${expiresAt.toLocaleDateString()}).\n\nWelcome to Penn Sync!`,
           from_name: 'Penn Sync'
         });
         console.log('✓ Invitation email sent');
