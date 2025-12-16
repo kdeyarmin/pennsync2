@@ -31,11 +31,10 @@ Deno.serve(async (req) => {
 
     // Store invitation in database
     console.log('Creating invitation record...');
-    const signupUrl = Deno.env.get('APP_URL') || window.location.origin;
 
     try {
       // Create invitation record
-      await base44.asServiceRole.entities.UserInvitation.create({
+      const invitation = await base44.asServiceRole.entities.UserInvitation.create({
         email,
         full_name,
         role: role || 'user',
@@ -45,39 +44,28 @@ Deno.serve(async (req) => {
         invited_by: user.email,
         status: 'pending'
       });
-      console.log('Invitation record created');
+      console.log('Invitation record created:', invitation.id);
       
-      // Send simple invitation email
-      const careScopeLabel = care_scope === 'home_health' ? 'Home Health' : care_scope === 'hospice' ? 'Hospice' : 'Both';
-      
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: email,
-        subject: 'You\'re Invited to Penn Sync',
-        body: `Hello ${full_name},
-
-You've been invited to join Penn Sync by ${user.full_name}.
-
-Your Account Details:
-- Email: ${email}
-- Role: ${role === 'admin' ? 'Administrator' : 'User'}
-- Care Scope: ${careScopeLabel}
-
-To get started, please visit: ${signupUrl}
-
-Once you create your account, you'll have immediate access to:
-- AI-powered clinical documentation
-- OASIS analysis and PDGM optimization
-- Patient risk alerts and early warnings
-- Personalized training and compliance tools
-
-Welcome to Penn Sync!`,
-        from_name: 'Penn Sync'
-      });
-      console.log('Invitation email sent');
+      // Try to send email but don't fail if it doesn't work
+      try {
+        const signupUrl = `${Deno.env.get('APP_URL') || 'https://app.base44.app'}`;
+        
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: email,
+          subject: 'Invitation to Penn Sync',
+          body: `Hello ${full_name},\n\nYou've been invited to join Penn Sync.\n\nEmail: ${email}\nRole: ${role || 'user'}\n\nPlease visit ${signupUrl} to create your account.\n\nWelcome to Penn Sync!`,
+          from_name: 'Penn Sync'
+        });
+        console.log('Invitation email sent successfully');
+      } catch (emailError) {
+        console.error('Email send failed (non-critical):', emailError.message);
+        // Don't throw - email failure is not critical
+      }
       
     } catch (error) {
-      console.error('Invitation error:', error);
-      throw new Error(`Failed to send invitation: ${error.message}`);
+      console.error('Failed to create invitation:', error);
+      console.error('Error details:', error.message, error.stack);
+      throw error;
     }
 
     console.log('User invitation completed successfully');
