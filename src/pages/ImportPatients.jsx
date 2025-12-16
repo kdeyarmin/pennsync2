@@ -176,31 +176,28 @@ export default function ImportPatients() {
       }
       
       setCsvData({ headers, rows });
+      
+      // Auto-map columns based on header names
+      const autoMapping = {};
+      headers.forEach((header, idx) => {
+        const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_');
         
-        // Auto-map columns based on header names
-        const autoMapping = {};
-        headers.forEach((header, idx) => {
-          const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-          
-          // Try exact match
-          if (FIELD_MAPPINGS[normalizedHeader]) {
-            autoMapping[idx] = normalizedHeader;
-          } else {
-            // Try partial matches
-            for (const fieldKey in FIELD_MAPPINGS) {
-              if (normalizedHeader.includes(fieldKey) || fieldKey.includes(normalizedHeader)) {
-                autoMapping[idx] = fieldKey;
-                break;
-              }
+        // Try exact match
+        if (FIELD_MAPPINGS[normalizedHeader]) {
+          autoMapping[idx] = normalizedHeader;
+        } else {
+          // Try partial matches
+          for (const fieldKey in FIELD_MAPPINGS) {
+            if (normalizedHeader.includes(fieldKey) || fieldKey.includes(normalizedHeader)) {
+              autoMapping[idx] = fieldKey;
+              break;
             }
           }
-        });
-        
-        setColumnMapping(autoMapping);
-        validateMapping(autoMapping);
-      } else {
-        alert('Failed to extract data from CSV: ' + (extractedData.details || 'Unknown error'));
-      }
+        }
+      });
+      
+      setColumnMapping(autoMapping);
+      validateMapping(autoMapping);
     } catch (error) {
       console.error('Error processing CSV:', error);
       alert('Error processing CSV file: ' + error.message);
@@ -872,9 +869,7 @@ export default function ImportPatients() {
               </div>
 
               {importResults.errors.length > 0 && (
-                <>
-                  <Separator className="my-4" />
-                  <div>
+                <div>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-red-900 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" />
@@ -917,10 +912,9 @@ export default function ImportPatients() {
                       </div>
                     </ScrollArea>
                   </div>
-                </>
               )}
 
-              <Separator className="my-4" />
+              <div className="border-t my-4"></div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Button
