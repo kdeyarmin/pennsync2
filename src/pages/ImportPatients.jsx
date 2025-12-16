@@ -583,7 +583,7 @@ export default function ImportPatients() {
       )}
 
       {/* Preview & Validation Results */}
-      {showPreview && (validationErrors.length > 0 || validRecords.length > 0) ? (
+      {showPreview && (validationErrors.length > 0 || validRecords.length > 0) && (
         <>
           {/* Validation Summary */}
           <ValidationSummary
@@ -758,8 +758,8 @@ export default function ImportPatients() {
             </div>
           </CardContent>
         </Card>
-      </>
-    ) : null}
+        </>
+      )}
 
       {/* Import Results */}
       {importResults && (
