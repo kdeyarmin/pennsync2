@@ -28,8 +28,13 @@ export default function PatientFileUpdateUploader() {
 
   const processFileMutation = useMutation({
     mutationFn: async (fileUrl) => {
-      const response = await base44.functions.invoke('processPatientFileUpdate', { file_url: fileUrl });
-      return response.data || response;
+      try {
+        const response = await base44.functions.invoke('processPatientFileUpdate', { file_url: fileUrl });
+        return response.data || response;
+      } catch (error) {
+        console.error('Process file mutation error:', error);
+        throw new Error(error.response?.data?.details || error.message || 'Failed to process file');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
