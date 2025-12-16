@@ -176,17 +176,22 @@ Deno.serve(async (req) => {
             const newPatient = await base44.asServiceRole.entities.Patient.create(uploadedPatient);
             results.created++;
             
-            await base44.asServiceRole.entities.SystemLog.create({
-              job_name: 'Patient File Update',
-              job_type: 'other',
-              status: 'success',
-              message: `Created new patient ${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
-              details: {
-                patient_id: newPatient.id,
-                uploaded_by: user.email,
-                file_url
-              }
-            });
+            // Log creation (non-blocking)
+            try {
+              await base44.asServiceRole.entities.SystemLog.create({
+                job_name: 'Patient File Update',
+                job_type: 'other',
+                status: 'success',
+                message: `Created new patient ${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
+                details: {
+                  patient_id: newPatient.id,
+                  uploaded_by: user.email,
+                  file_url
+                }
+              });
+            } catch (logError) {
+              console.error('Failed to create system log:', logError);
+            }
           } catch (error) {
             results.errors.push({
               patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
@@ -361,24 +366,30 @@ Deno.serve(async (req) => {
 
         results.updated++;
 
-        // Log the update
-        await base44.asServiceRole.entities.SystemLog.create({
-          job_name: 'Patient File Update',
-          job_type: 'other',
-          status: 'success',
-          message: `Updated ${changeLog.length} field(s) for patient ${matchingPatient.first_name} ${matchingPatient.last_name}`,
-          details: {
-            patient_id: matchingPatient.id,
-            updated_by: user.email,
-            changes: changeLog,
-            file_url
-          }
-        });
+        // Log the update (non-blocking)
+        try {
+          await base44.asServiceRole.entities.SystemLog.create({
+            job_name: 'Patient File Update',
+            job_type: 'other',
+            status: 'success',
+            message: `Updated ${changeLog.length} field(s) for patient ${matchingPatient.first_name} ${matchingPatient.last_name}`,
+            details: {
+              patient_id: matchingPatient.id,
+              updated_by: user.email,
+              changes: changeLog,
+              file_url
+            }
+          });
+        } catch (logError) {
+          console.error('Failed to create system log:', logError);
+        }
 
       } catch (error) {
+        console.error('Error processing individual patient:', error);
         results.errors.push({
           patient: `${uploadedPatient.first_name || ''} ${uploadedPatient.last_name || ''}`,
-          error: error.message
+          error: error.message,
+          details: error.stack
         });
       }
     }
