@@ -390,8 +390,29 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing patient file update:', error);
+    
+    // Create a detailed error log
+    try {
+      const base44 = createClientFromRequest(req);
+      await base44.asServiceRole.entities.SystemLog.create({
+        job_name: 'Patient File Update',
+        job_type: 'other',
+        status: 'error',
+        message: `Failed to process patient file update: ${error.message}`,
+        details: {
+          error: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     return Response.json({ 
-      error: error.message,
+      success: false,
+      error: 'Failed to process patient file',
+      details: error.message,
       stack: error.stack 
     }, { status: 500 });
   }
