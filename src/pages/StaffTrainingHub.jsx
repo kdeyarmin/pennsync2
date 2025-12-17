@@ -30,6 +30,7 @@ import AIPersonalizedTrainingPlan from "../components/training/AIPersonalizedTra
 import AIInteractiveQuiz from "../components/training/AIInteractiveQuiz";
 import AIPatientSimulation from "../components/training/AIPatientSimulation";
 import SkillGapRemediationSection from "../components/training/SkillGapRemediationSection";
+import StateSurveyVideos from "../components/training/StateSurveyVideos";
 
 export default function StaffTrainingHub() {
   const queryClient = useQueryClient();
@@ -177,10 +178,14 @@ export default function StaffTrainingHub() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-6 w-full mb-6">
+        <TabsList className="grid grid-cols-7 w-full mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="survey" className="flex items-center gap-2 bg-gradient-to-r from-red-50 to-orange-50 data-[state=active]:bg-red-100">
+            <Trophy className="w-4 h-4" />
+            <span className="hidden sm:inline">PA Survey</span>
           </TabsTrigger>
           <TabsTrigger value="remediation" className="flex items-center gap-2">
             <Target className="w-4 h-4" />
@@ -203,6 +208,11 @@ export default function StaffTrainingHub() {
             <span className="hidden sm:inline">Simulate</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* PA State Survey Preparation Tab */}
+        <TabsContent value="survey">
+          <StateSurveyVideos />
+        </TabsContent>
 
         {/* Skill Gap Remediation Tab */}
         <TabsContent value="remediation">
