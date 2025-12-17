@@ -30,6 +30,51 @@ const stateSurveyVideos = [
     category: "Survey Prep",
     videoId: "T-oO-eZWO74",
     priority: "high"
+  },
+  {
+    id: "4",
+    title: "Patient Rights in Home Health Care",
+    description: "Understanding patient rights, informed consent, and advocacy requirements for survey compliance",
+    duration: "25:00",
+    category: "Survey Prep",
+    videoId: "8bFHp6VyVKY",
+    priority: "high"
+  },
+  {
+    id: "5",
+    title: "HIPAA for Home Health Nurses",
+    description: "Essential HIPAA compliance and patient privacy protection for home health settings",
+    duration: "18:00",
+    category: "Survey Prep",
+    videoId: "zCWw8TnBPOo",
+    priority: "high"
+  },
+  {
+    id: "6",
+    title: "Medication Safety in Home Care",
+    description: "Best practices for medication management, administration, and error prevention",
+    duration: "22:00",
+    category: "Survey Prep",
+    videoId: "yRz_b6dOZhI",
+    priority: "high"
+  },
+  {
+    id: "7",
+    title: "Emergency Preparedness for Home Health Agencies",
+    description: "Critical emergency response protocols and disaster planning for home health care",
+    duration: "30:00",
+    category: "Survey Prep",
+    videoId: "4_bJ-3YfLGU",
+    priority: "medium"
+  },
+  {
+    id: "8",
+    title: "Care Planning and Documentation Excellence",
+    description: "Creating comprehensive, individualized care plans that meet Medicare standards",
+    duration: "35:00",
+    category: "Survey Prep",
+    videoId: "rLnNvQS5e9k",
+    priority: "high"
   }
 ];
 
