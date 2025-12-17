@@ -159,20 +159,20 @@ export default function ImportPatients() {
     setImportResults(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      const response = await base44.functions.invoke('autoImportPatients', formData);
+      // Read file content
+      const text = await selectedFile.text();
       
-      if (response.data.success) {
-        const results = response.data.results;
+      const response = await base44.functions.invoke('autoImportPatients', { fileContent: text });
+      
+      if (response.success) {
+        const results = response.results;
         setImportResults(results);
         queryClient.invalidateQueries({ queryKey: ['patients'] });
         
         // Set progress to 100%
         setImportProgress(100);
       } else {
-        alert('Import failed: ' + response.data.error);
+        alert('Import failed: ' + response.error);
       }
     } catch (error) {
       console.error('Auto import error:', error);

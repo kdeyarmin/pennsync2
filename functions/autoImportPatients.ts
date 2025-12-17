@@ -6,17 +6,15 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      return Response.json({ error: 'Unauthorized', success: false }, { status: 401 });
     }
 
-    const formData = await req.formData();
-    const file = formData.get('file');
+    const body = await req.json();
+    const text = body.fileContent;
     
-    if (!file) {
-      return Response.json({ error: 'No file provided' }, { status: 400 });
+    if (!text) {
+      return Response.json({ error: 'No file content provided', success: false }, { status: 400 });
     }
-
-    const text = await file.text();
     const lines = text.split('\n').filter(line => line.trim());
     
     if (lines.length === 0) {
