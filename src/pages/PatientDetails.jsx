@@ -34,6 +34,10 @@ import QuickActionsPanel from "../components/patient/QuickActionsPanel";
 import AIPatientHistoryAnalyzer from "../components/patient/AIPatientHistoryAnalyzer";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 import FavoriteButton from "../components/navigation/FavoriteButton";
+import ReferralLetterGenerator from "../components/documents/ReferralLetterGenerator";
+import PatientEducationGenerator from "../components/documents/PatientEducationGenerator";
+import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
+import { Sparkles, FileOutput, GraduationCap, TrendingUp } from "lucide-react";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -541,12 +545,16 @@ export default function PatientDetails() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="allergies" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="allergies">Allergies</TabsTrigger>
               <TabsTrigger value="medications">Medications</TabsTrigger>
               <TabsTrigger value="history">Medical History</TabsTrigger>
               <TabsTrigger value="careplans">Care Plans</TabsTrigger>
               <TabsTrigger value="visits">Visit Notes</TabsTrigger>
+              <TabsTrigger value="documents" className="flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Documents
+              </TabsTrigger>
             </TabsList>
 
             {/* Allergies Tab */}
@@ -817,7 +825,45 @@ export default function PatientDetails() {
               )}
             </TabsContent>
 
-            {/* Medications Tab Content - Duplicate for better UX */}
+            {/* Documents Tab */}
+            <TabsContent value="documents" className="space-y-4">
+              <Tabs defaultValue="discharge" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2">
+                  <TabsTrigger value="discharge" className="gap-2">
+                    <FileOutput className="w-4 h-4" />
+                    Discharge
+                  </TabsTrigger>
+                  <TabsTrigger value="referral" className="gap-2">
+                    <FileText className="w-4 h-4" />
+                    Referral
+                  </TabsTrigger>
+                  <TabsTrigger value="education" className="gap-2">
+                    <GraduationCap className="w-4 h-4" />
+                    Education
+                  </TabsTrigger>
+                  <TabsTrigger value="progress" className="gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    Progress
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="discharge">
+                  <DischargeSummaryGenerator patientId={patientId} patient={patient} />
+                </TabsContent>
+
+                <TabsContent value="referral">
+                  <ReferralLetterGenerator patientId={patientId} patient={patient} />
+                </TabsContent>
+
+                <TabsContent value="education">
+                  <PatientEducationGenerator patientId={patientId} patient={patient} />
+                </TabsContent>
+
+                <TabsContent value="progress">
+                  <ProgressReportGenerator patientId={patientId} patient={patient} />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

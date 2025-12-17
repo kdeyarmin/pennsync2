@@ -76,7 +76,6 @@ export default function Layout({ children, currentPageName }) {
       category: "Documentation",
       items: [
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
-        { name: "Documents", icon: FileText, page: "DocumentGenerator" },
         { name: "Patient Education", icon: FileText, page: "PatientEducationHub" }
       ]
     },
