@@ -20,7 +20,8 @@ import {
   Eye,
   X,
   RefreshCw,
-  FileDown
+  FileDown,
+  Zap
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { validatePatient, validatePhone, validateEmail, validateDate, SEVERITY } from "../components/utils/patientValidation";
@@ -78,6 +79,7 @@ export default function ImportPatients() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [skipErrors, setSkipErrors] = useState(true);
   const [selectedRowPreview, setSelectedRowPreview] = useState(null);
+  const [autoImporting, setAutoImporting] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -148,6 +150,37 @@ export default function ImportPatients() {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     }
   });
+
+  const handleAutoImport = async (selectedFile) => {
+    if (!selectedFile) return;
+
+    setAutoImporting(true);
+    setImportProgress(0);
+    setImportResults(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const response = await base44.functions.invoke('autoImportPatients', formData);
+      
+      if (response.data.success) {
+        const results = response.data.results;
+        setImportResults(results);
+        queryClient.invalidateQueries({ queryKey: ['patients'] });
+        
+        // Set progress to 100%
+        setImportProgress(100);
+      } else {
+        alert('Import failed: ' + response.data.error);
+      }
+    } catch (error) {
+      console.error('Auto import error:', error);
+      alert('Auto import failed: ' + error.message);
+    }
+
+    setAutoImporting(false);
+  };
 
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files?.[0];
@@ -491,39 +524,111 @@ export default function ImportPatients() {
         </CardContent>
       </Card>
 
-      {/* File Upload */}
+      {/* File Upload with Auto Import */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
-            Step 1: Upload CSV File
+            Upload & Import Patients
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="csv-upload"
-              disabled={isProcessing}
-            />
-            <label htmlFor="csv-upload" className="cursor-pointer">
-              <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-lg font-medium text-gray-700 mb-2">
-                {file ? file.name : 'Click to upload CSV file'}
-              </p>
-              <p className="text-sm text-gray-500">
-                CSV files only • Maximum 1000 rows recommended
-              </p>
-            </label>
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            {/* Auto Import */}
+            <Card className="border-2 border-green-300 bg-green-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-5 h-5 text-green-600" />
+                  <h3 className="font-semibold text-green-900">Quick Auto Import</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload your file and automatically import all patients with the expected format
+                </p>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleAutoImport(file);
+                  }}
+                  className="hidden"
+                  id="auto-import"
+                  disabled={autoImporting}
+                />
+                <label htmlFor="auto-import">
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700" 
+                    disabled={autoImporting}
+                    asChild
+                  >
+                    <span>
+                      {autoImporting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 mr-2" />
+                          Auto Import
+                        </>
+                      )}
+                    </span>
+                  </Button>
+                </label>
+              </CardContent>
+            </Card>
+
+            {/* Manual Import */}
+            <Card className="border-2 border-blue-300 bg-blue-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <ArrowRight className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-semibold text-blue-900">Manual Mapping</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload and manually map columns if format differs from template
+                </p>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="csv-upload"
+                  disabled={isProcessing}
+                />
+                <label htmlFor="csv-upload">
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700" 
+                    disabled={isProcessing}
+                    asChild
+                  >
+                    <span>
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Manual Import
+                        </>
+                      )}
+                    </span>
+                  </Button>
+                </label>
+              </CardContent>
+            </Card>
           </div>
-          
-          {isProcessing && (
-            <div className="mt-4 flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm text-gray-600">Processing file...</span>
+
+          {autoImporting && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Importing patients...</span>
+                <span className="text-sm text-gray-600">{importProgress}%</span>
+              </div>
+              <Progress value={importProgress} className="h-2" />
             </div>
           )}
         </CardContent>
