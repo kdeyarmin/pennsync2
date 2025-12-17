@@ -75,6 +75,33 @@ const pennsylvaniaSurveyVideos = [
     category: "OASIS",
     videoId: "IZDeEOlfCD4",
     priority: "medium"
+  },
+  {
+    id: "9",
+    title: "Home Health Bag Technique - Best Practice",
+    description: "6-step bag technique following accepted standards of practice for infection control",
+    duration: "8:00",
+    category: "Safety",
+    videoId: "T-oO-eZWO74",
+    priority: "high"
+  },
+  {
+    id: "10",
+    title: "Home Care Bag Technique - BAYADA",
+    description: "Proper bag technique demonstration for infection prevention in home care settings",
+    duration: "5:00",
+    category: "Safety",
+    videoId: "MxM4sVnfYyY",
+    priority: "high"
+  },
+  {
+    id: "11",
+    title: "Clinical Bag Technique - Fairview Home-Based Care",
+    description: "Educational video demonstrating proper clinical bag technique and infection control best practices",
+    duration: "10:00",
+    category: "Safety",
+    videoId: "RRV1hoAkkM4",
+    priority: "medium"
   }
 ];
 
