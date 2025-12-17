@@ -32,14 +32,15 @@ const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
 const FIELD_MAPPINGS = {
   // Patient basic info
-  'first_name': { label: 'First Name', type: 'string', required: true },
+  'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient'] },
   'last_name': { label: 'Last Name', type: 'string', required: true },
   'middle_name': { label: 'Middle Name', type: 'string' },
-  'date_of_birth': { label: 'Date of Birth', type: 'date', format: 'YYYY-MM-DD' },
-  'medical_record_number': { label: 'Medical Record Number', type: 'string' },
+  'date_of_birth': { label: 'Date of Birth', type: 'date', format: 'YYYY-MM-DD', aliases: ['dob'] },
+  'medical_record_number': { label: 'Medical Record Number', type: 'string', aliases: ['mrn'] },
   'phone': { label: 'Phone Number', type: 'string' },
   'email': { label: 'Email', type: 'email' },
   'address': { label: 'Address', type: 'string' },
+  'gender': { label: 'Gender', type: 'string' },
   
   // Emergency contact
   'emergency_contact_name': { label: 'Emergency Contact Name', type: 'string' },
@@ -49,15 +50,20 @@ const FIELD_MAPPINGS = {
   // Medical info
   'primary_diagnosis': { label: 'Primary Diagnosis', type: 'string' },
   'allergies': { label: 'Allergies', type: 'string' },
-  'physician_name': { label: 'Physician Name', type: 'string' },
+  'physician_name': { label: 'Physician Name', type: 'string', aliases: ['physician'] },
   'physician_phone': { label: 'Physician Phone', type: 'string' },
   'physician_email': { label: 'Physician Email', type: 'email' },
   
   // Admission info
-  'admission_date': { label: 'Admission Date', type: 'date', format: 'YYYY-MM-DD' },
-  'care_type': { label: 'Care Type', type: 'enum', options: ['home_health', 'hospice'] },
-  'status': { label: 'Status', type: 'enum', options: ['active', 'discharged', 'hospitalized'] }
+  'admission_date': { label: 'Admission Date', type: 'date', format: 'YYYY-MM-DD', aliases: ['admitted_date'] },
+  'care_type': { label: 'Care Type', type: 'enum', options: ['home_health', 'hospice'], aliases: ['organization_type'] },
+  'status': { label: 'Status', type: 'enum', options: ['active', 'discharged', 'hospitalized'], aliases: ['current_admission_status'] },
+  'insurance_primary_provider': { label: 'Primary Insurance', type: 'string', aliases: ['primary_payor'] },
+  'icd_code': { label: 'ICD Code', type: 'string', aliases: ['icd_code'] }
 };
+
+// Columns to skip/ignore
+const SKIP_COLUMNS = ['company', 'top_unit', 'parent_unit', 'sub_unit', 'branch_name', 'patient_team_name'];
 
 export default function ImportPatients() {
   const [file, setFile] = useState(null);
@@ -181,18 +187,33 @@ export default function ImportPatients() {
       // Auto-map columns based on header names
       const autoMapping = {};
       headers.forEach((header, idx) => {
-        const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_').trim();
+        
+        // Skip columns that should be ignored
+        if (SKIP_COLUMNS.includes(normalizedHeader)) {
+          return;
+        }
         
         // Try exact match
         if (FIELD_MAPPINGS[normalizedHeader]) {
           autoMapping[idx] = normalizedHeader;
-        } else {
-          // Try partial matches
-          for (const fieldKey in FIELD_MAPPINGS) {
-            if (normalizedHeader.includes(fieldKey) || fieldKey.includes(normalizedHeader)) {
-              autoMapping[idx] = fieldKey;
-              break;
-            }
+          return;
+        }
+        
+        // Try alias matches
+        for (const fieldKey in FIELD_MAPPINGS) {
+          const field = FIELD_MAPPINGS[fieldKey];
+          if (field.aliases && field.aliases.some(alias => normalizedHeader === alias.toLowerCase().replace(/[^a-z0-9_]/g, '_'))) {
+            autoMapping[idx] = fieldKey;
+            return;
+          }
+        }
+        
+        // Try partial matches
+        for (const fieldKey in FIELD_MAPPINGS) {
+          if (normalizedHeader.includes(fieldKey) || fieldKey.includes(normalizedHeader)) {
+            autoMapping[idx] = fieldKey;
+            break;
           }
         }
       });
@@ -289,19 +310,48 @@ export default function ImportPatients() {
             }
           }
           
-          if (field.type === 'enum' && !field.options.includes(value)) {
-            rowErrors.push(`Invalid value "${value}" for ${field.label}. Must be one of: ${field.options.join(', ')}`);
-          }
-          
-          // Phone validation
-          if (fieldKey === 'phone' || fieldKey === 'emergency_contact_phone' || fieldKey === 'physician_phone') {
-            const phoneError = validatePhone(value);
-            if (phoneError) {
-              rowErrors.push(`${field.label}: ${phoneError.message}`);
+          if (field.type === 'enum' && !field.options.includes(value.toLowerCase())) {
+            // Try to map common values
+            const valueLower = value.toLowerCase();
+            if (fieldKey === 'care_type') {
+              if (valueLower.includes('home') || valueLower.includes('health')) {
+                patient[fieldKey] = 'home_health';
+              } else if (valueLower.includes('hospice')) {
+                patient[fieldKey] = 'hospice';
+              } else {
+                rowErrors.push(`Invalid value "${value}" for ${field.label}. Must be one of: ${field.options.join(', ')}`);
+              }
+            } else if (fieldKey === 'status') {
+              if (valueLower.includes('active') || valueLower === 'a') {
+                patient[fieldKey] = 'active';
+              } else if (valueLower.includes('discharge')) {
+                patient[fieldKey] = 'discharged';
+              } else if (valueLower.includes('hospital')) {
+                patient[fieldKey] = 'hospitalized';
+              } else {
+                patient[fieldKey] = 'active'; // default to active
+              }
+            } else {
+              rowErrors.push(`Invalid value "${value}" for ${field.label}. Must be one of: ${field.options.join(', ')}`);
+            }
+          } else if (field.type === 'enum') {
+            patient[fieldKey] = value.toLowerCase();
+          } else {
+            // Phone validation
+            if (fieldKey === 'phone' || fieldKey === 'emergency_contact_phone' || fieldKey === 'physician_phone') {
+              const phoneError = validatePhone(value);
+              if (phoneError) {
+                rowErrors.push(`${field.label}: ${phoneError.message}`);
+              }
+            }
+            
+            // Handle special field mappings
+            if (fieldKey === 'insurance_primary_provider') {
+              patient.insurance_primary = { provider: value };
+            } else {
+              patient[fieldKey] = value;
             }
           }
-          
-          patient[fieldKey] = value;
         }
       });
 
@@ -344,8 +394,17 @@ export default function ImportPatients() {
   };
 
   const downloadTemplate = () => {
-    const headers = ['first_name', 'last_name', 'date_of_birth', 'medical_record_number', 'phone', 'email', 'address', 'primary_diagnosis', 'admission_date'];
-    const csv = headers.join(',') + '\n';
+    const headers = [
+      'Company', 'Top Unit', 'Parent Unit', 'Sub Unit', 'Branch Name', 'Patient Team Name',
+      'Organization Type', 'Primary Payor', 'Patient', 'MRN', 'Admitted Date', 'DOB',
+      'Current Admission Status', 'Primary Diagnosis', 'Gender', 'Physician', 'ICD Code'
+    ];
+    const sampleRow = [
+      '', '', '', '', '', '',
+      'Home Health', 'Medicare', 'John Doe', '12345', '2024-01-15', '1950-05-20',
+      'Active', 'CHF', 'M', 'Dr. Smith', 'I50.9'
+    ];
+    const csv = headers.join(',') + '\n' + sampleRow.join(',') + '\n';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -517,8 +576,10 @@ export default function ImportPatients() {
                       >
                         <div className="space-y-2">
                           {(csvData?.headers || []).map((header, idx) => {
+                            const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_').trim();
+                            const isSkipped = SKIP_COLUMNS.includes(normalizedHeader);
                             const isMapped = columnMapping[idx] !== undefined;
-                            if (isMapped) return null;
+                            if (isMapped || isSkipped) return null;
                             
                             return (
                               <Draggable key={`col-${idx}`} draggableId={`col-${idx}`} index={idx}>
