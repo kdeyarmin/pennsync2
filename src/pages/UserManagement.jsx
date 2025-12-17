@@ -54,7 +54,8 @@ import {
   Clock,
   AlertTriangle,
   Key,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
@@ -67,6 +68,7 @@ export default function UserManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resetPasswordResult, setResetPasswordResult] = useState(null);
   const [editedRole, setEditedRole] = useState("");
 
@@ -118,6 +120,15 @@ export default function UserManagement() {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId) => base44.entities.User.delete(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsersManagement'] });
+      setShowDeleteDialog(false);
+      setSelectedUser(null);
+    },
+  });
+
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setEditedRole(user.role);
@@ -157,6 +168,16 @@ export default function UserManagement() {
   const confirmResetPassword = () => {
     if (!selectedUser) return;
     resetPasswordMutation.mutate(selectedUser.email);
+  };
+
+  const handleDeleteUser = (user) => {
+    setSelectedUser(user);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteUser = () => {
+    if (!selectedUser) return;
+    deleteUserMutation.mutate(selectedUser.id);
   };
 
   // Filter users
@@ -528,6 +549,16 @@ export default function UserManagement() {
                             >
                               {isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteUser(user)}
+                              disabled={currentUser.email === user.email}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Delete user permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -615,6 +646,51 @@ export default function UserManagement() {
               className={selectedUser?.is_active === false ? 'bg-green-600' : 'bg-red-600'}
             >
               {selectedUser?.is_active === false ? 'Enable' : 'Disable'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete User Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Delete User Permanently
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-3">
+                <p>
+                  Are you sure you want to permanently delete <strong>{selectedUser?.full_name}</strong>?
+                </p>
+                <Alert className="bg-red-50 border-red-300">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <AlertDescription className="text-red-900 text-sm">
+                    <strong>Warning:</strong> This action cannot be undone. The user will be completely removed from the system and can sign up again with the same email if needed.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              disabled={deleteUserMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteUserMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete User
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
