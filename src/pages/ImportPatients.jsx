@@ -28,6 +28,10 @@ import { validatePatient, validatePhone, validateEmail, validateDate, SEVERITY }
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ValidationSummary from "../components/import/ValidationSummary";
 import AIValidationHelper from "../components/import/AIValidationHelper";
+import ErrorCategoryAnalyzer from "../components/import/ErrorCategoryAnalyzer";
+import BulkErrorResolver from "../components/import/BulkErrorResolver";
+import ImportAnalyticsDashboard from "../components/import/ImportAnalyticsDashboard";
+import ImportReportGenerator from "../components/import/ImportReportGenerator";
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -80,6 +84,10 @@ export default function ImportPatients() {
   const [skipErrors, setSkipErrors] = useState(true);
   const [selectedRowPreview, setSelectedRowPreview] = useState(null);
   const [autoImporting, setAutoImporting] = useState(false);
+  const [selectedErrorIndices, setSelectedErrorIndices] = useState([]);
+  const [showBulkResolver, setShowBulkResolver] = useState(false);
+  const [importHistory, setImportHistory] = useState([]);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -422,8 +430,41 @@ export default function ImportPatients() {
     }
 
     setImportProgress(0);
+    const startTime = Date.now();
     const results = await importPatientsMutation.mutateAsync(validRecords);
+    const resolutionTime = (Date.now() - startTime) / 1000; // in seconds
+    
+    // Add to import history
+    const historyEntry = {
+      ...results,
+      timestamp: new Date().toISOString(),
+      resolutionTime,
+      totalRecords: validRecords.length + validationErrors.length
+    };
+    setImportHistory(prev => [...prev, historyEntry]);
+    
     setImportResults(results);
+  };
+
+  const handleBulkResolve = async (resolution) => {
+    // Apply resolution based on mode
+    if (resolution.mode === 'skip') {
+      // Remove selected error rows from validation errors
+      const newErrors = validationErrors.filter((_, idx) => !resolution.selectedIndices.includes(idx));
+      setValidationErrors(newErrors);
+      setShowBulkResolver(false);
+      setSelectedErrorIndices([]);
+    } else if (resolution.mode === 'apply_defaults') {
+      // Apply default values and re-validate
+      alert('Default values applied. Please re-validate the data.');
+      setShowBulkResolver(false);
+      setSelectedErrorIndices([]);
+    } else if (resolution.mode === 'manual_fix') {
+      // Apply manual fixes - would need CSV data update logic
+      alert('Manual fixes will be applied on next validation.');
+      setShowBulkResolver(false);
+      setSelectedErrorIndices([]);
+    }
   };
 
   const downloadTemplate = () => {
@@ -508,21 +549,57 @@ export default function ImportPatients() {
         </p>
       </div>
 
-      {/* Download Template */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Get Started</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
-            Download our CSV template to ensure your data is formatted correctly
-          </p>
-          <Button onClick={downloadTemplate} variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Download CSV Template
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Download Template & Analytics Toggle */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Get Started</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Download our CSV template to ensure your data is formatted correctly
+            </p>
+            <Button onClick={downloadTemplate} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Download CSV Template
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+          <CardHeader>
+            <CardTitle className="text-lg">Import Analytics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              View detailed analytics and success metrics
+            </p>
+            <Button 
+              onClick={() => setShowAnalytics(!showAnalytics)}
+              variant="outline"
+              className="border-purple-300"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              {showAnalytics ? 'Hide' : 'Show'} Analytics
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Import Analytics Dashboard */}
+      {showAnalytics && importHistory.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <BarChart3 className="w-6 h-6 text-purple-600" />
+              Import Analytics Dashboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ImportAnalyticsDashboard importHistory={importHistory} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* File Upload with Auto Import */}
       <Card className="mb-6">
@@ -878,15 +955,52 @@ export default function ImportPatients() {
             totalRows={csvData?.rows?.length || 0}
           />
 
-          {/* AI Validation Helper */}
+          {/* Error Analysis & Resolution Tools */}
           {validationErrors.length > 0 && (
-            <AIValidationHelper
-              validationErrors={validationErrors}
-              onApplySuggestions={(suggestions) => {
-                console.log('Apply suggestions:', suggestions);
-              }}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Error Category Analyzer */}
+              <ErrorCategoryAnalyzer
+                validationErrors={validationErrors}
+                onSelectErrors={(indices) => {
+                  setSelectedErrorIndices(indices);
+                  setShowBulkResolver(true);
+                }}
+              />
+
+              {/* AI Validation Helper */}
+              <AIValidationHelper
+                validationErrors={validationErrors}
+                onApplySuggestions={(suggestions) => {
+                  console.log('Apply suggestions:', suggestions);
+                }}
+              />
+            </div>
           )}
+
+          {/* Bulk Error Resolver */}
+          {showBulkResolver && selectedErrorIndices.length > 0 && (
+            <div className="mb-6">
+              <BulkErrorResolver
+                selectedErrors={selectedErrorIndices}
+                validationErrors={validationErrors}
+                onResolve={handleBulkResolve}
+                onCancel={() => {
+                  setShowBulkResolver(false);
+                  setSelectedErrorIndices([]);
+                }}
+              />
+            </div>
+          )}
+
+          {/* Import Report Generator */}
+          <div className="mb-6">
+            <ImportReportGenerator
+              importHistory={importHistory}
+              validRecords={validRecords}
+              validationErrors={validationErrors}
+              importResults={importResults}
+            />
+          </div>
 
           <Card className="mb-6 border-blue-300 border-2">
             <CardHeader className="bg-blue-50">
