@@ -90,17 +90,12 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const adminItems = [
-    { name: "Admin", icon: Settings, page: "AdminDashboard" },
-    { name: "User Management", icon: Users, page: "UserManagement" },
-    { name: "Agency Settings", icon: Settings, page: "AgencySettings" },
-    { name: "Compliance & Regulatory", icon: Shield, page: "ComplianceRegulatory" },
-    { name: "System Monitoring", icon: BarChart3, page: "SystemMonitoring" },
-    { name: "Clinical Pathways", icon: Target, page: "ClinicalPathwayManager" },
-    { name: "OASIS Management", icon: ClipboardList, page: "OASIS" },
-    { name: "Import Patients", icon: Users, page: "ImportPatients" },
-    { name: "Nurse Performance", icon: BarChart3, page: "NursePerformanceDashboard" },
-    { name: "Agency Analytics", icon: Brain, page: "AgencyAnalytics" },
-    { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
+    { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
+    { name: "Users & Settings", icon: Users, page: "UserManagement" },
+    { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
+    { name: "Compliance & Audit", icon: Shield, page: "ComplianceRegulatory" },
+    { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
+    { name: "Import Patients", icon: Users, page: "ImportPatients" }
     ];
 
   const handleLogout = async () => {
