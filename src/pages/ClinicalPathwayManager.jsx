@@ -35,13 +35,20 @@ import {
   FileText,
   DollarSign,
   ClipboardList,
-  X
+  X,
+  Sparkles,
+  Brain
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AIAssessmentDrafter from "../components/clinical/AIAssessmentDrafter";
+import AIICD10Suggester from "../components/clinical/AIICD10Suggester";
+import AICarePlanGenerator from "../components/clinical/AICarePlanGenerator";
 
 export default function ClinicalPathwayManager() {
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editingPathway, setEditingPathway] = useState(null);
+  const [activeTab, setActiveTab] = useState("pathways");
 
   const { data: pathways = [], isLoading } = useQuery({
     queryKey: ['clinicalPathways'],
@@ -330,11 +337,11 @@ export default function ClinicalPathwayManager() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Route className="w-8 h-8 text-indigo-600" />
-              Clinical Pathways
+              <Brain className="w-8 h-8 text-indigo-600" />
+              Clinical & OASIS Management
             </h1>
             <p className="text-gray-600 mt-2">
-              Define automated documentation and task workflows for specific diagnoses
+              AI-powered clinical documentation, OASIS assessments, and care planning
             </p>
           </div>
           <div className="flex gap-2">
@@ -379,7 +386,28 @@ export default function ClinicalPathwayManager() {
           </div>
         </div>
 
-        {pathways.length === 0 ? (
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4 w-full mb-6">
+            <TabsTrigger value="pathways" className="flex items-center gap-2">
+              <Route className="w-4 h-4" />
+              Pathways
+            </TabsTrigger>
+            <TabsTrigger value="oasis" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              OASIS Assistant
+            </TabsTrigger>
+            <TabsTrigger value="icd10" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              ICD-10 Codes
+            </TabsTrigger>
+            <TabsTrigger value="careplan" className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" />
+              Care Plan
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pathways">
+            {pathways.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
               <Route className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -396,9 +424,9 @@ export default function ClinicalPathwayManager() {
               </Button>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid gap-4">
-            {pathways.map((pathway) => (
+            ) : (
+              <div className="grid gap-4">
+                {pathways.map((pathway) => (
               <Card key={pathway.id} className={`${!pathway.is_active && 'opacity-60'}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -478,9 +506,35 @@ export default function ClinicalPathwayManager() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="oasis">
+            <AIAssessmentDrafter
+              onDraftComplete={(assessment) => {
+                console.log("OASIS assessment generated:", assessment);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="icd10">
+            <AIICD10Suggester
+              onCodesSelected={(codes) => {
+                console.log("ICD-10 codes selected:", codes);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="careplan">
+            <AICarePlanGenerator
+              onCarePlanGenerated={(plan) => {
+                console.log("Care plan generated:", plan);
+              }}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
