@@ -670,6 +670,7 @@ ${guidelinesContext}
     
     setIsSaving(true);
     try {
+      // Save visit note
       await base44.entities.Visit.create({
         patient_id: selectedPatientId,
         visit_date: visitDate,
@@ -687,10 +688,31 @@ ${guidelinesContext}
         }
       });
 
+      // Save enhanced note to patient chart history for future context
+      const currentHistory = selectedPatient.enhanced_notes_history || [];
+      const updatedHistory = [
+        ...currentHistory,
+        {
+          date: new Date().toISOString(),
+          visit_type: visitType,
+          diagnosis: finalDiagnosis,
+          enhanced_note: enhancedNote,
+          rough_note: roughNote,
+          quality_score: auditResults?.quality_score || null,
+          nurse_email: currentUser?.email,
+          vital_signs: vitalSigns
+        }
+      ];
+
+      await base44.entities.Patient.update(selectedPatientId, {
+        enhanced_notes_history: updatedHistory.slice(-10) // Keep last 10 notes for context
+      });
+
       setSavedSuccessfully(true);
       setTimeout(() => setSavedSuccessfully(false), 3000);
 
-      // Refresh recent visits to include this one
+      // Refresh patient and recent visits
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
 
       logActivity(ActivityActions.VISIT_DOCUMENT, {
