@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Clock, PlayCircle, CheckCircle2 } from "lucide-react";
 
-const pennsylvaniaSurveyVideos = [
+const stateSurveyVideos = [
   {
     id: "1",
     title: "How to Prepare for Home Health Medicare Survey",
     description: "Medicare surveyors don't knock - they show up. Learn key preparation strategies for your home health agency",
     duration: "58:30",
-    category: "Overview",
+    category: "Survey Prep",
     videoId: "zsj2x-1zhIc",
     priority: "high"
   },
@@ -18,90 +18,9 @@ const pennsylvaniaSurveyVideos = [
     title: "Survey Readiness for Home Health and Hospice",
     description: "Comprehensive guide to CMS survey process and readiness strategies",
     duration: "60:00",
-    category: "Overview",
+    category: "Survey Prep",
     videoId: "7SrimL0OftY",
     priority: "high"
-  },
-  {
-    id: "3",
-    title: "Home Health Nursing: OASIS Training - M1800",
-    description: "Detailed breakdown of OASIS M1800 assessment for home health nurses",
-    duration: "15:00",
-    category: "OASIS",
-    videoId: "NjnFTLpExws",
-    priority: "high"
-  },
-  {
-    id: "4",
-    title: "2025 OASIS-E1 Training Series - Overview",
-    description: "Latest OASIS-E1 updates and comprehensive training for home health clinicians",
-    duration: "45:00",
-    category: "OASIS",
-    videoId: "RQos5WswF2g",
-    priority: "high"
-  },
-  {
-    id: "5",
-    title: "Home Health Lunch and Learn - Homebound Documentation",
-    description: "Critical documentation requirements for homebound status and compliance",
-    duration: "60:00",
-    category: "Documentation",
-    videoId: "z50-BLT1QgQ",
-    priority: "high"
-  },
-  {
-    id: "6",
-    title: "Face-to-Face Documentation Requirement for Home Health",
-    description: "Understanding Medicare face-to-face requirements and proper documentation",
-    duration: "30:00",
-    category: "Documentation",
-    videoId: "6dDYMaEsXmM",
-    priority: "high"
-  },
-  {
-    id: "7",
-    title: "Infection Prevention in Home Care - Best Practices",
-    description: "Essential infection control protocols and training for home health caregivers",
-    duration: "20:00",
-    category: "Safety",
-    videoId: "Ff5cnbA11OM",
-    priority: "medium"
-  },
-  {
-    id: "8",
-    title: "OASIS Training - Conventions",
-    description: "Foundational conventions essential for accurate OASIS assessment completion",
-    duration: "12:00",
-    category: "OASIS",
-    videoId: "IZDeEOlfCD4",
-    priority: "medium"
-  },
-  {
-    id: "9",
-    title: "Home Health Bag Technique - Best Practice",
-    description: "6-step bag technique following accepted standards of practice for infection control",
-    duration: "8:00",
-    category: "Safety",
-    videoId: "T-oO-eZWO74",
-    priority: "high"
-  },
-  {
-    id: "10",
-    title: "Home Care Bag Technique - BAYADA",
-    description: "Proper bag technique demonstration for infection prevention in home care settings",
-    duration: "5:00",
-    category: "Safety",
-    videoId: "MxM4sVnfYyY",
-    priority: "high"
-  },
-  {
-    id: "11",
-    title: "Clinical Bag Technique - Fairview Home-Based Care",
-    description: "Educational video demonstrating proper clinical bag technique and infection control best practices",
-    duration: "10:00",
-    category: "Safety",
-    videoId: "RRV1hoAkkM4",
-    priority: "medium"
   }
 ];
 
@@ -115,16 +34,10 @@ export default function StateSurveyVideos() {
   };
 
   const categoryColors = {
-    "Overview": "bg-blue-100 text-blue-800",
-    "Documentation": "bg-purple-100 text-purple-800",
-    "OASIS": "bg-green-100 text-green-800",
-    "Safety": "bg-red-100 text-red-800",
-    "Compliance": "bg-yellow-100 text-yellow-800",
-    "Clinical": "bg-indigo-100 text-indigo-800",
-    "Communication": "bg-pink-100 text-pink-800"
+    "Survey Prep": "bg-blue-100 text-blue-800"
   };
 
-  const totalVideos = pennsylvaniaSurveyVideos.length;
+  const totalVideos = stateSurveyVideos.length;
   const completionPercentage = Math.round((completedVideos.length / totalVideos) * 100);
 
   return (
@@ -137,8 +50,8 @@ export default function StateSurveyVideos() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900">Pennsylvania State Survey Preparation</h2>
-              <p className="text-sm text-gray-600">Essential training videos to prepare for your PA state survey</p>
+              <h2 className="text-xl font-bold text-gray-900">State Survey Preparation</h2>
+              <p className="text-sm text-gray-600">Essential training videos to prepare for your state survey</p>
             </div>
           </div>
           
@@ -160,7 +73,7 @@ export default function StateSurveyVideos() {
 
       {/* Video Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {pennsylvaniaSurveyVideos.map((video) => (
+        {stateSurveyVideos.map((video) => (
           <Card 
             key={video.id}
             className={`hover:shadow-lg transition-shadow ${
@@ -230,7 +143,7 @@ export default function StateSurveyVideos() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Congratulations!</h3>
             <p className="text-gray-600">
-              You've completed all Pennsylvania State Survey preparation videos. You're ready for your survey!
+              You've completed all State Survey preparation videos. You're ready for your survey!
             </p>
           </CardContent>
         </Card>

@@ -185,7 +185,7 @@ export default function StaffTrainingHub() {
           </TabsTrigger>
           <TabsTrigger value="survey" className="flex items-center gap-2 bg-gradient-to-r from-red-50 to-orange-50 data-[state=active]:bg-red-100">
             <Trophy className="w-4 h-4" />
-            <span className="hidden sm:inline">PA Survey</span>
+            <span className="hidden sm:inline">Survey</span>
           </TabsTrigger>
           <TabsTrigger value="remediation" className="flex items-center gap-2">
             <Target className="w-4 h-4" />

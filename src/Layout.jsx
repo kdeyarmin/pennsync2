@@ -23,7 +23,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Clock
+  Clock,
+  BookOpen
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
@@ -83,6 +84,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Quality & Compliance",
       items: [
         { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
+        { name: "Education Videos", icon: BookOpen, page: "NurseEducationVideos" },
         { name: "Features", icon: Sparkles, page: "Features" }
       ]
     }
