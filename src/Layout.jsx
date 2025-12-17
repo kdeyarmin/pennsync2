@@ -84,7 +84,6 @@ export default function Layout({ children, currentPageName }) {
       category: "Quality & Compliance",
       items: [
         { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
-        { name: "Education Videos", icon: BookOpen, page: "NurseEducationVideos" },
         { name: "Features", icon: Sparkles, page: "Features" }
       ]
     }
