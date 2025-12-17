@@ -52,7 +52,9 @@ import {
   Filter,
   Send,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Key,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
@@ -64,6 +66,8 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
+  const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
+  const [resetPasswordResult, setResetPasswordResult] = useState(null);
   const [editedRole, setEditedRole] = useState("");
 
   const queryClient = useQueryClient();
@@ -107,6 +111,13 @@ export default function UserManagement() {
     },
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: (userEmail) => base44.functions.invoke('resetUserPassword', { userEmail }),
+    onSuccess: (data) => {
+      setResetPasswordResult(data);
+    },
+  });
+
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setEditedRole(user.role);
@@ -135,6 +146,17 @@ export default function UserManagement() {
     });
     setShowDisableDialog(false);
     setSelectedUser(null);
+  };
+
+  const handleResetPassword = (user) => {
+    setSelectedUser(user);
+    setResetPasswordResult(null);
+    setShowPasswordResetDialog(true);
+  };
+
+  const confirmResetPassword = () => {
+    if (!selectedUser) return;
+    resetPasswordMutation.mutate(selectedUser.email);
   };
 
   // Filter users
@@ -483,8 +505,18 @@ export default function UserManagement() {
                               size="sm"
                               onClick={() => handleEditUser(user)}
                               disabled={currentUser.email === user.email}
+                              title="Edit user role"
                             >
                               <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleResetPassword(user)}
+                              className="text-orange-600 hover:text-orange-700"
+                              title="Reset password"
+                            >
+                              <Key className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -492,6 +524,7 @@ export default function UserManagement() {
                               onClick={() => handleToggleActive(user)}
                               disabled={currentUser.email === user.email}
                               className={isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
+                              title={isActive ? 'Disable user' : 'Enable user'}
                             >
                               {isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                             </Button>
@@ -583,6 +616,86 @@ export default function UserManagement() {
             >
               {selectedUser?.is_active === false ? 'Enable' : 'Disable'}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Password Dialog */}
+      <AlertDialog open={showPasswordResetDialog} onOpenChange={setShowPasswordResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-orange-600" />
+              Reset User Password
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {!resetPasswordResult ? (
+                <>
+                  Are you sure you want to reset the password for <strong>{selectedUser?.full_name}</strong>?
+                  <br/><br/>
+                  A temporary password will be generated and sent to <strong>{selectedUser?.email}</strong>. 
+                  The user will be able to log in with this temporary password and should change it immediately.
+                </>
+              ) : resetPasswordResult.success ? (
+                <div className="space-y-3">
+                  <Alert className="bg-green-50 border-green-300">
+                    <AlertDescription className="text-green-900">
+                      ✅ Password reset successfully! An email with the temporary password has been sent to the user.
+                    </AlertDescription>
+                  </Alert>
+                  <div className="p-4 bg-gray-50 rounded-lg border">
+                    <p className="text-sm text-gray-600 mb-2">Temporary Password:</p>
+                    <p className="font-mono text-lg font-bold text-gray-900 bg-white p-3 rounded border select-all">
+                      {resetPasswordResult.tempPassword}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      💡 You can share this with the user if they didn't receive the email
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Alert className="bg-red-50 border-red-300">
+                  <AlertDescription className="text-red-900">
+                    ❌ Failed to reset password: {resetPasswordResult?.error || 'Unknown error'}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            {!resetPasswordResult ? (
+              <>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmResetPassword}
+                  disabled={resetPasswordMutation.isPending}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {resetPasswordMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Resetting...
+                    </>
+                  ) : (
+                    <>
+                      <Key className="w-4 h-4 mr-2" />
+                      Reset Password
+                    </>
+                  )}
+                </AlertDialogAction>
+              </>
+            ) : (
+              <AlertDialogAction
+                onClick={() => {
+                  setShowPasswordResetDialog(false);
+                  setResetPasswordResult(null);
+                  setSelectedUser(null);
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Done
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
