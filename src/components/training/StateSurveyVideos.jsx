@@ -6,75 +6,75 @@ import { Shield, Clock, PlayCircle, CheckCircle2 } from "lucide-react";
 const pennsylvaniaSurveyVideos = [
   {
     id: "1",
-    title: "Pennsylvania State Survey Overview",
-    description: "Introduction to PA state survey process and what to expect",
-    duration: "12:45",
+    title: "How to Prepare for Home Health Medicare Survey",
+    description: "Medicare surveyors don't knock - they show up. Learn key preparation strategies for your home health agency",
+    duration: "58:30",
     category: "Overview",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
+    videoId: "zsj2x-1zhIc",
     priority: "high"
   },
   {
     id: "2",
-    title: "Documentation Standards for PA Surveys",
-    description: "Key documentation requirements and best practices",
-    duration: "18:30",
-    category: "Documentation",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
+    title: "Survey Readiness for Home Health and Hospice",
+    description: "Comprehensive guide to CMS survey process and readiness strategies",
+    duration: "60:00",
+    category: "Overview",
+    videoId: "7SrimL0OftY",
     priority: "high"
   },
   {
     id: "3",
-    title: "OASIS Assessment for PA State Survey",
-    description: "OASIS-E requirements and common survey findings",
-    duration: "22:15",
+    title: "Home Health Nursing: OASIS Training - M1800",
+    description: "Detailed breakdown of OASIS M1800 assessment for home health nurses",
+    duration: "15:00",
     category: "OASIS",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
+    videoId: "NjnFTLpExws",
     priority: "high"
   },
   {
     id: "4",
-    title: "Infection Control & Safety Protocols",
-    description: "PA-specific infection control and safety standards",
-    duration: "15:20",
-    category: "Safety",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
-    priority: "medium"
+    title: "2025 OASIS-E1 Training Series - Overview",
+    description: "Latest OASIS-E1 updates and comprehensive training for home health clinicians",
+    duration: "45:00",
+    category: "OASIS",
+    videoId: "RQos5WswF2g",
+    priority: "high"
   },
   {
     id: "5",
-    title: "Patient Rights & Privacy (HIPAA)",
-    description: "Understanding patient rights compliance for surveys",
-    duration: "14:10",
-    category: "Compliance",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
-    priority: "medium"
+    title: "Home Health Lunch and Learn - Homebound Documentation",
+    description: "Critical documentation requirements for homebound status and compliance",
+    duration: "60:00",
+    category: "Documentation",
+    videoId: "z50-BLT1QgQ",
+    priority: "high"
   },
   {
     id: "6",
-    title: "Medication Management Best Practices",
-    description: "Medication reconciliation and documentation standards",
-    duration: "16:45",
-    category: "Clinical",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
-    priority: "medium"
+    title: "Face-to-Face Documentation Requirement for Home Health",
+    description: "Understanding Medicare face-to-face requirements and proper documentation",
+    duration: "30:00",
+    category: "Documentation",
+    videoId: "6dDYMaEsXmM",
+    priority: "high"
   },
   {
     id: "7",
-    title: "Survey Interview Techniques",
-    description: "How to respond to surveyor questions effectively",
-    duration: "10:30",
-    category: "Communication",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
-    priority: "high"
+    title: "Infection Prevention in Home Care - Best Practices",
+    description: "Essential infection control protocols and training for home health caregivers",
+    duration: "20:00",
+    category: "Safety",
+    videoId: "Ff5cnbA11OM",
+    priority: "medium"
   },
   {
     id: "8",
-    title: "Common Deficiency Citations & How to Avoid Them",
-    description: "Review of most common PA citations and prevention strategies",
-    duration: "25:00",
-    category: "Compliance",
-    videoId: "dQw4w9WgXcQ", // Replace with actual YouTube video ID
-    priority: "high"
+    title: "OASIS Training - Conventions",
+    description: "Foundational conventions essential for accurate OASIS assessment completion",
+    duration: "12:00",
+    category: "OASIS",
+    videoId: "IZDeEOlfCD4",
+    priority: "medium"
   }
 ];
 
