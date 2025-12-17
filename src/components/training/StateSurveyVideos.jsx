@@ -21,6 +21,15 @@ const stateSurveyVideos = [
     category: "Survey Prep",
     videoId: "7SrimL0OftY",
     priority: "high"
+  },
+  {
+    id: "3",
+    title: "Home Health Bag Technique - Best Practice",
+    description: "6-step bag technique following accepted standards of practice for infection control during surveys",
+    duration: "8:00",
+    category: "Survey Prep",
+    videoId: "T-oO-eZWO74",
+    priority: "high"
   }
 ];
 
