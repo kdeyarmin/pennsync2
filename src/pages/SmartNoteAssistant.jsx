@@ -502,8 +502,7 @@ ${contextualizedNote}
       ACTIVE CARE PLAN GOALS:
       ${carePlans.filter(cp => cp.status === 'active').map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- No active care plans'}
 
-      OASIS ASSESSMENT DATA (Synced):
-      ${oasisContext ? `
+      ${oasisContext ? `OASIS ASSESSMENT DATA (Synced):
       - Assessment Date: ${formatEastern(oasisContext.assessmentDate, 'MMM d, yyyy')}
       - Admission Source: ${oasisContext.admissionSource === '1' || oasisContext.admissionSource?.toLowerCase().includes('community') ? 'Community (home)' : oasisContext.admissionSource === '2' || oasisContext.admissionSource?.toLowerCase().includes('institutional') ? 'Institutional (hospital/SNF discharge)' : oasisContext.admissionSource || 'Unknown'}
       - Clinical Group: ${oasisContext.clinicalGroup || 'Not specified'}
@@ -521,7 +520,7 @@ ${contextualizedNote}
       - Hearing Status: ${oasisContext.hearingStatus || 'Not assessed'}
       - ADL Limitations: ${Object.keys(oasisContext.adlStatus || {}).length > 0 ? Object.entries(oasisContext.adlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ') : 'None documented'}
       - IADL Limitations: ${Object.keys(oasisContext.iadlStatus || {}).length > 0 ? Object.entries(oasisContext.iadlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ') : 'None documented'}
-      ` : '- No OASIS data on file'}
+      ` : ''}
 
       ROUGH NOTES (Standardized Medical Terminology):
       ${standardizedNote}
