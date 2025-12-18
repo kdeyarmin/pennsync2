@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Clock, PlayCircle, CheckCircle2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Shield, Clock, PlayCircle, CheckCircle2, Clipboard } from "lucide-react";
 
 const stateSurveyVideos = [
   {
@@ -36,11 +37,20 @@ const stateSurveyVideos = [
 
 export default function StateSurveyVideos() {
   const [completedVideos, setCompletedVideos] = React.useState([]);
+  const [bagTechniqueChecklist, setBagTechniqueChecklist] = React.useState({});
 
   const handleVideoComplete = (videoId) => {
     if (!completedVideos.includes(videoId)) {
       setCompletedVideos([...completedVideos, videoId]);
     }
+  };
+
+  const toggleChecklistItem = (step, itemIndex) => {
+    const key = `${step}-${itemIndex}`;
+    setBagTechniqueChecklist(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
   const categoryColors = {
@@ -78,6 +88,202 @@ export default function StateSurveyVideos() {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Bag Technique Checklist */}
+      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clipboard className="w-5 h-5 text-purple-600" />
+            Bag Technique Checklist - Survey Ready
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Essential infection control procedure - demonstrate proper technique during state surveys
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Before You Begin */}
+          <div className="bg-white rounded-lg p-4 border border-purple-200">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Badge className="bg-purple-600">Before You Begin</Badge>
+            </h3>
+            <div className="space-y-2">
+              {[
+                "Review the plan of care and provider's orders",
+                "Introduce yourself and ask patient how they'd like to be addressed",
+                "Confirm patient understanding of procedure and gain informed consent",
+                "Locate a hard surface near patient (table) and trash receptacle",
+                "Follow organization's infection control policies"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={bagTechniqueChecklist[`before-${idx}`] || false}
+                    onCheckedChange={() => toggleChecklistItem('before', idx)}
+                    className="mt-0.5"
+                  />
+                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('before', idx)}>
+                    {item}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 1: Prepare the Bag */}
+          <div className="bg-white rounded-lg p-4 border border-purple-200">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Badge className="bg-blue-600">Step 1: Prepare the Bag</Badge>
+            </h3>
+            <div className="space-y-2">
+              {[
+                "Perform hand hygiene",
+                "Remove cleansing wipes from outside pocket",
+                "Clean the selected hard surface and let it dry",
+                "Remove clean barrier from outside pocket and lay on dry surface",
+                "Place bag on top of barrier",
+                "Perform hand hygiene and open the bag",
+                "Place down two barriers (clean area and dirty area)",
+                "Obtain all necessary supplies and place on clean barrier",
+                "Close the bag"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={bagTechniqueChecklist[`step1-${idx}`] || false}
+                    onCheckedChange={() => toggleChecklistItem('step1', idx)}
+                    className="mt-0.5"
+                  />
+                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step1', idx)}>
+                    {item}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-2 italic">
+              *Note: Shoulder bags on barrier; rolling bags stay on floor
+            </p>
+          </div>
+
+          {/* Step 2: Perform Patient Care */}
+          <div className="bg-white rounded-lg p-4 border border-purple-200">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Badge className="bg-green-600">Step 2: Perform Patient Care</Badge>
+            </h3>
+            <div className="space-y-2">
+              {[
+                "Perform hand hygiene and don gloves if indicated",
+                "Perform patient care, placing used equipment on dirty barrier (if reusable)",
+                "Dispose of waste in trash according to organizational policies",
+                "If item forgotten: perform hand hygiene before retrieving from bag",
+                "After care completion: discard all remaining disposable supplies",
+                "Perform hand hygiene"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={bagTechniqueChecklist[`step2-${idx}`] || false}
+                    onCheckedChange={() => toggleChecklistItem('step2', idx)}
+                    className="mt-0.5"
+                  />
+                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step2', idx)}>
+                    {item}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 3: Clean Reusable Equipment */}
+          <div className="bg-white rounded-lg p-4 border border-purple-200">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Badge className="bg-orange-600">Step 3: Clean Reusable Equipment</Badge>
+            </h3>
+            <div className="space-y-2">
+              {[
+                "Don clean gloves",
+                "Use sanitizing wipes/disinfectant per organizational policies",
+                "Clean all equipment used or removed from clean barrier",
+                "Follow manufacturer's contact time for disinfection",
+                "Place cleaned equipment back on clean barrier to dry"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={bagTechniqueChecklist[`step3-${idx}`] || false}
+                    onCheckedChange={() => toggleChecklistItem('step3', idx)}
+                    className="mt-0.5"
+                  />
+                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step3', idx)}>
+                    {item}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 4: Return Equipment to Bag */}
+          <div className="bg-white rounded-lg p-4 border border-purple-200">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Badge className="bg-indigo-600">Step 4: Return Equipment to Bag</Badge>
+            </h3>
+            <div className="space-y-2">
+              {[
+                "Doff used gloves using Aseptic Non Touch Technique",
+                "Dispose of gloves in trash",
+                "Perform hand hygiene",
+                "Return cleaned items to the bag",
+                "Close the bag",
+                "Discard the barriers into the trash",
+                "Perform hand hygiene"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={bagTechniqueChecklist[`step4-${idx}`] || false}
+                    onCheckedChange={() => toggleChecklistItem('step4', idx)}
+                    className="mt-0.5"
+                  />
+                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step4', idx)}>
+                    {item}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 5: Complete Procedure and Clean Up */}
+          <div className="bg-white rounded-lg p-4 border border-purple-200">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Badge className="bg-teal-600">Step 5: Complete Procedure</Badge>
+            </h3>
+            <div className="space-y-2">
+              {[
+                "Assess patient for tolerance of performed treatments",
+                "Confirm understanding with teach-back as appropriate",
+                "Document the procedure",
+                "Follow up with provider on noted abnormalities as indicated"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={bagTechniqueChecklist[`step5-${idx}`] || false}
+                    onCheckedChange={() => toggleChecklistItem('step5', idx)}
+                    className="mt-0.5"
+                  />
+                  <label className="text-sm text-gray-700 cursor-pointer" onClick={() => toggleChecklistItem('step5', idx)}>
+                    {item}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Completion Indicator */}
+          {Object.values(bagTechniqueChecklist).filter(Boolean).length === 30 && (
+            <Card className="border-2 border-green-300 bg-green-50">
+              <CardContent className="p-4 text-center">
+                <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <p className="font-semibold text-green-900">Bag Technique Checklist Complete!</p>
+                <p className="text-sm text-green-700">You're ready for state survey observation</p>
+              </CardContent>
+            </Card>
+          )}
         </CardContent>
       </Card>
 
