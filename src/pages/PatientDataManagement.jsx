@@ -68,27 +68,55 @@ export default function PatientDataManagement() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
 
-  const { data: patients = [] } = useQuery({
+  const { data: patients = [], isLoading, error } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: async () => {
+      try {
+        return await base44.entities.Patient.list();
+      } catch (err) {
+        console.error('Failed to load patients:', err);
+        return [];
+      }
+    },
     initialData: [],
   });
 
   const { data: allVisits = [] } = useQuery({
     queryKey: ['allVisits'],
-    queryFn: () => base44.entities.Visit.list('-visit_date', 500),
+    queryFn: async () => {
+      try {
+        return await base44.entities.Visit.list('-visit_date', 500);
+      } catch (err) {
+        console.error('Failed to load visits:', err);
+        return [];
+      }
+    },
     initialData: [],
   });
 
   const { data: allAlerts = [] } = useQuery({
     queryKey: ['allAlerts'],
-    queryFn: () => base44.entities.PatientAlert.list('-created_date', 200),
+    queryFn: async () => {
+      try {
+        return await base44.entities.PatientAlert.list('-created_date', 200);
+      } catch (err) {
+        console.error('Failed to load alerts:', err);
+        return [];
+      }
+    },
     initialData: [],
   });
 
   const { data: allIncidents = [] } = useQuery({
     queryKey: ['allIncidents'],
-    queryFn: () => base44.entities.Incident.list('-incident_date', 200),
+    queryFn: async () => {
+      try {
+        return await base44.entities.Incident.list('-incident_date', 200);
+      } catch (err) {
+        console.error('Failed to load incidents:', err);
+        return [];
+      }
+    },
     initialData: [],
   });
 
@@ -218,6 +246,17 @@ export default function PatientDataManagement() {
     if (sortBy !== field) return <Minus className="w-4 h-4 opacity-30" />;
     return sortOrder === 'asc' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />;
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading patient data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
