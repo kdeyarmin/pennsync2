@@ -133,6 +133,7 @@ export default function UserManagement({ users, currentUser }) {
       full_name: user.full_name || '',
       phone: user.phone || '',
       credentials: user.credentials || '',
+      credential_type: user.credential_type || '',
       license_number: user.license_number || '',
       care_scope: user.care_scope || 'home_health',
       role: user.role,
@@ -266,6 +267,11 @@ export default function UserManagement({ users, currentUser }) {
                     <TableCell className="text-sm">{user.email}</TableCell>
                     <TableCell className="text-sm">{user.phone || 'Not set'}</TableCell>
                     <TableCell className="text-sm">
+                      {user.credential_type && (
+                        <Badge variant="outline" className="mb-1 mr-1">
+                          {user.credential_type}
+                        </Badge>
+                      )}
                       {user.credentials || 'Not set'}
                       {user.license_number && (
                         <div className="text-xs text-gray-500">Lic: {user.license_number}</div>
@@ -504,6 +510,22 @@ export default function UserManagement({ users, currentUser }) {
                   onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
                   placeholder="(555) 123-4567"
                 />
+              </div>
+
+              <div>
+                <Label>Credential Type</Label>
+                <Select 
+                  value={editingUser.credential_type} 
+                  onValueChange={(value) => setEditingUser({...editingUser, credential_type: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select credential type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="RN">RN - Registered Nurse</SelectItem>
+                    <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
