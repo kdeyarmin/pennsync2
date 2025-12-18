@@ -290,8 +290,8 @@ Deno.serve(async (req) => {
         const unprocessed = group.filter(p => !processed.has(p.id));
         if (unprocessed.length < 2) continue;
 
-        // Only do detailed matching for groups with 10 or fewer patients
-        if (unprocessed.length <= 10) {
+        // Process all groups up to 50 patients (increased from 10)
+        if (unprocessed.length <= 50) {
           for (let i = 0; i < unprocessed.length; i++) {
             if (processed.has(unprocessed[i].id)) continue;
 
@@ -311,11 +311,33 @@ Deno.serve(async (req) => {
               processed.add(unprocessed[i].id);
             }
           }
+        } else {
+          // For very large groups (>50), use quick matching on first 100
+          const subset = unprocessed.slice(0, 100);
+          for (let i = 0; i < subset.length; i++) {
+            if (processed.has(subset[i].id)) continue;
+
+            const duplicates = [];
+            for (let j = i + 1; j < subset.length; j++) {
+              if (processed.has(subset[j].id)) continue;
+
+              const { score, matches } = calculateMatchScore(subset[i], subset[j]);
+              if (score >= 70) { // Higher threshold for large groups
+                duplicates.push({ patient: subset[j], score, matches });
+                processed.add(subset[j].id);
+              }
+            }
+
+            if (duplicates.length > 0) {
+              duplicateGroups.push({ primary: subset[i], duplicates });
+              processed.add(subset[i].id);
+            }
+          }
         }
       }
 
-      // Check timeout
-      if (Date.now() - startTime > 25000) {
+      // Check timeout - extended to 40 seconds
+      if (Date.now() - startTime > 40000) {
         console.log('Approaching timeout, stopping search');
         break;
       }
@@ -328,8 +350,8 @@ Deno.serve(async (req) => {
     const detailsArray = [];
 
     for (const group of duplicateGroups) {
-      // Check timeout before each group
-      if (Date.now() - startTime > 28000) {
+      // Check timeout before each group - extended to 50 seconds
+      if (Date.now() - startTime > 50000) {
         console.log('Timeout protection - stopping removal');
         break;
       }
@@ -393,9 +415,9 @@ Deno.serve(async (req) => {
         removed: removedFromGroup
       });
 
-      // Small delay every 5 groups
-      if (detailsArray.length % 5 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 50));
+      // Small delay every 10 groups (increased from 5)
+      if (detailsArray.length % 10 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 30));
       }
     }
 
