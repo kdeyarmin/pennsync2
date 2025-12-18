@@ -314,31 +314,23 @@ Deno.serve(async (req) => {
       const removedFromGroup = [];
       for (const patient of toRemove) {
         try {
-          // Delete related records first to avoid foreign key constraints
-          const visits = await base44.asServiceRole.entities.Visit.filter({ patient_id: patient.id });
-          for (const visit of visits) {
-            await base44.asServiceRole.entities.Visit.delete(visit.id);
-          }
-          
-          const carePlans = await base44.asServiceRole.entities.CarePlan.filter({ patient_id: patient.id });
-          for (const plan of carePlans) {
-            await base44.asServiceRole.entities.CarePlan.delete(plan.id);
-          }
-          
-          const alerts = await base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patient.id });
-          for (const alert of alerts) {
-            await base44.asServiceRole.entities.PatientAlert.delete(alert.id);
-          }
-          
-          const incidents = await base44.asServiceRole.entities.Incident.filter({ patient_id: patient.id });
-          for (const incident of incidents) {
-            await base44.asServiceRole.entities.Incident.delete(incident.id);
-          }
-          
-          const tasks = await base44.asServiceRole.entities.Task.filter({ patient_id: patient.id });
-          for (const task of tasks) {
-            await base44.asServiceRole.entities.Task.delete(task.id);
-          }
+          // Delete related records in parallel for speed
+          const [visits, carePlans, alerts, incidents, tasks] = await Promise.all([
+            base44.asServiceRole.entities.Visit.filter({ patient_id: patient.id }),
+            base44.asServiceRole.entities.CarePlan.filter({ patient_id: patient.id }),
+            base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patient.id }),
+            base44.asServiceRole.entities.Incident.filter({ patient_id: patient.id }),
+            base44.asServiceRole.entities.Task.filter({ patient_id: patient.id })
+          ]);
+
+          // Delete all related records in parallel
+          await Promise.all([
+            ...visits.map(v => base44.asServiceRole.entities.Visit.delete(v.id).catch(() => {})),
+            ...carePlans.map(cp => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch(() => {})),
+            ...alerts.map(a => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch(() => {})),
+            ...incidents.map(i => base44.asServiceRole.entities.Incident.delete(i.id).catch(() => {})),
+            ...tasks.map(t => base44.asServiceRole.entities.Task.delete(t.id).catch(() => {}))
+          ]);
           
           // Now delete the patient
           await base44.asServiceRole.entities.Patient.delete(patient.id);
