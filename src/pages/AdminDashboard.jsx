@@ -361,110 +361,110 @@ export default function AdminDashboard() {
       </div>
 
       {/* Key Metrics - Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium mb-1">Total Users</p>
-                <p className="text-4xl font-bold">{totalUsers}</p>
-                <p className="text-blue-100 text-xs mt-1">{adminUsers} admins</p>
+                <p className="text-blue-100 text-xs font-medium mb-0.5">Total Users</p>
+                <p className="text-2xl font-bold">{totalUsers}</p>
+                <p className="text-blue-100 text-[10px] mt-0.5">{adminUsers} admins</p>
               </div>
-              <Users className="w-12 h-12 text-blue-200" />
+              <Users className="w-8 h-8 text-blue-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium mb-1">Active Patients</p>
-                <p className="text-4xl font-bold">{activePatients}</p>
-                <p className="text-green-100 text-xs mt-1">{totalPatients} total</p>
+                <p className="text-green-100 text-xs font-medium mb-0.5">Active Patients</p>
+                <p className="text-2xl font-bold">{activePatients}</p>
+                <p className="text-green-100 text-[10px] mt-0.5">{totalPatients} total</p>
               </div>
-              <FileText className="w-12 h-12 text-green-200" />
+              <FileText className="w-8 h-8 text-green-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium mb-1">Visits (30 Days)</p>
-                <p className="text-4xl font-bold">{visitsLast30Days}</p>
-                <p className="text-purple-100 text-xs mt-1">{completedVisits} completed</p>
+                <p className="text-purple-100 text-xs font-medium mb-0.5">Visits (30 Days)</p>
+                <p className="text-2xl font-bold">{visitsLast30Days}</p>
+                <p className="text-purple-100 text-[10px] mt-0.5">{completedVisits} completed</p>
               </div>
-              <Calendar className="w-12 h-12 text-purple-200" />
+              <Calendar className="w-8 h-8 text-purple-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm font-medium mb-1">Avg Doc Time</p>
-                <p className="text-4xl font-bold">{avgDocTime}</p>
-                <p className="text-orange-100 text-xs mt-1">minutes per visit</p>
+                <p className="text-orange-100 text-xs font-medium mb-0.5">Avg Doc Time</p>
+                <p className="text-2xl font-bold">{avgDocTime}</p>
+                <p className="text-orange-100 text-[10px] mt-0.5">minutes per visit</p>
               </div>
-              <Clock className="w-12 h-12 text-orange-200" />
+              <Clock className="w-8 h-8 text-orange-200" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Key Metrics - Row 2: Efficiency & Quality */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-cyan-100 text-sm font-medium mb-1">Time Saved (AI)</p>
-                <p className="text-4xl font-bold">{timeSavedHours}h</p>
-                <p className="text-cyan-100 text-xs mt-1">{estimatedTimeSaved} mins total</p>
+                <p className="text-cyan-100 text-xs font-medium mb-0.5">Time Saved (AI)</p>
+                <p className="text-2xl font-bold">{timeSavedHours}h</p>
+                <p className="text-cyan-100 text-[10px] mt-0.5">{estimatedTimeSaved} mins total</p>
               </div>
-              <TrendingUp className="w-12 h-12 text-cyan-200" />
+              <TrendingUp className="w-8 h-8 text-cyan-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-indigo-100 text-sm font-medium mb-1">Compliance Score</p>
-                <p className="text-4xl font-bold">{avgComplianceScore}%</p>
-                <p className="text-indigo-100 text-xs mt-1">last 30 days avg</p>
+                <p className="text-indigo-100 text-xs font-medium mb-0.5">Compliance Score</p>
+                <p className="text-2xl font-bold">{avgComplianceScore}%</p>
+                <p className="text-indigo-100 text-[10px] mt-0.5">last 30 days avg</p>
               </div>
-              <Shield className="w-12 h-12 text-indigo-200" />
+              <Shield className="w-8 h-8 text-indigo-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-pink-100 text-sm font-medium mb-1">AI Adoption</p>
-                <p className="text-4xl font-bold">{aiAdoptionRate}%</p>
-                <p className="text-pink-100 text-xs mt-1">{visitsWithAI} visits with AI</p>
+                <p className="text-pink-100 text-xs font-medium mb-0.5">AI Adoption</p>
+                <p className="text-2xl font-bold">{aiAdoptionRate}%</p>
+                <p className="text-pink-100 text-[10px] mt-0.5">{visitsWithAI} visits with AI</p>
               </div>
-              <Target className="w-12 h-12 text-pink-200" />
+              <Target className="w-8 h-8 text-pink-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-teal-100 text-sm font-medium mb-1">Quality Score</p>
-                <p className="text-4xl font-bold">{qualityScore}%</p>
-                <p className="text-teal-100 text-xs mt-1">{recentIncidents} incidents</p>
+                <p className="text-teal-100 text-xs font-medium mb-0.5">Quality Score</p>
+                <p className="text-2xl font-bold">{qualityScore}%</p>
+                <p className="text-teal-100 text-[10px] mt-0.5">{recentIncidents} incidents</p>
               </div>
-              <Award className="w-12 h-12 text-teal-200" />
+              <Award className="w-8 h-8 text-teal-200" />
             </div>
           </CardContent>
         </Card>
