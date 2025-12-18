@@ -314,7 +314,35 @@ Deno.serve(async (req) => {
       const removedFromGroup = [];
       for (const patient of toRemove) {
         try {
+          // Delete related records first to avoid foreign key constraints
+          const visits = await base44.asServiceRole.entities.Visit.filter({ patient_id: patient.id });
+          for (const visit of visits) {
+            await base44.asServiceRole.entities.Visit.delete(visit.id);
+          }
+          
+          const carePlans = await base44.asServiceRole.entities.CarePlan.filter({ patient_id: patient.id });
+          for (const plan of carePlans) {
+            await base44.asServiceRole.entities.CarePlan.delete(plan.id);
+          }
+          
+          const alerts = await base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patient.id });
+          for (const alert of alerts) {
+            await base44.asServiceRole.entities.PatientAlert.delete(alert.id);
+          }
+          
+          const incidents = await base44.asServiceRole.entities.Incident.filter({ patient_id: patient.id });
+          for (const incident of incidents) {
+            await base44.asServiceRole.entities.Incident.delete(incident.id);
+          }
+          
+          const tasks = await base44.asServiceRole.entities.Task.filter({ patient_id: patient.id });
+          for (const task of tasks) {
+            await base44.asServiceRole.entities.Task.delete(task.id);
+          }
+          
+          // Now delete the patient
           await base44.asServiceRole.entities.Patient.delete(patient.id);
+          
           removedFromGroup.push({
             id: patient.id,
             name: `${patient.first_name} ${patient.last_name}`,
@@ -322,7 +350,7 @@ Deno.serve(async (req) => {
             match_score: group.duplicates.find(d => d.patient.id === patient.id)?.score || 100
           });
         } catch (err) {
-          console.error(`Failed to delete ${patient.id}:`, err);
+          console.error(`Failed to delete ${patient.id}:`, err.message);
         }
       }
 
