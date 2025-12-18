@@ -94,23 +94,48 @@ Deno.serve(async (req) => {
 
     // Remove duplicates (keep most recent created)
     const removed = [];
+    const detailsArray = [];
     
     for (const group of duplicateGroups) {
       // Sort by created_date to find most recent
       const allInGroup = [group.primary, ...group.duplicates.map(d => d.patient)];
-      allInGroup.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      allInGroup.sort((a, b) => {
+        const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
+        const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
+        return dateB - dateA;
+      });
       
       const keep = allInGroup[0];
       const toRemove = allInGroup.slice(1);
 
+      console.log(`Keeping patient: ${keep.first_name} ${keep.last_name} (${keep.id})`);
+      console.log(`Removing ${toRemove.length} duplicate(s)`);
+
+      const removedFromGroup = [];
       for (const patient of toRemove) {
-        await base44.asServiceRole.entities.Patient.update(patient.id, { status: 'discharged' });
-        removed.push({
-          id: patient.id,
-          name: `${patient.first_name} ${patient.last_name}`,
-          mrn: patient.medical_record_number
-        });
+        try {
+          await base44.asServiceRole.entities.Patient.update(patient.id, { status: 'discharged' });
+          const removedInfo = {
+            id: patient.id,
+            name: `${patient.first_name} ${patient.last_name}`,
+            mrn: patient.medical_record_number || 'N/A',
+            match_score: group.duplicates.find(d => d.patient.id === patient.id)?.score || 0
+          };
+          removed.push(removedInfo);
+          removedFromGroup.push(removedInfo);
+        } catch (err) {
+          console.error(`Failed to update patient ${patient.id}:`, err);
+        }
       }
+
+      detailsArray.push({
+        kept: {
+          id: keep.id,
+          name: `${keep.first_name} ${keep.last_name}`,
+          mrn: keep.medical_record_number || 'N/A'
+        },
+        removed: removedFromGroup
+      });
     }
 
     return Response.json({
