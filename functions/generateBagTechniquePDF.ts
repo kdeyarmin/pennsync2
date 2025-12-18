@@ -13,48 +13,68 @@ Deno.serve(async (req) => {
     const doc = new jsPDF();
     let y = 20;
 
-    // Header
-    doc.setFontSize(20);
-    doc.setFont(undefined, 'bold');
-    doc.text('Bag Technique Checklist', 20, y);
-    y += 10;
+    // Header with background
+    doc.setFillColor(79, 70, 229); // Indigo
+    doc.rect(0, 0, 210, 35, 'F');
     
-    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont(undefined, 'bold');
+    doc.text('Bag Technique Checklist', 105, 18, { align: 'center' });
+    
+    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
-    doc.text('State Survey Preparation - Infection Control Procedure', 20, y);
-    y += 15;
+    doc.text('State Survey Preparation - Infection Control Procedure', 105, 27, { align: 'center' });
+    
+    doc.setTextColor(0, 0, 0);
+    y = 45;
+
+    // Helper function to draw section
+    const drawSection = (title, items, color) => {
+      // Section header with colored background
+      doc.setFillColor(...color);
+      doc.rect(15, y - 5, 180, 10, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(title, 20, y + 1);
+      y += 10;
+      
+      // Section content box
+      const startY = y;
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      
+      items.forEach(item => {
+        // Checkbox
+        doc.setLineWidth(0.5);
+        doc.rect(20, y - 3, 4, 4);
+        
+        // Text with wrapping
+        const lines = doc.splitTextToSize(item, 160);
+        doc.text(lines, 27, y);
+        y += lines.length * 5;
+      });
+      
+      // Border around section
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.rect(15, startY - 5, 180, y - startY + 5);
+      y += 8;
+    };
 
     // Before You Begin
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Before You Begin', 20, y);
-    y += 8;
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    const beforeItems = [
+    drawSection('Before You Begin', [
       'Review the plan of care and provider\'s orders',
       'Introduce yourself and ask patient how they\'d like to be addressed',
       'Confirm patient understanding of procedure and gain informed consent',
       'Locate a hard surface near patient (table) and trash receptacle',
       'Follow organization\'s infection control policies'
-    ];
-    
-    beforeItems.forEach(item => {
-      doc.text('☐ ' + item, 25, y);
-      y += 6;
-    });
-    y += 5;
+    ], [139, 92, 246]); // Purple
 
     // Step 1
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Step 1: Prepare the Bag', 20, y);
-    y += 8;
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    const step1Items = [
+    drawSection('Step 1: Prepare the Bag', [
       'Perform hand hygiene',
       'Remove cleansing wipes from outside pocket',
       'Clean the selected hard surface and let it dry',
@@ -64,72 +84,45 @@ Deno.serve(async (req) => {
       'Place down two barriers (clean area and dirty area)',
       'Obtain all necessary supplies and place on clean barrier',
       'Close the bag'
-    ];
-    
-    step1Items.forEach(item => {
-      doc.text('☐ ' + item, 25, y);
-      y += 6;
-    });
-    y += 5;
+    ], [59, 130, 246]); // Blue
 
     // Step 2
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Step 2: Perform Patient Care', 20, y);
-    y += 8;
+    if (y > 220) {
+      doc.addPage();
+      y = 20;
+    }
     
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    const step2Items = [
+    drawSection('Step 2: Perform Patient Care', [
       'Perform hand hygiene and don gloves if indicated',
       'Perform patient care, placing used equipment on dirty barrier',
       'Dispose of waste in trash according to organizational policies',
       'If item forgotten: perform hand hygiene before retrieving from bag',
       'After care completion: discard all remaining disposable supplies',
       'Perform hand hygiene'
-    ];
-    
-    step2Items.forEach(item => {
-      doc.text('☐ ' + item, 25, y);
-      y += 6;
-    });
-    y += 5;
+    ], [16, 185, 129]); // Green
 
-    // New page
-    doc.addPage();
-    y = 20;
+    // New page if needed
+    if (y > 200) {
+      doc.addPage();
+      y = 20;
+    }
 
     // Step 3
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Step 3: Clean Reusable Equipment', 20, y);
-    y += 8;
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    const step3Items = [
+    drawSection('Step 3: Clean Reusable Equipment', [
       'Don clean gloves',
       'Use sanitizing wipes/disinfectant per organizational policies',
       'Clean all equipment used or removed from clean barrier',
       'Follow manufacturer\'s contact time for disinfection',
       'Place cleaned equipment back on clean barrier to dry'
-    ];
-    
-    step3Items.forEach(item => {
-      doc.text('☐ ' + item, 25, y);
-      y += 6;
-    });
-    y += 5;
+    ], [249, 115, 22]); // Orange
 
     // Step 4
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Step 4: Return Equipment to Bag', 20, y);
-    y += 8;
+    if (y > 220) {
+      doc.addPage();
+      y = 20;
+    }
     
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    const step4Items = [
+    drawSection('Step 4: Return Equipment to Bag', [
       'Doff used gloves using Aseptic Non Touch Technique',
       'Dispose of gloves in trash',
       'Perform hand hygiene',
@@ -137,39 +130,34 @@ Deno.serve(async (req) => {
       'Close the bag',
       'Discard the barriers into the trash',
       'Perform hand hygiene'
-    ];
-    
-    step4Items.forEach(item => {
-      doc.text('☐ ' + item, 25, y);
-      y += 6;
-    });
-    y += 5;
+    ], [99, 102, 241]); // Indigo
 
     // Step 5
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Step 5: Complete Procedure and Clean Up', 20, y);
-    y += 8;
+    if (y > 220) {
+      doc.addPage();
+      y = 20;
+    }
     
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    const step5Items = [
+    drawSection('Step 5: Complete Procedure and Clean Up', [
       'Assess patient for tolerance of performed treatments',
       'Confirm understanding with teach-back as appropriate',
       'Document the procedure',
       'Follow up with provider on noted abnormalities as indicated'
-    ];
-    
-    step5Items.forEach(item => {
-      doc.text('☐ ' + item, 25, y);
-      y += 6;
-    });
-    y += 10;
+    ], [20, 184, 166]); // Teal
 
-    // Footer
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'italic');
-    doc.text('Generated by Penn Sync - ' + new Date().toLocaleDateString(), 20, y);
+    // Footer on last page
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFillColor(245, 245, 245);
+      doc.rect(0, 285, 210, 12, 'F');
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.text('Penn Sync - Bag Technique Checklist', 20, 291);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 105, 291, { align: 'center' });
+      doc.text(`Page ${i} of ${pageCount}`, 190, 291, { align: 'right' });
+    }
 
     const pdfBytes = doc.output('arraybuffer');
 
