@@ -8,7 +8,6 @@ import {
   Brain, 
   AlertTriangle, 
   CheckCircle2, 
-  Wand2,
   FileText,
   TrendingUp,
   Loader2,

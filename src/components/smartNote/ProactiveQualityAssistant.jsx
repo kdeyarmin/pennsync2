@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Sparkles, 
   Lightbulb, 
-  Wand2, 
   TrendingUp, 
   AlertCircle,
   CheckCircle2,
@@ -158,7 +157,7 @@ Return JSON with specific suggestions that include before/after examples:
       case 'vague_language': return <AlertCircle className="w-4 h-4 text-orange-600" />;
       case 'weak_flow': return <TrendingUp className="w-4 h-4 text-yellow-600" />;
       case 'generic_description': return <Sparkles className="w-4 h-4 text-blue-600" />;
-      case 'lay_terminology': return <Wand2 className="w-4 h-4 text-purple-600" />;
+      case 'lay_terminology': return <Sparkles className="w-4 h-4 text-purple-600" />;
       case 'unclear_outcome': return <ArrowRight className="w-4 h-4 text-red-600" />;
       default: return <Lightbulb className="w-4 h-4 text-gray-600" />;
     }
@@ -196,7 +195,7 @@ Return JSON with specific suggestions that include before/after examples:
               onClick={handleApplyAll}
               className="bg-purple-600 hover:bg-purple-700 h-7 text-xs"
             >
-              <Wand2 className="w-3 h-3 mr-1" />
+              <Sparkles className="w-3 h-3 mr-1" />
               Apply All
             </Button>
           )}
@@ -247,7 +246,7 @@ Return JSON with specific suggestions that include before/after examples:
                         onClick={() => handleApply(suggestion, idx)}
                         className="h-7 px-2 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
                       >
-                        <Wand2 className="w-3 h-3" />
+                        <Sparkles className="w-3 h-3" />
                       </Button>
                     )}
                   </div>
