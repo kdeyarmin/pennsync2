@@ -93,8 +93,13 @@ export default function UserManagement() {
 
   const { data: invitations = [] } = useQuery({
     queryKey: ['userInvitations'],
-    queryFn: () => base44.entities.UserInvitation.list('-created_date'),
-    enabled: currentUser?.role === 'admin',
+    queryFn: async () => {
+      const allInvitations = await base44.entities.UserInvitation.list('-created_date');
+      // Filter out invitations where user has already signed up
+      const userEmails = new Set(allUsers.map(u => u.email.toLowerCase()));
+      return allInvitations.filter(inv => !userEmails.has(inv.email.toLowerCase()));
+    },
+    enabled: currentUser?.role === 'admin' && allUsers.length > 0,
   });
 
   const updateUserMutation = useMutation({
