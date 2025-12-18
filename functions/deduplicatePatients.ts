@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       for (let j = i + 1; j < patients.length; j++) {
         if (processed.has(patients[j].id)) continue;
 
-        const { score, matches } = calculateMatchScore(patients[i].data, patients[j].data);
+        const { score, matches } = calculateMatchScore(patients[i], patients[j]);
         
         if (score >= 40) {
           duplicates.push({
@@ -104,8 +104,8 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Patient.update(patient.id, { status: 'discharged' });
         removed.push({
           id: patient.id,
-          name: `${patient.data.first_name} ${patient.data.last_name}`,
-          mrn: patient.data.medical_record_number
+          name: `${patient.first_name} ${patient.last_name}`,
+          mrn: patient.medical_record_number
         });
       }
     }
@@ -118,13 +118,13 @@ Deno.serve(async (req) => {
       details: duplicateGroups.map(g => ({
         kept: {
           id: g.primary.id,
-          name: `${g.primary.data.first_name} ${g.primary.data.last_name}`,
-          mrn: g.primary.data.medical_record_number
+          name: `${g.primary.first_name} ${g.primary.last_name}`,
+          mrn: g.primary.medical_record_number
         },
         removed: g.duplicates.map(d => ({
           id: d.patient.id,
-          name: `${d.patient.data.first_name} ${d.patient.data.last_name}`,
-          mrn: d.patient.data.medical_record_number,
+          name: `${d.patient.first_name} ${d.patient.last_name}`,
+          mrn: d.patient.medical_record_number,
           match_score: d.score
         }))
       }))
