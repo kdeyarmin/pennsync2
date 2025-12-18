@@ -5,16 +5,19 @@ const calculateMatchScore = (p1, p2) => {
   let score = 0;
   const matches = [];
 
+  // Normalize names (remove commas and extra spaces)
+  const normalizeName = (str) => str?.toLowerCase().replace(/,/g, '').replace(/\s+/g, ' ').trim() || '';
+  
   // Name matching
-  const name1 = `${p1.first_name} ${p1.last_name}`.toLowerCase().trim();
-  const name2 = `${p2.first_name} ${p2.last_name}`.toLowerCase().trim();
+  const name1 = `${normalizeName(p1.first_name)} ${normalizeName(p1.last_name)}`;
+  const name2 = `${normalizeName(p2.first_name)} ${normalizeName(p2.last_name)}`;
   
   if (name1 === name2) {
     score += 40;
     matches.push('name_exact');
   } else if (
-    p1.first_name?.toLowerCase() === p2.first_name?.toLowerCase() ||
-    p1.last_name?.toLowerCase() === p2.last_name?.toLowerCase()
+    normalizeName(p1.first_name) === normalizeName(p2.first_name) ||
+    normalizeName(p1.last_name) === normalizeName(p2.last_name)
   ) {
     score += 20;
     matches.push('name_partial');
