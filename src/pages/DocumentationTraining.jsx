@@ -20,6 +20,7 @@ import InteractiveTutorials from "../components/training/InteractiveTutorials";
 import PracticeNoteSubmission from "../components/training/PracticeNoteSubmission";
 import ScenarioSimulator from "../components/training/ScenarioSimulator";
 import TrainingProgressTracker from "../components/training/TrainingProgressTracker";
+import AISkillAssessment from "../components/training/AISkillAssessment";
 
 export default function DocumentationTraining() {
   const queryClient = useQueryClient();
