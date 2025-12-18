@@ -35,10 +35,8 @@ Deno.serve(async (req) => {
           is_approved: true
         });
 
-        await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
-        });
+        // Delete the invitation instead of updating it
+        await base44.asServiceRole.entities.UserInvitation.delete(invitation.id);
 
         // Log auto-approval
         try {
