@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
       const removedFromGroup = [];
       for (const patient of toRemove) {
         try {
-          await base44.asServiceRole.entities.Patient.update(patient.id, { status: 'discharged' });
+          await base44.asServiceRole.entities.Patient.delete(patient.id);
           removedFromGroup.push({
             id: patient.id,
             name: `${patient.first_name} ${patient.last_name}`,
@@ -322,7 +322,7 @@ Deno.serve(async (req) => {
             match_score: group.duplicates.find(d => d.patient.id === patient.id)?.score || 100
           });
         } catch (err) {
-          console.error(`Failed to update ${patient.id}:`, err);
+          console.error(`Failed to delete ${patient.id}:`, err);
         }
       }
 
