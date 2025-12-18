@@ -1,8 +1,10 @@
 import React from "react";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Shield, Clock, PlayCircle, CheckCircle2, Clipboard } from "lucide-react";
+import { Shield, Clock, PlayCircle, CheckCircle2, Clipboard, Download } from "lucide-react";
 
 const stateSurveyVideos = [
   {
@@ -94,13 +96,40 @@ export default function StateSurveyVideos() {
       {/* Bag Technique Checklist */}
       <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clipboard className="w-5 h-5 text-purple-600" />
-            Bag Technique Checklist - Survey Ready
-          </CardTitle>
-          <p className="text-sm text-gray-600">
-            Essential infection control procedure - demonstrate proper technique during state surveys
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clipboard className="w-5 h-5 text-purple-600" />
+                Bag Technique Checklist - Survey Ready
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Essential infection control procedure - demonstrate proper technique during state surveys
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="flex-shrink-0 gap-2"
+              onClick={async () => {
+                try {
+                  const response = await base44.functions.invoke('generateBagTechniquePDF');
+                  const blob = new Blob([response.data], { type: 'application/pdf' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'Bag_Technique_Checklist.pdf';
+                  document.body.appendChild(a);
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                  a.remove();
+                } catch (error) {
+                  console.error('Error downloading PDF:', error);
+                }
+              }}
+            >
+              <Download className="w-4 h-4" />
+              Download PDF
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Before You Begin */}

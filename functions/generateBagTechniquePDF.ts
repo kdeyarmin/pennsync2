@@ -1,0 +1,186 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { jsPDF } from 'npm:jspdf@2.5.1';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const doc = new jsPDF();
+    let y = 20;
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont(undefined, 'bold');
+    doc.text('Bag Technique Checklist', 20, y);
+    y += 10;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text('State Survey Preparation - Infection Control Procedure', 20, y);
+    y += 15;
+
+    // Before You Begin
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Before You Begin', 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const beforeItems = [
+      'Review the plan of care and provider\'s orders',
+      'Introduce yourself and ask patient how they\'d like to be addressed',
+      'Confirm patient understanding of procedure and gain informed consent',
+      'Locate a hard surface near patient (table) and trash receptacle',
+      'Follow organization\'s infection control policies'
+    ];
+    
+    beforeItems.forEach(item => {
+      doc.text('☐ ' + item, 25, y);
+      y += 6;
+    });
+    y += 5;
+
+    // Step 1
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Step 1: Prepare the Bag', 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const step1Items = [
+      'Perform hand hygiene',
+      'Remove cleansing wipes from outside pocket',
+      'Clean the selected hard surface and let it dry',
+      'Remove clean barrier from outside pocket and lay on dry surface',
+      'Place bag on top of barrier',
+      'Perform hand hygiene and open the bag',
+      'Place down two barriers (clean area and dirty area)',
+      'Obtain all necessary supplies and place on clean barrier',
+      'Close the bag'
+    ];
+    
+    step1Items.forEach(item => {
+      doc.text('☐ ' + item, 25, y);
+      y += 6;
+    });
+    y += 5;
+
+    // Step 2
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Step 2: Perform Patient Care', 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const step2Items = [
+      'Perform hand hygiene and don gloves if indicated',
+      'Perform patient care, placing used equipment on dirty barrier',
+      'Dispose of waste in trash according to organizational policies',
+      'If item forgotten: perform hand hygiene before retrieving from bag',
+      'After care completion: discard all remaining disposable supplies',
+      'Perform hand hygiene'
+    ];
+    
+    step2Items.forEach(item => {
+      doc.text('☐ ' + item, 25, y);
+      y += 6;
+    });
+    y += 5;
+
+    // New page
+    doc.addPage();
+    y = 20;
+
+    // Step 3
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Step 3: Clean Reusable Equipment', 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const step3Items = [
+      'Don clean gloves',
+      'Use sanitizing wipes/disinfectant per organizational policies',
+      'Clean all equipment used or removed from clean barrier',
+      'Follow manufacturer\'s contact time for disinfection',
+      'Place cleaned equipment back on clean barrier to dry'
+    ];
+    
+    step3Items.forEach(item => {
+      doc.text('☐ ' + item, 25, y);
+      y += 6;
+    });
+    y += 5;
+
+    // Step 4
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Step 4: Return Equipment to Bag', 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const step4Items = [
+      'Doff used gloves using Aseptic Non Touch Technique',
+      'Dispose of gloves in trash',
+      'Perform hand hygiene',
+      'Return cleaned items to the bag',
+      'Close the bag',
+      'Discard the barriers into the trash',
+      'Perform hand hygiene'
+    ];
+    
+    step4Items.forEach(item => {
+      doc.text('☐ ' + item, 25, y);
+      y += 6;
+    });
+    y += 5;
+
+    // Step 5
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Step 5: Complete Procedure and Clean Up', 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const step5Items = [
+      'Assess patient for tolerance of performed treatments',
+      'Confirm understanding with teach-back as appropriate',
+      'Document the procedure',
+      'Follow up with provider on noted abnormalities as indicated'
+    ];
+    
+    step5Items.forEach(item => {
+      doc.text('☐ ' + item, 25, y);
+      y += 6;
+    });
+    y += 10;
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'italic');
+    doc.text('Generated by Penn Sync - ' + new Date().toLocaleDateString(), 20, y);
+
+    const pdfBytes = doc.output('arraybuffer');
+
+    return new Response(pdfBytes, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="Bag_Technique_Checklist.pdf"'
+      }
+    });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
