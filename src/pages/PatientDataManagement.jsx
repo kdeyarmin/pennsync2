@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import DuplicateScanner from "../components/patient/DuplicateScanner";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -274,6 +275,11 @@ export default function PatientDataManagement() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Duplicate Scanner */}
+      <div className="mb-6">
+        <DuplicateScanner />
       </div>
 
       {/* Filters */}
