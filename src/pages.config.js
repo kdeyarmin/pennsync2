@@ -44,6 +44,7 @@ import NurseTrainingHub from './pages/NurseTrainingHub';
 import AuditTrail from './pages/AuditTrail';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
 import NurseEducationVideos from './pages/NurseEducationVideos';
+import DocumentationTraining from './pages/DocumentationTraining';
 import __Layout from './Layout.jsx';
 
 
@@ -94,6 +95,7 @@ export const PAGES = {
     "AuditTrail": AuditTrail,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
     "NurseEducationVideos": NurseEducationVideos,
+    "DocumentationTraining": DocumentationTraining,
 }
 
 export const pagesConfig = {
