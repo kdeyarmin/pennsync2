@@ -1,0 +1,132 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+
+// Calculate match score between two patients
+const calculateMatchScore = (p1, p2) => {
+  let score = 0;
+  const matches = [];
+
+  // Name matching
+  const name1 = `${p1.first_name} ${p1.last_name}`.toLowerCase().trim();
+  const name2 = `${p2.first_name} ${p2.last_name}`.toLowerCase().trim();
+  
+  if (name1 === name2) {
+    score += 40;
+    matches.push('name_exact');
+  } else if (
+    p1.first_name?.toLowerCase() === p2.first_name?.toLowerCase() ||
+    p1.last_name?.toLowerCase() === p2.last_name?.toLowerCase()
+  ) {
+    score += 20;
+    matches.push('name_partial');
+  }
+
+  // DOB matching
+  if (p1.date_of_birth && p2.date_of_birth) {
+    const dob1 = p1.date_of_birth.replace(/\D/g, '');
+    const dob2 = p2.date_of_birth.replace(/\D/g, '');
+    if (dob1 === dob2) {
+      score += 30;
+      matches.push('dob_exact');
+    }
+  }
+
+  // MRN matching
+  if (p1.medical_record_number && p2.medical_record_number) {
+    if (p1.medical_record_number === p2.medical_record_number) {
+      score += 30;
+      matches.push('mrn_exact');
+    }
+  }
+
+  return { score, matches };
+};
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user || user.role !== 'admin') {
+      return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
+    }
+
+    // Get all active patients
+    const patients = await base44.asServiceRole.entities.Patient.filter({ status: 'active' });
+
+    // Find duplicate groups
+    const duplicateGroups = [];
+    const processed = new Set();
+
+    for (let i = 0; i < patients.length; i++) {
+      if (processed.has(patients[i].id)) continue;
+
+      const duplicates = [];
+      
+      for (let j = i + 1; j < patients.length; j++) {
+        if (processed.has(patients[j].id)) continue;
+
+        const { score, matches } = calculateMatchScore(patients[i].data, patients[j].data);
+        
+        if (score >= 40) {
+          duplicates.push({
+            patient: patients[j],
+            score,
+            matches
+          });
+          processed.add(patients[j].id);
+        }
+      }
+
+      if (duplicates.length > 0) {
+        duplicateGroups.push({
+          primary: patients[i],
+          duplicates
+        });
+        processed.add(patients[i].id);
+      }
+    }
+
+    // Remove duplicates (keep most recent created)
+    const removed = [];
+    
+    for (const group of duplicateGroups) {
+      // Sort by created_date to find most recent
+      const allInGroup = [group.primary, ...group.duplicates.map(d => d.patient)];
+      allInGroup.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      
+      const keep = allInGroup[0];
+      const toRemove = allInGroup.slice(1);
+
+      for (const patient of toRemove) {
+        await base44.asServiceRole.entities.Patient.update(patient.id, { status: 'discharged' });
+        removed.push({
+          id: patient.id,
+          name: `${patient.data.first_name} ${patient.data.last_name}`,
+          mrn: patient.data.medical_record_number
+        });
+      }
+    }
+
+    return Response.json({
+      success: true,
+      duplicate_groups_found: duplicateGroups.length,
+      patients_removed: removed.length,
+      removed_patients: removed,
+      details: duplicateGroups.map(g => ({
+        kept: {
+          id: g.primary.id,
+          name: `${g.primary.data.first_name} ${g.primary.data.last_name}`,
+          mrn: g.primary.data.medical_record_number
+        },
+        removed: g.duplicates.map(d => ({
+          id: d.patient.id,
+          name: `${d.patient.data.first_name} ${d.patient.data.last_name}`,
+          mrn: d.patient.data.medical_record_number,
+          match_score: d.score
+        }))
+      }))
+    });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
