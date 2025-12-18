@@ -14,7 +14,8 @@ import {
   BarChart3,
   Award,
   Target,
-  TrendingUp
+  TrendingUp,
+  Sparkles
 } from "lucide-react";
 import InteractiveTutorials from "../components/training/InteractiveTutorials";
 import PracticeNoteSubmission from "../components/training/PracticeNoteSubmission";
@@ -121,7 +122,7 @@ export default function DocumentationTraining() {
 
       {/* Main Training Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="tutorials" className="gap-2">
             <BookOpen className="w-4 h-4" />
             <span className="hidden sm:inline">Tutorials</span>
@@ -133,6 +134,10 @@ export default function DocumentationTraining() {
           <TabsTrigger value="scenarios" className="gap-2">
             <Users className="w-4 h-4" />
             <span className="hidden sm:inline">Scenarios</span>
+          </TabsTrigger>
+          <TabsTrigger value="assessment" className="gap-2">
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden sm:inline">AI Skills</span>
           </TabsTrigger>
           <TabsTrigger value="progress" className="gap-2">
             <BarChart3 className="w-4 h-4" />
@@ -165,6 +170,10 @@ export default function DocumentationTraining() {
               queryClient.invalidateQueries({ queryKey: ['practiceSubmissions'] });
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="assessment" className="mt-6">
+          <AISkillAssessment userEmail={currentUser?.email} />
         </TabsContent>
 
         <TabsContent value="progress" className="mt-6">
