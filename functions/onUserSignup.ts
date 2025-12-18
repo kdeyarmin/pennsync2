@@ -23,91 +23,47 @@ Deno.serve(async (req) => {
     if (invitations && invitations.length > 0) {
       const invitation = invitations[0];
       
-      // Check if invitation is expired
-      const now = new Date();
-      const expiresAt = new Date(invitation.expires_at);
+      // Auto-approve ALL invited users (admin-added users should be automatically approved)
+      console.log('Auto-approving invited user...');
       
-      if (now > expiresAt) {
-        console.log('Invitation expired for:', user.email);
-        
-        // Mark as expired
-        await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
-          status: 'expired'
+      try {
+        await base44.asServiceRole.entities.User.update(user.id, {
+          role: invitation.role,
+          care_scope: invitation.care_scope,
+          phone: invitation.phone,
+          credentials: invitation.credentials,
+          is_approved: true
         });
-        
-        // Notify admins about expired invitation signup attempt
-        const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
-        const expiredBody = `User ${user.full_name} (${user.email}) attempted to sign up with an expired invitation.\n\nThe invitation expired on ${expiresAt.toLocaleString()}.\n\nPlease resend the invitation if this user should have access.`;
 
-        for (const admin of admins) {
-          try {
-            await base44.asServiceRole.integrations.Core.SendEmail({
-              to: admin.email,
-              subject: '⚠️ Expired Invitation Signup Attempt - Penn Sync',
-              body: expiredBody,
-              from_name: 'Penn Sync'
-            });
-          } catch (e) {
-            console.error('Failed to send admin email:', e);
-          }
-        }
+        await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        });
 
-        // Also notify kdeyarmin@pennhospice.com
+        // Log auto-approval
         try {
-          await base44.asServiceRole.integrations.Core.SendEmail({
-            to: 'kdeyarmin@pennhospice.com',
-            subject: '⚠️ Expired Invitation Signup Attempt - Penn Sync',
-            body: expiredBody,
-            from_name: 'Penn Sync'
+          await base44.asServiceRole.entities.UserActivity.create({
+            user_email: user.email,
+            user_name: user.full_name,
+            action: 'user_signup_auto_approved',
+            details: {
+              invitation_id: invitation.id,
+              role: invitation.role,
+              care_scope: invitation.care_scope,
+              invited_by: invitation.invited_by
+            },
+            page: 'Signup',
+            entity_type: 'User',
+            entity_id: user.id
           });
-        } catch (e) {
-          console.error('Failed to send notification to kdeyarmin:', e);
+        } catch (logError) {
+          console.error('Failed to log activity:', logError);
         }
-        
-        // Continue with manual approval process
-        console.log('Proceeding with manual approval for expired invitation');
-      } else {
-        // Valid invitation - auto-approve
-        console.log('Auto-approving invited user...');
-        
-        try {
-          await base44.asServiceRole.entities.User.update(user.id, {
-            role: invitation.role,
-            care_scope: invitation.care_scope,
-            phone: invitation.phone,
-            credentials: invitation.credentials,
-            is_approved: true
-          });
 
-          await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
-            status: 'accepted',
-            accepted_at: new Date().toISOString()
-          });
-
-          // Log auto-approval
-          try {
-            await base44.asServiceRole.entities.UserActivity.create({
-              user_email: user.email,
-              user_name: user.full_name,
-              action: 'user_signup_auto_approved',
-              details: {
-                invitation_id: invitation.id,
-                role: invitation.role,
-                care_scope: invitation.care_scope
-              },
-              page: 'Signup',
-              entity_type: 'User',
-              entity_id: user.id
-            });
-          } catch (logError) {
-            console.error('Failed to log activity:', logError);
-          }
-
-          console.log('Auto-approved invited user:', user.email);
-          return Response.json({ success: true, auto_approved: true });
-        } catch (updateError) {
-          console.error('Failed to auto-approve user:', updateError);
-        }
+        console.log('Auto-approved invited user:', user.email);
+        return Response.json({ success: true, auto_approved: true });
+      } catch (updateError) {
+        console.error('Failed to auto-approve user:', updateError);
       }
     }
 
