@@ -329,10 +329,55 @@ export const diagnosisSpecificValidation = (patient) => {
   return errors;
 };
 
+// Fuzzy matching utilities
+const levenshteinDistanceUtil = (str1, str2) => {
+  const matrix = [];
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[str2.length][str1.length];
+};
+
+export const fuzzyMatch = (str1, str2, threshold = 0.8) => {
+  if (!str1 || !str2) return { match: false, similarity: 0 };
+  
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+  
+  if (s1 === s2) return { match: true, similarity: 1, type: 'exact' };
+  
+  const distance = levenshteinDistanceUtil(s1, s2);
+  const maxLength = Math.max(s1.length, s2.length);
+  const similarity = 1 - distance / maxLength;
+  
+  return {
+    match: similarity >= threshold,
+    similarity: similarity,
+    type: similarity >= 0.95 ? 'very_close' : similarity >= 0.8 ? 'close' : 'distant',
+    distance: distance
+  };
+};
+
 // Comprehensive patient validation
 export const validatePatient = (patient, options = {}) => {
   const errors = [];
-  const { skipWarnings = false } = options;
+  const { skipWarnings = false, customRules = [] } = options;
   
   // Required field validation
   if (!patient.first_name) {
@@ -429,6 +474,49 @@ export const validatePatient = (patient, options = {}) => {
   const diagnosisErrors = diagnosisSpecificValidation(patient);
   errors.push(...diagnosisErrors);
   
+  // Apply custom validation rules
+  customRules.forEach(rule => {
+    if (!rule.is_active) return;
+    
+    const fieldValue = patient[rule.field_name];
+    let ruleViolated = false;
+    
+    switch (rule.validation_type) {
+      case 'required':
+        ruleViolated = !fieldValue;
+        break;
+      case 'min_length':
+        ruleViolated = fieldValue && fieldValue.length < parseInt(rule.validation_value);
+        break;
+      case 'max_length':
+        ruleViolated = fieldValue && fieldValue.length > parseInt(rule.validation_value);
+        break;
+      case 'regex':
+        try {
+          const regex = new RegExp(rule.validation_value);
+          ruleViolated = fieldValue && !regex.test(fieldValue);
+        } catch (e) {
+          console.error('Invalid regex in custom rule:', e);
+        }
+        break;
+      case 'range':
+        const [min, max] = rule.validation_value.split(',').map(v => parseFloat(v.trim()));
+        const numValue = parseFloat(fieldValue);
+        ruleViolated = fieldValue && (numValue < min || numValue > max);
+        break;
+    }
+    
+    if (ruleViolated) {
+      errors.push({
+        field: rule.field_name,
+        message: rule.error_message || `Validation failed for ${rule.field_name}`,
+        severity: rule.severity === 'error' ? SEVERITY.ERROR : 
+                  rule.severity === 'warning' ? SEVERITY.WARNING : SEVERITY.INFO,
+        value: fieldValue
+      });
+    }
+  });
+
   // Filter out warnings if skipWarnings is true
   if (skipWarnings) {
     return errors.filter(e => e.severity === SEVERITY.ERROR);

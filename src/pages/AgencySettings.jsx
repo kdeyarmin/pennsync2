@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Building2, DollarSign, MapPin, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CustomValidationRuleManager from "../components/validation/CustomValidationRuleManager";
 
 export default function AgencySettings() {
   const queryClient = useQueryClient();
@@ -93,7 +95,7 @@ export default function AgencySettings() {
             <Building2 className="w-8 h-8 text-blue-600" />
             Agency Settings
           </h1>
-          <p className="text-gray-600 mt-2">Configure agency-wide settings for PDGM calculations and cost analysis</p>
+          <p className="text-gray-600 mt-2">Configure agency-wide settings, validation rules, and cost analysis</p>
         </div>
 
         {successMessage && (
@@ -112,7 +114,14 @@ export default function AgencySettings() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="general">General Settings</TabsTrigger>
+            <TabsTrigger value="validation">Validation Rules</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            <form onSubmit={handleSubmit} className="space-y-6">
           {/* Office Information */}
           <Card>
             <CardHeader>
@@ -286,6 +295,12 @@ export default function AgencySettings() {
             </Button>
           </div>
         </form>
+          </TabsContent>
+
+          <TabsContent value="validation">
+            <CustomValidationRuleManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
