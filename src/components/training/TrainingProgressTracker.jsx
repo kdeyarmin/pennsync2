@@ -2,16 +2,22 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 import { 
   TrendingUp, 
   Target, 
   Award,
   BarChart3,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Download,
+  Loader2
 } from "lucide-react";
 
 export default function TrainingProgressTracker({ userEmail, trainingProgress, practiceSubmissions }) {
+  const [isDownloading, setIsDownloading] = React.useState(false);
+  
   const completedTutorials = trainingProgress.filter(t => t.status === 'completed').length;
   const totalTutorials = 3; // Based on TUTORIALS array
   const tutorialProgress = (completedTutorials / totalTutorials) * 100;
@@ -34,6 +40,34 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
     weakAreas.push({ area: "Overall Documentation Quality", score: averagePracticeScore });
   }
 
+  const downloadCertificate = async (completion) => {
+    setIsDownloading(true);
+    try {
+      const moduleMatch = completion.training_module_id.match(/documentation-(.+)/);
+      const moduleName = moduleMatch ? moduleMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Documentation Training';
+      
+      const response = await base44.functions.invoke('generateTrainingCertificate', {
+        moduleName,
+        completionDate: completion.completion_date,
+        score: completion.score
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Certificate_${moduleName.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Failed to generate certificate');
+    }
+    setIsDownloading(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Overall Progress */}
@@ -52,6 +86,43 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
             </div>
             <Progress value={tutorialProgress} className="h-3" />
           </div>
+
+          {/* Completed Tutorials with Certificates */}
+          {trainingProgress.filter(t => t.status === 'completed').length > 0 && (
+            <div className="pt-3 border-t">
+              <p className="text-xs font-semibold text-gray-600 mb-2">Completed Modules:</p>
+              <div className="space-y-2">
+                {trainingProgress.filter(t => t.status === 'completed').map((completion) => (
+                  <div key={completion.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span className="text-xs font-medium">
+                        {completion.training_module_id.replace('documentation-', '').replace(/-/g, ' ')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-green-600 text-xs">
+                        {Math.round(completion.score)}%
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => downloadCertificate(completion)}
+                        disabled={isDownloading}
+                        className="h-6 px-2 gap-1"
+                      >
+                        {isDownloading ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <><Download className="w-3 h-3" /> Cert</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <div className="flex items-center justify-between mb-2">

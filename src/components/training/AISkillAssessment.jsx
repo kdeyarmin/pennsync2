@@ -17,12 +17,14 @@ import {
   ArrowRight,
   Loader2,
   BookOpen,
-  BarChart3
+  BarChart3,
+  Download
 } from "lucide-react";
 
 export default function AISkillAssessment({ userEmail }) {
   const [assessment, setAssessment] = React.useState(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [isDownloading, setIsDownloading] = React.useState(false);
 
   const { data: trainingCompletions } = useQuery({
     queryKey: ['trainingCompletions', userEmail],
@@ -307,9 +309,24 @@ Return JSON:
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">AI-powered comprehensive assessment</p>
             </div>
-            <Badge className={`${levelColors.bg} ${levelColors.text} text-lg px-4 py-2`}>
-              {assessment.overall_skill_level.toUpperCase()}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className={`${levelColors.bg} ${levelColors.text} text-lg px-4 py-2`}>
+                {assessment.overall_skill_level.toUpperCase()}
+              </Badge>
+              <Button
+                onClick={downloadAssessmentPDF}
+                disabled={isDownloading}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                {isDownloading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <><Download className="w-4 h-4" /> PDF</>
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
