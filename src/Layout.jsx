@@ -94,7 +94,8 @@ export default function Layout({ children, currentPageName }) {
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: Shield, page: "ComplianceRegulatory" },
     { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
-    { name: "Import Patients", icon: Users, page: "ImportPatients" }
+    { name: "Import Patients", icon: Users, page: "ImportPatients" },
+    { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
     ];
 
   const handleLogout = async () => {
