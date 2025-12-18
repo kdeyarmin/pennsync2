@@ -32,6 +32,7 @@ import ErrorCategoryAnalyzer from "../components/import/ErrorCategoryAnalyzer";
 import BulkErrorResolver from "../components/import/BulkErrorResolver";
 import ImportAnalyticsDashboard from "../components/import/ImportAnalyticsDashboard";
 import ImportReportGenerator from "../components/import/ImportReportGenerator";
+import DuplicateDetector from "../components/import/DuplicateDetector";
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -88,6 +89,7 @@ export default function ImportPatients() {
   const [showBulkResolver, setShowBulkResolver] = useState(false);
   const [importHistory, setImportHistory] = useState([]);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showDuplicateCheck, setShowDuplicateCheck] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -423,27 +425,83 @@ export default function ImportPatients() {
     }
   };
 
+  const handleDuplicateResolution = async (resolutionResults) => {
+    setImportProgress(0);
+    const startTime = Date.now();
+    const results = { success: 0, failed: 0, errors: [], failedRecords: [] };
+    let processed = 0;
+    const total = resolutionResults.added.length + resolutionResults.updated.length + resolutionResults.closed.length;
+
+    // Add new patients
+    for (const patient of resolutionResults.added) {
+      try {
+        await base44.entities.Patient.create(patient);
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push({
+          patient: `${patient.first_name} ${patient.last_name}`,
+          error: error.message
+        });
+      }
+      processed++;
+      setImportProgress(Math.round((processed / total) * 100));
+    }
+
+    // Update existing patients
+    for (const update of resolutionResults.updated) {
+      try {
+        await base44.entities.Patient.update(update.id, update.data);
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push({
+          patient: `${update.data.first_name} ${update.data.last_name}`,
+          error: error.message
+        });
+      }
+      processed++;
+      setImportProgress(Math.round((processed / total) * 100));
+    }
+
+    // Close patients (set status to discharged)
+    for (const patientId of resolutionResults.closed) {
+      try {
+        await base44.entities.Patient.update(patientId, { status: 'discharged' });
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push({
+          patient: patientId,
+          error: error.message
+        });
+      }
+      processed++;
+      setImportProgress(Math.round((processed / total) * 100));
+    }
+
+    const resolutionTime = (Date.now() - startTime) / 1000;
+    const historyEntry = {
+      ...results,
+      timestamp: new Date().toISOString(),
+      resolutionTime,
+      totalRecords: total
+    };
+    setImportHistory(prev => [...prev, historyEntry]);
+    
+    setImportResults(results);
+    setShowDuplicateCheck(false);
+    queryClient.invalidateQueries({ queryKey: ['patients'] });
+  };
+
   const handleImport = async () => {
     if (validRecords.length === 0) {
       alert('No valid records to import');
       return;
     }
 
-    setImportProgress(0);
-    const startTime = Date.now();
-    const results = await importPatientsMutation.mutateAsync(validRecords);
-    const resolutionTime = (Date.now() - startTime) / 1000; // in seconds
-    
-    // Add to import history
-    const historyEntry = {
-      ...results,
-      timestamp: new Date().toISOString(),
-      resolutionTime,
-      totalRecords: validRecords.length + validationErrors.length
-    };
-    setImportHistory(prev => [...prev, historyEntry]);
-    
-    setImportResults(results);
+    // Show duplicate check instead of directly importing
+    setShowDuplicateCheck(true);
   };
 
   const handleBulkResolve = async (resolution) => {
@@ -1181,7 +1239,7 @@ export default function ImportPatients() {
               )}
 
               {/* Import Button */}
-              {validRecords.length > 0 && (
+              {validRecords.length > 0 && !showDuplicateCheck && (
                 <div className="pt-4 border-t">
                   <Button
                     onClick={handleImport}
@@ -1189,28 +1247,25 @@ export default function ImportPatients() {
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     size="lg"
                   >
-                    {importPatientsMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Importing... {importProgress}%
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Import {validRecords.length} Valid Records
-                      </>
-                    )}
+                    <Users className="w-4 h-4 mr-2" />
+                    Check for Duplicates & Import {validRecords.length} Records
                   </Button>
-
-                  {importPatientsMutation.isPending && (
-                    <Progress value={importProgress} className="mt-3" />
-                  )}
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
         </>
+      )}
+
+      {/* Duplicate Detection */}
+      {showDuplicateCheck && validRecords.length > 0 && (
+        <div className="mb-6">
+          <DuplicateDetector
+            patients={validRecords}
+            onResolve={handleDuplicateResolution}
+          />
+        </div>
       )}
 
       {/* Import Results */}
