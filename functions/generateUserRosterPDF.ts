@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       doc.setFont(undefined, 'normal');
       doc.text(u.full_name || 'N/A', 15, y + 4);
       doc.text(u.email || '', 75, y + 4);
-      doc.text(u.credential_type || u.credentials || 'N/A', 135, y + 4);
+      doc.text(u.credential_type || 'N/A', 135, y + 4);
       doc.text(u.role || 'user', 170, y + 4);
       
       const careScope = u.care_scope === 'home_health' ? 'Home Health' : 

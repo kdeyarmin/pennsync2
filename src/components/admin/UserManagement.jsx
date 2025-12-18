@@ -134,7 +134,6 @@ export default function UserManagement({ users, currentUser }) {
       id: user.id,
       full_name: user.full_name || '',
       phone: user.phone || '',
-      credentials: user.credentials || '',
       credential_type: user.credential_type || '',
       license_number: user.license_number || '',
       care_scope: user.care_scope || 'home_health',
@@ -303,14 +302,15 @@ export default function UserManagement({ users, currentUser }) {
                     <TableCell className="text-sm">{user.email}</TableCell>
                     <TableCell className="text-sm">{user.phone || 'Not set'}</TableCell>
                     <TableCell className="text-sm">
-                      {user.credential_type && (
-                        <Badge variant="outline" className="mb-1 mr-1">
+                      {user.credential_type ? (
+                        <Badge variant="outline">
                           {user.credential_type}
                         </Badge>
+                      ) : (
+                        <span className="text-gray-400">Not set</span>
                       )}
-                      {user.credentials || 'Not set'}
                       {user.license_number && (
-                        <div className="text-xs text-gray-500">Lic: {user.license_number}</div>
+                        <div className="text-xs text-gray-500 mt-1">Lic: {user.license_number}</div>
                       )}
                     </TableCell>
                     <TableCell>
@@ -562,15 +562,6 @@ export default function UserManagement({ users, currentUser }) {
                     <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <Label>Credentials</Label>
-                <Input
-                  value={editingUser.credentials}
-                  onChange={(e) => setEditingUser({...editingUser, credentials: e.target.value})}
-                  placeholder="RN, LPN, MSW, etc."
-                />
               </div>
 
               <div>
