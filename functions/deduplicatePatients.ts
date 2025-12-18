@@ -285,59 +285,39 @@ Deno.serve(async (req) => {
     }
 
     // Process exact name matches with DOB/Address checks
+    let groupsProcessed = 0;
     for (const [nameKey, group] of nameGroups) {
       if (group.length > 1) {
         const unprocessed = group.filter(p => !processed.has(p.id));
         if (unprocessed.length < 2) continue;
 
-        // Process all groups up to 50 patients (increased from 10)
-        if (unprocessed.length <= 50) {
-          for (let i = 0; i < unprocessed.length; i++) {
-            if (processed.has(unprocessed[i].id)) continue;
+        // Process groups up to 100 patients
+        const limit = Math.min(unprocessed.length, 100);
+        for (let i = 0; i < limit; i++) {
+          if (processed.has(unprocessed[i].id)) continue;
 
-            const duplicates = [];
-            for (let j = i + 1; j < unprocessed.length; j++) {
-              if (processed.has(unprocessed[j].id)) continue;
+          const duplicates = [];
+          for (let j = i + 1; j < limit; j++) {
+            if (processed.has(unprocessed[j].id)) continue;
 
-              const { score, matches } = calculateMatchScore(unprocessed[i], unprocessed[j]);
-              if (score >= 60) {
-                duplicates.push({ patient: unprocessed[j], score, matches });
-                processed.add(unprocessed[j].id);
-              }
-            }
-
-            if (duplicates.length > 0) {
-              duplicateGroups.push({ primary: unprocessed[i], duplicates });
-              processed.add(unprocessed[i].id);
+            const { score, matches } = calculateMatchScore(unprocessed[i], unprocessed[j]);
+            if (score >= 60) {
+              duplicates.push({ patient: unprocessed[j], score, matches });
+              processed.add(unprocessed[j].id);
             }
           }
-        } else {
-          // For very large groups (>50), use quick matching on first 100
-          const subset = unprocessed.slice(0, 100);
-          for (let i = 0; i < subset.length; i++) {
-            if (processed.has(subset[i].id)) continue;
 
-            const duplicates = [];
-            for (let j = i + 1; j < subset.length; j++) {
-              if (processed.has(subset[j].id)) continue;
-
-              const { score, matches } = calculateMatchScore(subset[i], subset[j]);
-              if (score >= 70) { // Higher threshold for large groups
-                duplicates.push({ patient: subset[j], score, matches });
-                processed.add(subset[j].id);
-              }
-            }
-
-            if (duplicates.length > 0) {
-              duplicateGroups.push({ primary: subset[i], duplicates });
-              processed.add(subset[i].id);
-            }
+          if (duplicates.length > 0) {
+            duplicateGroups.push({ primary: unprocessed[i], duplicates });
+            processed.add(unprocessed[i].id);
           }
         }
+        
+        groupsProcessed++;
       }
 
-      // Check timeout - extended to 40 seconds
-      if (Date.now() - startTime > 40000) {
+      // Check timeout every 20 groups
+      if (groupsProcessed % 20 === 0 && Date.now() - startTime > 20000) {
         console.log('Approaching timeout, stopping search');
         break;
       }
@@ -349,75 +329,77 @@ Deno.serve(async (req) => {
     const removed = [];
     const detailsArray = [];
 
-    for (const group of duplicateGroups) {
-      // Check timeout before each group - extended to 50 seconds
-      if (Date.now() - startTime > 50000) {
+    // Process deletions in batches to avoid timeout
+    const batchSize = 5;
+    for (let i = 0; i < duplicateGroups.length; i += batchSize) {
+      // Check timeout
+      if (Date.now() - startTime > 25000) {
         console.log('Timeout protection - stopping removal');
         break;
       }
 
-      // Sort by status (active first) then by created_date
-      const allInGroup = [group.primary, ...group.duplicates.map(d => d.patient)];
-      allInGroup.sort((a, b) => {
-        if (a.status === 'active' && b.status !== 'active') return -1;
-        if (a.status !== 'active' && b.status === 'active') return 1;
-        const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
-        const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
-        return dateB - dateA;
-      });
+      const batch = duplicateGroups.slice(i, i + batchSize);
+      
+      for (const group of batch) {
+        // Sort by status (active first) then by created_date
+        const allInGroup = [group.primary, ...group.duplicates.map(d => d.patient)];
+        allInGroup.sort((a, b) => {
+          if (a.status === 'active' && b.status !== 'active') return -1;
+          if (a.status !== 'active' && b.status === 'active') return 1;
+          const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
+          const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
+          return dateB - dateA;
+        });
 
-      const keep = allInGroup[0];
-      const toRemove = allInGroup.slice(1);
+        const keep = allInGroup[0];
+        const toRemove = allInGroup.slice(1);
 
-      const removedFromGroup = [];
-      for (const patient of toRemove) {
-        try {
-          // Delete related records in parallel for speed
-          const [visits, carePlans, alerts, incidents, tasks] = await Promise.all([
-            base44.asServiceRole.entities.Visit.filter({ patient_id: patient.id }),
-            base44.asServiceRole.entities.CarePlan.filter({ patient_id: patient.id }),
-            base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patient.id }),
-            base44.asServiceRole.entities.Incident.filter({ patient_id: patient.id }),
-            base44.asServiceRole.entities.Task.filter({ patient_id: patient.id })
-          ]);
+        const removedFromGroup = [];
+        for (const patient of toRemove) {
+          try {
+            // Quick deletion without checking related records first
+            await base44.asServiceRole.entities.Patient.delete(patient.id).catch(async (err) => {
+              // If direct delete fails, delete related records first
+              const [visits, carePlans, alerts, incidents, tasks] = await Promise.all([
+                base44.asServiceRole.entities.Visit.filter({ patient_id: patient.id }).catch(() => []),
+                base44.asServiceRole.entities.CarePlan.filter({ patient_id: patient.id }).catch(() => []),
+                base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patient.id }).catch(() => []),
+                base44.asServiceRole.entities.Incident.filter({ patient_id: patient.id }).catch(() => []),
+                base44.asServiceRole.entities.Task.filter({ patient_id: patient.id }).catch(() => [])
+              ]);
 
-          // Delete all related records in parallel
-          await Promise.all([
-            ...visits.map(v => base44.asServiceRole.entities.Visit.delete(v.id).catch(() => {})),
-            ...carePlans.map(cp => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch(() => {})),
-            ...alerts.map(a => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch(() => {})),
-            ...incidents.map(i => base44.asServiceRole.entities.Incident.delete(i.id).catch(() => {})),
-            ...tasks.map(t => base44.asServiceRole.entities.Task.delete(t.id).catch(() => {}))
-          ]);
-          
-          // Now delete the patient
-          await base44.asServiceRole.entities.Patient.delete(patient.id);
-          
-          removedFromGroup.push({
-            id: patient.id,
-            name: `${patient.first_name} ${patient.last_name}`,
-            mrn: patient.medical_record_number || 'N/A',
-            match_score: group.duplicates.find(d => d.patient.id === patient.id)?.score || 100
-          });
-        } catch (err) {
-          console.error(`Failed to delete ${patient.id}:`, err.message);
+              await Promise.all([
+                ...visits.map(v => base44.asServiceRole.entities.Visit.delete(v.id).catch(() => {})),
+                ...carePlans.map(cp => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch(() => {})),
+                ...alerts.map(a => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch(() => {})),
+                ...incidents.map(i => base44.asServiceRole.entities.Incident.delete(i.id).catch(() => {})),
+                ...tasks.map(t => base44.asServiceRole.entities.Task.delete(t.id).catch(() => {}))
+              ]);
+              
+              await base44.asServiceRole.entities.Patient.delete(patient.id);
+            });
+            
+            removedFromGroup.push({
+              id: patient.id,
+              name: `${patient.first_name} ${patient.last_name}`,
+              mrn: patient.medical_record_number || 'N/A',
+              match_score: group.duplicates.find(d => d.patient.id === patient.id)?.score || 100
+            });
+          } catch (err) {
+            console.error(`Failed to delete ${patient.id}:`, err.message);
+          }
         }
-      }
 
-      removed.push(...removedFromGroup);
-      detailsArray.push({
-        kept: {
-          id: keep.id,
-          name: `${keep.first_name} ${keep.last_name}`,
-          mrn: keep.medical_record_number || 'N/A',
-          status: keep.status
-        },
-        removed: removedFromGroup
-      });
-
-      // Small delay every 10 groups (increased from 5)
-      if (detailsArray.length % 10 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 30));
+        removed.push(...removedFromGroup);
+        detailsArray.push({
+          kept: {
+            id: keep.id,
+            name: `${keep.first_name} ${keep.last_name}`,
+            mrn: keep.medical_record_number || 'N/A',
+            status: keep.status
+          },
+          removed: removedFromGroup
+        });
       }
     }
 
