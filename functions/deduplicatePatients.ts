@@ -143,19 +143,7 @@ Deno.serve(async (req) => {
       duplicate_groups_found: duplicateGroups.length,
       patients_removed: removed.length,
       removed_patients: removed,
-      details: duplicateGroups.map(g => ({
-        kept: {
-          id: g.primary.id,
-          name: `${g.primary.first_name} ${g.primary.last_name}`,
-          mrn: g.primary.medical_record_number
-        },
-        removed: g.duplicates.map(d => ({
-          id: d.patient.id,
-          name: `${d.patient.first_name} ${d.patient.last_name}`,
-          mrn: d.patient.medical_record_number,
-          match_score: d.score
-        }))
-      }))
+      details: detailsArray
     });
   } catch (error) {
     console.error('Deduplication error:', error);
