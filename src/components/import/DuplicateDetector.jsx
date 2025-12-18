@@ -22,34 +22,82 @@ const calculateMatchScore = (patient, existingPatient) => {
   let score = 0;
   let matches = [];
 
-  // Name match (first + last)
-  const patientFullName = `${patient.first_name} ${patient.last_name}`.toLowerCase().trim();
-  const existingFullName = `${existingPatient.first_name} ${existingPatient.last_name}`.toLowerCase().trim();
+  // Normalize strings
+  const normalize = (str) => str?.toLowerCase().trim().replace(/\s+/g, ' ') || '';
   
-  if (patientFullName === existingFullName) {
+  // Name match (first + last)
+  const patientFullName = normalize(`${patient.first_name} ${patient.last_name}`);
+  const existingFullName = normalize(`${existingPatient.first_name} ${existingPatient.last_name}`);
+  
+  if (patientFullName === existingFullName && patientFullName !== '') {
     score += 40;
-    matches.push('Name match');
+    matches.push('Full name match');
   } else if (
-    patient.first_name?.toLowerCase() === existingPatient.first_name?.toLowerCase() ||
-    patient.last_name?.toLowerCase() === existingPatient.last_name?.toLowerCase()
+    normalize(patient.first_name) === normalize(existingPatient.first_name) &&
+    normalize(patient.last_name) === normalize(existingPatient.last_name) &&
+    normalize(patient.first_name) !== '' &&
+    normalize(patient.last_name) !== ''
   ) {
-    score += 20;
-    matches.push('Partial name match');
+    score += 40;
+    matches.push('First & Last name match');
+  } else if (
+    normalize(patient.first_name) === normalize(existingPatient.first_name) &&
+    normalize(patient.first_name) !== ''
+  ) {
+    score += 15;
+    matches.push('First name match');
+  } else if (
+    normalize(patient.last_name) === normalize(existingPatient.last_name) &&
+    normalize(patient.last_name) !== ''
+  ) {
+    score += 15;
+    matches.push('Last name match');
   }
 
   // Date of birth match
   if (patient.date_of_birth && existingPatient.date_of_birth) {
-    if (patient.date_of_birth === existingPatient.date_of_birth) {
-      score += 30;
+    const normalizeDOB = (dob) => dob.replace(/\D/g, '');
+    if (normalizeDOB(patient.date_of_birth) === normalizeDOB(existingPatient.date_of_birth)) {
+      score += 35;
       matches.push('DOB match');
     }
   }
 
-  // Medical record number match
+  // Medical record number match (exact or very similar)
   if (patient.medical_record_number && existingPatient.medical_record_number) {
-    if (patient.medical_record_number === existingPatient.medical_record_number) {
-      score += 30;
-      matches.push('MRN match');
+    const normalizeMRN = (mrn) => String(mrn).trim().replace(/\s+/g, '');
+    const patientMRN = normalizeMRN(patient.medical_record_number);
+    const existingMRN = normalizeMRN(existingPatient.medical_record_number);
+    
+    if (patientMRN === existingMRN) {
+      score += 40;
+      matches.push('MRN exact match');
+    }
+  }
+
+  // Phone match (if both have phone numbers)
+  if (patient.phone && existingPatient.phone) {
+    const normalizePhone = (phone) => String(phone).replace(/\D/g, '');
+    const patientPhone = normalizePhone(patient.phone);
+    const existingPhone = normalizePhone(existingPatient.phone);
+    
+    if (patientPhone === existingPhone && patientPhone.length >= 10) {
+      score += 15;
+      matches.push('Phone match');
+    }
+  }
+
+  // Address similarity (partial match)
+  if (patient.address && existingPatient.address) {
+    const patientAddr = normalize(patient.address);
+    const existingAddr = normalize(existingPatient.address);
+    
+    if (patientAddr === existingAddr) {
+      score += 10;
+      matches.push('Address match');
+    } else if (patientAddr.includes(existingAddr) || existingAddr.includes(patientAddr)) {
+      score += 5;
+      matches.push('Partial address match');
     }
   }
 
@@ -62,7 +110,8 @@ const findDuplicates = (patient, existingPatients) => {
   existingPatients.forEach(existing => {
     const { score, matches } = calculateMatchScore(patient, existing);
     
-    if (score >= 40) { // Threshold for considering as duplicate
+    // Lower threshold to catch more potential duplicates - let user decide
+    if (score >= 30) {
       potentialDuplicates.push({
         patient: existing,
         score,
@@ -80,7 +129,11 @@ export default function DuplicateDetector({ patients, onResolve }) {
 
   const { data: existingPatients = [], isLoading } = useQuery({
     queryKey: ['all-patients-duplicate-check'],
-    queryFn: () => base44.entities.Patient.list('-created_date', 10000)
+    queryFn: async () => {
+      // Fetch all patients including active and discharged to check against all records
+      const allPatients = await base44.entities.Patient.list('-created_date', 10000);
+      return allPatients;
+    }
   });
 
   if (isLoading) {
@@ -215,12 +268,15 @@ export default function DuplicateDetector({ patients, onResolve }) {
                   {patientsWithDuplicates.map(({ index, patient, duplicates }) => (
                     <Card key={index} className="border-2 border-orange-200">
                       <CardContent className="p-4">
-                        <div className="mb-3">
-                          <h4 className="font-semibold text-gray-900 mb-1">
+                        <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <h4 className="font-semibold text-gray-900 mb-2">
                             Import Row {index + 1}: {patient.first_name} {patient.last_name}
                           </h4>
-                          <div className="text-sm text-gray-600">
-                            DOB: {patient.date_of_birth || 'N/A'} | MRN: {patient.medical_record_number || 'N/A'}
+                          <div className="text-sm text-gray-700 space-y-1">
+                            <div>DOB: {patient.date_of_birth || 'N/A'} | MRN: {patient.medical_record_number || 'N/A'}</div>
+                            {patient.phone && <div>Phone: {patient.phone}</div>}
+                            {patient.address && <div>Address: {patient.address}</div>}
+                            {patient.primary_diagnosis && <div>Diagnosis: {patient.primary_diagnosis}</div>}
                           </div>
                         </div>
 
@@ -233,31 +289,52 @@ export default function DuplicateDetector({ patients, onResolve }) {
                             <Card key={dupIdx} className="bg-gray-50">
                               <CardContent className="p-3">
                                 <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <p className="font-medium text-gray-900">
-                                      {dup.patient.first_name} {dup.patient.last_name}
-                                    </p>
-                                    <p className="text-xs text-gray-600">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <p className="font-medium text-gray-900">
+                                        {dup.patient.first_name} {dup.patient.last_name}
+                                      </p>
+                                      <Badge variant="outline" className={
+                                        dup.patient.status === 'active' ? 'bg-green-100 text-green-800 text-xs' :
+                                        dup.patient.status === 'discharged' ? 'bg-gray-100 text-gray-800 text-xs' :
+                                        'bg-orange-100 text-orange-800 text-xs'
+                                      }>
+                                        {dup.patient.status || 'unknown'}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mb-1">
                                       DOB: {dup.patient.date_of_birth || 'N/A'} | MRN: {dup.patient.medical_record_number || 'N/A'}
                                     </p>
-                                    <div className="flex gap-1 mt-1">
+                                    {dup.patient.phone && (
+                                      <p className="text-xs text-gray-600 mb-1">
+                                        Phone: {dup.patient.phone}
+                                      </p>
+                                    )}
+                                    {dup.patient.address && (
+                                      <p className="text-xs text-gray-600 mb-1">
+                                        Address: {dup.patient.address}
+                                      </p>
+                                    )}
+                                    {dup.patient.primary_diagnosis && (
+                                      <p className="text-xs text-gray-600 mb-1">
+                                        Diagnosis: {dup.patient.primary_diagnosis}
+                                      </p>
+                                    )}
+                                    <div className="flex gap-1 mt-2 flex-wrap">
                                       {dup.matches.map((match, mIdx) => (
                                         <Badge key={mIdx} className="bg-orange-100 text-orange-800 text-xs">
                                           {match}
                                         </Badge>
                                       ))}
-                                      <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                      <Badge className={`text-xs ${
+                                        dup.score >= 80 ? 'bg-red-100 text-red-800' :
+                                        dup.score >= 60 ? 'bg-orange-100 text-orange-800' :
+                                        'bg-yellow-100 text-yellow-800'
+                                      }`}>
                                         {dup.score}% match
                                       </Badge>
                                     </div>
                                   </div>
-                                  <Badge variant="outline" className={
-                                    dup.patient.status === 'active' ? 'bg-green-100 text-green-800' :
-                                    dup.patient.status === 'discharged' ? 'bg-gray-100 text-gray-800' :
-                                    'bg-orange-100 text-orange-800'
-                                  }>
-                                    {dup.patient.status || 'unknown'}
-                                  </Badge>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 mt-3">
