@@ -141,14 +141,27 @@ export default function ImportPatients() {
           results.success++;
         } catch (error) {
           results.failed++;
+          const errorMsg = error.message || 'Unknown error occurred';
+          let suggestion = 'Review and correct the data before re-importing.';
+          
+          if (errorMsg.toLowerCase().includes('duplicate')) {
+            suggestion = 'This patient may already exist. Check for duplicates or update existing record instead of creating new.';
+          } else if (errorMsg.toLowerCase().includes('required')) {
+            suggestion = 'Ensure all required fields are provided: First Name and Last Name are mandatory.';
+          } else if (errorMsg.toLowerCase().includes('invalid')) {
+            suggestion = 'Check that all field values match the expected format (e.g., dates, emails, phone numbers).';
+          }
+          
           results.errors.push({
             row: i + 1,
-            patient: `${patients[i].first_name} ${patients[i].last_name}`,
-            error: error.message
+            patient: `${patients[i].first_name || 'Unknown'} ${patients[i].last_name || 'Patient'}`,
+            error: errorMsg,
+            suggestion: suggestion
           });
           results.failedRecords.push({
             ...patients[i],
-            error_description: error.message,
+            error_description: errorMsg,
+            error_suggestion: suggestion,
             original_row: i + 1
           });
         }
@@ -339,18 +352,28 @@ export default function ImportPatients() {
         const field = FIELD_MAPPINGS[fieldKey];
 
         if (value) {
-          // Enhanced type validation
+          // Enhanced type validation with detailed suggestions
           if (field.type === 'email') {
             const emailError = validateEmail(value);
             if (emailError && emailError.severity === SEVERITY.ERROR) {
-              rowErrors.push(emailError.message);
+              rowErrors.push({
+                field: field.label,
+                value: value,
+                error: emailError.message,
+                suggestion: `Correct format: name@example.com`
+              });
             }
           }
           
           if (field.type === 'date') {
             const dateError = validateDate(value, fieldKey);
             if (dateError && dateError.severity === SEVERITY.ERROR) {
-              rowErrors.push(dateError.message);
+              rowErrors.push({
+                field: field.label,
+                value: value,
+                error: dateError.message,
+                suggestion: `Required format: YYYY-MM-DD (e.g., 2024-01-15)`
+              });
             }
           }
           
@@ -363,7 +386,12 @@ export default function ImportPatients() {
               } else if (valueLower.includes('hospice')) {
                 patient[fieldKey] = 'hospice';
               } else {
-                rowErrors.push(`Invalid value "${value}" for ${field.label}. Must be one of: ${field.options.join(', ')}`);
+                rowErrors.push({
+                  field: field.label,
+                  value: value,
+                  error: `Invalid value for ${field.label}`,
+                  suggestion: `Must be one of: ${field.options.join(', ')}`
+                });
               }
             } else if (fieldKey === 'status') {
               if (valueLower.includes('active') || valueLower === 'a') {
@@ -376,7 +404,12 @@ export default function ImportPatients() {
                 patient[fieldKey] = 'active'; // default to active
               }
             } else {
-              rowErrors.push(`Invalid value "${value}" for ${field.label}. Must be one of: ${field.options.join(', ')}`);
+              rowErrors.push({
+                field: field.label,
+                value: value,
+                error: `Invalid value for ${field.label}`,
+                suggestion: `Must be one of: ${field.options.join(', ')}`
+              });
             }
           } else if (field.type === 'enum') {
             patient[fieldKey] = value.toLowerCase();
@@ -385,7 +418,12 @@ export default function ImportPatients() {
             if (fieldKey === 'phone' || fieldKey === 'emergency_contact_phone' || fieldKey === 'physician_phone') {
               const phoneError = validatePhone(value);
               if (phoneError) {
-                rowErrors.push(`${field.label}: ${phoneError.message}`);
+                rowErrors.push({
+                  field: field.label,
+                  value: value,
+                  error: phoneError.message,
+                  suggestion: `Valid formats: (555) 123-4567, 555-123-4567, or 5551234567`
+                });
               }
             }
             
@@ -402,10 +440,15 @@ export default function ImportPatients() {
       // Comprehensive patient validation
       const validationResults = validatePatient(patient, { skipWarnings: false });
       
-      // Only add blocking errors
+      // Only add blocking errors with detailed info
       const blockingErrors = validationResults.filter(v => v.severity === SEVERITY.ERROR);
       blockingErrors.forEach(err => {
-        rowErrors.push(err.message);
+        rowErrors.push({
+          field: err.field || 'General',
+          value: err.value || '',
+          error: err.message,
+          suggestion: err.suggestion || 'Please review and correct this field'
+        });
       });
 
       if (rowErrors.length > 0) {
@@ -1110,21 +1153,46 @@ export default function ImportPatients() {
                         <Alert key={idx} variant="destructive">
                           <AlertCircle className="w-4 h-4" />
                           <AlertDescription>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               <div className="flex items-center justify-between">
-                                <span className="font-semibold">Row {error.row}</span>
-                                <Badge variant="outline" className="bg-red-100">
+                                <span className="font-semibold text-base">Row {error.row}</span>
+                                <Badge variant="outline" className="bg-red-100 text-red-800">
                                   {error.patient}
                                 </Badge>
                               </div>
-                              <ul className="ml-4 space-y-1">
-                                {(error.errors || []).map((err, errIdx) => (
-                                  <li key={errIdx} className="text-sm flex items-start gap-2">
-                                    <span className="text-red-600 mt-0.5">•</span>
-                                    <span>{err}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                              <div className="space-y-2">
+                                {(error.errors || []).map((err, errIdx) => {
+                                  const isDetailed = typeof err === 'object';
+                                  return (
+                                    <div key={errIdx} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                      {isDetailed ? (
+                                        <>
+                                          <div className="flex items-start justify-between gap-2 mb-2">
+                                            <span className="font-semibold text-sm text-red-900">
+                                              {err.field}
+                                            </span>
+                                            {err.value && (
+                                              <Badge variant="outline" className="text-xs bg-white">
+                                                "{err.value}"
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <p className="text-sm text-red-800 mb-2">
+                                            ❌ {err.error}
+                                          </p>
+                                          {err.suggestion && (
+                                            <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                                              💡 <strong>Fix:</strong> {err.suggestion}
+                                            </p>
+                                          )}
+                                        </>
+                                      ) : (
+                                        <p className="text-sm text-red-800">❌ {err}</p>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </AlertDescription>
                         </Alert>
@@ -1341,18 +1409,31 @@ export default function ImportPatients() {
                     </Alert>
 
                     <ScrollArea className="h-48 border rounded-lg p-4">
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {(importResults.errors || []).map((error, idx) => (
                           <Alert key={idx} variant="destructive">
                             <AlertDescription>
-                              <div className="space-y-1">
+                              <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="font-semibold">Row {error.row}</span>
+                                  <span className="font-semibold text-base">
+                                    {error.row ? `Row ${error.row}` : 'Import Error'}
+                                  </span>
                                   <Badge variant="outline" className="bg-red-100 text-red-800">
                                     {error.patient}
                                   </Badge>
                                 </div>
-                                <p className="text-sm font-mono bg-red-100 p-2 rounded">{error.error}</p>
+                                <div className="bg-red-50 border border-red-200 rounded p-3">
+                                  <p className="text-sm text-red-900 mb-2">
+                                    <strong>Error:</strong> {error.error}
+                                  </p>
+                                  <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                                    💡 <strong>Suggestion:</strong> Download the failed rows CSV, correct the errors, and re-import. Common fixes:
+                                    {error.error.includes('duplicate') && ' Check if patient already exists in system.'}
+                                    {error.error.includes('required') && ' Ensure all required fields (First Name, Last Name) are filled.'}
+                                    {error.error.includes('format') && ' Verify data format matches expected type (e.g., dates as YYYY-MM-DD).'}
+                                    {!error.error.includes('duplicate') && !error.error.includes('required') && !error.error.includes('format') && ' Review the error message and correct the data accordingly.'}
+                                  </p>
+                                </div>
                               </div>
                             </AlertDescription>
                           </Alert>
