@@ -71,6 +71,8 @@ import FavoriteButton from "../components/navigation/FavoriteButton";
 import MedicalTerminologyProcessor, { standardizeTerminology } from "../components/smartNote/MedicalTerminologyProcessor";
 import ComprehensivePatientContext, { buildComprehensiveContext, formatContextForAI } from "../components/smartNote/ComprehensivePatientContext";
 import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
+import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
+import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1249,6 +1251,37 @@ ${guidelinesContext}
             onAddOASISLink={(link) => setOasisLinkedItems(prev => [...prev, link])}
             onRemoveOASISLink={(idx) => setOasisLinkedItems(prev => prev.filter((_, i) => i !== idx))}
           />
+
+          {/* Guideline Reference Panel */}
+          {selectedPatientId && (roughNote.length >= 50 || enhancedNote) && (
+            <GuidelineReferencePanel
+              diagnosis={finalDiagnosis}
+              visitType={visitType}
+              noteContent={roughNote || enhancedNote}
+              onInsertGuideline={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
+              }}
+              compact={true}
+            />
+          )}
+
+          {/* Guideline Compliance Checker - After enhancement */}
+          {enhancedNote && (
+            <GuidelineComplianceChecker
+              noteContent={enhancedNote}
+              diagnosis={finalDiagnosis}
+              visitType={visitType}
+              patientData={selectedPatient}
+              careType={selectedPatient?.care_type || "home_health"}
+              onIssueFound={(gaps) => {
+                setComplianceIssues(prev => [...prev, ...gaps]);
+              }}
+            />
+          )}
         </div>
         </div>
 
