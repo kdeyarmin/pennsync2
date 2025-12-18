@@ -68,6 +68,8 @@ import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
 import UnifiedAISuggestions from "../components/smartNote/UnifiedAISuggestions";
 import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
 import FavoriteButton from "../components/navigation/FavoriteButton";
+import MedicalTerminologyProcessor, { standardizeTerminology } from "../components/smartNote/MedicalTerminologyProcessor";
+import ComprehensivePatientContext, { buildComprehensiveContext, formatContextForAI } from "../components/smartNote/ComprehensivePatientContext";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -302,6 +304,7 @@ export default function SmartNoteAssistant() {
   const [appliedFixesText, setAppliedFixesText] = useState(new Set());
   const [isAnalyzingCompliance, setIsAnalyzingCompliance] = useState(false);
   const [interimVoiceText, setInterimVoiceText] = useState('');
+  const [comprehensiveContext, setComprehensiveContext] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -442,6 +445,26 @@ export default function SmartNoteAssistant() {
     const enhanceStartTime = Date.now();
     const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
     try {
+      // Build comprehensive patient context
+      const patientVisits = recentVisits || [];
+      const patientCarePlans = carePlans || [];
+      const patientIncidents = [];
+      const patientAlerts = [];
+      
+      const fullContext = buildComprehensiveContext(
+        selectedPatient, 
+        patientVisits, 
+        patientCarePlans, 
+        patientIncidents,
+        selectedPatient?.current_medications,
+        patientAlerts
+      );
+      
+      const contextualizedNote = formatContextForAI(fullContext);
+
+      // Standardize medical terminology in rough note
+      const standardizedNote = standardizeTerminology(roughNote);
+
       // Retrieve relevant Medicare guidelines for context
       const relevantGuidelines = await retrieveRelevantGuidelines({
         diagnosis: finalDiagnosis,
@@ -454,12 +477,11 @@ export default function SmartNoteAssistant() {
 
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
-      PATIENT CONTEXT:
-      - Name: ${selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : 'Not specified'}
-      - Primary Diagnosis: ${finalDiagnosis || 'Not specified'}
-      - Secondary Diagnoses: ${selectedPatient?.secondary_diagnoses?.join(', ') || 'None'}
-      - Allergies: ${selectedPatient?.allergies || 'None documented'}
+${contextualizedNote}
+
+      VISIT DETAILS:
       - Visit Type: ${visitType.replace(/_/g, ' ')}
+      - Visit Date: ${visitDate}
       - Vitals: ${Object.entries(vitalSigns).filter(([k,v]) => v && k !== 'o2Source' && k !== 'o2Flow').map(([k,v]) => {
         if (k === 'o2') {
           const o2Text = `O2 Sat: ${v}`;
@@ -500,8 +522,8 @@ export default function SmartNoteAssistant() {
       - IADL Limitations: ${Object.keys(oasisContext.iadlStatus || {}).length > 0 ? Object.entries(oasisContext.iadlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ') : 'None documented'}
       ` : '- No OASIS data on file'}
 
-      ROUGH NOTES:
-      ${roughNote}
+      ROUGH NOTES (Standardized Medical Terminology):
+      ${standardizedNote}
 
       CRITICAL ENHANCEMENT REQUIREMENTS:
       1. HOMEBOUND STATUS: ${oasisContext?.functionalLevel ? `Based on OASIS functional level (${oasisContext.functionalLevel}), document specific mobility limitations and why leaving home is taxing.` : 'If patient has mobility/activity limitations, clearly state why leaving home is taxing (specific symptoms, distances, assistance needed)'}
@@ -924,22 +946,37 @@ ${guidelinesContext}
             </CardContent>
           </Card>
 
+          {/* Comprehensive Patient Context Loader */}
+          {selectedPatientId && (
+            <ComprehensivePatientContext
+              patientId={selectedPatientId}
+              onContextReady={setComprehensiveContext}
+            />
+          )}
+
           {/* Step 3: Notes */}
           <Card id="step-notes" className={`border-2 ${currentStep === 'notes' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
-            <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-purple-50 to-pink-50">
-              <CardTitle className="text-base md:text-lg flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Edit3 className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                  <span className="truncate">3. Your Notes</span>
-                  {roughNote.length >= 20 && <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />}
-                </div>
-                <VoiceHub 
-                  onTranscription={handleVoiceTranscription}
-                  onInterimTranscription={handleInterimTranscription}
-                />
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 space-y-4">
+          <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-purple-50 to-pink-50">
+          <CardTitle className="text-base md:text-lg flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Edit3 className="w-5 h-5 text-purple-600 flex-shrink-0" />
+              <span className="truncate">3. Your Notes</span>
+              {roughNote.length >= 20 && <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />}
+            </div>
+            <VoiceHub 
+              onTranscription={handleVoiceTranscription}
+              onInterimTranscription={handleInterimTranscription}
+            />
+          </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6 space-y-4">
+          {/* Medical Terminology Processor */}
+          {roughNote.length > 50 && (
+            <MedicalTerminologyProcessor 
+              text={roughNote} 
+              onSuggestion={(suggestion) => console.log('Terminology suggestion:', suggestion)}
+            />
+          )}
               {/* Smart auto-complete textarea with phrase categories */}
               <div className="relative">
                 <SmartAutoComplete
