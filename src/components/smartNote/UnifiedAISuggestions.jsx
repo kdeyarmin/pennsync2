@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Sparkles, 
-  Wand2, 
   CheckCircle2, 
   AlertCircle,
   XCircle,
@@ -268,7 +267,7 @@ Return JSON with COMBINED suggestions:
               onClick={handleApplyAll}
               className="bg-purple-600 hover:bg-purple-700 h-7"
             >
-              <Wand2 className="w-3 h-3 mr-1" /> Fix All ({unappliedSuggestions.length})
+              <Sparkles className="w-3 h-3 mr-1" /> Fix All ({unappliedSuggestions.length})
             </Button>
           )}
         </div>
