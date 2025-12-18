@@ -476,28 +476,7 @@ export default function SmartNoteAssistant() {
 
       const guidelinesContext = formatGuidelinesForPrompt(relevantGuidelines);
 
-      // Detect if user is LPN vs RN
-      const userRole = currentUser?.full_name?.toUpperCase().includes('LPN') || 
-                       currentUser?.email?.toLowerCase().includes('lpn') ? 'LPN' : 'RN';
-
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
-
-${userRole === 'LPN' ? `
-CRITICAL - LPN SCOPE OF PRACTICE:
-This nurse is an LPN (Licensed Practical Nurse). DO NOT ask about or reference:
-- Care plan creation or modification (RN function only)
-- Initial assessments or comprehensive evaluations (RN function)
-- Development of nursing diagnoses (RN function)
-- Discharge planning decisions (RN function)
-
-Focus ONLY on:
-- Observations and data collection
-- Medication administration and monitoring
-- Wound care and treatments per established care plan
-- Vital signs and physical assessment findings
-- Patient response to existing interventions
-- Implementation of established care plans (not creation)
-` : ''}
 
 ${contextualizedNote}
 
@@ -520,10 +499,8 @@ ${contextualizedNote}
       PATIENT HISTORY:
       ${recentVisits.length > 0 ? `- Last Visit (${recentVisits[0].visit_date}): ${recentVisits[0].visit_type} - ${recentVisits[0].nurse_notes?.substring(0, 200)}...` : '- No previous visits on record'}
 
-      ${userRole === 'RN' ? `ACTIVE CARE PLAN GOALS:
-      ${carePlans.filter(cp => cp.status === 'active').map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- No active care plans'}` : `ESTABLISHED CARE PLAN (RN-developed):
+      ACTIVE CARE PLAN GOALS:
       ${carePlans.filter(cp => cp.status === 'active').map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- No active care plans'}
-      Note: Document implementation of and patient response to these established interventions only.`}
 
       OASIS ASSESSMENT DATA (Synced):
       ${oasisContext ? `
@@ -553,9 +530,9 @@ ${contextualizedNote}
       1. HOMEBOUND STATUS: ${oasisContext?.functionalLevel ? `Based on OASIS functional level (${oasisContext.functionalLevel}), document specific mobility limitations and why leaving home is taxing.` : 'If patient has mobility/activity limitations, clearly state why leaving home is taxing (specific symptoms, distances, assistance needed)'}
          ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).filter(k => oasisContext.adlStatus[k]).length > 0 ? `- OASIS shows ADL limitations in: ${Object.keys(oasisContext.adlStatus).filter(k => oasisContext.adlStatus[k]).join(', ')}` : ''}
 
-      2. SKILLED NEED: ${userRole === 'RN' ? 'Explicitly state why RN skills are required (complex assessment, clinical judgment, patient education beyond basic instruction)' : 'Document LPN skilled observation, data collection, and implementation of established treatment plans'}
-         ${oasisContext?.admissionSource === '2' || oasisContext?.admissionSource?.toLowerCase().includes('institutional') ? `- Document ${userRole === 'RN' ? 'post-institutional monitoring and skilled assessment needs' : 'post-institutional monitoring per established care plan'}` : ''}
-         ${oasisContext?.cognitiveStatus && oasisContext.cognitiveStatus !== 'intact' ? `- Address cognitive impairment (${oasisContext.cognitiveStatus}) requiring skilled nursing ${userRole === 'RN' ? 'oversight' : 'monitoring'}` : ''}
+      2. SKILLED NEED: Explicitly state why RN skills are required (complex assessment, clinical judgment, patient education beyond basic instruction)
+         ${oasisContext?.admissionSource === '2' || oasisContext?.admissionSource?.toLowerCase().includes('institutional') ? '- Document post-institutional monitoring and skilled assessment needs' : ''}
+         ${oasisContext?.cognitiveStatus && oasisContext.cognitiveStatus !== 'intact' ? `- Address cognitive impairment (${oasisContext.cognitiveStatus}) requiring skilled nursing oversight` : ''}
 
       3. PATIENT RESPONSE: Include patient's verbal understanding, teach-back results, or demonstrated competency
          ${oasisContext?.cognitiveStatus ? `- Consider cognitive status (${oasisContext.cognitiveStatus}) when documenting teaching effectiveness` : ''}
@@ -575,10 +552,10 @@ ${contextualizedNote}
       ${finalDiagnosis?.toUpperCase().includes('DIABETES') || finalDiagnosis?.toUpperCase().includes('DIABETIC') ? '- Diabetes: Document blood glucose reading, diabetic foot exam (pedal pulses, sensation, skin integrity between toes), peripheral neuropathy assessment' : ''}
       ${finalDiagnosis?.toUpperCase().includes('WOUND') || finalDiagnosis?.toUpperCase().includes('PRESSURE') || finalDiagnosis?.toUpperCase().includes('ULCER') ? '- Wound: Document dimensions (L x W x D in cm), wound bed appearance (% granulation/slough/eschar), exudate (type, amount, odor), periwound condition, undermining/tunneling' : ''}
       ${finalDiagnosis?.toUpperCase().includes('STROKE') || finalDiagnosis?.toUpperCase().includes('CVA') ? '- Stroke: Document LOC, orientation, speech/aphasia, facial symmetry, motor strength bilateral (0-5 grading), sensation, swallowing safety' : ''}
-      ${userRole === 'RN' ? `5. INTEGRATE CARE PLAN PROGRESS: Reference active care plan goals and document progress toward them` : `5. DOCUMENT CARE PLAN IMPLEMENTATION: Document execution of established care plan interventions and patient response (do not modify or create new care plans)`}
+      5. INTEGRATE CARE PLAN PROGRESS: Reference active care plan goals and document progress toward them
       6. COMPARE TO BASELINE: If previous visit data available, note changes from last visit
       7. FUNCTIONAL STATUS: Describe ADL limitations, mobility level, assistance needed
-      8. ${userRole === 'RN' ? 'PLAN OF CARE: State continuing plan, next visit schedule, when to contact nurse/MD' : 'CONTINUING CARE: Document adherence to established plan, next visit schedule, when to contact RN/MD for changes'}
+      8. PLAN OF CARE: State continuing plan, next visit schedule, when to contact nurse/MD
 
       FORMATTING GUIDELINES:
       - Use complete sentences with proper medical terminology
