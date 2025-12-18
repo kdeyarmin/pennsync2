@@ -123,6 +123,9 @@ Deno.serve(async (req) => {
           };
           removed.push(removedInfo);
           removedFromGroup.push(removedInfo);
+          
+          // Add delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
         } catch (err) {
           console.error(`Failed to update patient ${patient.id}:`, err);
         }
