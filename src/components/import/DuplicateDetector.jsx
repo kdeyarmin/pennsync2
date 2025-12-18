@@ -14,7 +14,9 @@ import {
   UserPlus,
   UserCheck,
   UserX,
-  Loader2 
+  Loader2,
+  ArrowRight,
+  AlertTriangle
 } from "lucide-react";
 
 // Duplicate matching logic
@@ -123,6 +125,44 @@ const findDuplicates = (patient, existingPatients) => {
   return potentialDuplicates.sort((a, b) => b.score - a.score);
 };
 
+// Compare patient data and identify differences
+const comparePatients = (importedPatient, existingPatient) => {
+  const differences = [];
+  const fields = [
+    'first_name', 'last_name', 'middle_name', 'date_of_birth', 
+    'medical_record_number', 'phone', 'email', 'address',
+    'primary_diagnosis', 'physician_name', 'physician_phone',
+    'emergency_contact_name', 'emergency_contact_phone', 'status',
+    'care_type', 'admission_date'
+  ];
+
+  fields.forEach(field => {
+    const importedValue = importedPatient[field];
+    const existingValue = existingPatient[field];
+    
+    // Normalize for comparison
+    const normalize = (val) => {
+      if (!val) return '';
+      return String(val).toLowerCase().trim();
+    };
+    
+    const normalizedImported = normalize(importedValue);
+    const normalizedExisting = normalize(existingValue);
+    
+    if (normalizedImported && normalizedImported !== normalizedExisting) {
+      differences.push({
+        field,
+        importedValue: importedValue || '',
+        existingValue: existingValue || 'Not set',
+        isNew: !existingValue,
+        isUpdate: !!existingValue && normalizedImported !== normalizedExisting
+      });
+    }
+  });
+  
+  return differences;
+};
+
 export default function DuplicateDetector({ patients, onResolve }) {
   const [resolution, setResolution] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
@@ -147,9 +187,12 @@ export default function DuplicateDetector({ patients, onResolve }) {
     );
   }
 
-  // Find duplicates for each patient
+  // Find duplicates for each patient and analyze differences
   const duplicateAnalysis = patients.map((patient, idx) => {
-    const duplicates = findDuplicates(patient, existingPatients);
+    const duplicates = findDuplicates(patient, existingPatients).map(dup => ({
+      ...dup,
+      differences: comparePatients(patient, dup.patient)
+    }));
     return {
       index: idx,
       patient,
@@ -292,7 +335,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <p className="font-medium text-gray-900">
-                                        {dup.patient.first_name} {dup.patient.last_name}
+                                        Existing: {dup.patient.first_name} {dup.patient.last_name}
                                       </p>
                                       <Badge variant="outline" className={
                                         dup.patient.status === 'active' ? 'bg-green-100 text-green-800 text-xs' :
@@ -302,25 +345,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                         {dup.patient.status || 'unknown'}
                                       </Badge>
                                     </div>
-                                    <p className="text-xs text-gray-600 mb-1">
-                                      DOB: {dup.patient.date_of_birth || 'N/A'} | MRN: {dup.patient.medical_record_number || 'N/A'}
-                                    </p>
-                                    {dup.patient.phone && (
-                                      <p className="text-xs text-gray-600 mb-1">
-                                        Phone: {dup.patient.phone}
-                                      </p>
-                                    )}
-                                    {dup.patient.address && (
-                                      <p className="text-xs text-gray-600 mb-1">
-                                        Address: {dup.patient.address}
-                                      </p>
-                                    )}
-                                    {dup.patient.primary_diagnosis && (
-                                      <p className="text-xs text-gray-600 mb-1">
-                                        Diagnosis: {dup.patient.primary_diagnosis}
-                                      </p>
-                                    )}
-                                    <div className="flex gap-1 mt-2 flex-wrap">
+                                    <div className="flex gap-1 mt-1 flex-wrap">
                                       {dup.matches.map((match, mIdx) => (
                                         <Badge key={mIdx} className="bg-orange-100 text-orange-800 text-xs">
                                           {match}
@@ -333,9 +358,51 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                       }`}>
                                         {dup.score}% match
                                       </Badge>
+                                      {dup.differences.length > 0 && (
+                                        <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                          {dup.differences.length} difference{dup.differences.length > 1 ? 's' : ''}
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
+
+                                {/* Show differences */}
+                                {dup.differences.length > 0 ? (
+                                  <div className="mt-3 p-3 bg-white rounded-lg border border-blue-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <AlertTriangle className="w-4 h-4 text-blue-600" />
+                                      <p className="text-sm font-semibold text-blue-900">
+                                        Fields that would be updated:
+                                      </p>
+                                    </div>
+                                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                                      {dup.differences.map((diff, diffIdx) => (
+                                        <div key={diffIdx} className="text-xs p-2 bg-blue-50 rounded border border-blue-200">
+                                          <div className="font-semibold text-gray-800 mb-1 capitalize">
+                                            {diff.field.replace(/_/g, ' ')}
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <span className={`flex-1 ${diff.isNew ? 'text-gray-500 italic' : 'text-red-700'}`}>
+                                              Current: {diff.existingValue}
+                                            </span>
+                                            <ArrowRight className="w-3 h-3 text-blue-600 flex-shrink-0" />
+                                            <span className="flex-1 text-green-700 font-medium">
+                                              New: {diff.importedValue}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <Alert className="mt-3 bg-green-50 border-green-200">
+                                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                    <AlertDescription className="text-xs text-green-900">
+                                      All data matches existing record - no updates needed
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
 
                                 <div className="grid grid-cols-3 gap-2 mt-3">
                                   <Button
@@ -343,9 +410,10 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                     variant={resolution[index]?.action === 'update' && resolution[index]?.existingPatientId === dup.patient.id ? 'default' : 'outline'}
                                     onClick={() => handleSetResolution(index, 'update', dup.patient.id)}
                                     className="text-xs"
+                                    disabled={dup.differences.length === 0}
                                   >
                                     <RefreshCw className="w-3 h-3 mr-1" />
-                                    Update
+                                    Update{dup.differences.length > 0 && ` (${dup.differences.length})`}
                                   </Button>
                                   <Button
                                     size="sm"
@@ -362,7 +430,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                     onClick={() => handleSetResolution(index, 'skip')}
                                     className="text-xs"
                                   >
-                                    Skip
+                                    Skip Row
                                   </Button>
                                 </div>
                               </CardContent>
