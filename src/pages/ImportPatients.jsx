@@ -21,7 +21,8 @@ import {
   X,
   RefreshCw,
   FileDown,
-  Zap
+  Zap,
+  BarChart3
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { validatePatient, validatePhone, validateEmail, validateDate, SEVERITY } from "../components/utils/patientValidation";
