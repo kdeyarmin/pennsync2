@@ -13,18 +13,42 @@ Deno.serve(async (req) => {
     const doc = new jsPDF();
     let y = 20;
 
-    // Header with background
-    doc.setFillColor(79, 70, 229); // Indigo
-    doc.rect(0, 0, 210, 35, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont(undefined, 'bold');
-    doc.text('Bag Technique Checklist', 105, 18, { align: 'center' });
-    
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text('State Survey Preparation - Infection Control Procedure', 105, 27, { align: 'center' });
+    // Fetch and add logo
+    try {
+      const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png';
+      const logoResponse = await fetch(logoUrl);
+      const logoBlob = await logoResponse.blob();
+      const logoArrayBuffer = await logoBlob.arrayBuffer();
+      const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoArrayBuffer)));
+      const logoDataUrl = `data:image/png;base64,${logoBase64}`;
+      
+      // Header with background
+      doc.setFillColor(79, 70, 229); // Indigo
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      // Add logo
+      doc.addImage(logoDataUrl, 'PNG', 15, 8, 20, 20);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('Bag Technique Checklist', 105, 18, { align: 'center' });
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text('State Survey Preparation - Infection Control Procedure', 105, 27, { align: 'center' });
+    } catch (error) {
+      // Fallback if logo fetch fails
+      doc.setFillColor(79, 70, 229);
+      doc.rect(0, 0, 210, 35, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('Bag Technique Checklist', 105, 18, { align: 'center' });
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text('State Survey Preparation - Infection Control Procedure', 105, 27, { align: 'center' });
+    }
     
     doc.setTextColor(0, 0, 0);
     y = 45;
