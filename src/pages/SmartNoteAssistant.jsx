@@ -70,6 +70,7 @@ import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../compon
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import MedicalTerminologyProcessor, { standardizeTerminology } from "../components/smartNote/MedicalTerminologyProcessor";
 import ComprehensivePatientContext, { buildComprehensiveContext, formatContextForAI } from "../components/smartNote/ComprehensivePatientContext";
+import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1055,6 +1056,59 @@ ${guidelinesContext}
                   
                   setRoughNote(updatedNote);
                   setAppliedFixes(prev => [...prev, ...additions.map(a => a.split(':')[0].trim())]);
+                }}
+              />
+            )}
+
+            {/* AI Proactive Suggestions - Tasks, Care Plans, Clinical Alerts */}
+            {(roughNote.length >= 100 || enhancedNote) && comprehensiveContext && (
+              <AIProactiveSuggestions
+                roughNote={roughNote}
+                enhancedNote={enhancedNote}
+                patientContext={patientContext}
+                comprehensiveContext={comprehensiveContext}
+                diagnosis={finalDiagnosis}
+                vitalSigns={vitalSigns}
+                visitType={visitType}
+                onCreateTask={async (task) => {
+                  try {
+                    await base44.entities.Task.create({
+                      patient_id: selectedPatientId,
+                      title: task.title,
+                      description: task.description,
+                      type: task.type,
+                      priority: task.priority,
+                      due_timeframe: task.due_timeframe,
+                      source: 'ai_generated',
+                      ai_reason: task.reasoning,
+                      assigned_to: currentUser?.email
+                    });
+                    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                  } catch (error) {
+                    console.error('Error creating task:', error);
+                  }
+                }}
+                onUpdateCarePlan={async (carePlan) => {
+                  try {
+                    await base44.entities.CarePlan.create({
+                      patient_id: selectedPatientId,
+                      problem: carePlan.problem,
+                      goal: carePlan.goal,
+                      interventions: carePlan.interventions,
+                      status: 'active',
+                      target_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                    });
+                    queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
+                  } catch (error) {
+                    console.error('Error creating care plan:', error);
+                  }
+                }}
+                onAddToNote={(text) => {
+                  if (enhancedNote) {
+                    setEnhancedNote(prev => prev + '\n\n' + text);
+                  } else {
+                    setRoughNote(prev => prev + '\n\n' + text);
+                  }
                 }}
               />
             )}
