@@ -140,7 +140,7 @@ export default function OneClickComplianceFixer({
         <CardHeader className="py-3">
           <CardTitle className="text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <AlertTriangle className="w-4 h-4 text-purple-600" />
               <span>Guided Compliance Wizard</span>
             </div>
             <Badge className="bg-purple-600 text-white">
