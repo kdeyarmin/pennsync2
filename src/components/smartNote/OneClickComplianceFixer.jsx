@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { 
-  Wand2, 
   CheckCircle2, 
   AlertTriangle,
   ArrowRight,
@@ -141,7 +140,7 @@ export default function OneClickComplianceFixer({
         <CardHeader className="py-3">
           <CardTitle className="text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Wand2 className="w-4 h-4 text-purple-600" />
+              <Sparkles className="w-4 h-4 text-purple-600" />
               <span>Guided Compliance Wizard</span>
             </div>
             <Badge className="bg-purple-600 text-white">
@@ -217,7 +216,7 @@ export default function OneClickComplianceFixer({
             onClick={handleFixAll}
             className="h-7 bg-purple-600 hover:bg-purple-700"
           >
-            <Wand2 className="w-3 h-3 mr-1" /> Fix All
+            <Sparkles className="w-3 h-3 mr-1" /> Fix All
           </Button>
         </CardTitle>
       </CardHeader>

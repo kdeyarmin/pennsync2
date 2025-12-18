@@ -20,8 +20,7 @@ import {
   RefreshCw,
   Lightbulb,
   Stethoscope,
-  FileText,
-  Wand2
+  FileText
 } from "lucide-react";
 import debounce from "lodash/debounce";
 
@@ -440,7 +439,7 @@ Return JSON:
                     className="w-full bg-purple-600 hover:bg-purple-700 text-xs"
                     onClick={handleApplyAll}
                   >
-                    <Wand2 className="w-3 h-3 mr-2" />
+                    <Sparkles className="w-3 h-3 mr-2" />
                     Apply All Corrections
                   </Button>
                   <Button
