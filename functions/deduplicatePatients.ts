@@ -55,6 +55,11 @@ Deno.serve(async (req) => {
 
     // Get all active patients
     const patients = await base44.asServiceRole.entities.Patient.filter({ status: 'active' });
+    
+    console.log('Total patients fetched:', patients.length);
+    if (patients.length > 0) {
+      console.log('Sample patient structure:', JSON.stringify(patients[0]));
+    }
 
     // Find duplicate groups
     const duplicateGroups = [];
