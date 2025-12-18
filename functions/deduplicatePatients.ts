@@ -197,91 +197,147 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    // Get all patients (including discharged and hospitalized)
+    // Get all patients
     const patients = await base44.asServiceRole.entities.Patient.list();
-
     console.log('Total patients:', patients.length);
 
-    // Find duplicate groups
-    const duplicateGroups = [];
-    const processed = new Set();
+    // Group patients by MRN first for faster processing
+    const mrnGroups = new Map();
+    const nameGroups = new Map();
 
-    for (let i = 0; i < patients.length; i++) {
-      if (processed.has(patients[i].id)) continue;
-
-      const duplicates = [];
-      
-      for (let j = i + 1; j < patients.length; j++) {
-        if (processed.has(patients[j].id)) continue;
-
-        const { score, matches } = calculateMatchScore(patients[i], patients[j]);
-        
-        if (score >= 40) {
-          duplicates.push({
-            patient: patients[j],
-            score,
-            matches
-          });
-          processed.add(patients[j].id);
+    for (const patient of patients) {
+      // Group by MRN
+      if (patient.medical_record_number) {
+        const mrn = patient.medical_record_number.toString().trim();
+        if (!mrnGroups.has(mrn)) {
+          mrnGroups.set(mrn, []);
         }
+        mrnGroups.get(mrn).push(patient);
       }
 
-      if (duplicates.length > 0) {
-        duplicateGroups.push({
-          primary: patients[i],
-          duplicates
-        });
-        processed.add(patients[i].id);
+      // Group by normalized name
+      const nameKey = `${patient.first_name?.toLowerCase().trim()}_${patient.last_name?.toLowerCase().trim()}`;
+      if (nameKey !== '_') {
+        if (!nameGroups.has(nameKey)) {
+          nameGroups.set(nameKey, []);
+        }
+        nameGroups.get(nameKey).push(patient);
       }
     }
 
-    // Remove duplicates (keep most recent created)
-    const removed = [];
-    const detailsArray = [];
-    
-    for (const group of duplicateGroups) {
-      // Sort by created_date to find most recent
-      const allInGroup = [group.primary, ...group.duplicates.map(d => d.patient)];
-      allInGroup.sort((a, b) => {
-        const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
-        const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
-        return dateB - dateA;
-      });
-      
-      const keep = allInGroup[0];
-      const toRemove = allInGroup.slice(1);
+    const duplicateGroups = [];
+    const processed = new Set();
 
-      console.log(`Keeping patient: ${keep.first_name} ${keep.last_name} (${keep.id})`);
-      console.log(`Removing ${toRemove.length} duplicate(s)`);
-
-      const removedFromGroup = [];
-      for (const patient of toRemove) {
-        try {
-          await base44.asServiceRole.entities.Patient.update(patient.id, { status: 'discharged' });
-          const removedInfo = {
-            id: patient.id,
-            name: `${patient.first_name} ${patient.last_name}`,
-            mrn: patient.medical_record_number || 'N/A',
-            match_score: group.duplicates.find(d => d.patient.id === patient.id)?.score || 0
-          };
-          removed.push(removedInfo);
-          removedFromGroup.push(removedInfo);
-          
-          // Add delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 200));
-        } catch (err) {
-          console.error(`Failed to update patient ${patient.id}:`, err);
+    // Process MRN duplicates (highest confidence)
+    for (const [mrn, group] of mrnGroups) {
+      if (group.length > 1) {
+        const unprocessed = group.filter(p => !processed.has(p.id));
+        if (unprocessed.length > 1) {
+          duplicateGroups.push({
+            primary: unprocessed[0],
+            duplicates: unprocessed.slice(1).map(p => ({
+              patient: p,
+              score: 100,
+              matches: ['mrn_exact', 'exact_duplicate']
+            }))
+          });
+          unprocessed.forEach(p => processed.add(p.id));
         }
       }
+    }
 
-      detailsArray.push({
-        kept: {
-          id: keep.id,
-          name: `${keep.first_name} ${keep.last_name}`,
-          mrn: keep.medical_record_number || 'N/A'
-        },
-        removed: removedFromGroup
-      });
+    // Process name duplicates with additional checks
+    for (const [nameKey, group] of nameGroups) {
+      if (group.length > 1) {
+        const unprocessed = group.filter(p => !processed.has(p.id));
+
+        // Check for fuzzy matches within the group
+        for (let i = 0; i < unprocessed.length; i++) {
+          if (processed.has(unprocessed[i].id)) continue;
+
+          const duplicates = [];
+          for (let j = i + 1; j < unprocessed.length; j++) {
+            if (processed.has(unprocessed[j].id)) continue;
+
+            const { score, matches } = calculateMatchScore(unprocessed[i], unprocessed[j]);
+            if (score >= 40) {
+              duplicates.push({
+                patient: unprocessed[j],
+                score,
+                matches
+              });
+              processed.add(unprocessed[j].id);
+            }
+          }
+
+          if (duplicates.length > 0) {
+            duplicateGroups.push({
+              primary: unprocessed[i],
+              duplicates
+            });
+            processed.add(unprocessed[i].id);
+          }
+        }
+      }
+    }
+
+    console.log(`Found ${duplicateGroups.length} duplicate groups`);
+
+    // Remove duplicates in batches
+    const removed = [];
+    const detailsArray = [];
+    const BATCH_SIZE = 10;
+
+    for (let i = 0; i < duplicateGroups.length; i += BATCH_SIZE) {
+      const batch = duplicateGroups.slice(i, i + BATCH_SIZE);
+
+      for (const group of batch) {
+        // Sort by status (active first) then by created_date
+        const allInGroup = [group.primary, ...group.duplicates.map(d => d.patient)];
+        allInGroup.sort((a, b) => {
+          if (a.status === 'active' && b.status !== 'active') return -1;
+          if (a.status !== 'active' && b.status === 'active') return 1;
+          const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
+          const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
+          return dateB - dateA;
+        });
+
+        const keep = allInGroup[0];
+        const toRemove = allInGroup.slice(1);
+
+        console.log(`Keeping: ${keep.first_name} ${keep.last_name} (${keep.id}, ${keep.status})`);
+
+        const removedFromGroup = [];
+        for (const patient of toRemove) {
+          try {
+            await base44.asServiceRole.entities.Patient.update(patient.id, { status: 'discharged' });
+            removedFromGroup.push({
+              id: patient.id,
+              name: `${patient.first_name} ${patient.last_name}`,
+              mrn: patient.medical_record_number || 'N/A',
+              match_score: group.duplicates.find(d => d.patient.id === patient.id)?.score || 100
+            });
+          } catch (err) {
+            console.error(`Failed to update patient ${patient.id}:`, err);
+          }
+        }
+
+        removed.push(...removedFromGroup);
+        detailsArray.push({
+          kept: {
+            id: keep.id,
+            name: `${keep.first_name} ${keep.last_name}`,
+            mrn: keep.medical_record_number || 'N/A',
+            status: keep.status
+          },
+          removed: removedFromGroup
+        });
+      }
+
+      // Delay between batches
+      if (i + BATCH_SIZE < duplicateGroups.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
     return Response.json({
