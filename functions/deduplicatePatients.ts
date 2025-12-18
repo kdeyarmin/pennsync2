@@ -53,13 +53,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    // Get all active patients
-    const patients = await base44.asServiceRole.entities.Patient.filter({ status: 'active' });
+    // Get all patients and filter active ones
+    const allPatients = await base44.asServiceRole.entities.Patient.list();
+    const patients = allPatients.filter(p => p.status === 'active');
     
-    console.log('Total patients fetched:', patients.length);
-    if (patients.length > 0) {
-      console.log('Sample patient structure:', JSON.stringify(patients[0]));
-    }
+    console.log('Total active patients:', patients.length);
 
     // Find duplicate groups
     const duplicateGroups = [];
