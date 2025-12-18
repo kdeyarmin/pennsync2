@@ -104,7 +104,7 @@ const calculateMatchScore = (p1, p2) => {
     }
   }
 
-  // Address fuzzy matching
+  // Enhanced address fuzzy matching
   if (p1.address && p2.address) {
     const addr1 = normalizeName(p1.address);
     const addr2 = normalizeName(p2.address);
@@ -116,6 +116,21 @@ const calculateMatchScore = (p1, p2) => {
     } else if (addressSimilarity >= 85) {
       score += 10;
       matches.push('address_similar');
+    } else if (addressSimilarity >= 70) {
+      score += 5;
+      matches.push('address_partial');
+    }
+    
+    // Check for partial street/number matches (common data entry variations)
+    const addr1Parts = addr1.split(' ').filter(p => p.length > 0);
+    const addr2Parts = addr2.split(' ').filter(p => p.length > 0);
+    
+    // Check if street number matches
+    const hasNumber1 = addr1Parts.find(p => /^\d+/.test(p));
+    const hasNumber2 = addr2Parts.find(p => /^\d+/.test(p));
+    if (hasNumber1 && hasNumber2 && hasNumber1 === hasNumber2) {
+      score += 3;
+      matches.push('address_street_number');
     }
   }
 
@@ -153,6 +168,18 @@ const calculateMatchScore = (p1, p2) => {
           score += 20;
           matches.push('dob_year_typo');
         }
+        // Check for decade typo (e.g., 1945 vs 1955) with same month/day
+        else if (Math.abs(parseInt(dob1.year) - parseInt(dob2.year)) === 10 &&
+                 dob1.month === dob2.month && dob1.day === dob2.day) {
+          score += 18;
+          matches.push('dob_decade_typo');
+        }
+        // Check for century typo (e.g., 19XX vs 20XX)
+        else if (dob1.year.substring(2) === dob2.year.substring(2) &&
+                 dob1.month === dob2.month && dob1.day === dob2.day) {
+          score += 15;
+          matches.push('dob_century_typo');
+        }
       }
     }
   }
@@ -175,13 +202,22 @@ const calculateMatchScore = (p1, p2) => {
     }
   }
 
-  // Phone number matching (bonus points)
+  // Enhanced phone number matching
   if (p1.phone && p2.phone) {
     const phone1 = p1.phone.replace(/\D/g, '');
     const phone2 = p2.phone.replace(/\D/g, '');
+    
     if (phone1 === phone2 && phone1.length >= 10) {
       score += 10;
-      matches.push('phone_match');
+      matches.push('phone_exact');
+    } else if (phone1.length >= 10 && phone2.length >= 10) {
+      // Check last 4 digits (common for patient identification)
+      const last4_1 = phone1.slice(-4);
+      const last4_2 = phone2.slice(-4);
+      if (last4_1 === last4_2) {
+        score += 5;
+        matches.push('phone_last4');
+      }
     }
   }
 
@@ -363,12 +399,29 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Calculate confidence levels for results
+    const resultsWithConfidence = detailsArray.map(detail => {
+      const avgScore = detail.removed.length > 0 
+        ? detail.removed.reduce((sum, r) => sum + r.match_score, 0) / detail.removed.length 
+        : 100;
+      
+      let confidence = 'High';
+      if (avgScore < 70) confidence = 'Medium';
+      if (avgScore < 50) confidence = 'Low';
+      
+      return {
+        ...detail,
+        confidence,
+        average_match_score: Math.round(avgScore)
+      };
+    });
+
     return Response.json({
       success: true,
       duplicate_groups_found: duplicateGroups.length,
       patients_removed: removed.length,
       removed_patients: removed,
-      details: detailsArray
+      details: resultsWithConfidence
     });
   } catch (error) {
     console.error('Deduplication error:', error);

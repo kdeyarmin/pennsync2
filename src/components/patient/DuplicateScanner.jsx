@@ -102,12 +102,21 @@ export default function DuplicateScanner() {
                         {results.details.map((detail, idx) => (
                           <Card key={idx} className="bg-white">
                             <CardContent className="p-3">
-                              <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
                                 <CheckCircle2 className="w-4 h-4 text-green-600" />
                                 <span className="font-semibold text-sm">Kept: {detail.kept.name}</span>
                                 <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
                                   MRN: {detail.kept.mrn}
                                 </Badge>
+                                {detail.confidence && (
+                                  <Badge className={`text-xs ${
+                                    detail.confidence === 'High' ? 'bg-green-600' :
+                                    detail.confidence === 'Medium' ? 'bg-yellow-600' :
+                                    'bg-orange-600'
+                                  }`}>
+                                    {detail.confidence} Confidence ({detail.average_match_score}%)
+                                  </Badge>
+                                )}
                               </div>
                               <div className="ml-6 space-y-1">
                                 {detail.removed.map((removed, rIdx) => (
