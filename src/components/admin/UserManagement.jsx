@@ -42,7 +42,8 @@ import {
   XCircle,
   Users,
   Loader2,
-  Clock
+  Clock,
+  Download
 } from "lucide-react";
 import { format } from "date-fns";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
@@ -53,6 +54,7 @@ export default function UserManagement({ users, currentUser }) {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [isDownloadingRoster, setIsDownloadingRoster] = useState(false);
   
   const [inviteData, setInviteData] = useState({
     email: "",
@@ -183,6 +185,26 @@ export default function UserManagement({ users, currentUser }) {
   const pendingUsers = users.filter(u => !u.is_approved && u.role !== 'admin');
   const approvedUsers = users.filter(u => u.is_approved || u.role === 'admin');
 
+  const downloadUserRoster = async () => {
+    setIsDownloadingRoster(true);
+    try {
+      const response = await base44.functions.invoke('generateUserRosterPDF');
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `User_Roster_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Error downloading roster:', error);
+      alert('Failed to generate roster PDF');
+    }
+    setIsDownloadingRoster(false);
+  };
+
   return (
     <>
       {/* Invite User Card */}
@@ -204,13 +226,27 @@ export default function UserManagement({ users, currentUser }) {
                 className="pl-10"
               />
             </div>
-            <Button
-              onClick={() => setShowInviteDialog(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Invite New User
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={downloadUserRoster}
+                disabled={isDownloadingRoster}
+                variant="outline"
+                className="gap-2"
+              >
+                {isDownloadingRoster ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                ) : (
+                  <><Download className="w-4 h-4" /> Export Roster</>
+                )}
+              </Button>
+              <Button
+                onClick={() => setShowInviteDialog(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Invite New User
+              </Button>
+            </div>
           </div>
 
           <Alert className="mb-4 bg-blue-50 border-blue-200">

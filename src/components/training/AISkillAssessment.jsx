@@ -42,6 +42,26 @@ export default function AISkillAssessment({ userEmail }) {
     initialData: []
   });
 
+  const downloadAssessmentPDF = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await base44.functions.invoke('generateSkillAssessmentPDF', { assessment });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Skill_Assessment_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to generate PDF report');
+    }
+    setIsDownloading(false);
+  };
+
   const analyzeSkills = async () => {
     setIsAnalyzing(true);
     try {
