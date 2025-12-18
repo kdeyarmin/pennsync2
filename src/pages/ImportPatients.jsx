@@ -35,6 +35,8 @@ import BulkErrorResolver from "../components/import/BulkErrorResolver";
 import ImportAnalyticsDashboard from "../components/import/ImportAnalyticsDashboard";
 import ImportReportGenerator from "../components/import/ImportReportGenerator";
 import DuplicateDetector from "../components/import/DuplicateDetector";
+import ErrorPatternAnalyzer from "../components/import/ErrorPatternAnalyzer";
+import AutoCorrector from "../components/import/AutoCorrector";
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -973,6 +975,17 @@ export default function ImportPatients() {
               </p>
             </div>
 
+            {/* Auto-Corrector */}
+            <div className="mt-4">
+              <AutoCorrector
+                csvData={csvData}
+                columnMapping={columnMapping}
+                onCorrectedData={(correctedData) => {
+                  setCsvData(correctedData);
+                }}
+              />
+            </div>
+
             {/* Sample Data Preview */}
             {Object.keys(columnMapping).length > 0 && (
               <Card className="mt-4 border-purple-200 bg-purple-50">
@@ -1060,24 +1073,31 @@ export default function ImportPatients() {
 
           {/* Error Analysis & Resolution Tools */}
           {validationErrors.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Error Category Analyzer */}
-              <ErrorCategoryAnalyzer
-                validationErrors={validationErrors}
-                onSelectErrors={(indices) => {
-                  setSelectedErrorIndices(indices);
-                  setShowBulkResolver(true);
-                }}
-              />
+            <>
+              {/* Error Pattern Analysis */}
+              <div className="mb-6">
+                <ErrorPatternAnalyzer validationErrors={validationErrors} />
+              </div>
 
-              {/* AI Validation Helper */}
-              <AIValidationHelper
-                validationErrors={validationErrors}
-                onApplySuggestions={(suggestions) => {
-                  console.log('Apply suggestions:', suggestions);
-                }}
-              />
-            </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Error Category Analyzer */}
+                <ErrorCategoryAnalyzer
+                  validationErrors={validationErrors}
+                  onSelectErrors={(indices) => {
+                    setSelectedErrorIndices(indices);
+                    setShowBulkResolver(true);
+                  }}
+                />
+
+                {/* AI Validation Helper */}
+                <AIValidationHelper
+                  validationErrors={validationErrors}
+                  onApplySuggestions={(suggestions) => {
+                    console.log('Apply suggestions:', suggestions);
+                  }}
+                />
+              </div>
+            </>
           )}
 
           {/* Bulk Error Resolver */}
