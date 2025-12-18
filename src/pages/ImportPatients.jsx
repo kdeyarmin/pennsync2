@@ -433,6 +433,9 @@ export default function ImportPatients() {
             // Handle special field mappings
             if (fieldKey === 'insurance_primary_provider') {
               patient.insurance_primary = { provider: value };
+            } else if (fieldKey === 'icd_code') {
+              // Store ICD code but don't overwrite primary_diagnosis
+              patient.icd_code = value;
             } else {
               patient[fieldKey] = value;
             }
