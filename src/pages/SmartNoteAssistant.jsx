@@ -1451,10 +1451,7 @@ ${guidelinesContext}
             />
           )}
 
-          {/* Patient History Timeline */}
-          {patientHistory && (
-            <PatientHistoryTimeline history={patientHistory} />
-          )}
+
           </div>
         </div>
 
