@@ -14,8 +14,6 @@ import { format, isValid, parseISO } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { Shield } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
