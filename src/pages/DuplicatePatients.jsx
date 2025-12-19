@@ -40,6 +40,38 @@ const calculateSimilarity = (str1, str2) => {
   return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
 };
 
+// Normalize address for better matching
+const normalizeAddress = (address) => {
+  if (!address) return '';
+  return address.toLowerCase()
+    .replace(/\b(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|circle|cir|place|pl|parkway|pkwy|way)\b/g, '')
+    .replace(/\b(apt|apartment|unit|ste|suite|#)\s*\w+/gi, '')
+    .replace(/[.,#]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Extract name variations for better matching
+const getNameVariations = (patient) => {
+  const variations = new Set();
+  const first = patient.first_name?.toLowerCase().trim() || '';
+  const middle = patient.middle_name?.toLowerCase().trim() || '';
+  const last = patient.last_name?.toLowerCase().trim() || '';
+  
+  if (first && last) {
+    variations.add(`${first} ${last}`);
+    if (middle) {
+      variations.add(`${first} ${middle} ${last}`);
+      variations.add(`${first} ${middle.charAt(0)} ${last}`);
+      variations.add(`${first.charAt(0)} ${middle} ${last}`);
+    }
+    variations.add(`${first.charAt(0)} ${last}`);
+    variations.add(`${last} ${first}`);
+  }
+  
+  return Array.from(variations);
+};
+
 const calculateMatchScore = (p1, p2) => {
   let score = 0;
   let matches = [];
@@ -129,19 +161,54 @@ const calculateMatchScore = (p1, p2) => {
     }
   }
 
-  // Address matching
+  // Enhanced address matching with normalization
   if (p1.address && p2.address) {
-    const addrSim = calculateSimilarity(
-      p1.address.toLowerCase().trim(),
-      p2.address.toLowerCase().trim()
-    );
-    if (addrSim >= 90) {
+    const addr1 = p1.address.toLowerCase().trim();
+    const addr2 = p2.address.toLowerCase().trim();
+    const addrSim = calculateSimilarity(addr1, addr2);
+    
+    // Try normalized addresses
+    const normalizedAddr1 = normalizeAddress(p1.address);
+    const normalizedAddr2 = normalizeAddress(p2.address);
+    const normalizedSim = calculateSimilarity(normalizedAddr1, normalizedAddr2);
+    
+    const bestSim = Math.max(addrSim, normalizedSim);
+    
+    if (bestSim >= 90) {
       score += 12;
       matches.push('Address match');
-    } else if (addrSim >= 75) {
-      score += 7;
+    } else if (bestSim >= 75) {
+      score += 8;
       matches.push('Address similar');
+    } else if (bestSim >= 60) {
+      score += 4;
+      matches.push('Address partial match');
     }
+  }
+
+  // Middle name handling
+  if (p1.middle_name && p2.middle_name) {
+    const middle1 = p1.middle_name.toLowerCase().trim();
+    const middle2 = p2.middle_name.toLowerCase().trim();
+    if (middle1 === middle2 || middle1.charAt(0) === middle2.charAt(0)) {
+      score += 5;
+      matches.push('Middle name/initial match');
+    }
+  }
+
+  // Name variation cross-check
+  const variations1 = getNameVariations(p1);
+  const variations2 = getNameVariations(p2);
+  for (const v1 of variations1) {
+    for (const v2 of variations2) {
+      const varSim = calculateSimilarity(v1, v2);
+      if (varSim >= 95 && !matches.includes('Exact name match')) {
+        score += 8;
+        matches.push('Name variation match');
+        break;
+      }
+    }
+    if (matches.includes('Name variation match')) break;
   }
 
   return { score, matches };
@@ -157,6 +224,12 @@ export default function DuplicatePatients() {
     queryFn: () => base44.entities.Patient.list('-created_date', 10000)
   });
 
+  const { data: allVisits = [] } = useQuery({
+    queryKey: ['all-visits-duplicate-analysis'],
+    queryFn: () => base44.entities.Visit.list('-created_date', 5000),
+    enabled: patients.length > 0
+  });
+
   const mergePatientMutation = useMutation({
     mutationFn: async ({ keepId, mergeIds }) => {
       for (const mergeId of mergeIds) {
@@ -168,6 +241,54 @@ export default function DuplicatePatients() {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     }
   });
+
+  const analyzeRelatedEntities = (p1, p2) => {
+    let relatedScore = 0;
+    const relatedMatches = [];
+
+    // Check visits
+    const p1Visits = allVisits.filter(v => v.patient_id === p1.id);
+    const p2Visits = allVisits.filter(v => v.patient_id === p2.id);
+
+    if (p1Visits.length > 0 && p2Visits.length > 0) {
+      // Check for similar visit dates
+      const p1Dates = p1Visits.map(v => v.visit_date).filter(d => d);
+      const p2Dates = p2Visits.map(v => v.visit_date).filter(d => d);
+      
+      const commonDates = p1Dates.filter(d => p2Dates.includes(d));
+      if (commonDates.length > 0) {
+        relatedScore += 15;
+        relatedMatches.push(`${commonDates.length} matching visit date(s)`);
+      }
+
+      // Check same nurse documentation
+      const p1Nurses = new Set(p1Visits.map(v => v.created_by).filter(n => n));
+      const p2Nurses = new Set(p2Visits.map(v => v.created_by).filter(n => n));
+      const commonNurses = [...p1Nurses].filter(n => p2Nurses.has(n));
+      
+      if (commonNurses.length > 0) {
+        relatedScore += 8;
+        relatedMatches.push('Same nurse documentation');
+      }
+
+      // Check similar diagnoses in notes
+      const p1Notes = p1Visits.map(v => v.nurse_notes || '').join(' ').toLowerCase();
+      const p2Notes = p2Visits.map(v => v.nurse_notes || '').join(' ').toLowerCase();
+      
+      if (p1Notes.length > 50 && p2Notes.length > 50) {
+        const noteSim = calculateSimilarity(
+          p1Notes.substring(0, 500),
+          p2Notes.substring(0, 500)
+        );
+        if (noteSim >= 70) {
+          relatedScore += 10;
+          relatedMatches.push('Similar clinical notes');
+        }
+      }
+    }
+
+    return { relatedScore, relatedMatches };
+  };
 
   const scanForDuplicates = () => {
     setIsScanning(true);
@@ -183,10 +304,14 @@ export default function DuplicatePatients() {
         if (idx === otherIdx || processed.has(other.id)) return;
         
         const { score, matches } = calculateMatchScore(patient, other);
+        const { relatedScore, relatedMatches } = analyzeRelatedEntities(patient, other);
         
-        // Lowered threshold from 40 to 35 to catch more duplicates
-        if (score >= 35) {
-          duplicates.push({ patient: other, score, matches });
+        const totalScore = score + relatedScore;
+        const allMatches = [...matches, ...relatedMatches];
+        
+        // Lowered threshold to 30 and include related entity analysis
+        if (totalScore >= 30) {
+          duplicates.push({ patient: other, score: totalScore, matches: allMatches });
           processed.add(other.id);
         }
       });
