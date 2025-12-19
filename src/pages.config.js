@@ -47,6 +47,7 @@ import NurseEducationVideos from './pages/NurseEducationVideos';
 import DocumentationTraining from './pages/DocumentationTraining';
 import DuplicatePatients from './pages/DuplicatePatients';
 import OASISReview from './pages/OASISReview';
+import TrainingManagement from './pages/TrainingManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -100,6 +101,7 @@ export const PAGES = {
     "DocumentationTraining": DocumentationTraining,
     "DuplicatePatients": DuplicatePatients,
     "OASISReview": OASISReview,
+    "TrainingManagement": TrainingManagement,
 }
 
 export const pagesConfig = {
