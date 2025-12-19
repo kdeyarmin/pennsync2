@@ -85,10 +85,18 @@ const calculateMatchScore = (p1, p2) => {
 
   // Exact full name match
   if (name1 === name2) {
-    score += 40;
+    score += 50;
     matches.push('Exact name match');
+  }
+  
+  // Check exact component matches separately (more important than fuzzy)
+  if (firstName1 === firstName2 && lastName1 === lastName2) {
+    if (name1 !== name2) { // Don't double-count if we already matched above
+      score += 50;
+      matches.push('Exact first and last name');
+    }
   } else {
-    // Fuzzy full name matching (lowered from 85% to 75%)
+    // Fuzzy full name matching
     const fullNameSimilarity = calculateSimilarity(name1, name2);
     if (fullNameSimilarity >= 90) {
       score += 35;
@@ -309,8 +317,8 @@ export default function DuplicatePatients() {
         const totalScore = score + relatedScore;
         const allMatches = [...matches, ...relatedMatches];
         
-        // Lowered threshold to 30 and include related entity analysis
-        if (totalScore >= 30) {
+        // Lowered threshold to 25 to catch more potential duplicates
+        if (totalScore >= 25) {
           duplicates.push({ patient: other, score: totalScore, matches: allMatches });
           processed.add(other.id);
         }
