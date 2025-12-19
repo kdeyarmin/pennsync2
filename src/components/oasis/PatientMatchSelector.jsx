@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, AlertTriangle, User, Calendar, XCircle, RotateCcw, ThumbsUp, ThumbsDown, CreditCard, MapPin } from "lucide-react";
+import { CheckCircle2, AlertTriangle, User, Calendar, XCircle, RotateCcw, ThumbsUp, ThumbsDown, CreditCard, MapPin, Phone, Award } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -110,6 +111,13 @@ export default function PatientMatchSelector({
     return <AlertTriangle className="w-4 h-4 text-orange-600" />;
   };
 
+  const getConfidenceBadge = (score) => {
+    if (score >= 85) return 'bg-green-100 text-green-800 border-green-300';
+    if (score >= 70) return 'bg-blue-100 text-blue-800 border-blue-300';
+    if (score >= 55) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    return 'bg-orange-100 text-orange-800 border-orange-300';
+  };
+
   const bestMatch = matchResults.matches?.[0];
   const hasAlternatives = matchResults.matches?.length > 1;
 
@@ -183,12 +191,42 @@ export default function PatientMatchSelector({
                     <MapPin className="w-3 h-3" />
                     {bestMatch.patient.address}
                     {bestMatch.addressMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
-                  </p>
-                )}
-              </div>
-            </div>
+                    </p>
+                    )}
+                    {bestMatch.patient.phone && (
+                    <p className="text-xs text-gray-600 flex items-center gap-1">
+                    <Phone className="w-3 h-3" />
+                    {bestMatch.patient.phone}
+                    {bestMatch.phoneMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
+                    </p>
+                    )}
+                    </div>
+                    </div>
 
-            {/* Match Factors */}
+                    {/* Match Quality Indicators */}
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <Badge className={
+                    bestMatch.confidence >= 85 ? 'bg-green-600 text-white' :
+                    bestMatch.confidence >= 70 ? 'bg-blue-600 text-white' :
+                    bestMatch.confidence >= 55 ? 'bg-yellow-600 text-white' :
+                    'bg-orange-600 text-white'
+                    }>
+                    {bestMatch.confidence}% Match
+                    </Badge>
+                    {bestMatch.verifiedIdentifiers >= 3 && (
+                    <Badge className="bg-purple-600 text-white text-xs">
+                    <Award className="w-3 h-3 mr-1" />
+                    {bestMatch.verifiedIdentifiers} IDs Verified
+                    </Badge>
+                    )}
+                    {bestMatch.matchQuality && (
+                    <Badge variant="outline" className="text-xs capitalize">
+                    {bestMatch.matchQuality.replace('_', ' ')}
+                    </Badge>
+                    )}
+                    </div>
+
+                    {/* Match Factors */}
             <div className="text-xs text-gray-700 space-y-1">
               {bestMatch.matchFactors?.map((factor, idx) => (
                 <div key={idx} className="flex items-center gap-1">
