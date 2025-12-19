@@ -173,7 +173,6 @@ Deno.serve(async (req) => {
             patient.last_name = nameParts.slice(1).join(' ');
           } else {
             patient.first_name = value;
-            if (!patient.last_name) patient.last_name = 'Unknown';
           }
         } else if (fieldKey === 'last_name') {
           patient.last_name = value;
