@@ -104,14 +104,29 @@ const calculateMatchScore = (p1, p2) => {
   let score = 0;
   let matches = [];
 
-  const name1 = `${p1.first_name} ${p1.last_name}`.toLowerCase().trim();
-  const name2 = `${p2.first_name} ${p2.last_name}`.toLowerCase().trim();
-  const firstName1 = p1.first_name?.toLowerCase().trim() || '';
-  const firstName2 = p2.first_name?.toLowerCase().trim() || '';
-  const lastName1 = p1.last_name?.toLowerCase().trim() || '';
-  const lastName2 = p2.last_name?.toLowerCase().trim() || '';
+  // Normalize names - remove extra spaces, special characters
+  const normalizeName = (name) => {
+    return name?.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^a-z\s]/g, '') || '';
+  };
 
-  // Phonetic matching using Soundex
+  const name1 = `${normalizeName(p1.first_name)} ${normalizeName(p1.last_name)}`;
+  const name2 = `${normalizeName(p2.first_name)} ${normalizeName(p2.last_name)}`;
+  const firstName1 = normalizeName(p1.first_name);
+  const firstName2 = normalizeName(p2.first_name);
+  const lastName1 = normalizeName(p1.last_name);
+  const lastName2 = normalizeName(p2.last_name);
+
+  // CRITICAL: Exact name component matching (most reliable indicator)
+  const exactFirstName = firstName1 === firstName2 && firstName1.length >= 2;
+  const exactLastName = lastName1 === lastName2 && lastName1.length >= 2;
+  
+  // If both first AND last name are identical, this is very likely a duplicate
+  if (exactFirstName && exactLastName) {
+    score += 60; // Increased from 50 to ensure it passes threshold
+    matches.push('✓✓ EXACT NAME MATCH');
+  }
+  
+  // Phonetic matching using Soundex (for misspellings)
   const firstSoundex1 = soundex(p1.first_name || '');
   const firstSoundex2 = soundex(p2.first_name || '');
   const lastSoundex1 = soundex(p1.last_name || '');
@@ -120,43 +135,38 @@ const calculateMatchScore = (p1, p2) => {
   const phoneticMatch = firstSoundex1 === firstSoundex2 && lastSoundex1 === lastSoundex2 && 
                         firstSoundex1 !== '' && lastSoundex1 !== '';
 
-  // Exact full name match
-  if (name1 === name2) {
-    score += 50;
-    matches.push('Exact name match');
-  }
-  
-  // Check exact component matches separately (more important than fuzzy)
-  if (firstName1 === firstName2 && lastName1 === lastName2) {
-    if (name1 !== name2) { // Don't double-count if we already matched above
-      score += 50;
-      matches.push('Exact first and last name');
-    }
-  } else if (phoneticMatch) {
-    // Names sound the same (phonetic match)
-    score += 40;
-    matches.push('Names sound alike (phonetic)');
-  } else {
-    // Fuzzy full name matching
-    const fullNameSimilarity = calculateSimilarity(name1, name2);
-    if (fullNameSimilarity >= 90) {
-      score += 35;
-      matches.push('Very similar name');
-    } else if (fullNameSimilarity >= 75) {
-      score += 28;
-      matches.push('Similar name');
-    }
-    
-    // Component matching
-    const firstSimilarity = calculateSimilarity(firstName1, firstName2);
-    const lastSimilarity = calculateSimilarity(lastName1, lastName2);
-    
-    if (firstSimilarity >= 85 && lastSimilarity >= 85) {
-      score += 30;
-      matches.push('Both names similar');
-    } else if (firstSimilarity === 100 || lastSimilarity === 100) {
-      score += 18;
-      matches.push('Partial name match');
+  // Additional scoring for non-exact matches
+  if (!exactFirstName || !exactLastName) {
+    // Exact full name match (with middle name or formatting differences)
+    if (name1 === name2) {
+      score += 45;
+      matches.push('Exact full name match');
+    } else if (phoneticMatch) {
+      // Names sound the same (phonetic match)
+      score += 40;
+      matches.push('Names sound alike (phonetic)');
+    } else {
+      // Fuzzy full name matching
+      const fullNameSimilarity = calculateSimilarity(name1, name2);
+      if (fullNameSimilarity >= 90) {
+        score += 35;
+        matches.push('Very similar name');
+      } else if (fullNameSimilarity >= 75) {
+        score += 28;
+        matches.push('Similar name');
+      }
+      
+      // Component matching
+      const firstSimilarity = calculateSimilarity(firstName1, firstName2);
+      const lastSimilarity = calculateSimilarity(lastName1, lastName2);
+      
+      if (firstSimilarity >= 85 && lastSimilarity >= 85) {
+        score += 30;
+        matches.push('Both names similar');
+      } else if (firstSimilarity === 100 || lastSimilarity === 100) {
+        score += 18;
+        matches.push('Partial name match');
+      }
     }
   }
 
@@ -445,16 +455,25 @@ export default function DuplicatePatients() {
         const totalScore = score + relatedScore;
         const allMatches = [...matches, ...relatedMatches];
         
+        // Special case: Exact name match is extremely strong signal
+        const hasExactNameMatch = matches.some(m => m.includes('EXACT NAME MATCH'));
+        
         // Multi-tier thresholds for better duplicate detection
         // High confidence: 70+, Medium: 50-69, Low: 35-49, Review needed: 35+
-        const matchThreshold = 35; // Increased from 25 for better precision
+        let matchThreshold = 35;
+        
+        // Lower threshold significantly for exact name matches
+        if (hasExactNameMatch) {
+          matchThreshold = 25; // Very likely duplicate if names are identical
+        }
         
         // Additional rules for edge cases
         const hasStrongIdentifier = matches.some(m => 
           m.includes('✓') || 
           m.includes('Email match') || 
           m.includes('DOB match') ||
-          m.includes('MRN match')
+          m.includes('MRN match') ||
+          m.includes('Phone exact match')
         );
         
         // If we have a strong identifier, lower threshold slightly
