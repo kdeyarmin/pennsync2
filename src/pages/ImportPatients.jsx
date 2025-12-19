@@ -1048,61 +1048,87 @@ export default function ImportPatients() {
               />
             </div>
 
-            {/* Sample Data Preview */}
+            {/* Real-time Validation Preview */}
             {Object.keys(columnMapping).length > 0 && (
               <Card className="mt-4 border-purple-200 bg-purple-50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Eye className="w-4 h-4" />
-                    Sample Data Preview (First 3 Rows)
+                    Live Validation Preview (First 5 Rows)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {csvData.rows.slice(0, 3).map((row, rowIdx) => (
-                      <div key={rowIdx} className="p-3 bg-white rounded-lg border text-xs">
-                        <p className="font-semibold mb-2 text-gray-700">Row {rowIdx + 1}</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {Object.entries(columnMapping).map(([colIdx, fieldKey]) => {
-                            const value = row[colIdx]?.trim() || '';
-                            const field = FIELD_MAPPINGS[fieldKey];
-                            let validationError = null;
+                    {csvData.rows.slice(0, 5).map((row, rowIdx) => {
+                      const rowIssues = [];
+                      
+                      Object.entries(columnMapping).forEach(([colIdx, fieldKey]) => {
+                        const value = row[colIdx]?.trim() || '';
+                        const field = FIELD_MAPPINGS[fieldKey];
 
-                            if (value) {
-                              if (field.type === 'email') {
-                                const emailError = validateEmail(value);
-                                if (emailError?.severity === SEVERITY.ERROR) {
-                                  validationError = emailError.message;
-                                }
-                              } else if (field.type === 'date') {
-                                const dateError = validateDate(value, fieldKey);
-                                if (dateError?.severity === SEVERITY.ERROR) {
-                                  validationError = dateError.message;
-                                }
-                              } else if (fieldKey.includes('phone')) {
-                                const phoneError = validatePhone(value);
-                                if (phoneError?.severity === SEVERITY.ERROR) {
-                                  validationError = phoneError.message;
-                                }
-                              }
-                            }
+                        if (field.required && !value) {
+                          rowIssues.push({ field: field.label, error: 'Required field is empty' });
+                        } else if (value) {
+                          if (field.type === 'email') {
+                            const err = validateEmail(value);
+                            if (err?.severity === SEVERITY.ERROR) rowIssues.push({ field: field.label, error: err.message, fix: err.suggestion });
+                          } else if (field.type === 'date') {
+                            const err = validateDate(value, fieldKey);
+                            if (err?.severity === SEVERITY.ERROR) rowIssues.push({ field: field.label, error: err.message, fix: err.suggestion });
+                          } else if (fieldKey.includes('phone')) {
+                            const err = validatePhone(value);
+                            if (err?.severity === SEVERITY.ERROR) rowIssues.push({ field: field.label, error: err.message, fix: err.suggestion });
+                          }
+                        }
+                      });
 
-                            return (
-                              <div key={fieldKey} className={`p-2 rounded ${validationError ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
-                                <p className="font-medium text-gray-700">{field.label}</p>
-                                <p className={`mt-1 ${validationError ? 'text-red-700' : 'text-gray-900'}`}>
-                                  {value || <span className="text-gray-400 italic">empty</span>}
-                                </p>
-                                {validationError && (
-                                  <p className="text-xs text-red-600 mt-1">⚠️ {validationError}</p>
-                                )}
-                              </div>
-                            );
-                          })}
+                      return (
+                        <div key={rowIdx} className={`p-3 rounded-lg border text-xs ${
+                          rowIssues.length > 0 ? 'bg-red-50 border-red-300' : 'bg-white border-green-300'
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="font-semibold text-gray-700">Row {rowIdx + 1}</p>
+                            {rowIssues.length > 0 ? (
+                              <Badge variant="destructive" className="text-xs">{rowIssues.length} issue{rowIssues.length > 1 ? 's' : ''}</Badge>
+                            ) : (
+                              <Badge className="bg-green-100 text-green-800 text-xs">✓ Valid</Badge>
+                            )}
+                          </div>
+
+                          {rowIssues.length > 0 && (
+                            <div className="mb-2 p-2 bg-red-100 rounded border border-red-200">
+                              {rowIssues.map((issue, idx) => (
+                                <div key={idx} className="mb-1 last:mb-0">
+                                  <p className="text-red-800 font-medium">• {issue.field}: {issue.error}</p>
+                                  {issue.fix && <p className="text-xs text-green-700 ml-4">→ {issue.fix}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(columnMapping).map(([colIdx, fieldKey]) => {
+                              const value = row[colIdx]?.trim() || '';
+                              const field = FIELD_MAPPINGS[fieldKey];
+                              const hasError = rowIssues.some(i => i.field === field.label);
+
+                              return (
+                                <div key={fieldKey} className={`p-2 rounded ${hasError ? 'bg-red-100 border border-red-300' : 'bg-gray-50'}`}>
+                                  <p className="text-xs font-medium">{field.label}{field.required && <span className="text-red-500">*</span>}</p>
+                                  <p className={`mt-1 ${hasError ? 'text-red-700 font-medium' : 'text-gray-900'}`}>
+                                    {value || <span className="text-gray-400 italic">empty</span>}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                  <p className="text-xs text-gray-600 mt-3 text-center">
+                    Issues shown here will be flagged during validation
+                  </p>
                 </CardContent>
               </Card>
             )}
