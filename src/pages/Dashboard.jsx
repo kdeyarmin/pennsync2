@@ -22,6 +22,7 @@ import PDGMPredictiveAnalytics from "../components/pdgm/PDGMPredictiveAnalytics"
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import AITrainingRecommendations from "../components/training/AITrainingRecommendations";
 import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
+import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSupport";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -211,6 +212,16 @@ export default function Dashboard() {
         />
         <AITrainingRecommendations userId={currentUser?.id} userEmail={currentUser?.email} />
       </div>
+
+      {/* Proactive Clinical Support - Show for first scheduled patient */}
+      {visits.length > 0 && visits[0]?.patient_id && (
+        <div className="mb-6">
+          <ProactiveClinicalSupport 
+            patientId={visits[0].patient_id}
+            compact={true}
+          />
+        </div>
+      )}
 
 
 
