@@ -73,6 +73,8 @@ import ComprehensivePatientContext, { buildComprehensiveContext, formatContextFo
 import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
+import PatientHistoryTimeline from "../components/patient/PatientHistoryTimeline";
+import { buildComprehensivePatientHistory } from "../components/utils/patientHistoryAnalyzer";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1282,7 +1284,12 @@ ${guidelinesContext}
               }}
             />
           )}
-        </div>
+
+          {/* Patient History Timeline */}
+          {patientHistory && (
+            <PatientHistoryTimeline history={patientHistory} />
+          )}
+          </div>
         </div>
 
         {/* AI Patient History Summarizer - Moved to bottom */}

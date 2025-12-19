@@ -15,7 +15,8 @@ import {
   ChevronUp,
   Sparkles,
   RefreshCw,
-  Target
+  Target,
+  TrendingUp
 } from "lucide-react";
 import { buildComprehensivePatientHistory, formatHistoryForAI, extractKeyInsights } from "../utils/patientHistoryAnalyzer";
 
