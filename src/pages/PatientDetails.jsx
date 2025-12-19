@@ -537,6 +537,12 @@ export default function PatientDetails() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {patient.payor && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Primary Payor</p>
+                <Badge className="bg-purple-100 text-purple-800">{sanitizeInput(patient.payor)}</Badge>
+              </div>
+            )}
             {patient.insurance_primary?.provider ? (
               <>
                 <div>
@@ -556,9 +562,9 @@ export default function PatientDetails() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : !patient.payor ? (
               <p className="text-sm text-gray-500">No insurance information on file</p>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       </div>

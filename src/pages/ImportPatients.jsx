@@ -51,6 +51,7 @@ const FIELD_MAPPINGS = {
   'email': { label: 'Email', type: 'email' },
   'address': { label: 'Address', type: 'string' },
   'gender': { label: 'Gender', type: 'string' },
+  'payor': { label: 'Payor', type: 'string', aliases: ['primary_payor', 'insurance_type'] },
   
   // Emergency contact
   'emergency_contact_name': { label: 'Emergency Contact Name', type: 'string' },
