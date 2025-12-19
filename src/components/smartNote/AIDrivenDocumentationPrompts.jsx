@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Target
 } from "lucide-react";
+import { buildComprehensivePatientHistory, formatHistoryForAI, extractKeyInsights } from "../utils/patientHistoryAnalyzer";
 
 export default function AIDrivenDocumentationPrompts({
   noteText,
@@ -53,6 +54,11 @@ export default function AIDrivenDocumentationPrompts({
     
     setIsAnalyzing(true);
     try {
+      // Build comprehensive patient history
+      const patientHistory = patient ? await buildComprehensivePatientHistory(patient.id) : null;
+      const historyContext = patientHistory ? formatHistoryForAI(patientHistory) : '';
+      const keyInsights = patientHistory ? extractKeyInsights(patientHistory) : [];
+
       const patientContext = patient ? `
 Patient: ${patient.first_name} ${patient.last_name}
 Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
@@ -79,9 +85,11 @@ Previous Visit Notes (excerpt):
 ${previousVisits[0]?.nurse_notes?.substring(0, 300) || 'No previous notes'}
 ` : '';
 
-      const prompt = `You are an expert home health clinical documentation consultant. Analyze the current nursing note and identify SPECIFIC missing elements that should be documented for Medicare compliance and quality care.
+      const prompt = `You are an expert home health clinical documentation consultant. Analyze the current nursing note and identify SPECIFIC missing elements WITH EMPHASIS ON CONTINUITY OF CARE AND HISTORICAL CONTEXT.
 
-CONTEXT:
+${historyContext}
+
+CURRENT VISIT CONTEXT:
 ${patientContext}
 Visit Type: ${visitType || 'Routine Visit'}
 Diagnosis Focus: ${diagnosis || patient?.primary_diagnosis || 'General'}
@@ -89,11 +97,14 @@ ${vitalsContext}
 ${carePlanContext}
 ${previousVisitContext}
 
-CURRENT NOTE:
+CURRENT NOTE BEING DOCUMENTED:
 ${noteText}
 
+KEY HISTORICAL INSIGHTS TO ADDRESS:
+${keyInsights.length > 0 ? keyInsights.map(insight => `- [${insight.priority.toUpperCase()}] ${insight.message}\n  Action: ${insight.action}`).join('\n') : 'No critical historical insights at this time'}
+
 TASK:
-Identify missing documentation elements and generate SPECIFIC, actionable prompts. Focus on:
+Identify missing documentation elements with STRONG EMPHASIS ON CONTINUITY AND TRENDS. Generate SPECIFIC, actionable prompts that:
 
 1. **Medicare Required Elements** (highest priority):
    - Homebound status justification
@@ -101,21 +112,30 @@ Identify missing documentation elements and generate SPECIFIC, actionable prompt
    - Patient/caregiver response to teaching
    - Functional status/limitations
 
-2. **Diagnosis-Specific Assessments**:
+2. **Continuity of Care** (critical focus):
+   - Are trends from patient history addressed?
+   - Are changes from baseline vitals documented and explained?
+   - Are unresolved issues from previous visits followed up?
+   - Is patient's response pattern to interventions referenced?
+   - Are concerning patterns or deterioration noted?
+
+3. **Diagnosis-Specific Assessments**:
    - Based on "${diagnosis || patient?.primary_diagnosis || 'the patient condition'}", what specific assessments are missing?
    - What symptoms should be documented?
    - What comparison to baseline/previous visit is needed?
+   - How does current status compare to historical trajectory?
 
-3. **Care Plan Progress**:
-   - Are care plan goals being addressed?
-   - What interventions were performed?
-   - What is the patient's progress toward goals?
+4. **Care Plan Progress**:
+   - Are care plan goals being addressed with specific outcomes?
+   - What interventions were performed and how did patient respond compared to previous visits?
+   - What is the patient's progress toward goals over time?
+   - Are there patterns in goal achievement or barriers?
 
-4. **Clinical Completeness**:
+5. **Clinical Completeness**:
    - Missing body system assessments
-   - Medication review gaps
+   - Medication review gaps  
    - Safety assessment elements
-   - Follow-up plan
+   - Follow-up plan with historical context
 
 For each missing element, provide:
 - A SPECIFIC question the nurse should answer
@@ -195,7 +215,20 @@ Return JSON:
                 }
               }
             },
+            continuity_prompts: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  prompt: { type: "string" },
+                  historical_reference: { type: "string" },
+                  why_important: { type: "string" },
+                  suggested_text: { type: "string" }
+                }
+              }
+            },
             completeness_score: { type: "number" },
+            continuity_score: { type: "number" },
             priority_focus: { type: "string" }
           }
         }
@@ -357,6 +390,58 @@ Return JSON:
                           </div>
                         </div>
                       ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Continuity Prompts */}
+              {prompts.continuity_prompts?.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Continuity & Historical Context ({prompts.continuity_score || 0}% documented)
+                  </h4>
+                  <div className="space-y-2">
+                    {prompts.continuity_prompts.map((item, idx) => (
+                      <div key={idx} className="p-3 bg-purple-50 rounded-lg border-2 border-purple-300">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className="bg-purple-600 text-white text-xs">Historical Context</Badge>
+                          <p className="text-xs text-purple-700 italic">
+                            📊 {item.historical_reference}
+                          </p>
+                        </div>
+                        <p className="text-sm font-medium text-gray-900 mb-2">{item.prompt}</p>
+                        <p className="text-xs text-gray-600 mb-2">⚠️ {item.why_important}</p>
+                        {item.suggested_text && (
+                          <div className="bg-white p-2 rounded border border-purple-200">
+                            <p className="text-xs font-medium text-gray-500 mb-1">Suggested documentation:</p>
+                            <p className="text-xs text-gray-700">{item.suggested_text}</p>
+                          </div>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          {item.suggested_text && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleInsertSuggestion(item.suggested_text)}
+                              className="text-xs gap-1"
+                            >
+                              <Plus className="w-3 h-3" />
+                              Insert
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleMarkComplete(item.prompt)}
+                            className="text-xs gap-1 text-green-600"
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            Addressed
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

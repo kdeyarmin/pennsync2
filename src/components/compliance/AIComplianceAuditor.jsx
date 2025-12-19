@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { trackRecommendation } from "../training/RecommendationTracker";
 import { logActivity, ActivityActions } from "../utils/activityLogger";
+import { buildComprehensivePatientHistory, formatHistoryForAI, extractKeyInsights } from "../utils/patientHistoryAnalyzer";
 
 export default function AIComplianceAuditor({ 
   patientId, 
@@ -80,10 +81,17 @@ export default function AIComplianceAuditor({
 
     setIsAnalyzing(true);
     try {
+      // Build comprehensive patient history
+      const patientHistory = await buildComprehensivePatientHistory(patient.id);
+      const historyContext = formatHistoryForAI(patientHistory);
+      const keyInsights = extractKeyInsights(patientHistory);
+
       const targetVisit = visitId ? visits.find(v => v.id === visitId) : visits[0];
       const latestOASIS = oasisData[0];
 
-      const prompt = `You are an expert healthcare compliance auditor specializing in home health and hospice regulations. Perform a comprehensive compliance audit of this patient record.
+      const prompt = `You are an expert healthcare compliance auditor specializing in home health and hospice regulations. Perform a comprehensive compliance audit of this patient record WITH EMPHASIS ON CONTINUITY OF CARE AND TREND ANALYSIS.
+
+${historyContext}
 
 PATIENT COMPREHENSIVE DATA:
 Name: ${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}
@@ -261,6 +269,22 @@ Analyze this comprehensive patient record against the following compliance areas
    - Are privacy (HIPAA) standards maintained?
    - Are coordination of care requirements met?
 
+9. CONTINUITY OF CARE (Critical Focus):
+   - Are trends from patient history addressed?
+   - Are changes from baseline vitals documented?
+   - Are previous visit concerns followed up?
+   - Is patient response to interventions tracked?
+   - Are care plan goals progressing appropriately?
+   - Are recurring issues identified and managed?
+
+10. CONTEXTUAL COMPLIANCE:
+   - Does documentation reflect understanding of patient trajectory?
+   - Are concerning trends escalated appropriately?
+   - Is historical context referenced where relevant?
+
+KEY HISTORICAL INSIGHTS TO CONSIDER:
+${keyInsights.map(insight => `- [${insight.priority.toUpperCase()}] ${insight.message}`).join('\n')}
+
 For each area, provide:
 {
   "overall_compliance_score": 0-100,
@@ -299,7 +323,17 @@ For each area, provide:
     {
       "concern": "Pattern or trend identified",
       "evidence": "What data supports this concern",
-      "recommendation": "What to do about it"
+      "recommendation": "What to do about it",
+      "historical_context": "Reference to patient history that supports this concern"
+    }
+  ],
+  "continuity_issues": [
+    {
+      "issue": "Continuity gap identified",
+      "impact": "Impact on patient care",
+      "previous_documentation": "What was documented before",
+      "current_gap": "What's missing now",
+      "resolution": "How to address this gap"
     }
   ],
   "compliance_strengths": ["List areas where documentation is strong"],
@@ -385,7 +419,21 @@ For each area, provide:
                 properties: {
                   concern: { type: "string" },
                   evidence: { type: "string" },
-                  recommendation: { type: "string" }
+                  recommendation: { type: "string" },
+                  historical_context: { type: "string" }
+                }
+              }
+            },
+            continuity_issues: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  issue: { type: "string" },
+                  impact: { type: "string" },
+                  previous_documentation: { type: "string" },
+                  current_gap: { type: "string" },
+                  resolution: { type: "string" }
                 }
               }
             },
@@ -696,7 +744,7 @@ For each area, provide:
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-orange-600" />
-                    Trending Concerns
+                    Trending Concerns & Historical Patterns
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 space-y-3">
@@ -704,9 +752,51 @@ For each area, provide:
                     <div key={idx} className="bg-white p-3 rounded border border-orange-200">
                       <p className="font-medium text-sm text-orange-900 mb-1">{concern.concern}</p>
                       <p className="text-xs text-gray-600 mb-2">{concern.evidence}</p>
+                      {concern.historical_context && (
+                        <p className="text-xs text-orange-700 bg-orange-50 p-2 rounded mb-2 italic">
+                          📊 Historical Context: {concern.historical_context}
+                        </p>
+                      )}
                       <div className="flex items-start gap-2 text-xs">
                         <ChevronRight className="w-3 h-3 text-orange-600 mt-0.5 flex-shrink-0" />
                         <p className="text-orange-800">{concern.recommendation}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Continuity Issues */}
+            {auditResults.continuity_issues?.length > 0 && (
+              <Card className="border-purple-200 bg-purple-50">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-purple-600" />
+                    Continuity of Care Issues
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 space-y-3">
+                  {auditResults.continuity_issues.map((issue, idx) => (
+                    <div key={idx} className="bg-white p-3 rounded border border-purple-200">
+                      <p className="font-medium text-sm text-purple-900 mb-2">{issue.issue}</p>
+                      <div className="space-y-2 text-xs">
+                        <div className="bg-red-50 p-2 rounded border border-red-200">
+                          <p className="font-semibold text-red-800">Impact:</p>
+                          <p className="text-red-700">{issue.impact}</p>
+                        </div>
+                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                          <p className="font-semibold text-blue-800">Previous Documentation:</p>
+                          <p className="text-blue-700">{issue.previous_documentation}</p>
+                        </div>
+                        <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+                          <p className="font-semibold text-yellow-800">Current Gap:</p>
+                          <p className="text-yellow-700">{issue.current_gap}</p>
+                        </div>
+                        <div className="bg-green-50 p-2 rounded border border-green-200">
+                          <p className="font-semibold text-green-800">Resolution:</p>
+                          <p className="text-green-700">{issue.resolution}</p>
+                        </div>
                       </div>
                     </div>
                   ))}
