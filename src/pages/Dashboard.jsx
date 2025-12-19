@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText } from "lucide-react";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import { isValid } from "date-fns";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
@@ -236,12 +236,20 @@ export default function Dashboard() {
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Visit Schedule</h2>
-        <Link to={createPageUrl("Patients")}>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            New Visit
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to={createPageUrl("OASISReview")}>
+            <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
+              <FileText className="w-4 h-4 mr-2" />
+              OASIS Review
+            </Button>
+          </Link>
+          <Link to={createPageUrl("Patients")}>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              New Visit
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-4">

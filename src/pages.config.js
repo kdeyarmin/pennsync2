@@ -46,6 +46,7 @@ import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
 import NurseEducationVideos from './pages/NurseEducationVideos';
 import DocumentationTraining from './pages/DocumentationTraining';
 import DuplicatePatients from './pages/DuplicatePatients';
+import OASISReview from './pages/OASISReview';
 import __Layout from './Layout.jsx';
 
 
@@ -98,6 +99,7 @@ export const PAGES = {
     "NurseEducationVideos": NurseEducationVideos,
     "DocumentationTraining": DocumentationTraining,
     "DuplicatePatients": DuplicatePatients,
+    "OASISReview": OASISReview,
 }
 
 export const pagesConfig = {
