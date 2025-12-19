@@ -38,7 +38,8 @@ import FavoriteButton from "../components/navigation/FavoriteButton";
 import ReferralLetterGenerator from "../components/documents/ReferralLetterGenerator";
 import PatientEducationGenerator from "../components/documents/PatientEducationGenerator";
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
-import { Sparkles, FileOutput, GraduationCap, TrendingUp } from "lucide-react";
+import { Sparkles, FileOutput, GraduationCap, TrendingUp, Brain } from "lucide-react";
+import PredictiveAnalyticsPanel from "../components/oasis/PredictiveAnalyticsPanel";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -342,6 +343,19 @@ export default function PatientDetails() {
             incidents={incidents}
             autoGenerate={true}
             prominent={true}
+          />
+        </div>
+      )}
+
+      {/* AI Predictive Analytics - Outcomes & Interventions */}
+      {patient && (
+        <div className="mb-6">
+          <PredictiveAnalyticsPanel
+            patient={patient}
+            oasisData={patientOASIS[0]?.extracted_data}
+            historicalVisits={visits}
+            carePlans={carePlans}
+            incidents={incidents}
           />
         </div>
       )}
