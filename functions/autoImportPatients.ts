@@ -65,7 +65,11 @@ Deno.serve(async (req) => {
       'organization_type': 'care_type',
       'current_admission_status': 'status',
       'primary_payor': 'insurance_primary_provider',
-      'icd_code': 'icd_code'
+      'icd_code': 'primary_diagnosis',
+      'diagnosis': 'primary_diagnosis',
+      'primary_diagnosis': 'primary_diagnosis',
+      'secondary_diagnoses': 'secondary_diagnoses',
+      'secondary_diagnosis': 'secondary_diagnoses'
     };
 
     headers.forEach((header, idx) => {
@@ -119,6 +123,8 @@ Deno.serve(async (req) => {
           }
         } else if (fieldKey === 'insurance_primary_provider') {
           patient.insurance_primary = { provider: value };
+        } else if (fieldKey === 'secondary_diagnoses') {
+          patient.secondary_diagnoses = value.split(/[,;|]+/).map(d => d.trim()).filter(d => d.length > 0);
         } else {
           patient[fieldKey] = value;
         }
