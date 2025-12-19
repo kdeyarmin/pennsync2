@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { 
   Users, 
   AlertCircle, 
@@ -16,108 +18,254 @@ import {
   UserX,
   Loader2,
   ArrowRight,
-  AlertTriangle
+  AlertTriangle,
+  Settings
 } from "lucide-react";
 
-// Duplicate matching logic
-const calculateMatchScore = (patient, existingPatient) => {
+// Levenshtein distance for fuzzy matching
+const levenshteinDistance = (str1, str2) => {
+  const matrix = [];
+  for (let i = 0; i <= str2.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= str1.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+      }
+    }
+  }
+  return matrix[str2.length][str1.length];
+};
+
+// Calculate string similarity (0-100)
+const calculateSimilarity = (str1, str2) => {
+  if (!str1 || !str2) return 0;
+  const distance = levenshteinDistance(str1, str2);
+  const maxLength = Math.max(str1.length, str2.length);
+  return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
+};
+
+// Enhanced duplicate matching logic with configurable sensitivity
+const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') => {
   let score = 0;
   let matches = [];
+  const criteriaMatched = {};
 
   // Normalize strings
   const normalize = (str) => str?.toLowerCase().trim().replace(/\s+/g, ' ') || '';
   
-  // Name match (first + last)
-  const patientFullName = normalize(`${patient.first_name} ${patient.last_name}`);
-  const existingFullName = normalize(`${existingPatient.first_name} ${existingPatient.last_name}`);
+  // Sensitivity thresholds for fuzzy matching
+  const thresholds = {
+    strict: { name: 95, address: 90, phone: 100 },
+    medium: { name: 85, address: 80, phone: 100 },
+    loose: { name: 75, address: 70, phone: 100 }
+  };
   
-  if (patientFullName === existingFullName && patientFullName !== '') {
+  const threshold = thresholds[sensitivity] || thresholds.medium;
+
+  // NAME MATCHING (Multiple strategies)
+  const firstName1 = normalize(patient.first_name);
+  const firstName2 = normalize(existingPatient.first_name);
+  const lastName1 = normalize(patient.last_name);
+  const lastName2 = normalize(existingPatient.last_name);
+  
+  // Exact name match
+  if (firstName1 === firstName2 && lastName1 === lastName2 && firstName1 !== '' && lastName1 !== '') {
     score += 40;
-    matches.push('Full name match');
-  } else if (
-    normalize(patient.first_name) === normalize(existingPatient.first_name) &&
-    normalize(patient.last_name) === normalize(existingPatient.last_name) &&
-    normalize(patient.first_name) !== '' &&
-    normalize(patient.last_name) !== ''
-  ) {
-    score += 40;
-    matches.push('First & Last name match');
-  } else if (
-    normalize(patient.first_name) === normalize(existingPatient.first_name) &&
-    normalize(patient.first_name) !== ''
-  ) {
-    score += 15;
-    matches.push('First name match');
-  } else if (
-    normalize(patient.last_name) === normalize(existingPatient.last_name) &&
-    normalize(patient.last_name) !== ''
-  ) {
-    score += 15;
-    matches.push('Last name match');
+    matches.push('✓ Exact name match');
+    criteriaMatched.name = true;
+  } 
+  // Fuzzy name match
+  else if (firstName1 && firstName2 && lastName1 && lastName2) {
+    const firstNameSim = calculateSimilarity(firstName1, firstName2);
+    const lastNameSim = calculateSimilarity(lastName1, lastName2);
+    const avgNameSim = (firstNameSim + lastNameSim) / 2;
+    
+    if (avgNameSim >= threshold.name) {
+      const points = Math.round((avgNameSim / 100) * 35);
+      score += points;
+      matches.push(`Similar name (${Math.round(avgNameSim)}% match)`);
+      criteriaMatched.name = true;
+    } else if (firstNameSim >= threshold.name || lastNameSim >= threshold.name) {
+      score += 15;
+      matches.push('Partial name match');
+    }
   }
 
-  // Date of birth match
+  // DATE OF BIRTH MATCHING
   if (patient.date_of_birth && existingPatient.date_of_birth) {
     const normalizeDOB = (dob) => dob.replace(/\D/g, '');
-    if (normalizeDOB(patient.date_of_birth) === normalizeDOB(existingPatient.date_of_birth)) {
-      score += 35;
-      matches.push('DOB match');
-    }
-  }
-
-  // Medical record number match (exact or very similar)
-  if (patient.medical_record_number && existingPatient.medical_record_number) {
-    const normalizeMRN = (mrn) => String(mrn).trim().replace(/\s+/g, '');
-    const patientMRN = normalizeMRN(patient.medical_record_number);
-    const existingMRN = normalizeMRN(existingPatient.medical_record_number);
+    const dob1 = normalizeDOB(patient.date_of_birth);
+    const dob2 = normalizeDOB(existingPatient.date_of_birth);
     
-    if (patientMRN === existingMRN) {
-      score += 40;
-      matches.push('MRN exact match');
+    if (dob1 === dob2 && dob1.length >= 8) {
+      score += 35;
+      matches.push('✓ DOB exact match');
+      criteriaMatched.dob = true;
+    } else {
+      // Check for partial DOB match (year + month or year + day)
+      if (dob1.length >= 8 && dob2.length >= 8) {
+        const year1 = dob1.substring(0, 4);
+        const year2 = dob2.substring(0, 4);
+        const month1 = dob1.substring(4, 6);
+        const month2 = dob2.substring(4, 6);
+        const day1 = dob1.substring(6, 8);
+        const day2 = dob2.substring(6, 8);
+        
+        if (year1 === year2 && (month1 === month2 || day1 === day2)) {
+          score += 15;
+          matches.push('Partial DOB match');
+        }
+      }
     }
   }
 
-  // Phone match (if both have phone numbers)
+  // MEDICAL RECORD NUMBER MATCHING
+  if (patient.medical_record_number && existingPatient.medical_record_number) {
+    const normalizeMRN = (mrn) => String(mrn).trim().replace(/\s+/g, '').toUpperCase();
+    const mrn1 = normalizeMRN(patient.medical_record_number);
+    const mrn2 = normalizeMRN(existingPatient.medical_record_number);
+    
+    if (mrn1 === mrn2) {
+      score += 40;
+      matches.push('✓ MRN exact match');
+      criteriaMatched.mrn = true;
+    } else {
+      const mrnSim = calculateSimilarity(mrn1, mrn2);
+      if (mrnSim >= 80) {
+        score += 20;
+        matches.push(`Similar MRN (${Math.round(mrnSim)}%)`);
+      }
+    }
+  }
+
+  // PHONE NUMBER MATCHING (Enhanced)
   if (patient.phone && existingPatient.phone) {
     const normalizePhone = (phone) => String(phone).replace(/\D/g, '');
-    const patientPhone = normalizePhone(patient.phone);
-    const existingPhone = normalizePhone(existingPatient.phone);
+    const phone1 = normalizePhone(patient.phone);
+    const phone2 = normalizePhone(existingPatient.phone);
     
-    if (patientPhone === existingPhone && patientPhone.length >= 10) {
-      score += 15;
-      matches.push('Phone match');
+    if (phone1 === phone2 && phone1.length >= 10) {
+      score += 25;
+      matches.push('✓ Phone exact match');
+      criteriaMatched.phone = true;
+    } else if (phone1.length >= 10 && phone2.length >= 10) {
+      // Check last 7 digits (local number)
+      if (phone1.slice(-7) === phone2.slice(-7)) {
+        score += 15;
+        matches.push('Phone number match (local)');
+      } else if (phone1.slice(-4) === phone2.slice(-4)) {
+        score += 5;
+        matches.push('Phone last 4 match');
+      }
     }
   }
 
-  // Address similarity (partial match)
+  // ADDRESS MATCHING (Enhanced with street number extraction)
   if (patient.address && existingPatient.address) {
-    const patientAddr = normalize(patient.address);
-    const existingAddr = normalize(existingPatient.address);
+    const addr1 = normalize(patient.address);
+    const addr2 = normalize(existingPatient.address);
     
-    if (patientAddr === existingAddr) {
-      score += 10;
-      matches.push('Address match');
-    } else if (patientAddr.includes(existingAddr) || existingAddr.includes(patientAddr)) {
-      score += 5;
-      matches.push('Partial address match');
+    // Extract street numbers
+    const streetNum1 = patient.address.match(/^\d+/)?.[0];
+    const streetNum2 = existingPatient.address.match(/^\d+/)?.[0];
+    
+    // Exact address match
+    if (addr1 === addr2) {
+      score += 20;
+      matches.push('✓ Address exact match');
+      criteriaMatched.address = true;
+    } 
+    // Same street number (strong indicator)
+    else if (streetNum1 && streetNum1 === streetNum2 && streetNum1.length >= 1) {
+      const addrSim = calculateSimilarity(addr1, addr2);
+      if (addrSim >= threshold.address) {
+        score += 18;
+        matches.push('Address match (same street)');
+        criteriaMatched.address = true;
+      } else if (addrSim >= 60) {
+        score += 10;
+        matches.push('Partial address match');
+      }
+    }
+    // Fuzzy address match
+    else {
+      const addrSim = calculateSimilarity(addr1, addr2);
+      if (addrSim >= threshold.address) {
+        score += 15;
+        matches.push(`Similar address (${Math.round(addrSim)}%)`);
+        criteriaMatched.address = true;
+      } else if (addrSim >= 60) {
+        score += 5;
+        matches.push('Partial address match');
+      }
     }
   }
 
-  return { score, matches };
+  // EMAIL MATCHING
+  if (patient.email && existingPatient.email) {
+    const email1 = normalize(patient.email);
+    const email2 = normalize(existingPatient.email);
+    
+    if (email1 === email2) {
+      score += 30;
+      matches.push('✓ Email exact match');
+      criteriaMatched.email = true;
+    }
+  }
+
+  // EMERGENCY CONTACT MATCHING
+  if (patient.emergency_contact_phone && existingPatient.emergency_contact_phone) {
+    const normalizePhone = (phone) => String(phone).replace(/\D/g, '');
+    const ePhone1 = normalizePhone(patient.emergency_contact_phone);
+    const ePhone2 = normalizePhone(existingPatient.emergency_contact_phone);
+    
+    if (ePhone1 === ePhone2 && ePhone1.length >= 10) {
+      score += 15;
+      matches.push('Emergency contact match');
+    }
+  }
+
+  // Determine confidence level
+  let confidenceLevel = 'low';
+  const criteriaMet = Object.keys(criteriaMatched).length;
+  
+  if (score >= 90 || criteriaMet >= 3) {
+    confidenceLevel = 'very_high';
+  } else if (score >= 70 || criteriaMet >= 2) {
+    confidenceLevel = 'high';
+  } else if (score >= 50) {
+    confidenceLevel = 'medium';
+  }
+
+  return { score, matches, confidenceLevel, criteriaMatched };
 };
 
-const findDuplicates = (patient, existingPatients) => {
+const findDuplicates = (patient, existingPatients, sensitivity = 'medium', threshold = null) => {
   const potentialDuplicates = [];
+  
+  // Sensitivity-based thresholds
+  const defaultThresholds = {
+    strict: 60,
+    medium: 40,
+    loose: 25
+  };
+  
+  const minScore = threshold !== null ? threshold : defaultThresholds[sensitivity] || 40;
 
   existingPatients.forEach(existing => {
-    const { score, matches } = calculateMatchScore(patient, existing);
+    const { score, matches, confidenceLevel, criteriaMatched } = calculateMatchScore(patient, existing, sensitivity);
     
-    // Lower threshold to catch more potential duplicates - let user decide
-    if (score >= 30) {
+    if (score >= minScore) {
       potentialDuplicates.push({
         patient: existing,
         score,
-        matches
+        matches,
+        confidenceLevel,
+        criteriaMatched,
+        criteriaMet: Object.keys(criteriaMatched).length
       });
     }
   });
@@ -166,6 +314,9 @@ const comparePatients = (importedPatient, existingPatient) => {
 export default function DuplicateDetector({ patients, onResolve }) {
   const [resolution, setResolution] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sensitivity, setSensitivity] = useState('medium');
+  const [customThreshold, setCustomThreshold] = useState(40);
+  const [showSettings, setShowSettings] = useState(false);
 
   const { data: existingPatients = [], isLoading } = useQuery({
     queryKey: ['all-patients-duplicate-check'],
@@ -189,7 +340,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
 
   // Find duplicates for each patient and analyze differences
   const duplicateAnalysis = patients.map((patient, idx) => {
-    const duplicates = findDuplicates(patient, existingPatients).map(dup => ({
+    const duplicates = findDuplicates(patient, existingPatients, sensitivity, customThreshold).map(dup => ({
       ...dup,
       differences: comparePatients(patient, dup.patient)
     }));
@@ -261,8 +412,114 @@ export default function DuplicateDetector({ patients, onResolve }) {
     resolution[p.index] || p.duplicates.length === 0
   );
 
+  const getConfidenceBadgeColor = (level) => {
+    switch (level) {
+      case 'very_high':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      default:
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+    }
+  };
+
+  const getConfidenceLabel = (level) => {
+    switch (level) {
+      case 'very_high':
+        return 'Very High Confidence';
+      case 'high':
+        return 'High Confidence';
+      case 'medium':
+        return 'Medium Confidence';
+      default:
+        return 'Low Confidence';
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Sensitivity Configuration */}
+      <Card className="border-2 border-blue-300 bg-blue-50">
+        <CardHeader 
+          className="cursor-pointer hover:bg-blue-100 transition-colors"
+          onClick={() => setShowSettings(!showSettings)}
+        >
+          <CardTitle className="flex items-center justify-between text-blue-900">
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Duplicate Detection Settings
+            </div>
+            <Badge className="bg-blue-200 text-blue-900">
+              {sensitivity.charAt(0).toUpperCase() + sensitivity.slice(1)} Sensitivity
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        {showSettings && (
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Detection Sensitivity</Label>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <Button
+                  variant={sensitivity === 'strict' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => { setSensitivity('strict'); setCustomThreshold(60); }}
+                  className={sensitivity === 'strict' ? 'bg-blue-600' : ''}
+                >
+                  Strict
+                </Button>
+                <Button
+                  variant={sensitivity === 'medium' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => { setSensitivity('medium'); setCustomThreshold(40); }}
+                  className={sensitivity === 'medium' ? 'bg-blue-600' : ''}
+                >
+                  Medium
+                </Button>
+                <Button
+                  variant={sensitivity === 'loose' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => { setSensitivity('loose'); setCustomThreshold(25); }}
+                  className={sensitivity === 'loose' ? 'bg-blue-600' : ''}
+                >
+                  Loose
+                </Button>
+              </div>
+              <div className="text-xs text-gray-600 space-y-1 bg-white p-3 rounded-lg border">
+                <p><strong>Strict:</strong> Only very close matches (60%+ score) - fewer false positives</p>
+                <p><strong>Medium:</strong> Balanced approach (40%+ score) - recommended</p>
+                <p><strong>Loose:</strong> Catches more potential duplicates (25%+ score) - may include uncertain matches</p>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block">
+                Custom Threshold: {customThreshold}%
+              </Label>
+              <Slider
+                value={[customThreshold]}
+                onValueChange={(value) => setCustomThreshold(value[0])}
+                min={20}
+                max={80}
+                step={5}
+                className="mb-2"
+              />
+              <p className="text-xs text-gray-600">
+                Matches scoring {customThreshold}% or higher will be flagged as potential duplicates
+              </p>
+            </div>
+
+            <Alert className="bg-blue-100 border-blue-300">
+              <AlertDescription className="text-xs text-blue-900">
+                💡 <strong>Tip:</strong> Start with Medium sensitivity. If you're getting too many false positives, switch to Strict. 
+                If you're concerned about missing duplicates, use Loose.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        )}
+      </Card>
+
       <Card className="border-2 border-orange-300">
         <CardHeader className="bg-orange-50">
           <CardTitle className="flex items-center gap-2 text-orange-900">
@@ -333,7 +590,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                               <CardContent className="p-3">
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                                       <p className="font-medium text-gray-900">
                                         Existing: {dup.patient.first_name} {dup.patient.last_name}
                                       </p>
@@ -344,23 +601,35 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                       }>
                                         {dup.patient.status || 'unknown'}
                                       </Badge>
+                                      <Badge className={`text-xs border ${getConfidenceBadgeColor(dup.confidenceLevel)}`}>
+                                        {getConfidenceLabel(dup.confidenceLevel)}
+                                      </Badge>
                                     </div>
-                                    <div className="flex gap-1 mt-1 flex-wrap">
+                                    <div className="flex gap-1 mt-2 flex-wrap">
                                       {dup.matches.map((match, mIdx) => (
-                                        <Badge key={mIdx} className="bg-orange-100 text-orange-800 text-xs">
+                                        <Badge key={mIdx} className={`text-xs ${
+                                          match.includes('✓') ? 'bg-green-100 text-green-800 border-green-300' :
+                                          'bg-orange-100 text-orange-800 border-orange-300'
+                                        }`}>
                                           {match}
                                         </Badge>
                                       ))}
-                                      <Badge className={`text-xs ${
-                                        dup.score >= 80 ? 'bg-red-100 text-red-800' :
-                                        dup.score >= 60 ? 'bg-orange-100 text-orange-800' :
-                                        'bg-yellow-100 text-yellow-800'
+                                    </div>
+                                    <div className="flex gap-2 mt-2 flex-wrap">
+                                      <Badge className={`text-xs font-bold ${
+                                        dup.score >= 80 ? 'bg-red-500 text-white' :
+                                        dup.score >= 60 ? 'bg-orange-500 text-white' :
+                                        dup.score >= 40 ? 'bg-yellow-500 text-white' :
+                                        'bg-blue-500 text-white'
                                       }`}>
-                                        {dup.score}% match
+                                        Match Score: {Math.round(dup.score)}%
+                                      </Badge>
+                                      <Badge className="bg-purple-100 text-purple-800 border-purple-300 text-xs">
+                                        {dup.criteriaMet} of 6 criteria met
                                       </Badge>
                                       {dup.differences.length > 0 && (
-                                        <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                          {dup.differences.length} difference{dup.differences.length > 1 ? 's' : ''}
+                                        <Badge className="bg-blue-100 text-blue-800 border-blue-300 text-xs">
+                                          {dup.differences.length} field{dup.differences.length > 1 ? 's' : ''} to update
                                         </Badge>
                                       )}
                                     </div>
