@@ -117,6 +117,11 @@ export default function PatientDetails() {
     enabled: !!patientId,
   });
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   // Calculate critical indicators
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
   const hasHighAlerts = activeAlerts.some(a => a.severity === 'high');
@@ -259,6 +264,14 @@ export default function PatientDetails() {
                       <AlertTriangle className="w-3 h-3 mr-1" />
                       {highAlertCount} High Alert{highAlertCount !== 1 ? 's' : ''}
                     </Badge>
+                  )}
+                  {currentUser?.role === 'admin' && (
+                    <Link to={createPageUrl(`AuditTrail?entity=Patient&entityId=${patient.id}`)}>
+                      <Button variant="outline" size="sm">
+                        <Shield className="w-3 h-3 mr-1" />
+                        Audit Trail
+                      </Button>
+                    </Link>
                   )}
                   {patient.status !== 'discharged' && (
                     <DischargeSummaryGenerator 
