@@ -92,6 +92,7 @@ export default function Layout({ children, currentPageName }) {
   const adminItems = [
     { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
     { name: "Users & Settings", icon: Users, page: "UserManagement" },
+    { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
     { name: "Audit Trail", icon: Shield, page: "AuditTrail" },

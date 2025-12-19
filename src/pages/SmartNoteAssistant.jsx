@@ -76,6 +76,9 @@ import GuidelineComplianceChecker from "../components/guidelines/GuidelineCompli
 import PatientHistoryTimeline from "../components/patient/PatientHistoryTimeline";
 import { buildComprehensivePatientHistory } from "../components/utils/patientHistoryAnalyzer";
 import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
+import GuidedDocumentationWorkflow from "../components/smartNote/GuidedDocumentationWorkflow";
+import PatientHistoryAutoPopulator from "../components/smartNote/PatientHistoryAutoPopulator";
+import ConditionalAIAssistant from "../components/smartNote/ConditionalAIAssistant";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1070,6 +1073,18 @@ ${guidelinesContext}
             />
           )}
 
+          {/* Patient History Auto-Populator */}
+          {selectedPatientId && recentVisits.length > 0 && !enhancedNote && (
+            <PatientHistoryAutoPopulator
+              patient={selectedPatient}
+              recentVisits={recentVisits}
+              carePlans={carePlans}
+              diagnosis={finalDiagnosis}
+              visitType={visitType}
+              onPopulate={(text) => setRoughNote(prev => text + '\n\n' + prev)}
+            />
+          )}
+
           {/* Step 3: Notes */}
           <Card id="step-notes" className={`border-2 ${currentStep === 'notes' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
           <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-purple-50 to-pink-50">
@@ -1127,6 +1142,18 @@ ${guidelinesContext}
               </div>
               </CardContent>
               </Card>
+
+            {/* Conditional AI Assistant - Visit & Diagnosis Specific */}
+            {!enhancedNote && roughNote.length >= 100 && (
+              <ConditionalAIAssistant
+                visitType={visitType}
+                diagnosis={finalDiagnosis}
+                roughNote={roughNote}
+                patientData={selectedPatient}
+                vitalSigns={vitalSigns}
+                onSuggestion={(text) => setRoughNote(prev => prev + '\n\n' + text)}
+              />
+            )}
 
             {/* Unified AI Suggestions - Compliance + Quality */}
             {!enhancedNote && roughNote.length >= 100 && (
@@ -1403,6 +1430,15 @@ ${guidelinesContext}
 
         {/* Dynamic AI Sidebar */}
         <div className="space-y-4 md:space-y-6">
+          {/* Guided Documentation Workflow - Visit Type Checklist */}
+          {selectedPatientId && visitType && (
+            <GuidedDocumentationWorkflow
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              careType={selectedPatient?.care_type || "home_health"}
+            />
+          )}
+
           <DynamicAISidebar
             currentStep={currentStep}
             hasPatient={!!selectedPatientId}
