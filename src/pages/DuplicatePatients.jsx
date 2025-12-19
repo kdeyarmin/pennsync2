@@ -16,38 +16,132 @@ import {
   Search
 } from "lucide-react";
 
+// Levenshtein distance for fuzzy matching
+const levenshteinDistance = (str1, str2) => {
+  const matrix = [];
+  for (let i = 0; i <= str2.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= str1.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+      }
+    }
+  }
+  return matrix[str2.length][str1.length];
+};
+
+const calculateSimilarity = (str1, str2) => {
+  if (!str1 || !str2) return 0;
+  const distance = levenshteinDistance(str1, str2);
+  const maxLength = Math.max(str1.length, str2.length);
+  return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
+};
+
 const calculateMatchScore = (p1, p2) => {
   let score = 0;
   let matches = [];
 
   const name1 = `${p1.first_name} ${p1.last_name}`.toLowerCase().trim();
   const name2 = `${p2.first_name} ${p2.last_name}`.toLowerCase().trim();
+  const firstName1 = p1.first_name?.toLowerCase().trim() || '';
+  const firstName2 = p2.first_name?.toLowerCase().trim() || '';
+  const lastName1 = p1.last_name?.toLowerCase().trim() || '';
+  const lastName2 = p2.last_name?.toLowerCase().trim() || '';
 
+  // Exact full name match
   if (name1 === name2) {
     score += 40;
     matches.push('Exact name match');
-  } else if (
-    p1.first_name?.toLowerCase() === p2.first_name?.toLowerCase() ||
-    p1.last_name?.toLowerCase() === p2.last_name?.toLowerCase()
-  ) {
-    score += 20;
-    matches.push('Partial name match');
+  } else {
+    // Fuzzy full name matching (lowered from 85% to 75%)
+    const fullNameSimilarity = calculateSimilarity(name1, name2);
+    if (fullNameSimilarity >= 90) {
+      score += 35;
+      matches.push('Very similar name');
+    } else if (fullNameSimilarity >= 75) {
+      score += 28;
+      matches.push('Similar name');
+    }
+    
+    // Component matching
+    const firstSimilarity = calculateSimilarity(firstName1, firstName2);
+    const lastSimilarity = calculateSimilarity(lastName1, lastName2);
+    
+    if (firstSimilarity >= 85 && lastSimilarity >= 85) {
+      score += 30;
+      matches.push('Both names similar');
+    } else if (firstSimilarity === 100 || lastSimilarity === 100) {
+      score += 18;
+      matches.push('Partial name match');
+    }
   }
 
-  if (p1.date_of_birth && p2.date_of_birth && p1.date_of_birth === p2.date_of_birth) {
-    score += 30;
-    matches.push('DOB match');
+  // DOB matching with typo detection
+  if (p1.date_of_birth && p2.date_of_birth) {
+    const dob1 = p1.date_of_birth.replace(/\D/g, '');
+    const dob2 = p2.date_of_birth.replace(/\D/g, '');
+    
+    if (dob1 === dob2) {
+      score += 30;
+      matches.push('DOB match');
+    } else if (dob1 && dob2) {
+      // Check for swapped month/day
+      if (dob1.substring(0, 4) === dob2.substring(0, 4)) {
+        const similarity = calculateSimilarity(dob1, dob2);
+        if (similarity >= 75) {
+          score += 20;
+          matches.push('DOB similar (typo)');
+        }
+      }
+    }
   }
 
-  if (p1.medical_record_number && p2.medical_record_number && 
-      p1.medical_record_number === p2.medical_record_number) {
-    score += 30;
-    matches.push('MRN match');
+  // MRN matching
+  if (p1.medical_record_number && p2.medical_record_number) {
+    const mrn1 = p1.medical_record_number.toString().trim();
+    const mrn2 = p2.medical_record_number.toString().trim();
+    
+    if (mrn1 === mrn2) {
+      score += 30;
+      matches.push('MRN match');
+    } else {
+      const mrnSim = calculateSimilarity(mrn1, mrn2);
+      if (mrnSim >= 85) {
+        score += 22;
+        matches.push('MRN similar');
+      }
+    }
   }
 
-  if (p1.phone && p2.phone && p1.phone === p2.phone) {
-    score += 10;
-    matches.push('Phone match');
+  // Phone matching
+  if (p1.phone && p2.phone) {
+    const phone1 = p1.phone.replace(/\D/g, '');
+    const phone2 = p2.phone.replace(/\D/g, '');
+    if (phone1 === phone2 && phone1.length >= 10) {
+      score += 10;
+      matches.push('Phone match');
+    } else if (phone1.slice(-4) === phone2.slice(-4) && phone1.length >= 10) {
+      score += 5;
+      matches.push('Phone last 4 match');
+    }
+  }
+
+  // Address matching
+  if (p1.address && p2.address) {
+    const addrSim = calculateSimilarity(
+      p1.address.toLowerCase().trim(),
+      p2.address.toLowerCase().trim()
+    );
+    if (addrSim >= 90) {
+      score += 12;
+      matches.push('Address match');
+    } else if (addrSim >= 75) {
+      score += 7;
+      matches.push('Address similar');
+    }
   }
 
   return { score, matches };
@@ -90,7 +184,8 @@ export default function DuplicatePatients() {
         
         const { score, matches } = calculateMatchScore(patient, other);
         
-        if (score >= 40) {
+        // Lowered threshold from 40 to 35 to catch more duplicates
+        if (score >= 35) {
           duplicates.push({ patient: other, score, matches });
           processed.add(other.id);
         }

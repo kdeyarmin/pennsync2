@@ -1,5 +1,53 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
+// Common nicknames map
+const NICKNAMES = {
+  'william': ['bill', 'will', 'willie', 'billy'],
+  'robert': ['bob', 'rob', 'bobby', 'robbie'],
+  'richard': ['dick', 'rick', 'ricky', 'rich'],
+  'james': ['jim', 'jimmy', 'jamie'],
+  'john': ['jack', 'johnny'],
+  'michael': ['mike', 'mikey', 'mick'],
+  'thomas': ['tom', 'tommy'],
+  'joseph': ['joe', 'joey'],
+  'charles': ['charlie', 'chuck'],
+  'christopher': ['chris'],
+  'daniel': ['dan', 'danny'],
+  'matthew': ['matt'],
+  'anthony': ['tony'],
+  'donald': ['don', 'donnie'],
+  'kenneth': ['ken', 'kenny'],
+  'steven': ['steve'],
+  'edward': ['ed', 'eddie', 'ted'],
+  'timothy': ['tim', 'timmy'],
+  'elizabeth': ['liz', 'beth', 'betty', 'libby'],
+  'margaret': ['maggie', 'meg', 'peggy'],
+  'patricia': ['pat', 'patty', 'tricia'],
+  'jennifer': ['jen', 'jenny'],
+  'susan': ['sue', 'suzy'],
+  'deborah': ['deb', 'debbie'],
+  'catherine': ['cathy', 'kate', 'katie'],
+  'kimberly': ['kim'],
+  'rebecca': ['becky', 'becca'],
+  'dorothy': ['dot', 'dottie']
+};
+
+// Check if two names are nicknames of each other
+const areNicknames = (name1, name2) => {
+  const n1 = name1?.toLowerCase().trim();
+  const n2 = name2?.toLowerCase().trim();
+  if (!n1 || !n2 || n1 === n2) return false;
+
+  for (const [formal, nicks] of Object.entries(NICKNAMES)) {
+    if ((n1 === formal && nicks.includes(n2)) || 
+        (n2 === formal && nicks.includes(n1)) ||
+        (nicks.includes(n1) && nicks.includes(n2))) {
+      return true;
+    }
+  }
+  return false;
+};
+
 // Levenshtein distance for fuzzy string matching
 const levenshteinDistance = (str1, str2) => {
   const matrix = [];
@@ -80,14 +128,22 @@ const calculateMatchScore = (p1, p2) => {
     score += 40;
     matches.push('name_exact');
   } 
-  // Fuzzy match on full name (85% similarity threshold)
+  // Nickname matching
+  else if (areNicknames(firstName1, firstName2) && lastNameSimilarity >= 95) {
+    score += 38;
+    matches.push('nickname_match');
+  }
+  // Fuzzy match on full name (lowered threshold to 80%)
   else {
     const fullNameSimilarity = calculateSimilarity(fullName1, fullName2);
-    if (fullNameSimilarity >= 85) {
+    if (fullNameSimilarity >= 90) {
       score += 35;
+      matches.push('name_fuzzy_very_high');
+    } else if (fullNameSimilarity >= 80) {
+      score += 30;
       matches.push('name_fuzzy_high');
     } else if (fullNameSimilarity >= 70) {
-      score += 25;
+      score += 22;
       matches.push('name_fuzzy_medium');
     }
     
@@ -98,9 +154,21 @@ const calculateMatchScore = (p1, p2) => {
     if (firstNameSimilarity >= 90 && lastNameSimilarity >= 90) {
       score += 30;
       matches.push('name_components_similar');
+    } else if (firstNameSimilarity >= 85 || lastNameSimilarity >= 95) {
+      score += 20;
+      matches.push('name_partial_strong');
     } else if (firstNameSimilarity === 100 || lastNameSimilarity === 100) {
       score += 15;
       matches.push('name_partial');
+    }
+    
+    // Check for initials vs full name (e.g., "J. Smith" vs "John Smith")
+    if (firstName1.length === 1 && firstName2.startsWith(firstName1) && lastNameSimilarity >= 95) {
+      score += 25;
+      matches.push('initial_vs_full_name');
+    } else if (firstName2.length === 1 && firstName1.startsWith(firstName2) && lastNameSimilarity >= 95) {
+      score += 25;
+      matches.push('initial_vs_full_name');
     }
   }
 
@@ -301,7 +369,8 @@ Deno.serve(async (req) => {
             if (processed.has(unprocessed[j].id)) continue;
 
             const { score, matches } = calculateMatchScore(unprocessed[i], unprocessed[j]);
-            if (score >= 60) {
+            // Lowered threshold from 60 to 50 to catch more potential duplicates
+            if (score >= 50) {
               duplicates.push({ patient: unprocessed[j], score, matches });
               processed.add(unprocessed[j].id);
             }
