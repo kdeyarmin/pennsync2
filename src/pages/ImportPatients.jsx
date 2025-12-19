@@ -155,37 +155,45 @@ export default function ImportPatients() {
     mutationFn: async (patients) => {
       const results = { success: 0, failed: 0, errors: [], failedRecords: [] };
       
-      for (let i = 0; i < patients.length; i++) {
-        try {
-          await base44.entities.Patient.create(patients[i]);
-          results.success++;
-        } catch (error) {
-          results.failed++;
-          const errorMsg = error.message || 'Unknown error occurred';
-          let suggestion = 'Review and correct the data before re-importing.';
-          
-          if (errorMsg.toLowerCase().includes('duplicate')) {
-            suggestion = 'This patient may already exist. Check for duplicates or update existing record instead of creating new.';
-          } else if (errorMsg.toLowerCase().includes('required')) {
-            suggestion = 'Ensure all required fields are provided: First Name and Last Name are mandatory.';
-          } else if (errorMsg.toLowerCase().includes('invalid')) {
-            suggestion = 'Check that all field values match the expected format (e.g., dates, emails, phone numbers).';
+      try {
+        // Use bulk create to avoid rate limiting
+        const createdPatients = await base44.entities.Patient.bulkCreate(patients);
+        results.success = createdPatients.length;
+        setImportProgress(100);
+      } catch (error) {
+        // If bulk create fails, fall back to individual creates with error tracking
+        for (let i = 0; i < patients.length; i++) {
+          try {
+            await base44.entities.Patient.create(patients[i]);
+            results.success++;
+          } catch (error) {
+            results.failed++;
+            const errorMsg = error.message || 'Unknown error occurred';
+            let suggestion = 'Review and correct the data before re-importing.';
+            
+            if (errorMsg.toLowerCase().includes('duplicate')) {
+              suggestion = 'This patient may already exist. Check for duplicates or update existing record instead of creating new.';
+            } else if (errorMsg.toLowerCase().includes('required')) {
+              suggestion = 'Ensure all required fields are provided: First Name and Last Name are mandatory.';
+            } else if (errorMsg.toLowerCase().includes('invalid')) {
+              suggestion = 'Check that all field values match the expected format (e.g., dates, emails, phone numbers).';
+            }
+            
+            results.errors.push({
+              row: i + 1,
+              patient: `${patients[i].first_name || 'Unknown'} ${patients[i].last_name || 'Patient'}`,
+              error: errorMsg,
+              suggestion: suggestion
+            });
+            results.failedRecords.push({
+              ...patients[i],
+              error_description: errorMsg,
+              error_suggestion: suggestion,
+              original_row: i + 1
+            });
           }
-          
-          results.errors.push({
-            row: i + 1,
-            patient: `${patients[i].first_name || 'Unknown'} ${patients[i].last_name || 'Patient'}`,
-            error: errorMsg,
-            suggestion: suggestion
-          });
-          results.failedRecords.push({
-            ...patients[i],
-            error_description: errorMsg,
-            error_suggestion: suggestion,
-            original_row: i + 1
-          });
+          setImportProgress(Math.round(((i + 1) / patients.length) * 100));
         }
-        setImportProgress(Math.round(((i + 1) / patients.length) * 100));
       }
       
       return results;
