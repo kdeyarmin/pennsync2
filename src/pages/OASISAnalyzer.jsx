@@ -74,7 +74,9 @@ import { logActivity, ActivityActions } from "../components/utils/activityLogger
 import InlineDocumentationAssistant from "../components/oasis/InlineDocumentationAssistant";
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
+import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Users as UsersIcon, BarChart3 } from "lucide-react";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -1968,14 +1970,10 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
           {/* Key Takeaways Summary - Most Important */}
           <KeyTakeawaysSummary analysisResults={analysisResults} revenueData={null} />
 
-          {/* Automatic Document Review for OASIS */}
-          <AutomaticDocumentReviewer
-            documentType="oasis_assessment"
-            documentContent={JSON.stringify(pdgmData, null, 2)}
-            patientData={patients.find(p => p.id === selectedPatientId)}
-            diagnosis={pdgmData?.primary_diagnosis}
+          {/* AI-Powered Automatic Document Review */}
+          <AIDocumentReviewer
+            oasisData={pdgmData}
             autoReview={true}
-            compact={false}
           />
 
           {/* Score Overview */}
