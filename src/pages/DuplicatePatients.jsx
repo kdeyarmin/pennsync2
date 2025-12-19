@@ -16,6 +16,34 @@ import {
   Search
 } from "lucide-react";
 
+// Soundex algorithm for phonetic matching
+const soundex = (str) => {
+  if (!str) return '';
+  str = str.toUpperCase().replace(/[^A-Z]/g, '');
+  if (str.length === 0) return '';
+  
+  const firstLetter = str[0];
+  const codes = {
+    'BFPV': '1', 'CGJKQSXZ': '2', 'DT': '3',
+    'L': '4', 'MN': '5', 'R': '6'
+  };
+  
+  let soundexStr = firstLetter;
+  for (let i = 1; i < str.length; i++) {
+    for (const key in codes) {
+      if (key.includes(str[i])) {
+        const code = codes[key];
+        if (code !== soundexStr[soundexStr.length - 1]) {
+          soundexStr += code;
+        }
+        break;
+      }
+    }
+  }
+  
+  return (soundexStr + '0000').substring(0, 4);
+};
+
 // Levenshtein distance for fuzzy matching
 const levenshteinDistance = (str1, str2) => {
   const matrix = [];
@@ -83,6 +111,15 @@ const calculateMatchScore = (p1, p2) => {
   const lastName1 = p1.last_name?.toLowerCase().trim() || '';
   const lastName2 = p2.last_name?.toLowerCase().trim() || '';
 
+  // Phonetic matching using Soundex
+  const firstSoundex1 = soundex(p1.first_name || '');
+  const firstSoundex2 = soundex(p2.first_name || '');
+  const lastSoundex1 = soundex(p1.last_name || '');
+  const lastSoundex2 = soundex(p2.last_name || '');
+  
+  const phoneticMatch = firstSoundex1 === firstSoundex2 && lastSoundex1 === lastSoundex2 && 
+                        firstSoundex1 !== '' && lastSoundex1 !== '';
+
   // Exact full name match
   if (name1 === name2) {
     score += 50;
@@ -95,6 +132,10 @@ const calculateMatchScore = (p1, p2) => {
       score += 50;
       matches.push('Exact first and last name');
     }
+  } else if (phoneticMatch) {
+    // Names sound the same (phonetic match)
+    score += 40;
+    matches.push('Names sound alike (phonetic)');
   } else {
     // Fuzzy full name matching
     const fullNameSimilarity = calculateSimilarity(name1, name2);
@@ -156,51 +197,138 @@ const calculateMatchScore = (p1, p2) => {
     }
   }
 
-  // Phone matching
+  // Enhanced phone matching
   if (p1.phone && p2.phone) {
     const phone1 = p1.phone.replace(/\D/g, '');
     const phone2 = p2.phone.replace(/\D/g, '');
+    
     if (phone1 === phone2 && phone1.length >= 10) {
-      score += 10;
-      matches.push('Phone match');
-    } else if (phone1.slice(-4) === phone2.slice(-4) && phone1.length >= 10) {
-      score += 5;
-      matches.push('Phone last 4 match');
+      score += 20;
+      matches.push('✓ Phone exact match');
+    } else if (phone1.length >= 10 && phone2.length >= 10) {
+      // Last 7 digits match (local number)
+      if (phone1.slice(-7) === phone2.slice(-7)) {
+        score += 15;
+        matches.push('Phone number match (local)');
+      } else if (phone1.slice(-4) === phone2.slice(-4)) {
+        score += 8;
+        matches.push('Phone last 4 match');
+      }
+    }
+  }
+  
+  // Emergency contact phone matching
+  if (p1.emergency_contact_phone && p2.emergency_contact_phone) {
+    const ePhone1 = p1.emergency_contact_phone.replace(/\D/g, '');
+    const ePhone2 = p2.emergency_contact_phone.replace(/\D/g, '');
+    
+    if (ePhone1 === ePhone2 && ePhone1.length >= 10) {
+      score += 12;
+      matches.push('Emergency contact phone match');
     }
   }
 
-  // Enhanced address matching with normalization
+  // Enhanced address matching with normalization and street number
   if (p1.address && p2.address) {
     const addr1 = p1.address.toLowerCase().trim();
     const addr2 = p2.address.toLowerCase().trim();
-    const addrSim = calculateSimilarity(addr1, addr2);
     
-    // Try normalized addresses
+    // Extract street numbers
+    const streetNum1 = p1.address.match(/^\d+/)?.[0];
+    const streetNum2 = p2.address.match(/^\d+/)?.[0];
+    
+    // Extract zip codes
+    const zip1 = p1.address.match(/\b\d{5}\b/)?.[0];
+    const zip2 = p2.address.match(/\b\d{5}\b/)?.[0];
+    
+    // Normalized addresses
     const normalizedAddr1 = normalizeAddress(p1.address);
     const normalizedAddr2 = normalizeAddress(p2.address);
-    const normalizedSim = calculateSimilarity(normalizedAddr1, normalizedAddr2);
     
+    const addrSim = calculateSimilarity(addr1, addr2);
+    const normalizedSim = calculateSimilarity(normalizedAddr1, normalizedAddr2);
     const bestSim = Math.max(addrSim, normalizedSim);
     
-    if (bestSim >= 90) {
+    // Street number and name match (strongest signal)
+    if (streetNum1 && streetNum1 === streetNum2 && streetNum1.length >= 1) {
+      const streetName1 = normalizedAddr1.split(/\s+/)[1];
+      const streetName2 = normalizedAddr2.split(/\s+/)[1];
+      
+      if (streetName1 && streetName2 && calculateSimilarity(streetName1, streetName2) >= 85) {
+        score += 18;
+        matches.push('✓ Street address match');
+      } else if (streetName1 && streetName2) {
+        score += 12;
+        matches.push('Street number match');
+      }
+    } else if (bestSim >= 90) {
+      score += 15;
+      matches.push('✓ Address exact match');
+    } else if (bestSim >= 80) {
       score += 12;
-      matches.push('Address match');
-    } else if (bestSim >= 75) {
+      matches.push('Address very similar');
+    } else if (bestSim >= 70) {
       score += 8;
       matches.push('Address similar');
     } else if (bestSim >= 60) {
-      score += 4;
+      score += 5;
       matches.push('Address partial match');
+    }
+    
+    // Zip code match (additional signal)
+    if (zip1 && zip1 === zip2) {
+      score += 6;
+      matches.push('Same zip code');
     }
   }
 
-  // Middle name handling
+  // Enhanced middle name handling
   if (p1.middle_name && p2.middle_name) {
     const middle1 = p1.middle_name.toLowerCase().trim();
     const middle2 = p2.middle_name.toLowerCase().trim();
-    if (middle1 === middle2 || middle1.charAt(0) === middle2.charAt(0)) {
+    
+    if (middle1 === middle2) {
+      score += 8;
+      matches.push('Middle name match');
+    } else if (middle1.charAt(0) === middle2.charAt(0)) {
       score += 5;
-      matches.push('Middle name/initial match');
+      matches.push('Middle initial match');
+    }
+  }
+  
+  // Email matching (strong identifier)
+  if (p1.email && p2.email) {
+    const email1 = p1.email.toLowerCase().trim();
+    const email2 = p2.email.toLowerCase().trim();
+    
+    if (email1 === email2) {
+      score += 25;
+      matches.push('✓ Email match');
+    }
+  }
+  
+  // Caregiver information matching
+  if (p1.caregiver_email && p2.caregiver_email) {
+    if (p1.caregiver_email.toLowerCase() === p2.caregiver_email.toLowerCase()) {
+      score += 10;
+      matches.push('Caregiver email match');
+    }
+  }
+  
+  if (p1.caregiver_phone && p2.caregiver_phone) {
+    const cPhone1 = p1.caregiver_phone.replace(/\D/g, '');
+    const cPhone2 = p2.caregiver_phone.replace(/\D/g, '');
+    if (cPhone1 === cPhone2 && cPhone1.length >= 10) {
+      score += 10;
+      matches.push('Caregiver phone match');
+    }
+  }
+  
+  // Physician information matching
+  if (p1.physician_email && p2.physician_email) {
+    if (p1.physician_email.toLowerCase() === p2.physician_email.toLowerCase()) {
+      score += 8;
+      matches.push('Physician email match');
     }
   }
 
@@ -317,9 +445,28 @@ export default function DuplicatePatients() {
         const totalScore = score + relatedScore;
         const allMatches = [...matches, ...relatedMatches];
         
-        // Lowered threshold to 25 to catch more potential duplicates
-        if (totalScore >= 25) {
-          duplicates.push({ patient: other, score: totalScore, matches: allMatches });
+        // Multi-tier thresholds for better duplicate detection
+        // High confidence: 70+, Medium: 50-69, Low: 35-49, Review needed: 35+
+        const matchThreshold = 35; // Increased from 25 for better precision
+        
+        // Additional rules for edge cases
+        const hasStrongIdentifier = matches.some(m => 
+          m.includes('✓') || 
+          m.includes('Email match') || 
+          m.includes('DOB match') ||
+          m.includes('MRN match')
+        );
+        
+        // If we have a strong identifier, lower threshold slightly
+        const effectiveThreshold = hasStrongIdentifier ? 30 : matchThreshold;
+        
+        if (totalScore >= effectiveThreshold) {
+          duplicates.push({ 
+            patient: other, 
+            score: totalScore, 
+            matches: allMatches,
+            confidenceLevel: totalScore >= 70 ? 'high' : totalScore >= 50 ? 'medium' : 'low'
+          });
           processed.add(other.id);
         }
       });
@@ -542,15 +689,24 @@ export default function DuplicatePatients() {
                               <p>Phone: {dup.patient.phone || 'N/A'}</p>
                               <p>Diagnosis: {dup.patient.primary_diagnosis || 'N/A'}</p>
                             </div>
-                            <div className="flex gap-1 mt-2">
-                              {dup.matches.map((match, mIdx) => (
-                                <Badge key={mIdx} className="bg-orange-100 text-orange-800 text-xs">
+                            <div className="flex gap-1 mt-2 flex-wrap">
+                              <Badge className={
+                                dup.confidenceLevel === 'high' ? 'bg-red-100 text-red-800' :
+                                dup.confidenceLevel === 'medium' ? 'bg-orange-100 text-orange-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }>
+                                {dup.score}% • {dup.confidenceLevel} confidence
+                              </Badge>
+                              {dup.matches.slice(0, 4).map((match, mIdx) => (
+                                <Badge key={mIdx} variant="outline" className="text-xs">
                                   {match}
                                 </Badge>
                               ))}
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                {dup.score}% match
-                              </Badge>
+                              {dup.matches.length > 4 && (
+                                <Badge variant="outline" className="text-xs text-gray-500">
+                                  +{dup.matches.length - 4} more
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-col gap-2 ml-4">
