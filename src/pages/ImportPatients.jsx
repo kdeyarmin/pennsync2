@@ -449,15 +449,17 @@ export default function ImportPatients() {
             
             // Handle special field mappings
             if (fieldKey === 'insurance_primary_provider') {
-              patient.insurance_primary = { provider: value };
+              if (!patient.insurance_primary) patient.insurance_primary = {};
+              patient.insurance_primary.provider = value;
             } else if (fieldKey === 'insurance_primary_policy') {
               if (!patient.insurance_primary) patient.insurance_primary = {};
               patient.insurance_primary.policy_number = value;
             } else if (fieldKey === 'insurance_secondary_provider') {
-              patient.insurance_secondary = { provider: value };
+              if (!patient.insurance_secondary) patient.insurance_secondary = {};
+              patient.insurance_secondary.provider = value;
             } else if (fieldKey === 'secondary_diagnoses') {
               // Parse comma-separated secondary diagnoses into array
-              patient.secondary_diagnoses = value.split(',').map(d => d.trim()).filter(d => d);
+              patient.secondary_diagnoses = value.split(/[,;]/).map(d => d.trim()).filter(d => d);
             } else if (fieldKey === 'icd_code') {
               // Store ICD code but don't overwrite primary_diagnosis
               patient.icd_code = value;
