@@ -173,7 +173,10 @@ Deno.serve(async (req) => {
             patient.last_name = nameParts.slice(1).join(' ');
           } else {
             patient.first_name = value;
+            if (!patient.last_name) patient.last_name = 'Unknown';
           }
+        } else if (fieldKey === 'last_name') {
+          patient.last_name = value;
         } else if (fieldKey === 'care_type') {
           const valueLower = value.toLowerCase();
           if (valueLower.includes('home') || valueLower.includes('health')) {
@@ -225,15 +228,20 @@ Deno.serve(async (req) => {
         }
       });
 
-      // Validate required fields
-      if (!patient.first_name || !patient.last_name) {
+      // Ensure we have at least first_name
+      if (!patient.first_name) {
         results.failed++;
         results.errors.push({
           row: i + 1,
-          patient: row[columnMapping['first_name']] || `Row ${i + 1}`,
-          error: 'Missing required fields: first_name or last_name'
+          patient: `Row ${i + 1}`,
+          error: 'Missing required field: first_name'
         });
         continue;
+      }
+      
+      // Set default last name if missing
+      if (!patient.last_name) {
+        patient.last_name = 'Unknown';
       }
 
       try {
