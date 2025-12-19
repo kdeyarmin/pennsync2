@@ -227,20 +227,15 @@ Deno.serve(async (req) => {
         }
       });
 
-      // Ensure we have at least first_name
-      if (!patient.first_name) {
+      // Ensure we have required fields
+      if (!patient.first_name || !patient.last_name) {
         results.failed++;
         results.errors.push({
           row: i + 1,
           patient: `Row ${i + 1}`,
-          error: 'Missing required field: first_name'
+          error: `Missing required field(s): ${!patient.first_name ? 'first_name' : ''} ${!patient.last_name ? 'last_name' : ''}`.trim()
         });
         continue;
-      }
-      
-      // Set default last name if missing
-      if (!patient.last_name) {
-        patient.last_name = 'Unknown';
       }
 
       try {
