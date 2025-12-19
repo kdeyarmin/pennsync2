@@ -75,6 +75,7 @@ import GuidelineReferencePanel from "../components/guidelines/GuidelineReference
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
 import PatientHistoryTimeline from "../components/patient/PatientHistoryTimeline";
 import { buildComprehensivePatientHistory } from "../components/utils/patientHistoryAnalyzer";
+import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -310,6 +311,8 @@ export default function SmartNoteAssistant() {
   const [isAnalyzingCompliance, setIsAnalyzingCompliance] = useState(false);
   const [interimVoiceText, setInterimVoiceText] = useState('');
   const [comprehensiveContext, setComprehensiveContext] = useState(null);
+  const [oasisAutomationResults, setOasisAutomationResults] = useState(null);
+  const [isRunningOASISAutomation, setIsRunningOASISAutomation] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -689,6 +692,115 @@ ${guidelinesContext}
 
   const handleInsertPhrase = (text) => {
     setRoughNote(prev => prev ? prev + ' ' + text : text);
+  };
+
+  const handleRunOASISAutomation = async () => {
+    if (!enhancedNote || !selectedPatientId) return;
+    
+    setIsRunningOASISAutomation(true);
+    try {
+      const response = await base44.functions.invoke('mapNoteToOASIS', {
+        enhancedNote,
+        patientId: selectedPatientId,
+        visitType,
+        diagnosis: finalDiagnosis,
+        vitalSigns
+      });
+
+      setOasisAutomationResults(response);
+      setActiveAccordion('oasis'); // Auto-expand the OASIS section
+
+      logActivity(ActivityActions.AI_FEATURE_USED, {
+        feature: 'oasis_automation',
+        patient_id: selectedPatientId,
+        items_mapped: response.overall_summary?.total_items_mapped || 0,
+        page: 'SmartNoteAssistant'
+      });
+    } catch (error) {
+      console.error('Error running OASIS automation:', error);
+      alert('Failed to run OASIS automation. Please try again.');
+    }
+    setIsRunningOASISAutomation(false);
+  };
+
+  const handleApplyOASISSuggestion = async (suggestion) => {
+    try {
+      // Update or create OASIS record with AI suggestion
+      const oasisData = {
+        patient_id: selectedPatientId,
+        extracted_data: {
+          [suggestion.item_number]: {
+            value: suggestion.suggested_value,
+            label: suggestion.suggested_value_label,
+            confidence: suggestion.confidence_score,
+            source: 'ai_automation',
+            applied_by: currentUser?.email,
+            applied_at: new Date().toISOString()
+          }
+        }
+      };
+
+      // If OASIS exists, update it; otherwise create new
+      if (patientOASIS?.length > 0) {
+        const existing = patientOASIS[0];
+        const updatedData = {
+          ...existing.extracted_data,
+          ...oasisData.extracted_data
+        };
+        
+        await base44.entities.OASISUpload.update(existing.id, {
+          extracted_data: updatedData
+        });
+      } else {
+        await base44.entities.OASISUpload.create(oasisData);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['patientOASISForNotes', selectedPatientId] });
+    } catch (error) {
+      console.error('Error applying OASIS suggestion:', error);
+      alert('Failed to apply OASIS suggestion. Please try again.');
+    }
+  };
+
+  const handleApplyAllOASIS = async (suggestions) => {
+    try {
+      const extractedData = {};
+      
+      suggestions.forEach(s => {
+        extractedData[s.item_number] = {
+          value: s.suggested_value,
+          label: s.suggested_value_label,
+          confidence: s.confidence_score,
+          source: 'ai_automation_bulk',
+          applied_by: currentUser?.email,
+          applied_at: new Date().toISOString()
+        };
+      });
+
+      const oasisData = {
+        patient_id: selectedPatientId,
+        extracted_data: extractedData
+      };
+
+      if (patientOASIS?.length > 0) {
+        const existing = patientOASIS[0];
+        const updatedData = {
+          ...existing.extracted_data,
+          ...extractedData
+        };
+        
+        await base44.entities.OASISUpload.update(existing.id, {
+          extracted_data: updatedData
+        });
+      } else {
+        await base44.entities.OASISUpload.create(oasisData);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['patientOASISForNotes', selectedPatientId] });
+    } catch (error) {
+      console.error('Error applying all OASIS suggestions:', error);
+      alert('Failed to apply OASIS suggestions. Please try again.');
+    }
   };
 
   const handleSaveNote = async () => {
@@ -1182,12 +1294,66 @@ ${guidelinesContext}
                 onStartNew={handleClearNote}
                 complianceScore={enhancedNoteCompliance?.overall_score}
               />
+
+              {/* OASIS Automation Trigger */}
+              {patientOASIS?.length > 0 && (
+                <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <p className="text-sm font-medium">AI OASIS Automation Available</p>
+                          <p className="text-xs text-gray-600">Automatically map note to OASIS fields</p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={handleRunOASISAutomation}
+                        disabled={isRunningOASISAutomation}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto"
+                      >
+                        {isRunningOASISAutomation ? (
+                          <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Analyzing...</>
+                        ) : (
+                          <><Sparkles className="w-4 h-4 mr-2" /> Run OASIS Automation</>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
 
           {/* Additional Tools */}
           {enhancedNote && selectedPatientId && (
             <Accordion type="single" collapsible value={activeAccordion} onValueChange={setActiveAccordion}>
+              <AccordionItem value="oasis">
+                <AccordionTrigger className="text-sm">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" /> AI OASIS Automation
+                    {oasisAutomationResults && (
+                      <Badge className="ml-2 bg-purple-100 text-purple-800">
+                        {oasisAutomationResults.overall_summary?.total_items_mapped || 0} items
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <OASISAutomationPanel
+                    oasisSuggestions={oasisAutomationResults?.oasis_suggestions || []}
+                    overallSummary={oasisAutomationResults?.overall_summary || {}}
+                    missingCriticalInfo={oasisAutomationResults?.missing_critical_info || []}
+                    onApplySuggestion={handleApplyOASISSuggestion}
+                    onApplyAll={handleApplyAllOASIS}
+                    onReviewFlag={(suggestion) => {
+                      console.log('Flagged for review:', suggestion);
+                      // Could navigate to OASIS page or open a detailed review modal
+                    }}
+                    isLoading={isRunningOASISAutomation}
+                  />
+                </AccordionContent>
+              </AccordionItem>
               <AccordionItem value="tasks">
                 <AccordionTrigger className="text-sm">
                   <div className="flex items-center gap-2">
