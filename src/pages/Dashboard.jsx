@@ -21,6 +21,7 @@ import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlert
 import PDGMPredictiveAnalytics from "../components/pdgm/PDGMPredictiveAnalytics";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import AITrainingRecommendations from "../components/training/AITrainingRecommendations";
+import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -192,6 +193,12 @@ export default function Dashboard() {
 
       {/* Dashboard Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <ComplianceAlertNotifications 
+          nurseEmail={currentUser?.email}
+          showAll={false}
+          maxAlerts={5}
+          compact={true}
+        />
         <SmartRouteOptimizer
           visits={visits.filter(v => v.status === 'scheduled')}
           patients={patients}
