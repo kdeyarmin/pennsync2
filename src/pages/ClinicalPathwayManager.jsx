@@ -43,12 +43,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIAssessmentDrafter from "../components/clinical/AIAssessmentDrafter";
 import AIICD10Suggester from "../components/clinical/AIICD10Suggester";
 import AICarePlanGenerator from "../components/clinical/AICarePlanGenerator";
+import AIPathwayGenerator from "../components/clinical/AIPathwayGenerator";
+import AIPathwayUpdater from "../components/clinical/AIPathwayUpdater";
 
 export default function ClinicalPathwayManager() {
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editingPathway, setEditingPathway] = useState(null);
   const [activeTab, setActiveTab] = useState("pathways");
+  const [selectedPathwayForUpdate, setSelectedPathwayForUpdate] = useState(null);
 
   const { data: pathways = [], isLoading } = useQuery({
     queryKey: ['clinicalPathways'],
@@ -387,18 +390,22 @@ export default function ClinicalPathwayManager() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 w-full mb-6">
+          <TabsList className="grid grid-cols-5 w-full mb-6">
             <TabsTrigger value="pathways" className="flex items-center gap-2">
               <Route className="w-4 h-4" />
               Pathways
             </TabsTrigger>
+            <TabsTrigger value="ai-generate" className="flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              AI Generate
+            </TabsTrigger>
             <TabsTrigger value="oasis" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              OASIS Assistant
+              OASIS
             </TabsTrigger>
             <TabsTrigger value="icd10" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              ICD-10 Codes
+              ICD-10
             </TabsTrigger>
             <TabsTrigger value="careplan" className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4" />
@@ -476,39 +483,81 @@ export default function ClinicalPathwayManager() {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(pathway)}
-                    >
-                      <Edit className="w-3 h-3 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDuplicate(pathway)}
-                      disabled={createMutation.isPending}
-                    >
-                      <Copy className="w-3 h-3 mr-2" />
-                      Duplicate
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteMutation.mutate(pathway.id)}
-                      disabled={deleteMutation.isPending}
-                      className="text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-3 h-3 mr-2" />
-                      Delete
-                    </Button>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => handleEdit(pathway)}
+                   >
+                     <Edit className="w-3 h-3 mr-2" />
+                     Edit
+                   </Button>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => {
+                       setSelectedPathwayForUpdate(pathway);
+                       setActiveTab("ai-generate");
+                     }}
+                     className="text-blue-600 hover:bg-blue-50"
+                   >
+                     <Brain className="w-3 h-3 mr-2" />
+                     AI Update
+                   </Button>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => handleDuplicate(pathway)}
+                     disabled={createMutation.isPending}
+                   >
+                     <Copy className="w-3 h-3 mr-2" />
+                     Duplicate
+                   </Button>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => deleteMutation.mutate(pathway.id)}
+                     disabled={deleteMutation.isPending}
+                     className="text-red-600 hover:bg-red-50"
+                   >
+                     <Trash2 className="w-3 h-3 mr-2" />
+                     Delete
+                   </Button>
                   </div>
                 </CardContent>
               </Card>
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="ai-generate">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <AIPathwayGenerator
+                onPathwayGenerated={(pathway) => {
+                  queryClient.invalidateQueries({ queryKey: ['clinicalPathways'] });
+                }}
+              />
+              
+              {selectedPathwayForUpdate && (
+                <AIPathwayUpdater
+                  pathway={selectedPathwayForUpdate}
+                  onPathwayUpdated={(updated) => {
+                    queryClient.invalidateQueries({ queryKey: ['clinicalPathways'] });
+                    setSelectedPathwayForUpdate(null);
+                  }}
+                />
+              )}
+
+              {!selectedPathwayForUpdate && (
+                <Card className="border-gray-200">
+                  <CardContent className="p-8 text-center">
+                    <Brain className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-600 mb-2">Select a pathway from the list to get AI update recommendations</p>
+                    <p className="text-sm text-gray-500">Or generate a new pathway using the generator on the left</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="oasis">
