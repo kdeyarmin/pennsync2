@@ -245,6 +245,213 @@ export const validateMRN = (mrn) => {
   return null;
 };
 
+// Common ICD-10 codes for validation (subset of most common codes)
+const COMMON_ICD10_CODES = {
+  'I50.9': 'Heart failure, unspecified',
+  'I10': 'Essential (primary) hypertension',
+  'E11.9': 'Type 2 diabetes mellitus without complications',
+  'E11.65': 'Type 2 diabetes with hyperglycemia',
+  'J44.9': 'COPD, unspecified',
+  'J44.0': 'COPD with acute lower respiratory infection',
+  'N18.3': 'Chronic kidney disease, stage 3',
+  'N18.4': 'Chronic kidney disease, stage 4',
+  'M25.511': 'Pain in right shoulder',
+  'I63.9': 'Cerebral infarction, unspecified (Stroke)',
+  'L89.154': 'Pressure ulcer of sacral region, stage 4',
+  'Z79.4': 'Long term use of insulin',
+  'Z51.5': 'Encounter for palliative care',
+  'G30.9': 'Alzheimer disease, unspecified'
+};
+
+// ICD-10 code validation
+export const validateICD10Code = (code) => {
+  if (!code) return null;
+  
+  const trimmedCode = code.trim().toUpperCase();
+  
+  // Basic ICD-10 format: Letter + 2 digits, optional decimal and more digits
+  const icd10Regex = /^[A-Z]\d{2}(\.\d{1,4})?$/;
+  
+  if (!icd10Regex.test(trimmedCode)) {
+    return {
+      severity: SEVERITY.WARNING,
+      message: 'ICD-10 code format appears incorrect',
+      field: 'icd_code',
+      value: code,
+      suggestion: 'ICD-10 codes should follow pattern: Letter + 2-3 digits (e.g., I50.9, E11.65)',
+      canOverride: true
+    };
+  }
+  
+  // Check if it's a known common code
+  if (COMMON_ICD10_CODES[trimmedCode]) {
+    return {
+      severity: SEVERITY.INFO,
+      message: `Verified ICD-10 code: ${COMMON_ICD10_CODES[trimmedCode]}`,
+      field: 'icd_code'
+    };
+  }
+  
+  return null;
+};
+
+// Cross-field validation for data consistency
+export const validateCrossFieldConsistency = (patient) => {
+  const errors = [];
+  
+  // DOB vs Admission Date
+  if (patient.date_of_birth && patient.admission_date) {
+    const dob = new Date(patient.date_of_birth);
+    const admission = new Date(patient.admission_date);
+    
+    if (admission < dob) {
+      errors.push({
+        severity: SEVERITY.ERROR,
+        message: 'Admission date cannot be before date of birth',
+        field: 'admission_date',
+        suggestion: 'Check that admission date is after patient\'s birth date'
+      });
+    }
+  }
+  
+  // Admission vs Discharge Date
+  if (patient.admission_date && patient.discharge_date) {
+    const admission = new Date(patient.admission_date);
+    const discharge = new Date(patient.discharge_date);
+    
+    if (discharge < admission) {
+      errors.push({
+        severity: SEVERITY.ERROR,
+        message: 'Discharge date cannot be before admission date',
+        field: 'discharge_date',
+        suggestion: 'Ensure discharge date is after admission date'
+      });
+    }
+    
+    // Check for unreasonably long stay
+    const daysDiff = (discharge - admission) / (1000 * 60 * 60 * 24);
+    if (daysDiff > 365) {
+      errors.push({
+        severity: SEVERITY.WARNING,
+        message: `Length of stay exceeds 1 year (${Math.round(daysDiff)} days)`,
+        field: 'discharge_date',
+        suggestion: 'Verify dates are correct for extended care period',
+        canOverride: true
+      });
+    }
+  }
+  
+  // Status vs Discharge Date consistency
+  if (patient.status === 'discharged' && !patient.discharge_date) {
+    errors.push({
+      severity: SEVERITY.WARNING,
+      message: 'Patient marked as discharged but no discharge date provided',
+      field: 'discharge_date',
+      suggestion: 'Add discharge date or change status to active',
+      canOverride: true
+    });
+  }
+  
+  if (patient.discharge_date && patient.status === 'active') {
+    errors.push({
+      severity: SEVERITY.WARNING,
+      message: 'Patient has discharge date but status is active',
+      field: 'status',
+      suggestion: 'Consider changing status to discharged or removing discharge date',
+      canOverride: true
+    });
+  }
+  
+  // Age calculation and reasonableness
+  if (patient.date_of_birth) {
+    const dob = new Date(patient.date_of_birth);
+    const now = new Date();
+    const ageYears = (now - dob) / (1000 * 60 * 60 * 24 * 365.25);
+    
+    if (ageYears < 0) {
+      errors.push({
+        severity: SEVERITY.ERROR,
+        message: 'Date of birth is in the future',
+        field: 'date_of_birth',
+        suggestion: 'Verify the year is correct'
+      });
+    } else if (ageYears > 120) {
+      errors.push({
+        severity: SEVERITY.ERROR,
+        message: `Calculated age (${Math.round(ageYears)} years) exceeds 120`,
+        field: 'date_of_birth',
+        suggestion: 'Verify date of birth year is correct (should be YYYY-MM-DD)'
+      });
+    } else if (ageYears < 1) {
+      errors.push({
+        severity: SEVERITY.INFO,
+        message: `Patient is an infant (${Math.round(ageYears * 12)} months old)`,
+        field: 'date_of_birth',
+        suggestion: 'Ensure pediatric care protocols are followed'
+      });
+    }
+  }
+  
+  // Insurance and payor consistency
+  if (patient.payor && patient.insurance_primary?.provider) {
+    const payorLower = patient.payor.toLowerCase();
+    const insuranceLower = patient.insurance_primary.provider.toLowerCase();
+    
+    // Check for basic mismatch (medicare vs commercial, etc.)
+    if (payorLower.includes('medicare') && !insuranceLower.includes('medicare')) {
+      errors.push({
+        severity: SEVERITY.WARNING,
+        message: 'Payor is Medicare but primary insurance provider doesn\'t match',
+        field: 'insurance_primary',
+        suggestion: 'Verify insurance information is consistent with payor',
+        canOverride: true
+      });
+    }
+  }
+  
+  // Diagnosis and ICD code consistency
+  if (patient.primary_diagnosis && patient.icd_code) {
+    const diagnosisLower = patient.primary_diagnosis.toLowerCase();
+    const icdUpper = patient.icd_code.toUpperCase();
+    
+    // Basic consistency checks for common conditions
+    const diagnosisCodeMappings = {
+      'diabetes': ['E11', 'E10'],
+      'heart failure': ['I50'],
+      'chf': ['I50'],
+      'hypertension': ['I10', 'I11', 'I12', 'I13'],
+      'copd': ['J44'],
+      'stroke': ['I63', 'I64'],
+      'kidney disease': ['N18'],
+      'alzheimer': ['G30']
+    };
+    
+    let expectedCodes = [];
+    for (const [keyword, codes] of Object.entries(diagnosisCodeMappings)) {
+      if (diagnosisLower.includes(keyword)) {
+        expectedCodes = codes;
+        break;
+      }
+    }
+    
+    if (expectedCodes.length > 0) {
+      const matchesExpected = expectedCodes.some(code => icdUpper.startsWith(code));
+      if (!matchesExpected) {
+        errors.push({
+          severity: SEVERITY.WARNING,
+          message: `ICD-10 code may not match primary diagnosis`,
+          field: 'icd_code',
+          value: patient.icd_code,
+          suggestion: `For ${patient.primary_diagnosis}, expected codes starting with: ${expectedCodes.join(', ')}`,
+          canOverride: true
+        });
+      }
+    }
+  }
+  
+  return errors;
+};
+
 // Diagnosis-specific validation
 export const diagnosisSpecificValidation = (patient) => {
   const errors = [];
@@ -469,6 +676,16 @@ export const validatePatient = (patient, options = {}) => {
       canOverride: true
     });
   }
+  
+  // ICD-10 code validation
+  if (patient.icd_code) {
+    const icdError = validateICD10Code(patient.icd_code);
+    if (icdError) errors.push(icdError);
+  }
+  
+  // Cross-field consistency validation
+  const consistencyErrors = validateCrossFieldConsistency(patient);
+  errors.push(...consistencyErrors);
   
   // Diagnosis-specific validation
   const diagnosisErrors = diagnosisSpecificValidation(patient);

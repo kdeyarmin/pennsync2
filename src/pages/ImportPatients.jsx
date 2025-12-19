@@ -380,7 +380,7 @@ export default function ImportPatients() {
                 field: field.label,
                 value: value,
                 error: emailError.message,
-                suggestion: `Correct format: name@example.com`
+                suggestion: emailError.suggestion || `Correct format: name@example.com`
               });
             }
           }
@@ -392,7 +392,7 @@ export default function ImportPatients() {
                 field: field.label,
                 value: value,
                 error: dateError.message,
-                suggestion: `Required format: YYYY-MM-DD (e.g., 2024-01-15)`
+                suggestion: dateError.suggestion || `Required format: YYYY-MM-DD (e.g., 2024-01-15)`
               });
             }
           }
