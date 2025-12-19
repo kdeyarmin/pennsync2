@@ -580,6 +580,27 @@ export default function OASISAnalyzer() {
       }
     }
     
+    // Phone Number Matching (HIGH VALUE)
+    let phoneMatch = false;
+    const extractedPhone = pdgmData?.patient_info?.phone || analysisResults?.pdgm_data?.patient_info?.phone;
+    if (extractedPhone && patient.phone) {
+      const normalizePhone = (phone) => phone.replace(/\D/g, '');
+      const extractedPhoneNorm = normalizePhone(extractedPhone);
+      const patientPhoneNorm = normalizePhone(patient.phone);
+      
+      if (extractedPhoneNorm === patientPhoneNorm && extractedPhoneNorm.length >= 10) {
+        confidence += 25;
+        phoneMatch = true;
+        matchFactors.push('✓ Phone number verified');
+      } else if (extractedPhoneNorm.length >= 10 && patientPhoneNorm.length >= 10) {
+        // Check last 4 digits (common for verification)
+        if (extractedPhoneNorm.slice(-4) === patientPhoneNorm.slice(-4)) {
+          confidence += 10;
+          matchFactors.push('Phone last 4 digits match');
+        }
+      }
+    }
+
     // DOB Verification (CRITICAL - can add or subtract confidence)
     let medicareMatch = false;
     let addressMatch = false;
@@ -631,37 +652,93 @@ export default function OASISAnalyzer() {
       }
     }
     
-    // Address Verification (MODERATE VALUE)
+    // Address Verification (MODERATE-HIGH VALUE) - Enhanced
     const extractedAddress = pdgmData?.patient_info?.address || analysisResults?.pdgm_data?.patient_info?.address;
     if (extractedAddress && patient.address) {
-      const normalizeAddress = (addr) => addr.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const normalizeAddress = (addr) => addr.toLowerCase()
+        .replace(/\b(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|circle|cir|place|pl|parkway|pkwy|way|apartment|apt|unit|ste|suite|#)\b/g, '')
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
       const extractedAddrNorm = normalizeAddress(extractedAddress);
       const patientAddrNorm = normalizeAddress(patient.address);
       
-      // Check for street number match
-      const extractedStreetNum = extractedAddress.match(/^\d+/)?.[0];
-      const patientStreetNum = patient.address.match(/^\d+/)?.[0];
-      
-      if (extractedStreetNum && extractedStreetNum === patientStreetNum) {
-        confidence += 15;
+      // Strategy 1: Exact normalized match
+      if (extractedAddrNorm === patientAddrNorm && extractedAddrNorm.length >= 10) {
+        confidence += 20;
         addressMatch = true;
-        matchFactors.push('✓ Street number matches');
-      } else if (extractedAddrNorm.length >= 10 && similarity(extractedAddrNorm, patientAddrNorm) >= 70) {
-        confidence += 10;
-        addressMatch = true;
-        matchFactors.push('Address similarity');
+        matchFactors.push('✓ Address exact match');
+      } else {
+        // Strategy 2: Street number + street name match
+        const extractedStreetNum = extractedAddress.match(/^\d+/)?.[0];
+        const patientStreetNum = patient.address.match(/^\d+/)?.[0];
+        
+        if (extractedStreetNum && extractedStreetNum === patientStreetNum) {
+          // Extract street name (second word typically)
+          const extractedStreetName = extractedAddrNorm.split(/\s+/)[1];
+          const patientStreetName = patientAddrNorm.split(/\s+/)[1];
+          
+          if (extractedStreetName && patientStreetName && similarity(extractedStreetName, patientStreetName) >= 80) {
+            confidence += 18;
+            addressMatch = true;
+            matchFactors.push('✓ Street number and name match');
+          } else if (extractedStreetName && patientStreetName) {
+            confidence += 12;
+            addressMatch = true;
+            matchFactors.push('Street number matches');
+          }
+        }
+        
+        // Strategy 3: Overall similarity
+        if (!addressMatch && extractedAddrNorm.length >= 10) {
+          const addrSimilarity = similarity(extractedAddrNorm, patientAddrNorm);
+          if (addrSimilarity >= 85) {
+            confidence += 15;
+            addressMatch = true;
+            matchFactors.push('Address very similar');
+          } else if (addrSimilarity >= 70) {
+            confidence += 10;
+            addressMatch = true;
+            matchFactors.push('Address similar');
+          } else if (addrSimilarity >= 60) {
+            confidence += 5;
+            matchFactors.push('Address partial match');
+          }
+        }
+        
+        // Strategy 4: Zip code match (if present)
+        const extractedZip = extractedAddress.match(/\b\d{5}\b/)?.[0];
+        const patientZip = patient.address.match(/\b\d{5}\b/)?.[0];
+        if (extractedZip && extractedZip === patientZip) {
+          confidence += 8;
+          matchFactors.push('Zip code match');
+        }
       }
     }
     
     // Cap confidence at 100
     confidence = Math.min(100, Math.max(0, confidence));
     
+    // Calculate match quality level
+    let matchQuality = 'poor';
+    if (confidence >= 85) matchQuality = 'excellent';
+    else if (confidence >= 70) matchQuality = 'very_good';
+    else if (confidence >= 55) matchQuality = 'good';
+    else if (confidence >= 40) matchQuality = 'fair';
+    
+    // Count verified identifiers for additional context
+    const verifiedIdentifiers = [dobMatch, medicareMatch, phoneMatch, addressMatch].filter(Boolean).length;
+    
     return { 
       confidence: Math.round(confidence), 
       matchFactors, 
       dobMatch,
       medicareMatch,
-      addressMatch
+      addressMatch,
+      phoneMatch,
+      matchQuality,
+      verifiedIdentifiers
     };
   };
 
