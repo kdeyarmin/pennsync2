@@ -510,7 +510,7 @@ ${contextualizedNote}
       ${carePlans.filter(cp => cp.status === 'active').map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- No active care plans'}
 
       ${oasisContext ? `OASIS ASSESSMENT DATA (Synced):
-      - Assessment Date: ${formatEastern(oasisContext.assessmentDate, 'MMM d, yyyy')}
+      - Assessment Date: ${oasisContext.assessmentDate}
       - Admission Source: ${oasisContext.admissionSource === '1' || oasisContext.admissionSource?.toLowerCase().includes('community') ? 'Community (home)' : oasisContext.admissionSource === '2' || oasisContext.admissionSource?.toLowerCase().includes('institutional') ? 'Institutional (hospital/SNF discharge)' : oasisContext.admissionSource || 'Unknown'}
       - Clinical Group: ${oasisContext.clinicalGroup || 'Not specified'}
       - Functional Impairment Level: ${oasisContext.functionalLevel || 'Not specified'}
