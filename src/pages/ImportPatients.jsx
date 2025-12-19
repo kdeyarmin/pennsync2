@@ -51,26 +51,42 @@ const FIELD_MAPPINGS = {
   'email': { label: 'Email', type: 'email' },
   'address': { label: 'Address', type: 'string' },
   'gender': { label: 'Gender', type: 'string' },
-  'payor': { label: 'Payor', type: 'string', aliases: ['primary_payor', 'insurance_type'] },
+  'payor': { label: 'Payor', type: 'string', aliases: ['primary_payor', 'insurance_type', 'payer'] },
   
   // Emergency contact
-  'emergency_contact_name': { label: 'Emergency Contact Name', type: 'string' },
-  'emergency_contact_phone': { label: 'Emergency Contact Phone', type: 'string' },
-  'emergency_contact_relationship': { label: 'Emergency Contact Relationship', type: 'string' },
+  'emergency_contact_name': { label: 'Emergency Contact Name', type: 'string', aliases: ['emergency_name'] },
+  'emergency_contact_phone': { label: 'Emergency Contact Phone', type: 'string', aliases: ['emergency_phone'] },
+  'emergency_contact_relationship': { label: 'Emergency Contact Relationship', type: 'string', aliases: ['emergency_relationship'] },
+  
+  // Physician info
+  'physician_name': { label: 'Physician Name', type: 'string', aliases: ['physician', 'doctor_name', 'md_name'] },
+  'physician_phone': { label: 'Physician Phone', type: 'string', aliases: ['doctor_phone', 'md_phone'] },
+  'physician_email': { label: 'Physician Email', type: 'email', aliases: ['doctor_email'] },
+  
+  // Caregiver info
+  'caregiver_name': { label: 'Caregiver Name', type: 'string' },
+  'caregiver_phone': { label: 'Caregiver Phone', type: 'string' },
+  'caregiver_email': { label: 'Caregiver Email', type: 'email' },
   
   // Medical info
-  'primary_diagnosis': { label: 'Primary Diagnosis', type: 'string' },
-  'allergies': { label: 'Allergies', type: 'string' },
-  'physician_name': { label: 'Physician Name', type: 'string', aliases: ['physician'] },
-  'physician_phone': { label: 'Physician Phone', type: 'string' },
-  'physician_email': { label: 'Physician Email', type: 'email' },
+  'primary_diagnosis': { label: 'Primary Diagnosis', type: 'string', aliases: ['diagnosis', 'dx'] },
+  'secondary_diagnoses': { label: 'Secondary Diagnoses', type: 'string', aliases: ['secondary_dx', 'other_diagnoses'] },
+  'allergies': { label: 'Allergies', type: 'string', aliases: ['allergy'] },
+  'icd_code': { label: 'ICD Code', type: 'string', aliases: ['icd10_code', 'diagnosis_code'] },
   
   // Admission info
-  'admission_date': { label: 'Admission Date', type: 'date', format: 'YYYY-MM-DD', aliases: ['admitted_date'] },
-  'care_type': { label: 'Care Type', type: 'enum', options: ['home_health', 'hospice'], aliases: ['organization_type'] },
-  'status': { label: 'Status', type: 'enum', options: ['active', 'discharged', 'hospitalized'], aliases: ['current_admission_status'] },
-  'insurance_primary_provider': { label: 'Primary Insurance', type: 'string', aliases: ['primary_payor'] },
-  'icd_code': { label: 'ICD Code', type: 'string', aliases: ['icd_code'] }
+  'admission_date': { label: 'Admission Date', type: 'date', format: 'YYYY-MM-DD', aliases: ['admitted_date', 'soc_date', 'start_of_care'] },
+  'discharge_date': { label: 'Discharge Date', type: 'date', format: 'YYYY-MM-DD' },
+  'admission_source': { label: 'Admission Source', type: 'enum', options: ['home', 'hospital', 'skilled_nursing_facility', 'rehab', 'other'] },
+  'discharge_disposition': { label: 'Discharge Disposition', type: 'enum', options: ['home', 'hospital', 'skilled_nursing_facility', 'deceased', 'other'] },
+  'care_type': { label: 'Care Type', type: 'enum', options: ['home_health', 'hospice'], aliases: ['organization_type', 'service_type'] },
+  'status': { label: 'Status', type: 'enum', options: ['active', 'discharged', 'hospitalized'], aliases: ['current_admission_status', 'patient_status'] },
+  
+  // Insurance
+  'insurance_primary_provider': { label: 'Primary Insurance Provider', type: 'string', aliases: ['primary_insurance'] },
+  'insurance_primary_policy': { label: 'Primary Insurance Policy Number', type: 'string', aliases: ['policy_number', 'policy_no'] },
+  'insurance_secondary_provider': { label: 'Secondary Insurance Provider', type: 'string', aliases: ['secondary_insurance'] }
+
 };
 
 // Columns to skip/ignore
@@ -434,6 +450,14 @@ export default function ImportPatients() {
             // Handle special field mappings
             if (fieldKey === 'insurance_primary_provider') {
               patient.insurance_primary = { provider: value };
+            } else if (fieldKey === 'insurance_primary_policy') {
+              if (!patient.insurance_primary) patient.insurance_primary = {};
+              patient.insurance_primary.policy_number = value;
+            } else if (fieldKey === 'insurance_secondary_provider') {
+              patient.insurance_secondary = { provider: value };
+            } else if (fieldKey === 'secondary_diagnoses') {
+              // Parse comma-separated secondary diagnoses into array
+              patient.secondary_diagnoses = value.split(',').map(d => d.trim()).filter(d => d);
             } else if (fieldKey === 'icd_code') {
               // Store ICD code but don't overwrite primary_diagnosis
               patient.icd_code = value;
@@ -578,14 +602,24 @@ export default function ImportPatients() {
 
   const downloadTemplate = () => {
     const headers = [
-      'Company', 'Top Unit', 'Parent Unit', 'Sub Unit', 'Branch Name', 'Patient Team Name',
-      'Organization Type', 'Primary Payor', 'Patient', 'MRN', 'Admitted Date', 'DOB',
-      'Current Admission Status', 'Primary Diagnosis', 'Gender', 'Physician', 'ICD Code'
+      'first_name', 'last_name', 'middle_name', 'date_of_birth', 'medical_record_number',
+      'phone', 'email', 'address', 'payor',
+      'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+      'physician_name', 'physician_phone', 'physician_email',
+      'caregiver_name', 'caregiver_phone', 'caregiver_email',
+      'primary_diagnosis', 'secondary_diagnoses', 'allergies', 'icd_code',
+      'admission_date', 'discharge_date', 'admission_source', 'care_type', 'status',
+      'insurance_primary_provider', 'insurance_primary_policy', 'insurance_secondary_provider'
     ];
     const sampleRow = [
-      '', '', '', '', '', '',
-      'Home Health', 'Medicare', 'John Doe', '12345', '2024-01-15', '1950-05-20',
-      'Active', 'CHF', 'M', 'Dr. Smith', 'I50.9'
+      'John', 'Doe', 'A', '1950-05-20', '12345',
+      '555-123-4567', 'john.doe@email.com', '123 Main St, City, ST 12345', 'Medicare',
+      'Jane Doe', '555-987-6543', 'Spouse',
+      'Dr. Smith', '555-111-2222', 'dr.smith@clinic.com',
+      'Mary Johnson', '555-333-4444', 'mary.j@email.com',
+      'Congestive Heart Failure', 'Hypertension, Type 2 Diabetes', 'NKDA', 'I50.9',
+      '2024-01-15', '', 'hospital', 'home_health', 'active',
+      'Medicare Part A', 'MB123456789', 'Blue Cross'
     ];
     const csv = headers.join(',') + '\n' + sampleRow.join(',') + '\n';
     const blob = new Blob([csv], { type: 'text/csv' });
