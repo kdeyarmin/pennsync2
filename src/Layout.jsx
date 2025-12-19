@@ -24,8 +24,7 @@ import {
   ChevronRight,
   Sparkles,
   Clock,
-  BookOpen,
-  Shield
+  BookOpen
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
