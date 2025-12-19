@@ -60,7 +60,7 @@ import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
 import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
 import AIPatientHistorySummarizer from "../components/smartNote/AIPatientHistorySummarizer";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
-import { todayEastern } from "../components/utils/timezone";
+import { todayEastern, formatEastern } from "../components/utils/timezone";
 import ConsolidatedAIFeedback from "../components/smartNote/ConsolidatedAIFeedback";
 import NextStepsPanel from "../components/smartNote/NextStepsPanel";
 import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOverview";
