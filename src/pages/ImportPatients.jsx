@@ -517,23 +517,35 @@ export default function ImportPatients() {
     let processed = 0;
     const total = resolutionResults.added.length + resolutionResults.updated.length + resolutionResults.closed.length;
 
-    // Add new patients
-    for (const patient of resolutionResults.added) {
+    // Add new patients using bulk create to avoid rate limiting
+    if (resolutionResults.added.length > 0) {
       try {
-        await base44.entities.Patient.create(patient);
-        results.success++;
+        const created = await base44.entities.Patient.bulkCreate(resolutionResults.added);
+        results.success += created.length;
+        processed += resolutionResults.added.length;
+        setImportProgress(Math.round((processed / total) * 100));
       } catch (error) {
-        results.failed++;
-        results.errors.push({
-          patient: `${patient.first_name} ${patient.last_name}`,
-          error: error.message
-        });
+        // Fall back to individual creates with delay if bulk fails
+        for (const patient of resolutionResults.added) {
+          try {
+            await base44.entities.Patient.create(patient);
+            results.success++;
+          } catch (error) {
+            results.failed++;
+            results.errors.push({
+              patient: `${patient.first_name} ${patient.last_name}`,
+              error: error.message
+            });
+          }
+          processed++;
+          setImportProgress(Math.round((processed / total) * 100));
+          // Small delay to prevent rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
-      processed++;
-      setImportProgress(Math.round((processed / total) * 100));
     }
 
-    // Update existing patients
+    // Update existing patients with small delays
     for (const update of resolutionResults.updated) {
       try {
         await base44.entities.Patient.update(update.id, update.data);
@@ -547,9 +559,10 @@ export default function ImportPatients() {
       }
       processed++;
       setImportProgress(Math.round((processed / total) * 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Close patients (set status to discharged)
+    // Close patients (set status to discharged) with small delays
     for (const patientId of resolutionResults.closed) {
       try {
         await base44.entities.Patient.update(patientId, { status: 'discharged' });
@@ -563,6 +576,7 @@ export default function ImportPatients() {
       }
       processed++;
       setImportProgress(Math.round((processed / total) * 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     const resolutionTime = (Date.now() - startTime) / 1000;

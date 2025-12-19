@@ -404,6 +404,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
       }
     }
 
+    // Batch operations for efficiency and rate limit prevention
     onResolve(results);
     setIsProcessing(false);
   };
