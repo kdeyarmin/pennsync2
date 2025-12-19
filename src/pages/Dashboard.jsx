@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -45,24 +45,28 @@ export default function Dashboard() {
         return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
       },
       initialData: [],
+      staleTime: 60000,
     });
 
   const { data: patients, error: patientsError } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: () => base44.entities.Patient.list('-updated_date', 500),
     initialData: [],
+    staleTime: 300000,
   });
 
   const { data: carePlans = [] } = useQuery({
     queryKey: ['allCarePlans'],
-    queryFn: () => base44.entities.CarePlan.list(),
+    queryFn: () => base44.entities.CarePlan.list('-updated_date', 200),
     initialData: [],
+    staleTime: 300000,
   });
 
   const { data: incidents = [] } = useQuery({
     queryKey: ['recentIncidents'],
     queryFn: () => base44.entities.Incident.filter({}, '-incident_date', 50),
     initialData: [],
+    staleTime: 180000,
   });
 
   // Handle errors gracefully
@@ -120,8 +124,10 @@ export default function Dashboard() {
     }
   };
 
-  const completedVisits = visits.filter(v => v.status === 'completed').length;
-  const pendingVisits = visits.filter(v => v.status === 'scheduled').length;
+  const { completedVisits, pendingVisits } = useMemo(() => ({
+    completedVisits: visits.filter(v => v.status === 'completed').length,
+    pendingVisits: visits.filter(v => v.status === 'scheduled').length
+  }), [visits]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
