@@ -111,6 +111,9 @@ export default function ImportPatients() {
   const [importHistory, setImportHistory] = useState([]);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showDuplicateCheck, setShowDuplicateCheck] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [editingRow, setEditingRow] = useState(null);
+  const [editedData, setEditedData] = useState({});
   
   const queryClient = useQueryClient();
 
@@ -599,8 +602,48 @@ export default function ImportPatients() {
       return;
     }
 
-    // Show duplicate check instead of directly importing
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const confirmImport = () => {
+    setShowConfirmDialog(false);
     setShowDuplicateCheck(true);
+  };
+
+  const quickFixError = (errorIdx, field) => {
+    const error = validationErrors[errorIdx];
+    const rowIndex = error.row - 1;
+    const row = csvData.rows[rowIndex];
+    
+    // Find column index for this field
+    const colIdx = Object.entries(columnMapping).find(([_, fKey]) => 
+      FIELD_MAPPINGS[fKey].label === field
+    )?.[0];
+    
+    if (colIdx === undefined) return;
+    
+    const value = row[colIdx]?.trim();
+    const fieldKey = columnMapping[colIdx];
+    
+    // Apply auto-fixes
+    let fixedValue = value;
+    if (fieldKey.includes('phone') && value) {
+      fixedValue = value.replace(/\D/g, '').slice(-10);
+      if (fixedValue.length === 10) {
+        fixedValue = `(${fixedValue.slice(0,3)}) ${fixedValue.slice(3,6)}-${fixedValue.slice(6)}`;
+      }
+    } else if (FIELD_MAPPINGS[fieldKey].type === 'email' && value) {
+      fixedValue = value.toLowerCase().trim();
+    }
+    
+    // Update CSV data
+    const newRows = [...csvData.rows];
+    newRows[rowIndex][colIdx] = fixedValue;
+    setCsvData({ ...csvData, rows: newRows });
+    
+    // Re-validate
+    setTimeout(() => validateData(), 100);
   };
 
   const handleBulkResolve = async (resolution) => {
@@ -1133,6 +1176,30 @@ export default function ImportPatients() {
               </Card>
             )}
 
+            {/* Mapping Confirmation Summary */}
+            {Object.keys(columnMapping).length > 0 && (
+              <Card className="mt-4 border-blue-200 bg-blue-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                    Column Mapping Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {Object.entries(columnMapping).map(([colIdx, fieldKey]) => (
+                      <div key={colIdx} className="flex items-center gap-2 p-2 bg-white rounded">
+                        <span className="text-gray-600">{csvData.headers[colIdx]}</span>
+                        <ArrowRight className="w-3 h-3 text-blue-500" />
+                        <span className="font-medium text-blue-900">{FIELD_MAPPINGS[fieldKey].label}</span>
+                        {FIELD_MAPPINGS[fieldKey].required && <span className="text-red-500">*</span>}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Validate Button */}
             <div className="mt-6 flex justify-end">
               <Button
@@ -1271,35 +1338,54 @@ export default function ImportPatients() {
                               </div>
                               <div className="space-y-2">
                                 {(error.errors || []).map((err, errIdx) => {
-                                  const isDetailed = typeof err === 'object';
-                                  return (
-                                    <div key={errIdx} className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                      {isDetailed ? (
-                                        <>
-                                          <div className="flex items-start justify-between gap-2 mb-2">
-                                            <span className="font-semibold text-sm text-red-900">
-                                              {err.field}
-                                            </span>
-                                            {err.value && (
-                                              <Badge variant="outline" className="text-xs bg-white">
-                                                "{err.value}"
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          <p className="text-sm text-red-800 mb-2">
-                                            ❌ {err.error}
-                                          </p>
-                                          {err.suggestion && (
-                                            <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
-                                              💡 <strong>Fix:</strong> {err.suggestion}
-                                            </p>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <p className="text-sm text-red-800">❌ {err}</p>
-                                      )}
-                                    </div>
-                                  );
+                                 const isDetailed = typeof err === 'object';
+                                 const canQuickFix = isDetailed && (
+                                   err.field.includes('Phone') || 
+                                   err.field.includes('Email') ||
+                                   err.field.includes('Date')
+                                 );
+
+                                 return (
+                                   <div key={errIdx} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                     {isDetailed ? (
+                                       <>
+                                         <div className="flex items-start justify-between gap-2 mb-2">
+                                           <span className="font-semibold text-sm text-red-900">
+                                             {err.field}
+                                           </span>
+                                           {err.value && (
+                                             <Badge variant="outline" className="text-xs bg-white">
+                                               "{err.value}"
+                                             </Badge>
+                                           )}
+                                         </div>
+                                         <p className="text-sm text-red-800 mb-2">
+                                           ❌ {err.error}
+                                         </p>
+                                         {err.suggestion && (
+                                           <div className="space-y-2">
+                                             <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                                               💡 <strong>Fix:</strong> {err.suggestion}
+                                             </p>
+                                             {canQuickFix && (
+                                               <Button
+                                                 size="sm"
+                                                 variant="outline"
+                                                 className="text-xs h-7"
+                                                 onClick={() => quickFixError(idx, err.field)}
+                                               >
+                                                 <RefreshCw className="w-3 h-3 mr-1" />
+                                                 Quick Fix
+                                               </Button>
+                                             )}
+                                           </div>
+                                         )}
+                                       </>
+                                     ) : (
+                                       <p className="text-sm text-red-800">❌ {err}</p>
+                                     )}
+                                   </div>
+                                 );
                                 })}
                               </div>
                             </div>
@@ -1445,6 +1531,71 @@ export default function ImportPatients() {
           />
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-blue-600" />
+              Confirm Import
+            </DialogTitle>
+            <DialogDescription>
+              Please review the import summary before proceeding
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm text-green-600 font-medium mb-1">Valid Records</p>
+                <p className="text-3xl font-bold text-green-700">{validRecords.length}</p>
+              </div>
+              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                <p className="text-sm text-red-600 font-medium mb-1">Records with Errors</p>
+                <p className="text-3xl font-bold text-red-700">{validationErrors.length}</p>
+              </div>
+            </div>
+
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertDescription className="text-sm text-blue-900">
+                <strong>What will happen:</strong>
+                <ul className="list-disc ml-4 mt-2 space-y-1">
+                  <li>System will check for duplicate patients</li>
+                  <li>{validRecords.length} valid record{validRecords.length !== 1 ? 's' : ''} will be processed</li>
+                  {skipErrors && validationErrors.length > 0 && (
+                    <li className="text-orange-700">{validationErrors.length} record{validationErrors.length !== 1 ? 's' : ''} with errors will be skipped</li>
+                  )}
+                </ul>
+              </AlertDescription>
+            </Alert>
+
+            {validationErrors.length > 0 && !skipErrors && (
+              <Alert variant="destructive">
+                <AlertCircle className="w-4 h-4" />
+                <AlertDescription className="text-sm">
+                  You have {validationErrors.length} record{validationErrors.length !== 1 ? 's' : ''} with errors. 
+                  Please resolve errors or enable "Skip rows with errors" to proceed.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmImport}
+              disabled={!skipErrors && validationErrors.length > 0}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Proceed to Import
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Import Results */}
       {importResults && (
