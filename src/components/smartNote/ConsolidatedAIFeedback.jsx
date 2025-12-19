@@ -66,15 +66,15 @@ ENHANCED NOTE:
 ${enhancedNote}
 
 PATIENT CONTEXT:
-- Patient: ${patientData ? `${patientData.first_name} ${patientData.last_name}, Age ${patientData.date_of_birth ? new Date().getFullYear() - new Date(patientData.date_of_birth).getFullYear() : 'Unknown'}` : 'Unknown'}
-- Primary Diagnosis: ${diagnosis || patientData?.primary_diagnosis || 'Not specified'}
-- Care Type: ${patientData?.care_type || 'home_health'}
-- Current Status: ${patientData?.status || 'active'}
-- Functional Status: ${patientData?.functional_status ? JSON.stringify(patientData.functional_status) : 'Not documented'}
-- Current Vitals: ${vitalSigns ? JSON.stringify(vitalSigns) : 'Not provided'}
-- Baseline Vitals: ${patientData?.baseline_vitals ? JSON.stringify(patientData.baseline_vitals) : 'Not documented'}
-- Current Medications: ${patientData?.current_medications?.length || 0} medications
-- Active Care Plans: ${carePlans?.length || 0} care plans
+      - Patient: ${patientData ? `${patientData.first_name} ${patientData.last_name}, Age ${patientData.date_of_birth ? new Date().getFullYear() - new Date(patientData.date_of_birth).getFullYear() : 'Unknown'}` : 'Unknown'}
+      - Primary Diagnosis: ${diagnosis || patientData?.primary_diagnosis || 'Not specified'}
+      - Care Type: ${patientData?.care_type || 'home_health'}
+      - Current Status: ${patientData?.status || 'active'}
+      - Functional Status: ${patientData?.functional_status ? JSON.stringify(patientData.functional_status) : 'Not documented'}
+      - Current Vitals: ${vitalSigns ? JSON.stringify(vitalSigns) : 'Not provided'}
+      - Baseline Vitals: ${patientData?.baseline_vitals ? JSON.stringify(patientData.baseline_vitals) : 'Not documented'}
+      - Current Medications: ${patientData?.current_medications?.length || 0} medications
+      ${carePlans?.length > 0 ? `- Active Care Plans: ${carePlans.length} care plans` : ''}
 
 ANALYSIS FRAMEWORK:
 Provide CONTEXT-AWARE analysis by considering the patient's specific diagnosis, age, functional status, and current condition when evaluating documentation.

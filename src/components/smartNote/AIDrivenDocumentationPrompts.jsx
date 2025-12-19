@@ -76,12 +76,12 @@ ${vitalSigns.o2 ? `- O2: ${vitalSigns.o2}%` : ''}
 ${vitalSigns.pain ? `- Pain: ${vitalSigns.pain}/10` : ''}
 ` : '';
 
-      const carePlanContext = carePlans.length > 0 ? `
+      const carePlanContext = carePlans?.length > 0 ? `
 Active Care Plans:
 ${carePlans.slice(0, 5).map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n')}
 ` : '';
 
-      const previousVisitContext = previousVisits.length > 0 ? `
+      const previousVisitContext = previousVisits?.length > 0 ? `
 Previous Visit Notes (excerpt):
 ${previousVisits[0]?.nurse_notes?.substring(0, 300) || 'No previous notes'}
 ` : '';
@@ -126,11 +126,11 @@ Identify missing documentation elements with STRONG EMPHASIS ON CONTINUITY AND T
    - What comparison to baseline/previous visit is needed?
    - How does current status compare to historical trajectory?
 
-4. **Care Plan Progress**:
-   - Are care plan goals being addressed with specific outcomes?
+4. **Care Plan Progress** ${carePlans?.length > 0 ? '(Active care plans exist - assess progress)' : '(No active care plans - skip this section)'}:
+   ${carePlans?.length > 0 ? `- Are care plan goals being addressed with specific outcomes?
    - What interventions were performed and how did patient respond compared to previous visits?
    - What is the patient's progress toward goals over time?
-   - Are there patterns in goal achievement or barriers?
+   - Are there patterns in goal achievement or barriers?` : '- No care plans to assess - focus on clinical documentation only'}
 
 5. **Clinical Completeness**:
    - Missing body system assessments

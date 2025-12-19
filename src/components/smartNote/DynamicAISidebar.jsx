@@ -121,7 +121,7 @@ export default function DynamicAISidebar({
       )}
 
       {/* OASIS Item Linker - Only if OASIS data exists */}
-      {content.showOASISLinker && (
+      {content.showOASISLinker && hasOASIS && (
         <OASISItemLinker
           linkedItems={oasisLinkedItems}
           onAddLink={onAddOASISLink}

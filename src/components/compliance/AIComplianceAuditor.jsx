@@ -239,11 +239,11 @@ Analyze this comprehensive patient record against the following compliance areas
    - Are high-risk medications identified?
    - Are medication side effects monitored?
 
-4. CARE PLANNING (CMS CoP 484.60)
-   - Are care plans based on comprehensive assessment?
+4. CARE PLANNING (CMS CoP 484.60) ${carePlans?.length > 0 ? '- Care plans exist, assess alignment:' : '- No care plans on file (may be appropriate for some patients):'}
+   ${carePlans?.length > 0 ? `- Are care plans based on comprehensive assessment?
    - Do care plans address all identified problems?
    - Are patient/family goals documented?
-   - Are interventions specific and measurable?
+   - Are interventions specific and measurable?` : '- Assess if care plan development is warranted based on patient needs'}
 
 5. VISIT DOCUMENTATION (Medicare Guidelines)
    - Are skilled nursing interventions documented?
@@ -252,10 +252,10 @@ Analyze this comprehensive patient record against the following compliance areas
    - Are teaching efforts and comprehension noted?
    - Are vital signs trended and compared to baseline?
 
-6. OASIS COMPLIANCE (OASIS-E Requirements)
-   - Is OASIS assessment current (within 5 days of SOC)?
+6. OASIS COMPLIANCE (OASIS-E Requirements) ${latestOASIS ? '- OASIS exists, verify alignment:' : '- No OASIS data (skip if not required for this patient/visit):'}
+   ${latestOASIS ? `- Is OASIS assessment current (within 5 days of SOC)?
    - Does clinical documentation support OASIS answers?
-   - Are discrepancies between OASIS and clinical notes identified?
+   - Are discrepancies between OASIS and clinical notes identified?` : '- OASIS not applicable - skip this compliance area'}
 
 7. SAFETY AND RISK MANAGEMENT
    - Is fall risk assessed and addressed?
