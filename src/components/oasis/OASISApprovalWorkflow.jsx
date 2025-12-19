@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { logOASISAction, AuditActions } from "../utils/auditLogger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
       const currentUser = await base44.auth.me();
       
       // Update all reviewed items with supervisor approval
+      const reviewedItems = [];
       Object.keys(updatedData).forEach(key => {
         if (updatedData[key]?.reviewed && !updatedData[key]?.supervisor_approved) {
           updatedData[key] = {
@@ -39,7 +41,18 @@ export default function OASISApprovalWorkflow({ pendingItems = [], onApprove }) 
             approval_date: new Date().toISOString(),
             approval_notes: notes
           };
+          reviewedItems.push(key);
         }
+      });
+
+      // Log supervisor action
+      await logOASISAction({
+        action: action === 'approve' ? AuditActions.OASIS_SUPERVISOR_APPROVED : AuditActions.OASIS_SUPERVISOR_REJECTED,
+        patientId,
+        oasisId,
+        itemNumber: reviewedItems.join(', '),
+        notes,
+        reviewedBy: currentUser.email,
       });
 
       return base44.entities.OASISUpload.update(oasisId, {

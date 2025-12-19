@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { logOASISAction, AuditActions } from "../utils/auditLogger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,35 +33,74 @@ export default function OASISComparisonView({
   const updateMutation = useMutation({
     mutationFn: async ({ itemNumber, action, value, notes }) => {
       const updatedData = { ...oasisRecord.extracted_data };
+      const currentUser = await base44.auth.me();
+      const oldValue = updatedData[itemNumber]?.value;
       
       if (action === 'approve') {
         updatedData[itemNumber] = {
           ...updatedData[itemNumber],
           reviewed: true,
           approved: true,
-          reviewed_by: (await base44.auth.me()).email,
+          reviewed_by: currentUser.email,
           reviewed_at: new Date().toISOString(),
           review_notes: notes
         };
+        
+        // Log audit trail
+        await logOASISAction({
+          action: AuditActions.OASIS_SUGGESTION_APPROVED,
+          patientId: patient.id,
+          oasisId: oasisRecord.id,
+          itemNumber,
+          oldValue,
+          newValue: updatedData[itemNumber].value,
+          confidence: updatedData[itemNumber].confidence,
+          notes,
+          reviewedBy: currentUser.email,
+        });
       } else if (action === 'reject') {
         updatedData[itemNumber] = {
           ...updatedData[itemNumber],
           reviewed: true,
           rejected: true,
-          reviewed_by: (await base44.auth.me()).email,
+          reviewed_by: currentUser.email,
           reviewed_at: new Date().toISOString(),
           rejection_reason: notes
         };
+        
+        // Log audit trail
+        await logOASISAction({
+          action: AuditActions.OASIS_SUGGESTION_REJECTED,
+          patientId: patient.id,
+          oasisId: oasisRecord.id,
+          itemNumber,
+          oldValue,
+          newValue: null,
+          notes,
+          reviewedBy: currentUser.email,
+        });
       } else if (action === 'edit') {
         updatedData[itemNumber] = {
           ...updatedData[itemNumber],
           value,
           reviewed: true,
           manually_edited: true,
-          reviewed_by: (await base44.auth.me()).email,
+          reviewed_by: currentUser.email,
           reviewed_at: new Date().toISOString(),
           edit_notes: notes
         };
+        
+        // Log audit trail
+        await logOASISAction({
+          action: AuditActions.OASIS_SUGGESTION_EDITED,
+          patientId: patient.id,
+          oasisId: oasisRecord.id,
+          itemNumber,
+          oldValue,
+          newValue: value,
+          notes,
+          reviewedBy: currentUser.email,
+        });
       }
 
       return base44.entities.OASISUpload.update(oasisRecord.id, {

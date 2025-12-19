@@ -24,7 +24,8 @@ import {
   ChevronRight,
   Sparkles,
   Clock,
-  BookOpen
+  BookOpen,
+  Shield
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
@@ -93,7 +94,8 @@ export default function Layout({ children, currentPageName }) {
     { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
     { name: "Users & Settings", icon: Users, page: "UserManagement" },
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
-    { name: "Compliance & Audit", icon: Shield, page: "ComplianceRegulatory" },
+    { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
+    { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
     { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
     { name: "Import Patients", icon: Users, page: "ImportPatients" },
     { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
