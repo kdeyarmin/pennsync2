@@ -55,7 +55,7 @@ export default function GuidelineComplianceChecker({
         content_excerpt: g.content_markdown?.substring(0, 1000)
       }));
 
-      const prompt = `You are a Medicare compliance auditor. Cross-reference this clinical note against specific Medicare guidelines to identify compliance gaps.
+      const prompt = `You are a Medicare compliance auditor. Perform GRANULAR, SENTENCE-LEVEL cross-reference of this clinical note against specific Medicare guidelines.
 
 CLINICAL NOTE TO AUDIT:
 ${noteContent}
@@ -81,13 +81,26 @@ Detailed Requirements:
 ${g.content_excerpt}
 `).join('\n\n---\n\n')}
 
-AUDIT REQUIREMENTS:
-For EACH guideline above, determine:
-1. Does the note contain the required documentation elements?
-2. What specific requirements are missing or incomplete?
-3. What text should be added to meet the guideline?
+GRANULAR AUDIT REQUIREMENTS:
+For EACH guideline above, you must:
 
-Return JSON with detailed compliance analysis:
+1. **Extract Relevant Text**: Identify EXACT sentences or phrases from the note that attempt to address each guideline requirement
+
+2. **Assess Degree of Compliance**: For EACH requirement, provide:
+   - Compliance percentage (0-100%) for that specific requirement
+   - Whether it's: fully_met, partially_met, minimally_addressed, or not_addressed
+   - EXACT quotes from the note that relate to this requirement
+   - What's missing or weak in those quotes
+
+3. **Granular Gap Analysis**: For each requirement NOT fully met, specify:
+   - Current text from note (exact quote)
+   - Why current text is insufficient (be specific)
+   - What additional language would make it compliant
+   - Degree of risk (critical/high/medium/low)
+
+4. **Sentence-Level Suggestions**: Provide specific text improvements that reference what's already written
+
+Return JSON with GRANULAR compliance analysis:
 {
   "overall_compliance_score": 0-100,
   "guidelines_reviewed": ${guidelines.length},
@@ -100,18 +113,20 @@ Return JSON with detailed compliance analysis:
       "category": "string",
       "compliance_status": "compliant|partial|non_compliant",
       "compliance_percentage": 0-100,
-      "required_elements": ["element1", "element2"],
-      "present_elements": ["element1"],
-      "missing_elements": ["element2"],
-      "specific_gaps": [
+      "requirement_analysis": [
         {
-          "requirement": "What the guideline requires",
-          "current_state": "What the note currently says (or 'Not documented')",
-          "gap_severity": "critical|high|medium|low",
-          "suggested_addition": "Specific text to add to meet requirement",
-          "rationale": "Why this is required per the guideline"
+          "requirement_name": "Specific requirement from guideline",
+          "compliance_degree": "fully_met|partially_met|minimally_addressed|not_addressed",
+          "compliance_percentage": 0-100,
+          "note_excerpts": ["Exact sentence from note", "Another relevant sentence"],
+          "excerpt_assessment": "Analysis of why excerpts are sufficient or insufficient",
+          "gap_description": "What's missing or weak",
+          "improvement_needed": "Specific improvement to make it fully compliant",
+          "suggested_enhanced_text": "Improved version of the excerpt or new text to add",
+          "severity": "critical|high|medium|low"
         }
       ],
+      "overall_strengths": ["Aspects of note that meet this guideline well"],
       "audit_risk": "Description of audit risk if gaps remain",
       "guideline_url": "string"
     }
@@ -145,22 +160,24 @@ Return JSON with detailed compliance analysis:
                   category: { type: "string" },
                   compliance_status: { type: "string" },
                   compliance_percentage: { type: "number" },
-                  required_elements: { type: "array", items: { type: "string" } },
-                  present_elements: { type: "array", items: { type: "string" } },
-                  missing_elements: { type: "array", items: { type: "string" } },
-                  specific_gaps: {
+                  requirement_analysis: {
                     type: "array",
                     items: {
                       type: "object",
                       properties: {
-                        requirement: { type: "string" },
-                        current_state: { type: "string" },
-                        gap_severity: { type: "string" },
-                        suggested_addition: { type: "string" },
-                        rationale: { type: "string" }
+                        requirement_name: { type: "string" },
+                        compliance_degree: { type: "string" },
+                        compliance_percentage: { type: "number" },
+                        note_excerpts: { type: "array", items: { type: "string" } },
+                        excerpt_assessment: { type: "string" },
+                        gap_description: { type: "string" },
+                        improvement_needed: { type: "string" },
+                        suggested_enhanced_text: { type: "string" },
+                        severity: { type: "string" }
                       }
                     }
                   },
+                  overall_strengths: { type: "array", items: { type: "string" } },
                   audit_risk: { type: "string" },
                   guideline_url: { type: "string" }
                 }
@@ -187,8 +204,9 @@ Return JSON with detailed compliance analysis:
       // Callback with issues
       if (onIssueFound && result.guideline_results) {
         const allGaps = result.guideline_results
-          .flatMap(gr => gr.specific_gaps || [])
-          .filter(gap => gap.gap_severity === 'critical' || gap.gap_severity === 'high');
+          .flatMap(gr => gr.requirement_analysis || [])
+          .filter(req => req.severity === 'critical' || req.severity === 'high')
+          .filter(req => req.compliance_degree !== 'fully_met');
         onIssueFound(allGaps);
       }
 
@@ -218,6 +236,20 @@ Return JSON with detailed compliance analysis:
       low: 'bg-blue-100 text-blue-800'
     };
     return colors[severity] || colors.medium;
+  };
+
+  const getDegreeIcon = (degree) => {
+    if (degree === 'fully_met') return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+    if (degree === 'partially_met') return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
+    if (degree === 'minimally_addressed') return <AlertCircle className="w-4 h-4 text-orange-600" />;
+    return <XCircle className="w-4 h-4 text-red-600" />;
+  };
+
+  const getDegreeColor = (degree) => {
+    if (degree === 'fully_met') return 'bg-green-50 border-green-300';
+    if (degree === 'partially_met') return 'bg-yellow-50 border-yellow-300';
+    if (degree === 'minimally_addressed') return 'bg-orange-50 border-orange-300';
+    return 'bg-red-50 border-red-300';
   };
 
   return (
@@ -310,45 +342,116 @@ Return JSON with detailed compliance analysis:
                       </div>
                     </CardHeader>
                     <CardContent className="py-2 space-y-3">
-                      {/* Missing Elements */}
-                      {result.missing_elements?.length > 0 && (
-                        <div className="bg-white p-3 rounded border border-gray-200">
-                          <p className="text-xs font-semibold text-red-800 mb-2">
-                            Missing Required Elements:
-                          </p>
-                          <div className="space-y-1">
-                            {result.missing_elements.map((elem, i) => (
-                              <div key={i} className="flex items-center gap-1 text-xs text-red-700">
-                                <XCircle className="w-3 h-3 flex-shrink-0" />
-                                {elem}
+                      {/* Requirement-Level Analysis */}
+                      {result.requirement_analysis?.length > 0 && (
+                        <div className="space-y-2">
+                          {result.requirement_analysis.map((req, reqIdx) => (
+                            <div key={reqIdx} className={`p-3 rounded-lg border-2 ${getDegreeColor(req.compliance_degree)}`}>
+                              {/* Requirement Header */}
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2 flex-1">
+                                  {getDegreeIcon(req.compliance_degree)}
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-900">{req.requirement_name}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Badge className={getSeverityColor(req.severity)}>
+                                        {req.severity}
+                                      </Badge>
+                                      <Badge variant="outline" className="text-xs">
+                                        {req.compliance_degree.replace(/_/g, ' ')}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className={`text-lg font-bold ${
+                                    req.compliance_percentage >= 90 ? 'text-green-600' :
+                                    req.compliance_percentage >= 70 ? 'text-yellow-600' :
+                                    req.compliance_percentage >= 40 ? 'text-orange-600' :
+                                    'text-red-600'
+                                  }`}>
+                                    {req.compliance_percentage}%
+                                  </div>
+                                  <p className="text-xs text-gray-500">compliant</p>
+                                </div>
                               </div>
-                            ))}
-                          </div>
+
+                              {/* Note Excerpts - What's Currently Documented */}
+                              {req.note_excerpts?.length > 0 && (
+                                <div className="bg-white p-2 rounded border border-gray-300 mb-2">
+                                  <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                                    <FileText className="w-3 h-3" />
+                                    Current Documentation:
+                                  </p>
+                                  <div className="space-y-1">
+                                    {req.note_excerpts.map((excerpt, i) => (
+                                      <p key={i} className="text-xs text-gray-800 italic pl-3 border-l-2 border-blue-300">
+                                        "{excerpt}"
+                                      </p>
+                                    ))}
+                                  </div>
+                                  {req.excerpt_assessment && (
+                                    <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                                      💬 {req.excerpt_assessment}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Gap Description */}
+                              {req.compliance_degree !== 'fully_met' && req.gap_description && (
+                                <div className="bg-red-50 p-2 rounded border border-red-200 mb-2">
+                                  <p className="text-xs font-semibold text-red-800 mb-1">⚠️ Gap Identified:</p>
+                                  <p className="text-xs text-red-700">{req.gap_description}</p>
+                                </div>
+                              )}
+
+                              {/* Improvement Needed */}
+                              {req.improvement_needed && (
+                                <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-2">
+                                  <p className="text-xs font-semibold text-blue-800 mb-1">🔧 To Improve:</p>
+                                  <p className="text-xs text-blue-700">{req.improvement_needed}</p>
+                                </div>
+                              )}
+
+                              {/* Suggested Enhanced Text */}
+                              {req.suggested_enhanced_text && (
+                                <div className="bg-green-50 p-2 rounded border border-green-300">
+                                  <p className="text-xs font-semibold text-green-800 mb-1">✅ Suggested Enhancement:</p>
+                                  <p className="text-xs text-green-900 font-medium">"{req.suggested_enhanced_text}"</p>
+                                  {onIssueFound && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="mt-2 w-full h-6 text-xs"
+                                      onClick={() => onIssueFound([req])}
+                                    >
+                                      <Plus className="w-3 h-3 mr-1" />
+                                      Apply Enhancement
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       )}
 
-                      {/* Specific Gaps */}
-                      {result.specific_gaps?.length > 0 && (
-                        <div className="space-y-2">
-                          {result.specific_gaps.map((gap, gapIdx) => (
-                            <div key={gapIdx} className={`p-2 rounded border ${getSeverityColor(gap.gap_severity)}`}>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge className={getSeverityColor(gap.gap_severity)}>
-                                  {gap.gap_severity}
-                                </Badge>
-                                <p className="text-xs font-medium text-gray-900">{gap.requirement}</p>
-                              </div>
-                              <p className="text-xs text-gray-600 mb-1">
-                                <strong>Current:</strong> {gap.current_state}
-                              </p>
-                              <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-1">
-                                <p className="text-xs text-blue-900">
-                                  <strong>Add:</strong> {gap.suggested_addition}
-                                </p>
-                              </div>
-                              <p className="text-xs text-gray-500 italic">{gap.rationale}</p>
-                            </div>
-                          ))}
+                      {/* Overall Strengths for this Guideline */}
+                      {result.overall_strengths?.length > 0 && (
+                        <div className="bg-green-50 p-2 rounded border border-green-200">
+                          <p className="text-xs font-semibold text-green-800 mb-1 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Compliant Elements:
+                          </p>
+                          <ul className="space-y-1">
+                            {result.overall_strengths.map((strength, i) => (
+                              <li key={i} className="text-xs text-green-700 flex items-start gap-1">
+                                <span className="text-green-600">✓</span>
+                                {strength}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
 
