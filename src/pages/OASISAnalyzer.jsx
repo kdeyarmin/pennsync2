@@ -21,6 +21,8 @@ import {
   DollarSign,
   Target,
   Loader2,
+  TrendingDown,
+  Activity,
   Info,
   TrendingUp,
   ClipboardCheck,
