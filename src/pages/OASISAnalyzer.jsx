@@ -72,6 +72,288 @@ import { logActivity, ActivityActions } from "../components/utils/activityLogger
 import InlineDocumentationAssistant from "../components/oasis/InlineDocumentationAssistant";
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+// Analytics Dashboard Component
+function OASISAnalyticsDashboard({ savedOASISUploads }) {
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+  // Process demographics data
+  const demographicsData = React.useMemo(() => {
+    const genderCount = { Male: 0, Female: 0, Unknown: 0 };
+    const ageRanges = { '0-64': 0, '65-74': 0, '75-84': 0, '85+': 0, Unknown: 0 };
+    
+    savedOASISUploads.forEach(upload => {
+      const gender = upload.pdgm_data?.patient_info?.gender || 'Unknown';
+      if (gender.toLowerCase().includes('m') || gender.toLowerCase() === 'male') genderCount.Male++;
+      else if (gender.toLowerCase().includes('f') || gender.toLowerCase() === 'female') genderCount.Female++;
+      else genderCount.Unknown++;
+
+      const dob = upload.pdgm_data?.patient_info?.dob;
+      if (dob && dob !== 'Not found') {
+        const age = new Date().getFullYear() - new Date(dob).getFullYear();
+        if (age < 65) ageRanges['0-64']++;
+        else if (age < 75) ageRanges['65-74']++;
+        else if (age < 85) ageRanges['75-84']++;
+        else ageRanges['85+']++;
+      } else {
+        ageRanges.Unknown++;
+      }
+    });
+
+    return {
+      gender: Object.entries(genderCount).map(([name, value]) => ({ name, value })),
+      age: Object.entries(ageRanges).map(([name, value]) => ({ name, value }))
+    };
+  }, [savedOASISUploads]);
+
+  // Process diagnoses data
+  const diagnosesData = React.useMemo(() => {
+    const diagnosisCount = {};
+    
+    savedOASISUploads.forEach(upload => {
+      const primaryDx = upload.pdgm_data?.primary_diagnosis || upload.pdgm_data?.primary_diagnosis_description;
+      if (primaryDx && primaryDx !== 'Unknown' && primaryDx !== 'Not found') {
+        const dxKey = primaryDx.substring(0, 50); // Truncate for display
+        diagnosisCount[dxKey] = (diagnosisCount[dxKey] || 0) + 1;
+      }
+    });
+
+    return Object.entries(diagnosisCount)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }, [savedOASISUploads]);
+
+  // Process functional scores over time
+  const functionalScoresData = React.useMemo(() => {
+    return savedOASISUploads
+      .filter(u => u.assessment_date && u.pdgm_data?.functional_scores)
+      .sort((a, b) => new Date(a.assessment_date) - new Date(b.assessment_date))
+      .slice(-20) // Last 20 assessments
+      .map(upload => ({
+        date: new Date(upload.assessment_date).toLocaleDateString(),
+        ambulation: upload.pdgm_data?.functional_scores?.m1860_ambulation || 0,
+        transferring: upload.pdgm_data?.functional_scores?.m1850_transferring || 0,
+        bathing: upload.pdgm_data?.functional_scores?.m1830_bathing || 0,
+        patient: upload.patient_name?.substring(0, 15) || 'Unknown'
+      }));
+  }, [savedOASISUploads]);
+
+  // Process PDGM payment trends
+  const paymentTrendsData = React.useMemo(() => {
+    return savedOASISUploads
+      .filter(u => u.assessment_date && u.estimated_payment)
+      .sort((a, b) => new Date(a.assessment_date) - new Date(b.assessment_date))
+      .slice(-15) // Last 15 with payments
+      .map(upload => ({
+        date: new Date(upload.assessment_date).toLocaleDateString(),
+        payment: upload.estimated_payment,
+        patient: upload.patient_name?.substring(0, 15) || 'Unknown'
+      }));
+  }, [savedOASISUploads]);
+
+  // Calculate summary statistics
+  const summaryStats = React.useMemo(() => {
+    const totalAssessments = savedOASISUploads.length;
+    const avgScore = savedOASISUploads.reduce((sum, u) => sum + (u.scores?.overall || 0), 0) / totalAssessments || 0;
+    const avgPayment = savedOASISUploads.filter(u => u.estimated_payment).reduce((sum, u) => sum + u.estimated_payment, 0) / savedOASISUploads.filter(u => u.estimated_payment).length || 0;
+    const totalRevenue = savedOASISUploads.reduce((sum, u) => sum + (u.estimated_payment || 0), 0);
+
+    return { totalAssessments, avgScore, avgPayment, totalRevenue };
+  }, [savedOASISUploads]);
+
+  if (savedOASISUploads.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Data Available</h3>
+          <p className="text-gray-600">Upload and analyze OASIS documents to see analytics and trends.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="border-2 border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-600 font-medium">Total Assessments</p>
+                <p className="text-3xl font-bold text-blue-700">{summaryStats.totalAssessments}</p>
+              </div>
+              <FileText className="w-10 h-10 text-blue-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-600 font-medium">Avg Quality Score</p>
+                <p className="text-3xl font-bold text-green-700">{summaryStats.avgScore.toFixed(0)}%</p>
+              </div>
+              <Target className="w-10 h-10 text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-purple-200 bg-purple-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-purple-600 font-medium">Avg Payment</p>
+                <p className="text-3xl font-bold text-purple-700">${summaryStats.avgPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              </div>
+              <DollarSign className="w-10 h-10 text-purple-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-orange-600 font-medium">Total Revenue</p>
+                <p className="text-3xl font-bold text-orange-700">${summaryStats.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              </div>
+              <TrendingUp className="w-10 h-10 text-orange-400" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Patient Demographics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              Gender Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={demographicsData.gender}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {demographicsData.gender.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity className="w-5 h-5 text-green-600" />
+              Age Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={demographicsData.age}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#10b981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Common Diagnoses */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ClipboardCheck className="w-5 h-5 text-purple-600" />
+            Top 10 Primary Diagnoses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={diagnosesData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis dataKey="name" type="category" width={200} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#8b5cf6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Functional Scores Over Time */}
+      {functionalScoresData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+              Functional Scores Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={functionalScoresData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
+                <YAxis label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="ambulation" stroke="#3b82f6" name="Ambulation" strokeWidth={2} />
+                <Line type="monotone" dataKey="transferring" stroke="#10b981" name="Transferring" strokeWidth={2} />
+                <Line type="monotone" dataKey="bathing" stroke="#f59e0b" name="Bathing" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* PDGM Payment Trends */}
+      {paymentTrendsData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-600" />
+              PDGM Payment Trends
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={paymentTrendsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
+                <YAxis label={{ value: 'Payment ($)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                <Legend />
+                <Line type="monotone" dataKey="payment" stroke="#10b981" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 export default function OASISAnalyzer() {
   const [activeTab, setActiveTab] = useState("single");
@@ -1379,7 +1661,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full max-w-lg grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="single" className="gap-2">
             <FileText className="w-4 h-4" />
             Single Document
@@ -1391,6 +1673,10 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
           <TabsTrigger value="saved" className="gap-2">
             <History className="w-4 h-4" />
             Saved ({savedOASISUploads.length})
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analytics
           </TabsTrigger>
         </TabsList>
 
@@ -1449,6 +1735,11 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="mt-4">
+          <OASISAnalyticsDashboard savedOASISUploads={savedOASISUploads} />
         </TabsContent>
 
         <TabsContent value="batch" className="mt-4">
