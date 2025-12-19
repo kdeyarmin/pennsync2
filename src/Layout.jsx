@@ -96,7 +96,8 @@ export default function Layout({ children, currentPageName }) {
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
     { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
-    { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
+    { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
+    { name: "OASIS Analyzer", icon: FileText, page: "OASISAnalyzer" },
     { name: "Import Patients", icon: Users, page: "ImportPatients" },
     { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
     ];
