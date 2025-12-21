@@ -45,9 +45,9 @@ const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
 const FIELD_MAPPINGS = {
   // Patient basic info
-  'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient_first_name', 'patient', 'firstname', 'fname', 'patientfirstname', 'patientfirst', 'patient first name', 'first'] },
-  'last_name': { label: 'Last Name', type: 'string', required: true, aliases: ['patient_last_name', 'lastname', 'lname', 'patientlastname', 'patientlast', 'surname', 'familyname', 'patient last name', 'last'] },
-  'middle_name': { label: 'Middle Name', type: 'string' },
+  'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient_first_name', 'patient', 'firstname', 'fname', 'patientfirstname', 'patientfirst', 'patient first name', 'first', 'givenname', 'given_name'] },
+  'last_name': { label: 'Last Name', type: 'string', required: true, aliases: ['patient_last_name', 'lastname', 'lname', 'patientlastname', 'patientlast', 'surname', 'familyname', 'patient last name', 'last', 'patient_lastname', 'patientname', 'name'] },
+  'middle_name': { label: 'Middle Name', type: 'string', aliases: ['middle', 'middlename', 'middle_name', 'mi'] },
   'date_of_birth': { label: 'Date of Birth', type: 'date', format: 'MM/DD/YYYY', aliases: ['dob'] },
   'medical_record_number': { label: 'Medical Record Number', type: 'string', aliases: ['mrn'] },
   'phone': { label: 'Phone Number', type: 'string' },
