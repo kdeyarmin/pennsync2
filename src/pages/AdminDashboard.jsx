@@ -167,7 +167,10 @@ export default function AdminDashboard() {
   const last7Days = format(subDays(new Date(), 7), 'yyyy-MM-dd');
   const last30Days = format(subDays(new Date(), 30), 'yyyy-MM-dd');
   const visitsLast7Days = visits.filter(v => v.visit_date >= last7Days).length;
-  const visitsLast30Days = visits.filter(v => v.visit_date >= last30Days).length;
+  const notesEnhanced = allNoteConversions.filter(n => {
+    const noteDate = new Date(n.created_date);
+    return noteDate >= new Date(last30Days);
+  }).length;
   const completedVisits = visits.filter(v => v.status === 'completed').length;
 
   // Security metrics
@@ -179,20 +182,9 @@ export default function AdminDashboard() {
     log.action === 'AI_API_CALL'
   ).length;
 
-  // Calculate avg documentation time
-  const visitsWithTime = visits.filter(v => v.start_time && v.end_time && v.status === 'completed');
-  const avgDocTime = visitsWithTime.length > 0
-    ? Math.round(visitsWithTime.reduce((sum, v) => {
-        try {
-          const start = new Date(`2000-01-01T${v.start_time}`);
-          const end = new Date(`2000-01-01T${v.end_time}`);
-          const diff = (end - start) / 1000 / 60;
-          return sum + (diff > 0 ? diff : 0);
-        } catch (e) {
-          return sum;
-        }
-      }, 0) / visitsWithTime.length)
-    : 0;
+  // Calculate estimated time saved from note conversions (15 min per note)
+  const totalTimeSavedMinutes = notesEnhanced * 15;
+  const totalTimeSavedHours = Math.round(totalTimeSavedMinutes / 60);
 
   // Fetch user activities and compliance audits
   const { data: userActivities = [] } = useQuery({
@@ -392,11 +384,11 @@ export default function AdminDashboard() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-xs font-medium mb-0.5">Visits (30 Days)</p>
-                <p className="text-2xl font-bold">{visitsLast30Days}</p>
-                <p className="text-purple-100 text-[10px] mt-0.5">{completedVisits} completed</p>
+                <p className="text-purple-100 text-xs font-medium mb-0.5">Notes Enhanced</p>
+                <p className="text-2xl font-bold">{notesEnhanced}</p>
+                <p className="text-purple-100 text-[10px] mt-0.5">last 30 days</p>
               </div>
-              <Calendar className="w-8 h-8 text-purple-200" />
+              <FileText className="w-8 h-8 text-purple-200" />
             </div>
           </CardContent>
         </Card>
@@ -405,9 +397,9 @@ export default function AdminDashboard() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-xs font-medium mb-0.5">Avg Doc Time</p>
-                <p className="text-2xl font-bold">{avgDocTime}</p>
-                <p className="text-orange-100 text-[10px] mt-0.5">minutes per visit</p>
+                <p className="text-orange-100 text-xs font-medium mb-0.5">Time Saved (All)</p>
+                <p className="text-2xl font-bold">{totalTimeSavedHours}h</p>
+                <p className="text-orange-100 text-[10px] mt-0.5">{totalTimeSavedMinutes} mins total</p>
               </div>
               <Clock className="w-8 h-8 text-orange-200" />
             </div>
