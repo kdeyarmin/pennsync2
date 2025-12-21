@@ -254,6 +254,25 @@ export default function PatientDetails() {
                   >
                     {patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}
                   </Badge>
+                  {patient.primary_diagnosis && (
+                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                      {sanitizeInput(patient.primary_diagnosis)}
+                    </Badge>
+                  )}
+                  {patient.secondary_diagnoses && patient.secondary_diagnoses.length > 0 && (
+                    <>
+                      {patient.secondary_diagnoses.slice(0, 2).map((dx, idx) => (
+                        <Badge key={idx} variant="outline" className="bg-gray-50 text-gray-700">
+                          {sanitizeInput(dx)}
+                        </Badge>
+                      ))}
+                      {patient.secondary_diagnoses.length > 2 && (
+                        <Badge variant="outline" className="bg-gray-50 text-gray-500">
+                          +{patient.secondary_diagnoses.length - 2} more
+                        </Badge>
+                      )}
+                    </>
+                  )}
                   {hasCriticalAlerts && (
                     <Badge className="bg-red-600 text-white animate-pulse">
                       <AlertTriangle className="w-3 h-3 mr-1" />
