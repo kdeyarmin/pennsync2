@@ -65,7 +65,7 @@ export default function NoteConversionReport() {
     ? Math.round(filteredConversions.reduce((sum, c) => sum + (c.quality_score || 0), 0) / filteredConversions.length)
     : 0;
   const avgConversionTime = filteredConversions.length > 0
-    ? Math.round(filteredConversions.reduce((sum, c) => sum + (c.conversion_time_ms || 0), 0) / filteredConversions.length / 1000)
+    ? Math.round(filteredConversions.reduce((sum, c) => sum + (c.conversion_time_ms || 0), 0) / filteredConversions.length / 60000)
     : 0;
   const uniqueNurses = new Set(filteredConversions.map(c => c.nurse_email)).size;
 
@@ -178,7 +178,7 @@ export default function NoteConversionReport() {
                 <Clock className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{avgConversionTime}s</p>
+                <p className="text-2xl font-bold">{avgConversionTime} min</p>
                 <p className="text-xs text-gray-500">Avg Conversion Time</p>
               </div>
             </div>
