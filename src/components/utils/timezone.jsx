@@ -12,11 +12,8 @@ const EASTERN_TIMEZONE = 'America/New_York';
 export const formatEastern = (date, formatStr = 'MMM d, yyyy HH:mm') => {
   if (!date) return '';
   try {
-    // Parse the date - handle both ISO strings and Date objects
-    const dateObj = date instanceof Date ? date : new Date(date);
-    // The date from the database is in UTC, formatInTimeZone will convert it to Eastern Time
-    const zonedDate = toZonedTime(dateObj, EASTERN_TIMEZONE);
-    return dateFnsFormat(zonedDate, formatStr);
+    // Use formatInTimeZone directly to convert UTC to Eastern Time
+    return formatInTimeZone(date, EASTERN_TIMEZONE, formatStr);
   } catch (error) {
     console.error('Error formatting date:', error);
     return '';
@@ -62,9 +59,12 @@ export const todayEastern = () => {
 export const formatRelativeEastern = (date) => {
   if (!date) return '';
   try {
-    const easternDate = toZonedTime(new Date(date), EASTERN_TIMEZONE);
-    const now = toZonedTime(new Date(), EASTERN_TIMEZONE);
-    const diffMs = now - easternDate;
+    // Convert both dates to Eastern Time for accurate comparison
+    const utcDate = new Date(date);
+    const utcNow = new Date();
+    const easternDate = toZonedTime(utcDate, EASTERN_TIMEZONE);
+    const easternNow = toZonedTime(utcNow, EASTERN_TIMEZONE);
+    const diffMs = easternNow - easternDate;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
@@ -73,7 +73,7 @@ export const formatRelativeEastern = (date) => {
     if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    return formatInTimeZone(easternDate, EASTERN_TIMEZONE, 'MMM d, yyyy');
+    return formatInTimeZone(utcDate, EASTERN_TIMEZONE, 'MMM d, yyyy');
   } catch (error) {
     console.error('Error formatting relative time:', error);
     return '';
