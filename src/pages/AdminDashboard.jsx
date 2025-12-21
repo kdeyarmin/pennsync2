@@ -415,60 +415,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Key Metrics - Row 2: Efficiency & Quality */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-cyan-100 text-xs font-medium mb-0.5">Time Saved (AI)</p>
-                <p className="text-2xl font-bold">{timeSavedHours}h</p>
-                <p className="text-cyan-100 text-[10px] mt-0.5">{estimatedTimeSaved} mins total</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-cyan-200" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-indigo-100 text-xs font-medium mb-0.5">Compliance Score</p>
-                <p className="text-2xl font-bold">{avgComplianceScore}%</p>
-                <p className="text-indigo-100 text-[10px] mt-0.5">last 30 days avg</p>
-              </div>
-              <Shield className="w-8 h-8 text-indigo-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-pink-100 text-xs font-medium mb-0.5">AI Adoption</p>
-                <p className="text-2xl font-bold">{aiAdoptionRate}%</p>
-                <p className="text-pink-100 text-[10px] mt-0.5">{visitsWithAI} visits with AI</p>
-              </div>
-              <Target className="w-8 h-8 text-pink-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-teal-100 text-xs font-medium mb-0.5">Quality Score</p>
-                <p className="text-2xl font-bold">{qualityScore}%</p>
-                <p className="text-teal-100 text-[10px] mt-0.5">{recentIncidents} incidents</p>
-              </div>
-              <Award className="w-8 h-8 text-teal-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
