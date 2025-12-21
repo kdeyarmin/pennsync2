@@ -38,6 +38,7 @@ import ImportReportGenerator from "../components/import/ImportReportGenerator";
 import DuplicateDetector from "../components/import/DuplicateDetector";
 import ErrorPatternAnalyzer from "../components/import/ErrorPatternAnalyzer";
 import AutoCorrector from "../components/import/AutoCorrector";
+import AIErrorInterpreter from "../components/import/AIErrorInterpreter";
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -166,7 +167,7 @@ export default function ImportPatients() {
         results.success = createdPatients.length;
         setImportProgress(100);
       } catch (error) {
-        // If bulk create fails, fall back to individual creates with error tracking
+        // If bulk create fails, fall back to individual creates with enhanced error tracking
         for (let i = 0; i < patients.length; i++) {
           try {
             await base44.entities.Patient.create(patients[i]);
@@ -174,26 +175,47 @@ export default function ImportPatients() {
           } catch (error) {
             results.failed++;
             const errorMsg = error.message || 'Unknown error occurred';
+            
+            // Enhanced context-specific error messages and suggestions
             let suggestion = 'Review and correct the data before re-importing.';
+            let contextualHelp = '';
             
             if (errorMsg.toLowerCase().includes('duplicate')) {
-              suggestion = 'This patient may already exist. Check for duplicates or update existing record instead of creating new.';
-            } else if (errorMsg.toLowerCase().includes('required')) {
-              suggestion = 'Ensure all required fields are provided: First Name and Last Name are mandatory.';
-            } else if (errorMsg.toLowerCase().includes('invalid')) {
-              suggestion = 'Check that all field values match the expected format (e.g., dates, emails, phone numbers).';
+              suggestion = 'This patient may already exist in the system.';
+              contextualHelp = `Check patient: ${patients[i].first_name} ${patients[i].last_name}${patients[i].medical_record_number ? ` (MRN: ${patients[i].medical_record_number})` : ''}. Consider updating the existing record instead.`;
+            } else if (errorMsg.toLowerCase().includes('required') || errorMsg.toLowerCase().includes('missing')) {
+              const missingFields = [];
+              if (!patients[i].first_name) missingFields.push('First Name');
+              if (!patients[i].last_name) missingFields.push('Last Name');
+              
+              suggestion = `Missing required field(s): ${missingFields.join(', ')}`;
+              contextualHelp = 'These fields are mandatory for all patient records. Please ensure they are filled in your CSV file.';
+            } else if (errorMsg.toLowerCase().includes('invalid') || errorMsg.toLowerCase().includes('format')) {
+              suggestion = 'One or more fields have invalid format.';
+              contextualHelp = 'Check: dates (YYYY-MM-DD), emails (user@domain.com), phone numbers (10 digits), and enum values match allowed options.';
+            } else if (errorMsg.toLowerCase().includes('validation')) {
+              suggestion = 'Data validation failed.';
+              contextualHelp = 'Review the patient data for consistency: age calculations, date sequences, phone/email formats.';
             }
             
             results.errors.push({
               row: i + 1,
               patient: `${patients[i].first_name || 'Unknown'} ${patients[i].last_name || 'Patient'}`,
               error: errorMsg,
-              suggestion: suggestion
+              suggestion: suggestion,
+              contextualHelp: contextualHelp,
+              patientData: {
+                first_name: patients[i].first_name,
+                last_name: patients[i].last_name,
+                date_of_birth: patients[i].date_of_birth,
+                medical_record_number: patients[i].medical_record_number
+              }
             });
             results.failedRecords.push({
               ...patients[i],
               error_description: errorMsg,
               error_suggestion: suggestion,
+              contextual_help: contextualHelp,
               original_row: i + 1
             });
           }
@@ -772,19 +794,73 @@ export default function ImportPatients() {
   };
 
   const handleReImportFailed = () => {
-    // Reset to allow re-upload of corrected file
+    if (!importResults?.failedRecords || importResults.failedRecords.length === 0) {
+      alert('No failed records to re-import');
+      return;
+    }
+
+    // Convert failed records back to CSV format
+    const failedRecordsCSV = convertRecordsToCSV(importResults.failedRecords);
+    
+    // Parse the CSV data
+    const { headers, rows } = parseCSV(failedRecordsCSV);
+    
+    // Reset state and pre-load failed records
     setFile(null);
-    setCsvData(null);
-    setColumnMapping({});
-    setMappingErrors({});
-    setValidationErrors([]);
-    setValidRecords([]);
-    setShowPreview(false);
+    setCsvData({ headers, rows });
     setImportResults(null);
     setImportProgress(0);
+    setShowPreview(false);
+    setValidationErrors([]);
+    setValidRecords([]);
+    
+    // Auto-map columns
+    const autoMapping = {};
+    headers.forEach((header, idx) => {
+      const normalize = (str) => str.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const normalizedHeader = normalize(header);
+      
+      for (const fieldKey in FIELD_MAPPINGS) {
+        if (normalize(fieldKey) === normalizedHeader) {
+          autoMapping[idx] = fieldKey;
+          break;
+        }
+      }
+    });
+    
+    setColumnMapping(autoMapping);
+    validateMapping(autoMapping);
     
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const convertRecordsToCSV = (records) => {
+    const fieldKeys = Object.keys(FIELD_MAPPINGS).filter(key => !key.includes('insurance_')); // Simplified fields
+    const headers = fieldKeys.join(',');
+    
+    const rows = records.map(record => {
+      return fieldKeys.map(key => {
+        let value = record[key] || '';
+        
+        // Handle special fields
+        if (key === 'secondary_diagnoses' && Array.isArray(value)) {
+          value = value.join('; ');
+        } else if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
+        
+        // Escape CSV values
+        value = String(value);
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+          value = `"${value.replace(/"/g, '""')}"`;
+        }
+        
+        return value;
+      }).join(',');
+    });
+    
+    return headers + '\n' + rows.join('\n');
   };
 
   // Auto-validate is removed - user must click "Validate & Continue" button
@@ -970,10 +1046,19 @@ export default function ImportPatients() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ArrowRight className="w-5 h-5" />
-              Step 2: Map Columns (Drag & Drop)
+              Step 2: Map Columns {importResults?.failedRecords && '(Retry Mode - Failed Records Loaded)'}
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {importResults?.failedRecords && (
+              <Alert className="bg-orange-50 border-orange-300 mb-4">
+                <AlertCircle className="w-4 h-4 text-orange-600" />
+                <AlertDescription className="text-orange-900">
+                  <strong>Retry Mode Active:</strong> {importResults.failedRecords.length} previously failed record(s) loaded. 
+                  Review and correct the errors before re-validating.
+                </AlertDescription>
+              </Alert>
+            )}
             <p className="text-sm text-gray-600 mb-4">
               Drag CSV columns to the corresponding patient fields. Auto-mapped fields are already assigned.
             </p>
@@ -1271,31 +1356,41 @@ export default function ImportPatients() {
 
           {/* Error Analysis & Resolution Tools */}
           {validationErrors.length > 0 && (
-            <>
-              {/* Error Pattern Analysis */}
-              <div className="mb-6">
-                <ErrorPatternAnalyzer validationErrors={validationErrors} />
-              </div>
+          <>
+          {/* AI Error Interpreter */}
+          <div className="mb-6">
+            <AIErrorInterpreter
+              errors={validationErrors}
+              onApplySuggestions={(suggestions) => {
+                console.log('Apply AI suggestions:', suggestions);
+              }}
+            />
+          </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Error Category Analyzer */}
-                <ErrorCategoryAnalyzer
-                  validationErrors={validationErrors}
-                  onSelectErrors={(indices) => {
-                    setSelectedErrorIndices(indices);
-                    setShowBulkResolver(true);
-                  }}
-                />
+          {/* Error Pattern Analysis */}
+          <div className="mb-6">
+            <ErrorPatternAnalyzer validationErrors={validationErrors} />
+          </div>
 
-                {/* AI Validation Helper */}
-                <AIValidationHelper
-                  validationErrors={validationErrors}
-                  onApplySuggestions={(suggestions) => {
-                    console.log('Apply suggestions:', suggestions);
-                  }}
-                />
-              </div>
-            </>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Error Category Analyzer */}
+            <ErrorCategoryAnalyzer
+              validationErrors={validationErrors}
+              onSelectErrors={(indices) => {
+                setSelectedErrorIndices(indices);
+                setShowBulkResolver(true);
+              }}
+            />
+
+            {/* AI Validation Helper */}
+            <AIValidationHelper
+              validationErrors={validationErrors}
+              onApplySuggestions={(suggestions) => {
+                console.log('Apply suggestions:', suggestions);
+              }}
+            />
+          </div>
+          </>
           )}
 
           {/* Bulk Error Resolver */}
@@ -1714,7 +1809,11 @@ export default function ImportPatients() {
                     
                     <Alert className="bg-yellow-50 border-yellow-300 mb-3">
                       <AlertDescription className="text-sm text-yellow-900">
-                        💡 <strong>Tip:</strong> Download the failed rows CSV, fix the errors described in each row, remove the 'error_description' and 'original_row' columns, then re-upload the corrected file.
+                        💡 <strong>Quick Fix Options:</strong>
+                        <ul className="list-disc ml-4 mt-2 space-y-1">
+                          <li><strong>Option 1:</strong> Click "Retry Import - Failed Rows Only" below to automatically reload failed records for correction</li>
+                          <li><strong>Option 2:</strong> Download failed rows CSV, fix errors in Excel/Sheets, then upload the corrected file</li>
+                        </ul>
                       </AlertDescription>
                     </Alert>
 
@@ -1732,17 +1831,31 @@ export default function ImportPatients() {
                                     {error.patient}
                                   </Badge>
                                 </div>
+                                
+                                {error.patientData && (
+                                  <div className="text-xs text-gray-700 p-2 bg-gray-50 rounded border">
+                                    <strong>Patient Info:</strong> {error.patientData.first_name} {error.patientData.last_name}
+                                    {error.patientData.medical_record_number && ` | MRN: ${error.patientData.medical_record_number}`}
+                                    {error.patientData.date_of_birth && ` | DOB: ${error.patientData.date_of_birth}`}
+                                  </div>
+                                )}
+
                                 <div className="bg-red-50 border border-red-200 rounded p-3">
                                   <p className="text-sm text-red-900 mb-2">
                                     <strong>Error:</strong> {error.error}
                                   </p>
-                                  <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
-                                    💡 <strong>Suggestion:</strong> Download the failed rows CSV, correct the errors, and re-import. Common fixes:
-                                    {error.error.includes('duplicate') && ' Check if patient already exists in system.'}
-                                    {error.error.includes('required') && ' Ensure all required fields (First Name, Last Name) are filled.'}
-                                    {error.error.includes('format') && ' Verify data format matches expected type (e.g., dates as YYYY-MM-DD).'}
-                                    {!error.error.includes('duplicate') && !error.error.includes('required') && !error.error.includes('format') && ' Review the error message and correct the data accordingly.'}
-                                  </p>
+                                  
+                                  <div className="space-y-2">
+                                    <p className="text-xs text-orange-700 bg-orange-50 p-2 rounded border border-orange-200">
+                                      <strong>Suggestion:</strong> {error.suggestion}
+                                    </p>
+                                    
+                                    {error.contextualHelp && (
+                                      <p className="text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-200">
+                                        💡 <strong>Context:</strong> {error.contextualHelp}
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </AlertDescription>
@@ -1776,13 +1889,18 @@ export default function ImportPatients() {
                 </Button>
 
                 {importResults.failed > 0 && (
-                  <Button
-                    onClick={handleReImportFailed}
-                    className="w-full bg-orange-600 hover:bg-orange-700"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Re-Import Failed Rows
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      onClick={handleReImportFailed}
+                      className="w-full bg-orange-600 hover:bg-orange-700"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Retry Import - Failed Rows Only ({importResults.failed})
+                    </Button>
+                    <p className="text-xs text-center text-gray-600">
+                      Failed records will be pre-loaded for correction and re-validation
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
