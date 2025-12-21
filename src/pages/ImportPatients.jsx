@@ -386,6 +386,7 @@ export default function ImportPatients() {
       Object.entries(columnMapping).forEach(([colIndex, fieldKey]) => {
         const value = row[colIndex]?.trim();
         const field = FIELD_MAPPINGS[fieldKey];
+        const columnHeader = csvData.headers[colIndex]; // Track original column header
 
         if (value) {
           // Enhanced type validation with detailed suggestions
@@ -394,6 +395,8 @@ export default function ImportPatients() {
             if (emailError && emailError.severity === SEVERITY.ERROR) {
               rowErrors.push({
                 field: field.label,
+                columnHeader: columnHeader,
+                columnIndex: parseInt(colIndex) + 1,
                 value: value,
                 error: emailError.message,
                 suggestion: emailError.suggestion || `Correct format: name@example.com`
@@ -406,6 +409,8 @@ export default function ImportPatients() {
             if (dateError && dateError.severity === SEVERITY.ERROR) {
               rowErrors.push({
                 field: field.label,
+                columnHeader: columnHeader,
+                columnIndex: parseInt(colIndex) + 1,
                 value: value,
                 error: dateError.message,
                 suggestion: dateError.suggestion || `Required format: MM/DD/YYYY (e.g., 01/15/2024)`
@@ -503,12 +508,21 @@ export default function ImportPatients() {
 
       // Comprehensive patient validation
       const validationResults = validatePatient(patient, { skipWarnings: false });
-      
+
       // Only add blocking errors with detailed info
       const blockingErrors = validationResults.filter(v => v.severity === SEVERITY.ERROR);
       blockingErrors.forEach(err => {
+        // Try to find the column header for this field
+        const fieldKey = Object.keys(FIELD_MAPPINGS).find(key => 
+          FIELD_MAPPINGS[key].label === err.field || key === err.field
+        );
+        const colIndex = Object.entries(columnMapping).find(([_, fKey]) => fKey === fieldKey)?.[0];
+        const columnHeader = colIndex ? csvData.headers[colIndex] : null;
+
         rowErrors.push({
           field: err.field || 'General',
+          columnHeader: columnHeader || 'N/A',
+          columnIndex: colIndex ? parseInt(colIndex) + 1 : null,
           value: err.value || '',
           error: err.message,
           suggestion: err.suggestion || 'Please review and correct this field'
@@ -1358,55 +1372,62 @@ export default function ImportPatients() {
                               </div>
                               <div className="space-y-2">
                                 {(error.errors || []).map((err, errIdx) => {
-                                 const isDetailed = typeof err === 'object';
-                                 const canQuickFix = isDetailed && (
-                                   err.field.includes('Phone') || 
-                                   err.field.includes('Email') ||
-                                   err.field.includes('Date')
-                                 );
+                                  const isDetailed = typeof err === 'object';
+                                  const canQuickFix = isDetailed && (
+                                    err.field.includes('Phone') || 
+                                    err.field.includes('Email') ||
+                                    err.field.includes('Date')
+                                  );
 
-                                 return (
-                                   <div key={errIdx} className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                     {isDetailed ? (
-                                       <>
-                                         <div className="flex items-start justify-between gap-2 mb-2">
-                                           <span className="font-semibold text-sm text-red-900">
-                                             {err.field}
-                                           </span>
-                                           {err.value && (
-                                             <Badge variant="outline" className="text-xs bg-white">
-                                               "{err.value}"
-                                             </Badge>
-                                           )}
-                                         </div>
-                                         <p className="text-sm text-red-800 mb-2">
-                                           ❌ {err.error}
-                                         </p>
-                                         {err.suggestion && (
-                                           <div className="space-y-2">
-                                             <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
-                                               💡 <strong>Fix:</strong> {err.suggestion}
-                                             </p>
-                                             {canQuickFix && (
-                                               <Button
-                                                 size="sm"
-                                                 variant="outline"
-                                                 className="text-xs h-7"
-                                                 onClick={() => quickFixError(idx, err.field)}
-                                               >
-                                                 <RefreshCw className="w-3 h-3 mr-1" />
-                                                 Quick Fix
-                                               </Button>
-                                             )}
-                                           </div>
-                                         )}
-                                       </>
-                                     ) : (
-                                       <p className="text-sm text-red-800">❌ {err}</p>
-                                     )}
-                                   </div>
-                                 );
-                                })}
+                                  return (
+                                    <div key={errIdx} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                      {isDetailed ? (
+                                        <>
+                                          <div className="flex items-start justify-between gap-2 mb-2">
+                                            <div>
+                                              <span className="font-semibold text-sm text-red-900">
+                                                {err.field}
+                                              </span>
+                                              {err.columnHeader && (
+                                                <div className="text-xs text-gray-600 mt-0.5">
+                                                  CSV Column: "{err.columnHeader}" {err.columnIndex && `(Column ${err.columnIndex})`}
+                                                </div>
+                                              )}
+                                            </div>
+                                            {err.value && (
+                                              <Badge variant="outline" className="text-xs bg-white">
+                                                "{err.value}"
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <p className="text-sm text-red-800 mb-2">
+                                            ❌ {err.error}
+                                          </p>
+                                          {err.suggestion && (
+                                            <div className="space-y-2">
+                                              <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                                                💡 <strong>Fix:</strong> {err.suggestion}
+                                              </p>
+                                              {canQuickFix && (
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  className="text-xs h-7"
+                                                  onClick={() => quickFixError(idx, err.field)}
+                                                >
+                                                  <RefreshCw className="w-3 h-3 mr-1" />
+                                                  Quick Fix
+                                                </Button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </>
+                                      ) : (
+                                        <p className="text-sm text-red-800">❌ {err}</p>
+                                      )}
+                                    </div>
+                                  );
+                                 })}
                               </div>
                             </div>
                           </AlertDescription>
