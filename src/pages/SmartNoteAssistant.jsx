@@ -667,6 +667,32 @@ Return JSON with:
         console.error('Error checking enhanced compliance:', error);
       }
 
+      // Save enhanced note to patient chart history immediately for future context
+      try {
+        const currentHistory = selectedPatient.enhanced_notes_history || [];
+        const updatedHistory = [
+          ...currentHistory,
+          {
+            date: new Date().toISOString(),
+            visit_type: visitType,
+            diagnosis: finalDiagnosis,
+            enhanced_note: result.enhanced_note,
+            rough_note: roughNote,
+            quality_score: result.quality_score,
+            nurse_email: currentUser?.email,
+            vital_signs: vitalSigns
+          }
+        ];
+
+        await base44.entities.Patient.update(selectedPatientId, {
+          enhanced_notes_history: updatedHistory.slice(-10) // Keep last 10 notes for context
+        });
+
+        queryClient.invalidateQueries({ queryKey: ['patients'] });
+      } catch (error) {
+        console.error('Error saving note to patient history:', error);
+      }
+
       // Log note enhancement activity - counts as AI utilization
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
@@ -898,26 +924,6 @@ Return JSON with:
           pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null,
           weight: vitalSigns.weight ? parseFloat(vitalSigns.weight) : null
         }
-      });
-
-      // Save enhanced note to patient chart history for future context
-      const currentHistory = selectedPatient.enhanced_notes_history || [];
-      const updatedHistory = [
-        ...currentHistory,
-        {
-          date: new Date().toISOString(),
-          visit_type: visitType,
-          diagnosis: finalDiagnosis,
-          enhanced_note: enhancedNote,
-          rough_note: roughNote,
-          quality_score: auditResults?.quality_score || null,
-          nurse_email: currentUser?.email,
-          vital_signs: vitalSigns
-        }
-      ];
-
-      await base44.entities.Patient.update(selectedPatientId, {
-        enhanced_notes_history: updatedHistory.slice(-10) // Keep last 10 notes for context
       });
 
       setSavedSuccessfully(true);
