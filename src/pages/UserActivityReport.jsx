@@ -20,6 +20,7 @@ import {
   MousePointer
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { formatEastern } from "../components/utils/timezone";
 import { jsPDF } from "jspdf";
 
 export default function UserActivityReport() {
@@ -187,7 +188,7 @@ export default function UserActivityReport() {
         stat.logins || 0,
         stat.pages_visited_count || 0,
         stat.entities_interacted_count || 0,
-        stat.last_activity ? new Date(stat.last_activity).toLocaleDateString() : 'N/A',
+        stat.last_activity ? formatEastern(new Date(stat.last_activity), 'MMM d, yyyy') : 'N/A',
         stat.top_actions[0] ? `${stat.top_actions[0][0]} (${stat.top_actions[0][1]})` : 'N/A'
       ]);
       

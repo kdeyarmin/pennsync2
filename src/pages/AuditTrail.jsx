@@ -32,7 +32,7 @@ import {
   AlertTriangle,
   Info,
 } from "lucide-react";
-import { format } from "date-fns";
+import { formatEastern } from "../components/utils/timezone";
 
 export default function AuditTrail() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -304,7 +304,7 @@ export default function AuditTrail() {
                       <TableCell className="text-xs">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3 text-gray-400" />
-                          {format(new Date(log.created_date), 'MMM d, yyyy HH:mm:ss')}
+                          {formatEastern(new Date(log.created_date), 'MMM d, yyyy HH:mm:ss')}
                         </div>
                       </TableCell>
                       <TableCell>
