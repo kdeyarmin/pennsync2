@@ -306,29 +306,50 @@ export default function ImportPatients() {
       const autoMapping = {};
       headers.forEach((header, idx) => {
         const normalizedHeader = normalize(header);
-        
+        const lowerHeader = header.trim().toLowerCase();
+
         // Skip columns that should be ignored
         if (SKIP_COLUMNS.some(skip => normalize(skip) === normalizedHeader)) {
           return;
         }
-        
-        // Try exact match with field key
+
+        // Try exact match with field key (normalized)
         for (const fieldKey in FIELD_MAPPINGS) {
           if (normalize(fieldKey) === normalizedHeader) {
             autoMapping[idx] = fieldKey;
             return;
           }
         }
-        
-        // Try alias matches
+
+        // Try alias matches (both normalized and with spaces/underscores preserved)
         for (const fieldKey in FIELD_MAPPINGS) {
           const field = FIELD_MAPPINGS[fieldKey];
-          if (field.aliases && field.aliases.some(alias => normalize(alias) === normalizedHeader)) {
-            autoMapping[idx] = fieldKey;
-            return;
+          if (field.aliases) {
+            // Check normalized aliases
+            if (field.aliases.some(alias => normalize(alias) === normalizedHeader)) {
+              autoMapping[idx] = fieldKey;
+              return;
+            }
+            // Check lowercase aliases with spaces preserved
+            if (field.aliases.some(alias => alias.toLowerCase() === lowerHeader)) {
+              autoMapping[idx] = fieldKey;
+              return;
+            }
           }
         }
-        
+
+        // Special case: if header contains "last" and "name", map to last_name
+        if (lowerHeader.includes('last') && lowerHeader.includes('name') && !lowerHeader.includes('first')) {
+          autoMapping[idx] = 'last_name';
+          return;
+        }
+
+        // Special case: if header contains "first" and "name", map to first_name
+        if (lowerHeader.includes('first') && lowerHeader.includes('name')) {
+          autoMapping[idx] = 'first_name';
+          return;
+        }
+
         // Try partial matches (less strict)
         for (const fieldKey in FIELD_MAPPINGS) {
           const normalizedFieldKey = normalize(fieldKey);
