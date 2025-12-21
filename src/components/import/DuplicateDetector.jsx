@@ -122,16 +122,17 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') =
     }
   }
 
-  // MEDICAL RECORD NUMBER MATCHING
+  // MEDICAL RECORD NUMBER MATCHING - PRIORITY CHECK
   if (patient.medical_record_number && existingPatient.medical_record_number) {
     const normalizeMRN = (mrn) => String(mrn).trim().replace(/\s+/g, '').toUpperCase();
     const mrn1 = normalizeMRN(patient.medical_record_number);
     const mrn2 = normalizeMRN(existingPatient.medical_record_number);
     
     if (mrn1 === mrn2) {
-      score += 40;
-      matches.push('✓ MRN exact match');
+      score += 100; // Maximum score for MRN match - definitive match
+      matches.push('✓ MRN EXACT MATCH - SAME PATIENT');
       criteriaMatched.mrn = true;
+      criteriaMatched.definitive = true; // Flag as definitive match
     } else {
       const mrnSim = calculateSimilarity(mrn1, mrn2);
       if (mrnSim >= 80) {
@@ -232,7 +233,10 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') =
   let confidenceLevel = 'low';
   const criteriaMet = Object.keys(criteriaMatched).length;
   
-  if (score >= 90 || criteriaMet >= 3) {
+  // MRN match is definitive - always very high confidence
+  if (criteriaMatched.definitive) {
+    confidenceLevel = 'definitive';
+  } else if (score >= 90 || criteriaMet >= 3) {
     confidenceLevel = 'very_high';
   } else if (score >= 70 || criteriaMet >= 2) {
     confidenceLevel = 'high';
@@ -344,11 +348,22 @@ export default function DuplicateDetector({ patients, onResolve }) {
       ...dup,
       differences: comparePatients(patient, dup.patient)
     }));
+    
+    // Auto-set resolution for definitive MRN matches with updates
+    let autoResolution = resolution[idx] || null;
+    if (!autoResolution && duplicates.length > 0) {
+      const definitiveMatch = duplicates.find(d => d.confidenceLevel === 'definitive');
+      if (definitiveMatch && definitiveMatch.differences.length > 0) {
+        // Auto-select update for definitive MRN matches with new data
+        autoResolution = { action: 'update', existingPatientId: definitiveMatch.patient.id, auto: true };
+      }
+    }
+    
     return {
       index: idx,
       patient,
       duplicates,
-      resolution: resolution[idx] || null
+      resolution: autoResolution
     };
   });
 
@@ -415,6 +430,8 @@ export default function DuplicateDetector({ patients, onResolve }) {
 
   const getConfidenceBadgeColor = (level) => {
     switch (level) {
+      case 'definitive':
+        return 'bg-purple-100 text-purple-900 border-purple-400';
       case 'very_high':
         return 'bg-red-100 text-red-800 border-red-300';
       case 'high':
@@ -428,6 +445,8 @@ export default function DuplicateDetector({ patients, onResolve }) {
 
   const getConfidenceLabel = (level) => {
     switch (level) {
+      case 'definitive':
+        return '✓ DEFINITIVE MATCH';
       case 'very_high':
         return 'Very High Confidence';
       case 'high':
@@ -488,9 +507,10 @@ export default function DuplicateDetector({ patients, onResolve }) {
                 </Button>
               </div>
               <div className="text-xs text-gray-600 space-y-1 bg-white p-3 rounded-lg border">
-                <p><strong>Strict:</strong> Only very close matches (60%+ score) - fewer false positives</p>
-                <p><strong>Medium:</strong> Balanced approach (40%+ score) - recommended</p>
-                <p><strong>Loose:</strong> Catches more potential duplicates (25%+ score) - may include uncertain matches</p>
+               <p><strong>MRN Matching:</strong> Medical Record Number matches are always treated as definitive and auto-selected for update</p>
+               <p><strong>Strict:</strong> Only very close matches (60%+ score) - fewer false positives</p>
+               <p><strong>Medium:</strong> Balanced approach (40%+ score) - recommended</p>
+               <p><strong>Loose:</strong> Catches more potential duplicates (25%+ score) - may include uncertain matches</p>
               </div>
             </div>
 
@@ -525,7 +545,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
         <CardHeader className="bg-orange-50">
           <CardTitle className="flex items-center gap-2 text-orange-900">
             <AlertCircle className="w-6 h-6" />
-            Duplicate Detection Results
+            Duplicate Detection Results (MRN-Priority Matching)
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -675,16 +695,16 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                 )}
 
                                 <div className="grid grid-cols-3 gap-2 mt-3">
-                                  <Button
-                                    size="sm"
-                                    variant={resolution[index]?.action === 'update' && resolution[index]?.existingPatientId === dup.patient.id ? 'default' : 'outline'}
-                                    onClick={() => handleSetResolution(index, 'update', dup.patient.id)}
-                                    className="text-xs"
-                                    disabled={dup.differences.length === 0}
-                                  >
-                                    <RefreshCw className="w-3 h-3 mr-1" />
-                                    Update{dup.differences.length > 0 && ` (${dup.differences.length})`}
-                                  </Button>
+                                 <Button
+                                   size="sm"
+                                   variant={resolution[index]?.action === 'update' && resolution[index]?.existingPatientId === dup.patient.id ? 'default' : 'outline'}
+                                   onClick={() => handleSetResolution(index, 'update', dup.patient.id)}
+                                   className={`text-xs ${dup.confidenceLevel === 'definitive' && dup.differences.length > 0 ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}`}
+                                   disabled={dup.differences.length === 0}
+                                 >
+                                   <RefreshCw className="w-3 h-3 mr-1" />
+                                   {dup.confidenceLevel === 'definitive' ? '✓ Update' : 'Update'}{dup.differences.length > 0 && ` (${dup.differences.length})`}
+                                 </Button>
                                   <Button
                                     size="sm"
                                     variant={resolution[index]?.action === 'close' && resolution[index]?.existingPatientId === dup.patient.id ? 'default' : 'outline'}
@@ -720,12 +740,12 @@ export default function DuplicateDetector({ patients, onResolve }) {
                           </div>
 
                           {resolution[index] && (
-                            <Alert className="bg-blue-50 border-blue-200">
-                              <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                              <AlertDescription className="text-sm text-blue-900">
-                                <strong>Action selected:</strong>{' '}
+                            <Alert className={resolution[index].auto ? 'bg-purple-50 border-purple-300' : 'bg-blue-50 border-blue-200'}>
+                              <CheckCircle2 className={`w-4 h-4 ${resolution[index].auto ? 'text-purple-600' : 'text-blue-600'}`} />
+                              <AlertDescription className={`text-sm ${resolution[index].auto ? 'text-purple-900' : 'text-blue-900'}`}>
+                                <strong>{resolution[index].auto ? 'Auto-selected (MRN Match):' : 'Action selected:'}</strong>{' '}
                                 {resolution[index].action === 'add' && 'Add as new patient'}
-                                {resolution[index].action === 'update' && 'Update existing patient'}
+                                {resolution[index].action === 'update' && 'Update existing patient with new information'}
                                 {resolution[index].action === 'close' && 'Close existing patient'}
                                 {resolution[index].action === 'skip' && 'Skip this row'}
                               </AlertDescription>
