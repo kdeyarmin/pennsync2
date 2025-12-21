@@ -163,95 +163,118 @@ export default function UserActivityReport() {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = [
-      'User Name',
-      'Email',
-      'Total Actions',
-      'Logins',
-      'Pages Visited',
-      'Entities Interacted',
-      'Last Activity',
-      'Top Action'
-    ];
-    
-    const rows = processedStats.map(stat => [
-      stat.name,
-      stat.email,
-      stat.total_actions,
-      stat.logins,
-      stat.pages_visited_count,
-      stat.entities_interacted_count,
-      new Date(stat.last_activity).toLocaleDateString(),
-      stat.top_actions[0] ? `${stat.top_actions[0][0]} (${stat.top_actions[0][1]})` : 'N/A'
-    ]);
-    
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `user_activity_report_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    try {
+      if (processedStats.length === 0) {
+        alert('No data to export');
+        return;
+      }
+
+      const headers = [
+        'User Name',
+        'Email',
+        'Total Actions',
+        'Logins',
+        'Pages Visited',
+        'Entities Interacted',
+        'Last Activity',
+        'Top Action'
+      ];
+      
+      const rows = processedStats.map(stat => [
+        stat.name || '',
+        stat.email || '',
+        stat.total_actions || 0,
+        stat.logins || 0,
+        stat.pages_visited_count || 0,
+        stat.entities_interacted_count || 0,
+        stat.last_activity ? new Date(stat.last_activity).toLocaleDateString() : 'N/A',
+        stat.top_actions[0] ? `${stat.top_actions[0][0]} (${stat.top_actions[0][1]})` : 'N/A'
+      ]);
+      
+      const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `user_activity_report_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('CSV export error:', error);
+      alert('Failed to generate CSV report: ' + error.message);
+    }
   };
 
   // Export to PDF
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    // Title
-    doc.setFontSize(20);
-    doc.text('User Activity Report', 20, 20);
-    
-    // Date and time range
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
-    doc.text(`Time Range: ${timeRange === 'all' ? 'All Time' : `Last ${timeRange} days`}`, 20, 35);
-    
-    // Overall stats
-    doc.setFontSize(12);
-    doc.text('Overall Statistics', 20, 45);
-    doc.setFontSize(10);
-    doc.text(`Total Users: ${overallStats.total_users}`, 30, 52);
-    doc.text(`Total Actions: ${overallStats.total_actions}`, 30, 58);
-    doc.text(`Total Logins: ${overallStats.total_logins}`, 30, 64);
-    doc.text(`Active Users (7 days): ${overallStats.active_users}`, 30, 70);
-    
-    // User details
-    let y = 85;
-    doc.setFontSize(12);
-    doc.text('User Activity Details', 20, y);
-    y += 10;
-    
-    processedStats.forEach((stat, idx) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
+    try {
+      if (processedStats.length === 0) {
+        alert('No data to export');
+        return;
       }
+
+      const doc = new jsPDF();
       
+      // Title
+      doc.setFontSize(20);
+      doc.text('User Activity Report', 20, 20);
+      
+      // Date and time range
       doc.setFontSize(10);
-      doc.setFont(undefined, 'bold');
-      doc.text(`${idx + 1}. ${stat.name}`, 20, y);
-      doc.setFont(undefined, 'normal');
-      y += 5;
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
+      doc.text(`Time Range: ${timeRange === 'all' ? 'All Time' : `Last ${timeRange} days`}`, 20, 35);
       
-      doc.setFontSize(8);
-      doc.text(`Email: ${stat.email}`, 30, y);
-      y += 5;
-      doc.text(`Total Actions: ${stat.total_actions} | Logins: ${stat.logins} | Pages: ${stat.pages_visited_count} | Entities: ${stat.entities_interacted_count}`, 30, y);
-      y += 5;
-      doc.text(`Last Activity: ${formatDistanceToNow(new Date(stat.last_activity), { addSuffix: true })}`, 30, y);
-      y += 5;
+      // Overall stats
+      doc.setFontSize(12);
+      doc.text('Overall Statistics', 20, 45);
+      doc.setFontSize(10);
+      doc.text(`Total Users: ${overallStats.total_users}`, 30, 52);
+      doc.text(`Total Actions: ${overallStats.total_actions}`, 30, 58);
+      doc.text(`Total Logins: ${overallStats.total_logins}`, 30, 64);
+      doc.text(`Active Users (7 days): ${overallStats.active_users}`, 30, 70);
       
-      if (stat.top_actions.length > 0) {
-        doc.text(`Top Actions: ${stat.top_actions.slice(0, 3).map(([action, count]) => `${action}(${count})`).join(', ')}`, 30, y);
+      // User details
+      let y = 85;
+      doc.setFontSize(12);
+      doc.text('User Activity Details', 20, y);
+      y += 10;
+      
+      processedStats.forEach((stat, idx) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        doc.text(`${idx + 1}. ${stat.name || 'Unknown'}`, 20, y);
+        doc.setFont(undefined, 'normal');
         y += 5;
-      }
+        
+        doc.setFontSize(8);
+        doc.text(`Email: ${stat.email || 'N/A'}`, 30, y);
+        y += 5;
+        doc.text(`Total Actions: ${stat.total_actions || 0} | Logins: ${stat.logins || 0} | Pages: ${stat.pages_visited_count || 0} | Entities: ${stat.entities_interacted_count || 0}`, 30, y);
+        y += 5;
+        
+        if (stat.last_activity) {
+          doc.text(`Last Activity: ${formatDistanceToNow(new Date(stat.last_activity), { addSuffix: true })}`, 30, y);
+          y += 5;
+        }
+        
+        if (stat.top_actions && stat.top_actions.length > 0) {
+          doc.text(`Top Actions: ${stat.top_actions.slice(0, 3).map(([action, count]) => `${action}(${count})`).join(', ')}`, 30, y);
+          y += 5;
+        }
+        
+        y += 3;
+      });
       
-      y += 3;
-    });
-    
-    doc.save(`user_activity_report_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`user_activity_report_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('PDF export error:', error);
+      alert('Failed to generate PDF report: ' + error.message);
+    }
   };
 
   if (isLoading) {
