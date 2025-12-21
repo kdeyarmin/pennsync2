@@ -160,6 +160,32 @@ export default function Dashboard() {
       {/* New Features Banner */}
       <NewFeaturesBanner />
 
+      {/* Nurse Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-600 font-medium mb-1">Completed Notes</p>
+                <p className="text-3xl font-bold text-blue-900">{noteStats.completedNotes}</p>
+              </div>
+              <FileText className="w-12 h-12 text-blue-400" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-600 font-medium mb-1">Estimated Time Saved</p>
+                <p className="text-3xl font-bold text-green-900">{noteStats.timeSavedDisplay}</p>
+              </div>
+              <Clock className="w-12 h-12 text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Quick Action Buttons */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Link to={createPageUrl("SmartNoteAssistant")}>
