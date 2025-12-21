@@ -39,6 +39,7 @@ import DuplicateDetector from "../components/import/DuplicateDetector";
 import ErrorPatternAnalyzer from "../components/import/ErrorPatternAnalyzer";
 import AutoCorrector from "../components/import/AutoCorrector";
 import AIErrorInterpreter from "../components/import/AIErrorInterpreter";
+import DocumentOCRImporter from "../components/import/DocumentOCRImporter";
 
 const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
@@ -930,12 +931,39 @@ export default function ImportPatients() {
         </Card>
       )}
 
+      {/* AI Document Scanner */}
+      <div className="mb-6">
+        <DocumentOCRImporter
+          onPatientExtracted={(patients) => {
+            // Convert extracted patients to CSV-like format for consistency
+            const headers = Object.keys(FIELD_MAPPINGS);
+            const rows = patients.map(patient => 
+              headers.map(key => patient[key] || '')
+            );
+            
+            setCsvData({ headers, rows });
+            
+            // Auto-map all columns
+            const autoMapping = {};
+            headers.forEach((header, idx) => {
+              autoMapping[idx] = header;
+            });
+            
+            setColumnMapping(autoMapping);
+            validateMapping(autoMapping);
+            
+            // Auto-validate
+            setTimeout(() => validateData(), 500);
+          }}
+        />
+      </div>
+
       {/* File Upload with Auto Import */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
-            Upload & Import Patients
+            Upload & Import Patients (CSV)
           </CardTitle>
         </CardHeader>
         <CardContent>
