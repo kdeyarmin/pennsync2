@@ -988,7 +988,7 @@ export default function ImportPatients() {
                       >
                         <div className="space-y-2">
                           {(csvData?.headers || []).map((header, idx) => {
-                            const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').trim();
+                            const normalizedHeader = header.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
                             const isSkipped = SKIP_COLUMNS.includes(normalizedHeader);
                             const isMapped = columnMapping[idx] !== undefined;
                             if (isMapped || isSkipped) return null;
