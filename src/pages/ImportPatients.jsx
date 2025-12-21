@@ -43,8 +43,8 @@ const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
 const FIELD_MAPPINGS = {
   // Patient basic info
-  'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient'] },
-  'last_name': { label: 'Last Name', type: 'string', required: true },
+  'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient_first_name', 'patient'] },
+  'last_name': { label: 'Last Name', type: 'string', required: true, aliases: ['patient_last_name'] },
   'middle_name': { label: 'Middle Name', type: 'string' },
   'date_of_birth': { label: 'Date of Birth', type: 'date', format: 'YYYY-MM-DD', aliases: ['dob'] },
   'medical_record_number': { label: 'Medical Record Number', type: 'string', aliases: ['mrn'] },
@@ -53,6 +53,7 @@ const FIELD_MAPPINGS = {
   'address': { label: 'Address', type: 'string' },
   'gender': { label: 'Gender', type: 'string' },
   'payor': { label: 'Payor', type: 'string', aliases: ['primary_payor', 'insurance_type', 'payer'] },
+  'living_situation': { label: 'Living Situation', type: 'enum', options: ['home', 'personal_care_home', 'assisted_living', 'group_home', 'alone', 'with_family'], aliases: ['organization_type'] },
   
   // Emergency contact
   'emergency_contact_name': { label: 'Emergency Contact Name', type: 'string', aliases: ['emergency_name'] },
@@ -60,7 +61,7 @@ const FIELD_MAPPINGS = {
   'emergency_contact_relationship': { label: 'Emergency Contact Relationship', type: 'string', aliases: ['emergency_relationship'] },
   
   // Physician info
-  'physician_name': { label: 'Physician Name', type: 'string', aliases: ['physician', 'doctor_name', 'md_name'] },
+  'physician_name': { label: 'Physician Name', type: 'string', aliases: ['physician', 'doctor_name', 'md_name', 'physician_name'] },
   'physician_phone': { label: 'Physician Phone', type: 'string', aliases: ['doctor_phone', 'md_phone'] },
   'physician_email': { label: 'Physician Email', type: 'email', aliases: ['doctor_email'] },
   
@@ -70,13 +71,13 @@ const FIELD_MAPPINGS = {
   'caregiver_email': { label: 'Caregiver Email', type: 'email' },
   
   // Medical info
-  'primary_diagnosis': { label: 'Primary Diagnosis', type: 'string', aliases: ['diagnosis', 'dx'] },
-  'secondary_diagnoses': { label: 'Secondary Diagnoses', type: 'string', aliases: ['secondary_dx', 'other_diagnoses'] },
+  'primary_diagnosis': { label: 'Primary Diagnosis', type: 'string', aliases: ['diagnosis', 'dx', 'primary_diagnosis'] },
+  'secondary_diagnoses': { label: 'Secondary Diagnoses', type: 'string', aliases: ['secondary_dx', 'other_diagnoses', 'secondary_diagnosis'] },
   'allergies': { label: 'Allergies', type: 'string', aliases: ['allergy'] },
   'icd_code': { label: 'ICD Code', type: 'string', aliases: ['icd10_code', 'diagnosis_code'] },
   
   // Admission info
-  'admission_date': { label: 'Admission Date', type: 'date', format: 'YYYY-MM-DD', aliases: ['admitted_date', 'soc_date', 'start_of_care'] },
+  'admission_date': { label: 'Admission Date', type: 'date', format: 'YYYY-MM-DD', aliases: ['admitted_date', 'soc_date', 'start_of_care', 'admitted_date'] },
   'discharge_date': { label: 'Discharge Date', type: 'date', format: 'YYYY-MM-DD' },
   'admission_source': { label: 'Admission Source', type: 'enum', options: ['home', 'hospital', 'skilled_nursing_facility', 'rehab', 'other'] },
   'discharge_disposition': { label: 'Discharge Disposition', type: 'enum', options: ['home', 'hospital', 'skilled_nursing_facility', 'deceased', 'other'] },
@@ -91,7 +92,7 @@ const FIELD_MAPPINGS = {
 };
 
 // Columns to skip/ignore
-const SKIP_COLUMNS = ['company', 'top_unit', 'parent_unit', 'sub_unit', 'branch_name', 'patient_team_name'];
+const SKIP_COLUMNS = ['company', 'top_unit', 'parent_unit', 'sub_unit', 'branch_name', 'patient_team_name', 'branch_na', 'patient_tea'];
 
 export default function ImportPatients() {
   const [file, setFile] = useState(null);
