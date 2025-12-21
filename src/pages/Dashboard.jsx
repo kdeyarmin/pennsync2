@@ -70,6 +70,13 @@ export default function Dashboard() {
     staleTime: 180000,
   });
 
+  const { data: noteConversions = [] } = useQuery({
+    queryKey: ['nurseNoteConversions', currentUser?.email],
+    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser?.email }),
+    enabled: !!currentUser?.email,
+    initialData: [],
+  });
+
   // Handle errors gracefully
   if (visitsError || patientsError) {
     console.error('Dashboard data loading error:', visitsError || patientsError);
@@ -129,6 +136,17 @@ export default function Dashboard() {
     completedVisits: visits.filter(v => v.status === 'completed').length,
     pendingVisits: visits.filter(v => v.status === 'scheduled').length
   }), [visits]);
+
+  const noteStats = useMemo(() => {
+    const completedNotes = noteConversions.length;
+    const timeSavedMinutes = completedNotes * 15;
+    const hours = Math.floor(timeSavedMinutes / 60);
+    const minutes = timeSavedMinutes % 60;
+    return {
+      completedNotes,
+      timeSavedDisplay: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+    };
+  }, [noteConversions]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
