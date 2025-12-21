@@ -126,6 +126,13 @@ export default function AdminDashboard() {
     enabled: isAdmin,
   });
 
+  const { data: allNoteConversions = [] } = useQuery({
+    queryKey: ['allNoteConversions'],
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
+    initialData: [],
+    enabled: isAdmin,
+  });
+
   // Voice command handler
   const handleVoiceCommand = (action, spokenText) => {
     switch (action) {
