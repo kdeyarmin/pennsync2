@@ -277,7 +277,7 @@ export default function ImportPatients() {
       // Auto-map columns based on header names
       const autoMapping = {};
       headers.forEach((header, idx) => {
-        const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').trim();
+        const normalizedHeader = header.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
         
         // Skip columns that should be ignored
         if (SKIP_COLUMNS.includes(normalizedHeader)) {
