@@ -274,37 +274,42 @@ export default function ImportPatients() {
       
       setCsvData({ headers, rows });
       
+      // Normalize function for consistent header/alias comparison
+      const normalize = (str) => {
+        return str.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      };
+
       // Auto-map columns based on header names
       const autoMapping = {};
       headers.forEach((header, idx) => {
-        const normalizedHeader = header.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        const normalizedHeader = normalize(header);
         
         // Skip columns that should be ignored
-        if (SKIP_COLUMNS.includes(normalizedHeader)) {
+        if (SKIP_COLUMNS.some(skip => normalize(skip) === normalizedHeader)) {
           return;
         }
         
-        // Try exact match
-        if (FIELD_MAPPINGS[normalizedHeader]) {
-          autoMapping[idx] = normalizedHeader;
-          return;
-        }
-        
-        // Try alias matches
+        // Try exact match with field key
         for (const fieldKey in FIELD_MAPPINGS) {
-          const field = FIELD_MAPPINGS[fieldKey];
-          if (field.aliases && field.aliases.some(alias => {
-            const normalizedAlias = alias.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').trim();
-            return normalizedHeader === normalizedAlias;
-          })) {
+          if (normalize(fieldKey) === normalizedHeader) {
             autoMapping[idx] = fieldKey;
             return;
           }
         }
         
-        // Try partial matches
+        // Try alias matches
         for (const fieldKey in FIELD_MAPPINGS) {
-          if (normalizedHeader.includes(fieldKey) || fieldKey.includes(normalizedHeader)) {
+          const field = FIELD_MAPPINGS[fieldKey];
+          if (field.aliases && field.aliases.some(alias => normalize(alias) === normalizedHeader)) {
+            autoMapping[idx] = fieldKey;
+            return;
+          }
+        }
+        
+        // Try partial matches (less strict)
+        for (const fieldKey in FIELD_MAPPINGS) {
+          const normalizedFieldKey = normalize(fieldKey);
+          if (normalizedHeader.includes(normalizedFieldKey) || normalizedFieldKey.includes(normalizedHeader)) {
             autoMapping[idx] = fieldKey;
             break;
           }
