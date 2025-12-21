@@ -160,43 +160,7 @@ export default function Dashboard() {
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Today's Visits</h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium mb-1">Total Visits</p>
-                <p className="text-4xl font-bold">{visits.length}</p>
-              </div>
-              <Calendar className="w-12 h-12 text-blue-200" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium mb-1">Completed</p>
-                <p className="text-4xl font-bold">{completedVisits}</p>
-              </div>
-              <CheckCircle2 className="w-12 h-12 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium mb-1">Pending</p>
-                <p className="text-4xl font-bold">{pendingVisits}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 text-orange-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Dashboard Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
