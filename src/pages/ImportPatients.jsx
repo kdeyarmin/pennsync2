@@ -293,7 +293,10 @@ export default function ImportPatients() {
         // Try alias matches
         for (const fieldKey in FIELD_MAPPINGS) {
           const field = FIELD_MAPPINGS[fieldKey];
-          if (field.aliases && field.aliases.some(alias => normalizedHeader === alias.toLowerCase().replace(/[^a-z0-9_]/g, '_'))) {
+          if (field.aliases && field.aliases.some(alias => {
+            const normalizedAlias = alias.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').trim();
+            return normalizedHeader === normalizedAlias;
+          })) {
             autoMapping[idx] = fieldKey;
             return;
           }
