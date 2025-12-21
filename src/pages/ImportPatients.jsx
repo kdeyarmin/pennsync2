@@ -46,7 +46,7 @@ const FIELD_MAPPINGS = {
   'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient_first_name', 'patient'] },
   'last_name': { label: 'Last Name', type: 'string', required: true, aliases: ['patient_last_name'] },
   'middle_name': { label: 'Middle Name', type: 'string' },
-  'date_of_birth': { label: 'Date of Birth', type: 'date', format: 'YYYY-MM-DD', aliases: ['dob'] },
+  'date_of_birth': { label: 'Date of Birth', type: 'date', format: 'MM/DD/YYYY', aliases: ['dob'] },
   'medical_record_number': { label: 'Medical Record Number', type: 'string', aliases: ['mrn'] },
   'phone': { label: 'Phone Number', type: 'string' },
   'email': { label: 'Email', type: 'email' },
@@ -77,8 +77,8 @@ const FIELD_MAPPINGS = {
   'icd_code': { label: 'ICD Code', type: 'string', aliases: ['icd10_code', 'diagnosis_code'] },
   
   // Admission info
-  'admission_date': { label: 'Admission Date', type: 'date', format: 'YYYY-MM-DD', aliases: ['admitted_date', 'soc_date', 'start_of_care', 'admitted_date'] },
-  'discharge_date': { label: 'Discharge Date', type: 'date', format: 'YYYY-MM-DD' },
+  'admission_date': { label: 'Admission Date', type: 'date', format: 'MM/DD/YYYY', aliases: ['admitted_date', 'soc_date', 'start_of_care', 'admitted_date'] },
+  'discharge_date': { label: 'Discharge Date', type: 'date', format: 'MM/DD/YYYY' },
   'admission_source': { label: 'Admission Source', type: 'enum', options: ['home', 'hospital', 'skilled_nursing_facility', 'rehab', 'other'] },
   'discharge_disposition': { label: 'Discharge Disposition', type: 'enum', options: ['home', 'hospital', 'skilled_nursing_facility', 'deceased', 'other'] },
   'care_type': { label: 'Care Type', type: 'enum', options: ['home_health', 'hospice'], aliases: ['organization_type', 'service_type'] },
@@ -405,7 +405,7 @@ export default function ImportPatients() {
                 field: field.label,
                 value: value,
                 error: dateError.message,
-                suggestion: dateError.suggestion || `Required format: YYYY-MM-DD (e.g., 2024-01-15)`
+                suggestion: dateError.suggestion || `Required format: MM/DD/YYYY (e.g., 01/15/2024)`
               });
             }
           }
