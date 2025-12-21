@@ -84,15 +84,29 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
 
       if (exportFormat === 'pdf') {
-        // Generate comprehensive PDF using raw fetch for binary response
-        const response = await base44.functions.invoke('generateComprehensiveReport', {
-          reportType,
-          dateRange,
-          includeCharts: false
+        // Generate comprehensive PDF - use fetch directly for binary data
+        const user = await base44.auth.me();
+        const functionUrl = `${window.location.origin}/api/functions/generateComprehensiveReport`;
+        
+        const response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            reportType,
+            dateRange,
+            includeCharts: false
+          })
         });
 
-        // The response should be arraybuffer
-        const blob = new Blob([response], { type: 'application/pdf' });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || `HTTP error ${response.status}`);
+        }
+
+        const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
