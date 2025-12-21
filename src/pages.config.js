@@ -50,6 +50,7 @@ import OASISReview from './pages/OASISReview';
 import TrainingManagement from './pages/TrainingManagement';
 import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import UserActivityReport from './pages/UserActivityReport';
+import ManageNewFeatures from './pages/ManageNewFeatures';
 import __Layout from './Layout.jsx';
 
 
@@ -106,6 +107,7 @@ export const PAGES = {
     "TrainingManagement": TrainingManagement,
     "PatientRecordDashboard": PatientRecordDashboard,
     "UserActivityReport": UserActivityReport,
+    "ManageNewFeatures": ManageNewFeatures,
 }
 
 export const pagesConfig = {

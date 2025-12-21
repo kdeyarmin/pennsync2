@@ -23,6 +23,7 @@ import { logActivity, ActivityActions } from "@/components/utils/activityLogger"
 import AITrainingRecommendations from "../components/training/AITrainingRecommendations";
 import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
 import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSupport";
+import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -150,11 +151,50 @@ export default function Dashboard() {
               {getGreeting()}, {fullName}! 👋
             </h1>
             <p className="text-white/80 text-xs sm:text-sm md:text-base">
-              {isValid(new Date()) ? formatEastern(new Date(), 'EEEE, MMMM d, yyyy').replace(' ET', '') : new Date().toLocaleDateString()} • You have {pendingVisits} visit{pendingVisits !== 1 ? 's' : ''} scheduled today
+              {isValid(new Date()) ? formatEastern(new Date(), 'EEEE, MMMM d, yyyy').replace(' ET', '') : new Date().toLocaleDateString()}
             </p>
           </div>
         </CardContent>
       </Card>
+
+      {/* New Features Banner */}
+      <NewFeaturesBanner />
+
+      {/* Quick Action Buttons */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Link to={createPageUrl("SmartNoteAssistant")}>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-blue-200 hover:border-blue-400">
+            <CardContent className="p-6 text-center">
+              <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-gray-900">Smart Note</h3>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to={createPageUrl("CarePlanManagement")}>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-green-200 hover:border-green-400">
+            <CardContent className="p-6 text-center">
+              <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-gray-900">Care Plans</h3>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to={createPageUrl("PatientEducationHub")}>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-purple-200 hover:border-purple-400">
+            <CardContent className="p-6 text-center">
+              <User className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-gray-900">Patient Education</h3>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to={createPageUrl("StaffTrainingHub")}>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-orange-200 hover:border-orange-400">
+            <CardContent className="p-6 text-center">
+              <Calendar className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-gray-900">Nurse Training Hub</h3>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
 
       {/* Dashboard Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
@@ -174,7 +214,6 @@ export default function Dashboard() {
           patients={patients}
           onTaskCompleted={() => queryClient.invalidateQueries({ queryKey: ['nurseTasks'] })}
         />
-        <AITrainingRecommendations userId={currentUser?.id} userEmail={currentUser?.email} />
       </div>
 
       {/* Proactive Clinical Support - Show for first scheduled patient */}
