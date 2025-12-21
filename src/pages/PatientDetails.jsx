@@ -497,74 +497,62 @@ export default function PatientDetails() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Stethoscope className="w-5 h-5 text-green-600" />
-              Primary Care Physician
+              Physician & Payor
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {patient.physician_name ? (
-              <>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Name</p>
-                  <p className="text-gray-900">{sanitizeInput(patient.physician_name)}</p>
-                </div>
-                {patient.physician_phone && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Primary Care Physician</p>
+              {patient.physician_name ? (
+                <div className="space-y-2">
+                  <p className="text-gray-900 font-medium">{sanitizeInput(patient.physician_name)}</p>
+                  {patient.physician_phone && (
+                    <p className="text-sm text-gray-600 flex items-center gap-1">
                       <Phone className="w-3 h-3" />
-                      Phone
+                      {sanitizeInput(patient.physician_phone)}
                     </p>
-                    <p className="text-gray-900">{sanitizeInput(patient.physician_phone)}</p>
-                  </div>
-                )}
-                {patient.physician_email && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Email</p>
-                    <p className="text-gray-900">{sanitizeInput(patient.physician_email)}</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="text-sm text-gray-500">No physician information on file</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-purple-600" />
-              Insurance Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {patient.payor && (
-              <div>
-                <p className="text-sm font-medium text-gray-500">Primary Payor</p>
-                <Badge className="bg-purple-100 text-purple-800">{sanitizeInput(patient.payor)}</Badge>
-              </div>
-            )}
-            {patient.insurance_primary?.provider ? (
-              <>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Primary Insurance</p>
-                  <p className="text-gray-900">{sanitizeInput(patient.insurance_primary.provider)}</p>
-                  {patient.insurance_primary.policy_number && (
-                    <p className="text-sm text-gray-600">Policy: {sanitizeInput(patient.insurance_primary.policy_number)}</p>
+                  )}
+                  {patient.physician_email && (
+                    <p className="text-sm text-gray-600">{sanitizeInput(patient.physician_email)}</p>
                   )}
                 </div>
-                {patient.insurance_secondary?.provider && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Secondary Insurance</p>
-                    <p className="text-gray-900">{sanitizeInput(patient.insurance_secondary.provider)}</p>
-                    {patient.insurance_secondary.policy_number && (
-                      <p className="text-sm text-gray-600">Policy: {sanitizeInput(patient.insurance_secondary.policy_number)}</p>
+              ) : (
+                <p className="text-sm text-gray-500">No physician information</p>
+              )}
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Payor / Insurance</p>
+              {patient.payor ? (
+                <Badge className="bg-purple-100 text-purple-800 text-sm">{sanitizeInput(patient.payor)}</Badge>
+              ) : (
+                <p className="text-sm text-gray-500">No payor specified</p>
+              )}
+            </div>
+
+            {(patient.insurance_primary?.provider || patient.insurance_secondary?.provider) && (
+              <div className="border-t pt-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Additional Insurance</p>
+                {patient.insurance_primary?.provider && (
+                  <div className="mb-3">
+                    <p className="text-sm font-medium text-gray-700">Primary</p>
+                    <p className="text-gray-900">{sanitizeInput(patient.insurance_primary.provider)}</p>
+                    {patient.insurance_primary.policy_number && (
+                      <p className="text-xs text-gray-600">Policy: {sanitizeInput(patient.insurance_primary.policy_number)}</p>
                     )}
                   </div>
                 )}
-              </>
-            ) : !patient.payor ? (
-              <p className="text-sm text-gray-500">No insurance information on file</p>
-            ) : null}
+                {patient.insurance_secondary?.provider && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Secondary</p>
+                    <p className="text-gray-900">{sanitizeInput(patient.insurance_secondary.provider)}</p>
+                    {patient.insurance_secondary.policy_number && (
+                      <p className="text-xs text-gray-600">Policy: {sanitizeInput(patient.insurance_secondary.policy_number)}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
