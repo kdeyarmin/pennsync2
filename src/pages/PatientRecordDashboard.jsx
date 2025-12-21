@@ -143,16 +143,16 @@ export default function PatientRecordDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <LayoutDashboard className="w-8 h-8 text-blue-600" />
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 md:gap-3">
+              <LayoutDashboard className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
               Patient Record Dashboard
             </h1>
-            <p className="text-gray-600 mt-1">Comprehensive patient management and overview</p>
+            <p className="text-sm md:text-base text-gray-600 mt-1">Comprehensive patient management and overview</p>
           </div>
           <PatientQuickActions onActionComplete={() => {
             // Refresh data
@@ -161,7 +161,7 @@ export default function PatientRecordDashboard() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">

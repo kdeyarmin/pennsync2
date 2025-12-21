@@ -96,8 +96,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
     { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
-    { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
-    { name: "OASIS Analyzer", icon: FileText, page: "OASISAnalyzer" },
+    { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
     { name: "Import Patients", icon: Users, page: "ImportPatients" },
     { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
     ];
@@ -167,7 +166,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-blue-100 flex">
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 shadow-lg border-r border-blue-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'}`}>
+      <aside className={`hidden lg:flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 shadow-lg border-r border-blue-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
@@ -306,7 +305,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-blue-600 shadow-sm border-b border-blue-700 h-14 flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-blue-600 shadow-sm border-b border-blue-700 h-16 flex items-center justify-between px-4 print:hidden">
         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" 
@@ -315,17 +314,20 @@ export default function Layout({ children, currentPageName }) {
           />
           <span className="font-bold text-lg text-white">Penn Sync</span>
         </Link>
-        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700">
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700 h-12 w-12">
+          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </Button>
       </div>
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="h-14 flex items-center px-4 border-b border-gray-200 flex-shrink-0">
+          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 flex-shrink-0">
               <span className="font-bold text-lg text-gray-900">Menu</span>
+              <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                <X className="w-5 h-5" />
+              </Button>
             </div>
             <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
               {navCategories.map((category, catIndex) => (
@@ -395,7 +397,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:overflow-auto pt-14 lg:pt-0 bg-blue-100">{children}</main>
+      <main className="flex-1 lg:overflow-auto pt-16 lg:pt-0 bg-blue-100 min-h-screen">{children}</main>
 
       {/* Offline Indicator */}
       <OfflineIndicator />

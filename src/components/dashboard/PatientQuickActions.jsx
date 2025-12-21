@@ -110,27 +110,32 @@ export default function PatientQuickActions({ onActionComplete }) {
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           onClick={() => setShowNewPatient(true)}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 h-11"
         >
           <UserPlus className="w-4 h-4 mr-2" />
-          New Patient
+          <span className="hidden sm:inline">New Patient</span>
+          <span className="sm:hidden">New</span>
         </Button>
         <Button
           onClick={() => setShowNewVisit(true)}
           variant="outline"
+          className="h-11"
         >
           <Calendar className="w-4 h-4 mr-2" />
-          Schedule Visit
+          <span className="hidden sm:inline">Schedule Visit</span>
+          <span className="sm:hidden">Visit</span>
         </Button>
         <Button
           onClick={() => setShowNewDiagnosis(true)}
           variant="outline"
+          className="h-11"
         >
           <Stethoscope className="w-4 h-4 mr-2" />
-          Add Diagnosis
+          <span className="hidden sm:inline">Add Diagnosis</span>
+          <span className="sm:hidden">Diagnosis</span>
         </Button>
       </div>
 

@@ -28,7 +28,7 @@ export default function PatientSearchBar({ searchQuery, onSearchChange, filters,
           placeholder="Search by name, MRN, phone, or diagnosis..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 pr-4 h-12 text-base"
+          className="pl-11 pr-4 h-12 md:h-14 text-base"
         />
       </div>
 
