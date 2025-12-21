@@ -447,6 +447,8 @@ export default function ImportPatients() {
             } else {
               rowErrors.push({
                 field: field.label,
+                columnHeader: columnHeader,
+                columnIndex: parseInt(colIndex) + 1,
                 value: value,
                 error: `Invalid value for ${field.label}`,
                 suggestion: `Must be one of: ${field.options.join(', ')}`
@@ -461,6 +463,8 @@ export default function ImportPatients() {
               if (phoneError) {
                 rowErrors.push({
                   field: field.label,
+                  columnHeader: columnHeader,
+                  columnIndex: parseInt(colIndex) + 1,
                   value: value,
                   error: phoneError.message,
                   suggestion: `Valid formats: (555) 123-4567, 555-123-4567, or 5551234567`
