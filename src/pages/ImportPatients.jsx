@@ -358,10 +358,38 @@ export default function ImportPatients() {
             break;
           }
         }
-      });
-      
-      setColumnMapping(autoMapping);
-      validateMapping(autoMapping);
+        });
+
+        // Fallback: if last_name is not mapped, try to find any column with "name" that's not first_name
+        if (!Object.values(autoMapping).includes('last_name')) {
+        const nameColumnIdx = headers.findIndex((header, idx) => {
+          const lower = header.toLowerCase();
+          return (lower.includes('name') || lower.includes('last')) && 
+                 autoMapping[idx] !== 'first_name' && 
+                 autoMapping[idx] !== 'middle_name' &&
+                 !SKIP_COLUMNS.includes(normalize(header));
+        });
+        if (nameColumnIdx !== -1) {
+          autoMapping[nameColumnIdx] = 'last_name';
+        }
+        }
+
+        // Fallback: if first_name is not mapped, try to find any column with "first"
+        if (!Object.values(autoMapping).includes('first_name')) {
+        const firstColumnIdx = headers.findIndex((header, idx) => {
+          const lower = header.toLowerCase();
+          return (lower.includes('first') || (lower.includes('name') && !lower.includes('last'))) && 
+                 autoMapping[idx] !== 'last_name' && 
+                 autoMapping[idx] !== 'middle_name' &&
+                 !SKIP_COLUMNS.includes(normalize(header));
+        });
+        if (firstColumnIdx !== -1) {
+          autoMapping[firstColumnIdx] = 'first_name';
+        }
+        }
+
+        setColumnMapping(autoMapping);
+        validateMapping(autoMapping);
     } catch (error) {
       console.error('Error processing CSV:', error);
       alert('Error processing CSV file: ' + error.message);
