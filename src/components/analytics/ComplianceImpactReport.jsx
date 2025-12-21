@@ -23,8 +23,15 @@ import {
 } from "recharts";
 
 export default function ComplianceImpactReport({ noteConversions }) {
+  if (!noteConversions || noteConversions.length === 0) {
+    return null;
+  }
+
   const conversionsWithCompliance = noteConversions.filter(nc => 
-    nc.rough_note_compliance !== null && nc.enhanced_note_compliance !== null
+    nc.rough_note_compliance != null && 
+    nc.enhanced_note_compliance != null &&
+    typeof nc.rough_note_compliance === 'number' &&
+    typeof nc.enhanced_note_compliance === 'number'
   );
 
   if (conversionsWithCompliance.length === 0) {
@@ -32,11 +39,11 @@ export default function ComplianceImpactReport({ noteConversions }) {
   }
 
   const avgRoughCompliance = conversionsWithCompliance.reduce(
-    (sum, nc) => sum + nc.rough_note_compliance, 0
+    (sum, nc) => sum + (nc.rough_note_compliance || 0), 0
   ) / conversionsWithCompliance.length;
 
   const avgEnhancedCompliance = conversionsWithCompliance.reduce(
-    (sum, nc) => sum + nc.enhanced_note_compliance, 0
+    (sum, nc) => sum + (nc.enhanced_note_compliance || 0), 0
   ) / conversionsWithCompliance.length;
 
   const avgImprovement = avgEnhancedCompliance - avgRoughCompliance;
@@ -44,19 +51,20 @@ export default function ComplianceImpactReport({ noteConversions }) {
   // Group by nurse for individual impact
   const nurseImpact = {};
   conversionsWithCompliance.forEach(nc => {
-    if (!nurseImpact[nc.nurse_email]) {
-      nurseImpact[nc.nurse_email] = {
-        email: nc.nurse_email,
+    const email = nc.nurse_email || 'unknown';
+    if (!nurseImpact[email]) {
+      nurseImpact[email] = {
+        email: email,
         notes: [],
         totalRough: 0,
         totalEnhanced: 0,
         count: 0
       };
     }
-    nurseImpact[nc.nurse_email].notes.push(nc);
-    nurseImpact[nc.nurse_email].totalRough += nc.rough_note_compliance;
-    nurseImpact[nc.nurse_email].totalEnhanced += nc.enhanced_note_compliance;
-    nurseImpact[nc.nurse_email].count++;
+    nurseImpact[email].notes.push(nc);
+    nurseImpact[email].totalRough += (nc.rough_note_compliance || 0);
+    nurseImpact[email].totalEnhanced += (nc.enhanced_note_compliance || 0);
+    nurseImpact[email].count++;
   });
 
   const nurseStats = Object.values(nurseImpact).map(n => ({
@@ -67,13 +75,15 @@ export default function ComplianceImpactReport({ noteConversions }) {
     count: n.count
   }));
 
-  // Timeline data
+  // Timeline data - safely handle dates and values
   const timelineData = conversionsWithCompliance
-    .sort((a, b) => new Date(a.created_date) - new Date(b.created_date))
+    .filter(nc => nc.created_date)
+    .sort((a, b) => new Date(a.created_date || 0) - new Date(b.created_date || 0))
+    .slice(-20) // Last 20 notes for readability
     .map((nc, idx) => ({
       note: `Note ${idx + 1}`,
-      rough: nc.rough_note_compliance,
-      enhanced: nc.enhanced_note_compliance
+      rough: nc.rough_note_compliance || 0,
+      enhanced: nc.enhanced_note_compliance || 0
     }));
 
   return (

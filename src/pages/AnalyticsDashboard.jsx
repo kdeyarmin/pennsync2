@@ -143,12 +143,15 @@ export default function AnalyticsDashboard() {
       ? noteConversions.reduce((sum, nc) => sum + (nc.quality_score || 0), 0) / noteConversions.length
       : 0;
 
-    // Compliance improvement metrics
+    // Compliance improvement metrics - safely handle undefined fields
     const conversionsWithCompliance = noteConversions.filter(nc => 
-      nc.rough_note_compliance !== null && nc.enhanced_note_compliance !== null
+      nc.rough_note_compliance != null && 
+      nc.enhanced_note_compliance != null && 
+      typeof nc.rough_note_compliance === 'number' && 
+      typeof nc.enhanced_note_compliance === 'number'
     );
     const avgComplianceImprovement = conversionsWithCompliance.length > 0
-      ? conversionsWithCompliance.reduce((sum, nc) => sum + (nc.compliance_improvement || 0), 0) / conversionsWithCompliance.length
+      ? conversionsWithCompliance.reduce((sum, nc) => sum + ((nc.enhanced_note_compliance || 0) - (nc.rough_note_compliance || 0)), 0) / conversionsWithCompliance.length
       : 0;
     const avgRoughCompliance = conversionsWithCompliance.length > 0
       ? conversionsWithCompliance.reduce((sum, nc) => sum + (nc.rough_note_compliance || 0), 0) / conversionsWithCompliance.length
@@ -319,16 +322,21 @@ export default function AnalyticsDashboard() {
         return;
       }
 
-      // Calculate compliance improvement statistics
+      // Calculate compliance improvement statistics - safely handle missing data
       const complianceImpactData = noteConversions
-        .filter(nc => nc.rough_note_compliance !== null && nc.enhanced_note_compliance !== null)
+        .filter(nc => 
+          nc.rough_note_compliance != null && 
+          nc.enhanced_note_compliance != null &&
+          typeof nc.rough_note_compliance === 'number' &&
+          typeof nc.enhanced_note_compliance === 'number'
+        )
         .map(nc => ({
-          nurse: nc.nurse_email,
-          visit_type: nc.visit_type,
+          nurse: nc.nurse_email || 'Unknown',
+          visit_type: nc.visit_type || 'N/A',
           date: nc.created_date,
-          rough_compliance: nc.rough_note_compliance,
-          enhanced_compliance: nc.enhanced_note_compliance,
-          improvement: nc.compliance_improvement
+          rough_compliance: nc.rough_note_compliance || 0,
+          enhanced_compliance: nc.enhanced_note_compliance || 0,
+          improvement: (nc.enhanced_note_compliance || 0) - (nc.rough_note_compliance || 0)
         }));
 
       const report = {
