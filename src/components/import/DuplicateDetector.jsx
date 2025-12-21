@@ -47,229 +47,28 @@ const calculateSimilarity = (str1, str2) => {
   return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
 };
 
-// Enhanced duplicate matching logic with configurable sensitivity and criteria
+// Simplified duplicate matching - MRN only
 const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium', criteria = {}) => {
   let score = 0;
   let matches = [];
   const criteriaMatched = {};
 
-  // Normalize strings
-  const normalize = (str) => str?.toLowerCase().trim().replace(/\s+/g, ' ') || '';
-  
-  // Sensitivity thresholds for fuzzy matching
-  const thresholds = {
-    strict: { name: 95, address: 90, phone: 100 },
-    medium: { name: 85, address: 80, phone: 100 },
-    loose: { name: 75, address: 70, phone: 100 }
-  };
-  
-  const threshold = thresholds[sensitivity] || thresholds.medium;
-  
-  // Apply matching criteria filters
-  const enabledCriteria = {
-    mrn: criteria.mrn !== false,
-    nameAndDob: criteria.nameAndDob !== false,
-    phoneAndLastName: criteria.phoneAndLastName !== false,
-    emailAndLastName: criteria.emailAndLastName !== false,
-    address: criteria.address !== false
-  };
-
-  // NAME MATCHING (Multiple strategies)
-  const firstName1 = normalize(patient.first_name);
-  const firstName2 = normalize(existingPatient.first_name);
-  const lastName1 = normalize(patient.last_name);
-  const lastName2 = normalize(existingPatient.last_name);
-  
-  // Exact name match
-  if (firstName1 === firstName2 && lastName1 === lastName2 && firstName1 !== '' && lastName1 !== '') {
-    score += 40;
-    matches.push('✓ Exact name match');
-    criteriaMatched.name = true;
-  } 
-  // Fuzzy name match
-  else if (firstName1 && firstName2 && lastName1 && lastName2) {
-    const firstNameSim = calculateSimilarity(firstName1, firstName2);
-    const lastNameSim = calculateSimilarity(lastName1, lastName2);
-    const avgNameSim = (firstNameSim + lastNameSim) / 2;
-    
-    if (avgNameSim >= threshold.name) {
-      const points = Math.round((avgNameSim / 100) * 35);
-      score += points;
-      matches.push(`Similar name (${Math.round(avgNameSim)}% match)`);
-      criteriaMatched.name = true;
-    } else if (firstNameSim >= threshold.name || lastNameSim >= threshold.name) {
-      score += 15;
-      matches.push('Partial name match');
-    }
-  }
-
-  // DATE OF BIRTH MATCHING
-  if (patient.date_of_birth && existingPatient.date_of_birth) {
-    const normalizeDOB = (dob) => dob.replace(/\D/g, '');
-    const dob1 = normalizeDOB(patient.date_of_birth);
-    const dob2 = normalizeDOB(existingPatient.date_of_birth);
-    
-    if (dob1 === dob2 && dob1.length >= 8) {
-      score += 35;
-      matches.push('✓ DOB exact match');
-      criteriaMatched.dob = true;
-    } else {
-      // Check for partial DOB match (year + month or year + day)
-      if (dob1.length >= 8 && dob2.length >= 8) {
-        const year1 = dob1.substring(0, 4);
-        const year2 = dob2.substring(0, 4);
-        const month1 = dob1.substring(4, 6);
-        const month2 = dob2.substring(4, 6);
-        const day1 = dob1.substring(6, 8);
-        const day2 = dob2.substring(6, 8);
-        
-        if (year1 === year2 && (month1 === month2 || day1 === day2)) {
-          score += 15;
-          matches.push('Partial DOB match');
-        }
-      }
-    }
-  }
-
-  // MEDICAL RECORD NUMBER MATCHING - PRIORITY CHECK
-  if (enabledCriteria.mrn && patient.medical_record_number && existingPatient.medical_record_number) {
+  // MEDICAL RECORD NUMBER MATCHING ONLY
+  if (patient.medical_record_number && existingPatient.medical_record_number) {
     const normalizeMRN = (mrn) => String(mrn).trim().replace(/\s+/g, '').toUpperCase();
     const mrn1 = normalizeMRN(patient.medical_record_number);
     const mrn2 = normalizeMRN(existingPatient.medical_record_number);
     
     if (mrn1 === mrn2) {
-      score += 100; // Maximum score for MRN match - definitive match
+      score = 100; // Maximum score for MRN match - definitive match
       matches.push('✓ MRN EXACT MATCH - SAME PATIENT');
       criteriaMatched.mrn = true;
-      criteriaMatched.definitive = true; // Flag as definitive match
-    } else {
-      const mrnSim = calculateSimilarity(mrn1, mrn2);
-      if (mrnSim >= 80) {
-        score += 20;
-        matches.push(`Similar MRN (${Math.round(mrnSim)}%)`);
-      }
-    }
-  }
-  
-  // NAME + DOB COMBINATION MATCHING
-  if (enabledCriteria.nameAndDob && criteriaMatched.name && criteriaMatched.dob) {
-    score += 20; // Bonus for matching both name and DOB
-    matches.push('✓ Name + DOB Match');
-  }
-  
-  // PHONE + LAST NAME COMBINATION MATCHING
-  if (enabledCriteria.phoneAndLastName && criteriaMatched.phone && lastName1 === lastName2) {
-    score += 15; // Bonus for phone + last name match
-    matches.push('✓ Phone + Last Name Match');
-  }
-  
-  // EMAIL + LAST NAME COMBINATION MATCHING
-  if (enabledCriteria.emailAndLastName && criteriaMatched.email && lastName1 === lastName2) {
-    score += 15; // Bonus for email + last name match
-    matches.push('✓ Email + Last Name Match');
-  }
-
-  // PHONE NUMBER MATCHING (Enhanced)
-  if (patient.phone && existingPatient.phone) {
-    const normalizePhone = (phone) => String(phone).replace(/\D/g, '');
-    const phone1 = normalizePhone(patient.phone);
-    const phone2 = normalizePhone(existingPatient.phone);
-    
-    if (phone1 === phone2 && phone1.length >= 10) {
-      score += 25;
-      matches.push('✓ Phone exact match');
-      criteriaMatched.phone = true;
-    } else if (phone1.length >= 10 && phone2.length >= 10) {
-      // Check last 7 digits (local number)
-      if (phone1.slice(-7) === phone2.slice(-7)) {
-        score += 15;
-        matches.push('Phone number match (local)');
-      } else if (phone1.slice(-4) === phone2.slice(-4)) {
-        score += 5;
-        matches.push('Phone last 4 match');
-      }
-    }
-  }
-
-  // ADDRESS MATCHING (Enhanced with street number extraction)
-  if (enabledCriteria.address && patient.address && existingPatient.address) {
-    const addr1 = normalize(patient.address);
-    const addr2 = normalize(existingPatient.address);
-    
-    // Extract street numbers
-    const streetNum1 = patient.address.match(/^\d+/)?.[0];
-    const streetNum2 = existingPatient.address.match(/^\d+/)?.[0];
-    
-    // Exact address match
-    if (addr1 === addr2) {
-      score += 20;
-      matches.push('✓ Address exact match');
-      criteriaMatched.address = true;
-    } 
-    // Same street number (strong indicator)
-    else if (streetNum1 && streetNum1 === streetNum2 && streetNum1.length >= 1) {
-      const addrSim = calculateSimilarity(addr1, addr2);
-      if (addrSim >= threshold.address) {
-        score += 18;
-        matches.push('Address match (same street)');
-        criteriaMatched.address = true;
-      } else if (addrSim >= 60) {
-        score += 10;
-        matches.push('Partial address match');
-      }
-    }
-    // Fuzzy address match
-    else {
-      const addrSim = calculateSimilarity(addr1, addr2);
-      if (addrSim >= threshold.address) {
-        score += 15;
-        matches.push(`Similar address (${Math.round(addrSim)}%)`);
-        criteriaMatched.address = true;
-      } else if (addrSim >= 60) {
-        score += 5;
-        matches.push('Partial address match');
-      }
-    }
-  }
-
-  // EMAIL MATCHING
-  if (patient.email && existingPatient.email) {
-    const email1 = normalize(patient.email);
-    const email2 = normalize(existingPatient.email);
-    
-    if (email1 === email2) {
-      score += 30;
-      matches.push('✓ Email exact match');
-      criteriaMatched.email = true;
-    }
-  }
-
-  // EMERGENCY CONTACT MATCHING
-  if (patient.emergency_contact_phone && existingPatient.emergency_contact_phone) {
-    const normalizePhone = (phone) => String(phone).replace(/\D/g, '');
-    const ePhone1 = normalizePhone(patient.emergency_contact_phone);
-    const ePhone2 = normalizePhone(existingPatient.emergency_contact_phone);
-    
-    if (ePhone1 === ePhone2 && ePhone1.length >= 10) {
-      score += 15;
-      matches.push('Emergency contact match');
+      criteriaMatched.definitive = true;
     }
   }
 
   // Determine confidence level
-  let confidenceLevel = 'low';
-  const criteriaMet = Object.keys(criteriaMatched).length;
-  
-  // MRN match is definitive - always very high confidence
-  if (criteriaMatched.definitive) {
-    confidenceLevel = 'definitive';
-  } else if (score >= 90 || criteriaMet >= 3) {
-    confidenceLevel = 'very_high';
-  } else if (score >= 70 || criteriaMet >= 2) {
-    confidenceLevel = 'high';
-  } else if (score >= 50) {
-    confidenceLevel = 'medium';
-  }
+  const confidenceLevel = criteriaMatched.definitive ? 'definitive' : 'low';
 
   return { score, matches, confidenceLevel, criteriaMatched };
 };
