@@ -156,12 +156,6 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      <div className="mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Today's Visits</h2>
-      </div>
-
-
-
       {/* Dashboard Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <ComplianceAlertNotifications 
