@@ -145,12 +145,25 @@ Deno.serve(async (req) => {
 
     headers.forEach((header, idx) => {
       const normalized = header.toLowerCase().replace(/[^a-z0-9_]/g, '_').trim();
+      const lowerHeader = header.toLowerCase().trim();
       
       if (skipColumns.includes(normalized)) return;
       
       // Try direct match first
       if (fieldAliases[normalized]) {
         columnMapping[idx] = fieldAliases[normalized];
+        return;
+      }
+      
+      // Special case: if header contains "last" and "name", map to last_name
+      if (lowerHeader.includes('last') && lowerHeader.includes('name')) {
+        columnMapping[idx] = 'last_name';
+        return;
+      }
+      
+      // Special case: if header contains "first" and "name", map to first_name
+      if (lowerHeader.includes('first') && lowerHeader.includes('name')) {
+        columnMapping[idx] = 'first_name';
         return;
       }
       
