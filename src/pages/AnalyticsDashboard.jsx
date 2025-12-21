@@ -294,24 +294,34 @@ export default function AnalyticsDashboard() {
 
   // Export report
   const handleExportReport = () => {
-    const report = {
-      generatedAt: new Date().toISOString(),
-      dateRange: { start: startDate, end: endDate },
-      user: selectedUser === 'all' ? 'All Users' : selectedUser,
-      summary: metrics,
-      dailyTrends: trendData,
-      userPerformance: isAdmin ? userPerformance : null
-    };
+    try {
+      if (!metrics || !trendData || trendData.length === 0) {
+        alert('No data available to export. Please adjust your filters and try again.');
+        return;
+      }
 
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `analytics-report-${startDate}-to-${endDate}.json`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
+      const report = {
+        generatedAt: new Date().toISOString(),
+        dateRange: { start: startDate, end: endDate },
+        user: selectedUser === 'all' ? 'All Users' : selectedUser,
+        summary: metrics,
+        dailyTrends: trendData,
+        userPerformance: isAdmin ? userPerformance : null
+      };
+
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics-report-${startDate}-to-${endDate}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Report generation error:', error);
+      alert('Failed to generate report: ' + error.message);
+    }
   };
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
