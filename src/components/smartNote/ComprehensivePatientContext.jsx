@@ -277,7 +277,7 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <ScrollArea className="h-96">
+        <ScrollArea className="max-h-[400px]">
           <div className="space-y-4 pr-4">
             {/* Patient Summary */}
             <div className="bg-white rounded-lg p-3 border border-indigo-200">
@@ -288,25 +288,29 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
               <div className="text-xs space-y-1">
                 <p><strong>{context.demographics.name}</strong>, {context.demographics.age} years old</p>
                 <p>MRN: {context.demographics.mrn}</p>
-                <Badge className="mt-1">{context.demographics.careType}</Badge>
               </div>
             </div>
 
             {/* Active Diagnoses */}
-            {context.medicalHistory.primaryDiagnosis && (
+            {(context.medicalHistory.primaryDiagnosis || context.medicalHistory.secondaryDiagnoses?.length > 0) && (
               <div className="bg-white rounded-lg p-3 border border-indigo-200">
                 <div className="flex items-center gap-2 mb-2">
                   <Heart className="w-4 h-4 text-red-600" />
                   <span className="font-semibold text-sm">Active Diagnoses</span>
                 </div>
                 <div className="text-xs space-y-1">
-                  <p className="font-medium">Primary: {context.medicalHistory.primaryDiagnosis}</p>
-                  {context.medicalHistory.secondaryDiagnoses.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {context.medicalHistory.secondaryDiagnoses.map((dx, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">{dx}</Badge>
-                      ))}
-                    </div>
+                  {context.medicalHistory.primaryDiagnosis && (
+                    <p className="font-medium">Primary: {context.medicalHistory.primaryDiagnosis}</p>
+                  )}
+                  {context.medicalHistory.secondaryDiagnoses?.length > 0 && (
+                    <>
+                      <p className="font-medium mt-2">Secondary:</p>
+                      <div className="space-y-1">
+                        {context.medicalHistory.secondaryDiagnoses.map((dx, idx) => (
+                          <p key={idx}>• {dx}</p>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -406,11 +410,6 @@ export default function ComprehensivePatientContext({ patientId, onContextReady 
             )}
           </div>
         </ScrollArea>
-
-        <div className="bg-indigo-100 rounded p-2 text-xs text-indigo-900">
-          <Activity className="w-4 h-4 inline mr-1" />
-          <strong>Context Enriched:</strong> AI will use this comprehensive patient data to generate more accurate and contextually appropriate clinical documentation.
-        </div>
       </CardContent>
     </Card>
   );
