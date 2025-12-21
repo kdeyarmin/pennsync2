@@ -476,6 +476,21 @@ export default function ImportPatients() {
             } else if (fieldKey === 'icd_code') {
               // Store ICD code but don't overwrite primary_diagnosis
               patient.icd_code = value;
+            } else if (fieldKey === 'living_situation') {
+              // Map organization type to living situation in social_history
+              const valueLower = value.toLowerCase();
+              let livingSituation = 'alone';
+              if (valueLower.includes('personal care') || valueLower.includes('pch')) {
+                livingSituation = 'assisted_living';
+              } else if (valueLower.includes('home') || valueLower.includes('residence')) {
+                livingSituation = 'alone';
+              } else if (valueLower.includes('family')) {
+                livingSituation = 'with_family';
+              } else if (valueLower.includes('group')) {
+                livingSituation = 'group_home';
+              }
+              if (!patient.social_history) patient.social_history = {};
+              patient.social_history.living_situation = livingSituation;
             } else {
               patient[fieldKey] = value;
             }
