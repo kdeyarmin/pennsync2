@@ -20,6 +20,7 @@ import {
   MousePointer
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { jsPDF } from "jspdf";
 
 export default function UserActivityReport() {
   const [timeRange, setTimeRange] = useState("30"); // days
@@ -194,6 +195,65 @@ export default function UserActivityReport() {
     window.URL.revokeObjectURL(url);
   };
 
+  // Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.text('User Activity Report', 20, 20);
+    
+    // Date and time range
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
+    doc.text(`Time Range: ${timeRange === 'all' ? 'All Time' : `Last ${timeRange} days`}`, 20, 35);
+    
+    // Overall stats
+    doc.setFontSize(12);
+    doc.text('Overall Statistics', 20, 45);
+    doc.setFontSize(10);
+    doc.text(`Total Users: ${overallStats.total_users}`, 30, 52);
+    doc.text(`Total Actions: ${overallStats.total_actions}`, 30, 58);
+    doc.text(`Total Logins: ${overallStats.total_logins}`, 30, 64);
+    doc.text(`Active Users (7 days): ${overallStats.active_users}`, 30, 70);
+    
+    // User details
+    let y = 85;
+    doc.setFontSize(12);
+    doc.text('User Activity Details', 20, y);
+    y += 10;
+    
+    processedStats.forEach((stat, idx) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.text(`${idx + 1}. ${stat.name}`, 20, y);
+      doc.setFont(undefined, 'normal');
+      y += 5;
+      
+      doc.setFontSize(8);
+      doc.text(`Email: ${stat.email}`, 30, y);
+      y += 5;
+      doc.text(`Total Actions: ${stat.total_actions} | Logins: ${stat.logins} | Pages: ${stat.pages_visited_count} | Entities: ${stat.entities_interacted_count}`, 30, y);
+      y += 5;
+      doc.text(`Last Activity: ${formatDistanceToNow(new Date(stat.last_activity), { addSuffix: true })}`, 30, y);
+      y += 5;
+      
+      if (stat.top_actions.length > 0) {
+        doc.text(`Top Actions: ${stat.top_actions.slice(0, 3).map(([action, count]) => `${action}(${count})`).join(', ')}`, 30, y);
+        y += 5;
+      }
+      
+      y += 3;
+    });
+    
+    doc.save(`user_activity_report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -217,10 +277,16 @@ export default function UserActivityReport() {
             </h1>
             <p className="text-gray-600 mt-1">Comprehensive analytics on user engagement and activity</p>
           </div>
-          <Button onClick={exportToCSV} variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={exportToCSV} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button onClick={exportToPDF} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
         </div>
 
         {/* Overall Stats */}
