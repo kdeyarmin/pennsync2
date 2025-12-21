@@ -266,6 +266,11 @@ Deno.serve(async (req) => {
         const created = await base44.asServiceRole.entities.Patient.create(patient);
         results.success++;
         results.patients.push(created);
+        
+        // Add delay to prevent rate limiting (200ms between creates)
+        if (i < rows.length - 1) {
+          await delay(200);
+        }
       } catch (error) {
         results.failed++;
         results.errors.push({
@@ -273,6 +278,11 @@ Deno.serve(async (req) => {
           patient: `${patient.first_name} ${patient.last_name}`,
           error: error.message
         });
+        
+        // If rate limit error, add longer delay
+        if (error.message && error.message.toLowerCase().includes('rate limit')) {
+          await delay(1000);
+        }
       }
     }
 
