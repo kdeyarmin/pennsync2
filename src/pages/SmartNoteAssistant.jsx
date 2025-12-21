@@ -455,6 +455,38 @@ export default function SmartNoteAssistant() {
     setIsProcessing(true);
     const enhanceStartTime = Date.now();
     const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
+    
+    // Calculate compliance of rough note BEFORE enhancement
+    let roughCompliance = null;
+    try {
+      const roughComplianceCheck = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this rough clinical note for Medicare compliance. Return a compliance score (0-100) based on presence of required elements.
+
+ROUGH NOTE:
+${roughNote}
+
+VISIT TYPE: ${visitType}
+DIAGNOSIS: ${finalDiagnosis}
+
+Return JSON with:
+{
+  "compliance_score": 0-100,
+  "missing_elements": ["element1", "element2"]
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            compliance_score: { type: "number" },
+            missing_elements: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
+      roughCompliance = roughComplianceCheck.compliance_score || 0;
+      setRoughNoteCompliance(roughComplianceCheck);
+    } catch (error) {
+      console.error('Error checking rough compliance:', error);
+    }
+    
     try {
       // Build comprehensive patient context
       const patientVisits = recentVisits || [];
@@ -604,6 +636,37 @@ ${guidelinesContext}
       setAuditResults(result);
       setComplianceReviewComplete(false); // Reset to show compliance review first
 
+      // Calculate compliance of enhanced note AFTER enhancement
+      let enhancedCompliance = null;
+      try {
+        const enhancedComplianceCheck = await base44.integrations.Core.InvokeLLM({
+          prompt: `Analyze this enhanced clinical note for Medicare compliance. Return a compliance score (0-100) based on presence of required elements.
+
+ENHANCED NOTE:
+${result.enhanced_note}
+
+VISIT TYPE: ${visitType}
+DIAGNOSIS: ${finalDiagnosis}
+
+Return JSON with:
+{
+  "compliance_score": 0-100,
+  "compliant_elements": ["element1", "element2"]
+}`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              compliance_score: { type: "number" },
+              compliant_elements: { type: "array", items: { type: "string" } }
+            }
+          }
+        });
+        enhancedCompliance = enhancedComplianceCheck.compliance_score || 0;
+        setEnhancedNoteCompliance(enhancedComplianceCheck);
+      } catch (error) {
+        console.error('Error checking enhanced compliance:', error);
+      }
+
       // Log note enhancement activity - counts as AI utilization
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
@@ -617,8 +680,12 @@ ${guidelinesContext}
         ai_utilization: true // Flag for analytics tracking
       });
 
-      // Track note conversion for admin reporting - use actual doc time from first keystroke
+      // Track note conversion with compliance improvement metrics
       try {
+        const complianceImprovement = (roughCompliance !== null && enhancedCompliance !== null)
+          ? enhancedCompliance - roughCompliance
+          : null;
+
         await base44.entities.NoteConversion.create({
           nurse_email: currentUser?.email || 'unknown',
           patient_id: selectedPatientId || null,
@@ -627,6 +694,10 @@ ${guidelinesContext}
           rough_note_length: roughNote.length,
           enhanced_note_length: result.enhanced_note?.length || 0,
           quality_score: result.quality_score || null,
+          compliance_score: enhancedCompliance,
+          rough_note_compliance: roughCompliance,
+          enhanced_note_compliance: enhancedCompliance,
+          compliance_improvement: complianceImprovement,
           conversion_time_ms: actualDocTime
         });
       } catch (trackError) {

@@ -57,6 +57,7 @@ import PerformanceMetricsCard from "../components/analytics/PerformanceMetricsCa
 import ComplianceTrendsChart from "../components/analytics/ComplianceTrendsChart";
 import AIUtilizationChart from "../components/analytics/AIUtilizationChart";
 import UserPerformanceTable from "../components/analytics/UserPerformanceTable";
+import ComplianceImpactReport from "../components/analytics/ComplianceImpactReport";
 
 export default function AnalyticsDashboard() {
   const [dateRange, setDateRange] = useState("30");
@@ -142,6 +143,20 @@ export default function AnalyticsDashboard() {
       ? noteConversions.reduce((sum, nc) => sum + (nc.quality_score || 0), 0) / noteConversions.length
       : 0;
 
+    // Compliance improvement metrics
+    const conversionsWithCompliance = noteConversions.filter(nc => 
+      nc.rough_note_compliance !== null && nc.enhanced_note_compliance !== null
+    );
+    const avgComplianceImprovement = conversionsWithCompliance.length > 0
+      ? conversionsWithCompliance.reduce((sum, nc) => sum + (nc.compliance_improvement || 0), 0) / conversionsWithCompliance.length
+      : 0;
+    const avgRoughCompliance = conversionsWithCompliance.length > 0
+      ? conversionsWithCompliance.reduce((sum, nc) => sum + (nc.rough_note_compliance || 0), 0) / conversionsWithCompliance.length
+      : 0;
+    const avgEnhancedCompliance = conversionsWithCompliance.length > 0
+      ? conversionsWithCompliance.reduce((sum, nc) => sum + (nc.enhanced_note_compliance || 0), 0) / conversionsWithCompliance.length
+      : 0;
+
     // Previous period comparison
     const midDate = new Date(startDate);
     midDate.setDate(midDate.getDate() + (new Date(endDate) - new Date(startDate)) / (2 * 24 * 60 * 60 * 1000));
@@ -167,7 +182,11 @@ export default function AnalyticsDashboard() {
       totalAudits: complianceAudits.length,
       timeChange: timeChange.toFixed(1),
       aiActionsCount: aiActions.length,
-      totalVisits: userActivities.filter(ua => ua.action === 'visit_document').length
+      totalVisits: userActivities.filter(ua => ua.action === 'visit_document').length,
+      avgComplianceImprovement: avgComplianceImprovement.toFixed(1),
+      avgRoughCompliance: avgRoughCompliance.toFixed(1),
+      avgEnhancedCompliance: avgEnhancedCompliance.toFixed(1),
+      notesWithComplianceTracking: conversionsWithCompliance.length
     };
   }, [noteConversions, complianceAudits, userActivities, startDate, endDate]);
 
@@ -300,11 +319,30 @@ export default function AnalyticsDashboard() {
         return;
       }
 
+      // Calculate compliance improvement statistics
+      const complianceImpactData = noteConversions
+        .filter(nc => nc.rough_note_compliance !== null && nc.enhanced_note_compliance !== null)
+        .map(nc => ({
+          nurse: nc.nurse_email,
+          visit_type: nc.visit_type,
+          date: nc.created_date,
+          rough_compliance: nc.rough_note_compliance,
+          enhanced_compliance: nc.enhanced_note_compliance,
+          improvement: nc.compliance_improvement
+        }));
+
       const report = {
         generatedAt: new Date().toISOString(),
         dateRange: { start: startDate, end: endDate },
         user: selectedUser === 'all' ? 'All Users' : selectedUser,
         summary: metrics,
+        aiImpactMetrics: {
+          avgRoughCompliance: metrics.avgRoughCompliance,
+          avgEnhancedCompliance: metrics.avgEnhancedCompliance,
+          avgComplianceImprovement: metrics.avgComplianceImprovement,
+          notesAnalyzed: metrics.notesWithComplianceTracking,
+          detailedImpacts: complianceImpactData
+        },
         dailyTrends: trendData,
         userPerformance: isAdmin ? userPerformance : null
       };
@@ -417,6 +455,45 @@ export default function AnalyticsDashboard() {
           color="indigo"
         />
       </div>
+
+      {/* AI Impact Metrics */}
+      {metrics.notesWithComplianceTracking > 0 && (
+        <Card className="mb-6 border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              AI Enhancement Impact
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-white rounded-lg border border-purple-200">
+                <p className="text-sm text-gray-600 mb-1">Before AI</p>
+                <p className="text-3xl font-bold text-orange-600">{metrics.avgRoughCompliance}%</p>
+                <p className="text-xs text-gray-500">Avg rough note compliance</p>
+              </div>
+              <div className="p-4 bg-white rounded-lg border border-purple-200">
+                <p className="text-sm text-gray-600 mb-1">After AI</p>
+                <p className="text-3xl font-bold text-green-600">{metrics.avgEnhancedCompliance}%</p>
+                <p className="text-xs text-gray-500">Avg enhanced note compliance</p>
+              </div>
+              <div className="p-4 bg-white rounded-lg border border-purple-200">
+                <p className="text-sm text-gray-600 mb-1">Improvement</p>
+                <p className="text-3xl font-bold text-purple-600">+{metrics.avgComplianceImprovement}%</p>
+                <p className="text-xs text-gray-500">Avg compliance gain</p>
+              </div>
+              <div className="p-4 bg-white rounded-lg border border-purple-200">
+                <p className="text-sm text-gray-600 mb-1">Notes Tracked</p>
+                <p className="text-3xl font-bold text-blue-600">{metrics.notesWithComplianceTracking}</p>
+                <p className="text-xs text-gray-500">With compliance data</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* AI Impact Report */}
+      <ComplianceImpactReport noteConversions={noteConversions} />
 
       {/* Charts */}
       <Tabs defaultValue="compliance" className="mb-6">
