@@ -56,6 +56,15 @@ export default function VoiceDataEntry({
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 3;
+    
+    // Enhanced accuracy settings for medical voice input
+    if ('grammars' in recognition) {
+      const speechRecognitionList = new (window.SpeechGrammarList || window.webkitSpeechGrammarList)();
+      const medicalGrammar = '#JSGF V1.0; grammar vitals; public <vitals> = blood pressure | heart rate | temperature | oxygen | respiratory | pain | weight | bp | hr | temp | sats | resp rate;';
+      speechRecognitionList.addFromString(medicalGrammar, 1);
+      recognition.grammars = speechRecognitionList;
+    }
 
     recognition.onresult = (event) => {
       let interimTranscript = '';
@@ -137,27 +146,65 @@ export default function VoiceDataEntry({
     setIsProcessing(true);
     
     try {
-      const prompt = `You are an AI assistant helping nurses document patient visits. Parse the following spoken input and extract:
-1. Structured vital signs data (temperature, blood pressure, heart rate, respiratory rate, oxygen saturation, pain level, weight)
-2. Clinical narrative (observations, assessments, patient responses, etc.)
+      const prompt = `You are an expert AI medical scribe specializing in nursing documentation. Parse this spoken clinical input with maximum accuracy for medical terminology and vital signs.
 
 SPOKEN INPUT:
 "${spokenText}"
 
-RULES FOR PARSING:
-- Extract vital signs even if stated casually (e.g., "BP is one twenty over eighty" → blood_pressure_systolic: 120, blood_pressure_diastolic: 80)
-- Temperature: Convert to Fahrenheit if needed, accept "ninety-eight point six" or "98.6"
-- Blood Pressure: Handle "120 over 80", "one twenty over eighty", "BP 120/80"
-- Heart Rate: "heart rate 72", "pulse 72", "HR 72"
-- Respiratory Rate: "breathing 16 times per minute", "resp rate 16", "RR 16"
-- Oxygen Saturation: "O2 sat 98%", "sats at 98", "oxygen 98 percent"
-- Pain Level: "pain is 3 out of 10", "pain level three", "no pain" (0)
-- Weight: "weight 150 pounds", "weighs 150", "150 lbs"
-- Everything else goes into narrative
+ADVANCED PARSING RULES FOR MAXIMUM ACCURACY:
 
-- For narrative: Clean up filler words ("um", "like", "you know"), fix grammar, use professional nursing terminology
-- Keep clinical observations intact and detailed
-- If structured data is mentioned, DON'T include it in narrative (to avoid duplication)
+VITAL SIGNS EXTRACTION (Handle ALL variations):
+- Temperature: 
+  * "ninety-eight point six" / "98.6" / "temp is 98" → 98.6
+  * "ninety-seven" → 97.0
+  * "one oh one" → 101.0
+  * "afebrile" → null (note in narrative)
+  
+- Blood Pressure:
+  * "one twenty over eighty" / "120 over 80" / "BP 120/80" → systolic: 120, diastolic: 80
+  * "one thirty eight over ninety" → systolic: 138, diastolic: 90
+  * "blood pressure elevated at one forty over ninety five" → systolic: 140, diastolic: 95
+  
+- Heart Rate:
+  * "heart rate seventy-two" / "pulse 72" / "HR 72" / "heart rate is seventy two" → 72
+  * "brady at fifty" → 50
+  * "tachy at one ten" → 110
+  
+- Respiratory Rate:
+  * "breathing sixteen times per minute" / "resp rate 16" / "RR 16" / "respirations sixteen" → 16
+  * "breathing twenty" → 20
+  
+- Oxygen Saturation:
+  * "O2 sat 98 percent" / "sats at 98" / "oxygen ninety-eight" / "SpO2 98" → 98
+  * "on room air ninety-five" → 95
+  
+- Pain Level:
+  * "pain is three out of ten" / "pain level three" / "three out of ten pain" → 3
+  * "no pain" / "pain zero" / "denies pain" → 0
+  * "pain ten out of ten" / "severe pain" → 10
+  
+- Weight:
+  * "weight 150 pounds" / "weighs one fifty" / "150 lbs" / "weight one hundred fifty" → 150
+  * "weight two hundred five" → 205
+
+MEDICAL TERMINOLOGY HANDLING:
+- Recognize and preserve medical abbreviations: WNL, NAD, A&O x3, PRN, BID, TID, QID
+- Handle medication names accurately (even complex ones)
+- Preserve diagnosis terminology exactly as stated
+- Correctly interpret anatomical terms and procedures
+
+NARRATIVE PROCESSING:
+- Remove filler words: "um", "uh", "like", "you know", "kind of"
+- Fix grammar and sentence structure professionally
+- Use proper medical terminology and nursing language
+- Maintain clinical significance and detail
+- EXCLUDE vital signs from narrative if already extracted to structured data
+- Include assessment findings, patient responses, observations, interventions
+
+CONTEXT-AWARE EXTRACTION:
+- If "blood pressure" mentioned multiple times, use the most recent or most relevant reading
+- Handle corrections: "BP is 120... actually 130 over 80" → use 130/80
+- Recognize clinical context: "patient denies pain" vs "pain reported as 5/10"
 
 Return JSON with this structure:
 {
@@ -176,26 +223,36 @@ Return JSON with this structure:
   "parsing_notes": "Brief note about what was extracted or any ambiguities"
 }
 
-Example Input: "Blood pressure is one thirty over eighty five, heart rate seventy two, patient reports feeling dizzy when standing, oriented times three, skin warm and dry"
+EXAMPLES FOR REFERENCE:
 
-Example Output:
-{
-  "vitals": {
-    "blood_pressure_systolic": 130,
-    "blood_pressure_diastolic": 85,
-    "heart_rate": 72,
-    "temperature": null,
-    "respiratory_rate": null,
-    "oxygen_saturation": null,
-    "pain_level": null,
-    "weight": null
-  },
+Example 1:
+Input: "Blood pressure is one thirty over eighty five, heart rate seventy two, patient reports feeling dizzy when standing, oriented times three, skin warm and dry"
+Output: {
+  "vitals": { "blood_pressure_systolic": 130, "blood_pressure_diastolic": 85, "heart_rate": 72, "temperature": null, "respiratory_rate": null, "oxygen_saturation": null, "pain_level": null, "weight": null },
   "narrative": "Patient reports feeling dizzy when standing. Alert and oriented x3. Skin warm and dry.",
   "confidence": "high",
-  "parsing_notes": "Extracted BP, HR, and clinical observations successfully"
+  "parsing_notes": "Extracted BP, HR, and clinical observations"
 }
 
-Now parse the input above:`;
+Example 2:
+Input: "temp ninety eight point six, oxygen sat ninety five on room air, no respiratory distress, lungs clear bilaterally, pain level two out of ten in right knee"
+Output: {
+  "vitals": { "temperature": 98.6, "oxygen_saturation": 95, "pain_level": 2, "blood_pressure_systolic": null, "blood_pressure_diastolic": null, "heart_rate": null, "respiratory_rate": null, "weight": null },
+  "narrative": "Patient on room air with no respiratory distress. Lungs clear bilaterally. Pain localized to right knee.",
+  "confidence": "high",
+  "parsing_notes": "Extracted temperature, O2 sat, pain level. Detailed respiratory and pain assessment captured."
+}
+
+Example 3:
+Input: "um, so the patient's BP is like one forty over ninety, uh heart rate is eighty five, breathing is kind of rapid at twenty-two, and she's complaining of shortness of breath"
+Output: {
+  "vitals": { "blood_pressure_systolic": 140, "blood_pressure_diastolic": 90, "heart_rate": 85, "respiratory_rate": 22, "temperature": null, "oxygen_saturation": null, "pain_level": null, "weight": null },
+  "narrative": "Patient reports shortness of breath with tachypnea noted.",
+  "confidence": "high",
+  "parsing_notes": "Cleaned filler words, extracted elevated BP, HR, and RR. Documented chief complaint."
+}
+
+Now parse the user's input above with maximum medical accuracy:`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,

@@ -95,20 +95,43 @@ export default function VoiceDictation({ onTranscriptionComplete }) {
 
       // Transcribe using LLM with audio context
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a medical transcription AI. Transcribe this audio recording of a nurse's clinical notes.
+        prompt: `You are an expert medical transcription AI specialized in nursing documentation. Transcribe this audio recording with the highest accuracy for medical terminology.
 
-Instructions:
-1. Transcribe the spoken words accurately
-2. Maintain medical terminology as spoken
-3. Keep the natural flow of the dictation
-4. Include any pauses or corrections the speaker makes
-5. Do NOT enhance or modify the content - just transcribe
+CRITICAL TRANSCRIPTION RULES:
+1. Transcribe EXACTLY what is spoken - word-for-word accuracy is paramount
+2. Recognize and correctly spell medical terms (medications, diagnoses, procedures, anatomical terms)
+3. Handle common medical abbreviations and their phonetic spellings:
+   - "BP" or "blood pressure"
+   - "HR" or "heart rate"
+   - "O2 sat" or "oxygen saturation"
+   - "resp rate" or "respiratory rate"
+   - "temp" or "temperature"
+   - "PRN" (as needed), "BID" (twice daily), "TID" (three times daily), "QID" (four times daily)
+4. Correctly transcribe vital signs with numbers and units:
+   - Blood pressure: "120 over 80" → "120/80"
+   - Temperature: "ninety-eight point six" → "98.6"
+   - Weight: "one fifty" → "150 lbs"
+5. Handle medical phrases accurately:
+   - "Alert and oriented times three" → "Alert and oriented x3"
+   - "No acute distress" → "NAD"
+   - "Within normal limits" → "WNL"
+6. Preserve clinical context and timing phrases
+7. Maintain speaker corrections and clarifications
+8. Use proper punctuation for clarity
+9. If audio quality is poor in sections, mark unclear portions with [inaudible] or [unclear]
+10. Return raw medical transcription - do NOT summarize, interpret, or add clinical notes
+
+AUDIO QUALITY ASSESSMENT:
+- Evaluate clarity, background noise, and speaker articulation
+- Note any technical issues that may affect accuracy
 
 Return JSON:
 {
-  "transcription": "The full transcribed text",
-  "duration_detected": "approximate duration mentioned or detected",
-  "clarity_score": 1-10
+  "transcription": "Complete word-for-word medical transcription",
+  "duration_detected": "Approximate recording duration in minutes",
+  "clarity_score": 1-10 (10 = crystal clear, 1 = very poor),
+  "medical_terms_detected": ["list", "of", "medical", "terms"],
+  "quality_notes": "Brief assessment of audio quality and any transcription challenges"
 }`,
         file_urls: [file_url],
         response_json_schema: {
@@ -116,7 +139,9 @@ Return JSON:
           properties: {
             transcription: { type: "string" },
             duration_detected: { type: "string" },
-            clarity_score: { type: "number" }
+            clarity_score: { type: "number" },
+            medical_terms_detected: { type: "array", items: { type: "string" } },
+            quality_notes: { type: "string" }
           }
         }
       });
@@ -153,6 +178,15 @@ Return JSON:
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 3;
+    
+    // Enhanced accuracy settings for medical dictation
+    if ('grammars' in recognition) {
+      const speechRecognitionList = new (window.SpeechGrammarList || window.webkitSpeechGrammarList)();
+      const grammar = '#JSGF V1.0; grammar medical; public <medical> = vitals | blood pressure | heart rate | temperature | oxygen saturation | respiratory rate | pain level | ambulating | edema | lungs clear | oriented | medication | diagnosis | assessment | intervention;';
+      speechRecognitionList.addFromString(grammar, 1);
+      recognition.grammars = speechRecognitionList;
+    }
 
     let finalTranscript = '';
 
