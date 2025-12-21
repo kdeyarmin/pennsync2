@@ -59,8 +59,16 @@ Deno.serve(async (req) => {
     const fieldAliases = {
       // Name fields
       'patient': 'first_name',
+      'patient_first_name': 'first_name',
+      'firstname': 'first_name',
       'first_name': 'first_name',
+      'fname': 'first_name',
+      'patient_last_name': 'last_name',
+      'lastname': 'last_name',
       'last_name': 'last_name',
+      'lname': 'last_name',
+      'surname': 'last_name',
+      'name': 'last_name',
       'middle_name': 'middle_name',
       
       // Basic info
