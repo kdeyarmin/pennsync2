@@ -177,6 +177,9 @@ Deno.serve(async (req) => {
     });
 
     const results = { success: 0, failed: 0, errors: [], patients: [] };
+    
+    // Helper function to add delay between operations
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
