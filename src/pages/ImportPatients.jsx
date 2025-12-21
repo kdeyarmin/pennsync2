@@ -43,8 +43,8 @@ const REQUIRED_FIELDS = ['first_name', 'last_name'];
 
 const FIELD_MAPPINGS = {
   // Patient basic info
-  'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient_first_name', 'patient'] },
-  'last_name': { label: 'Last Name', type: 'string', required: true, aliases: ['patient_last_name'] },
+  'first_name': { label: 'First Name', type: 'string', required: true, aliases: ['patient_first_name', 'patient', 'firstname', 'fname'] },
+  'last_name': { label: 'Last Name', type: 'string', required: true, aliases: ['patient_last_name', 'lastname', 'lname', 'patientlastname'] },
   'middle_name': { label: 'Middle Name', type: 'string' },
   'date_of_birth': { label: 'Date of Birth', type: 'date', format: 'MM/DD/YYYY', aliases: ['dob'] },
   'medical_record_number': { label: 'Medical Record Number', type: 'string', aliases: ['mrn'] },
