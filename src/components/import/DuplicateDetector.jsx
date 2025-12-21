@@ -47,8 +47,8 @@ const calculateSimilarity = (str1, str2) => {
   return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
 };
 
-// Enhanced duplicate matching logic with configurable sensitivity
-const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') => {
+// Enhanced duplicate matching logic with configurable sensitivity and criteria
+const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium', criteria = {}) => {
   let score = 0;
   let matches = [];
   const criteriaMatched = {};
@@ -64,6 +64,15 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') =
   };
   
   const threshold = thresholds[sensitivity] || thresholds.medium;
+  
+  // Apply matching criteria filters
+  const enabledCriteria = {
+    mrn: criteria.mrn !== false,
+    nameAndDob: criteria.nameAndDob !== false,
+    phoneAndLastName: criteria.phoneAndLastName !== false,
+    emailAndLastName: criteria.emailAndLastName !== false,
+    address: criteria.address !== false
+  };
 
   // NAME MATCHING (Multiple strategies)
   const firstName1 = normalize(patient.first_name);
@@ -123,7 +132,7 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') =
   }
 
   // MEDICAL RECORD NUMBER MATCHING - PRIORITY CHECK
-  if (patient.medical_record_number && existingPatient.medical_record_number) {
+  if (enabledCriteria.mrn && patient.medical_record_number && existingPatient.medical_record_number) {
     const normalizeMRN = (mrn) => String(mrn).trim().replace(/\s+/g, '').toUpperCase();
     const mrn1 = normalizeMRN(patient.medical_record_number);
     const mrn2 = normalizeMRN(existingPatient.medical_record_number);
@@ -140,6 +149,24 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') =
         matches.push(`Similar MRN (${Math.round(mrnSim)}%)`);
       }
     }
+  }
+  
+  // NAME + DOB COMBINATION MATCHING
+  if (enabledCriteria.nameAndDob && criteriaMatched.name && criteriaMatched.dob) {
+    score += 20; // Bonus for matching both name and DOB
+    matches.push('✓ Name + DOB Match');
+  }
+  
+  // PHONE + LAST NAME COMBINATION MATCHING
+  if (enabledCriteria.phoneAndLastName && criteriaMatched.phone && lastName1 === lastName2) {
+    score += 15; // Bonus for phone + last name match
+    matches.push('✓ Phone + Last Name Match');
+  }
+  
+  // EMAIL + LAST NAME COMBINATION MATCHING
+  if (enabledCriteria.emailAndLastName && criteriaMatched.email && lastName1 === lastName2) {
+    score += 15; // Bonus for email + last name match
+    matches.push('✓ Email + Last Name Match');
   }
 
   // PHONE NUMBER MATCHING (Enhanced)
@@ -165,7 +192,7 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') =
   }
 
   // ADDRESS MATCHING (Enhanced with street number extraction)
-  if (patient.address && existingPatient.address) {
+  if (enabledCriteria.address && patient.address && existingPatient.address) {
     const addr1 = normalize(patient.address);
     const addr2 = normalize(existingPatient.address);
     
@@ -247,7 +274,7 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium') =
   return { score, matches, confidenceLevel, criteriaMatched };
 };
 
-const findDuplicates = (patient, existingPatients, sensitivity = 'medium', threshold = null) => {
+const findDuplicates = (patient, existingPatients, sensitivity = 'medium', threshold = null, criteria = {}) => {
   const potentialDuplicates = [];
   
   // Sensitivity-based thresholds
@@ -260,7 +287,7 @@ const findDuplicates = (patient, existingPatients, sensitivity = 'medium', thres
   const minScore = threshold !== null ? threshold : defaultThresholds[sensitivity] || 40;
 
   existingPatients.forEach(existing => {
-    const { score, matches, confidenceLevel, criteriaMatched } = calculateMatchScore(patient, existing, sensitivity);
+    const { score, matches, confidenceLevel, criteriaMatched } = calculateMatchScore(patient, existing, sensitivity, criteria);
     
     if (score >= minScore) {
       potentialDuplicates.push({
@@ -321,6 +348,14 @@ export default function DuplicateDetector({ patients, onResolve }) {
   const [sensitivity, setSensitivity] = useState('medium');
   const [customThreshold, setCustomThreshold] = useState(40);
   const [showSettings, setShowSettings] = useState(false);
+  const [matchingCriteria, setMatchingCriteria] = useState({
+    mrn: true,
+    nameAndDob: true,
+    phoneAndLastName: true,
+    emailAndLastName: false,
+    address: true
+  });
+  const [autoResolveStrategy, setAutoResolveStrategy] = useState('manual'); // manual, merge, mark_duplicate, ignore
 
   const { data: existingPatients = [], isLoading } = useQuery({
     queryKey: ['all-patients-duplicate-check'],
@@ -344,18 +379,28 @@ export default function DuplicateDetector({ patients, onResolve }) {
 
   // Find duplicates for each patient and analyze differences
   const duplicateAnalysis = patients.map((patient, idx) => {
-    const duplicates = findDuplicates(patient, existingPatients, sensitivity, customThreshold).map(dup => ({
+    const duplicates = findDuplicates(patient, existingPatients, sensitivity, customThreshold, matchingCriteria).map(dup => ({
       ...dup,
       differences: comparePatients(patient, dup.patient)
     }));
     
-    // Auto-set resolution for definitive MRN matches with updates
+    // Auto-set resolution based on strategy
     let autoResolution = resolution[idx] || null;
-    if (!autoResolution && duplicates.length > 0) {
-      const definitiveMatch = duplicates.find(d => d.confidenceLevel === 'definitive');
-      if (definitiveMatch && definitiveMatch.differences.length > 0) {
-        // Auto-select update for definitive MRN matches with new data
-        autoResolution = { action: 'update', existingPatientId: definitiveMatch.patient.id, auto: true };
+    if (!autoResolution && duplicates.length > 0 && autoResolveStrategy !== 'manual') {
+      const topMatch = duplicates[0];
+      
+      if (autoResolveStrategy === 'merge' && topMatch.confidenceLevel === 'definitive') {
+        autoResolution = { action: 'update', existingPatientId: topMatch.patient.id, auto: true };
+      } else if (autoResolveStrategy === 'ignore') {
+        autoResolution = { action: 'add', auto: true };
+      } else if (autoResolveStrategy === 'mark_duplicate') {
+        autoResolution = { action: 'skip', auto: true };
+      } else {
+        // Default: auto-select for definitive MRN matches with updates
+        const definitiveMatch = duplicates.find(d => d.confidenceLevel === 'definitive');
+        if (definitiveMatch && definitiveMatch.differences.length > 0) {
+          autoResolution = { action: 'update', existingPatientId: definitiveMatch.patient.id, auto: true };
+        }
       }
     }
     
@@ -507,7 +552,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                 </Button>
               </div>
               <div className="text-xs text-gray-600 space-y-1 bg-white p-3 rounded-lg border">
-               <p><strong>MRN Matching:</strong> Medical Record Number matches are always treated as definitive and auto-selected for update</p>
+               <p><strong>MRN Matching:</strong> Medical Record Number matches are always treated as definitive</p>
                <p><strong>Strict:</strong> Only very close matches (60%+ score) - fewer false positives</p>
                <p><strong>Medium:</strong> Balanced approach (40%+ score) - recommended</p>
                <p><strong>Loose:</strong> Catches more potential duplicates (25%+ score) - may include uncertain matches</p>
@@ -531,10 +576,118 @@ export default function DuplicateDetector({ patients, onResolve }) {
               </p>
             </div>
 
+            <div className="border-t pt-4">
+              <Label className="text-sm font-medium mb-3 block">Matching Criteria</Label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={matchingCriteria.mrn}
+                    onChange={(e) => setMatchingCriteria({...matchingCriteria, mrn: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm">MRN (Medical Record Number)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={matchingCriteria.nameAndDob}
+                    onChange={(e) => setMatchingCriteria({...matchingCriteria, nameAndDob: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Name + Date of Birth</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={matchingCriteria.phoneAndLastName}
+                    onChange={(e) => setMatchingCriteria({...matchingCriteria, phoneAndLastName: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Phone + Last Name</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={matchingCriteria.emailAndLastName}
+                    onChange={(e) => setMatchingCriteria({...matchingCriteria, emailAndLastName: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Email + Last Name</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={matchingCriteria.address}
+                    onChange={(e) => setMatchingCriteria({...matchingCriteria, address: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Address</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <Label className="text-sm font-medium mb-3 block">Automatic Resolution Strategy</Label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="autoResolve"
+                    checked={autoResolveStrategy === 'manual'}
+                    onChange={() => setAutoResolveStrategy('manual')}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Manual Review</span>
+                    <p className="text-xs text-gray-600">Review each duplicate manually</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="autoResolve"
+                    checked={autoResolveStrategy === 'merge'}
+                    onChange={() => setAutoResolveStrategy('merge')}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Auto-Merge Definitive Matches</span>
+                    <p className="text-xs text-gray-600">Automatically update records with definitive matches (MRN)</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="autoResolve"
+                    checked={autoResolveStrategy === 'ignore'}
+                    onChange={() => setAutoResolveStrategy('ignore')}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Ignore Duplicates</span>
+                    <p className="text-xs text-gray-600">Add all as new patients, ignore detected duplicates</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="autoResolve"
+                    checked={autoResolveStrategy === 'mark_duplicate'}
+                    onChange={() => setAutoResolveStrategy('mark_duplicate')}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Mark as Duplicate</span>
+                    <p className="text-xs text-gray-600">Skip all rows with potential duplicates</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
             <Alert className="bg-blue-100 border-blue-300">
               <AlertDescription className="text-xs text-blue-900">
-                💡 <strong>Tip:</strong> Start with Medium sensitivity. If you're getting too many false positives, switch to Strict. 
-                If you're concerned about missing duplicates, use Loose.
+                💡 <strong>Tip:</strong> Start with Manual Review. Use Auto-Merge for trusted data sources with reliable MRNs.
               </AlertDescription>
             </Alert>
           </CardContent>
