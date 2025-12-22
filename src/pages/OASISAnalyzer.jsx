@@ -79,6 +79,8 @@ import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentRev
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users as UsersIcon, BarChart3 } from "lucide-react";
+import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
+import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
