@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +37,8 @@ import {
   User,
   History,
   Sparkles,
-  Zap
+  Zap,
+  Shield
 } from "lucide-react";
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -2004,6 +2007,48 @@ Return scores (0-100) and top 3-5 issues in each category.`,
                   )}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Navigation to Detailed Review Pages */}
+          <Card className="border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Workflow className="w-5 h-5 text-indigo-600" />
+                Detailed Analysis Sections
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Link to={createPageUrl("OASISRevenueAnalysis")} state={{ analysisResults, pdgmData, patientName, uploadId: analysisId }}>
+                  <Button className="w-full bg-green-600 hover:bg-green-700 h-auto py-4 flex flex-col items-center gap-2">
+                    <DollarSign className="w-8 h-8" />
+                    <div className="text-center">
+                      <div className="font-bold">Revenue Analysis</div>
+                      <div className="text-xs opacity-90">PDGM, Case Mix, Payment</div>
+                    </div>
+                  </Button>
+                </Link>
+                <Link to={createPageUrl("OASISComplianceReview")} state={{ analysisResults, pdgmData, patientName, patientId: selectedPatientId }}>
+                  <Button className="w-full bg-red-600 hover:bg-red-700 h-auto py-4 flex flex-col items-center gap-2">
+                    <Shield className="w-8 h-8" />
+                    <div className="text-center">
+                      <div className="font-bold">Compliance Review</div>
+                      <div className="text-xs opacity-90">Audit Risk, Validation</div>
+                    </div>
+                  </Button>
+                </Link>
+                <Link to={createPageUrl("OASISDocumentationReview")} state={{ analysisResults, pdgmData, patientName, navigationData }}>
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 h-auto py-4 flex flex-col items-center gap-2">
+                    <FileText className="w-8 h-8" />
+                    <div className="text-center">
+                      <div className="font-bold">Documentation</div>
+                      <div className="text-xs opacity-90">Quality, AI Suggestions</div>
+                    </div>
+                  </Button>
+                </Link>
+              </div>
+              <p className="text-xs text-gray-600 mt-3 text-center">Click any section above to view detailed analysis and AI-powered recommendations</p>
             </CardContent>
           </Card>
 
