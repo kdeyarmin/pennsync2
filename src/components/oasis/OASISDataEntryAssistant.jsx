@@ -69,7 +69,6 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
             patient_last_name: { type: "string" },
             patient_dob: { type: "string", description: "Date of birth MM/DD/YYYY" },
             patient_gender: { type: "string", description: "M or F" },
-            patient_address: { type: "string" },
             patient_phone: { type: "string" },
             medical_record_number: { type: "string" },
 
@@ -494,7 +493,6 @@ Return structured JSON.`,
                 {renderField("Last Name", "patient_last_name")}
                 {renderField("Date of Birth", "patient_dob", "MM/DD/YYYY")}
                 {renderField("Gender", "patient_gender", "M or F")}
-                {renderField("Address", "patient_address")}
                 {renderField("Phone", "patient_phone")}
                 {renderField("Medical Record Number", "medical_record_number")}
               </TabsContent>
@@ -506,7 +504,6 @@ Return structured JSON.`,
                 {renderField("M0110 Episode Timing", "m0110_episode_timing", "1=Early, 2=Late")}
                 {renderField("M0030 SOC Date", "m0030_soc_date", "MM/DD/YYYY")}
                 {renderField("M1021 Primary Dx Code", "m1021_primary_dx_code", "ICD-10")}
-                {renderField("M1021 Primary Dx Description", "m1021_primary_dx_description")}
                 {renderField("M1023 Other Diagnoses", "m1023_other_diagnoses")}
               </TabsContent>
 
