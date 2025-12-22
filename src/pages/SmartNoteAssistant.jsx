@@ -50,6 +50,7 @@ import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreInd
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
+import AICarePlanOptimizer from "../components/carePlan/AICarePlanOptimizer";
 import ComplianceSummaryReport from "../components/smartNote/ComplianceSummaryReport";
 import FloatingActionBar from "../components/smartNote/FloatingActionBar";
 import QuickPhraseButtons from "../components/smartNote/QuickPhraseButtons";
@@ -1480,14 +1481,32 @@ Return JSON with:
               <AccordionItem value="careplans">
                 <AccordionTrigger className="text-sm">
                   <div className="flex items-center gap-2">
-                    <Stethoscope className="w-4 h-4" /> Generate Care Plans
+                    <Stethoscope className="w-4 h-4" /> AI Care Plan Optimizer
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <AICarePlanGenerator
-                    patientId={selectedPatientId}
-                    diagnosis={finalDiagnosis}
+                  <AICarePlanOptimizer
                     enhancedNote={enhancedNote}
+                    patientData={selectedPatient}
+                    existingCarePlans={carePlans}
+                    recentVisits={recentVisits}
+                    diagnosis={finalDiagnosis}
+                    onCreateCarePlan={async (carePlanData) => {
+                      try {
+                        await base44.entities.CarePlan.create({
+                          patient_id: selectedPatientId,
+                          ...carePlanData
+                        });
+                        queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
+                      } catch (error) {
+                        console.error('Error creating care plan:', error);
+                      }
+                    }}
+                    onModifyCarePlan={async (modification) => {
+                      console.log('Care plan modification suggested:', modification);
+                      // Could implement update logic here
+                    }}
+                    autoAnalyze={false}
                   />
                 </AccordionContent>
               </AccordionItem>

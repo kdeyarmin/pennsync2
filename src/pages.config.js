@@ -1,113 +1,115 @@
-import Dashboard from './pages/Dashboard';
-import DocumentVisit from './pages/DocumentVisit';
-import Patients from './pages/Patients';
-import PatientDetails from './pages/PatientDetails';
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
-import Features from './pages/Features';
-import CarePlanManagement from './pages/CarePlanManagement';
-import AutomaticCarePlans from './pages/AutomaticCarePlans';
-import ComplianceCenter from './pages/ComplianceCenter';
-import SecurityPolicy from './pages/SecurityPolicy';
-import TemplateLibrary from './pages/TemplateLibrary';
-import ComplianceDashboard from './pages/ComplianceDashboard';
-import PredictiveAnalytics from './pages/PredictiveAnalytics';
-import StaffTraining from './pages/StaffTraining';
-import PatientEducation from './pages/PatientEducation';
-import NurseTraining from './pages/NurseTraining';
-import PatientAlerts from './pages/PatientAlerts';
-import RegulatoryCompliance from './pages/RegulatoryCompliance';
-import SmartNoteAssistant from './pages/SmartNoteAssistant';
-import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
-import ImportPatients from './pages/ImportPatients';
-import StaffTrainingHub from './pages/StaffTrainingHub';
-import OASISAnalyzer from './pages/OASISAnalyzer';
-import AnalyticsDashboard from './pages/AnalyticsDashboard';
-import OASISAuditDashboard from './pages/OASISAuditDashboard';
-import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
-import AgencySettings from './pages/AgencySettings';
-import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
-import UserActivityLog from './pages/UserActivityLog';
-import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
-import PatientDataManagement from './pages/PatientDataManagement';
-import PatientDashboard from './pages/PatientDashboard';
-import DocumentGenerator from './pages/DocumentGenerator';
-import OASIS from './pages/OASIS';
-import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
-import SystemJobMonitor from './pages/SystemJobMonitor';
-import PatientEducationHub from './pages/PatientEducationHub';
-import AgencyAnalytics from './pages/AgencyAnalytics';
-import ComplianceRegulatory from './pages/ComplianceRegulatory';
-import SystemMonitoring from './pages/SystemMonitoring';
-import UserManagement from './pages/UserManagement';
-import NurseTrainingHub from './pages/NurseTrainingHub';
-import AuditTrail from './pages/AuditTrail';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
-import NurseEducationVideos from './pages/NurseEducationVideos';
+import AgencyAnalytics from './pages/AgencyAnalytics';
+import AgencySettings from './pages/AgencySettings';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import AuditTrail from './pages/AuditTrail';
+import AutomaticCarePlans from './pages/AutomaticCarePlans';
+import CarePlanManagement from './pages/CarePlanManagement';
+import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
+import ComplianceCenter from './pages/ComplianceCenter';
+import ComplianceDashboard from './pages/ComplianceDashboard';
+import ComplianceRegulatory from './pages/ComplianceRegulatory';
+import Dashboard from './pages/Dashboard';
+import DocumentGenerator from './pages/DocumentGenerator';
+import DocumentVisit from './pages/DocumentVisit';
 import DocumentationTraining from './pages/DocumentationTraining';
 import DuplicatePatients from './pages/DuplicatePatients';
-import OASISReview from './pages/OASISReview';
-import TrainingManagement from './pages/TrainingManagement';
-import PatientRecordDashboard from './pages/PatientRecordDashboard';
-import UserActivityReport from './pages/UserActivityReport';
+import Features from './pages/Features';
+import Home from './pages/Home';
+import ImportPatients from './pages/ImportPatients';
 import ManageNewFeatures from './pages/ManageNewFeatures';
+import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
+import NurseEducationVideos from './pages/NurseEducationVideos';
+import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
+import NurseTraining from './pages/NurseTraining';
+import NurseTrainingHub from './pages/NurseTrainingHub';
+import OASIS from './pages/OASIS';
+import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
+import OASISAnalyzer from './pages/OASISAnalyzer';
+import OASISAuditDashboard from './pages/OASISAuditDashboard';
+import OASISReview from './pages/OASISReview';
+import PatientAlerts from './pages/PatientAlerts';
+import PatientDashboard from './pages/PatientDashboard';
+import PatientDataManagement from './pages/PatientDataManagement';
+import PatientDetails from './pages/PatientDetails';
+import PatientEducation from './pages/PatientEducation';
+import PatientEducationHub from './pages/PatientEducationHub';
+import PatientRecordDashboard from './pages/PatientRecordDashboard';
+import Patients from './pages/Patients';
+import PredictiveAnalytics from './pages/PredictiveAnalytics';
+import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
+import RegulatoryCompliance from './pages/RegulatoryCompliance';
+import SecurityPolicy from './pages/SecurityPolicy';
+import SmartNoteAssistant from './pages/SmartNoteAssistant';
+import StaffTraining from './pages/StaffTraining';
+import StaffTrainingHub from './pages/StaffTrainingHub';
+import SystemJobMonitor from './pages/SystemJobMonitor';
+import SystemMonitoring from './pages/SystemMonitoring';
+import TemplateLibrary from './pages/TemplateLibrary';
+import TrainingManagement from './pages/TrainingManagement';
+import UserActivityLog from './pages/UserActivityLog';
+import UserActivityReport from './pages/UserActivityReport';
+import UserManagement from './pages/UserManagement';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "DocumentVisit": DocumentVisit,
-    "Patients": Patients,
-    "PatientDetails": PatientDetails,
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
-    "Features": Features,
-    "CarePlanManagement": CarePlanManagement,
-    "AutomaticCarePlans": AutomaticCarePlans,
-    "ComplianceCenter": ComplianceCenter,
-    "SecurityPolicy": SecurityPolicy,
-    "TemplateLibrary": TemplateLibrary,
-    "ComplianceDashboard": ComplianceDashboard,
-    "PredictiveAnalytics": PredictiveAnalytics,
-    "StaffTraining": StaffTraining,
-    "PatientEducation": PatientEducation,
-    "NurseTraining": NurseTraining,
-    "PatientAlerts": PatientAlerts,
-    "RegulatoryCompliance": RegulatoryCompliance,
-    "SmartNoteAssistant": SmartNoteAssistant,
-    "NursePerformanceDashboard": NursePerformanceDashboard,
-    "ImportPatients": ImportPatients,
-    "StaffTrainingHub": StaffTrainingHub,
-    "OASISAnalyzer": OASISAnalyzer,
-    "AnalyticsDashboard": AnalyticsDashboard,
-    "OASISAuditDashboard": OASISAuditDashboard,
-    "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
-    "AgencySettings": AgencySettings,
-    "ClinicalPathwayManager": ClinicalPathwayManager,
-    "UserActivityLog": UserActivityLog,
-    "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
-    "PatientDataManagement": PatientDataManagement,
-    "PatientDashboard": PatientDashboard,
-    "DocumentGenerator": DocumentGenerator,
-    "OASIS": OASIS,
-    "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
-    "SystemJobMonitor": SystemJobMonitor,
-    "PatientEducationHub": PatientEducationHub,
-    "AgencyAnalytics": AgencyAnalytics,
-    "ComplianceRegulatory": ComplianceRegulatory,
-    "SystemMonitoring": SystemMonitoring,
-    "UserManagement": UserManagement,
-    "NurseTrainingHub": NurseTrainingHub,
-    "AuditTrail": AuditTrail,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
-    "NurseEducationVideos": NurseEducationVideos,
+    "AgencyAnalytics": AgencyAnalytics,
+    "AgencySettings": AgencySettings,
+    "AnalyticsDashboard": AnalyticsDashboard,
+    "AuditTrail": AuditTrail,
+    "AutomaticCarePlans": AutomaticCarePlans,
+    "CarePlanManagement": CarePlanManagement,
+    "ClinicalPathwayManager": ClinicalPathwayManager,
+    "ComplianceCenter": ComplianceCenter,
+    "ComplianceDashboard": ComplianceDashboard,
+    "ComplianceRegulatory": ComplianceRegulatory,
+    "Dashboard": Dashboard,
+    "DocumentGenerator": DocumentGenerator,
+    "DocumentVisit": DocumentVisit,
     "DocumentationTraining": DocumentationTraining,
     "DuplicatePatients": DuplicatePatients,
-    "OASISReview": OASISReview,
-    "TrainingManagement": TrainingManagement,
-    "PatientRecordDashboard": PatientRecordDashboard,
-    "UserActivityReport": UserActivityReport,
+    "Features": Features,
+    "Home": Home,
+    "ImportPatients": ImportPatients,
     "ManageNewFeatures": ManageNewFeatures,
+    "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
+    "NurseEducationVideos": NurseEducationVideos,
+    "NursePerformanceDashboard": NursePerformanceDashboard,
+    "NurseTraining": NurseTraining,
+    "NurseTrainingHub": NurseTrainingHub,
+    "OASIS": OASIS,
+    "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
+    "OASISAnalyzer": OASISAnalyzer,
+    "OASISAuditDashboard": OASISAuditDashboard,
+    "OASISReview": OASISReview,
+    "PatientAlerts": PatientAlerts,
+    "PatientDashboard": PatientDashboard,
+    "PatientDataManagement": PatientDataManagement,
+    "PatientDetails": PatientDetails,
+    "PatientEducation": PatientEducation,
+    "PatientEducationHub": PatientEducationHub,
+    "PatientRecordDashboard": PatientRecordDashboard,
+    "Patients": Patients,
+    "PredictiveAnalytics": PredictiveAnalytics,
+    "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
+    "RegulatoryCompliance": RegulatoryCompliance,
+    "SecurityPolicy": SecurityPolicy,
+    "SmartNoteAssistant": SmartNoteAssistant,
+    "StaffTraining": StaffTraining,
+    "StaffTrainingHub": StaffTrainingHub,
+    "SystemJobMonitor": SystemJobMonitor,
+    "SystemMonitoring": SystemMonitoring,
+    "TemplateLibrary": TemplateLibrary,
+    "TrainingManagement": TrainingManagement,
+    "UserActivityLog": UserActivityLog,
+    "UserActivityReport": UserActivityReport,
+    "UserManagement": UserManagement,
 }
 
 export const pagesConfig = {
