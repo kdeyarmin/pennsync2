@@ -103,12 +103,13 @@ export default function OASISUploadWidget() {
             {file ? file.name : "No file selected"}
           </p>
           <p className="text-xs text-gray-400 mb-4">Upload OASIS PDF for analysis</p>
-          <label htmlFor="quick-oasis-upload">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Upload className="w-4 h-4 mr-2" />
-              Choose PDF File
-            </Button>
-          </label>
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => document.getElementById('quick-oasis-upload').click()}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Choose PDF File
+          </Button>
         </div>
 
         {file && !uploadComplete && (
