@@ -808,47 +808,70 @@ export default function OASISAnalyzer() {
       const sanitizeData = (obj) => {
         if (!obj) return null;
 
-        // Simple approach: convert to JSON and back to remove circular refs
-        try {
-          return JSON.parse(JSON.stringify(obj, (key, value) => {
-            // Filter out React fiber nodes and DOM elements
-            if (key.includes('react') || key.includes('Fiber') || key.includes('fiber') ||
-                key === 'nativeEvent' || key === 'currentTarget' || key === 'target' ||
-                key.startsWith('__') || key.startsWith('_')) {
-              return undefined;
-            }
+        const seen = new WeakSet();
 
-            // Skip functions
-            if (typeof value === 'function') {
-              return undefined;
-            }
+        const sanitize = (value) => {
+          // Handle null and undefined
+          if (value === null || value === undefined) return value;
 
-            // Skip DOM elements and nodes
-            if (value && typeof value === 'object') {
-              if (value.nodeType || value instanceof Element || value instanceof Node) {
-                return undefined;
-              }
-              // Check for HTMLElement-like objects
-              if (value.constructor?.name?.includes('HTML') || value.constructor?.name?.includes('Element')) {
-                return undefined;
-              }
-            }
-
+          // Handle primitives
+          const type = typeof value;
+          if (type === 'string' || type === 'number' || type === 'boolean') {
             return value;
-          }));
-        } catch (e) {
-          console.error('Sanitization error:', e);
-          // Fallback: return only primitive data
-          return {
-            primary_diagnosis: obj.primary_diagnosis,
-            functional_scores: obj.functional_scores,
-            patient_info: {
-              name: obj.patient_info?.name,
-              dob: obj.patient_info?.dob,
-              gender: obj.patient_info?.gender
+          }
+
+          // Skip functions
+          if (type === 'function') return undefined;
+
+          // Handle objects
+          if (type === 'object') {
+            // Detect circular references
+            if (seen.has(value)) return undefined;
+            seen.add(value);
+
+            // Skip DOM elements, React elements, and HTML elements
+            if (value instanceof Element || value instanceof Node || 
+                value.$$typeof || value._owner || value.nodeType ||
+                (value.constructor && (
+                  value.constructor.name?.includes('HTML') ||
+                  value.constructor.name?.includes('Element') ||
+                  value.constructor.name === 'FiberNode'
+                ))) {
+              return undefined;
             }
-          };
-        }
+
+            // Handle arrays
+            if (Array.isArray(value)) {
+              return value.map(item => sanitize(item)).filter(item => item !== undefined);
+            }
+
+            // Handle plain objects
+            const result = {};
+            for (const key in value) {
+              // Skip React internal properties
+              if (key.startsWith('__') || key.startsWith('_') || 
+                  key.includes('react') || key.includes('fiber') || key.includes('Fiber') ||
+                  key === 'nativeEvent' || key === 'target' || key === 'currentTarget') {
+                continue;
+              }
+
+              try {
+                const sanitized = sanitize(value[key]);
+                if (sanitized !== undefined) {
+                  result[key] = sanitized;
+                }
+              } catch (e) {
+                // Skip problematic properties
+                continue;
+              }
+            }
+            return result;
+          }
+
+          return undefined;
+        };
+
+        return sanitize(obj);
       };
       
       const savedOASIS = await saveOASISMutation.mutateAsync({
