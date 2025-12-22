@@ -1876,7 +1876,10 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
 
         {/* Analytics Tab */}
         <TabsContent value="analytics" className="mt-4">
-          <OASISAnalyticsDashboard savedOASISUploads={savedOASISUploads} />
+          <div className="space-y-6">
+            <PDGMTrendDashboard />
+            <OASISAnalyticsDashboard savedOASISUploads={savedOASISUploads} />
+          </div>
         </TabsContent>
 
         {/* Automation Tab */}
