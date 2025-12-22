@@ -33,7 +33,9 @@ import {
   Workflow,
   Save,
   User,
-  History
+  History,
+  Sparkles,
+  Zap
 } from "lucide-react";
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -381,6 +383,7 @@ export default function OASISAnalyzer() {
   const [qualityScore, setQualityScore] = useState(null);
   const [triggeredPathways, setTriggeredPathways] = useState([]);
   const [matchResults, setMatchResults] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -389,6 +392,16 @@ export default function OASISAnalyzer() {
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list(),
   });
+
+  // Update selected patient when selectedPatientId changes
+  useEffect(() => {
+    if (selectedPatientId && patients.length > 0) {
+      const patient = patients.find(p => p.id === selectedPatientId);
+      setSelectedPatient(patient || null);
+    } else {
+      setSelectedPatient(null);
+    }
+  }, [selectedPatientId, patients]);
 
   // Fetch saved OASIS uploads
   const { data: savedOASISUploads = [] } = useQuery({
@@ -1777,7 +1790,7 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="grid w-full max-w-3xl grid-cols-5">
           <TabsTrigger value="single" className="gap-2">
             <FileText className="w-4 h-4" />
             Single Document
@@ -1793,6 +1806,10 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
           <TabsTrigger value="analytics" className="gap-2">
             <BarChart3 className="w-4 h-4" />
             Analytics
+          </TabsTrigger>
+          <TabsTrigger value="automation" className="gap-2">
+            <Zap className="w-4 h-4" />
+            Automation
           </TabsTrigger>
         </TabsList>
 
@@ -1856,6 +1873,26 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
         {/* Analytics Tab */}
         <TabsContent value="analytics" className="mt-4">
           <OASISAnalyticsDashboard savedOASISUploads={savedOASISUploads} />
+        </TabsContent>
+
+        {/* Automation Tab */}
+        <TabsContent value="automation" className="mt-4">
+          <OASISAutomationSettings />
+          
+          <Alert className="mt-4 bg-blue-50 border-blue-200">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <AlertDescription>
+              <p className="text-sm text-blue-900 mb-2">
+                <strong>How Automation Works:</strong>
+              </p>
+              <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
+                <li>Configure rules that trigger when specific OASIS issues are detected</li>
+                <li>AI analyzes each assessment and matches findings to your automation rules</li>
+                <li>Automatically suggests follow-up tasks for clinicians based on compliance, revenue, or clinical concerns</li>
+                <li>Review suggested actions and create tasks with one click</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
         </TabsContent>
 
         <TabsContent value="batch" className="mt-4">
@@ -1999,6 +2036,18 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Automation Engine */}
+          {analysisResults && selectedPatient && (
+            <OASISAutomationEngine
+              analysisResults={analysisResults}
+              patientId={selectedPatient.id}
+              onTasksCreated={() => {
+                // Refresh tasks or show success notification
+              }}
+              autoExecute={true}
+            />
+          )}
 
           {/* Auto-Generated Tasks Based on Analysis */}
           <OASISTaskGenerator
