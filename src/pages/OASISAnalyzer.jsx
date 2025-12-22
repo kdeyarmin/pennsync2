@@ -802,6 +802,16 @@ export default function OASISAnalyzer() {
         return type; // Return as-is if no match
       };
       
+      // Sanitize data to remove circular references
+      const sanitizeData = (obj) => {
+        try {
+          return JSON.parse(JSON.stringify(obj));
+        } catch (e) {
+          console.error("Failed to sanitize data:", e);
+          return {};
+        }
+      };
+      
       const savedOASIS = await saveOASISMutation.mutateAsync({
         patient_id: patientIdToUse || null,
         patient_name: patientFullName,
@@ -810,8 +820,8 @@ export default function OASISAnalyzer() {
         assessment_date: analysisResults.pdgm_data?.patient_info?.assessment_date || new Date().toISOString().split('T')[0],
         assessment_type: mapAssessmentType(analysisResults.pdgm_data?.patient_info?.assessment_type),
         analysis_id: analysisId,
-        pdgm_data: pdgmData,
-        analysis_results: analysisResults,
+        pdgm_data: sanitizeData(pdgmData),
+        analysis_results: sanitizeData(analysisResults),
         scores: {
           overall: analysisResults.overall_score,
           accuracy: analysisResults.accuracy_score,
