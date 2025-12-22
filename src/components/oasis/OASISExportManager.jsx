@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Download, FileDown, FileSpreadsheet, Loader2, CheckCircle2 } from "lucide-react";
-import { generateComprehensiveOASISReport } from "@/functions/generateComprehensiveOASISReport";
+import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 
 export default function OASISExportManager({ 
   analysisResults, 
@@ -200,13 +200,8 @@ export default function OASISExportManager({
     setExportType('pdf');
 
     try {
-      const response = await generateComprehensiveOASISReport({
-        analysisResults,
-        pdgmData,
-        revenueData,
-        navigationData,
-        qualityScore,
-        patientName
+      const response = await generateOASISReportPDF({
+        analysisResults
       });
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
