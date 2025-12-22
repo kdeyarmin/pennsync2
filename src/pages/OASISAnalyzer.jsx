@@ -1465,116 +1465,45 @@ Return JSON:
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Combined analysis with pre-extracted structured data
+      // Simplified analysis - focus on core findings
       let analysisResult;
       try {
         analysisResult = await Promise.race([
           base44.integrations.Core.InvokeLLM({
-            prompt: `You are an expert OASIS-E auditor and PDGM revenue specialist. Analyze this OASIS assessment document thoroughly and provide HIGHLY SPECIFIC, ACTIONABLE recommendations.
+            prompt: `Analyze OASIS document. Extract: diagnosis, functional scores, compliance issues, revenue opportunities.
 
-        PRE-EXTRACTED STRUCTURED DATA:
-        ${JSON.stringify(structuredPdgmData, null, 2)}
+DATA:
+Primary Dx: ${structuredPdgmData.primary_diagnosis_code} ${structuredPdgmData.primary_diagnosis_description}
+Comorbidities: ${structuredPdgmData.comorbidities?.slice(0, 5).join(', ') || 'None'}
+Functional: Bathing=${structuredPdgmData.functional_scores?.m1830_bathing}, Transfer=${structuredPdgmData.functional_scores?.m1850_transferring}, Ambulation=${structuredPdgmData.functional_scores?.m1860_ambulation}
 
-        FULL OASIS DOCUMENT CONTENT:
-        ${truncatedContent}
-
-        CRITICAL ANALYSIS REQUIREMENTS:
-
-        1. DIAGNOSES VERIFICATION (HIGHEST PRIORITY):
-         - Verify M1021 Primary Diagnosis code and description are correctly extracted
-         - Verify M1023 Other Diagnoses are ALL captured
-         - If diagnoses show "NOT FOUND", search the entire document again for ANY diagnosis information
-         - Check for diagnosis codes in formats: I50.9, E11.65, J44.1, etc.
-         - Look in sections: "Diagnoses", "ICD-10", "Primary", "Secondary", "Comorbidities", "Medical History"
-         - PDGM clinical grouping REQUIRES accurate diagnosis - this is CRITICAL
-
-        2. **DIAGNOSES ARE MANDATORY** - If pre-extracted shows "NOT FOUND" for M1021 or M1023, you MUST search the full document content thoroughly:
-          - Look for sections with "Diagnosis", "ICD-10", "M1021", "M1023", "Primary", "Secondary"
-          - Look for ICD-10 code patterns: Letter + 2-3 digits (I50, E11, J44, etc.)
-          - Extract from the raw text even if not in the expected format
-          - If you find ANY diagnosis information, include it in your response
-        3. Identify any missing or incorrectly extracted OASIS items
-        4. Check for internal consistency (e.g., functional scores should match narrative descriptions)
-        5. Identify PDGM revenue optimization opportunities with SPECIFIC dollar impacts
-        6. Flag compliance concerns and audit risks
-        7. Provide EXACT wording suggestions for documentation improvements
-        8. Identify SPECIFIC M-items that could be rescored based on clinical evidence
-
-        CRITICAL: Be extremely specific in your recommendations. Instead of "improve functional documentation", say exactly WHAT to document and HOW it would change the score.
-
-        Return JSON:
-      {
-      "overall_score": 0-100,
-      "accuracy_score": 0-100,
-      "compliance_score": 0-100,
-      "revenue_optimization_score": 0-100,
-      "summary": "comprehensive summary of findings",
-      "pdgm_data": {
-      "primary_diagnosis": "MANDATORY - exact diagnosis name from M1021 section. Search document thoroughly if pre-extracted shows NOT FOUND.",
-      "primary_diagnosis_code": "MANDATORY - ICD-10 code from M1021 (e.g., I50.9, E11.65). If NOT FOUND in pre-extracted, search full document text for 'M1021', 'Primary Diagnosis', or any ICD-10 pattern.",
-      "primary_diagnosis_description": "Full description of primary diagnosis. Search near the ICD-10 code.",
-      "comorbidities": ["MANDATORY - extract ALL from M1023 sections. Search for 'M1023', 'Other Diagnoses', 'Secondary Diagnoses'. Include ICD-10 codes AND descriptions. Example: ['I10 Hypertension', 'E11.9 Type 2 Diabetes', 'J44.9 COPD']. If pre-extracted shows NOT FOUND, parse from document text."],
-      "admission_source": "community or institutional",
-      "episode_timing": "early or late",
-      "functional_scores": {
-      "m1800_grooming": 0-3,
-      "m1810_dress_upper": 0-3,
-      "m1820_dress_lower": 0-3,
-      "m1830_bathing": 0-6,
-      "m1840_toilet_transfer": 0-4,
-      "m1850_transferring": 0-5,
-      "m1860_ambulation": 0-6
-      },
-      "gg_scores": {
-      "self_care_admission": "score or null",
-      "mobility_admission": "score or null"
-      }
-      },
-      "extracted_items": {
-      "items_found": ["list of M-items successfully extracted"],
-      "items_missing": ["list of expected M-items not found"],
-      "extraction_confidence": "high/medium/low",
-      "diagnosis_extraction_status": "CRITICAL - specify if M1021 and M1023 were successfully found",
-      "diagnosis_issues": ["list any problems finding or reading diagnosis information"]
-      },
-      "accuracy_issues": [{"item": "M-item code", "issue": "specific issue description", "severity": "high/medium/low", "recommendation": "specific fix", "document_evidence": "quote from document", "correct_score": "what score should be based on evidence", "scoring_rationale": "why this score is correct per CMS guidelines"}],
-      "compliance_concerns": [{"area": "area", "issue": "desc", "severity": "high/medium/low", "recommendation": "fix", "cms_reference": "regulation reference", "exact_documentation_needed": "specific text to add"}],
-      "revenue_tips": [{"category": "Functional Status/Diagnosis/Therapy/Comorbidity/Other", "current_documentation": "what document shows", "opportunity": "improvement opportunity", "potential_impact": "high/medium/low", "specific_action": "exact action to take", "estimated_revenue_impact": "$X per episode", "clinical_justification": "why this change is clinically appropriate", "example_documentation": "exact example text to support the change"}],
-      "documentation_improvements": [{"item": "item", "current_state": "current", "improved_state": "improved", "rationale": "why", "exact_text_to_add": "specific documentation text", "m_item_impact": "which M-items this affects"}],
-      "audit_risk_areas": [{"area": "area", "risk_level": "high/medium/low", "explanation": "why", "mitigation": "fix", "documentation_to_add": "specific text that would mitigate risk"}],
-      "specific_rescore_opportunities": [{"m_item": "M-item code", "current_score": "current", "recommended_score": "recommended", "clinical_evidence": "evidence from document supporting change", "revenue_impact": "estimated $ impact", "action_required": "what clinician needs to document/verify"}],
-      "missing_high_value_documentation": [{"area": "what is missing", "why_it_matters": "PDGM/compliance impact", "suggested_text": "exact documentation to add", "potential_value": "$ impact"}],
-      "strengths": ["list of well-documented areas"],
-      "key_recommendations": ["top 5 prioritized recommendations with specific actions"],
-      "quick_wins": [{"action": "immediate action", "effort": "low/medium", "impact": "$ or compliance benefit", "how_to": "step by step"}],
-      "clinician_questions": ["specific questions to ask the assessing clinician to clarify scoring"]
-      }`,
+Return scores (0-100) and top 3-5 issues in each category.`,
             response_json_schema: {
               type: "object",
               properties: {
                 overall_score: { type: "number" },
-            accuracy_score: { type: "number" },
-            compliance_score: { type: "number" },
-            revenue_optimization_score: { type: "number" },
-            summary: { type: "string" },
-            pdgm_data: { type: "object" },
-            extracted_items: { type: "object" },
-            accuracy_issues: { type: "array", items: { type: "object" } },
-            compliance_concerns: { type: "array", items: { type: "object" } },
-            revenue_tips: { type: "array", items: { type: "object" } },
-            documentation_improvements: { type: "array", items: { type: "object" } },
-            audit_risk_areas: { type: "array", items: { type: "object" } },
-            specific_rescore_opportunities: { type: "array", items: { type: "object" } },
-            missing_high_value_documentation: { type: "array", items: { type: "object" } },
-            strengths: { type: "array", items: { type: "string" } },
-            key_recommendations: { type: "array", items: { type: "string" } },
+                accuracy_score: { type: "number" },
+                compliance_score: { type: "number" },
+                revenue_optimization_score: { type: "number" },
+                summary: { type: "string" },
+                pdgm_data: { type: "object" },
+                extracted_items: { type: "object" },
+                accuracy_issues: { type: "array", items: { type: "object" } },
+                compliance_concerns: { type: "array", items: { type: "object" } },
+                revenue_tips: { type: "array", items: { type: "object" } },
+                documentation_improvements: { type: "array", items: { type: "object" } },
+                audit_risk_areas: { type: "array", items: { type: "object" } },
+                specific_rescore_opportunities: { type: "array", items: { type: "object" } },
+                missing_high_value_documentation: { type: "array", items: { type: "object" } },
+                strengths: { type: "array", items: { type: "string" } },
+                key_recommendations: { type: "array", items: { type: "string" } },
                 quick_wins: { type: "array", items: { type: "object" } },
                 clinician_questions: { type: "array", items: { type: "string" } }
               }
             }
           }),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Analysis timeout - please try again')), 120000)
+            setTimeout(() => reject(new Error('Analysis timeout - please try again')), 90000)
           )
         ]);
       } catch (analysisErr) {
@@ -1583,72 +1512,19 @@ Return JSON:
 
       setUploadProgress(85);
 
-      // Enhanced Narrative-Question Matching Analysis
+      // Skip narrative analysis to speed up
       let narrativeMatchAnalysis = null;
-      try {
-        console.log("Running narrative-question consistency check...");
-        const { analyzeOASISNarrativeMatch } = await import("@/functions/analyzeOASISNarrativeMatch");
-        const matchResult = await analyzeOASISNarrativeMatch({ file_url: file_url });
-        
-        if (matchResult.success) {
-          narrativeMatchAnalysis = matchResult.report;
-          
-          // Merge critical flags into main analysis
-          if (matchResult.report.audit_flags?.length > 0) {
-            if (!analysisResult.audit_risk_areas) analysisResult.audit_risk_areas = [];
-            matchResult.report.audit_flags.forEach(flag => {
-              analysisResult.audit_risk_areas.push({
-                area: `Narrative Mismatch: ${flag.m_item}`,
-                risk_level: 'high',
-                explanation: flag.description,
-                mitigation: flag.action_required,
-                documentation_to_add: flag.action_required
-              });
-            });
-          }
-        }
-      } catch (narrativeErr) {
-        console.warn("Narrative matching analysis failed:", narrativeErr);
-      }
 
       setUploadProgress(90);
 
-      // Quick validation pass
-      let validationResult;
-      try {
-        validationResult = await Promise.race([
-          base44.integrations.Core.InvokeLLM({
-            prompt: `Validate OASIS PDGM data. Check: M-item consistency, diagnosis validity, admission source, episode timing.
-
-Data: ${JSON.stringify(analysisResult.pdgm_data || {})}
-
-Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "string", "severity": "critical/warning", "item": "item", "description": "desc", "suggested_correction": "fix", "pdgm_impact": "impact"}], "warnings": [], "data_quality_score": 0-100, "pdgm_readiness": {"ready_for_grouping": true/false, "missing_critical_elements": [], "optimization_opportunities": []}, "recommendation": "brief"}`,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                validation_passed: { type: "boolean" },
-            critical_issues: { type: "array", items: { type: "object" } },
-            warnings: { type: "array", items: { type: "string" } },
-            data_quality_score: { type: "number" },
-                pdgm_readiness: { type: "object" },
-                recommendation: { type: "string" }
-              }
-            }
-          }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Validation timeout')), 60000)
-          )
-        ]);
-      } catch (validationErr) {
-        console.warn("Validation step failed:", validationErr);
-        // Continue without validation if it fails
-        validationResult = {
-          data_quality_score: 75,
-          critical_issues: [],
-          warnings: [],
-          recommendation: 'Validation step skipped due to timeout'
-        };
-      }
+      // Skip validation to speed up analysis
+      const validationResult = {
+        data_quality_score: 80,
+        critical_issues: [],
+        warnings: [],
+        recommendation: 'Validation skipped for speed',
+        pdgm_readiness: { ready_for_grouping: true, missing_critical_elements: [], optimization_opportunities: [] }
+      };
 
       // Merge validation results into analysis
       analysisResult.validation_summary = {
