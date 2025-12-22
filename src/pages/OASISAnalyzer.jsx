@@ -807,48 +807,48 @@ export default function OASISAnalyzer() {
       // Deep sanitize to remove circular references and non-serializable objects
       const sanitizeData = (obj) => {
         if (!obj) return null;
-        
-        const seen = new WeakSet();
-        const clean = (value) => {
-          if (value === null || value === undefined) return value;
-          
-          // Handle primitives
-          if (typeof value !== 'object') return value;
-          
-          // Detect circular references
-          if (seen.has(value)) return '[Circular Reference]';
-          seen.add(value);
-          
-          // Handle arrays
-          if (Array.isArray(value)) {
-            return value.map(item => clean(item));
-          }
-          
-          // Handle objects - filter out DOM elements and React internals
-          const cleaned = {};
-          for (const key in value) {
-            // Skip React internal properties and DOM elements
-            if (key.startsWith('__react') || key.startsWith('_react') || 
-                key === 'nativeEvent' || key === 'currentTarget' || key === 'target') {
-              continue;
+
+        // Simple approach: convert to JSON and back to remove circular refs
+        try {
+          return JSON.parse(JSON.stringify(obj, (key, value) => {
+            // Filter out React fiber nodes and DOM elements
+            if (key.includes('react') || key.includes('Fiber') || key.includes('fiber') ||
+                key === 'nativeEvent' || key === 'currentTarget' || key === 'target' ||
+                key.startsWith('__') || key.startsWith('_')) {
+              return undefined;
             }
-            
-            try {
-              const val = value[key];
-              // Skip DOM elements and functions
-              if (val instanceof Element || val instanceof Node || typeof val === 'function') {
-                continue;
+
+            // Skip functions
+            if (typeof value === 'function') {
+              return undefined;
+            }
+
+            // Skip DOM elements and nodes
+            if (value && typeof value === 'object') {
+              if (value.nodeType || value instanceof Element || value instanceof Node) {
+                return undefined;
               }
-              cleaned[key] = clean(val);
-            } catch (e) {
-              // Skip problematic properties
-              continue;
+              // Check for HTMLElement-like objects
+              if (value.constructor?.name?.includes('HTML') || value.constructor?.name?.includes('Element')) {
+                return undefined;
+              }
             }
-          }
-          return cleaned;
-        };
-        
-        return clean(obj);
+
+            return value;
+          }));
+        } catch (e) {
+          console.error('Sanitization error:', e);
+          // Fallback: return only primitive data
+          return {
+            primary_diagnosis: obj.primary_diagnosis,
+            functional_scores: obj.functional_scores,
+            patient_info: {
+              name: obj.patient_info?.name,
+              dob: obj.patient_info?.dob,
+              gender: obj.patient_info?.gender
+            }
+          };
+        }
       };
       
       const savedOASIS = await saveOASISMutation.mutateAsync({
