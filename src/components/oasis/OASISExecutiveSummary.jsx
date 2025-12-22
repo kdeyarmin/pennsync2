@@ -22,8 +22,9 @@ export default function OASISExecutiveSummary({ analysisResults, pdgmData }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
-    if (analysisResults && pdgmData) {
-      generateExecutiveSummary();
+    if (analysisResults && pdgmData && !summary && !isGenerating) {
+      // Don't auto-generate, let user click button
+      setIsGenerating(false);
     }
   }, [analysisResults, pdgmData]);
 
@@ -97,18 +98,37 @@ Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlig
     setIsGenerating(false);
   };
 
-  if (!analysisResults || isGenerating) {
-    return isGenerating ? (
+  if (!analysisResults) return null;
+
+  if (isGenerating) {
+    return (
       <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
         <CardContent className="p-6 text-center">
           <Loader2 className="w-8 h-8 text-purple-600 mx-auto mb-3 animate-spin" />
           <p className="text-sm text-purple-900">Generating executive summary...</p>
         </CardContent>
       </Card>
-    ) : null;
+    );
   }
 
-  if (!summary) return null;
+  if (!summary) {
+    return (
+      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <p className="text-sm font-medium text-purple-900">Executive Summary</p>
+            </div>
+            <Button size="sm" onClick={generateExecutiveSummary} className="bg-purple-600 hover:bg-purple-700">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate Summary
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-2 border-purple-400 bg-gradient-to-r from-purple-50 to-pink-50">
