@@ -8,6 +8,7 @@ import { ArrowLeft, Shield, AlertTriangle, CheckCircle2 } from "lucide-react";
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
 import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";
+import AdvancedComplianceAnalyzer from "../components/oasis/AdvancedComplianceAnalyzer";
 
 export default function OASISComplianceReview() {
   const location = useLocation();
@@ -59,6 +60,13 @@ export default function OASISComplianceReview() {
           </div>
         </div>
       </div>
+
+      {/* Advanced AI Compliance Analyzer */}
+      <AdvancedComplianceAnalyzer
+        analysisResults={analysisResults}
+        pdgmData={pdgmData}
+        patientId={patientId}
+      />
 
       {/* Validation Panel */}
       <OASISValidationPanel
