@@ -1840,7 +1840,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           <PatientMatchSelector
             extractedName={patientName}
             extractedDOB={pdgmData?.patient_info?.dob}
-            extractedMedicareId={pdgmData?.patient_info?.medicare_number}
             matchResults={matchResults}
             selectedPatientId={selectedPatientId}
             onSelectPatient={(patientId) => setSelectedPatientId(patientId)}

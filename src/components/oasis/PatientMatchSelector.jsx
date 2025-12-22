@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, AlertTriangle, User, Calendar, XCircle, RotateCcw, ThumbsUp, ThumbsDown, CreditCard, MapPin, Phone, Award } from "lucide-react";
+import { CheckCircle2, AlertTriangle, User, Calendar, XCircle, RotateCcw, ThumbsUp, ThumbsDown, MapPin, Phone, Award } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +13,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 export default function PatientMatchSelector({ 
   extractedName, 
   extractedDOB,
-  extractedMedicareId,
   matchResults, 
   selectedPatientId, 
   onSelectPatient,
@@ -56,7 +55,6 @@ export default function PatientMatchSelector({
         oasis_upload_id: oasisUploadId,
         feedback_type: isCorrect ? 'correct_match' : 'manual_override',
         extracted_name: extractedName,
-        extracted_medicare_id: extractedMedicareId,
         extracted_dob: extractedDOB,
         suggested_patient_id: matchResults.matches?.[0]?.patient?.id,
         suggested_confidence: matchResults.matches?.[0]?.confidence,
@@ -83,7 +81,6 @@ export default function PatientMatchSelector({
         oasis_upload_id: oasisUploadId,
         feedback_type: 'incorrect_match',
         extracted_name: extractedName,
-        extracted_medicare_id: extractedMedicareId,
         extracted_dob: extractedDOB,
         suggested_patient_id: matchResults.matches?.[0]?.patient?.id,
         suggested_confidence: matchResults.matches?.[0]?.confidence,
@@ -143,12 +140,6 @@ export default function PatientMatchSelector({
                 DOB: {extractedDOB}
               </p>
             )}
-            {extractedMedicareId && (
-              <p className="text-xs text-gray-600 flex items-center gap-1">
-                <CreditCard className="w-3 h-3" />
-                Medicare: {extractedMedicareId}
-              </p>
-            )}
           </div>
         </div>
 
@@ -179,13 +170,7 @@ export default function PatientMatchSelector({
                     {bestMatch.dobMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
                   </p>
                 )}
-                {bestMatch.patient.medical_record_number && (
-                  <p className="text-xs text-gray-600 flex items-center gap-1">
-                    <CreditCard className="w-3 h-3" />
-                    MRN: {bestMatch.patient.medical_record_number}
-                    {bestMatch.medicareMatch && <CheckCircle2 className="w-3 h-3 text-green-600 ml-1" />}
-                  </p>
-                )}
+
                 {bestMatch.patient.address && (
                   <p className="text-xs text-gray-600 flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
@@ -309,13 +294,7 @@ export default function PatientMatchSelector({
                         {match.dobMatch && <CheckCircle2 className="w-3 h-3 text-green-600" />}
                       </p>
                     )}
-                    {match.patient.medical_record_number && (
-                      <p className="text-xs text-gray-600 flex items-center gap-1">
-                        <CreditCard className="w-3 h-3" />
-                        MRN: {match.patient.medical_record_number}
-                        {match.medicareMatch && <CheckCircle2 className="w-3 h-3 text-green-600" />}
-                      </p>
-                    )}
+
                     {match.patient.address && (
                       <p className="text-xs text-gray-500 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
