@@ -1941,6 +1941,18 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             </CardContent>
           </Card>
 
+      {/* AI Automation Engine */}
+      {analysisResults && selectedPatient && (
+        <OASISAutomationEngine
+          analysisResults={analysisResults}
+          patientId={selectedPatient.id}
+          onTasksCreated={() => {
+            // Refresh or show success
+          }}
+          autoExecute={true}
+        />
+      )}
+
       {/* Analysis Results */}
       {analysisResults && (
         <div className="space-y-6">

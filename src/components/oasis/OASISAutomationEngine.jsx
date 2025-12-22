@@ -1,0 +1,354 @@
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Zap,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  FileText,
+  Users,
+  Sparkles,
+  Loader2,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
+
+export default function OASISAutomationEngine({ 
+  analysisResults, 
+  patientId, 
+  onTasksCreated,
+  autoExecute = true 
+}) {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [suggestedActions, setSuggestedActions] = useState([]);
+  const [selectedActions, setSelectedActions] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Fetch active automation rules
+  const { data: automationRules = [] } = useQuery({
+    queryKey: ['automationRules'],
+    queryFn: () => base44.entities.OASISAutomationRule.filter({ is_active: true }, '-priority'),
+  });
+
+  // Task creation mutation
+  const createTasksMutation = useMutation({
+    mutationFn: (tasks) => base44.entities.Task.bulkCreate(tasks),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      if (onTasksCreated) onTasksCreated();
+    },
+  });
+
+  // Analyze results and generate actions
+  useEffect(() => {
+    if (analysisResults && automationRules.length > 0 && autoExecute) {
+      analyzeAndGenerateActions();
+    }
+  }, [analysisResults, automationRules, autoExecute]);
+
+  const analyzeAndGenerateActions = async () => {
+    setIsAnalyzing(true);
+    
+    try {
+      // Use AI to analyze results and suggest actions based on rules
+      const prompt = `You are an OASIS automation expert. Analyze this OASIS assessment and generate specific, actionable follow-up tasks based on the findings and automation rules.
+
+OASIS ANALYSIS RESULTS:
+${JSON.stringify(analysisResults, null, 2)}
+
+AUTOMATION RULES:
+${JSON.stringify(automationRules, null, 2)}
+
+Generate smart follow-up actions including:
+1. Tasks for compliance issues (documentation fixes, re-assessments)
+2. Revenue optimization opportunities (coding improvements, justification needs)
+3. Clinical follow-ups (therapy orders, physician notifications, wound care)
+4. Documentation improvements (narrative enhancements, M-item clarifications)
+
+For EACH suggested action, provide:
+- Clear, specific title
+- Detailed description with exact issue and resolution steps
+- Priority level
+- Recommended due date
+- Task type
+- Who should handle it (role)
+- Why it's important (impact on compliance/revenue/patient care)
+
+Return JSON array of suggested actions:`;
+
+      const aiSuggestions = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            suggested_actions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  priority: { type: "string", enum: ["high", "medium", "low"] },
+                  type: { type: "string" },
+                  due_in_days: { type: "number" },
+                  assign_to_role: { type: "string" },
+                  reason: { type: "string" },
+                  impact_category: { 
+                    type: "string", 
+                    enum: ["compliance", "revenue", "clinical", "documentation"] 
+                  },
+                  estimated_revenue_impact: { type: "string" },
+                  compliance_risk_if_ignored: { type: "string" },
+                  source_finding: { type: "string" },
+                  auto_recommended: { type: "boolean" }
+                }
+              }
+            },
+            automation_summary: {
+              type: "object",
+              properties: {
+                total_actions: { type: "number" },
+                high_priority_count: { type: "number" },
+                estimated_total_revenue_impact: { type: "string" },
+                critical_compliance_items: { type: "number" }
+              }
+            }
+          }
+        }
+      });
+
+      const actions = aiSuggestions.suggested_actions || [];
+      setSuggestedActions(actions);
+      
+      // Auto-select high priority items
+      const autoSelect = actions
+        .filter(a => a.auto_recommended || a.priority === 'high')
+        .map((_, idx) => idx);
+      setSelectedActions(autoSelect);
+
+    } catch (error) {
+      console.error("Automation analysis error:", error);
+    }
+    
+    setIsAnalyzing(false);
+  };
+
+  const handleToggleAction = (index) => {
+    setSelectedActions(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
+  const handleCreateTasks = async () => {
+    const tasksToCreate = selectedActions.map(idx => {
+      const action = suggestedActions[idx];
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + (action.due_in_days || 7));
+
+      return {
+        patient_id: patientId,
+        title: action.title,
+        description: `${action.description}\n\n📋 Reason: ${action.reason}\n\n⚠️ Impact: ${action.compliance_risk_if_ignored || action.estimated_revenue_impact || 'Important for quality care'}`,
+        type: action.type || 'followup',
+        priority: action.priority,
+        status: 'pending',
+        due_date: dueDate.toISOString().split('T')[0],
+        source: 'ai_generated',
+        ai_reason: action.source_finding
+      };
+    });
+
+    await createTasksMutation.mutateAsync(tasksToCreate);
+    setSuggestedActions([]);
+    setSelectedActions([]);
+  };
+
+  const getPriorityColor = (priority) => {
+    const colors = {
+      high: "bg-red-100 text-red-800 border-red-300",
+      medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      low: "bg-blue-100 text-blue-800 border-blue-300"
+    };
+    return colors[priority] || colors.low;
+  };
+
+  const getImpactIcon = (category) => {
+    const icons = {
+      compliance: <AlertTriangle className="w-4 h-4 text-orange-600" />,
+      revenue: <Sparkles className="w-4 h-4 text-green-600" />,
+      clinical: <Users className="w-4 h-4 text-blue-600" />,
+      documentation: <FileText className="w-4 h-4 text-purple-600" />
+    };
+    return icons[category] || icons.documentation;
+  };
+
+  if (!analysisResults) return null;
+
+  if (isAnalyzing) {
+    return (
+      <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50">
+        <CardContent className="p-6 text-center">
+          <Loader2 className="w-8 h-8 text-purple-600 mx-auto mb-3 animate-spin" />
+          <p className="text-sm font-medium text-purple-900">
+            AI is analyzing results and generating follow-up actions...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (suggestedActions.length === 0) return null;
+
+  return (
+    <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50">
+      <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Zap className="w-5 h-5 text-purple-600" />
+            AI-Suggested Follow-Up Actions
+            <Badge className="bg-purple-600 text-white ml-2">
+              {suggestedActions.length} suggested
+            </Badge>
+          </CardTitle>
+          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </div>
+      </CardHeader>
+
+      {isExpanded && (
+        <CardContent className="space-y-4">
+          <Alert className="bg-blue-50 border-blue-300">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <AlertDescription>
+              <p className="text-sm text-blue-900 mb-2">
+                Based on the OASIS analysis, I've identified <strong>{suggestedActions.length}</strong> recommended actions.
+                Review and select which tasks to create automatically.
+              </p>
+              <div className="flex gap-4 text-xs text-blue-700 mt-2">
+                <span>🔴 {suggestedActions.filter(a => a.priority === 'high').length} High Priority</span>
+                <span>🟡 {suggestedActions.filter(a => a.priority === 'medium').length} Medium</span>
+                <span>🔵 {suggestedActions.filter(a => a.priority === 'low').length} Low</span>
+              </div>
+            </AlertDescription>
+          </Alert>
+
+          <ScrollArea className="h-96">
+            <div className="space-y-3 pr-4">
+              {suggestedActions.map((action, idx) => (
+                <div
+                  key={idx}
+                  className={`border-2 rounded-lg p-4 transition-all ${
+                    selectedActions.includes(idx)
+                      ? 'bg-white border-purple-400 shadow-md'
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedActions.includes(idx)}
+                      onCheckedChange={() => handleToggleAction(idx)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {getImpactIcon(action.impact_category)}
+                          <h4 className="font-semibold text-gray-900">{action.title}</h4>
+                        </div>
+                        <Badge className={getPriorityColor(action.priority)}>
+                          {action.priority}
+                        </Badge>
+                      </div>
+
+                      <p className="text-sm text-gray-700">{action.description}</p>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <Clock className="w-3 h-3" />
+                          Due in {action.due_in_days} days
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <Users className="w-3 h-3" />
+                          {action.assign_to_role || 'Clinician'}
+                        </div>
+                      </div>
+
+                      <div className="bg-purple-50 p-2 rounded text-xs border border-purple-200">
+                        <p className="text-purple-900">
+                          <strong>Why:</strong> {action.reason}
+                        </p>
+                      </div>
+
+                      {action.estimated_revenue_impact && (
+                        <div className="bg-green-50 p-2 rounded text-xs border border-green-200">
+                          <p className="text-green-900">
+                            <strong>💰 Revenue Impact:</strong> {action.estimated_revenue_impact}
+                          </p>
+                        </div>
+                      )}
+
+                      {action.compliance_risk_if_ignored && (
+                        <div className="bg-orange-50 p-2 rounded text-xs border border-orange-200">
+                          <p className="text-orange-900">
+                            <strong>⚠️ Risk if Ignored:</strong> {action.compliance_risk_if_ignored}
+                          </p>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-500 italic">
+                        Source: {action.source_finding}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">{selectedActions.length}</span> action{selectedActions.length !== 1 ? 's' : ''} selected
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedActions([])}
+                disabled={selectedActions.length === 0}
+              >
+                Clear Selection
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleCreateTasks}
+                disabled={selectedActions.length === 0 || createTasksMutation.isPending}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {createTasksMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Tasks...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Create {selectedActions.length} Task{selectedActions.length !== 1 ? 's' : ''}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
