@@ -81,6 +81,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { Users as UsersIcon, BarChart3 } from "lucide-react";
 import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
 import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
+import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -2038,6 +2039,12 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
               </div>
             </CardContent>
           </Card>
+
+          {/* Executive Summary - AI-Generated Quick Overview */}
+          <OASISExecutiveSummary
+            analysisResults={analysisResults}
+            pdgmData={pdgmData}
+          />
 
           {/* AI Automation Engine */}
           {analysisResults && selectedPatient && (
