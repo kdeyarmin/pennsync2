@@ -31,32 +31,23 @@ export default function OASISExecutiveSummary({ analysisResults, pdgmData }) {
     setIsGenerating(true);
 
     try {
+      // Extract only essential data
+      const topIssues = (analysisResults.compliance_concerns || []).slice(0, 2).map(c => c.concern || c);
+      const topRevenue = (analysisResults.revenue_tips || []).slice(0, 2).map(r => r.tip || r);
+      const topAccuracy = (analysisResults.accuracy_issues || []).slice(0, 2).map(a => a.issue || a);
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate a concise executive summary of this OASIS analysis. Extract ONLY the most critical insights.
+        prompt: `Create executive summary for OASIS assessment.
 
-ANALYSIS DATA:
-- Overall Score: ${analysisResults.overall_score}%
-- Compliance Score: ${analysisResults.compliance_score}%
-- Revenue Score: ${analysisResults.revenue_optimization_score}%
-- Accuracy Score: ${analysisResults.accuracy_score}%
+Scores: Overall ${analysisResults.overall_score}%, Compliance ${analysisResults.compliance_score}%, Revenue ${analysisResults.revenue_optimization_score}%
 
-COMPLIANCE ISSUES:
-${JSON.stringify(analysisResults.compliance_concerns?.slice(0, 3) || [], null, 2)}
+Top Issues:
+${topIssues.join(', ')}
 
-REVENUE OPPORTUNITIES:
-${JSON.stringify(analysisResults.revenue_tips?.slice(0, 3) || [], null, 2)}
+Revenue Opportunities:
+${topRevenue.join(', ')}
 
-ACCURACY ISSUES:
-${JSON.stringify(analysisResults.accuracy_issues?.slice(0, 3) || [], null, 2)}
-
-Create a concise executive summary with:
-1. One-sentence overall assessment
-2. Top 3 critical actions (max 15 words each)
-3. Top 2 revenue opportunities (max 15 words each)  
-4. Top 2 compliance risks (max 15 words each)
-5. Bottom line impact statement (1 sentence)
-
-Be EXTREMELY concise and actionable.`,
+Generate: 1 overall assessment sentence, 2-3 critical actions, 2 revenue highlights, 2 compliance risks, 1 bottom line.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -100,6 +91,7 @@ Be EXTREMELY concise and actionable.`,
       setSummary(result);
     } catch (error) {
       console.error("Summary generation error:", error);
+      setSummary(null);
     }
 
     setIsGenerating(false);
