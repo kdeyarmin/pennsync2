@@ -151,171 +151,106 @@ Deno.serve(async (req) => {
       y += 5;
     }
 
-    // Accuracy Issues
+    // Accuracy Issues - limit to top 5
     if (analysisResults.accuracy_issues?.length > 0) {
       checkNewPage(40);
       doc.setFontSize(14);
       doc.setTextColor(202, 138, 4);
-      doc.text(`Accuracy Issues (${analysisResults.accuracy_issues.length})`, margin, y);
+      doc.text(`Top Accuracy Issues (${Math.min(5, analysisResults.accuracy_issues.length)})`, margin, y);
       y += 8;
 
-      analysisResults.accuracy_issues.forEach((issue, index) => {
-        checkNewPage(35);
+      const topIssues = analysisResults.accuracy_issues.slice(0, 5);
+      topIssues.forEach((issue, index) => {
+        checkNewPage(25);
         doc.setFillColor(254, 252, 232);
-        doc.roundedRect(margin, y, contentWidth, 30, 2, 2, 'F');
-        
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Item: ${issue.item || 'N/A'}`, margin + 5, y + 7);
-        
-        // Severity badge
-        const severityColors = {
-          high: [220, 38, 38],
-          medium: [202, 138, 4],
-          low: [59, 130, 246]
-        };
-        const color = severityColors[issue.severity] || severityColors.medium;
-        doc.setTextColor(...color);
-        doc.text(`[${(issue.severity || 'medium').toUpperCase()}]`, margin + 60, y + 7);
+        doc.roundedRect(margin, y, contentWidth, 20, 2, 2, 'F');
         
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
-        const issueText = doc.splitTextToSize(`Issue: ${issue.issue || ''}`, contentWidth - 15);
-        doc.text(issueText[0], margin + 5, y + 15);
+        doc.text(`${issue.item || 'N/A'}:`, margin + 5, y + 7);
         
-        const recText = doc.splitTextToSize(`Recommendation: ${issue.recommendation || ''}`, contentWidth - 15);
-        doc.setTextColor(22, 163, 74);
-        doc.text(recText[0], margin + 5, y + 23);
+        const issueText = doc.splitTextToSize(issue.issue || '', contentWidth - 15);
+        doc.text(issueText[0], margin + 5, y + 14);
         
-        y += 35;
+        y += 23;
       });
       y += 5;
     }
 
-    // Compliance Concerns
+    // Compliance Concerns - limit to top 5
     if (analysisResults.compliance_concerns?.length > 0) {
       checkNewPage(40);
       doc.setFontSize(14);
       doc.setTextColor(220, 38, 38);
-      doc.text(`Compliance Concerns (${analysisResults.compliance_concerns.length})`, margin, y);
+      doc.text(`Top Compliance Concerns (${Math.min(5, analysisResults.compliance_concerns.length)})`, margin, y);
       y += 8;
 
-      analysisResults.compliance_concerns.forEach((concern) => {
-        checkNewPage(40);
+      const topConcerns = analysisResults.compliance_concerns.slice(0, 5);
+      topConcerns.forEach((concern) => {
+        checkNewPage(25);
         doc.setFillColor(254, 242, 242);
-        doc.roundedRect(margin, y, contentWidth, 35, 2, 2, 'F');
-        
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Area: ${concern.area || 'N/A'}`, margin + 5, y + 7);
-        
-        const severityColors = {
-          high: [220, 38, 38],
-          medium: [202, 138, 4],
-          low: [59, 130, 246]
-        };
-        const color = severityColors[concern.severity] || severityColors.medium;
-        doc.setTextColor(...color);
-        doc.text(`[${(concern.severity || 'medium').toUpperCase()}]`, margin + 80, y + 7);
+        doc.roundedRect(margin, y, contentWidth, 20, 2, 2, 'F');
         
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
-        const issueText = doc.splitTextToSize(`Issue: ${concern.issue || ''}`, contentWidth - 15);
-        doc.text(issueText[0], margin + 5, y + 15);
+        doc.text(`${concern.area || 'N/A'}:`, margin + 5, y + 7);
         
-        if (concern.cms_reference) {
-          doc.setTextColor(100, 100, 100);
-          doc.text(`CMS Ref: ${concern.cms_reference}`, margin + 5, y + 22);
-        }
+        const issueText = doc.splitTextToSize(concern.issue || '', contentWidth - 15);
+        doc.text(issueText[0], margin + 5, y + 14);
         
-        doc.setTextColor(22, 163, 74);
-        const recText = doc.splitTextToSize(`Recommendation: ${concern.recommendation || ''}`, contentWidth - 15);
-        doc.text(recText[0], margin + 5, y + 30);
-        
-        y += 40;
+        y += 23;
       });
       y += 5;
     }
 
-    // Revenue Tips
+    // Revenue Tips - limit to top 5
     if (analysisResults.revenue_tips?.length > 0) {
       checkNewPage(40);
       doc.setFontSize(14);
       doc.setTextColor(22, 163, 74);
-      doc.text(`Revenue Optimization Tips (${analysisResults.revenue_tips.length})`, margin, y);
+      doc.text(`Top Revenue Opportunities (${Math.min(5, analysisResults.revenue_tips.length)})`, margin, y);
       y += 8;
 
-      analysisResults.revenue_tips.forEach((tip) => {
-        checkNewPage(45);
+      const topTips = analysisResults.revenue_tips.slice(0, 5);
+      topTips.forEach((tip) => {
+        checkNewPage(25);
         doc.setFillColor(240, 253, 244);
-        doc.roundedRect(margin, y, contentWidth, 40, 2, 2, 'F');
-        
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Category: ${tip.category || 'N/A'}`, margin + 5, y + 7);
-        
-        const impactColors = {
-          high: [22, 163, 74],
-          medium: [202, 138, 4],
-          low: [59, 130, 246]
-        };
-        const color = impactColors[tip.potential_impact] || impactColors.medium;
-        doc.setTextColor(...color);
-        doc.text(`[${(tip.potential_impact || 'medium').toUpperCase()} IMPACT]`, margin + 60, y + 7);
+        doc.roundedRect(margin, y, contentWidth, 20, 2, 2, 'F');
         
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
-        const currentText = doc.splitTextToSize(`Current: ${tip.current_documentation || ''}`, contentWidth - 15);
-        doc.text(currentText[0], margin + 5, y + 15);
+        doc.text(`${tip.category || 'N/A'}:`, margin + 5, y + 7);
         
-        const oppText = doc.splitTextToSize(`Opportunity: ${tip.opportunity || ''}`, contentWidth - 15);
-        doc.text(oppText[0], margin + 5, y + 23);
+        const oppText = doc.splitTextToSize(tip.opportunity || '', contentWidth - 15);
+        doc.text(oppText[0], margin + 5, y + 14);
         
-        doc.setTextColor(22, 163, 74);
-        const actionText = doc.splitTextToSize(`Action: ${tip.specific_action || ''}`, contentWidth - 15);
-        doc.text(actionText[0], margin + 5, y + 31);
-        
-        y += 45;
+        y += 23;
       });
       y += 5;
     }
 
-    // Audit Risk Areas
+    // Audit Risk Areas - limit to top 3
     if (analysisResults.audit_risk_areas?.length > 0) {
       checkNewPage(40);
       doc.setFontSize(14);
       doc.setTextColor(234, 88, 12);
-      doc.text(`Audit Risk Areas (${analysisResults.audit_risk_areas.length})`, margin, y);
+      doc.text(`Top Audit Risks (${Math.min(3, analysisResults.audit_risk_areas.length)})`, margin, y);
       y += 8;
 
-      analysisResults.audit_risk_areas.forEach((risk) => {
-        checkNewPage(35);
+      const topRisks = analysisResults.audit_risk_areas.slice(0, 3);
+      topRisks.forEach((risk) => {
+        checkNewPage(20);
         doc.setFillColor(255, 247, 237);
-        doc.roundedRect(margin, y, contentWidth, 30, 2, 2, 'F');
-        
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Area: ${risk.area || 'N/A'}`, margin + 5, y + 7);
-        
-        const riskColors = {
-          high: [220, 38, 38],
-          medium: [202, 138, 4],
-          low: [59, 130, 246]
-        };
-        const color = riskColors[risk.risk_level] || riskColors.medium;
-        doc.setTextColor(...color);
-        doc.text(`[${(risk.risk_level || 'medium').toUpperCase()} RISK]`, margin + 80, y + 7);
+        doc.roundedRect(margin, y, contentWidth, 15, 2, 2, 'F');
         
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
-        const expText = doc.splitTextToSize(`Explanation: ${risk.explanation || ''}`, contentWidth - 15);
-        doc.text(expText[0], margin + 5, y + 15);
+        doc.text(`${risk.area || 'N/A'}:`, margin + 5, y + 7);
         
-        doc.setTextColor(22, 163, 74);
-        const mitText = doc.splitTextToSize(`Mitigation: ${risk.mitigation || ''}`, contentWidth - 15);
-        doc.text(mitText[0], margin + 5, y + 23);
+        const mitText = doc.splitTextToSize(risk.mitigation || '', contentWidth - 15);
+        doc.text(mitText[0], margin + 5, y + 12);
         
-        y += 35;
+        y += 18;
       });
     }
 
