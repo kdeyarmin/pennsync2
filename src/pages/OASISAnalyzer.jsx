@@ -82,6 +82,7 @@ import { Users as UsersIcon, BarChart3 } from "lucide-react";
 import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
 import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
 import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
+import PDGMTrendDashboard from "../components/oasis/PDGMTrendDashboard";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
