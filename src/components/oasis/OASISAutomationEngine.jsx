@@ -58,31 +58,28 @@ export default function OASISAutomationEngine({
     setIsAnalyzing(true);
     
     try {
-      // Use AI to analyze results and suggest actions based on rules
-      const prompt = `You are an OASIS automation expert. Analyze this OASIS assessment and generate specific, actionable follow-up tasks based on the findings and automation rules.
+      // Simplified analysis - extract key issues only
+      const issuesSummary = {
+        compliance: analysisResults.compliance_concerns?.slice(0, 3) || [],
+        revenue: analysisResults.revenue_tips?.slice(0, 3) || [],
+        accuracy: analysisResults.accuracy_issues?.slice(0, 3) || [],
+        scores: {
+          overall: analysisResults.overall_score,
+          compliance: analysisResults.compliance_score,
+          accuracy: analysisResults.accuracy_score,
+          revenue: analysisResults.revenue_optimization_score
+        }
+      };
 
-OASIS ANALYSIS RESULTS:
-${JSON.stringify(analysisResults, null, 2)}
+      const prompt = `Analyze OASIS results and generate 3-5 specific follow-up tasks.
+
+ISSUES FOUND:
+${JSON.stringify(issuesSummary, null, 2)}
 
 AUTOMATION RULES:
-${JSON.stringify(automationRules, null, 2)}
+${JSON.stringify(automationRules.slice(0, 5), null, 2)}
 
-Generate smart follow-up actions including:
-1. Tasks for compliance issues (documentation fixes, re-assessments)
-2. Revenue optimization opportunities (coding improvements, justification needs)
-3. Clinical follow-ups (therapy orders, physician notifications, wound care)
-4. Documentation improvements (narrative enhancements, M-item clarifications)
-
-For EACH suggested action, provide:
-- Clear, specific title
-- Detailed description with exact issue and resolution steps
-- Priority level
-- Recommended due date
-- Task type
-- Who should handle it (role)
-- Why it's important (impact on compliance/revenue/patient care)
-
-Return JSON array of suggested actions:`;
+Generate actionable tasks. Each task must have: title, description, priority (high/medium/low), type, due_in_days (number), reason, impact_category.`;
 
       const aiSuggestions = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -96,29 +93,17 @@ Return JSON array of suggested actions:`;
                 properties: {
                   title: { type: "string" },
                   description: { type: "string" },
-                  priority: { type: "string", enum: ["high", "medium", "low"] },
+                  priority: { type: "string" },
                   type: { type: "string" },
                   due_in_days: { type: "number" },
                   assign_to_role: { type: "string" },
                   reason: { type: "string" },
-                  impact_category: { 
-                    type: "string", 
-                    enum: ["compliance", "revenue", "clinical", "documentation"] 
-                  },
+                  impact_category: { type: "string" },
                   estimated_revenue_impact: { type: "string" },
                   compliance_risk_if_ignored: { type: "string" },
                   source_finding: { type: "string" },
                   auto_recommended: { type: "boolean" }
                 }
-              }
-            },
-            automation_summary: {
-              type: "object",
-              properties: {
-                total_actions: { type: "number" },
-                high_priority_count: { type: "number" },
-                estimated_total_revenue_impact: { type: "string" },
-                critical_compliance_items: { type: "number" }
               }
             }
           }
@@ -136,6 +121,7 @@ Return JSON array of suggested actions:`;
 
     } catch (error) {
       console.error("Automation analysis error:", error);
+      setSuggestedActions([]);
     }
     
     setIsAnalyzing(false);
