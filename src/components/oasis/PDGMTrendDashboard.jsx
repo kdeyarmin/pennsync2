@@ -222,13 +222,11 @@ export default function PDGMTrendDashboard() {
 
     setIsPredicting(true);
     try {
-      // Use only last 6 months for prediction
-      const recentData = chartData.paymentTrend.slice(-6).map(d => 
-        `${d.month}: $${d.avgPayment}, ${d.count} cases`
-      ).join('; ');
-
+      const last3 = chartData.paymentTrend.slice(-3);
+      const avg = Math.round(last3.reduce((s, d) => s + d.avgPayment, 0) / 3);
+      
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Predict PDGM payment for next 3 months. Recent: ${recentData}. Return prediction for each month with payment, count, confidence.`,
+        prompt: `Last 3 months avg payment: $${avg}. Predict next 3 months.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -252,6 +250,7 @@ export default function PDGMTrendDashboard() {
       setPredictions(result);
     } catch (error) {
       console.error("Prediction error:", error);
+      setPredictions({ error: "Failed to generate predictions. Please try again." });
     }
     setIsPredicting(false);
   };
@@ -261,16 +260,11 @@ export default function PDGMTrendDashboard() {
 
     setIsAnalyzingDrivers(true);
     try {
-      // Aggregate summary instead of raw data
-      const summary = {
-        avgPayment: stats.avgPayment,
-        totalCases: filteredData.length,
-        groups: chartData.groupDist.slice(0, 5).map(g => `${g.name}: ${g.value}`).join(', '),
-        funcLevels: chartData.funcDist.slice(0, 3).map(f => `${f.name}: ${f.value}`).join(', ')
-      };
-
+      const topGroup = chartData.groupDist[0]?.name || 'N/A';
+      const topFunc = chartData.funcDist[0]?.name || 'N/A';
+      
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Identify top 5 PDGM payment drivers. Avg: $${summary.avgPayment}, Cases: ${summary.totalCases}. Groups: ${summary.groups}. Functional: ${summary.funcLevels}. Return driver, impact, correlation, effect, recommendation.`,
+        prompt: `Top PDGM drivers for $${stats.avgPayment} avg. Top group: ${topGroup}. Top func: ${topFunc}. List 3 key drivers.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -293,6 +287,7 @@ export default function PDGMTrendDashboard() {
       setDriverAnalysis(result);
     } catch (error) {
       console.error("Driver analysis error:", error);
+      setDriverAnalysis({ error: "Failed to analyze drivers. Please try again." });
     }
     setIsAnalyzingDrivers(false);
   };
@@ -487,28 +482,34 @@ export default function PDGMTrendDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Badge className="bg-purple-600 text-white mb-2">
-              Trend: {predictions.trend_direction}
-            </Badge>
-            <div className="grid grid-cols-3 gap-3">
-              {predictions.predictions?.map((pred, idx) => (
-                <div key={idx} className="bg-white p-3 rounded-lg border">
-                  <p className="text-xs text-gray-500">{pred.month}</p>
-                  <p className="text-xl font-bold text-purple-700">${Math.round(pred.predicted_payment).toLocaleString()}</p>
-                  <p className="text-xs text-gray-600">~{pred.predicted_count} cases</p>
-                  <Badge variant="outline" className="text-xs mt-1">{pred.confidence}</Badge>
-                </div>
-              ))}
-            </div>
-            {predictions.key_insights?.length > 0 && (
-              <div className="bg-white p-3 rounded border">
-                <p className="text-sm font-semibold text-purple-900 mb-2">Key Insights:</p>
-                <ul className="space-y-1">
-                  {predictions.key_insights.map((insight, idx) => (
-                    <li key={idx} className="text-sm text-purple-800">• {insight}</li>
+            {predictions.error ? (
+              <p className="text-sm text-red-600">{predictions.error}</p>
+            ) : (
+              <>
+                <Badge className="bg-purple-600 text-white mb-2">
+                  Trend: {predictions.trend_direction}
+                </Badge>
+                <div className="grid grid-cols-3 gap-3">
+                  {predictions.predictions?.map((pred, idx) => (
+                    <div key={idx} className="bg-white p-3 rounded-lg border">
+                      <p className="text-xs text-gray-500">{pred.month}</p>
+                      <p className="text-xl font-bold text-purple-700">${Math.round(pred.predicted_payment).toLocaleString()}</p>
+                      <p className="text-xs text-gray-600">~{pred.predicted_count} cases</p>
+                      <Badge variant="outline" className="text-xs mt-1">{pred.confidence}</Badge>
+                    </div>
                   ))}
-                </ul>
-              </div>
+                </div>
+                {predictions.key_insights?.length > 0 && (
+                  <div className="bg-white p-3 rounded border">
+                    <p className="text-sm font-semibold text-purple-900 mb-2">Key Insights:</p>
+                    <ul className="space-y-1">
+                      {predictions.key_insights.map((insight, idx) => (
+                        <li key={idx} className="text-sm text-purple-800">• {insight}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -590,35 +591,39 @@ export default function PDGMTrendDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {driverAnalysis.key_drivers?.map((driver, idx) => (
-                <div key={idx} className="bg-white p-3 rounded-lg border">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-semibold text-gray-900">{driver.driver}</p>
-                    <Badge className={
-                      driver.impact === 'high' ? 'bg-red-100 text-red-800' :
-                      driver.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-blue-100 text-blue-800'
-                    }>
-                      {driver.impact} impact
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div className="text-sm">
-                      <span className="text-gray-600">Correlation:</span>
-                      <span className="ml-2 font-medium">{driver.correlation}</span>
+            {driverAnalysis.error ? (
+              <p className="text-sm text-red-600">{driverAnalysis.error}</p>
+            ) : (
+              <div className="space-y-3">
+                {driverAnalysis.key_drivers?.map((driver, idx) => (
+                  <div key={idx} className="bg-white p-3 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-gray-900">{driver.driver}</p>
+                      <Badge className={
+                        driver.impact === 'high' ? 'bg-red-100 text-red-800' :
+                        driver.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }>
+                        {driver.impact} impact
+                      </Badge>
                     </div>
-                    <div className="text-sm">
-                      <span className="text-gray-600">Avg Effect:</span>
-                      <span className="ml-2 font-medium">{driver.average_effect}</span>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="text-sm">
+                        <span className="text-gray-600">Correlation:</span>
+                        <span className="ml-2 font-medium">{driver.correlation}</span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-gray-600">Avg Effect:</span>
+                        <span className="ml-2 font-medium">{driver.average_effect}</span>
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 p-2 rounded text-sm">
+                      <p className="text-blue-900">{driver.recommendation}</p>
                     </div>
                   </div>
-                  <div className="bg-blue-50 p-2 rounded text-sm">
-                    <p className="text-blue-900">{driver.recommendation}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
