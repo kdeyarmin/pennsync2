@@ -874,6 +874,10 @@ export default function OASISAnalyzer() {
         return sanitize(obj);
       };
       
+      // Sanitize all data before saving
+      const cleanPdgmData = sanitizeData(pdgmData);
+      const cleanAnalysisResults = sanitizeData(analysisResults);
+
       const savedOASIS = await saveOASISMutation.mutateAsync({
         patient_id: patientIdToUse || null,
         patient_name: patientFullName,
@@ -882,8 +886,8 @@ export default function OASISAnalyzer() {
         assessment_date: analysisResults.pdgm_data?.patient_info?.assessment_date || new Date().toISOString().split('T')[0],
         assessment_type: mapAssessmentType(analysisResults.pdgm_data?.patient_info?.assessment_type),
         analysis_id: analysisId,
-        pdgm_data: sanitizeData(pdgmData),
-        analysis_results: sanitizeData(analysisResults),
+        pdgm_data: cleanPdgmData,
+        analysis_results: cleanAnalysisResults,
         scores: {
           overall: analysisResults.overall_score || 0,
           accuracy: analysisResults.accuracy_score || 0,
