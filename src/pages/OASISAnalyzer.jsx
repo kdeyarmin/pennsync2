@@ -835,7 +835,7 @@ export default function OASISAnalyzer() {
       }
     } catch (err) {
       console.error("Error saving OASIS:", err);
-      setError("Failed to save OASIS to patient record.");
+      setError(`Failed to save OASIS to patient record: ${err.message || 'Unknown error'}`);
     }
     setIsSaving(false);
   };
