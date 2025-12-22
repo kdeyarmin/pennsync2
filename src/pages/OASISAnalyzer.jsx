@@ -1980,6 +1980,28 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             autoReview={true}
           />
 
+          {/* Automated Document Reviewer - Compliance & Best Practices Scanner */}
+          <AutomaticDocumentReviewer
+            documentType="oasis_assessment"
+            documentContent={JSON.stringify(pdgmData, null, 2) + '\n\n' + JSON.stringify(analysisResults, null, 2)}
+            patientData={patients.find(p => p.id === selectedPatientId)}
+            diagnosis={pdgmData?.primary_diagnosis}
+            visitType={pdgmData?.patient_info?.assessment_type}
+            autoReview={true}
+            onReviewComplete={(reviewResults) => {
+              console.log('Document review complete:', reviewResults);
+              logActivity(ActivityActions.NOTE_COMPLIANCE_CHECK, {
+                document_type: 'oasis',
+                overall_score: reviewResults.overall_score,
+                compliance_score: reviewResults.compliance_score,
+                critical_issues: reviewResults.critical_issues?.length || 0,
+                patient_id: selectedPatientId,
+                page: 'OASISAnalyzer'
+              });
+            }}
+            compact={false}
+          />
+
           {/* Score Overview */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
