@@ -1845,12 +1845,16 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                   className="hidden"
                   id="oasis-upload"
                 />
-                <label htmlFor="oasis-upload" className="cursor-pointer">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-sm text-gray-600 mb-2">
-                    {file ? file.name : "Click to upload or drag and drop"}
-                  </p>
-                  <p className="text-xs text-gray-400">PDF files only</p>
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-sm text-gray-600 mb-2">
+                  {file ? file.name : "No file selected"}
+                </p>
+                <p className="text-xs text-gray-400 mb-4">Upload your OASIS PDF for accuracy review</p>
+                <label htmlFor="oasis-upload">
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose PDF File
+                  </Button>
                 </label>
               </div>
 
