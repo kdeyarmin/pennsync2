@@ -45,6 +45,7 @@ import AIICD10Suggester from "../components/clinical/AIICD10Suggester";
 import AICarePlanGenerator from "../components/clinical/AICarePlanGenerator";
 import AIPathwayGenerator from "../components/clinical/AIPathwayGenerator";
 import AIPathwayUpdater from "../components/clinical/AIPathwayUpdater";
+import OASISUploadWidget from "../components/oasis/OASISUploadWidget";
 
 export default function ClinicalPathwayManager() {
   const queryClient = useQueryClient();
@@ -561,11 +562,16 @@ export default function ClinicalPathwayManager() {
           </TabsContent>
 
           <TabsContent value="oasis">
-            <AIAssessmentDrafter
-              onDraftComplete={(assessment) => {
-                console.log("OASIS assessment generated:", assessment);
-              }}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <AIAssessmentDrafter
+                  onDraftComplete={(assessment) => {
+                    console.log("OASIS assessment generated:", assessment);
+                  }}
+                />
+              </div>
+              <OASISUploadWidget />
+            </div>
           </TabsContent>
 
           <TabsContent value="icd10">
