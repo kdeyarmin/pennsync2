@@ -52,6 +52,10 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
+import OASISRevenueAnalysis from './pages/OASISRevenueAnalysis';
+import OASISComplianceReview from './pages/OASISComplianceReview';
+import OASISDocumentationReview from './pages/OASISDocumentationReview';
+import OASISClinicalReview from './pages/OASISClinicalReview';
 import __Layout from './Layout.jsx';
 
 
@@ -110,6 +114,10 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
+    "OASISRevenueAnalysis": OASISRevenueAnalysis,
+    "OASISComplianceReview": OASISComplianceReview,
+    "OASISDocumentationReview": OASISDocumentationReview,
+    "OASISClinicalReview": OASISClinicalReview,
 }
 
 export const pagesConfig = {
