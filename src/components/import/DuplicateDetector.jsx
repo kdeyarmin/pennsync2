@@ -47,7 +47,7 @@ const calculateSimilarity = (str1, str2) => {
   return maxLength === 0 ? 100 : ((maxLength - distance) / maxLength) * 100;
 };
 
-// Simplified duplicate matching - MRN only
+// MRN-ONLY duplicate matching
 const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium', criteria = {}) => {
   let score = 0;
   let matches = [];
@@ -67,8 +67,8 @@ const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium', c
     }
   }
 
-  // Determine confidence level
-  const confidenceLevel = criteriaMatched.definitive ? 'definitive' : 'low';
+  // No match if MRN doesn't match
+  const confidenceLevel = criteriaMatched.definitive ? 'definitive' : 'no_match';
 
   return { score, matches, confidenceLevel, criteriaMatched };
 };
@@ -154,7 +154,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
     emailAndLastName: false,
     address: true
   });
-  const [autoResolveStrategy, setAutoResolveStrategy] = useState('manual'); // manual, merge, mark_duplicate, ignore
+  const [autoResolveStrategy, setAutoResolveStrategy] = useState('merge'); // Default to auto-merge for MRN matches
 
   const { data: existingPatients = [], isLoading } = useQuery({
     queryKey: ['all-patients-duplicate-check'],
@@ -189,17 +189,11 @@ export default function DuplicateDetector({ patients, onResolve }) {
       const topMatch = duplicates[0];
       
       if (autoResolveStrategy === 'merge' && topMatch.confidenceLevel === 'definitive') {
+        // Auto-update for MRN matches (regardless of whether there are differences)
         autoResolution = { action: 'update', existingPatientId: topMatch.patient.id, auto: true };
-      } else if (autoResolveStrategy === 'ignore') {
-        autoResolution = { action: 'add', auto: true };
-      } else if (autoResolveStrategy === 'mark_duplicate') {
-        autoResolution = { action: 'skip', auto: true };
-      } else {
-        // Default: auto-select for definitive MRN matches with updates
-        const definitiveMatch = duplicates.find(d => d.confidenceLevel === 'definitive');
-        if (definitiveMatch && definitiveMatch.differences.length > 0) {
-          autoResolution = { action: 'update', existingPatientId: definitiveMatch.patient.id, auto: true };
-        }
+      } else if (autoResolveStrategy === 'manual') {
+        // Manual review - don't auto-select
+        autoResolution = null;
       }
     }
     
@@ -351,10 +345,9 @@ export default function DuplicateDetector({ patients, onResolve }) {
                 </Button>
               </div>
               <div className="text-xs text-gray-600 space-y-1 bg-white p-3 rounded-lg border">
-               <p><strong>MRN Matching:</strong> Medical Record Number matches are always treated as definitive</p>
-               <p><strong>Strict:</strong> Only very close matches (60%+ score) - fewer false positives</p>
-               <p><strong>Medium:</strong> Balanced approach (40%+ score) - recommended</p>
-               <p><strong>Loose:</strong> Catches more potential duplicates (25%+ score) - may include uncertain matches</p>
+               <p><strong>MRN-Only Matching:</strong> Duplicates are detected ONLY by matching Medical Record Number (MRN)</p>
+               <p><strong>Auto-Update:</strong> When MRN matches, the existing patient record will be updated with new information from the upload</p>
+               <p>Sensitivity settings do not affect MRN matching - exact match required</p>
               </div>
             </div>
 
@@ -375,60 +368,29 @@ export default function DuplicateDetector({ patients, onResolve }) {
               </p>
             </div>
 
-            <div className="border-t pt-4">
-              <Label className="text-sm font-medium mb-3 block">Matching Criteria</Label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={matchingCriteria.mrn}
-                    onChange={(e) => setMatchingCriteria({...matchingCriteria, mrn: e.target.checked})}
-                    className="rounded"
-                  />
-                  <span className="text-sm">MRN (Medical Record Number)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={matchingCriteria.nameAndDob}
-                    onChange={(e) => setMatchingCriteria({...matchingCriteria, nameAndDob: e.target.checked})}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Name + Date of Birth</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={matchingCriteria.phoneAndLastName}
-                    onChange={(e) => setMatchingCriteria({...matchingCriteria, phoneAndLastName: e.target.checked})}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Phone + Last Name</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={matchingCriteria.emailAndLastName}
-                    onChange={(e) => setMatchingCriteria({...matchingCriteria, emailAndLastName: e.target.checked})}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Email + Last Name</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={matchingCriteria.address}
-                    onChange={(e) => setMatchingCriteria({...matchingCriteria, address: e.target.checked})}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Address</span>
-                </label>
-              </div>
-            </div>
+            <Alert className="bg-purple-50 border-purple-300">
+              <AlertDescription className="text-xs text-purple-900">
+                <strong>MRN-Only Matching:</strong> Duplicates are identified exclusively by Medical Record Number (MRN). 
+                When an MRN match is found, the existing patient record will be automatically updated with any new information from the upload file.
+              </AlertDescription>
+            </Alert>
 
             <div className="border-t pt-4">
               <Label className="text-sm font-medium mb-3 block">Automatic Resolution Strategy</Label>
               <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="autoResolve"
+                    checked={autoResolveStrategy === 'merge'}
+                    onChange={() => setAutoResolveStrategy('merge')}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Auto-Update (Recommended)</span>
+                    <p className="text-xs text-gray-600">Automatically update existing records when MRN matches</p>
+                  </div>
+                </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -439,46 +401,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                   />
                   <div>
                     <span className="text-sm font-medium">Manual Review</span>
-                    <p className="text-xs text-gray-600">Review each duplicate manually</p>
-                  </div>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="autoResolve"
-                    checked={autoResolveStrategy === 'merge'}
-                    onChange={() => setAutoResolveStrategy('merge')}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <span className="text-sm font-medium">Auto-Merge Definitive Matches</span>
-                    <p className="text-xs text-gray-600">Automatically update records with definitive matches (MRN)</p>
-                  </div>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="autoResolve"
-                    checked={autoResolveStrategy === 'ignore'}
-                    onChange={() => setAutoResolveStrategy('ignore')}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <span className="text-sm font-medium">Ignore Duplicates</span>
-                    <p className="text-xs text-gray-600">Add all as new patients, ignore detected duplicates</p>
-                  </div>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="autoResolve"
-                    checked={autoResolveStrategy === 'mark_duplicate'}
-                    onChange={() => setAutoResolveStrategy('mark_duplicate')}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <span className="text-sm font-medium">Mark as Duplicate</span>
-                    <p className="text-xs text-gray-600">Skip all rows with potential duplicates</p>
+                    <p className="text-xs text-gray-600">Review each MRN match manually before updating</p>
                   </div>
                 </label>
               </div>
@@ -486,7 +409,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
 
             <Alert className="bg-blue-100 border-blue-300">
               <AlertDescription className="text-xs text-blue-900">
-                💡 <strong>Tip:</strong> Start with Manual Review. Use Auto-Merge for trusted data sources with reliable MRNs.
+                💡 <strong>Recommended:</strong> Auto-Update mode will automatically update patient records when MRN matches are found, preserving all new information from the upload.
               </AlertDescription>
             </Alert>
           </CardContent>
