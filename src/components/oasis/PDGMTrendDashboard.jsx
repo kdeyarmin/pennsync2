@@ -28,7 +28,7 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
-import { TrendingUp, Filter, Download, Calendar, DollarSign, Users, Activity } from "lucide-react";
+import { TrendingUp, Filter, Download, Calendar, DollarSign, Users, Activity, Loader2 } from "lucide-react";
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
