@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -423,76 +422,7 @@ ${Object.entries(metrics.nurseStats).map(([email, stats]) =>
         </CardContent>
       </Card>
 
-      {/* Key Performance Indicators */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className={`${completionStatus.bg} border-l-4 ${completionStatus.color.replace('text', 'border')}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle2 className={`w-8 h-8 ${completionStatus.color}`} />
-              <Badge className={completionStatus.color.replace('text', 'bg')}>
-                {completionStatus.label}
-              </Badge>
-            </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Visit Completion Rate</p>
-            <p className="text-3xl font-bold text-gray-900">{metrics.completionRate}%</p>
-            <Progress value={metrics.completionRate} className="mt-2 h-2" />
-            <p className="text-xs text-gray-500 mt-2">
-              {metrics.completedVisits} of {metrics.totalVisits} visits completed
-            </p>
-          </CardContent>
-        </Card>
 
-        <Card className={`${qualityStatus.bg} border-l-4 ${qualityStatus.color.replace('text', 'border')}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Shield className={`w-8 h-8 ${qualityStatus.color}`} />
-              <Badge className={qualityStatus.color.replace('text', 'bg')}>
-                {qualityStatus.label}
-              </Badge>
-            </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Avg Quality Score</p>
-            <p className="text-3xl font-bold text-gray-900">{metrics.avgQualityScore}/100</p>
-            <Progress value={metrics.avgQualityScore} className="mt-2 h-2" />
-            <p className="text-xs text-gray-500 mt-2">
-              Medicare compliance average
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-l-4 border-green-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="w-8 h-8 text-green-600" />
-              <TrendingDown className="w-5 h-5 text-green-600" />
-            </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Avg Doc Time</p>
-            <p className="text-3xl font-bold text-gray-900">{metrics.avgDocTime}</p>
-            <p className="text-xs text-gray-500 mt-2">
-              minutes per visit
-            </p>
-            <p className="text-xs font-semibold text-green-700 mt-1">
-              Target: &lt;45 min
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-l-4 border-purple-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Award className="w-8 h-8 text-purple-600" />
-              <TrendingUp className="w-5 h-5 text-purple-600" />
-            </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">Time Saved by AI</p>
-            <p className="text-3xl font-bold text-gray-900">{metrics.totalTimeSavedHours}</p>
-            <p className="text-xs text-gray-500 mt-2">
-              hours saved in {timeRange} days
-            </p>
-            <p className="text-xs font-semibold text-purple-700 mt-1">
-              ~95 min per visit
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Patient Outcomes */}
       <Card>
