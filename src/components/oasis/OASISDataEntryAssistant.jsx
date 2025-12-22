@@ -26,6 +26,10 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
   const [editedData, setEditedData] = useState(null);
   const [error, setError] = useState(null);
   const [fileUrl, setFileUrl] = useState(null);
+  const [aiInsights, setAiInsights] = useState(null);
+  const [isAnalyzingInsights, setIsAnalyzingInsights] = useState(false);
+  const [flaggedFields, setFlaggedFields] = useState([]);
+  const [carePathways, setCarePathways] = useState([]);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -126,12 +130,103 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
 
       setExtractedData(extractResult.output);
       setEditedData({ ...extractResult.output });
+
+      // Trigger AI insights analysis
+      await analyzeExtractedData(extractResult.output);
     } catch (err) {
       console.error("Extraction error:", err);
       setError(`Failed to extract data: ${err.message}`);
     }
 
     setIsExtracting(false);
+  };
+
+  const analyzeExtractedData = async (data) => {
+    setIsAnalyzingInsights(true);
+
+    try {
+      // AI-powered validation and insights
+      const insights = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this extracted OASIS data for compliance issues, clinical concerns, and care opportunities.
+
+EXTRACTED OASIS DATA:
+${JSON.stringify(data, null, 2)}
+
+Analyze and provide:
+1. COMPLIANCE ISSUES: Identify any missing required fields, inconsistent data, or potential coding errors
+2. CLINICAL CONCERNS: Flag any clinical red flags (e.g., high fall risk, pressure ulcer, severe functional decline)
+3. CARE PATHWAYS: Recommend specific care pathways or interventions based on diagnosis and functional status
+4. FIELDS REQUIRING REVIEW: List specific fields that need clinician verification or additional documentation
+
+Return structured JSON.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            compliance_issues: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  field: { type: "string" },
+                  issue: { type: "string" },
+                  severity: { type: "string", enum: ["critical", "high", "medium", "low"] },
+                  recommendation: { type: "string" }
+                }
+              }
+            },
+            clinical_concerns: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  concern_type: { type: "string" },
+                  description: { type: "string" },
+                  risk_level: { type: "string", enum: ["critical", "high", "medium", "low"] },
+                  recommended_actions: { type: "array", items: { type: "string" } }
+                }
+              }
+            },
+            recommended_care_pathways: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  pathway_name: { type: "string" },
+                  reason: { type: "string" },
+                  priority: { type: "string", enum: ["critical", "high", "medium", "low"] },
+                  key_interventions: { type: "array", items: { type: "string" } }
+                }
+              }
+            },
+            flagged_fields: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  field_name: { type: "string" },
+                  flag_reason: { type: "string" },
+                  action_needed: { type: "string" }
+                }
+              }
+            },
+            overall_assessment: { type: "string" }
+          }
+        }
+      });
+
+      setAiInsights(insights);
+      
+      // Extract flagged fields for UI highlighting
+      const flaggedFieldsList = insights.flagged_fields?.map(f => f.field_name) || [];
+      setFlaggedFields(flaggedFieldsList);
+      setCarePathways(insights.recommended_care_pathways || []);
+
+    } catch (err) {
+      console.error("AI insights error:", err);
+      // Don't fail the whole process if insights fail
+    }
+
+    setIsAnalyzingInsights(false);
   };
 
   const handleFieldChange = (field, value) => {
@@ -152,20 +247,28 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
   const renderField = (label, field, placeholder = "") => {
     const wasExtracted = extractedData?.[field] && extractedData[field] !== "Not found" && extractedData[field] !== "";
     const wasEdited = editedData?.[field] !== extractedData?.[field];
+    const isFlagged = flaggedFields.includes(field);
+    const flagInfo = aiInsights?.flagged_fields?.find(f => f.field_name === field);
 
     return (
       <div className="space-y-1">
-        <Label className="text-xs flex items-center gap-2">
+        <Label className="text-xs flex items-center gap-2 flex-wrap">
           {label}
           {wasExtracted && <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700">AI Found</Badge>}
           {wasEdited && <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700">Edited</Badge>}
+          {isFlagged && <Badge className="text-[10px] bg-red-500 text-white">⚠ Needs Review</Badge>}
         </Label>
         <Input
           value={editedData?.[field] || ""}
           onChange={(e) => handleFieldChange(field, e.target.value)}
           placeholder={placeholder}
-          className="text-sm"
+          className={`text-sm ${isFlagged ? 'border-red-300 bg-red-50 focus:border-red-500' : ''}`}
         />
+        {flagInfo && (
+          <p className="text-xs text-red-700 mt-1">
+            ⚠ {flagInfo.flag_reason} - {flagInfo.action_needed}
+          </p>
+        )}
       </div>
     );
   };
@@ -245,6 +348,137 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
                 <strong>Data extracted successfully!</strong> Review the fields below and make any corrections before confirming.
               </AlertDescription>
             </Alert>
+
+            {/* AI Insights - Compliance Issues */}
+            {isAnalyzingInsights && (
+              <Card className="border-purple-200 bg-purple-50">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+                  <p className="text-sm text-purple-900">AI is analyzing data for compliance issues and clinical insights...</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {aiInsights && (
+              <div className="space-y-3">
+                {/* Overall Assessment */}
+                {aiInsights.overall_assessment && (
+                  <Alert className="bg-blue-50 border-blue-200">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <AlertDescription className="text-blue-900 text-sm">
+                      <strong>AI Assessment:</strong> {aiInsights.overall_assessment}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Compliance Issues */}
+                {aiInsights.compliance_issues?.length > 0 && (
+                  <Card className="border-red-200 bg-red-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        Compliance Issues Found ({aiInsights.compliance_issues.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {aiInsights.compliance_issues.map((issue, idx) => (
+                        <div key={idx} className="bg-white p-2 rounded border border-red-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className={
+                              issue.severity === 'critical' ? 'bg-red-600' :
+                              issue.severity === 'high' ? 'bg-orange-500' :
+                              issue.severity === 'medium' ? 'bg-yellow-500' :
+                              'bg-blue-500'
+                            }>
+                              {issue.severity}
+                            </Badge>
+                            <span className="text-xs font-semibold">{issue.field}</span>
+                          </div>
+                          <p className="text-xs text-gray-700">{issue.issue}</p>
+                          <p className="text-xs text-green-700 mt-1">💡 {issue.recommendation}</p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Clinical Concerns */}
+                {aiInsights.clinical_concerns?.length > 0 && (
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-orange-600" />
+                        Clinical Concerns ({aiInsights.clinical_concerns.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {aiInsights.clinical_concerns.map((concern, idx) => (
+                        <div key={idx} className="bg-white p-2 rounded border border-orange-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className={
+                              concern.risk_level === 'critical' ? 'bg-red-600' :
+                              concern.risk_level === 'high' ? 'bg-orange-500' :
+                              'bg-yellow-500'
+                            }>
+                              {concern.risk_level} risk
+                            </Badge>
+                            <span className="text-xs font-semibold">{concern.concern_type}</span>
+                          </div>
+                          <p className="text-xs text-gray-700 mb-1">{concern.description}</p>
+                          {concern.recommended_actions?.length > 0 && (
+                            <ul className="text-xs text-green-700 space-y-0.5">
+                              {concern.recommended_actions.map((action, aidx) => (
+                                <li key={aidx}>✓ {action}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Recommended Care Pathways */}
+                {carePathways.length > 0 && (
+                  <Card className="border-green-200 bg-green-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        Recommended Care Pathways ({carePathways.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {carePathways.map((pathway, idx) => (
+                        <div key={idx} className="bg-white p-3 rounded border border-green-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className={
+                              pathway.priority === 'critical' ? 'bg-red-600' :
+                              pathway.priority === 'high' ? 'bg-orange-500' :
+                              pathway.priority === 'medium' ? 'bg-blue-500' :
+                              'bg-gray-500'
+                            }>
+                              {pathway.priority}
+                            </Badge>
+                            <span className="text-sm font-semibold text-green-900">{pathway.pathway_name}</span>
+                          </div>
+                          <p className="text-xs text-gray-700 mb-2">{pathway.reason}</p>
+                          {pathway.key_interventions?.length > 0 && (
+                            <div className="bg-green-50 p-2 rounded border border-green-200">
+                              <p className="text-xs font-semibold text-green-800 mb-1">Key Interventions:</p>
+                              <ul className="text-xs text-green-700 space-y-0.5">
+                                {pathway.key_interventions.map((intervention, iidx) => (
+                                  <li key={iidx}>• {intervention}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
 
             <Tabs defaultValue="patient" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
@@ -327,6 +561,9 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
                   setEditedData(null);
                   setFile(null);
                   setFileUrl(null);
+                  setAiInsights(null);
+                  setFlaggedFields([]);
+                  setCarePathways([]);
                 }}
                 className="flex-1"
               >
@@ -334,6 +571,7 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
               </Button>
               <Button
                 onClick={handleConfirm}
+                disabled={isAnalyzingInsights}
                 className="flex-1 bg-purple-600 hover:bg-purple-700"
               >
                 <Send className="w-4 h-4 mr-2" />
@@ -341,9 +579,27 @@ export default function OASISDataEntryAssistant({ onDataConfirmed }) {
               </Button>
             </div>
 
+            {/* Summary of AI Findings */}
             <div className="bg-purple-50 p-3 rounded border border-purple-200">
-              <p className="text-xs text-purple-800">
-                <strong>Next:</strong> Click "Confirm & Analyze" to run full OASIS analysis with this data. You can edit any fields above before confirming.
+              <p className="text-xs text-purple-800 mb-2">
+                <strong>AI Pre-Analysis Summary:</strong>
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="bg-white p-2 rounded text-center">
+                  <p className="text-red-600 font-bold">{aiInsights?.compliance_issues?.length || 0}</p>
+                  <p className="text-gray-600">Compliance Issues</p>
+                </div>
+                <div className="bg-white p-2 rounded text-center">
+                  <p className="text-orange-600 font-bold">{aiInsights?.clinical_concerns?.length || 0}</p>
+                  <p className="text-gray-600">Clinical Concerns</p>
+                </div>
+                <div className="bg-white p-2 rounded text-center">
+                  <p className="text-green-600 font-bold">{carePathways.length}</p>
+                  <p className="text-gray-600">Care Pathways</p>
+                </div>
+              </div>
+              <p className="text-xs text-purple-700 mt-2">
+                Review flagged fields (highlighted in red) before confirming.
               </p>
             </div>
           </>
