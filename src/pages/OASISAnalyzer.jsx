@@ -77,6 +77,7 @@ import InlineDocumentationAssistant from "../components/oasis/InlineDocumentatio
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
+import OASISDataEntryAssistant from "../components/oasis/OASISDataEntryAssistant";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users as UsersIcon, BarChart3 } from "lucide-react";
 import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
@@ -388,6 +389,7 @@ export default function OASISAnalyzer() {
   const [triggeredPathways, setTriggeredPathways] = useState([]);
   const [matchResults, setMatchResults] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [useDataEntryAssistant, setUseDataEntryAssistant] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -1801,6 +1803,24 @@ Return scores (0-100) and top 3-5 issues in each category.`,
         </TabsContent>
 
         <TabsContent value="single" className="mt-4">
+          {/* AI Data Entry Assistant */}
+          {useDataEntryAssistant ? (
+            <OASISDataEntryAssistant
+              onDataConfirmed={(data) => {
+                // Use the confirmed data to pre-populate analysis
+                setFile(data.file);
+                setUploadedFileUrl(data.fileUrl);
+                setPatientName(data.extractedData.patient_name || "Unknown");
+
+                // Auto-trigger analysis with pre-filled data
+                setUseDataEntryAssistant(false);
+
+                // Show success message
+                alert("Data confirmed! Now analyzing with AI-extracted information...");
+              }}
+            />
+          ) : null}
+
           {/* Upload Section */}
           <Card className="mb-6">
             <CardHeader>
@@ -1810,26 +1830,49 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="oasis-upload"
-                />
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-sm text-gray-600 mb-2">
-                  {file ? file.name : "No file selected"}
-                </p>
-                <p className="text-xs text-gray-400 mb-4">Upload your OASIS PDF for accuracy review</p>
-                <Button 
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => document.getElementById('oasis-upload').click()}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Choose PDF File
-                </Button>
+              <div className="space-y-4">
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    variant={useDataEntryAssistant ? "outline" : "default"}
+                    onClick={() => setUseDataEntryAssistant(false)}
+                    className={!useDataEntryAssistant ? "bg-blue-600 hover:bg-blue-700" : ""}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Quick Upload
+                  </Button>
+                  <Button
+                    variant={useDataEntryAssistant ? "default" : "outline"}
+                    onClick={() => setUseDataEntryAssistant(true)}
+                    className={useDataEntryAssistant ? "bg-purple-600 hover:bg-purple-700" : ""}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI Data Entry Assistant
+                  </Button>
+                </div>
+
+                {!useDataEntryAssistant && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="oasis-upload"
+                    />
+                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm text-gray-600 mb-2">
+                      {file ? file.name : "No file selected"}
+                    </p>
+                    <p className="text-xs text-gray-400 mb-4">Upload your OASIS PDF for accuracy review</p>
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => document.getElementById('oasis-upload').click()}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Choose PDF File
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {file && (
