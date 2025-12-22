@@ -1564,6 +1564,36 @@ Return JSON:
         throw new Error(`AI analysis failed: ${analysisErr.message}. Please try uploading again.`);
       }
 
+      setUploadProgress(85);
+
+      // Enhanced Narrative-Question Matching Analysis
+      let narrativeMatchAnalysis = null;
+      try {
+        console.log("Running narrative-question consistency check...");
+        const { analyzeOASISNarrativeMatch } = await import("@/functions/analyzeOASISNarrativeMatch");
+        const matchResult = await analyzeOASISNarrativeMatch({ file_url: file_url });
+        
+        if (matchResult.success) {
+          narrativeMatchAnalysis = matchResult.report;
+          
+          // Merge critical flags into main analysis
+          if (matchResult.report.audit_flags?.length > 0) {
+            if (!analysisResult.audit_risk_areas) analysisResult.audit_risk_areas = [];
+            matchResult.report.audit_flags.forEach(flag => {
+              analysisResult.audit_risk_areas.push({
+                area: `Narrative Mismatch: ${flag.m_item}`,
+                risk_level: 'high',
+                explanation: flag.description,
+                mitigation: flag.action_required,
+                documentation_to_add: flag.action_required
+              });
+            });
+          }
+        }
+      } catch (narrativeErr) {
+        console.warn("Narrative matching analysis failed:", narrativeErr);
+      }
+
       setUploadProgress(90);
 
       // Quick validation pass
@@ -1613,6 +1643,11 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
         recommendation: validationResult?.recommendation || '',
         pdgm_readiness: validationResult?.pdgm_readiness || null
       };
+
+      // Attach narrative analysis to results
+      if (narrativeMatchAnalysis) {
+        analysisResult.narrative_match_analysis = narrativeMatchAnalysis;
+      }
 
       setUploadProgress(100);
       setAnalysisResults(analysisResult);
@@ -1979,6 +2014,130 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
             oasisData={pdgmData}
             autoReview={true}
           />
+
+          {/* Narrative-Question Match Analysis */}
+          {analysisResults.narrative_match_analysis && (
+           <Card className="border-2 border-purple-300">
+             <CardHeader>
+               <CardTitle className="text-lg flex items-center gap-2">
+                 <ClipboardCheck className="w-5 h-5 text-purple-600" />
+                 Narrative-Question Consistency Analysis
+               </CardTitle>
+             </CardHeader>
+             <CardContent>
+               <div className="grid grid-cols-3 gap-4 mb-4">
+                 <div className="text-center p-3 bg-purple-50 rounded-lg border">
+                   <p className="text-sm text-purple-600">Consistency Score</p>
+                   <p className={`text-3xl font-bold ${analysisResults.narrative_match_analysis.consistency_analysis?.overall_consistency_score >= 80 ? 'text-green-600' : analysisResults.narrative_match_analysis.consistency_analysis?.overall_consistency_score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                     {analysisResults.narrative_match_analysis.consistency_analysis?.overall_consistency_score || 0}%
+                   </p>
+                 </div>
+                 <div className="text-center p-3 bg-red-50 rounded-lg border">
+                   <p className="text-sm text-red-600">Total Mismatches</p>
+                   <p className="text-3xl font-bold text-red-700">
+                     {analysisResults.narrative_match_analysis.consistency_analysis?.total_mismatches_found || 0}
+                   </p>
+                 </div>
+                 <div className="text-center p-3 bg-orange-50 rounded-lg border">
+                   <p className="text-sm text-orange-600">Critical Issues</p>
+                   <p className="text-3xl font-bold text-orange-700">
+                     {analysisResults.narrative_match_analysis.consistency_analysis?.critical_mismatches || 0}
+                   </p>
+                 </div>
+               </div>
+
+               {analysisResults.narrative_match_analysis.consistency_analysis?.mismatches?.length > 0 && (
+                 <Accordion type="single" collapsible className="mt-4">
+                   <AccordionItem value="mismatches">
+                     <AccordionTrigger className="text-red-700">
+                       <div className="flex items-center gap-2">
+                         <AlertTriangle className="w-4 h-4" />
+                         Narrative-Code Mismatches ({analysisResults.narrative_match_analysis.consistency_analysis.mismatches.length})
+                       </div>
+                     </AccordionTrigger>
+                     <AccordionContent>
+                       <div className="space-y-3">
+                         {analysisResults.narrative_match_analysis.consistency_analysis.mismatches.map((mismatch, idx) => (
+                           <div key={idx} className={`p-3 rounded-lg border ${
+                             mismatch.severity === 'critical' ? 'bg-red-50 border-red-300' :
+                             mismatch.severity === 'high' ? 'bg-orange-50 border-orange-300' :
+                             'bg-yellow-50 border-yellow-300'
+                           }`}>
+                             <div className="flex items-center justify-between mb-2">
+                               <Badge className="font-mono">{mismatch.m_item_code}</Badge>
+                               <Badge className={getSeverityBadge(mismatch.severity)}>
+                                 {mismatch.severity}
+                               </Badge>
+                             </div>
+                             <p className="text-sm font-medium text-gray-800 mb-1">{mismatch.m_item_question}</p>
+
+                             <div className="grid grid-cols-2 gap-2 my-2">
+                               <div className="bg-white p-2 rounded border">
+                                 <p className="text-xs text-gray-500">Coded Response:</p>
+                                 <p className="text-sm font-medium text-red-700">{mismatch.coded_response}</p>
+                               </div>
+                               <div className="bg-white p-2 rounded border">
+                                 <p className="text-xs text-gray-500">Should Be:</p>
+                                 <p className="text-sm font-medium text-green-700">{mismatch.correct_response_should_be}</p>
+                               </div>
+                             </div>
+
+                             <div className="bg-white p-2 rounded border my-2">
+                               <p className="text-xs text-gray-500 mb-1">Narrative Quote:</p>
+                               <p className="text-sm text-gray-700 italic">"{mismatch.narrative_quote}"</p>
+                             </div>
+
+                             <p className="text-sm text-gray-800 mb-2">{mismatch.explanation}</p>
+
+                             {mismatch.revenue_impact && (
+                               <div className="bg-green-50 p-2 rounded text-xs text-green-800 mb-1">
+                                 💰 Revenue Impact: {mismatch.revenue_impact}
+                               </div>
+                             )}
+
+                             {mismatch.compliance_risk && (
+                               <div className="bg-red-50 p-2 rounded text-xs text-red-800 mb-2">
+                                 ⚠️ Compliance Risk: {mismatch.compliance_risk}
+                               </div>
+                             )}
+
+                             <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                               <p className="text-xs text-blue-600 font-medium mb-1">Recommended Fix:</p>
+                               <p className="text-sm text-blue-900">{mismatch.recommended_fix}</p>
+                             </div>
+
+                             {mismatch.exact_narrative_needed && (
+                               <div className="bg-purple-50 p-2 rounded border border-purple-200 mt-2">
+                                 <p className="text-xs text-purple-600 font-medium mb-1">Add This Narrative:</p>
+                                 <p className="text-sm text-purple-900 italic">"{mismatch.exact_narrative_needed}"</p>
+                               </div>
+                             )}
+                           </div>
+                         ))}
+                       </div>
+                     </AccordionContent>
+                   </AccordionItem>
+                 </Accordion>
+               )}
+
+               {analysisResults.narrative_match_analysis.consistency_analysis?.missing_narratives?.length > 0 && (
+                 <Alert className="mt-4 bg-yellow-50 border-yellow-300">
+                   <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                   <AlertDescription className="text-yellow-800">
+                     <p className="font-semibold mb-2">Missing Required Narratives ({analysisResults.narrative_match_analysis.consistency_analysis.missing_narratives.length})</p>
+                     <ul className="space-y-1 text-sm">
+                       {analysisResults.narrative_match_analysis.consistency_analysis.missing_narratives.slice(0, 5).map((missing, idx) => (
+                         <li key={idx}>
+                           <strong>{missing.m_item_code}</strong>: {missing.why_narrative_required}
+                         </li>
+                       ))}
+                     </ul>
+                   </AlertDescription>
+                 </Alert>
+               )}
+             </CardContent>
+           </Card>
+          )}
 
           {/* Automated Document Reviewer - Compliance & Best Practices Scanner */}
           <AutomaticDocumentReviewer
