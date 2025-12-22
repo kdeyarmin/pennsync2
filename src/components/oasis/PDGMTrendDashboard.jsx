@@ -37,6 +37,10 @@ export default function PDGMTrendDashboard() {
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedDiagnosis, setSelectedDiagnosis] = useState('all');
   const [filtersVisible, setFiltersVisible] = useState(true);
+  const [predictions, setPredictions] = useState(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [driverAnalysis, setDriverAnalysis] = useState(null);
+  const [isAnalyzingDrivers, setIsAnalyzingDrivers] = useState(false);
 
   // Fetch all OASIS uploads with PDGM data
   const { data: oasisUploads = [], isLoading } = useQuery({
@@ -149,6 +153,30 @@ export default function PDGMTrendDashboard() {
       caseMix: parseFloat(d.avgCaseMix)
     }));
 
+    // Compliance rates over time
+    const complianceTrend = {};
+    filtered.forEach(u => {
+      const month = new Date(u.created_date).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short' 
+      });
+      if (!complianceTrend[month]) {
+        complianceTrend[month] = { month, totalScore: 0, count: 0, avgCompliance: 0 };
+      }
+      const compScore = u.analysis_results?.compliance_score || u.scores?.compliance || 0;
+      complianceTrend[month].totalScore += compScore;
+      complianceTrend[month].count += 1;
+    });
+
+    const complianceTrendData = Object.values(complianceTrend)
+      .map(d => ({
+        month: d.month,
+        avgCompliance: Math.round(d.totalScore / d.count),
+        count: d.count
+      }))
+      .sort((a, b) => new Date(a.month) - new Date(b.month))
+      .slice(-12);
+
     return {
       filteredData: filtered,
       stats: {
@@ -162,7 +190,8 @@ export default function PDGMTrendDashboard() {
         groupDist: groupDistData,
         funcDist: funcDistData,
         topDiagnoses,
-        caseMixTrend
+        caseMixTrend,
+        complianceTrend: complianceTrendData
       }
     };
   }, [oasisUploads, dateRange, selectedGroup, selectedDiagnosis]);
@@ -188,12 +217,100 @@ export default function PDGMTrendDashboard() {
     return Array.from(diags).sort();
   }, [oasisUploads]);
 
+  const generatePredictions = async () => {
+    if (chartData.paymentTrend.length < 3) return;
+
+    setIsPredicting(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze PDGM payment trends and predict next 3 months.
+
+HISTORICAL DATA (last ${chartData.paymentTrend.length} months):
+${JSON.stringify(chartData.paymentTrend, null, 2)}
+
+Predict: average payment, case mix, assessment count for next 3 months. Include confidence level and key factors.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            predictions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  month: { type: "string" },
+                  predicted_payment: { type: "number" },
+                  predicted_case_mix: { type: "number" },
+                  predicted_count: { type: "number" },
+                  confidence: { type: "string" }
+                }
+              }
+            },
+            trend_direction: { type: "string" },
+            key_insights: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
+      setPredictions(result);
+    } catch (error) {
+      console.error("Prediction error:", error);
+    }
+    setIsPredicting(false);
+  };
+
+  const analyzeDrivers = async () => {
+    if (filteredData.length < 5) return;
+
+    setIsAnalyzingDrivers(true);
+    try {
+      const sampleData = filteredData.slice(0, 20).map(u => ({
+        payment: u.pdgm_data?.estimated_payment,
+        clinical_group: u.pdgm_data?.clinical_group,
+        functional_level: u.pdgm_data?.functional_level,
+        comorbidities: u.pdgm_data?.comorbidities?.length || 0,
+        admission_source: u.pdgm_data?.admission_source,
+        compliance_score: u.analysis_results?.compliance_score || 0
+      }));
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Identify top 5 drivers of payment variation in PDGM data.
+
+DATA SAMPLE:
+${JSON.stringify(sampleData, null, 2)}
+
+Return: driver name, impact level (high/medium/low), correlation, recommendation.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            key_drivers: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  driver: { type: "string" },
+                  impact: { type: "string" },
+                  correlation: { type: "string" },
+                  average_effect: { type: "string" },
+                  recommendation: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setDriverAnalysis(result);
+    } catch (error) {
+      console.error("Driver analysis error:", error);
+    }
+    setIsAnalyzingDrivers(false);
+  };
+
   const exportData = () => {
     const csv = [
-      ['Month', 'Assessments', 'Avg Payment', 'Avg Case Mix', 'Total Revenue'].join(','),
-      ...chartData.paymentTrend.map(d => 
-        [d.month, d.count, d.avgPayment, d.avgCaseMix, d.total].join(',')
-      )
+      ['Month', 'Assessments', 'Avg Payment', 'Avg Case Mix', 'Total Revenue', 'Compliance Rate'].join(','),
+      ...chartData.paymentTrend.map((d, idx) => {
+        const compliance = chartData.complianceTrend[idx]?.avgCompliance || 0;
+        return [d.month, d.count, d.avgPayment, d.avgCaseMix, d.total, compliance].join(',');
+      })
     ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -227,7 +344,7 @@ export default function PDGMTrendDashboard() {
               <TrendingUp className="w-5 h-5 text-blue-600" />
               PDGM Trend Analysis
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -235,6 +352,24 @@ export default function PDGMTrendDashboard() {
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={generatePredictions}
+                disabled={isPredicting || chartData.paymentTrend.length < 3}
+              >
+                {isPredicting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <TrendingUp className="w-4 h-4 mr-2" />}
+                Predict
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={analyzeDrivers}
+                disabled={isAnalyzingDrivers || filteredData.length < 5}
+              >
+                {isAnalyzingDrivers ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Activity className="w-4 h-4 mr-2" />}
+                Analyze Drivers
               </Button>
               <Button variant="outline" size="sm" onClick={exportData}>
                 <Download className="w-4 h-4 mr-2" />
@@ -349,18 +484,63 @@ export default function PDGMTrendDashboard() {
         </Card>
       </div>
 
-      {/* Payment Trend Chart */}
+      {/* AI Predictions */}
+      {predictions && (
+        <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-purple-600" />
+              AI Payment Predictions - Next 3 Months
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Badge className="bg-purple-600 text-white mb-2">
+              Trend: {predictions.trend_direction}
+            </Badge>
+            <div className="grid grid-cols-3 gap-3">
+              {predictions.predictions?.map((pred, idx) => (
+                <div key={idx} className="bg-white p-3 rounded-lg border">
+                  <p className="text-xs text-gray-500">{pred.month}</p>
+                  <p className="text-xl font-bold text-purple-700">${Math.round(pred.predicted_payment).toLocaleString()}</p>
+                  <p className="text-xs text-gray-600">~{pred.predicted_count} cases</p>
+                  <Badge variant="outline" className="text-xs mt-1">{pred.confidence}</Badge>
+                </div>
+              ))}
+            </div>
+            {predictions.key_insights?.length > 0 && (
+              <div className="bg-white p-3 rounded border">
+                <p className="text-sm font-semibold text-purple-900 mb-2">Key Insights:</p>
+                <ul className="space-y-1">
+                  {predictions.key_insights.map((insight, idx) => (
+                    <li key={idx} className="text-sm text-purple-800">• {insight}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Payment Trend with Predictions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Payment Trend Over Time</CardTitle>
+          <CardTitle className="text-lg">Payment Trend & Forecast</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData.paymentTrend}>
+            <LineChart data={[...chartData.paymentTrend, ...(predictions?.predictions?.map(p => ({
+              month: p.month,
+              avgPayment: p.predicted_payment,
+              count: p.predicted_count,
+              isPrediction: true
+            })) || [])]}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+              <Tooltip formatter={(value, name, props) => {
+                if (name === "avgPayment") return `$${value.toLocaleString()}${props.payload.isPrediction ? ' (predicted)' : ''}`;
+                return value;
+              }} />
               <Legend />
               <Line 
                 type="monotone" 
@@ -368,6 +548,7 @@ export default function PDGMTrendDashboard() {
                 stroke="#10b981" 
                 strokeWidth={2}
                 name="Avg Payment"
+                strokeDasharray={(entry) => entry.isPrediction ? "5 5" : "0"}
               />
               <Line 
                 type="monotone" 
@@ -380,6 +561,74 @@ export default function PDGMTrendDashboard() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* Compliance Rate Over Time */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">PDGM Compliance Rates</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={chartData.complianceTrend}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip formatter={(value) => `${value}%`} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="avgCompliance" 
+                stroke="#ef4444" 
+                strokeWidth={2}
+                name="Avg Compliance Score"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Key Drivers Analysis */}
+      {driverAnalysis && (
+        <Card className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-600" />
+              Key Payment Drivers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {driverAnalysis.key_drivers?.map((driver, idx) => (
+                <div key={idx} className="bg-white p-3 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-semibold text-gray-900">{driver.driver}</p>
+                    <Badge className={
+                      driver.impact === 'high' ? 'bg-red-100 text-red-800' :
+                      driver.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-blue-100 text-blue-800'
+                    }>
+                      {driver.impact} impact
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div className="text-sm">
+                      <span className="text-gray-600">Correlation:</span>
+                      <span className="ml-2 font-medium">{driver.correlation}</span>
+                    </div>
+                    <div className="text-sm">
+                      <span className="text-gray-600">Avg Effect:</span>
+                      <span className="ml-2 font-medium">{driver.average_effect}</span>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-2 rounded text-sm">
+                    <p className="text-blue-900">{driver.recommendation}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Case Mix Trend */}
       <Card>
