@@ -222,13 +222,13 @@ export default function PDGMTrendDashboard() {
 
     setIsPredicting(true);
     try {
+      // Use only last 6 months for prediction
+      const recentData = chartData.paymentTrend.slice(-6).map(d => 
+        `${d.month}: $${d.avgPayment}, ${d.count} cases`
+      ).join('; ');
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze PDGM payment trends and predict next 3 months.
-
-HISTORICAL DATA (last ${chartData.paymentTrend.length} months):
-${JSON.stringify(chartData.paymentTrend, null, 2)}
-
-Predict: average payment, case mix, assessment count for next 3 months. Include confidence level and key factors.`,
+        prompt: `Predict PDGM payment for next 3 months. Recent: ${recentData}. Return prediction for each month with payment, count, confidence.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -239,7 +239,6 @@ Predict: average payment, case mix, assessment count for next 3 months. Include 
                 properties: {
                   month: { type: "string" },
                   predicted_payment: { type: "number" },
-                  predicted_case_mix: { type: "number" },
                   predicted_count: { type: "number" },
                   confidence: { type: "string" }
                 }
@@ -262,22 +261,16 @@ Predict: average payment, case mix, assessment count for next 3 months. Include 
 
     setIsAnalyzingDrivers(true);
     try {
-      const sampleData = filteredData.slice(0, 20).map(u => ({
-        payment: u.pdgm_data?.estimated_payment,
-        clinical_group: u.pdgm_data?.clinical_group,
-        functional_level: u.pdgm_data?.functional_level,
-        comorbidities: u.pdgm_data?.comorbidities?.length || 0,
-        admission_source: u.pdgm_data?.admission_source,
-        compliance_score: u.analysis_results?.compliance_score || 0
-      }));
+      // Aggregate summary instead of raw data
+      const summary = {
+        avgPayment: stats.avgPayment,
+        totalCases: filteredData.length,
+        groups: chartData.groupDist.slice(0, 5).map(g => `${g.name}: ${g.value}`).join(', '),
+        funcLevels: chartData.funcDist.slice(0, 3).map(f => `${f.name}: ${f.value}`).join(', ')
+      };
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Identify top 5 drivers of payment variation in PDGM data.
-
-DATA SAMPLE:
-${JSON.stringify(sampleData, null, 2)}
-
-Return: driver name, impact level (high/medium/low), correlation, recommendation.`,
+        prompt: `Identify top 5 PDGM payment drivers. Avg: $${summary.avgPayment}, Cases: ${summary.totalCases}. Groups: ${summary.groups}. Functional: ${summary.funcLevels}. Return driver, impact, correlation, effect, recommendation.`,
         response_json_schema: {
           type: "object",
           properties: {
