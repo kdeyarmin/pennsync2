@@ -791,13 +791,24 @@ export default function OASISAnalyzer() {
         ? `${selectedPatient.first_name} ${selectedPatient.last_name}`
         : patientName;
       
+      // Map assessment type abbreviations to full names
+      const mapAssessmentType = (type) => {
+        if (!type) return 'Other';
+        const typeUpper = type.toUpperCase().trim();
+        if (typeUpper === 'SOC' || typeUpper.includes('START OF CARE')) return 'Start of Care';
+        if (typeUpper === 'ROC' || typeUpper.includes('RESUMPTION')) return 'Resumption of Care';
+        if (typeUpper === 'RECERT' || typeUpper.includes('RECERTIFICATION')) return 'Recertification';
+        if (typeUpper === 'DISCHARGE' || typeUpper.includes('DISCHARGE')) return 'Discharge';
+        return type; // Return as-is if no match
+      };
+      
       const savedOASIS = await saveOASISMutation.mutateAsync({
         patient_id: patientIdToUse || null,
         patient_name: patientFullName,
         file_url: uploadedFileUrl,
         file_name: file?.name || 'OASIS Document',
         assessment_date: analysisResults.pdgm_data?.patient_info?.assessment_date || new Date().toISOString().split('T')[0],
-        assessment_type: analysisResults.pdgm_data?.patient_info?.assessment_type || 'Other',
+        assessment_type: mapAssessmentType(analysisResults.pdgm_data?.patient_info?.assessment_type),
         analysis_id: analysisId,
         pdgm_data: pdgmData,
         analysis_results: analysisResults,
