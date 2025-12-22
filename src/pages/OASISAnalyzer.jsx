@@ -1885,12 +1885,13 @@ Return JSON: {"validation_passed": true/false, "critical_issues": [{"type": "str
                   {file ? file.name : "No file selected"}
                 </p>
                 <p className="text-xs text-gray-400 mb-4">Upload your OASIS PDF for accuracy review</p>
-                <label htmlFor="oasis-upload">
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose PDF File
-                  </Button>
-                </label>
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => document.getElementById('oasis-upload').click()}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Choose PDF File
+                </Button>
               </div>
 
               {file && (
