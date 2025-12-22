@@ -802,14 +802,51 @@ export default function OASISAnalyzer() {
         return type; // Return as-is if no match
       };
       
-      // Sanitize data to remove circular references
+      // Deep sanitize to remove circular references and non-serializable objects
       const sanitizeData = (obj) => {
-        try {
-          return JSON.parse(JSON.stringify(obj));
-        } catch (e) {
-          console.error("Failed to sanitize data:", e);
-          return {};
-        }
+        if (!obj) return null;
+        
+        const seen = new WeakSet();
+        const clean = (value) => {
+          if (value === null || value === undefined) return value;
+          
+          // Handle primitives
+          if (typeof value !== 'object') return value;
+          
+          // Detect circular references
+          if (seen.has(value)) return '[Circular Reference]';
+          seen.add(value);
+          
+          // Handle arrays
+          if (Array.isArray(value)) {
+            return value.map(item => clean(item));
+          }
+          
+          // Handle objects - filter out DOM elements and React internals
+          const cleaned = {};
+          for (const key in value) {
+            // Skip React internal properties and DOM elements
+            if (key.startsWith('__react') || key.startsWith('_react') || 
+                key === 'nativeEvent' || key === 'currentTarget' || key === 'target') {
+              continue;
+            }
+            
+            try {
+              const val = value[key];
+              // Skip DOM elements and functions
+              if (val instanceof Element || val instanceof Node || typeof val === 'function') {
+                continue;
+              }
+              cleaned[key] = clean(val);
+            } catch (e) {
+              // Skip problematic properties
+              continue;
+            }
+          }
+          return cleaned;
+        };
+        
+        return clean(obj);
       };
       
       const savedOASIS = await saveOASISMutation.mutateAsync({
@@ -823,12 +860,12 @@ export default function OASISAnalyzer() {
         pdgm_data: sanitizeData(pdgmData),
         analysis_results: sanitizeData(analysisResults),
         scores: {
-          overall: analysisResults.overall_score,
-          accuracy: analysisResults.accuracy_score,
-          compliance: analysisResults.compliance_score,
-          revenue_optimization: analysisResults.revenue_optimization_score
+          overall: analysisResults.overall_score || 0,
+          accuracy: analysisResults.accuracy_score || 0,
+          compliance: analysisResults.compliance_score || 0,
+          revenue_optimization: analysisResults.revenue_optimization_score || 0
         },
-        estimated_payment: originalPayment,
+        estimated_payment: originalPayment || 0,
         status: 'analyzed'
       });
 
