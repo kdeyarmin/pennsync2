@@ -12,8 +12,9 @@ const EASTERN_TIMEZONE = 'America/New_York';
 export const formatEastern = (date, formatStr = 'MMM d, yyyy HH:mm') => {
   if (!date) return '';
   try {
-    // Use formatInTimeZone directly to convert UTC to Eastern Time
-    return formatInTimeZone(date, EASTERN_TIMEZONE, formatStr);
+    // Parse the date and ensure it's treated as UTC before converting to Eastern
+    const utcDate = typeof date === 'string' ? new Date(date + (date.includes('Z') ? '' : 'Z')) : new Date(date);
+    return formatInTimeZone(utcDate, EASTERN_TIMEZONE, formatStr);
   } catch (error) {
     console.error('Error formatting date:', error);
     return '';
