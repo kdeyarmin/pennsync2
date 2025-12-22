@@ -621,9 +621,8 @@ export default function OASISAnalyzer() {
     }
 
     // DOB Verification (CRITICAL - can add or subtract confidence)
-    let medicareMatch = false;
     let addressMatch = false;
-    
+
     if (extractedDOB && patient.date_of_birth) {
       const normalizeDOB = (dob) => {
         const cleaned = dob.replace(/[^\d]/g, '');
@@ -651,23 +650,6 @@ export default function OASISAnalyzer() {
           confidence -= 20;
           matchFactors.push('⚠ Date of birth does NOT match');
         }
-      }
-    }
-    
-    // Medicare ID Verification (HIGH VALUE)
-    const extractedMedicareId = pdgmData?.patient_info?.medicare_number || analysisResults?.pdgm_data?.patient_info?.medicare_number;
-    if (extractedMedicareId && extractedMedicareId !== 'Not found' && patient.medical_record_number) {
-      const normalizeMedicare = (id) => id.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-      const extractedNorm = normalizeMedicare(extractedMedicareId);
-      const patientNorm = normalizeMedicare(patient.medical_record_number);
-      
-      if (extractedNorm === patientNorm) {
-        confidence += 35; // Even higher than DOB - Medicare ID is unique
-        medicareMatch = true;
-        matchFactors.push('✓ Medicare ID verified');
-      } else if (extractedNorm.length >= 4 && patientNorm.includes(extractedNorm.substring(0, 4))) {
-        confidence += 15;
-        matchFactors.push('Partial Medicare ID match');
       }
     }
     
@@ -747,13 +729,12 @@ export default function OASISAnalyzer() {
     else if (confidence >= 40) matchQuality = 'fair';
     
     // Count verified identifiers for additional context
-    const verifiedIdentifiers = [dobMatch, medicareMatch, phoneMatch, addressMatch].filter(Boolean).length;
-    
+    const verifiedIdentifiers = [dobMatch, phoneMatch, addressMatch].filter(Boolean).length;
+
     return { 
       confidence: Math.round(confidence), 
       matchFactors, 
       dobMatch,
-      medicareMatch,
       addressMatch,
       phoneMatch,
       matchQuality,
@@ -860,6 +841,7 @@ export default function OASISAnalyzer() {
   };
 
   // Load saved OASIS for viewing
+  // Load saved OASIS for viewing
   const handleLoadSavedOASIS = (oasisUpload) => {
     setAnalysisResults(oasisUpload.analysis_results);
     setPdgmData(oasisUpload.pdgm_data);
@@ -936,7 +918,6 @@ export default function OASISAnalyzer() {
             patient_last_name: { type: "string", description: "Patient's LAST NAME only - separate field for matching. Look for 'Last Name:', 'Surname:' or extract from full name." },
             patient_dob: { type: "string", description: "Date of birth - look for 'DOB:', 'Date of Birth:', birth date field. Format MM/DD/YYYY or any date format found." },
             patient_gender: { type: "string", description: "Gender - M, F, Male, Female. Look for 'Gender:', 'Sex:' checkbox or field." },
-            medicare_number: { type: "string", description: "Medicare number or ID - look for 'Medicare:', 'Medicare #:', 'MBI:', 'ID:', 'Medical Record Number:', 'MRN:' near top of form. Extract full number." },
             patient_address: { type: "string", description: "Patient home address - look for 'Address:', 'Street:', 'Home Address:' on patient demographics section." },
 
             // Assessment info
@@ -972,9 +953,7 @@ export default function OASISAnalyzer() {
               description: "RAW TEXT FROM DIAGNOSIS SECTION - Copy the entire text from any section labeled with 'Diagnosis', 'ICD-10', 'M1021', 'M1023' verbatim. This ensures we capture everything even if codes are unclear."
             },
 
-            // Admission source and timing
-            m1000_admission_source: { type: "string", description: "M1000 value 1-6 or description" },
-            m1005_inpatient_facility: { type: "string", description: "M1005 inpatient facility type" },
+            // Episode timing
             episode_timing: { type: "string", description: "Early (0-29 days) or Late (30+ days)" },
 
             // Functional status - ADLs
@@ -1019,9 +998,6 @@ export default function OASISAnalyzer() {
             // Medications
             high_risk_medications: { type: "string", description: "High risk drugs mentioned" },
             medication_count: { type: "string", description: "Number of medications if stated" },
-
-            // Homebound status
-            homebound_reason: { type: "string", description: "Reason patient is homebound" },
 
             // Full text for AI analysis
             clinical_narrative: { type: "string", description: "Any narrative clinical notes or comments" }
@@ -1189,7 +1165,6 @@ Return JSON:
       Name: ${extractedPatientName}
       DOB: ${output.patient_dob || '?'}
       Gender: ${output.patient_gender || '?'}
-      Medicare #: ${output.medicare_number || 'N/A'}
 
       ASSESSMENT INFORMATION:
       Date (M0090): ${output.assessment_date || '?'}
@@ -1201,7 +1176,6 @@ Return JSON:
       M1021 PRIMARY DIAGNOSIS:
       Code: ${primaryDxCode}
       Description: ${primaryDxDesc}
-      Severity: ${output.diagnosis_severity || 'Not specified'}
 
       M1023 OTHER DIAGNOSES:
       ${otherDx}
@@ -1215,8 +1189,6 @@ Return JSON:
       ==========================================
 
       ADMISSION/EPISODE:
-      M1000 Admission Source: ${output.m1000_admission_source || '?'}
-      M1005 Inpatient Facility: ${output.m1005_inpatient_facility || 'N/A'}
       M0110 Episode Timing: ${output.m0110_episode_timing || '?'}
       SOC Date (M0030): ${output.soc_date || '?'}
       Referral Date (M0104): ${output.referral_date || '?'}
@@ -1266,9 +1238,6 @@ Return JSON:
       High-Risk Medications: ${output.high_risk_medications || 'None noted'}
       Medication Count: ${output.medication_count || '?'}
 
-      HOMEBOUND STATUS:
-      Reason: ${output.homebound_reason || 'Not documented'}
-
       CLINICAL NARRATIVE:
       ${output.clinical_narrative || 'No narrative extracted'}`;
       }
@@ -1291,15 +1260,8 @@ Return JSON:
         return isNaN(num) ? 0 : num;
       };
 
-      // Determine admission source with improved detection
+      // Default admission source
       let admissionSource = 'community';
-      const m1000 = String(output?.m1000_admission_source || '').toLowerCase();
-      const m1005 = String(output?.m1005_inpatient_facility || '').toLowerCase();
-      if (m1000.includes('2') || m1000.includes('hospital') || m1000.includes('3') || m1000.includes('snf') || 
-          m1000.includes('4') || m1000.includes('institutional') || m1000.includes('inpatient') ||
-          m1005.includes('hospital') || m1005.includes('snf') || m1005.includes('rehab') || m1005.includes('ltch')) {
-        admissionSource = 'institutional';
-      }
 
       // Determine episode timing from M0110 or calculated from dates
       let episodeTiming = 'early';
@@ -1389,7 +1351,6 @@ Return JSON:
         primary_diagnosis: primaryDiagnosis,
         primary_diagnosis_code: primaryDxCode,
         primary_diagnosis_description: primaryDxDescription,
-        diagnosis_severity: output?.diagnosis_severity || null,
         comorbidities: [...parseComorbidities(allSecondaryDx), ...additionalCodes].filter((v, i, a) => a.indexOf(v) === i), // Deduplicate
         raw_diagnosis_data: {
           m1021_found: !!output?.m1021_primary_diagnosis_code,
@@ -1448,7 +1409,6 @@ Return JSON:
           last_name: output?.patient_last_name || null,
           dob: output?.patient_dob || "Not found",
           gender: output?.patient_gender || "Not specified",
-          medicare_number: output?.medicare_number || "Not found",
           address: output?.patient_address || null,
           assessment_date: output?.assessment_date || new Date().toISOString().split('T')[0], 
           assessment_type: output?.assessment_type || "Unknown",
