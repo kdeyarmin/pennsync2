@@ -49,7 +49,8 @@ import {
   Activity,
   BarChart3,
   Target,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 
@@ -314,7 +315,90 @@ export default function AnalyticsDashboard() {
     }
   };
 
-  // Export report
+  // Export report as PDF
+  const handleExportPDF = async () => {
+    try {
+      const { exportToPDF } = await import('@/components/utils/pdfExporter');
+      
+      const content = [
+        { type: 'heading', text: 'Performance Analytics Report', size: 18 },
+        { type: 'text', text: `Date Range: ${startDate} to ${endDate}` },
+        { type: 'text', text: `User: ${selectedUser === 'all' ? 'All Users' : selectedUser}` },
+        { type: 'text', text: `Generated: ${new Date().toLocaleString()}` },
+        { type: 'spacer', height: 10 },
+        { type: 'line' },
+        { type: 'spacer', height: 5 },
+        
+        { type: 'heading', text: 'Key Performance Metrics', size: 14 },
+        { type: 'spacer', height: 5 },
+        {
+          type: 'table',
+          headers: ['Metric', 'Value'],
+          rows: [
+            ['Average Documentation Time', `${metrics.avgDocTime} minutes`],
+            ['Average Compliance Score', `${metrics.avgComplianceScore}%`],
+            ['AI Utilization Rate', `${metrics.aiUtilizationRate}%`],
+            ['Average Quality Score', `${metrics.avgQualityScore}%`],
+            ['Total Notes Generated', metrics.totalNotes],
+            ['Total Audits Performed', metrics.totalAudits],
+            ['Total Visits Documented', metrics.totalVisits],
+            ['AI Actions Count', metrics.aiActionsCount]
+          ]
+        },
+        
+        { type: 'spacer', height: 10 },
+        { type: 'line' },
+        { type: 'spacer', height: 5 },
+        
+        { type: 'heading', text: 'AI Enhancement Impact', size: 14 },
+        { type: 'spacer', height: 5 },
+        {
+          type: 'table',
+          headers: ['Metric', 'Value'],
+          rows: [
+            ['Notes Tracked with Compliance Data', metrics.notesWithComplianceTracking],
+            ['Avg Compliance Before AI Enhancement', `${metrics.avgRoughCompliance}%`],
+            ['Avg Compliance After AI Enhancement', `${metrics.avgEnhancedCompliance}%`],
+            ['Average Compliance Improvement', `+${metrics.avgComplianceImprovement}%`]
+          ]
+        },
+        
+        { type: 'spacer', height: 10 },
+        { type: 'line' },
+        { type: 'spacer', height: 5 },
+        
+        { type: 'heading', text: 'User Performance Summary', size: 14 },
+        { type: 'spacer', height: 5 }
+      ];
+
+      if (isAdmin && userPerformance.length > 0) {
+        content.push({
+          type: 'table',
+          headers: ['Nurse', 'Notes', 'Avg Time', 'Compliance', 'Quality', 'AI Usage'],
+          rows: userPerformance.slice(0, 10).map(user => [
+            user.name,
+            user.notesCount,
+            `${user.avgDocTime} min`,
+            `${user.avgCompliance}%`,
+            `${user.avgQuality}%`,
+            `${user.aiUtilization}%`
+          ])
+        });
+      }
+
+      await exportToPDF({
+        filename: `performance-analytics-${startDate}-to-${endDate}.pdf`,
+        title: 'Performance Analytics Report',
+        subtitle: `${startDate} to ${endDate}`,
+        content
+      });
+    } catch (error) {
+      console.error('PDF export error:', error);
+      alert('Failed to export PDF: ' + error.message);
+    }
+  };
+
+  // Export report as JSON
   const handleExportReport = () => {
     try {
       if (!metrics || !trendData || trendData.length === 0) {
@@ -379,10 +463,16 @@ export default function AnalyticsDashboard() {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Performance Analytics</h1>
           <p className="text-sm text-gray-600 mt-1">Track metrics, trends, and outcomes</p>
         </div>
-        <Button onClick={handleExportReport} className="bg-blue-600 hover:bg-blue-700">
-          <Download className="w-4 h-4 mr-2" />
-          Export Report
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700">
+            <Download className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+          <Button onClick={handleExportReport} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Export JSON
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

@@ -86,24 +86,133 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
 
       if (exportFormat === 'pdf') {
-        // Generate comprehensive PDF using SDK
-        const { generateComprehensiveReport } = await import('@/functions/generateComprehensiveReport');
+        // Generate PDF using utility
+        const { exportToPDF } = await import('@/components/utils/pdfExporter');
         
-        const response = await generateComprehensiveReport({
-          reportType,
-          dateRange,
-          includeCharts: false
-        });
+        const filteredVisits = visits.filter(v => 
+          v.visit_date >= startDate && v.visit_date <= endDate
+        );
+        
+        const filteredIncidents = incidents.filter(i =>
+          i.incident_date >= startDate && i.incident_date <= endDate
+        );
 
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `penn-sync-${reportType}-report-${endDate}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+        let pdfContent = [];
+        let reportTitle = '';
+
+        switch (reportType) {
+          case 'productivity':
+            reportTitle = 'Productivity Report';
+            const prodData = generateProductivityReportData(filteredVisits, users);
+            pdfContent = [
+              { type: 'heading', text: 'Nurse Productivity Summary', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Nurse', 'Total Visits', 'Completed', 'Rate %', 'Enhancements', 'Time Saved (hrs)'],
+                rows: prodData.map(d => [d.name, d.totalVisits, d.completedVisits, d.completionRate, d.noteConversions, d.timeSavedHours])
+              }
+            ];
+            break;
+
+          case 'quality':
+            reportTitle = 'Quality Metrics Report';
+            const qualityData = generateQualityReportData(filteredVisits, filteredIncidents, patients);
+            pdfContent = [
+              { type: 'heading', text: 'Overall Metrics', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Metric', 'Value'],
+                rows: [
+                  ['Total Visits', qualityData.totalVisits],
+                  ['Completed Visits', qualityData.completedVisits],
+                  ['Completion Rate', `${qualityData.completionRate}%`],
+                  ['Active Patients', qualityData.activePatients]
+                ]
+              },
+              { type: 'spacer', height: 10 },
+              { type: 'heading', text: 'Patient Outcomes', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Metric', 'Value'],
+                rows: [
+                  ['Falls', qualityData.falls],
+                  ['Fall Rate (per 1000 visits)', qualityData.fallRate],
+                  ['Hospitalizations', qualityData.hospitalizations],
+                  ['Hospitalization Rate', `${qualityData.hospitalizationRate}%`],
+                  ['Medication Errors', qualityData.medErrors]
+                ]
+              }
+            ];
+            break;
+
+          case 'financial':
+            reportTitle = 'Financial Report';
+            const finData = generateDetailedFinancialData(filteredVisits, patients);
+            pdfContent = [
+              { type: 'heading', text: 'Revenue Analysis', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Visit Type', 'Count', 'Revenue/Visit', 'Total Revenue'],
+                rows: finData.visitTypes.map(vt => [
+                  vt.type.replace(/_/g, ' '),
+                  vt.count,
+                  `$${Math.round(vt.revenue / vt.count)}`,
+                  `$${vt.revenue}`
+                ])
+              },
+              { type: 'spacer', height: 10 },
+              { type: 'heading', text: 'Penn Sync ROI', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Metric', 'Value'],
+                rows: [
+                  ['Total Estimated Revenue', `$${finData.totalRevenue.toLocaleString()}`],
+                  ['Cost Savings from Efficiency', `$${Math.round(finData.costSavings).toLocaleString()}`],
+                  ['ROI Percentage', `${finData.roi}%`]
+                ]
+              }
+            ];
+            break;
+
+          case 'staff_comparison':
+            reportTitle = 'Staff Performance Comparison';
+            const staffData = generateStaffComparisonData(filteredVisits, users);
+            pdfContent = [
+              { type: 'heading', text: 'Staff Rankings', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Rank', 'Nurse', 'Visits', 'Completion %', 'Quality %', 'Avg/Day'],
+                rows: staffData.map((d, idx) => [
+                  `#${idx + 1}`,
+                  d.name,
+                  d.totalVisits,
+                  `${d.completionRate}%`,
+                  `${d.docQuality}%`,
+                  d.avgVisitsPerDay
+                ])
+              }
+            ];
+            break;
+
+          default:
+            reportTitle = 'Penn Sync Report';
+            pdfContent = [
+              { type: 'text', text: 'Report data not available for PDF export in this format.' }
+            ];
+        }
+
+        await exportToPDF({
+          filename: `penn-sync-${reportType}-report-${endDate}.pdf`,
+          title: reportTitle,
+          subtitle: `${startDate} to ${endDate}`,
+          content: pdfContent
+        });
       } else {
         // Original CSV export
         const filteredVisits = visits.filter(v => 
@@ -179,29 +288,52 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     initialData: [],
   });
 
-  // Productivity Report
-  const generateProductivityReport = (visits, users, startDate, endDate) => {
-    const nurseStats = {};
-    
-    users.filter(u => u.role === 'user').forEach(nurse => {
+  // Helper functions for PDF data
+  const generateProductivityReportData = (visits, users) => {
+    return users.filter(u => u.role === 'user').map(nurse => {
       const stats = calculateNurseStats(nurse.email, {
         visits,
         noteConversions: allNoteConversions,
         dateRange: parseInt(dateRange)
       });
       
-      nurseStats[nurse.email] = {
+      return {
         name: nurse.full_name || nurse.email,
         ...stats
       };
     });
+  };
+
+  const generateQualityReportData = (visits, incidents, patients) => {
+    const completedVisits = visits.filter(v => v.status === 'completed');
+    const activePatients = patients.filter(p => p.status === 'active').length;
+    const falls = incidents.filter(i => i.incident_type === 'fall').length;
+    const hospitalizations = incidents.filter(i => i.incident_type === 'hospitalized').length;
+    const medErrors = incidents.filter(i => i.incident_type === 'medication_error').length;
+    
+    return {
+      totalVisits: visits.length,
+      completedVisits: completedVisits.length,
+      completionRate: visits.length > 0 ? Math.round((completedVisits.length / visits.length) * 100) : 0,
+      activePatients,
+      falls,
+      fallRate: visits.length > 0 ? Math.round((falls / visits.length) * 1000) : 0,
+      hospitalizations,
+      hospitalizationRate: activePatients > 0 ? Math.round((hospitalizations / activePatients) * 100) : 0,
+      medErrors
+    };
+  };
+
+  // Productivity Report CSV
+  const generateProductivityReport = (visits, users, startDate, endDate) => {
+    const data = generateProductivityReportData(visits, users);
 
     let content = `Penn Sync Productivity Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `Nurse,Total Visits,Completed,Completion Rate %,Note Enhancements,Time Saved (hours)\n`;
     
-    Object.values(nurseStats).forEach(stats => {
+    data.forEach(stats => {
       content += `${stats.name},${stats.totalVisits},${stats.completedVisits},${stats.completionRate},${stats.noteConversions},${stats.timeSavedHours}\n`;
     });
 
@@ -211,32 +343,24 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     };
   };
 
-  // Quality Report
+  // Quality Report CSV
   const generateQualityReport = (visits, incidents, patients, startDate, endDate) => {
-    const completedVisits = visits.filter(v => v.status === 'completed');
-    const activePatients = patients.filter(p => p.status === 'active').length;
-    
-    const falls = incidents.filter(i => i.incident_type === 'fall').length;
-    const hospitalizations = incidents.filter(i => i.incident_type === 'hospitalized').length;
-    const medErrors = incidents.filter(i => i.incident_type === 'medication_error').length;
-    
-    const fallRate = visits.length > 0 ? Math.round((falls / visits.length) * 1000) : 0;
-    const hospitalizationRate = activePatients > 0 ? Math.round((hospitalizations / activePatients) * 100) : 0;
+    const data = generateQualityReportData(visits, incidents, patients);
 
     let content = `Penn Sync Quality Metrics Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `OVERALL METRICS\n`;
-    content += `Total Visits,${visits.length}\n`;
-    content += `Completed Visits,${completedVisits.length}\n`;
-    content += `Completion Rate,${visits.length > 0 ? Math.round((completedVisits.length / visits.length) * 100) : 0}%\n`;
-    content += `Active Patients,${activePatients}\n\n`;
+    content += `Total Visits,${data.totalVisits}\n`;
+    content += `Completed Visits,${data.completedVisits}\n`;
+    content += `Completion Rate,${data.completionRate}%\n`;
+    content += `Active Patients,${data.activePatients}\n\n`;
     content += `PATIENT OUTCOMES\n`;
-    content += `Falls,${falls}\n`;
-    content += `Fall Rate (per 1000 visits),${fallRate}\n`;
-    content += `Hospitalizations,${hospitalizations}\n`;
-    content += `Hospitalization Rate (per 100 patients),${hospitalizationRate}\n`;
-    content += `Medication Errors,${medErrors}\n`;
+    content += `Falls,${data.falls}\n`;
+    content += `Fall Rate (per 1000 visits),${data.fallRate}\n`;
+    content += `Hospitalizations,${data.hospitalizations}\n`;
+    content += `Hospitalization Rate (per 100 patients),${data.hospitalizationRate}\n`;
+    content += `Medication Errors,${data.medErrors}\n`;
 
     return {
       content,
