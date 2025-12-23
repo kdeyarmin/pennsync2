@@ -71,6 +71,7 @@ import UserActivityLog from "../components/admin/UserActivityLog";
 import NoteConversionReport from "../components/admin/NoteConversionReport";
 import AIAutoTagger from "../components/admin/AIAutoTagger";
 import AIKPIReportGenerator from "../components/admin/AIKPIReportGenerator";
+import AnnouncementManager from "../components/admin/AnnouncementManager";
 import { calculateStats } from "@/components/utils/statsCalculator";
 
 export default function AdminDashboard() {
@@ -657,6 +658,7 @@ export default function AdminDashboard() {
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-6">
           <SystemSettings currentUser={currentUser} />
+          <AnnouncementManager />
         </TabsContent>
       </Tabs>
 

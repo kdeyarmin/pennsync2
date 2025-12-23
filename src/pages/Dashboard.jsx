@@ -24,6 +24,7 @@ import AITrainingRecommendations from "../components/training/AITrainingRecommen
 import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
 import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSupport";
 import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
+import AnnouncementsWidget from "../components/dashboard/AnnouncementsWidget";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
 
 export default function Dashboard() {
