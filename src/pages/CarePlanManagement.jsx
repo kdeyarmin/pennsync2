@@ -31,6 +31,8 @@ import {
 import AICarePlanRecommendations from "../components/carePlan/AICarePlanRecommendations";
 import AutomatedTaskGenerator from "../components/carePlan/AutomatedTaskGenerator";
 import CarePlanTimeline from "../components/carePlan/CarePlanTimeline";
+import AIEducationRecommender from "../components/carePlan/AIEducationRecommender";
+import EducationTracker from "../components/carePlan/EducationTracker";
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
@@ -285,20 +287,33 @@ export default function CarePlanManagement() {
 
       {/* AI Tools Section */}
       {selectedPatient && showAITools && (
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <AICarePlanRecommendations
-            patient={selectedPatient}
-            visits={patientVisits}
-            existingCarePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
-            onAcceptRecommendation={handleAcceptRecommendation}
-          />
-          <AutomatedTaskGenerator
-            patient={selectedPatient}
-            carePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
-            onTasksGenerated={() => {
-              alert('Tasks created successfully!');
-            }}
-          />
+        <div className="space-y-6 mb-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <AICarePlanRecommendations
+              patient={selectedPatient}
+              visits={patientVisits}
+              existingCarePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
+              onAcceptRecommendation={handleAcceptRecommendation}
+            />
+            <AutomatedTaskGenerator
+              patient={selectedPatient}
+              carePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
+              onTasksGenerated={() => {
+                queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
+                alert('Tasks created successfully!');
+              }}
+            />
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <AIEducationRecommender
+              patient={selectedPatient}
+              carePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
+              onAssignEducation={() => {
+                queryClient.invalidateQueries({ queryKey: ['patientEducation', selectedPatient.id] });
+              }}
+            />
+            <EducationTracker patient={selectedPatient} />
+          </div>
         </div>
       )}
 
