@@ -32,14 +32,11 @@ import AIPatientSimulation from "../components/training/AIPatientSimulation";
 import SkillGapRemediationSection from "../components/training/SkillGapRemediationSection";
 import StateSurveyVideos from "../components/training/StateSurveyVideos";
 import EducationVideos from "../components/training/EducationVideos";
+import AIPersonalizedTrainingHub from "../components/training/AIPersonalizedTrainingHub";
+import TrainingProgressDashboard from "../components/training/TrainingProgressDashboard";
+import StaffEducationComplianceReport from "../components/training/StaffEducationComplianceReport";
 
 export default function StaffTrainingHub() {
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
-  const isAdmin = currentUser?.role === 'admin';
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [skillGaps, setSkillGaps] = useState([]);
@@ -49,6 +46,8 @@ export default function StaffTrainingHub() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   const { data: trainingProgress = [] } = useQuery({
     queryKey: ['trainingProgress', currentUser?.email],
@@ -183,9 +182,33 @@ export default function StaffTrainingHub() {
         </Card>
       </div>
 
-      {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-8 w-full mb-6">
+      {/* AI-Powered Training Hub */}
+      {isAdmin ? (
+        <Tabs defaultValue="compliance" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="compliance">Compliance Reports</TabsTrigger>
+            <TabsTrigger value="staff">Staff Performance</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="compliance">
+            <StaffEducationComplianceReport />
+          </TabsContent>
+
+          <TabsContent value="staff">
+            {currentUser && <TrainingProgressDashboard nurseEmail={currentUser.email} />}
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <Tabs defaultValue="aipath" className="w-full">
+          <TabsList className="grid grid-cols-10 w-full mb-6">
+            <TabsTrigger value="aipath" className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-indigo-50 data-[state=active]:bg-purple-100">
+              <Star className="w-4 h-4" />
+              <span className="hidden sm:inline">AI Path</span>
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Progress</span>
+            </TabsTrigger>
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -218,9 +241,19 @@ export default function StaffTrainingHub() {
             <Play className="w-4 h-4" />
             <span className="hidden sm:inline">Simulate</span>
           </TabsTrigger>
-        </TabsList>
+          </TabsList>
 
-        {/* State Survey Preparation Tab */}
+          {/* AI Personalized Training Path */}
+          <TabsContent value="aipath">
+            {currentUser && <AIPersonalizedTrainingHub nurseEmail={currentUser.email} />}
+          </TabsContent>
+
+          {/* Training Progress Dashboard */}
+          <TabsContent value="progress">
+            {currentUser && <TrainingProgressDashboard nurseEmail={currentUser.email} />}
+          </TabsContent>
+
+          {/* State Survey Preparation Tab */}
         <TabsContent value="survey">
           <StateSurveyVideos />
         </TabsContent>
@@ -485,7 +518,8 @@ export default function StaffTrainingHub() {
             </div>
           </div>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      )}
     </div>
   );
 }
