@@ -78,7 +78,10 @@ For each issue found, provide:
 - Reimbursement impact ($$ estimate if applicable)
 - Quality measure impact
 - Compliance risk level
-- Detailed explanation of why this matters`;
+- Detailed explanation of why this matters
+- CMS regulation/guideline reference with link
+- Plain-language explanation of the rule
+- Specific do's and don'ts examples`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -108,7 +111,14 @@ For each issue found, provide:
                   severity: {
                     type: "string",
                     enum: ["critical", "high", "medium", "low"]
-                  }
+                  },
+                  cms_regulation: { type: "string" },
+                  cms_reference_link: { type: "string" },
+                  plain_language_explanation: { type: "string" },
+                  documentation_dos: { type: "array", items: { type: "string" } },
+                  documentation_donts: { type: "array", items: { type: "string" } },
+                  compliant_example: { type: "string" },
+                  non_compliant_example: { type: "string" }
                 }
               }
             },
@@ -154,7 +164,12 @@ For each issue found, provide:
                   audit_likelihood: {
                     type: "string",
                     enum: ["low", "medium", "high"]
-                  }
+                  },
+                  cms_regulation: { type: "string" },
+                  cms_reference_link: { type: "string" },
+                  plain_language_explanation: { type: "string" },
+                  documentation_dos: { type: "array", items: { type: "string" } },
+                  documentation_donts: { type: "array", items: { type: "string" } }
                 }
               }
             },
@@ -166,8 +181,14 @@ For each issue found, provide:
                   m_item_code: { type: "string" },
                   why_it_matters: { type: "string" },
                   cms_requirement: { type: "string" },
+                  cms_reference_link: { type: "string" },
+                  plain_language_explanation: { type: "string" },
                   common_mistakes: { type: "array", items: { type: "string" } },
-                  best_practice: { type: "string" }
+                  best_practice: { type: "string" },
+                  documentation_dos: { type: "array", items: { type: "string" } },
+                  documentation_donts: { type: "array", items: { type: "string" } },
+                  compliant_example: { type: "string" },
+                  non_compliant_example: { type: "string" }
                 }
               }
             }
@@ -316,6 +337,74 @@ For each issue found, provide:
                           <p className="text-gray-700">{issue.clinical_evidence}</p>
                         </div>
 
+                        {issue.cms_regulation && (
+                          <div className="bg-indigo-50 p-3 rounded mb-3 border border-indigo-200">
+                            <p className="font-semibold text-xs text-indigo-900 mb-1 flex items-center gap-2">
+                              <Shield className="w-3 h-3" />
+                              CMS Regulation
+                            </p>
+                            <p className="text-xs text-indigo-800 mb-2">{issue.cms_regulation}</p>
+                            {issue.cms_reference_link && (
+                              <a 
+                                href={issue.cms_reference_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-indigo-600 underline hover:text-indigo-800"
+                              >
+                                View Official Guideline →
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {issue.plain_language_explanation && (
+                          <div className="bg-blue-50 p-3 rounded mb-3 border border-blue-200">
+                            <p className="font-semibold text-xs text-blue-900 mb-1">
+                              📘 What This Means
+                            </p>
+                            <p className="text-xs text-blue-800">{issue.plain_language_explanation}</p>
+                          </div>
+                        )}
+
+                        {(issue.documentation_dos?.length > 0 || issue.documentation_donts?.length > 0) && (
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            {issue.documentation_dos?.length > 0 && (
+                              <div className="bg-green-50 p-2 rounded border border-green-200">
+                                <p className="font-semibold text-xs text-green-900 mb-1">✓ DO:</p>
+                                <ul className="text-xs text-green-800 space-y-1">
+                                  {issue.documentation_dos.map((item, i) => (
+                                    <li key={i}>• {item}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {issue.documentation_donts?.length > 0 && (
+                              <div className="bg-red-50 p-2 rounded border border-red-200">
+                                <p className="font-semibold text-xs text-red-900 mb-1">✗ DON'T:</p>
+                                <ul className="text-xs text-red-800 space-y-1">
+                                  {issue.documentation_donts.map((item, i) => (
+                                    <li key={i}>• {item}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {issue.compliant_example && (
+                          <div className="bg-green-50 p-2 rounded mb-2 text-xs border border-green-200">
+                            <p className="font-semibold text-green-900 mb-1">✓ Compliant Example:</p>
+                            <p className="text-green-800 italic">"{issue.compliant_example}"</p>
+                          </div>
+                        )}
+
+                        {issue.non_compliant_example && (
+                          <div className="bg-red-50 p-2 rounded mb-3 text-xs border border-red-200">
+                            <p className="font-semibold text-red-900 mb-1">✗ Non-Compliant Example:</p>
+                            <p className="text-red-800 italic">"{issue.non_compliant_example}"</p>
+                          </div>
+                        )}
+
                         {!appliedCorrections.has(issue.m_item_code) && (
                           <Button
                             size="sm"
@@ -450,6 +539,59 @@ For each issue found, provide:
                         </Badge>
                       </div>
                       <p className="text-sm mb-2">{risk.description}</p>
+
+                      {risk.cms_regulation && (
+                        <div className="bg-indigo-50 p-2 rounded mb-2 border border-indigo-200">
+                          <p className="font-semibold text-xs text-indigo-900 mb-1 flex items-center gap-2">
+                            <Shield className="w-3 h-3" />
+                            CMS Regulation
+                          </p>
+                          <p className="text-xs text-indigo-800 mb-1">{risk.cms_regulation}</p>
+                          {risk.cms_reference_link && (
+                            <a 
+                              href={risk.cms_reference_link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs text-indigo-600 underline hover:text-indigo-800"
+                            >
+                              View Official CMS Guideline →
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {risk.plain_language_explanation && (
+                        <div className="bg-blue-50 p-2 rounded mb-2 border border-blue-200">
+                          <p className="font-semibold text-xs text-blue-900 mb-1">📘 Plain English</p>
+                          <p className="text-xs text-blue-800">{risk.plain_language_explanation}</p>
+                        </div>
+                      )}
+
+                      {(risk.documentation_dos?.length > 0 || risk.documentation_donts?.length > 0) && (
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          {risk.documentation_dos?.length > 0 && (
+                            <div className="bg-green-50 p-2 rounded border border-green-200">
+                              <p className="font-semibold text-xs text-green-900 mb-1">✓ DO:</p>
+                              <ul className="text-xs text-green-800 space-y-1">
+                                {risk.documentation_dos.map((item, didx) => (
+                                  <li key={didx}>• {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {risk.documentation_donts?.length > 0 && (
+                            <div className="bg-red-50 p-2 rounded border border-red-200">
+                              <p className="font-semibold text-xs text-red-900 mb-1">✗ DON'T:</p>
+                              <ul className="text-xs text-red-800 space-y-1">
+                                {risk.documentation_donts.map((item, didx) => (
+                                  <li key={didx}>• {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="bg-white rounded p-2">
                         <p className="font-medium text-xs mb-1">Mitigation Steps:</p>
                         <ul className="list-disc list-inside text-xs space-y-1">
@@ -479,10 +621,71 @@ For each issue found, provide:
                         <h4 className="font-semibold">Why It Matters</h4>
                       </div>
                       <p className="text-sm mb-2">{exp.why_it_matters}</p>
-                      <div className="bg-white rounded p-2 mb-2 text-xs">
-                        <p className="font-medium text-gray-700 mb-1">CMS Requirement:</p>
-                        <p>{exp.cms_requirement}</p>
+
+                      <div className="bg-indigo-50 rounded p-2 mb-2 border border-indigo-200">
+                        <p className="font-medium text-xs text-indigo-900 mb-1 flex items-center gap-2">
+                          <Shield className="w-3 h-3" />
+                          CMS Requirement
+                        </p>
+                        <p className="text-xs text-indigo-800 mb-1">{exp.cms_requirement}</p>
+                        {exp.cms_reference_link && (
+                          <a 
+                            href={exp.cms_reference_link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-indigo-600 underline hover:text-indigo-800"
+                          >
+                            View Official CMS Guideline →
+                          </a>
+                        )}
                       </div>
+
+                      {exp.plain_language_explanation && (
+                        <div className="bg-blue-50 rounded p-2 mb-2 border border-blue-200">
+                          <p className="font-medium text-xs text-blue-900 mb-1">📘 Plain English Explanation</p>
+                          <p className="text-xs text-blue-800">{exp.plain_language_explanation}</p>
+                        </div>
+                      )}
+
+                      {(exp.documentation_dos?.length > 0 || exp.documentation_donts?.length > 0) && (
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          {exp.documentation_dos?.length > 0 && (
+                            <div className="bg-green-50 p-2 rounded border border-green-200">
+                              <p className="font-semibold text-xs text-green-900 mb-1">✓ DO:</p>
+                              <ul className="text-xs text-green-800 space-y-1">
+                                {exp.documentation_dos.map((item, didx) => (
+                                  <li key={didx}>• {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {exp.documentation_donts?.length > 0 && (
+                            <div className="bg-red-50 p-2 rounded border border-red-200">
+                              <p className="font-semibold text-xs text-red-900 mb-1">✗ DON'T:</p>
+                              <ul className="text-xs text-red-800 space-y-1">
+                                {exp.documentation_donts.map((item, didx) => (
+                                  <li key={didx}>• {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {exp.compliant_example && (
+                        <div className="bg-green-50 p-2 rounded mb-2 text-xs border border-green-200">
+                          <p className="font-semibold text-green-900 mb-1">✓ Compliant Example:</p>
+                          <p className="text-green-800 italic">"{exp.compliant_example}"</p>
+                        </div>
+                      )}
+
+                      {exp.non_compliant_example && (
+                        <div className="bg-red-50 p-2 rounded mb-2 text-xs border border-red-200">
+                          <p className="font-semibold text-red-900 mb-1">✗ Non-Compliant Example:</p>
+                          <p className="text-red-800 italic">"{exp.non_compliant_example}"</p>
+                        </div>
+                      )}
+
                       {exp.common_mistakes?.length > 0 && (
                         <div className="bg-red-50 border border-red-200 rounded p-2 mb-2 text-xs">
                           <p className="font-medium text-red-800 mb-1">Common Mistakes:</p>
@@ -493,6 +696,7 @@ For each issue found, provide:
                           </ul>
                         </div>
                       )}
+
                       <div className="bg-green-50 border border-green-200 rounded p-2 text-xs">
                         <p className="font-medium text-green-800 mb-1">Best Practice:</p>
                         <p className="text-green-700">{exp.best_practice}</p>
