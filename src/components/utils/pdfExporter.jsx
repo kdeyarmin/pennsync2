@@ -102,7 +102,7 @@ export const exportToPDF = async (options = {}) => {
         const colWidth = (pageWidth - (2 * margin)) / headers.length;
         
         // Headers
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont(undefined, 'bold');
         doc.setFillColor(240, 240, 240);
         doc.rect(margin, yPosition - 5, pageWidth - (2 * margin), 8, 'F');
@@ -110,27 +110,50 @@ export const exportToPDF = async (options = {}) => {
         headers.forEach((header, i) => {
           doc.text(header, margin + (i * colWidth) + 2, yPosition);
         });
-        yPosition += 8;
+        yPosition += 10;
 
         // Rows
+        doc.setFontSize(8);
         doc.setFont(undefined, 'normal');
         rows.forEach((row, rowIndex) => {
-          if (yPosition > pageHeight - 20) {
+          if (yPosition > pageHeight - 25) {
             doc.addPage();
             yPosition = margin;
+            
+            // Repeat headers on new page
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margin, yPosition - 5, pageWidth - (2 * margin), 8, 'F');
+            headers.forEach((header, i) => {
+              doc.text(header, margin + (i * colWidth) + 2, yPosition);
+            });
+            yPosition += 10;
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
           }
 
-          row.forEach((cell, i) => {
+          // Calculate max height needed for this row
+          let maxHeight = 0;
+          const cellLines = row.map((cell, i) => {
             const cellText = String(cell || '');
             const lines = doc.splitTextToSize(cellText, colWidth - 4);
-            doc.text(lines, margin + (i * colWidth) + 2, yPosition);
+            maxHeight = Math.max(maxHeight, lines.length);
+            return lines;
           });
-          yPosition += 7;
 
+          // Draw alternating row background
           if (rowIndex % 2 === 0) {
             doc.setFillColor(250, 250, 250);
-            doc.rect(margin, yPosition - 7, pageWidth - (2 * margin), 7, 'F');
+            doc.rect(margin, yPosition - 4, pageWidth - (2 * margin), maxHeight * 4.5 + 2, 'F');
           }
+
+          // Render each cell
+          cellLines.forEach((lines, i) => {
+            doc.text(lines, margin + (i * colWidth) + 2, yPosition);
+          });
+          
+          yPosition += maxHeight * 4.5 + 2;
         });
         yPosition += 5;
       } else if (section.type === 'spacer') {
