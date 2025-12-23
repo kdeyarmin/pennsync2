@@ -93,6 +93,7 @@ import WorkflowMonitoringDashboard from "../components/oasis/WorkflowMonitoringD
 import OASISToPatientChartPusher from "../components/oasis/OASISToPatientChartPusher";
 import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
 import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
+import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -1964,6 +1965,22 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               )}
             </CardContent>
           </Card>
+
+      {/* Real-Time AI Documentation Assistant for OASIS */}
+      {currentOASIS?.raw_text && (
+        <RealTimeDocumentationAI
+          noteContent={currentOASIS.raw_text}
+          visitType={currentOASIS.assessment_type || 'admission'}
+          diagnosis={currentOASIS.extracted_data?.primary_diagnosis || pdgmData?.primary_diagnosis}
+          patientData={patients?.find(p => p.id === selectedPatientId)}
+          oasisData={currentOASIS}
+          careType={patients?.find(p => p.id === selectedPatientId)?.care_type || "home_health"}
+          onSuggestionApply={(text) => {
+            // OASIS is read-only, so suggestions are for reference
+            navigator.clipboard.writeText(text);
+          }}
+        />
+      )}
 
       {/* Visit-Type Compliance Review */}
       {selectedPatientId && (

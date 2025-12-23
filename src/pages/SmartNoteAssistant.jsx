@@ -81,6 +81,7 @@ import GuidedDocumentationWorkflow from "../components/smartNote/GuidedDocumenta
 import PatientHistoryAutoPopulator from "../components/smartNote/PatientHistoryAutoPopulator";
 import ConditionalAIAssistant from "../components/smartNote/ConditionalAIAssistant";
 import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
+import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
 
 // Common diagnoses list
 const commonDiagnoses = [
