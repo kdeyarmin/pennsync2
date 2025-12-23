@@ -28,6 +28,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import StaffTrainingOverview from "../components/training/StaffTrainingOverview";
 
 export default function TrainingManagement() {
   const queryClient = useQueryClient();
@@ -185,7 +186,7 @@ export default function TrainingManagement() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Training Management</h1>
-          <p className="text-gray-600">Upload, assign, and track training materials</p>
+          <p className="text-gray-600">Create modules, assign training, and track staff completion</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -393,13 +394,18 @@ export default function TrainingManagement() {
       )}
 
       {/* Training Modules List */}
-      <Tabs defaultValue="all" className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="overview">Staff Overview</TabsTrigger>
           <TabsTrigger value="all">All Modules ({trainingModules.length})</TabsTrigger>
           <TabsTrigger value="required">Required ({trainingModules.filter(m => m.is_required).length})</TabsTrigger>
           <TabsTrigger value="clinical">Clinical</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          <StaffTrainingOverview />
+        </TabsContent>
 
         <TabsContent value="all" className="space-y-3">
           <ScrollArea className="h-[600px]">

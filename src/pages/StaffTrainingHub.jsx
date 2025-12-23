@@ -42,32 +42,32 @@ export default function StaffTrainingHub() {
     queryFn: () => base44.auth.me(),
   });
 
-  const isAdmin = currentUser?.role === 'admin';
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [skillGaps, setSkillGaps] = useState([]);
   const [activeModule, setActiveModule] = useState(null);
 
+  // Only fetch current user's training data
   const { data: trainingProgress = [] } = useQuery({
-    queryKey: ['trainingProgress', currentUser?.email],
+    queryKey: ['myTrainingProgress', currentUser?.email],
     queryFn: () => base44.entities.MicroLearningProgress.filter({ nurse_email: currentUser?.email }),
     enabled: !!currentUser?.email,
   });
 
   const { data: completions = [] } = useQuery({
-    queryKey: ['trainingCompletions', currentUser?.email],
+    queryKey: ['myTrainingCompletions', currentUser?.email],
     queryFn: () => base44.entities.TrainingCompletion.filter({ nurse_email: currentUser?.email }),
     enabled: !!currentUser?.email,
   });
 
   const { data: complianceAudits = [] } = useQuery({
-    queryKey: ['nurseAudits', currentUser?.email],
+    queryKey: ['myComplianceAudits', currentUser?.email],
     queryFn: () => base44.entities.ComplianceAudit.filter({ nurse_email: currentUser?.email }),
     enabled: !!currentUser?.email,
   });
 
   const { data: recommendations = [] } = useQuery({
-    queryKey: ['nurseRecommendations', currentUser?.email],
+    queryKey: ['myTrainingRecommendations', currentUser?.email],
     queryFn: () => base44.entities.TrainingRecommendation.filter({ nurse_email: currentUser?.email }),
     enabled: !!currentUser?.email,
   });
@@ -125,9 +125,9 @@ export default function StaffTrainingHub() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <GraduationCap className="w-7 h-7 text-indigo-600" />
-          Staff Training Hub
+          My Training Hub
         </h1>
-        <p className="text-gray-600 mt-1">AI-powered training on documentation, compliance, and patient communication</p>
+        <p className="text-gray-600 mt-1">Your personalized training on documentation, compliance, and patient communication</p>
       </div>
 
       {/* Stats Cards */}
@@ -181,24 +181,8 @@ export default function StaffTrainingHub() {
         </Card>
       </div>
 
-      {/* AI-Powered Training Hub */}
-      {isAdmin ? (
-        <Tabs defaultValue="compliance" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="compliance">Compliance Reports</TabsTrigger>
-            <TabsTrigger value="staff">Staff Performance</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="compliance">
-            <StaffEducationComplianceReport />
-          </TabsContent>
-
-          <TabsContent value="staff">
-            {currentUser && <TrainingProgressDashboard nurseEmail={currentUser.email} />}
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <Tabs defaultValue="aipath" className="w-full">
+      {/* Individual User Training Hub */}
+      <Tabs defaultValue="aipath" className="w-full">
           <TabsList className="grid grid-cols-10 w-full mb-6">
             <TabsTrigger value="aipath" className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-indigo-50 data-[state=active]:bg-purple-100">
               <Star className="w-4 h-4" />
@@ -518,7 +502,6 @@ export default function StaffTrainingHub() {
           </div>
         </TabsContent>
         </Tabs>
-      )}
-    </div>
-  );
-}
+        </div>
+        );
+        }
