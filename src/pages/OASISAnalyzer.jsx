@@ -95,6 +95,9 @@ import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAn
 import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
 import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
 import AIDataValidationEngine from "../components/oasis/AIDataValidationEngine";
+import ClinicalNoteToOASISMapper from "../components/oasis/ClinicalNoteToOASISMapper";
+import OASISDraftGenerator from "../components/oasis/OASISDraftGenerator";
+import ProactiveRescoringEngine from "../components/oasis/ProactiveRescoringEngine";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -1997,6 +2000,39 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardContent>
           </Card>
 
+      {/* Clinical Note to OASIS Mapper */}
+      <ClinicalNoteToOASISMapper
+        onMappingComplete={(mappedData) => {
+          console.log('Mapped fields:', mappedData);
+        }}
+        existingOASISData={pdgmData}
+      />
+
+      {/* OASIS Draft Generator */}
+      {selectedPatient && (
+        <OASISDraftGenerator
+          patientData={selectedPatient}
+          clinicalContext={analysisResults?.summary}
+          visitType={pdgmData?.patient_info?.assessment_type || 'admission'}
+          onDraftGenerated={(draft) => {
+            console.log('Draft generated:', draft);
+          }}
+        />
+      )}
+
+      {/* Proactive Rescoring Engine */}
+      {analysisResults && pdgmData && (
+        <ProactiveRescoringEngine
+          oasisData={pdgmData}
+          patientData={selectedPatient}
+          clinicalContext={analysisResults?.summary}
+          autoAnalyze={true}
+          onOpportunitiesFound={(opportunities) => {
+            console.log('Rescoring opportunities:', opportunities);
+          }}
+        />
+      )}
+
       {/* AI Data Validation Engine - Proactive OASIS Corrections */}
       {analysisResults && pdgmData && (
         <AIDataValidationEngine
@@ -2007,7 +2043,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           autoValidate={true}
           onCorrection={(correction) => {
             console.log('Applying AI correction:', correction);
-            // Update OASIS data with correction
             setPdgmData(prev => ({
               ...prev,
               [correction.m_item_code]: correction.suggested_value
