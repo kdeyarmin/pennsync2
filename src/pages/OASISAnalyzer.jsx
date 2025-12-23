@@ -100,6 +100,7 @@ import OASISDraftGenerator from "../components/oasis/OASISDraftGenerator";
 import ProactiveRescoringEngine from "../components/oasis/ProactiveRescoringEngine";
 import AutomatedQualityAssurance from "../components/oasis/AutomatedQualityAssurance";
 import ProactiveDocumentationAssistant from "../components/oasis/ProactiveDocumentationAssistant";
+import ComprehensiveOASISReviewer from "../components/oasis/ComprehensiveOASISReviewer";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -2032,6 +2033,16 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           onOpportunitiesFound={(opportunities) => {
             console.log('Rescoring opportunities:', opportunities);
           }}
+        />
+      )}
+
+      {/* Comprehensive OASIS Review - Full Document Analysis */}
+      {analysisResults && pdgmData && (
+        <ComprehensiveOASISReviewer
+          oasisData={oasisData}
+          analysisResults={analysisResults}
+          patientData={selectedPatient}
+          autoReview={true}
         />
       )}
 
