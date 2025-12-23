@@ -522,10 +522,66 @@ Return JSON with:
       // Determine nurse type and adjust requirements accordingly
       const isLPN = currentUser?.credential_type === 'LPN';
       const nurseTitle = isLPN ? 'LPN' : 'RN';
+      const nurseFullTitle = isLPN ? 'Licensed Practical Nurse' : 'Registered Nurse';
+
+      const skilledNeedGuidance = isLPN ? 
+        `Explicitly state why LPN skills are required - LPNs provide skilled services under RN supervision including:
+         - Specific skilled tasks (wound care, medication administration, catheter care, tube feeding)
+         - Implementation of established care plan interventions
+         - Monitoring and reporting patient status changes
+         - Patient/caregiver teaching on specific procedures (not comprehensive assessment/teaching)
+         - DO NOT document comprehensive assessments, initial care planning, or complex clinical judgments (RN scope)
+         ${oasisContext?.admissionSource === '2' || oasisContext?.admissionSource?.toLowerCase().includes('institutional') ? '- Document specific skilled interventions and monitoring per RN-established plan' : ''}
+         ${oasisContext?.cognitiveStatus && oasisContext.cognitiveStatus !== 'intact' ? `- Document implementation of teaching strategies per RN plan, considering cognitive status (${oasisContext.cognitiveStatus})` : ''}` 
+        : 
+        `Explicitly state why RN skills are required (complex assessment, clinical judgment, patient education beyond basic instruction)
+         ${oasisContext?.admissionSource === '2' || oasisContext?.admissionSource?.toLowerCase().includes('institutional') ? '- Document post-institutional monitoring and skilled assessment needs' : ''}
+         ${oasisContext?.cognitiveStatus && oasisContext.cognitiveStatus !== 'intact' ? `- Address cognitive impairment (${oasisContext.cognitiveStatus}) requiring skilled nursing oversight` : ''}`;
+
+      const patientResponseGuidance = isLPN ?
+        `Document patient's response to specific interventions and teaching:
+         - Patient's ability to demonstrate procedure/skill taught
+         - Verbal feedback on specific interventions provided
+         - Observed physical response to treatments
+         ${oasisContext?.cognitiveStatus ? `- Note cognitive status (${oasisContext.cognitiveStatus}) affecting understanding of specific procedures` : ''}
+         - Report any concerns/changes to RN supervisor`
+        :
+        `Include patient's verbal understanding, teach-back results, or demonstrated competency
+         ${oasisContext?.cognitiveStatus ? `- Consider cognitive status (${oasisContext.cognitiveStatus}) when documenting teaching effectiveness` : ''}`;
+
+      const functionalAssessmentGuidance = isLPN ?
+        `LPNs observe and document functional status but do NOT perform comprehensive assessments:
+         ${oasisContext?.adlStatus || oasisContext?.iadlStatus ? '- Note observed functional abilities compared to RN-documented baseline' : '- Document observed functional status during interventions'}
+         ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).length > 0 ? `- Observed ADL performance: ${Object.entries(oasisContext.adlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}
+         - Report any significant changes to RN`
+        :
+        `${oasisContext?.adlStatus || oasisContext?.iadlStatus ? 'Document changes in functional abilities compared to OASIS baseline:' : 'Document functional abilities:'}
+         ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).length > 0 ? `- ADL assistance needs per OASIS: ${Object.entries(oasisContext.adlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}
+         ${oasisContext?.iadlStatus && Object.keys(oasisContext.iadlStatus).length > 0 ? `- IADL assistance needs per OASIS: ${Object.entries(oasisContext.iadlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}`;
+
+      const additionalRequirements = isLPN ? 
+        `
+      LPN-SPECIFIC DOCUMENTATION REQUIREMENTS:
+      7. SUPERVISION ACKNOWLEDGMENT: LPN visits are under RN supervision per agency policy and state regulations
+      8. CARE PLAN IMPLEMENTATION: Document specific interventions performed per RN-established care plan
+      9. SCOPE LIMITATIONS: 
+         - DO NOT document comprehensive patient assessments
+         - DO NOT establish new care plan goals
+         - DO NOT make independent clinical judgments requiring RN assessment
+         - Focus on: skilled tasks performed, patient responses, observations, and reporting to RN
+      10. REPORTING: Note what was reported to supervising RN (if applicable)
+      11. PLAN OF CARE: Continue per RN-established plan, next LPN visit scheduled, when to contact RN/MD` 
+      : 
+      `
+      RN-SPECIFIC DOCUMENTATION REQUIREMENTS:
+      7. INTEGRATE CARE PLAN PROGRESS: Reference active care plan goals and document progress toward them
+      8. COMPARE TO BASELINE: If previous visit data available, note changes from last visit
+      9. FUNCTIONAL STATUS: Describe ADL limitations, mobility level, assistance needed
+      10. PLAN OF CARE: State continuing plan, next visit schedule, when to contact nurse/MD`;
 
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
-CRITICAL: This visit is documented by a ${nurseTitle} (${isLPN ? 'Licensed Practical Nurse' : 'Registered Nurse'}).
+CRITICAL: This visit is documented by a ${nurseTitle} (${nurseFullTitle}).
 
 ${contextualizedNote}
 
@@ -579,43 +635,11 @@ ${contextualizedNote}
       1. HOMEBOUND STATUS: ${oasisContext?.functionalLevel ? `Based on OASIS functional level (${oasisContext.functionalLevel}), document specific mobility limitations and why leaving home is taxing.` : 'If patient has mobility/activity limitations, clearly state why leaving home is taxing (specific symptoms, distances, assistance needed)'}
          ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).filter(k => oasisContext.adlStatus[k]).length > 0 ? `- OASIS shows ADL limitations in: ${Object.keys(oasisContext.adlStatus).filter(k => oasisContext.adlStatus[k]).join(', ')}` : ''}
 
-      2. SKILLED NEED: ${isLPN ? 
-        `Explicitly state why LPN skills are required - LPNs provide skilled services under RN supervision including:
-         - Specific skilled tasks (wound care, medication administration, catheter care, tube feeding)
-         - Implementation of established care plan interventions
-         - Monitoring and reporting patient status changes
-         - Patient/caregiver teaching on specific procedures (not comprehensive assessment/teaching)
-         - DO NOT document comprehensive assessments, initial care planning, or complex clinical judgments (RN scope)
-         ${oasisContext?.admissionSource === '2' || oasisContext?.admissionSource?.toLowerCase().includes('institutional') ? '- Document specific skilled interventions and monitoring per RN-established plan' : ''}
-         ${oasisContext?.cognitiveStatus && oasisContext.cognitiveStatus !== 'intact' ? `- Document implementation of teaching strategies per RN plan, considering cognitive status (${oasisContext.cognitiveStatus})` : ''}` 
-        : 
-        `Explicitly state why RN skills are required (complex assessment, clinical judgment, patient education beyond basic instruction)
-         ${oasisContext?.admissionSource === '2' || oasisContext?.admissionSource?.toLowerCase().includes('institutional') ? '- Document post-institutional monitoring and skilled assessment needs' : ''}
-         ${oasisContext?.cognitiveStatus && oasisContext.cognitiveStatus !== 'intact' ? `- Address cognitive impairment (${oasisContext.cognitiveStatus}) requiring skilled nursing oversight` : ''}`
-      }
+      2. SKILLED NEED: ${skilledNeedGuidance}
 
-      3. PATIENT RESPONSE: ${isLPN ?
-        `Document patient's response to specific interventions and teaching:
-         - Patient's ability to demonstrate procedure/skill taught
-         - Verbal feedback on specific interventions provided
-         - Observed physical response to treatments
-         ${oasisContext?.cognitiveStatus ? `- Note cognitive status (${oasisContext.cognitiveStatus}) affecting understanding of specific procedures` : ''}
-         - Report any concerns/changes to RN supervisor`
-        :
-        `Include patient's verbal understanding, teach-back results, or demonstrated competency
-         ${oasisContext?.cognitiveStatus ? `- Consider cognitive status (${oasisContext.cognitiveStatus}) when documenting teaching effectiveness` : ''}`
-      }
+      3. PATIENT RESPONSE: ${patientResponseGuidance}
 
-      4. FUNCTIONAL ASSESSMENT: ${isLPN ?
-        `LPNs observe and document functional status but do NOT perform comprehensive assessments:
-         ${oasisContext?.adlStatus || oasisContext?.iadlStatus ? '- Note observed functional abilities compared to RN-documented baseline' : '- Document observed functional status during interventions'}
-         ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).length > 0 ? `- Observed ADL performance: ${Object.entries(oasisContext.adlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}
-         - Report any significant changes to RN`
-        :
-        `${oasisContext?.adlStatus || oasisContext?.iadlStatus ? 'Document changes in functional abilities compared to OASIS baseline:' : 'Document functional abilities:'}
-         ${oasisContext?.adlStatus && Object.keys(oasisContext.adlStatus).length > 0 ? `- ADL assistance needs per OASIS: ${Object.entries(oasisContext.adlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}
-         ${oasisContext?.iadlStatus && Object.keys(oasisContext.iadlStatus).length > 0 ? `- IADL assistance needs per OASIS: ${Object.entries(oasisContext.iadlStatus).filter(([k,v]) => v).map(([k]) => k).join(', ')}` : ''}`
-      }
+      4. FUNCTIONAL ASSESSMENT: ${functionalAssessmentGuidance}
 
       5. SAFETY/RISK FACTORS: 
          ${oasisContext?.fallRisk ? `- Fall Risk: ${oasisContext.fallRisk} - document fall prevention measures` : ''}
@@ -627,26 +651,8 @@ ${contextualizedNote}
       ${finalDiagnosis?.toUpperCase().includes('COPD') || finalDiagnosis?.toUpperCase().includes('CHRONIC OBSTRUCTIVE') ? '- COPD: Document O2 sat on room air vs supplemental O2, respiratory rate, work of breathing, accessory muscle use, cyanosis, lung sounds (wheezes/rhonchi)' : ''}
       ${finalDiagnosis?.toUpperCase().includes('DIABETES') || finalDiagnosis?.toUpperCase().includes('DIABETIC') ? '- Diabetes: Document blood glucose reading, diabetic foot exam (pedal pulses, sensation, skin integrity between toes), peripheral neuropathy assessment' : ''}
       ${finalDiagnosis?.toUpperCase().includes('WOUND') || finalDiagnosis?.toUpperCase().includes('PRESSURE') || finalDiagnosis?.toUpperCase().includes('ULCER') ? '- Wound: Document dimensions (L x W x D in cm), wound bed appearance (% granulation/slough/eschar), exudate (type, amount, odor), periwound condition, undermining/tunneling' : ''}
-      ${finalDiagnosis?.toUpperCase().includes('STROKE') || finalDiagnosis?.toUpperCase().includes('CVA') ? `- Stroke: ${isLPN ? 'Document observed LOC, response to interventions, feeding/swallowing assistance provided per care plan' : 'Document LOC, orientation, speech/aphasia, facial symmetry, motor strength bilateral (0-5 grading), sensation, swallowing safety'}` : ''}
-
-      ${isLPN ? `
-      LPN-SPECIFIC DOCUMENTATION REQUIREMENTS:
-      7. SUPERVISION ACKNOWLEDGMENT: LPN visits are under RN supervision per agency policy and state regulations
-      8. CARE PLAN IMPLEMENTATION: Document specific interventions performed per RN-established care plan
-      9. SCOPE LIMITATIONS: 
-         - DO NOT document comprehensive patient assessments
-         - DO NOT establish new care plan goals
-         - DO NOT make independent clinical judgments requiring RN assessment
-         - Focus on: skilled tasks performed, patient responses, observations, and reporting to RN
-      10. REPORTING: Note what was reported to supervising RN (if applicable)
-      11. PLAN OF CARE: Continue per RN-established plan, next LPN visit scheduled, when to contact RN/MD` 
-      : 
-      `
-      RN-SPECIFIC DOCUMENTATION REQUIREMENTS:
-      7. INTEGRATE CARE PLAN PROGRESS: Reference active care plan goals and document progress toward them
-      8. COMPARE TO BASELINE: If previous visit data available, note changes from last visit
-      9. FUNCTIONAL STATUS: Describe ADL limitations, mobility level, assistance needed
-      10. PLAN OF CARE: State continuing plan, next visit schedule, when to contact nurse/MD`}
+      ${finalDiagnosis?.toUpperCase().includes('STROKE') || finalDiagnosis?.toUpperCase().includes('CVA') ? (isLPN ? '- Stroke: Document observed LOC, response to interventions, feeding/swallowing assistance provided per care plan' : '- Stroke: Document LOC, orientation, speech/aphasia, facial symmetry, motor strength bilateral (0-5 grading), sensation, swallowing safety') : ''}
+      ${additionalRequirements}
 
       FORMATTING GUIDELINES:
       - Use complete sentences with proper medical terminology
