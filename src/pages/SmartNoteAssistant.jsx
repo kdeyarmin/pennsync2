@@ -1200,6 +1200,21 @@ Return JSON with:
             </CardContent>
           </Card>
 
+          {/* Real-Time AI Documentation Assistant */}
+          {roughNote && roughNote.length > 50 && !enhancedNote && (
+            <RealTimeDocumentationAI
+              noteContent={roughNote}
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              patientData={selectedPatient}
+              oasisData={patientOASIS?.[0]}
+              careType={selectedPatient?.care_type || "home_health"}
+              onSuggestionApply={(text) => {
+                setRoughNote(prev => prev + '\n\n' + text);
+              }}
+            />
+          )}
+
           {/* Comprehensive Patient Context Loader */}
           {selectedPatientId && (
             <ComprehensivePatientContext
