@@ -30,7 +30,8 @@ import {
   Edit,
   Zap,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles
 } from "lucide-react";
 
 export default function OASISAutomationSettings() {
