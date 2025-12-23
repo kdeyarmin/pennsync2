@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import PDGMAnalyticsDashboard from "./PDGMAnalyticsDashboard";
 import PDGMScenarioModeler from "./PDGMScenarioModeler";
+import AIGroupAssignmentValidator from "./AIGroupAssignmentValidator";
 import {
   Dialog,
   DialogContent,
@@ -2253,11 +2254,20 @@ PREDICT:
               </div>
             )}
 
+            {/* AI Group Assignment Validator */}
+            <AIGroupAssignmentValidator
+              oasisData={oasisData}
+              analysisResults={analysisResults}
+              pdgmData={pdgmData}
+              patientId={patientId}
+              autoValidate={true}
+            />
+
             {/* PDGM Scenario Modeler */}
             <PDGMScenarioModeler
               baselineOasisData={pdgmData}
               baselineNavigationData={navigation}
-              patientId={null}
+              patientId={patientId}
             />
 
             {/* Re-analyze Button */}
