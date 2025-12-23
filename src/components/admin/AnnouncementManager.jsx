@@ -100,14 +100,19 @@ export default function AnnouncementManager() {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Ensure priority is a valid number
     const dataToSubmit = {
-      ...formData,
+      title: formData.title,
+      content: formData.content,
+      type: formData.type,
+      is_active: formData.is_active,
       priority: parseInt(formData.priority) || 0
     };
+    
+    console.log('Submitting announcement:', dataToSubmit);
     
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: dataToSubmit });
