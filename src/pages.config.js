@@ -29,6 +29,10 @@ import OASIS from './pages/OASIS';
 import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
 import OASISAnalyzer from './pages/OASISAnalyzer';
 import OASISAuditDashboard from './pages/OASISAuditDashboard';
+import OASISClinicalReview from './pages/OASISClinicalReview';
+import OASISComplianceReview from './pages/OASISComplianceReview';
+import OASISDocumentationReview from './pages/OASISDocumentationReview';
+import OASISRevenueAnalysis from './pages/OASISRevenueAnalysis';
 import OASISReview from './pages/OASISReview';
 import PatientAlerts from './pages/PatientAlerts';
 import PatientDashboard from './pages/PatientDashboard';
@@ -52,10 +56,6 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
-import OASISRevenueAnalysis from './pages/OASISRevenueAnalysis';
-import OASISComplianceReview from './pages/OASISComplianceReview';
-import OASISDocumentationReview from './pages/OASISDocumentationReview';
-import OASISClinicalReview from './pages/OASISClinicalReview';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +91,10 @@ export const PAGES = {
     "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
     "OASISAnalyzer": OASISAnalyzer,
     "OASISAuditDashboard": OASISAuditDashboard,
+    "OASISClinicalReview": OASISClinicalReview,
+    "OASISComplianceReview": OASISComplianceReview,
+    "OASISDocumentationReview": OASISDocumentationReview,
+    "OASISRevenueAnalysis": OASISRevenueAnalysis,
     "OASISReview": OASISReview,
     "PatientAlerts": PatientAlerts,
     "PatientDashboard": PatientDashboard,
@@ -114,10 +118,6 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
-    "OASISRevenueAnalysis": OASISRevenueAnalysis,
-    "OASISComplianceReview": OASISComplianceReview,
-    "OASISDocumentationReview": OASISDocumentationReview,
-    "OASISClinicalReview": OASISClinicalReview,
 }
 
 export const pagesConfig = {

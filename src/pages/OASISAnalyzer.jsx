@@ -87,6 +87,8 @@ import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
 import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
 import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
 import PDGMTrendDashboard from "../components/oasis/PDGMTrendDashboard";
+import WorkflowExecutionEngine from "../components/oasis/WorkflowExecutionEngine";
+import WorkflowMonitoringDashboard from "../components/oasis/WorkflowMonitoringDashboard";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -1810,22 +1812,28 @@ Return scores (0-100) and top 3-5 issues in each category.`,
 
         {/* Automation Tab */}
         <TabsContent value="automation" className="mt-4">
-          <OASISAutomationSettings />
-          
-          <Alert className="mt-4 bg-blue-50 border-blue-200">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <AlertDescription>
-              <p className="text-sm text-blue-900 mb-2">
-                <strong>How Automation Works:</strong>
-              </p>
-              <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
-                <li>Configure rules that trigger when specific OASIS issues are detected</li>
-                <li>AI analyzes each assessment and matches findings to your automation rules</li>
-                <li>Automatically suggests follow-up tasks for clinicians based on compliance, revenue, or clinical concerns</li>
-                <li>Review suggested actions and create tasks with one click</li>
-              </ul>
-            </AlertDescription>
-          </Alert>
+          <div className="space-y-6">
+            {/* Workflow Monitoring Dashboard */}
+            <WorkflowMonitoringDashboard />
+
+            {/* Automation Settings */}
+            <OASISAutomationSettings />
+            
+            <Alert className="bg-blue-50 border-blue-200">
+              <Sparkles className="w-4 h-4 text-blue-600" />
+              <AlertDescription>
+                <p className="text-sm text-blue-900 mb-2">
+                  <strong>How Automation Works:</strong>
+                </p>
+                <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
+                  <li>Configure rules that trigger when specific OASIS issues are detected</li>
+                  <li>AI analyzes each assessment and matches findings to your automation rules</li>
+                  <li>Automatically creates tasks, alerts, and notifications based on configured actions</li>
+                  <li>Monitor workflow execution history and performance in the dashboard above</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+          </div>
         </TabsContent>
 
         <TabsContent value="batch" className="mt-4">
@@ -1952,17 +1960,15 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardContent>
           </Card>
 
-      {/* AI Automation Engine */}
-      {analysisResults && selectedPatient && (
-        <OASISAutomationEngine
-          analysisResults={analysisResults}
-          patientId={selectedPatient.id}
-          onTasksCreated={() => {
-            // Refresh or show success
-          }}
-          autoExecute={true}
-        />
-      )}
+      {/* Workflow Execution Engine */}
+      <WorkflowExecutionEngine
+        analysisResults={analysisResults}
+        pdgmData={pdgmData}
+        patientId={selectedPatientId}
+        patientName={patientName}
+        oasisUploadId={analysisId}
+        autoExecute={true}
+      />
 
       {/* Analysis Results */}
       {analysisResults && (
@@ -2057,18 +2063,6 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             analysisResults={analysisResults}
             pdgmData={pdgmData}
           />
-
-          {/* AI Automation Engine */}
-          {analysisResults && selectedPatient && (
-            <OASISAutomationEngine
-              analysisResults={analysisResults}
-              patientId={selectedPatient.id}
-              onTasksCreated={() => {
-                // Refresh tasks or show success notification
-              }}
-              autoExecute={true}
-            />
-          )}
 
           {/* Auto-Generated Tasks Based on Analysis */}
           <OASISTaskGenerator

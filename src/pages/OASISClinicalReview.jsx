@@ -9,6 +9,7 @@ import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
 import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
+import WorkflowExecutionEngine from "../components/oasis/WorkflowExecutionEngine";
 
 export default function OASISClinicalReview() {
   const location = useLocation();
@@ -77,11 +78,14 @@ export default function OASISClinicalReview() {
         patientName={patientName}
       />
 
-      {/* Automation Engine */}
-      <OASISAutomationEngine
+      {/* Automated Workflow Engine */}
+      <WorkflowExecutionEngine
         analysisResults={analysisResults}
+        pdgmData={pdgmData}
         patientId={patientId}
         patientName={patientName}
+        oasisUploadId={null}
+        autoExecute={true}
       />
 
       {/* Clinical Data Summary */}
