@@ -525,25 +525,13 @@ export default function AnalyticsDashboard() {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <PerformanceMetricsCard
           title="Avg Doc Time"
           value={`${metrics.avgDocTime} min`}
           change={metrics.timeChange}
           icon={Clock}
           color="blue"
-        />
-        <PerformanceMetricsCard
-          title="Compliance Score"
-          value={`${metrics.avgComplianceScore}%`}
-          icon={CheckCircle2}
-          color="green"
-        />
-        <PerformanceMetricsCard
-          title="AI Utilization"
-          value={`${metrics.aiUtilizationRate}%`}
-          icon={Zap}
-          color="purple"
         />
         <PerformanceMetricsCard
           title="Quality Score"
@@ -588,39 +576,11 @@ export default function AnalyticsDashboard() {
       <ComplianceImpactReport noteConversions={noteConversions} />
 
       {/* Charts */}
-      <Tabs defaultValue="compliance" className="mb-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="compliance">Compliance Trends</TabsTrigger>
+      <Tabs defaultValue="time" className="mb-6">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="time">Documentation Time</TabsTrigger>
           <TabsTrigger value="ai">AI Utilization</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="compliance">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Compliance Score Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" style={{ fontSize: '12px' }} />
-                  <YAxis domain={[0, 100]} style={{ fontSize: '12px' }} />
-                  <Tooltip />
-                  <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="avgCompliance" 
-                    stroke="#10b981" 
-                    fill="#10b981" 
-                    fillOpacity={0.3}
-                    name="Compliance Score (%)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="time">
           <Card>
@@ -686,45 +646,7 @@ export default function AnalyticsDashboard() {
         </Card>
       )}
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">Total Notes</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{metrics.totalNotes}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">Visits</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{metrics.totalVisits}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">AI Actions</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{metrics.aiActionsCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">Audits</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{metrics.totalAudits}</p>
-          </CardContent>
-        </Card>
-      </div>
+
     </div>
   );
 }
