@@ -166,6 +166,10 @@ export default function AdminDashboard() {
     }
   };
 
+  // Define date ranges
+  const last30Days = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+  const completedVisits = visits.filter(v => v.status === 'completed').length;
+
   // Calculate centralized metrics
   const stats = React.useMemo(() => {
     return calculateStats({
