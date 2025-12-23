@@ -102,10 +102,17 @@ export default function AnnouncementManager() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Ensure priority is a valid number
+    const dataToSubmit = {
+      ...formData,
+      priority: parseInt(formData.priority) || 0
+    };
+    
     if (editingId) {
-      updateMutation.mutate({ id: editingId, data: formData });
+      updateMutation.mutate({ id: editingId, data: dataToSubmit });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(dataToSubmit);
     }
   };
 
@@ -186,7 +193,7 @@ export default function AnnouncementManager() {
                     <Input
                       type="number"
                       value={formData.priority}
-                      onChange={(e) => setFormData({...formData, priority: parseInt(e.target.value)})}
+                      onChange={(e) => setFormData({...formData, priority: e.target.value})}
                       placeholder="0"
                     />
                   </div>
