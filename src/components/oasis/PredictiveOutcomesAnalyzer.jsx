@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, TrendingUp, Activity, AlertTriangle, Target, Brain, Calendar } from "lucide-react";
+import { Loader2, TrendingUp, Activity, AlertTriangle, Target, Brain, Calendar, Clock, Shield } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, patientId, onPredictionsComplete }) {
@@ -268,6 +268,44 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                   action_needed: { type: "string" },
                   timeframe: { type: "string" }
                 }
+              }
+            },
+            risk_mitigation_strategies: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  risk_addressed: { type: "string" },
+                  intervention: { type: "string" },
+                  implementation_steps: { type: "array", items: { type: "string" } },
+                  resources_needed: { type: "string" },
+                  expected_risk_reduction: { type: "string" },
+                  monitoring_frequency: { type: "string" },
+                  success_metrics: { type: "array", items: { type: "string" } }
+                }
+              }
+            },
+            resource_allocation_plan: {
+              type: "object",
+              properties: {
+                skilled_nursing_visits_per_week: { type: "number" },
+                pt_sessions_recommended: { type: "number" },
+                ot_sessions_recommended: { type: "number" },
+                aide_visits_per_week: { type: "number" },
+                nurse_hours_per_episode: { type: "number" },
+                total_cost_estimate: { type: "number" },
+                high_priority_resources: { type: "array", items: { type: "string" } },
+                resource_optimization_tips: { type: "array", items: { type: "string" } }
+              }
+            },
+            care_planning_insights: {
+              type: "object",
+              properties: {
+                primary_goals: { type: "array", items: { type: "string" } },
+                critical_interventions: { type: "array", items: { type: "string" } },
+                interdisciplinary_coordination_needs: { type: "array", items: { type: "string" } },
+                family_education_priorities: { type: "array", items: { type: "string" } },
+                equipment_recommendations: { type: "array", items: { type: "string" } }
               }
             }
           }
@@ -787,6 +825,212 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Risk Mitigation Strategies */}
+          {predictions.risk_mitigation_strategies?.length > 0 && (
+            <Card className="border-2 border-red-400 bg-gradient-to-r from-red-50 to-orange-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-red-600" />
+                  Risk Mitigation Strategies
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {predictions.risk_mitigation_strategies.map((strategy, idx) => (
+                    <Card key={idx} className="border-l-4 border-l-red-600">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 mb-1">{strategy.risk_addressed}</h4>
+                            <p className="text-sm text-gray-700">{strategy.intervention}</p>
+                          </div>
+                          <Badge className="bg-green-600 text-white">
+                            {strategy.expected_risk_reduction}
+                          </Badge>
+                        </div>
+
+                        {strategy.implementation_steps?.length > 0 && (
+                          <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-2">
+                            <p className="text-xs text-blue-700 font-semibold mb-2">Implementation Steps:</p>
+                            <ol className="space-y-1">
+                              {strategy.implementation_steps.map((step, sIdx) => (
+                                <li key={sIdx} className="text-sm text-blue-900 flex items-start gap-2">
+                                  <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0">
+                                    {sIdx + 1}
+                                  </span>
+                                  {step}
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <div className="bg-purple-50 p-2 rounded border border-purple-200">
+                            <p className="text-xs text-purple-600 mb-1">Resources Needed:</p>
+                            <p className="text-sm text-purple-900">{strategy.resources_needed}</p>
+                          </div>
+                          <div className="bg-orange-50 p-2 rounded border border-orange-200">
+                            <p className="text-xs text-orange-600 mb-1">Monitoring:</p>
+                            <p className="text-sm text-orange-900">{strategy.monitoring_frequency}</p>
+                          </div>
+                        </div>
+
+                        {strategy.success_metrics?.length > 0 && (
+                          <div className="bg-green-50 p-2 rounded border border-green-200">
+                            <p className="text-xs text-green-700 font-semibold mb-1">Success Metrics:</p>
+                            <ul className="space-y-0.5">
+                              {strategy.success_metrics.map((metric, mIdx) => (
+                                <li key={mIdx} className="text-xs text-green-800">✓ {metric}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Resource Allocation Plan */}
+          {predictions.resource_allocation_plan && (
+            <Card className="border-2 border-green-400">
+              <CardHeader className="bg-green-50">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-600" />
+                  Resource Allocation Plan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                  <div className="text-center p-3 bg-white rounded border">
+                    <p className="text-xs text-gray-600 mb-1">SN Visits/Week</p>
+                    <p className="text-2xl font-bold text-blue-700">{predictions.resource_allocation_plan.skilled_nursing_visits_per_week}</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded border">
+                    <p className="text-xs text-gray-600 mb-1">PT Sessions</p>
+                    <p className="text-2xl font-bold text-green-700">{predictions.resource_allocation_plan.pt_sessions_recommended}</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded border">
+                    <p className="text-xs text-gray-600 mb-1">OT Sessions</p>
+                    <p className="text-2xl font-bold text-purple-700">{predictions.resource_allocation_plan.ot_sessions_recommended}</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded border">
+                    <p className="text-xs text-gray-600 mb-1">Aide Visits/Week</p>
+                    <p className="text-2xl font-bold text-orange-700">{predictions.resource_allocation_plan.aide_visits_per_week}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="p-3 bg-indigo-50 rounded border border-indigo-200">
+                    <p className="text-xs text-indigo-600 mb-1">Nurse Hours/Episode</p>
+                    <p className="text-xl font-bold text-indigo-700">{predictions.resource_allocation_plan.nurse_hours_per_episode} hrs</p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded border border-green-200">
+                    <p className="text-xs text-green-600 mb-1">Total Cost Estimate</p>
+                    <p className="text-xl font-bold text-green-700">${predictions.resource_allocation_plan.total_cost_estimate?.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {predictions.resource_allocation_plan.high_priority_resources?.length > 0 && (
+                  <div className="bg-red-50 p-3 rounded border border-red-200 mb-3">
+                    <p className="text-sm font-semibold text-red-900 mb-2">High-Priority Resources:</p>
+                    <ul className="space-y-1">
+                      {predictions.resource_allocation_plan.high_priority_resources.map((resource, idx) => (
+                        <li key={idx} className="text-sm text-red-800">⚡ {resource}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {predictions.resource_allocation_plan.resource_optimization_tips?.length > 0 && (
+                  <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                    <p className="text-sm font-semibold text-blue-900 mb-2">Optimization Tips:</p>
+                    <ul className="space-y-1">
+                      {predictions.resource_allocation_plan.resource_optimization_tips.map((tip, idx) => (
+                        <li key={idx} className="text-sm text-blue-800">💡 {tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Care Planning Insights */}
+          {predictions.care_planning_insights && (
+            <Card className="border-2 border-purple-400 bg-gradient-to-r from-purple-50 to-pink-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Target className="w-5 h-5 text-purple-600" />
+                  Care Planning Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {predictions.care_planning_insights.primary_goals?.length > 0 && (
+                    <div className="bg-white p-3 rounded border">
+                      <p className="text-sm font-semibold text-gray-900 mb-2">🎯 Primary Care Goals:</p>
+                      <ul className="space-y-1">
+                        {predictions.care_planning_insights.primary_goals.map((goal, idx) => (
+                          <li key={idx} className="text-sm text-gray-800">• {goal}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {predictions.care_planning_insights.critical_interventions?.length > 0 && (
+                    <div className="bg-red-50 p-3 rounded border border-red-200">
+                      <p className="text-sm font-semibold text-red-900 mb-2">⚡ Critical Interventions:</p>
+                      <ul className="space-y-1">
+                        {predictions.care_planning_insights.critical_interventions.map((intervention, idx) => (
+                          <li key={idx} className="text-sm text-red-800">• {intervention}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {predictions.care_planning_insights.interdisciplinary_coordination_needs?.length > 0 && (
+                    <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                      <p className="text-sm font-semibold text-blue-900 mb-2">🤝 Team Coordination Needs:</p>
+                      <ul className="space-y-1">
+                        {predictions.care_planning_insights.interdisciplinary_coordination_needs.map((need, idx) => (
+                          <li key={idx} className="text-sm text-blue-800">• {need}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {predictions.care_planning_insights.family_education_priorities?.length > 0 && (
+                      <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                        <p className="text-sm font-semibold text-yellow-900 mb-2">👨‍👩‍👧 Family Education:</p>
+                        <ul className="space-y-1">
+                          {predictions.care_planning_insights.family_education_priorities.map((priority, idx) => (
+                            <li key={idx} className="text-xs text-yellow-800">• {priority}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {predictions.care_planning_insights.equipment_recommendations?.length > 0 && (
+                      <div className="bg-green-50 p-3 rounded border border-green-200">
+                        <p className="text-sm font-semibold text-green-900 mb-2">🛠️ Equipment Needs:</p>
+                        <ul className="space-y-1">
+                          {predictions.care_planning_insights.equipment_recommendations.map((equip, idx) => (
+                            <li key={idx} className="text-xs text-green-800">• {equip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
