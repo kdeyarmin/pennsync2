@@ -134,6 +134,21 @@ export default function AdminDashboard() {
     enabled: isAdmin,
   });
 
+  // Fetch user activities and compliance audits
+  const { data: userActivities = [] } = useQuery({
+    queryKey: ['allUserActivities'],
+    queryFn: () => base44.entities.UserActivity.list('-created_date', 1000),
+    initialData: [],
+    enabled: isAdmin,
+  });
+
+  const { data: complianceAudits = [] } = useQuery({
+    queryKey: ['allComplianceAudits'],
+    queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 500),
+    initialData: [],
+    enabled: isAdmin,
+  });
+
   // Voice command handler
   const handleVoiceCommand = (action, spokenText) => {
     switch (action) {
