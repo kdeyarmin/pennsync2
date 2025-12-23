@@ -43,12 +43,16 @@ export default function AnnouncementManager() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Announcement.create(data),
-    onSuccess: () => {
+    mutationFn: async (data) => {
+      const result = await base44.entities.Announcement.create(data);
+      console.log('Create result:', result);
+      return result;
+    },
+    onSuccess: (data) => {
+      console.log('Create success, new announcement:', data);
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
       setIsDialogOpen(false);
       resetForm();
-      alert('Announcement created successfully!');
     },
     onError: (error) => {
       console.error('Create error:', error);
