@@ -38,6 +38,11 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => base44.auth.me(),
   });
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPageName]);
+
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
 
