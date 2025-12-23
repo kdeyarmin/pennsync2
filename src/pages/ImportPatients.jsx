@@ -41,7 +41,7 @@ import AutoCorrector from "../components/import/AutoCorrector";
 import AIErrorInterpreter from "../components/import/AIErrorInterpreter";
 import DocumentOCRImporter from "../components/import/DocumentOCRImporter";
 
-const REQUIRED_FIELDS = ['first_name', 'last_name'];
+const REQUIRED_FIELDS = ['first_name', 'last_name', 'medical_record_number'];
 
 const FIELD_MAPPINGS = {
   // Patient basic info
@@ -586,6 +586,17 @@ export default function ImportPatients() {
           }
         }
       });
+
+      // Check for MRN requirement
+      if (!patient.medical_record_number || !patient.medical_record_number.trim()) {
+        rowErrors.push({
+          field: 'Medical Record Number',
+          columnHeader: 'MRN',
+          value: '',
+          error: 'Medical Record Number (MRN) is required',
+          suggestion: 'All patients must have a valid MRN. Patients without MRN will be skipped.'
+        });
+      }
 
       // Comprehensive patient validation
       const validationResults = validatePatient(patient, { skipWarnings: false });
