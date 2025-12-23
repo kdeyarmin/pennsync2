@@ -82,6 +82,9 @@ import PatientHistoryAutoPopulator from "../components/smartNote/PatientHistoryA
 import ConditionalAIAssistant from "../components/smartNote/ConditionalAIAssistant";
 import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
 import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
+import NuancedFeedbackPanel from "../components/smartNote/NuancedFeedbackPanel";
+import ComplianceTargetSettings from "../components/smartNote/ComplianceTargetSettings";
+import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecificGuidance";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -319,6 +322,7 @@ export default function SmartNoteAssistant() {
   const [comprehensiveContext, setComprehensiveContext] = useState(null);
   const [oasisAutomationResults, setOasisAutomationResults] = useState(null);
   const [isRunningOASISAutomation, setIsRunningOASISAutomation] = useState(false);
+  const [complianceTarget, setComplianceTarget] = useState(90);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -1623,6 +1627,50 @@ Return JSON with:
             onAddOASISLink={(link) => setOasisLinkedItems(prev => [...prev, link])}
             onRemoveOASISLink={(idx) => setOasisLinkedItems(prev => prev.filter((_, i) => i !== idx))}
           />
+
+          {/* Compliance Target Settings */}
+          {selectedPatientId && (
+            <ComplianceTargetSettings
+              currentTarget={complianceTarget}
+              onTargetChange={setComplianceTarget}
+              visitType={visitType}
+            />
+          )}
+
+          {/* Visit Type Specific Guidance */}
+          {selectedPatientId && visitType && (
+            <VisitTypeSpecificGuidance
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              patientData={selectedPatient}
+              onGenerateTemplate={(template) => setRoughNote(prev => template + '\n\n' + prev)}
+            />
+          )}
+
+          {/* Nuanced Feedback Panel */}
+          {(roughNote.length >= 100 || enhancedNote) && (
+            <NuancedFeedbackPanel
+              noteContent={enhancedNote || roughNote}
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              complianceTarget={complianceTarget}
+              onApplyFix={(textOrUpdatedNote, category, isReplacement) => {
+                if (isReplacement) {
+                  if (enhancedNote) {
+                    setEnhancedNote(textOrUpdatedNote);
+                  } else {
+                    setRoughNote(textOrUpdatedNote);
+                  }
+                } else {
+                  if (enhancedNote) {
+                    setEnhancedNote(prev => prev + '\n\n' + textOrUpdatedNote);
+                  } else {
+                    setRoughNote(prev => prev + '\n\n' + textOrUpdatedNote);
+                  }
+                }
+              }}
+            />
+          )}
 
           {/* Guideline Reference Panel */}
           {selectedPatientId && (roughNote.length >= 50 || enhancedNote) && (
