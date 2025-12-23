@@ -15,7 +15,10 @@ import {
   RefreshCw,
   CheckCircle2,
   Target,
-  Shield
+  Shield,
+  BookOpen,
+  Users,
+  Zap
 } from "lucide-react";
 
 export default function AIPredictivePatientAnalyzer({ patientId, autoAnalyze = false }) {
@@ -128,6 +131,24 @@ Analyze and provide structured insights in the following areas:
 - Suggest vital sign parameters that require attention
 - Recommend proactive assessments
 
+5. ADVERSE EVENT PREDICTION
+- Predict likelihood of falls (0-100% risk)
+- Predict infection risk (0-100% risk)
+- Identify other potential adverse events (pressure ulcers, medication errors, etc.)
+- For each predicted event, provide early warning signs and prevention strategies
+
+6. PERSONALIZED PATIENT EDUCATION RECOMMENDATIONS
+- Based on diagnoses, risks, and care gaps, recommend specific education topics
+- Suggest teaching methods appropriate for patient's cognitive status
+- Prioritize education needs (high/medium/low)
+- Include family/caregiver education needs
+
+7. PATIENT ENGAGEMENT & ADHERENCE PREDICTION
+- Predict likelihood of patient engagement with care plan (0-100%)
+- Identify barriers to adherence (cognitive, physical, social, motivational)
+- Suggest engagement strategies tailored to patient
+- Recommend monitoring frequency for adherence
+
 Be specific, evidence-based, and actionable. Focus on Medicare home health best practices.`;
 
       const response = await base44.integrations.Core.InvokeLLM({
@@ -172,6 +193,78 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                 clinicalRedFlags: { type: "array", items: { type: "string" } },
                 vitalSignParameters: { type: "array", items: { type: "string" } },
                 recommendedAssessments: { type: "array", items: { type: "string" } }
+              }
+            },
+            adverseEventPrediction: {
+              type: "object",
+              properties: {
+                fallRisk: {
+                  type: "object",
+                  properties: {
+                    riskPercentage: { type: "number" },
+                    riskLevel: { type: "string" },
+                    earlyWarningSigns: { type: "array", items: { type: "string" } },
+                    preventionStrategies: { type: "array", items: { type: "string" } }
+                  }
+                },
+                infectionRisk: {
+                  type: "object",
+                  properties: {
+                    riskPercentage: { type: "number" },
+                    riskLevel: { type: "string" },
+                    riskTypes: { type: "array", items: { type: "string" } },
+                    preventionMeasures: { type: "array", items: { type: "string" } }
+                  }
+                },
+                otherAdverseEvents: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      eventType: { type: "string" },
+                      riskLevel: { type: "string" },
+                      preventionActions: { type: "array", items: { type: "string" } }
+                    }
+                  }
+                }
+              }
+            },
+            educationRecommendations: {
+              type: "object",
+              properties: {
+                priorityTopics: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      topic: { type: "string" },
+                      priority: { type: "string" },
+                      rationale: { type: "string" },
+                      teachingMethod: { type: "string" }
+                    }
+                  }
+                },
+                caregiverEducation: { type: "array", items: { type: "string" } },
+                teachBackTopics: { type: "array", items: { type: "string" } }
+              }
+            },
+            engagementAdherencePrediction: {
+              type: "object",
+              properties: {
+                engagementLikelihood: { type: "number" },
+                adherenceBarriers: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      barrier: { type: "string" },
+                      impact: { type: "string" },
+                      mitigation: { type: "string" }
+                    }
+                  }
+                },
+                engagementStrategies: { type: "array", items: { type: "string" } },
+                recommendedMonitoringFrequency: { type: "string" }
               }
             }
           }
@@ -446,6 +539,247 @@ Be specific, evidence-based, and actionable. Focus on Medicare home health best 
                     ))}
                   </ul>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Adverse Event Prediction */}
+          <Card className="border-2 border-orange-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+                Adverse Event Prediction
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Fall Risk */}
+                <div className="border-2 border-red-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-red-900">Fall Risk Assessment</h4>
+                    <div className="text-center">
+                      <div className={`text-3xl font-bold ${getRiskLevelColor(analysis.adverseEventPrediction?.fallRisk?.riskLevel)}`}>
+                        {analysis.adverseEventPrediction?.fallRisk?.riskPercentage}%
+                      </div>
+                      <Badge className={getSeverityColor(analysis.adverseEventPrediction?.fallRisk?.riskLevel)}>
+                        {analysis.adverseEventPrediction?.fallRisk?.riskLevel}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="bg-red-50 border border-red-200 rounded p-2">
+                      <p className="text-xs font-semibold text-red-900 mb-1">Early Warning Signs:</p>
+                      <ul className="space-y-1">
+                        {analysis.adverseEventPrediction?.fallRisk?.earlyWarningSigns?.map((sign, idx) => (
+                          <li key={idx} className="text-xs text-red-800">• {sign}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded p-2">
+                      <p className="text-xs font-semibold text-green-900 mb-1">Prevention Strategies:</p>
+                      <ul className="space-y-1">
+                        {analysis.adverseEventPrediction?.fallRisk?.preventionStrategies?.map((strategy, idx) => (
+                          <li key={idx} className="text-xs text-green-800">• {strategy}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Infection Risk */}
+                <div className="border-2 border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-yellow-900">Infection Risk Assessment</h4>
+                    <div className="text-center">
+                      <div className={`text-3xl font-bold ${getRiskLevelColor(analysis.adverseEventPrediction?.infectionRisk?.riskLevel)}`}>
+                        {analysis.adverseEventPrediction?.infectionRisk?.riskPercentage}%
+                      </div>
+                      <Badge className={getSeverityColor(analysis.adverseEventPrediction?.infectionRisk?.riskLevel)}>
+                        {analysis.adverseEventPrediction?.infectionRisk?.riskLevel}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-gray-700 mb-1">Infection Types at Risk:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {analysis.adverseEventPrediction?.infectionRisk?.riskTypes?.map((type, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">{type}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                    <p className="text-xs font-semibold text-blue-900 mb-1">Prevention Measures:</p>
+                    <ul className="space-y-1">
+                      {analysis.adverseEventPrediction?.infectionRisk?.preventionMeasures?.map((measure, idx) => (
+                        <li key={idx} className="text-xs text-blue-800">• {measure}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Other Adverse Events */}
+                {analysis.adverseEventPrediction?.otherAdverseEvents?.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-gray-900">Other Potential Adverse Events</h4>
+                    {analysis.adverseEventPrediction?.otherAdverseEvents?.map((event, idx) => (
+                      <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{event.eventType}</span>
+                          <Badge className={getSeverityColor(event.riskLevel)}>
+                            {event.riskLevel} Risk
+                          </Badge>
+                        </div>
+                        <ul className="space-y-1">
+                          {event.preventionActions?.map((action, aidx) => (
+                            <li key={aidx} className="text-xs text-gray-700">• {action}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Personalized Patient Education */}
+          <Card className="border-2 border-blue-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                Personalized Patient Education Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-3">Priority Education Topics</h4>
+                  <div className="space-y-2">
+                    {analysis.educationRecommendations?.priorityTopics?.map((topic, idx) => (
+                      <div key={idx} className="border rounded-lg p-3 hover:bg-gray-50">
+                        <div className="flex items-start justify-between mb-2">
+                          <h5 className="font-semibold">{topic.topic}</h5>
+                          <Badge className={
+                            topic.priority === 'high' ? 'bg-red-500' :
+                            topic.priority === 'medium' ? 'bg-yellow-500' :
+                            'bg-blue-500'
+                          }>
+                            {topic.priority} priority
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">{topic.rationale}</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                          <p className="text-xs font-semibold text-blue-900 mb-1">Teaching Method:</p>
+                          <p className="text-xs text-blue-800">{topic.teachingMethod}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {analysis.educationRecommendations?.caregiverEducation?.length > 0 && (
+                  <div className="bg-purple-50 border border-purple-200 rounded p-3">
+                    <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Family/Caregiver Education
+                    </h4>
+                    <ul className="space-y-1">
+                      {analysis.educationRecommendations?.caregiverEducation?.map((item, idx) => (
+                        <li key={idx} className="text-sm text-purple-800">• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {analysis.educationRecommendations?.teachBackTopics?.length > 0 && (
+                  <div className="bg-green-50 border border-green-200 rounded p-3">
+                    <h4 className="font-semibold text-green-900 mb-2">Teach-Back Verification Topics</h4>
+                    <ul className="space-y-1">
+                      {analysis.educationRecommendations?.teachBackTopics?.map((topic, idx) => (
+                        <li key={idx} className="text-sm text-green-800">• {topic}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Patient Engagement & Adherence */}
+          <Card className="border-2 border-indigo-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-indigo-600" />
+                Engagement & Adherence Prediction
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className={`text-5xl font-bold ${
+                      analysis.engagementAdherencePrediction?.engagementLikelihood >= 70 ? 'text-green-600' :
+                      analysis.engagementAdherencePrediction?.engagementLikelihood >= 50 ? 'text-yellow-600' :
+                      'text-red-600'
+                    }`}>
+                      {analysis.engagementAdherencePrediction?.engagementLikelihood}%
+                    </div>
+                    <Badge className={
+                      analysis.engagementAdherencePrediction?.engagementLikelihood >= 70 ? 'bg-green-500 mt-2' :
+                      analysis.engagementAdherencePrediction?.engagementLikelihood >= 50 ? 'bg-yellow-500 mt-2' :
+                      'bg-red-500 mt-2'
+                    }>
+                      Engagement Likelihood
+                    </Badge>
+                  </div>
+                  <div className="flex-1">
+                    <div className="bg-indigo-50 border border-indigo-200 rounded p-3">
+                      <p className="text-xs font-semibold text-indigo-900 mb-1">Monitoring Frequency:</p>
+                      <p className="text-sm text-indigo-800">{analysis.engagementAdherencePrediction?.recommendedMonitoringFrequency}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Adherence Barriers */}
+                {analysis.engagementAdherencePrediction?.adherenceBarriers?.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Identified Barriers to Adherence</h4>
+                    <div className="space-y-2">
+                      {analysis.engagementAdherencePrediction?.adherenceBarriers?.map((barrier, idx) => (
+                        <div key={idx} className="border rounded-lg p-3 bg-white">
+                          <div className="flex items-start justify-between mb-2">
+                            <span className="font-medium">{barrier.barrier}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {barrier.impact} impact
+                            </Badge>
+                          </div>
+                          <div className="bg-green-50 border border-green-200 rounded p-2">
+                            <p className="text-xs font-semibold text-green-900 mb-1">Mitigation:</p>
+                            <p className="text-xs text-green-800">{barrier.mitigation}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Engagement Strategies */}
+                {analysis.engagementAdherencePrediction?.engagementStrategies?.length > 0 && (
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded p-4">
+                    <h4 className="font-semibold text-indigo-900 mb-2 flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      Tailored Engagement Strategies
+                    </h4>
+                    <ul className="space-y-1">
+                      {analysis.engagementAdherencePrediction?.engagementStrategies?.map((strategy, idx) => (
+                        <li key={idx} className="text-sm text-indigo-800 flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                          {strategy}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
