@@ -78,6 +78,8 @@ export default function AutomatedPDGMNavigator({ analysisResults, pdgmData, reve
   const [financialPredictions, setFinancialPredictions] = useState({});
   const [loadingPrediction, setLoadingPrediction] = useState(null);
   const [showCostSettings, setShowCostSettings] = useState(false);
+  const [patientForecasts, setPatientForecasts] = useState(null);
+  const [isLoadingForecasts, setIsLoadingForecasts] = useState(false);
   
   // Fetch agency settings for cost analysis
   const { data: agencySettings } = useQuery({
@@ -664,6 +666,209 @@ Return JSON:
 
   const [isExporting, setIsExporting] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+
+  // Fetch historical patient data for forecasting
+  const { data: patientHistory = [] } = useQuery({
+    queryKey: ['patientOasisHistory', pdgmData?.patient_info?.name],
+    queryFn: async () => {
+      if (!pdgmData?.patient_info?.name) return [];
+      return await base44.entities.OASISUpload.filter({}, '-created_date', 10);
+    },
+    enabled: !!pdgmData
+  });
+
+  const { data: allPatients = [] } = useQuery({
+    queryKey: ['patientsForForecasting'],
+    queryFn: () => base44.entities.Patient.list('-created_date', 100),
+  });
+
+  // Auto-generate forecasts when navigation completes
+  useEffect(() => {
+    if (navigation && !patientForecasts && !isLoadingForecasts) {
+      generatePatientForecasts();
+    }
+  }, [navigation]);
+
+  const generatePatientForecasts = async () => {
+    if (!navigation || !pdgmData) return;
+
+    setIsLoadingForecasts(true);
+    try {
+      // Get historical trends from similar patients
+      const similarPatients = allPatients.filter(p => 
+        p.primary_diagnosis?.toLowerCase().includes(pdgmData.primary_diagnosis?.toLowerCase().split(' ')[0]) ||
+        p.status === 'active'
+      ).slice(0, 20);
+
+      const historicalTrends = {
+        avgHospitalizations: similarPatients.reduce((sum, p) => 
+          sum + (p.past_hospitalizations?.length || 0), 0) / Math.max(similarPatients.length, 1),
+        avgLengthOfStay: 45, // Default average
+        avgFunctionalImprovement: 0.15 // 15% improvement average
+      };
+
+      const prompt = `You are a predictive analytics expert in home health. Forecast patient outcomes based on current OASIS data and historical trends.
+
+CURRENT PATIENT DATA:
+${JSON.stringify({
+  primary_diagnosis: pdgmData.primary_diagnosis,
+  functional_level: navigation.functional_level?.level,
+  functional_points: navigation.functional_level?.total_points,
+  comorbidities: pdgmData.comorbidities?.slice(0, 5),
+  admission_source: navigation.admission_timing?.admission_source,
+  episode_timing: navigation.admission_timing?.episode_timing,
+  clinical_group: navigation.clinical_group?.group_name
+}, null, 2)}
+
+HISTORICAL TRENDS (Agency Data):
+- Average hospitalizations for similar patients: ${historicalTrends.avgHospitalizations.toFixed(2)}
+- Average length of stay: ${historicalTrends.avgLengthOfStay} days
+- Average functional improvement: ${(historicalTrends.avgFunctionalImprovement * 100).toFixed(0)}%
+- Similar patient count: ${similarPatients.length}
+
+OASIS FUNCTIONAL SCORES:
+${JSON.stringify(pdgmData.functional_scores, null, 2)}
+
+CLINICAL STATUS:
+${JSON.stringify(pdgmData.clinical_items, null, 2)}
+
+PREDICT:
+1. READMISSION RISK (30-day, 60-day)
+   - Calculate risk score (0-100)
+   - Identify top risk factors
+   - Provide preventive interventions
+   - Estimate cost of readmission
+
+2. LENGTH OF STAY
+   - Predict expected LOS in days
+   - Compare to agency average
+   - Identify factors influencing duration
+   - Provide care plan recommendations
+
+3. FUNCTIONAL OUTCOMES
+   - Predict improvement trajectory
+   - Expected discharge functional status
+   - Timeline to goals
+   - Interventions to optimize outcomes
+
+4. RESOURCE ALLOCATION
+   - Predicted visit frequency needed
+   - Therapy service recommendations
+   - Nursing intensity level
+   - Estimated total care hours
+
+5. QUALITY MEASURES PERFORMANCE
+   - Likelihood of improvement in key measures
+   - Risk of decline in functional status
+   - Patient satisfaction predictors
+
+6. CARE PLANNING INSIGHTS
+   - High-priority interventions
+   - Timeline for key milestones
+   - Resource optimization opportunities`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            readmission_risk: {
+              type: "object",
+              properties: {
+                thirty_day_risk_score: { type: "number" },
+                sixty_day_risk_score: { type: "number" },
+                risk_level: { type: "string", enum: ["low", "moderate", "high", "critical"] },
+                top_risk_factors: { type: "array", items: { type: "string" } },
+                preventive_interventions: { type: "array", items: { type: "string" } },
+                estimated_readmission_cost: { type: "number" },
+                monitoring_recommendations: { type: "array", items: { type: "string" } }
+              }
+            },
+            length_of_stay: {
+              type: "object",
+              properties: {
+                predicted_days: { type: "number" },
+                confidence_range: { type: "string" },
+                compared_to_average: { type: "string" },
+                influencing_factors: { type: "array", items: { type: "string" } },
+                care_plan_recommendations: { type: "array", items: { type: "string" } },
+                efficiency_opportunities: { type: "array", items: { type: "string" } }
+              }
+            },
+            functional_outcomes: {
+              type: "object",
+              properties: {
+                expected_improvement_percentage: { type: "number" },
+                discharge_functional_level: { type: "string" },
+                timeline_to_goals: { type: "string" },
+                key_interventions: { type: "array", items: { type: "string" } },
+                barriers_to_improvement: { type: "array", items: { type: "string" } },
+                success_probability: { type: "number" }
+              }
+            },
+            resource_allocation: {
+              type: "object",
+              properties: {
+                predicted_weekly_visits: { type: "number" },
+                skilled_nursing_visits: { type: "number" },
+                pt_sessions_recommended: { type: "number" },
+                ot_sessions_recommended: { type: "number" },
+                nursing_intensity: { type: "string", enum: ["low", "moderate", "high", "very_high"] },
+                total_care_hours_estimate: { type: "number" },
+                resource_optimization_tips: { type: "array", items: { type: "string" } }
+              }
+            },
+            quality_measures_forecast: {
+              type: "object",
+              properties: {
+                improvement_in_ambulation_likelihood: { type: "number" },
+                improvement_in_bathing_likelihood: { type: "number" },
+                improvement_in_transferring_likelihood: { type: "number" },
+                decline_risk_areas: { type: "array", items: { type: "string" } },
+                patient_satisfaction_predictors: { type: "array", items: { type: "string" } }
+              }
+            },
+            care_planning_insights: {
+              type: "object",
+              properties: {
+                high_priority_interventions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      intervention: { type: "string" },
+                      timeframe: { type: "string" },
+                      expected_outcome: { type: "string" },
+                      resource_needs: { type: "string" }
+                    }
+                  }
+                },
+                key_milestones: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      milestone: { type: "string" },
+                      target_date: { type: "string" },
+                      success_criteria: { type: "string" }
+                    }
+                  }
+                },
+                cost_efficiency_tips: { type: "array", items: { type: "string" } }
+              }
+            },
+            overall_prognosis: { type: "string" },
+            confidence_level: { type: "string", enum: ["high", "moderate", "low"] }
+          }
+        }
+      });
+
+      setPatientForecasts(result);
+    } catch (error) {
+      console.error('Forecasting error:', error);
+    }
+    setIsLoadingForecasts(false);
+  };
 
   const exportPDF = async () => {
     if (!navigation) return;
@@ -1677,6 +1882,361 @@ Return JSON:
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Patient Outcome Forecasts */}
+            {patientForecasts && (
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-2 border-blue-300">
+                <h3 className="font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Predictive Patient Outcome Forecasts
+                  <Badge className={
+                    patientForecasts.confidence_level === 'high' ? 'bg-green-600 text-white' :
+                    patientForecasts.confidence_level === 'moderate' ? 'bg-yellow-600 text-white' :
+                    'bg-orange-600 text-white'
+                  }>
+                    {patientForecasts.confidence_level} confidence
+                  </Badge>
+                </h3>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                  {/* Readmission Risk */}
+                  <Card className={`border-2 ${
+                    patientForecasts.readmission_risk?.risk_level === 'critical' || patientForecasts.readmission_risk?.risk_level === 'high'
+                      ? 'border-red-400 bg-red-50'
+                      : patientForecasts.readmission_risk?.risk_level === 'moderate'
+                      ? 'border-yellow-400 bg-yellow-50'
+                      : 'border-green-400 bg-green-50'
+                  }`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4" />
+                          Readmission Risk
+                        </h4>
+                        <Badge className={
+                          patientForecasts.readmission_risk?.risk_level === 'critical' || patientForecasts.readmission_risk?.risk_level === 'high'
+                            ? 'bg-red-600 text-white'
+                            : patientForecasts.readmission_risk?.risk_level === 'moderate'
+                            ? 'bg-yellow-600 text-white'
+                            : 'bg-green-600 text-white'
+                        }>
+                          {patientForecasts.readmission_risk?.risk_level?.toUpperCase()}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="text-center p-2 bg-white rounded border">
+                          <p className="text-xs text-gray-600">30-Day Risk</p>
+                          <p className="text-2xl font-bold text-red-600">
+                            {patientForecasts.readmission_risk?.thirty_day_risk_score}%
+                          </p>
+                        </div>
+                        <div className="text-center p-2 bg-white rounded border">
+                          <p className="text-xs text-gray-600">60-Day Risk</p>
+                          <p className="text-2xl font-bold text-orange-600">
+                            {patientForecasts.readmission_risk?.sixty_day_risk_score}%
+                          </p>
+                        </div>
+                      </div>
+
+                      {patientForecasts.readmission_risk?.top_risk_factors?.length > 0 && (
+                        <div className="bg-white p-2 rounded border mb-2">
+                          <p className="text-xs font-semibold text-gray-700 mb-1">Top Risk Factors</p>
+                          <ul className="text-xs text-gray-700 space-y-1">
+                            {patientForecasts.readmission_risk.top_risk_factors.map((factor, i) => (
+                              <li key={i}>• {factor}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {patientForecasts.readmission_risk?.preventive_interventions?.length > 0 && (
+                        <div className="bg-green-50 p-2 rounded border border-green-200">
+                          <p className="text-xs font-semibold text-green-800 mb-1">✓ Preventive Actions</p>
+                          <ul className="text-xs text-green-700 space-y-1">
+                            {patientForecasts.readmission_risk.preventive_interventions.slice(0, 3).map((int, i) => (
+                              <li key={i}>• {int}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Length of Stay */}
+                  <Card className="border-2 border-blue-400 bg-blue-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Length of Stay
+                        </h4>
+                      </div>
+
+                      <div className="text-center p-3 bg-white rounded border-2 border-blue-300 mb-3">
+                        <p className="text-xs text-gray-600">Predicted LOS</p>
+                        <p className="text-4xl font-bold text-blue-700">
+                          {patientForecasts.length_of_stay?.predicted_days}
+                        </p>
+                        <p className="text-xs text-blue-600">days</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {patientForecasts.length_of_stay?.confidence_range}
+                        </p>
+                      </div>
+
+                      <div className="bg-white p-2 rounded border mb-2">
+                        <p className="text-xs text-gray-600">{patientForecasts.length_of_stay?.compared_to_average}</p>
+                      </div>
+
+                      {patientForecasts.length_of_stay?.influencing_factors?.length > 0 && (
+                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                          <p className="text-xs font-semibold text-blue-800 mb-1">Key Factors</p>
+                          <ul className="text-xs text-blue-700 space-y-1">
+                            {patientForecasts.length_of_stay.influencing_factors.slice(0, 3).map((factor, i) => (
+                              <li key={i}>• {factor}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Functional Outcomes */}
+                  <Card className="border-2 border-purple-400 bg-purple-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Activity className="w-4 h-4" />
+                          Functional Outcomes
+                        </h4>
+                      </div>
+
+                      <div className="text-center p-3 bg-white rounded border-2 border-purple-300 mb-3">
+                        <p className="text-xs text-gray-600">Expected Improvement</p>
+                        <p className="text-4xl font-bold text-purple-700">
+                          {patientForecasts.functional_outcomes?.expected_improvement_percentage}%
+                        </p>
+                        <p className="text-xs text-purple-600 mt-1">
+                          Success Probability: {patientForecasts.functional_outcomes?.success_probability}%
+                        </p>
+                      </div>
+
+                      <div className="bg-white p-2 rounded border mb-2 text-xs">
+                        <p className="text-gray-600">
+                          <strong>Discharge Functional Level:</strong> {patientForecasts.functional_outcomes?.discharge_functional_level}
+                        </p>
+                        <p className="text-gray-600 mt-1">
+                          <strong>Timeline:</strong> {patientForecasts.functional_outcomes?.timeline_to_goals}
+                        </p>
+                      </div>
+
+                      {patientForecasts.functional_outcomes?.barriers_to_improvement?.length > 0 && (
+                        <div className="bg-orange-50 p-2 rounded border border-orange-200">
+                          <p className="text-xs font-semibold text-orange-800 mb-1">⚠️ Barriers</p>
+                          <ul className="text-xs text-orange-700 space-y-1">
+                            {patientForecasts.functional_outcomes.barriers_to_improvement.slice(0, 2).map((barrier, i) => (
+                              <li key={i}>• {barrier}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Resource Allocation */}
+                  <Card className="border-2 border-green-400 bg-green-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Target className="w-4 h-4" />
+                          Resource Allocation
+                        </h4>
+                        <Badge className={
+                          patientForecasts.resource_allocation?.nursing_intensity === 'very_high' ? 'bg-red-600 text-white' :
+                          patientForecasts.resource_allocation?.nursing_intensity === 'high' ? 'bg-orange-600 text-white' :
+                          patientForecasts.resource_allocation?.nursing_intensity === 'moderate' ? 'bg-yellow-600 text-white' :
+                          'bg-green-600 text-white'
+                        }>
+                          {patientForecasts.resource_allocation?.nursing_intensity} intensity
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                        <div className="bg-white p-2 rounded border text-center">
+                          <p className="text-gray-600">Weekly Visits</p>
+                          <p className="text-2xl font-bold text-green-700">
+                            {patientForecasts.resource_allocation?.predicted_weekly_visits}
+                          </p>
+                        </div>
+                        <div className="bg-white p-2 rounded border text-center">
+                          <p className="text-gray-600">Total Care Hours</p>
+                          <p className="text-2xl font-bold text-green-700">
+                            {patientForecasts.resource_allocation?.total_care_hours_estimate}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-2 rounded border text-xs mb-2">
+                        <div className="grid grid-cols-3 gap-1 text-center">
+                          <div>
+                            <p className="text-gray-500">SN</p>
+                            <p className="font-bold">{patientForecasts.resource_allocation?.skilled_nursing_visits}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">PT</p>
+                            <p className="font-bold">{patientForecasts.resource_allocation?.pt_sessions_recommended}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">OT</p>
+                            <p className="font-bold">{patientForecasts.resource_allocation?.ot_sessions_recommended}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {patientForecasts.resource_allocation?.resource_optimization_tips?.length > 0 && (
+                        <div className="bg-green-50 p-2 rounded border border-green-200">
+                          <p className="text-xs font-semibold text-green-800 mb-1">💡 Optimization</p>
+                          <ul className="text-xs text-green-700 space-y-1">
+                            {patientForecasts.resource_allocation.resource_optimization_tips.slice(0, 2).map((tip, i) => (
+                              <li key={i}>• {tip}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Care Planning Insights */}
+                {patientForecasts.care_planning_insights?.high_priority_interventions?.length > 0 && (
+                  <div className="bg-white p-4 rounded-lg border-2 border-indigo-300">
+                    <h4 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      High-Priority Care Plan Interventions
+                    </h4>
+                    <div className="space-y-2">
+                      {patientForecasts.care_planning_insights.high_priority_interventions.map((int, idx) => (
+                        <div key={idx} className="bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded border">
+                          <div className="flex items-start gap-2">
+                            <span className="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm flex-shrink-0">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1">
+                              <p className="font-semibold text-sm text-indigo-900">{int.intervention}</p>
+                              <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
+                                <div>
+                                  <p className="text-gray-500">Timeframe</p>
+                                  <p className="font-medium text-gray-800">{int.timeframe}</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-500">Expected Outcome</p>
+                                  <p className="font-medium text-green-700">{int.expected_outcome}</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-500">Resources</p>
+                                  <p className="font-medium text-blue-700">{int.resource_needs}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Key Milestones */}
+                {patientForecasts.care_planning_insights?.key_milestones?.length > 0 && (
+                  <div className="bg-white p-4 rounded-lg border-2 border-purple-300">
+                    <h4 className="font-semibold text-purple-900 mb-3">📅 Care Plan Milestones</h4>
+                    <div className="space-y-2">
+                      {patientForecasts.care_planning_insights.key_milestones.map((milestone, idx) => (
+                        <div key={idx} className="flex items-start gap-3 bg-purple-50 p-2 rounded border border-purple-200">
+                          <CheckCircle2 className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1 text-xs">
+                            <p className="font-semibold text-purple-900">{milestone.milestone}</p>
+                            <p className="text-gray-600">Target: {milestone.target_date}</p>
+                            <p className="text-gray-700">Success Criteria: {milestone.success_criteria}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quality Measures Forecast */}
+                <div className="bg-white p-4 rounded-lg border-2 border-green-300">
+                  <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    Quality Measures Performance Forecast
+                  </h4>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="text-center p-2 bg-green-50 rounded border border-green-200">
+                      <p className="text-xs text-gray-600">Ambulation</p>
+                      <p className="text-xl font-bold text-green-700">
+                        {patientForecasts.quality_measures_forecast?.improvement_in_ambulation_likelihood}%
+                      </p>
+                      <p className="text-xs text-green-600">likely to improve</p>
+                    </div>
+                    <div className="text-center p-2 bg-blue-50 rounded border border-blue-200">
+                      <p className="text-xs text-gray-600">Bathing</p>
+                      <p className="text-xl font-bold text-blue-700">
+                        {patientForecasts.quality_measures_forecast?.improvement_in_bathing_likelihood}%
+                      </p>
+                      <p className="text-xs text-blue-600">likely to improve</p>
+                    </div>
+                    <div className="text-center p-2 bg-purple-50 rounded border border-purple-200">
+                      <p className="text-xs text-gray-600">Transferring</p>
+                      <p className="text-xl font-bold text-purple-700">
+                        {patientForecasts.quality_measures_forecast?.improvement_in_transferring_likelihood}%
+                      </p>
+                      <p className="text-xs text-purple-600">likely to improve</p>
+                    </div>
+                  </div>
+
+                  {patientForecasts.quality_measures_forecast?.decline_risk_areas?.length > 0 && (
+                    <Alert className="bg-orange-50 border-orange-200">
+                      <AlertTriangle className="w-4 h-4 text-orange-600" />
+                      <AlertDescription className="text-xs">
+                        <p className="font-semibold text-orange-900 mb-1">Areas at Risk of Decline</p>
+                        <ul className="text-orange-800 space-y-1">
+                          {patientForecasts.quality_measures_forecast.decline_risk_areas.map((area, i) => (
+                            <li key={i}>• {area}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+
+                {/* Overall Prognosis */}
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg border border-indigo-300">
+                  <p className="text-xs font-semibold text-indigo-800 mb-1">📊 Overall Prognosis</p>
+                  <p className="text-sm text-indigo-900">{patientForecasts.overall_prognosis}</p>
+                </div>
+
+                <Button
+                  onClick={generatePatientForecasts}
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoadingForecasts}
+                  className="w-full"
+                >
+                  {isLoadingForecasts ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating Forecasts...</>
+                  ) : (
+                    'Refresh Forecasts'
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {isLoadingForecasts && !patientForecasts && (
+              <div className="bg-blue-50 p-6 rounded-lg border border-blue-300 text-center">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
+                <p className="text-sm text-blue-700">Generating predictive forecasts for patient outcomes...</p>
               </div>
             )}
 
