@@ -37,17 +37,16 @@ import TrainingProgressDashboard from "../components/training/TrainingProgressDa
 import StaffEducationComplianceReport from "../components/training/StaffEducationComplianceReport";
 
 export default function StaffTrainingHub() {
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [skillGaps, setSkillGaps] = useState([]);
-  const [activeModule, setActiveModule] = useState(null);
-
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
   const isAdmin = currentUser?.role === 'admin';
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [skillGaps, setSkillGaps] = useState([]);
+  const [activeModule, setActiveModule] = useState(null);
 
   const { data: trainingProgress = [] } = useQuery({
     queryKey: ['trainingProgress', currentUser?.email],
