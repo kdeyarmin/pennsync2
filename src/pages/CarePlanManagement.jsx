@@ -17,9 +17,10 @@ import {
   Trash2,
   User,
   Calendar,
-  ArrowLeft
+  ArrowLeft,
+  Sparkles
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -27,12 +28,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AICarePlanRecommendations from "../components/carePlan/AICarePlanRecommendations";
+import AutomatedTaskGenerator from "../components/carePlan/AutomatedTaskGenerator";
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showAITools, setShowAITools] = useState(false);
 
   // Fetch all patients
   const { data: patients = [] } = useQuery({
@@ -45,6 +50,14 @@ export default function CarePlanManagement() {
   const { data: carePlans = [], isLoading } = useQuery({
     queryKey: ['allCarePlans'],
     queryFn: () => base44.entities.CarePlan.list('-created_date', 500),
+    initialData: [],
+  });
+
+  // Fetch visits for selected patient
+  const { data: patientVisits = [] } = useQuery({
+    queryKey: ['patientVisits', selectedPatient?.id],
+    queryFn: () => base44.entities.Visit.filter({ patient_id: selectedPatient?.id }, '-visit_date', 10),
+    enabled: !!selectedPatient?.id,
     initialData: [],
   });
 
@@ -105,6 +118,31 @@ export default function CarePlanManagement() {
   const handleDelete = (planId) => {
     if (window.confirm('Are you sure you want to delete this care plan?')) {
       deleteCarePlanMutation.mutate(planId);
+    }
+  };
+
+  const handleAcceptRecommendation = async (recommendation) => {
+    if (!selectedPatient) return;
+
+    try {
+      const targetDate = format(addDays(new Date(), recommendation.target_days || 60), 'yyyy-MM-dd');
+      
+      await base44.entities.CarePlan.create({
+        patient_id: selectedPatient.id,
+        problem: recommendation.problem,
+        goal: recommendation.goal,
+        interventions: recommendation.interventions,
+        baseline_measurement: recommendation.baseline_measurement,
+        frequency: recommendation.frequency,
+        target_date: targetDate,
+        status: 'active'
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+      alert('Care plan created successfully!');
+    } catch (error) {
+      console.error('Error creating care plan:', error);
+      alert('Failed to create care plan. Please try again.');
     }
   };
 
@@ -227,6 +265,25 @@ export default function CarePlanManagement() {
         </CardContent>
       </Card>
 
+      {/* AI Tools Section */}
+      {selectedPatient && showAITools && (
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <AICarePlanRecommendations
+            patient={selectedPatient}
+            visits={patientVisits}
+            existingCarePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
+            onAcceptRecommendation={handleAcceptRecommendation}
+          />
+          <AutomatedTaskGenerator
+            patient={selectedPatient}
+            carePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
+            onTasksGenerated={() => {
+              alert('Tasks created successfully!');
+            }}
+          />
+        </div>
+      )}
+
       {/* Care Plans by Patient */}
       <div className="space-y-6">
         {isLoading ? (
@@ -265,13 +322,28 @@ export default function CarePlanManagement() {
                         </p>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => navigate(`${createPageUrl("PatientDetails")}?patientId=${patientId}`)}
-                      variant="outline"
-                    >
-                      View Patient
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={selectedPatient?.id === patientId ? "default" : "outline"}
+                        onClick={() => {
+                          setSelectedPatient(patient);
+                          setShowAITools(true);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className={selectedPatient?.id === patientId ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      >
+                        <Sparkles className="w-4 h-4 mr-1" />
+                        AI Tools
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`${createPageUrl("PatientDetails")}?patientId=${patientId}`)}
+                        variant="outline"
+                      >
+                        View Patient
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
