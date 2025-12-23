@@ -48,6 +48,11 @@ export default function AnnouncementManager() {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
       setIsDialogOpen(false);
       resetForm();
+      alert('Announcement created successfully!');
+    },
+    onError: (error) => {
+      console.error('Create error:', error);
+      alert(`Failed to create announcement: ${error.message}`);
     }
   });
 
@@ -57,6 +62,11 @@ export default function AnnouncementManager() {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
       setIsDialogOpen(false);
       resetForm();
+      alert('Announcement updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Update error:', error);
+      alert(`Failed to update announcement: ${error.message}`);
     }
   });
 
@@ -200,8 +210,12 @@ export default function AnnouncementManager() {
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                    {editingId ? 'Update' : 'Create'}
+                  <Button 
+                    type="submit" 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                  >
+                    {createMutation.isPending || updateMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Create'}
                   </Button>
                 </div>
               </form>
