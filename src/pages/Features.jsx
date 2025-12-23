@@ -74,7 +74,7 @@ export default function FeaturesPage() {
         },
         {
           name: "AI Note Enhancement",
-          icon: Wand2,
+          icon: Sparkles,
           description: "One-click transformation of rough notes into polished, Medicare-compliant clinical documentation",
           timeSaved: "10-15 min/visit",
           impact: "critical",
