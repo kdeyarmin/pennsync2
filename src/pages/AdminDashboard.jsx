@@ -256,6 +256,28 @@ export default function AdminDashboard() {
     setIsCheckingEncryption(false);
   };
 
+  // Security metrics
+  const unauthorizedAttempts = securityLogs.filter(log =>
+    log.action?.includes('UNAUTHORIZED') || log.action?.includes('ACCESS_DENIED')
+  ).length;
+
+  const aiApiCalls = securityLogs.filter(log =>
+    log.action === 'AI_API_CALL'
+  ).length;
+
+  // Filter logs
+  const filteredLogs = securityLogs.filter(log =>
+    log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.user_email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Security event counts
+  const securityEventCounts = securityLogs.reduce((acc, log) => {
+    const action = log.action || 'Unknown';
+    acc[action] = (acc[action] || 0) + 1;
+    return acc;
+  }, {});
+
   // Check if user is loading or not admin
   if (userLoading) {
     return (
