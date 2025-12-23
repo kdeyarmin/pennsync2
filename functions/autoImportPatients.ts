@@ -251,13 +251,18 @@ Deno.serve(async (req) => {
         }
       });
 
-      // Ensure we have required fields
-      if (!patient.first_name || !patient.last_name) {
+      // Ensure we have required fields including MRN
+      if (!patient.first_name || !patient.last_name || !patient.medical_record_number) {
         results.failed++;
+        const missingFields = [];
+        if (!patient.first_name) missingFields.push('first_name');
+        if (!patient.last_name) missingFields.push('last_name');
+        if (!patient.medical_record_number) missingFields.push('medical_record_number (MRN)');
+        
         results.errors.push({
           row: i + 1,
           patient: `Row ${i + 1}`,
-          error: `Missing required field(s): ${!patient.first_name ? 'first_name' : ''} ${!patient.last_name ? 'last_name' : ''}`.trim()
+          error: `Missing required field(s): ${missingFields.join(', ')}`
         });
         continue;
       }
