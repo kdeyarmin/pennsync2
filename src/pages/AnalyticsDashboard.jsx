@@ -356,7 +356,6 @@ export default function AnalyticsDashboard() {
           type: 'table',
           headers: ['Metric', 'Value'],
           rows: [
-            ['Notes Tracked with Compliance Data', metrics.notesWithComplianceTracking],
             ['Avg Compliance Before AI Enhancement', `${metrics.avgRoughCompliance}%`],
             ['Avg Compliance After AI Enhancement', `${metrics.avgEnhancedCompliance}%`],
             ['Average Compliance Improvement', `+${metrics.avgComplianceImprovement}%`]
@@ -564,7 +563,7 @@ export default function AnalyticsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 bg-white rounded-lg border border-purple-200">
                 <p className="text-sm text-gray-600 mb-1">Before AI</p>
                 <p className="text-3xl font-bold text-orange-600">{metrics.avgRoughCompliance}%</p>
@@ -579,11 +578,6 @@ export default function AnalyticsDashboard() {
                 <p className="text-sm text-gray-600 mb-1">Improvement</p>
                 <p className="text-3xl font-bold text-purple-600">+{metrics.avgComplianceImprovement}%</p>
                 <p className="text-xs text-gray-500">Avg compliance gain</p>
-              </div>
-              <div className="p-4 bg-white rounded-lg border border-purple-200">
-                <p className="text-sm text-gray-600 mb-1">Notes Tracked</p>
-                <p className="text-3xl font-bold text-blue-600">{metrics.notesWithComplianceTracking}</p>
-                <p className="text-xs text-gray-500">With compliance data</p>
               </div>
             </div>
           </CardContent>
