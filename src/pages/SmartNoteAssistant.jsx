@@ -80,6 +80,7 @@ import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
 import GuidedDocumentationWorkflow from "../components/smartNote/GuidedDocumentationWorkflow";
 import PatientHistoryAutoPopulator from "../components/smartNote/PatientHistoryAutoPopulator";
 import ConditionalAIAssistant from "../components/smartNote/ConditionalAIAssistant";
+import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1621,6 +1622,22 @@ Return JSON with:
                 }
               }}
               compact={true}
+            />
+          )}
+
+          {/* Visit-Type Specific Compliance Checker */}
+          {enhancedNote && (
+            <VisitTypeComplianceChecker
+              visitType={visitType}
+              noteContent={enhancedNote}
+              oasisData={patientOASIS?.[0]}
+              patientData={selectedPatient}
+              vitalSigns={vitalSigns}
+              careType={selectedPatient?.care_type || "home_health"}
+              autoCheck={true}
+              onIssuesDetected={(issues) => {
+                setComplianceIssues(prev => [...prev, ...issues]);
+              }}
             />
           )}
 

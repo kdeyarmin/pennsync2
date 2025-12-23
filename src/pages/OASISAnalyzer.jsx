@@ -92,6 +92,7 @@ import WorkflowExecutionEngine from "../components/oasis/WorkflowExecutionEngine
 import WorkflowMonitoringDashboard from "../components/oasis/WorkflowMonitoringDashboard";
 import OASISToPatientChartPusher from "../components/oasis/OASISToPatientChartPusher";
 import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
+import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -1963,6 +1964,18 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               )}
             </CardContent>
           </Card>
+
+      {/* Visit-Type Compliance Review */}
+      {selectedPatientId && (
+        <VisitTypeComplianceChecker
+          visitType={currentOASIS?.assessment_type || 'admission'}
+          noteContent={currentOASIS?.raw_text || analysisResults?.summary}
+          oasisData={currentOASIS}
+          patientData={patients?.find(p => p.id === selectedPatientId)}
+          careType={patients?.find(p => p.id === selectedPatientId)?.care_type || "home_health"}
+          autoCheck={false}
+        />
+      )}
 
       {/* Predictive Outcomes Analyzer */}
       <PredictiveOutcomesAnalyzer
