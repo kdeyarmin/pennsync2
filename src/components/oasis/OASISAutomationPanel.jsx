@@ -35,8 +35,8 @@ export default function OASISAutomationPanel({
   onReviewFlag,
   isLoading = false
 }) {
-  const [expandedItems, setExpandedItems] = useState(new Set());
   const [appliedSuggestions, setAppliedSuggestions] = useState(new Set());
+  const [filterAction, setFilterAction] = useState("all");
 
   const getConfidenceColor = (score) => {
     if (score >= 80) return "bg-green-100 text-green-800 border-green-300";
@@ -93,6 +93,18 @@ export default function OASISAutomationPanel({
     s.action_needed === 'review' || s.action_needed === 'flag'
   );
 
+  const criticalDiscrepancies = discrepancies.filter(d => 
+    d.discrepancy_severity === 'critical'
+  );
+
+  const filteredSuggestions = oasisSuggestions.filter(s => {
+    if (filterAction === "all") return true;
+    if (filterAction === "auto") return s.action_needed === "auto_update";
+    if (filterAction === "review") return s.action_needed === "review" || s.action_needed === "flag";
+    if (filterAction === "discrepancies") return s.discrepancy_flag;
+    return true;
+  });
+
   if (isLoading) {
     return (
       <Card className="border-2 border-purple-200">
@@ -117,6 +129,28 @@ export default function OASISAutomationPanel({
 
   return (
     <div className="space-y-4">
+      {/* Critical Discrepancies Alert */}
+      {criticalDiscrepancies.length > 0 && (
+        <Alert className="border-red-600 bg-red-50">
+          <AlertTriangle className="w-5 h-5 text-red-600" />
+          <AlertDescription>
+            <p className="font-semibold text-red-900 mb-2">
+              {criticalDiscrepancies.length} Critical Discrepanc{criticalDiscrepancies.length > 1 ? 'ies' : 'y'} Detected
+            </p>
+            <ul className="text-xs text-red-800 space-y-1">
+              {criticalDiscrepancies.slice(0, 3).map((d, i) => (
+                <li key={i}>
+                  <strong>{d.item_number}:</strong> {d.discrepancy_reason}
+                </li>
+              ))}
+              {criticalDiscrepancies.length > 3 && (
+                <li className="italic">+ {criticalDiscrepancies.length - 3} more...</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Summary Card */}
       <Card className="border-2 border-purple-200 bg-gradient-to-b from-purple-50 to-white">
         <CardHeader className="py-4">
@@ -155,15 +189,17 @@ export default function OASISAutomationPanel({
           </div>
 
           {/* Quick Actions */}
-          {highConfidenceCount > 0 && (
-            <Button
-              onClick={handleApplyAllHighConfidence}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              Auto-Apply {highConfidenceCount} High Confidence Suggestion{highConfidenceCount > 1 ? 's' : ''}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {highConfidenceCount > 0 && (
+              <Button
+                onClick={handleApplyAllHighConfidence}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Auto-Apply {highConfidenceCount} High Confidence
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -187,14 +223,56 @@ export default function OASISAutomationPanel({
         </Alert>
       )}
 
+      {/* Filter Tabs */}
+      <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+        <Button
+          size="sm"
+          variant={filterAction === "all" ? "default" : "ghost"}
+          onClick={() => setFilterAction("all")}
+          className="flex-1"
+        >
+          All ({oasisSuggestions.length})
+        </Button>
+        <Button
+          size="sm"
+          variant={filterAction === "auto" ? "default" : "ghost"}
+          onClick={() => setFilterAction("auto")}
+          className="flex-1"
+        >
+          <Zap className="w-3 h-3 mr-1" />
+          Auto ({oasisSuggestions.filter(s => s.action_needed === "auto_update").length})
+        </Button>
+        <Button
+          size="sm"
+          variant={filterAction === "review" ? "default" : "ghost"}
+          onClick={() => setFilterAction("review")}
+          className="flex-1"
+        >
+          <Eye className="w-3 h-3 mr-1" />
+          Review ({needsReview.length})
+        </Button>
+        <Button
+          size="sm"
+          variant={filterAction === "discrepancies" ? "default" : "ghost"}
+          onClick={() => setFilterAction("discrepancies")}
+          className="flex-1"
+        >
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Issues ({discrepancies.length})
+        </Button>
+      </div>
+
       {/* Suggestions List */}
       <Card className="border-gray-200">
         <CardHeader className="py-3">
-          <CardTitle className="text-sm">OASIS Field Suggestions</CardTitle>
+          <CardTitle className="text-sm flex items-center justify-between">
+            <span>OASIS Field Suggestions</span>
+            <Badge variant="outline">{filteredSuggestions.length} items</Badge>
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
           <Accordion type="multiple" className="space-y-2">
-            {oasisSuggestions.map((suggestion, idx) => {
+            {filteredSuggestions.map((suggestion, idx) => {
               const isApplied = appliedSuggestions.has(suggestion.item_number);
               
               return (
@@ -241,18 +319,37 @@ export default function OASISAutomationPanel({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4 space-y-3">
+                    {/* Confidence Breakdown */}
+                    <div className="bg-gray-50 p-3 rounded border">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-gray-700">Confidence Analysis</span>
+                        <Badge className={getConfidenceColor(suggestion.confidence_score)}>
+                          {suggestion.confidence_score}%
+                        </Badge>
+                      </div>
+                      <Progress value={suggestion.confidence_score} className="h-2 mb-2" />
+                      <p className="text-xs text-gray-600">
+                        {suggestion.confidence_score >= 85 ? "✓ Very confident - clear documentation" :
+                         suggestion.confidence_score >= 70 ? "⚠ Confident - good evidence but verify" :
+                         suggestion.confidence_score >= 50 ? "⚠ Moderate - review recommended" :
+                         "⚠️ Low confidence - manual assessment needed"}
+                      </p>
+                    </div>
+
                     {/* Supporting Evidence */}
                     <div className="bg-white p-3 rounded border border-gray-200">
-                      <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
                         <FileText className="w-3 h-3" />
                         Evidence from Clinical Note:
                       </p>
-                      <p className="text-xs text-gray-800 italic pl-4 border-l-2 border-blue-300">
-                        "{suggestion.supporting_text}"
-                      </p>
+                      <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-2">
+                        <p className="text-xs text-blue-900 italic">
+                          "{suggestion.supporting_text}"
+                        </p>
+                      </div>
                       {suggestion.note_location && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          📍 Found in: {suggestion.note_location}
+                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                          📍 Location: <span className="font-medium">{suggestion.note_location}</span>
                         </p>
                       )}
                     </div>
