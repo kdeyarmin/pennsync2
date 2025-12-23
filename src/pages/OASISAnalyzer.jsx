@@ -99,6 +99,7 @@ import ClinicalNoteToOASISMapper from "../components/oasis/ClinicalNoteToOASISMa
 import OASISDraftGenerator from "../components/oasis/OASISDraftGenerator";
 import ProactiveRescoringEngine from "../components/oasis/ProactiveRescoringEngine";
 import AutomatedQualityAssurance from "../components/oasis/AutomatedQualityAssurance";
+import ProactiveDocumentationAssistant from "../components/oasis/ProactiveDocumentationAssistant";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -2030,6 +2031,20 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           autoAnalyze={true}
           onOpportunitiesFound={(opportunities) => {
             console.log('Rescoring opportunities:', opportunities);
+          }}
+        />
+      )}
+
+      {/* Proactive Documentation Assistant - AI Gap Detection */}
+      {analysisResults && pdgmData && (
+        <ProactiveDocumentationAssistant
+          oasisData={pdgmData}
+          clinicalNotes={analysisResults?.summary}
+          patientData={selectedPatient}
+          autoAnalyze={true}
+          onApplySuggestion={(suggestion) => {
+            console.log('Applying suggestion:', suggestion);
+            // Could integrate with OASIS editor if available
           }}
         />
       )}
