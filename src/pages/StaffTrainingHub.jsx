@@ -34,6 +34,12 @@ import StateSurveyVideos from "../components/training/StateSurveyVideos";
 import EducationVideos from "../components/training/EducationVideos";
 
 export default function StaffTrainingHub() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [skillGaps, setSkillGaps] = useState([]);
