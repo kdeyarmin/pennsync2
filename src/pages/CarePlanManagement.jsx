@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import AICarePlanRecommendations from "../components/carePlan/AICarePlanRecommendations";
 import AutomatedTaskGenerator from "../components/carePlan/AutomatedTaskGenerator";
+import CarePlanTimeline from "../components/carePlan/CarePlanTimeline";
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ export default function CarePlanManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showAITools, setShowAITools] = useState(false);
+  const [viewMode, setViewMode] = useState("list"); // "list" or "timeline"
 
   // Fetch all patients
   const { data: patients = [] } = useQuery({
@@ -261,6 +263,22 @@ export default function CarePlanManagement() {
                 <SelectItem value="revised">Revised</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                onClick={() => setViewMode("list")}
+                className={viewMode === "list" ? "bg-blue-600" : ""}
+              >
+                List View
+              </Button>
+              <Button
+                variant={viewMode === "timeline" ? "default" : "outline"}
+                onClick={() => setViewMode("timeline")}
+                className={viewMode === "timeline" ? "bg-blue-600" : ""}
+              >
+                Timeline View
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -300,6 +318,45 @@ export default function CarePlanManagement() {
               <p className="text-gray-500">Try adjusting your search or filters.</p>
             </CardContent>
           </Card>
+        ) : viewMode === "timeline" ? (
+          Object.entries(groupedByPatient).map(([patientId, plans]) => {
+            const patient = getPatient(patientId);
+            if (!patient) return null;
+
+            return (
+              <div key={patientId} className="space-y-3">
+                <div className="flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-blue-300">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
+                    <User className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {patient.first_name} {patient.last_name}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {patient.primary_diagnosis} • {plans.length} care plan{plans.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={selectedPatient?.id === patientId ? "default" : "outline"}
+                      onClick={() => {
+                        setSelectedPatient(patient);
+                        setShowAITools(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={selectedPatient?.id === patientId ? "bg-purple-600 hover:bg-purple-700" : ""}
+                    >
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      AI Tools
+                    </Button>
+                  </div>
+                </div>
+                <CarePlanTimeline carePlans={plans} patient={patient} />
+              </div>
+            );
+          })
         ) : (
           Object.entries(groupedByPatient).map(([patientId, plans]) => {
             const patient = getPatient(patientId);
