@@ -9,23 +9,26 @@ import { Progress } from "@/components/ui/progress";
 import { Loader2, TrendingUp, Activity, AlertTriangle, Target, Brain, Calendar } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, patientId }) {
+export default function PredictiveOutcomesAnalyzer({ analysisResults, pdgmData, patientId, onPredictionsComplete }) {
   const [isPredicting, setIsPredicting] = useState(false);
   const [predictions, setPredictions] = useState(null);
   const [autoPredict, setAutoPredict] = useState(false);
 
-  // Fetch patient's historical data
+  // Fetch patient's historical data with enhanced context
   const { data: patientHistory = [] } = useQuery({
     queryKey: ['patientHistory', patientId],
     queryFn: async () => {
       if (!patientId) return [];
-      const [visits, oasisData, carePlans, incidents] = await Promise.all([
+      const [visits, oasisData, carePlans, incidents, alerts, tasks, recommendations] = await Promise.all([
         base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 50),
         base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 20),
         base44.entities.CarePlan.filter({ patient_id: patientId }),
-        base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 20)
+        base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 20),
+        base44.entities.PatientAlert.filter({ patient_id: patientId }, '-created_date', 30),
+        base44.entities.Task.filter({ patient_id: patientId }, '-created_date', 50),
+        base44.entities.PatientRecommendation.filter({ patient_id: patientId }, '-created_date', 30)
       ]);
-      return { visits, oasisData, carePlans, incidents };
+      return { visits, oasisData, carePlans, incidents, alerts, tasks, recommendations };
     },
     enabled: !!patientId
   });
@@ -85,6 +88,11 @@ PATIENT CONTEXT:
 - Past Hospitalizations: ${patient?.past_hospitalizations?.length || 0}
 - Living Situation: ${patient?.social_history?.living_situation || 'Unknown'}
 - Support System: ${patient?.social_history?.support_system || 'Unknown'}
+- Active Alerts: ${patientHistory?.alerts?.filter(a => a.status === 'active').length || 0}
+- Pending Tasks: ${patientHistory?.tasks?.filter(t => t.status === 'pending').length || 0}
+- Active Care Plans: ${patientHistory?.carePlans?.filter(cp => cp.status === 'active').length || 0}
+- Recent Incidents: ${patientHistory?.incidents?.length || 0} (falls: ${patientHistory?.incidents?.filter(i => i.incident_type === 'fall').length || 0}, hospitalizations: ${patientHistory?.incidents?.filter(i => i.incident_type === 'hospitalized').length || 0})
+- Previous Recommendations: ${patientHistory?.recommendations?.filter(r => r.status === 'completed').length || 0} completed, ${patientHistory?.recommendations?.filter(r => r.status === 'pending').length || 0} pending
 
 HISTORICAL TRENDS:
 ${JSON.stringify(historicalTrends, null, 2)}
@@ -267,6 +275,9 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
       });
 
       setPredictions(result);
+      if (onPredictionsComplete) {
+        onPredictionsComplete(result);
+      }
     } catch (error) {
       console.error("Predictive analysis error:", error);
       setPredictions({ error: "Failed to generate predictions. Please try again." });
@@ -282,6 +293,10 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
       incident_count: history.incidents?.length || 0,
       hospitalization_count: history.incidents?.filter(i => i.incident_type === 'hospitalized')?.length || 0,
       fall_count: history.incidents?.filter(i => i.incident_type === 'fall')?.length || 0,
+      active_alerts: history.alerts?.filter(a => a.status === 'active').length || 0,
+      critical_alerts: history.alerts?.filter(a => a.severity === 'critical' && a.status === 'active').length || 0,
+      care_plan_adherence: history.carePlans?.filter(cp => cp.status === 'met').length / (history.carePlans?.length || 1),
+      recommendation_completion_rate: history.recommendations?.filter(r => r.status === 'completed').length / (history.recommendations?.length || 1),
       avg_visit_gap_days: null,
       functional_trend: 'unknown'
     };

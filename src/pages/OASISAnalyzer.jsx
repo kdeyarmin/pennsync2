@@ -89,6 +89,8 @@ import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
 import PDGMTrendDashboard from "../components/oasis/PDGMTrendDashboard";
 import WorkflowExecutionEngine from "../components/oasis/WorkflowExecutionEngine";
 import WorkflowMonitoringDashboard from "../components/oasis/WorkflowMonitoringDashboard";
+import OASISToPatientChartPusher from "../components/oasis/OASISToPatientChartPusher";
+import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -395,6 +397,7 @@ export default function OASISAnalyzer() {
   const [matchResults, setMatchResults] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [useDataEntryAssistant, setUseDataEntryAssistant] = useState(false);
+  const [predictions, setPredictions] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -1959,6 +1962,25 @@ Return scores (0-100) and top 3-5 issues in each category.`,
               )}
             </CardContent>
           </Card>
+
+      {/* Predictive Outcomes Analyzer */}
+      <PredictiveOutcomesAnalyzer
+        analysisResults={analysisResults}
+        pdgmData={pdgmData}
+        patientId={selectedPatientId}
+        onPredictionsComplete={(preds) => setPredictions(preds)}
+      />
+
+      {/* Push Recommendations to Patient Chart */}
+      {selectedPatientId && (
+        <OASISToPatientChartPusher
+          analysisResults={analysisResults}
+          pdgmData={pdgmData}
+          patientId={selectedPatientId}
+          oasisUploadId={analysisId}
+          predictions={predictions}
+        />
+      )}
 
       {/* Workflow Execution Engine */}
       <WorkflowExecutionEngine
