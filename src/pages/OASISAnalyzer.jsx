@@ -409,6 +409,7 @@ export default function OASISAnalyzer() {
   const [useDataEntryAssistant, setUseDataEntryAssistant] = useState(false);
   const [predictions, setPredictions] = useState(null);
   const [patientHistoricalData, setPatientHistoricalData] = useState(null);
+  const [extractedData, setExtractedData] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -1028,6 +1029,7 @@ export default function OASISAnalyzer() {
       
       setUploadedFileUrl(file_url);
       setUploadProgress(40);
+      setExtractedData(null); // Reset extracted data for new upload
 
       // Log upload activity
       logActivity(ActivityActions.OASIS_UPLOAD, {
@@ -1146,6 +1148,9 @@ export default function OASISAnalyzer() {
       } catch (extractErr) {
         console.warn("Structured extraction failed, trying text fallback:", extractErr);
         extractionMethod = 'text_fallback';
+        
+        // Store extraction data for mapper
+        setExtractedData(extractedData);
         
         // Fallback: Extract as plain text with AI-assisted parsing
         try {
@@ -1679,6 +1684,11 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       // Update the analysis result with merged data
       analysisResult.pdgm_data = finalPdgmData;
       setPdgmData(finalPdgmData);
+      
+      // Store extracted data for clinical note mapper
+      if (!extractedData) {
+        setExtractedData({ status: 'success', output });
+      }
     } catch (err) {
     console.error("Error analyzing OASIS:", err);
 
@@ -2004,12 +2014,15 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           </Card>
 
       {/* Clinical Note to OASIS Mapper */}
-      <ClinicalNoteToOASISMapper
-        onMappingComplete={(mappedData) => {
-          console.log('Mapped fields:', mappedData);
-        }}
-        existingOASISData={pdgmData}
-      />
+      {pdgmData && (
+        <ClinicalNoteToOASISMapper
+          onMappingComplete={(mappedData) => {
+            console.log('Mapped fields:', mappedData);
+          }}
+          existingOASISData={pdgmData}
+          extractedNarrative={extractedData?.output?.clinical_narrative}
+        />
+      )}
 
       {/* OASIS Draft Generator */}
       {selectedPatient && (
