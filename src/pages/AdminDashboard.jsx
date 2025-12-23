@@ -165,20 +165,20 @@ export default function AdminDashboard() {
     }
   };
 
-  // Calculate metrics
-  const totalUsers = users.length;
-  const adminUsers = users.filter(u => u.role === 'admin').length;
-  const activePatients = patients.filter(p => p.status === 'active').length;
-  const totalPatients = patients.length;
-
-  const last7Days = format(subDays(new Date(), 7), 'yyyy-MM-dd');
-  const last30Days = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-  const visitsLast7Days = visits.filter(v => v.visit_date >= last7Days).length;
-  const notesEnhanced = allNoteConversions.filter(n => {
-    const noteDate = new Date(n.created_date);
-    return noteDate >= new Date(last30Days);
-  }).length;
-  const completedVisits = visits.filter(v => v.status === 'completed').length;
+  // Calculate centralized metrics
+  const stats = React.useMemo(() => {
+    const { calculateStats } = require('@/components/utils/statsCalculator');
+    return calculateStats({
+      visits,
+      noteConversions: allNoteConversions,
+      users,
+      patients,
+      incidents,
+      complianceAudits,
+      userActivities,
+      dateRange: 30
+    });
+  }, [visits, allNoteConversions, users, patients, incidents, complianceAudits, userActivities]);
 
   // Security metrics
   const unauthorizedAttempts = securityLogs.filter(log =>
@@ -188,10 +188,6 @@ export default function AdminDashboard() {
   const aiApiCalls = securityLogs.filter(log =>
     log.action === 'AI_API_CALL'
   ).length;
-
-  // Calculate estimated time saved from note conversions (15 min per note)
-  const totalTimeSavedMinutes = notesEnhanced * 15;
-  const totalTimeSavedHours = Math.round(totalTimeSavedMinutes / 60);
 
   // Fetch user activities and compliance audits
   const { data: userActivities = [] } = useQuery({
@@ -366,8 +362,8 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-xs font-medium mb-0.5">Total Users</p>
-                <p className="text-2xl font-bold">{totalUsers}</p>
-                <p className="text-blue-100 text-[10px] mt-0.5">{adminUsers} admins</p>
+                <p className="text-2xl font-bold">{stats.users.total}</p>
+                <p className="text-blue-100 text-[10px] mt-0.5">{stats.users.admins} admins</p>
               </div>
               <Users className="w-8 h-8 text-blue-200" />
             </div>
@@ -379,8 +375,8 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-xs font-medium mb-0.5">Active Patients</p>
-                <p className="text-2xl font-bold">{activePatients}</p>
-                <p className="text-green-100 text-[10px] mt-0.5">{totalPatients} total</p>
+                <p className="text-2xl font-bold">{stats.patients.active}</p>
+                <p className="text-green-100 text-[10px] mt-0.5">{stats.patients.total} total</p>
               </div>
               <FileText className="w-8 h-8 text-green-200" />
             </div>
@@ -391,8 +387,8 @@ export default function AdminDashboard() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-xs font-medium mb-0.5">Notes Enhanced</p>
-                <p className="text-2xl font-bold">{notesEnhanced}</p>
+                <p className="text-purple-100 text-xs font-medium mb-0.5">Note Enhancements</p>
+                <p className="text-2xl font-bold">{stats.noteConversions.inRange}</p>
                 <p className="text-purple-100 text-[10px] mt-0.5">last 30 days</p>
               </div>
               <FileText className="w-8 h-8 text-purple-200" />
@@ -404,9 +400,9 @@ export default function AdminDashboard() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-xs font-medium mb-0.5">Time Saved (All)</p>
-                <p className="text-2xl font-bold">{totalTimeSavedHours}h</p>
-                <p className="text-orange-100 text-[10px] mt-0.5">{totalTimeSavedMinutes} mins total</p>
+                <p className="text-orange-100 text-xs font-medium mb-0.5">Time Saved</p>
+                <p className="text-2xl font-bold">{stats.timeSaved.rangeHours}h</p>
+                <p className="text-orange-100 text-[10px] mt-0.5">{stats.timeSaved.totalHours}h total</p>
               </div>
               <Clock className="w-8 h-8 text-orange-200" />
             </div>

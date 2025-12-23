@@ -132,21 +132,14 @@ export default function Dashboard() {
     }
   };
 
-  const { completedVisits, pendingVisits } = useMemo(() => ({
-    completedVisits: visits.filter(v => v.status === 'completed').length,
-    pendingVisits: visits.filter(v => v.status === 'scheduled').length
-  }), [visits]);
-
-  const noteStats = useMemo(() => {
-    const completedNotes = noteConversions.length;
-    const timeSavedMinutes = completedNotes * 15;
-    const hours = Math.floor(timeSavedMinutes / 60);
-    const minutes = timeSavedMinutes % 60;
-    return {
-      completedNotes,
-      timeSavedDisplay: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
-    };
-  }, [noteConversions]);
+  const stats = useMemo(() => {
+    const { calculateNurseStats } = require('../components/utils/statsCalculator');
+    return calculateNurseStats(currentUser?.email, {
+      visits,
+      noteConversions,
+      dateRange: 30
+    });
+  }, [visits, noteConversions, currentUser]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -184,8 +177,8 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-600 font-medium mb-1">Completed Notes</p>
-                <p className="text-3xl font-bold text-blue-900">{noteStats.completedNotes}</p>
+                <p className="text-sm text-blue-600 font-medium mb-1">Note Enhancements</p>
+                <p className="text-3xl font-bold text-blue-900">{stats.noteConversions}</p>
               </div>
               <FileText className="w-12 h-12 text-blue-400" />
             </div>
@@ -195,8 +188,8 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 font-medium mb-1">Estimated Time Saved</p>
-                <p className="text-3xl font-bold text-green-900">{noteStats.timeSavedDisplay}</p>
+                <p className="text-sm text-green-600 font-medium mb-1">Time Saved</p>
+                <p className="text-3xl font-bold text-green-900">{stats.timeSavedDisplay}</p>
               </div>
               <Clock className="w-12 h-12 text-green-400" />
             </div>

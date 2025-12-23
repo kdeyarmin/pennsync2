@@ -172,47 +172,35 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
   // Productivity Report
   const generateProductivityReport = (visits, users, startDate, endDate) => {
+    const { calculateNurseStats } = require('@/components/utils/statsCalculator');
+    const { data: allNoteConversions = [] } = useQuery({
+      queryKey: ['allNoteConversions'],
+      queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
+      initialData: [],
+    });
+    
     const nurseStats = {};
     
     users.filter(u => u.role === 'user').forEach(nurse => {
-      const nurseVisits = visits.filter(v => v.created_by === nurse.email);
-      const completed = nurseVisits.filter(v => v.status === 'completed').length;
-      
-      // Calculate documentation time
-      const visitsWithTime = nurseVisits.filter(v => v.start_time && v.end_time);
-      let avgDocTime = 0;
-      if (visitsWithTime.length > 0) {
-        const totalMins = visitsWithTime.reduce((sum, v) => {
-          try {
-            const start = new Date(`2000-01-01 ${v.start_time}`);
-            const end = new Date(`2000-01-01 ${v.end_time}`);
-            return sum + ((end - start) / 1000 / 60);
-          } catch {
-            return sum;
-          }
-        }, 0);
-        avgDocTime = Math.round(totalMins / visitsWithTime.length);
-      }
+      const stats = calculateNurseStats(nurse.email, {
+        visits,
+        noteConversions: allNoteConversions,
+        dateRange: parseInt(dateRange)
+      });
       
       nurseStats[nurse.email] = {
         name: nurse.full_name || nurse.email,
-        totalVisits: nurseVisits.length,
-        completedVisits: completed,
-        scheduledVisits: nurseVisits.filter(v => v.status === 'scheduled').length,
-        cancelledVisits: nurseVisits.filter(v => v.status === 'cancelled').length,
-        completionRate: nurseVisits.length > 0 ? Math.round((completed / nurseVisits.length) * 100) : 0,
-        avgDocTime,
-        timeSaved: completed * 95 // Penn Sync saves ~95 min per visit
+        ...stats
       };
     });
 
     let content = `Penn Sync Productivity Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
-    content += `Nurse,Total Visits,Completed,Scheduled,Cancelled,Completion Rate %,Avg Doc Time (min),Time Saved by Penn Sync (hours)\n`;
+    content += `Nurse,Total Visits,Completed,Completion Rate %,Note Enhancements,Time Saved (hours)\n`;
     
     Object.values(nurseStats).forEach(stats => {
-      content += `${stats.name},${stats.totalVisits},${stats.completedVisits},${stats.scheduledVisits},${stats.cancelledVisits},${stats.completionRate},${stats.avgDocTime},${Math.round(stats.timeSaved / 60)}\n`;
+      content += `${stats.name},${stats.totalVisits},${stats.completedVisits},${stats.completionRate},${stats.noteConversions},${stats.timeSavedHours}\n`;
     });
 
     return {
