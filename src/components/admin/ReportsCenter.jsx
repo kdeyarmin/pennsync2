@@ -1058,7 +1058,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
               <>
                 <div>
                   <h3 className="font-semibold mb-4">Revenue Distribution by Visit Type</h3>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <RechartsPieChart>
                       <Pie
                         data={reportPreview.visitTypes}
@@ -1066,14 +1066,19 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
                         nameKey="type"
                         cx="50%"
                         cy="50%"
-                        outerRadius={100}
-                        label={(entry) => `${entry.type}: $${entry.revenue}`}
+                        outerRadius={90}
+                        labelLine={true}
+                        label={(entry) => {
+                          const name = entry.type.replace(/_/g, ' ');
+                          const percent = ((entry.revenue / reportPreview.totalRevenue) * 100).toFixed(0);
+                          return `${name} (${percent}%)`;
+                        }}
                       >
                         {reportPreview.visitTypes.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(value) => `$${value}`} />
                     </RechartsPieChart>
                   </ResponsiveContainer>
                 </div>
