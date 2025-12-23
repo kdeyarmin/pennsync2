@@ -42,7 +42,8 @@ import {
   MessageCircle,
   Save,
   Loader2,
-  Edit3
+  Edit3,
+  BookOpen
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import { useQueryClient } from "@tanstack/react-query";
