@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   Copy,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  AlertTriangle
 } from "lucide-react";
 
 const VISIT_TYPE_TEMPLATES = {
