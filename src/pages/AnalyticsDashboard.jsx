@@ -50,7 +50,6 @@ import {
   BarChart3,
   Target,
   AlertCircle,
-  Sparkles
 } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 
@@ -58,7 +57,6 @@ import PerformanceMetricsCard from "../components/analytics/PerformanceMetricsCa
 import ComplianceTrendsChart from "../components/analytics/ComplianceTrendsChart";
 import AIUtilizationChart from "../components/analytics/AIUtilizationChart";
 import UserPerformanceTable from "../components/analytics/UserPerformanceTable";
-import ComplianceImpactReport from "../components/analytics/ComplianceImpactReport";
 
 export default function AnalyticsDashboard() {
   const [dateRange, setDateRange] = useState("30");
@@ -345,26 +343,7 @@ export default function AnalyticsDashboard() {
             ['AI Actions Count', metrics.aiActionsCount]
           ]
         },
-        
-        { type: 'spacer', height: 10 },
-        { type: 'line' },
-        { type: 'spacer', height: 5 },
-        
-        { type: 'heading', text: 'AI Enhancement Impact', size: 14 },
-        { type: 'spacer', height: 5 },
-        {
-          type: 'table',
-          headers: ['Metric', 'Value'],
-          rows: [
-            ['Avg Compliance Before AI Enhancement', `${metrics.avgRoughCompliance}%`],
-            ['Avg Compliance After AI Enhancement', `${metrics.avgEnhancedCompliance}%`],
-            ['Average Compliance Improvement', `+${metrics.avgComplianceImprovement}%`]
-          ]
-        },
-        
-        { type: 'spacer', height: 10 },
-        { type: 'line' },
-        { type: 'spacer', height: 5 },
+
         
         { type: 'heading', text: 'User Performance Summary', size: 14 },
         { type: 'spacer', height: 5 }
@@ -541,39 +520,7 @@ export default function AnalyticsDashboard() {
         />
       </div>
 
-      {/* AI Impact Metrics */}
-      {metrics.notesWithComplianceTracking > 0 && (
-        <Card className="mb-6 border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              AI Enhancement Impact
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-white rounded-lg border border-purple-200">
-                <p className="text-sm text-gray-600 mb-1">Before AI</p>
-                <p className="text-3xl font-bold text-orange-600">{metrics.avgRoughCompliance}%</p>
-                <p className="text-xs text-gray-500">Avg rough note compliance</p>
-              </div>
-              <div className="p-4 bg-white rounded-lg border border-purple-200">
-                <p className="text-sm text-gray-600 mb-1">After AI</p>
-                <p className="text-3xl font-bold text-green-600">{metrics.avgEnhancedCompliance}%</p>
-                <p className="text-xs text-gray-500">Avg enhanced note compliance</p>
-              </div>
-              <div className="p-4 bg-white rounded-lg border border-purple-200">
-                <p className="text-sm text-gray-600 mb-1">Improvement</p>
-                <p className="text-3xl font-bold text-purple-600">+{metrics.avgComplianceImprovement}%</p>
-                <p className="text-xs text-gray-500">Avg compliance gain</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* AI Impact Report */}
-      <ComplianceImpactReport noteConversions={noteConversions} />
 
       {/* Charts */}
       <Tabs defaultValue="time" className="mb-6">
