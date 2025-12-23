@@ -189,8 +189,13 @@ export default function DuplicateDetector({ patients, onResolve }) {
       const topMatch = duplicates[0];
       
       if (autoResolveStrategy === 'merge' && topMatch.confidenceLevel === 'definitive') {
-        // Auto-update for MRN matches (regardless of whether there are differences)
-        autoResolution = { action: 'update', existingPatientId: topMatch.patient.id, auto: true };
+        // Auto-update for MRN matches only if there are differences to update
+        if (topMatch.differences.length > 0) {
+          autoResolution = { action: 'update', existingPatientId: topMatch.patient.id, auto: true };
+        } else {
+          // MRN match but no differences - skip this row
+          autoResolution = { action: 'skip', auto: true };
+        }
       } else if (autoResolveStrategy === 'manual') {
         // Manual review - don't auto-select
         autoResolution = null;
@@ -571,14 +576,14 @@ export default function DuplicateDetector({ patients, onResolve }) {
 
                                 <div className="grid grid-cols-3 gap-2 mt-3">
                                  <Button
-                                   size="sm"
-                                   variant={resolution[index]?.action === 'update' && resolution[index]?.existingPatientId === dup.patient.id ? 'default' : 'outline'}
-                                   onClick={() => handleSetResolution(index, 'update', dup.patient.id)}
-                                   className={`text-xs ${dup.confidenceLevel === 'definitive' && dup.differences.length > 0 ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}`}
-                                   disabled={dup.differences.length === 0}
+                                  size="sm"
+                                  variant={resolution[index]?.action === 'update' && resolution[index]?.existingPatientId === dup.patient.id ? 'default' : 'outline'}
+                                  onClick={() => handleSetResolution(index, 'update', dup.patient.id)}
+                                  className={`text-xs ${resolution[index]?.action === 'update' && resolution[index]?.existingPatientId === dup.patient.id ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}`}
+                                  disabled={dup.differences.length === 0}
                                  >
-                                   <RefreshCw className="w-3 h-3 mr-1" />
-                                   {dup.confidenceLevel === 'definitive' ? '✓ Update' : 'Update'}{dup.differences.length > 0 && ` (${dup.differences.length})`}
+                                  <RefreshCw className="w-3 h-3 mr-1" />
+                                  {dup.confidenceLevel === 'definitive' ? '✓ Update' : 'Update'}{dup.differences.length > 0 && ` (${dup.differences.length})`}
                                  </Button>
                                   <Button
                                     size="sm"
@@ -622,7 +627,7 @@ export default function DuplicateDetector({ patients, onResolve }) {
                                 {resolution[index].action === 'add' && 'Add as new patient'}
                                 {resolution[index].action === 'update' && 'Update existing patient with new information'}
                                 {resolution[index].action === 'close' && 'Close existing patient'}
-                                {resolution[index].action === 'skip' && 'Skip this row'}
+                                {resolution[index].action === 'skip' && (resolution[index].auto ? 'MRN match found but no updates needed - skipping' : 'Skip this row')}
                               </AlertDescription>
                             </Alert>
                           )}
