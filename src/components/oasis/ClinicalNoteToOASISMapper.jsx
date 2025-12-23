@@ -17,11 +17,19 @@ import {
 export default function ClinicalNoteToOASISMapper({ 
   onMappingComplete,
   autoMap = false,
-  existingOASISData 
+  existingOASISData,
+  extractedNarrative 
 }) {
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [isMapping, setIsMapping] = useState(false);
   const [mappedFields, setMappedFields] = useState(null);
+
+  // Auto-populate with extracted narrative from OASIS
+  useEffect(() => {
+    if (extractedNarrative && !clinicalNotes) {
+      setClinicalNotes(extractedNarrative);
+    }
+  }, [extractedNarrative]);
 
   useEffect(() => {
     if (autoMap && clinicalNotes.length > 100) {
@@ -133,7 +141,15 @@ Focus on:
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <label className="text-sm font-medium mb-2 block">Paste Clinical Notes</label>
+          <label className="text-sm font-medium mb-2 block flex items-center justify-between">
+            <span>Paste Clinical Notes</span>
+            {extractedNarrative && (
+              <Badge variant="outline" className="text-xs">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Auto-filled from OASIS
+              </Badge>
+            )}
+          </label>
           <Textarea
             value={clinicalNotes}
             onChange={(e) => setClinicalNotes(e.target.value)}
@@ -143,6 +159,7 @@ Focus on:
           />
           <p className="text-xs text-gray-500 mt-1">
             {clinicalNotes.length} characters
+            {extractedNarrative && ' • Narrative extracted from uploaded OASIS'}
           </p>
         </div>
 
