@@ -10,6 +10,7 @@ import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
 import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
 import WorkflowExecutionEngine from "../components/oasis/WorkflowExecutionEngine";
+import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
 
 export default function OASISClinicalReview() {
   const location = useLocation();
@@ -52,6 +53,13 @@ export default function OASISClinicalReview() {
           Clinical Insights & Care Planning
         </Badge>
       </div>
+
+      {/* Predictive Outcomes Analyzer */}
+      <PredictiveOutcomesAnalyzer
+        analysisResults={analysisResults}
+        pdgmData={pdgmData}
+        patientId={patientId}
+      />
 
       {/* AI Pathway Recommender */}
       <AIPathwayRecommender
