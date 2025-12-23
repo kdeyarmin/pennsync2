@@ -40,6 +40,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import PDGMAnalyticsDashboard from "./PDGMAnalyticsDashboard";
+import PDGMScenarioModeler from "./PDGMScenarioModeler";
 import {
   Dialog,
   DialogContent,
@@ -2251,6 +2252,13 @@ PREDICT:
                 </div>
               </div>
             )}
+
+            {/* PDGM Scenario Modeler */}
+            <PDGMScenarioModeler
+              baselineOasisData={pdgmData}
+              baselineNavigationData={navigation}
+              patientId={null}
+            />
 
             {/* Re-analyze Button */}
             <Button
