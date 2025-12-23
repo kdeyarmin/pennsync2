@@ -40,6 +40,7 @@ import PatientEducationGenerator from "../components/documents/PatientEducationG
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
 import { Sparkles, FileOutput, GraduationCap, TrendingUp, Brain } from "lucide-react";
 import PredictiveAnalyticsPanel from "../components/oasis/PredictiveAnalyticsPanel";
+import PatientChartRecommendations from "../components/patient/PatientChartRecommendations";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -305,6 +306,11 @@ export default function PatientDetails() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI-Generated Recommendations from OASIS */}
+      <div className="mb-6">
+        <PatientChartRecommendations patientId={patientId} />
+      </div>
 
       {/* AI Patient Dashboard Summary & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
