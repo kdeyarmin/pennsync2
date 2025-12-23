@@ -94,6 +94,7 @@ import OASISToPatientChartPusher from "../components/oasis/OASISToPatientChartPu
 import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
 import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
 import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
+import AIDataValidationEngine from "../components/oasis/AIDataValidationEngine";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -401,6 +402,7 @@ export default function OASISAnalyzer() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [useDataEntryAssistant, setUseDataEntryAssistant] = useState(false);
   const [predictions, setPredictions] = useState(null);
+  const [patientHistoricalData, setPatientHistoricalData] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -415,10 +417,39 @@ export default function OASISAnalyzer() {
     if (selectedPatientId && patients.length > 0) {
       const patient = patients.find(p => p.id === selectedPatientId);
       setSelectedPatient(patient || null);
+      
+      // Load historical data for AI validation
+      if (patient) {
+        loadPatientHistoricalData(patient.id);
+      }
     } else {
       setSelectedPatient(null);
+      setPatientHistoricalData(null);
     }
   }, [selectedPatientId, patients]);
+
+  // Load patient historical data for AI validation
+  const loadPatientHistoricalData = async (patientId) => {
+    try {
+      const [visits, previousOASIS] = await Promise.all([
+        base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
+        base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 3)
+      ]);
+
+      setPatientHistoricalData({
+        previousScores: previousOASIS.map(o => ({
+          date: o.assessment_date,
+          overall: o.scores?.overall,
+          functional: o.pdgm_data?.functional_impairment_level
+        })),
+        hospitalizations: visits.filter(v => v.visit_type === 'admission'),
+        functionalDecline: previousOASIS.length >= 2 && 
+          previousOASIS[0].pdgm_data?.functional_impairment_level > previousOASIS[1].pdgm_data?.functional_impairment_level
+      });
+    } catch (error) {
+      console.error('Error loading historical data:', error);
+    }
+  };
 
   // Fetch saved OASIS uploads
   const { data: savedOASISUploads = [] } = useQuery({
@@ -1966,30 +1997,33 @@ Return scores (0-100) and top 3-5 issues in each category.`,
             </CardContent>
           </Card>
 
-      {/* Real-Time AI Documentation Assistant for OASIS */}
-      {currentOASIS?.raw_text && (
-        <RealTimeDocumentationAI
-          noteContent={currentOASIS.raw_text}
-          visitType={currentOASIS.assessment_type || 'admission'}
-          diagnosis={currentOASIS.extracted_data?.primary_diagnosis || pdgmData?.primary_diagnosis}
-          patientData={patients?.find(p => p.id === selectedPatientId)}
-          oasisData={currentOASIS}
-          careType={patients?.find(p => p.id === selectedPatientId)?.care_type || "home_health"}
-          onSuggestionApply={(text) => {
-            // OASIS is read-only, so suggestions are for reference
-            navigator.clipboard.writeText(text);
+      {/* AI Data Validation Engine - Proactive OASIS Corrections */}
+      {analysisResults && pdgmData && (
+        <AIDataValidationEngine
+          oasisData={{ extracted_data: pdgmData, pdgm_data: pdgmData }}
+          patientData={selectedPatient}
+          clinicalNotes={analysisResults?.summary}
+          patientHistory={patientHistoricalData}
+          autoValidate={true}
+          onCorrection={(correction) => {
+            console.log('Applying AI correction:', correction);
+            // Update OASIS data with correction
+            setPdgmData(prev => ({
+              ...prev,
+              [correction.m_item_code]: correction.suggested_value
+            }));
           }}
         />
       )}
 
       {/* Visit-Type Compliance Review */}
-      {selectedPatientId && (
+      {selectedPatientId && analysisResults && (
         <VisitTypeComplianceChecker
-          visitType={currentOASIS?.assessment_type || 'admission'}
-          noteContent={currentOASIS?.raw_text || analysisResults?.summary}
-          oasisData={currentOASIS}
-          patientData={patients?.find(p => p.id === selectedPatientId)}
-          careType={patients?.find(p => p.id === selectedPatientId)?.care_type || "home_health"}
+          visitType={pdgmData?.patient_info?.assessment_type || 'admission'}
+          noteContent={analysisResults?.summary}
+          oasisData={{ extracted_data: pdgmData, pdgm_data: pdgmData }}
+          patientData={selectedPatient}
+          careType={selectedPatient?.care_type || "home_health"}
           autoCheck={false}
         />
       )}
