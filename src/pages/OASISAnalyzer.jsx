@@ -98,6 +98,7 @@ import AIDataValidationEngine from "../components/oasis/AIDataValidationEngine";
 import ClinicalNoteToOASISMapper from "../components/oasis/ClinicalNoteToOASISMapper";
 import OASISDraftGenerator from "../components/oasis/OASISDraftGenerator";
 import ProactiveRescoringEngine from "../components/oasis/ProactiveRescoringEngine";
+import AutomatedQualityAssurance from "../components/oasis/AutomatedQualityAssurance";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -2029,6 +2030,19 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           autoAnalyze={true}
           onOpportunitiesFound={(opportunities) => {
             console.log('Rescoring opportunities:', opportunities);
+          }}
+        />
+      )}
+
+      {/* Automated Quality Assurance */}
+      {analysisResults && pdgmData && (
+        <AutomatedQualityAssurance
+          oasisData={pdgmData}
+          patientData={selectedPatient}
+          clinicalNotes={analysisResults?.summary}
+          autoRun={true}
+          onQAComplete={(qaResults) => {
+            console.log('QA checks complete:', qaResults);
           }}
         />
       )}
