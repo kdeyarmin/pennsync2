@@ -36,26 +36,32 @@ export default function AnnouncementManager() {
     priority: 0
   });
 
-  const { data: announcements = [], isLoading } = useQuery({
+  const { data: announcements = [], isLoading, refetch } = useQuery({
     queryKey: ['announcements'],
-    queryFn: () => base44.entities.Announcement.list('-priority,-created_date'),
+    queryFn: async () => {
+      const result = await base44.entities.Announcement.list('-priority,-created_date');
+      console.log('Fetched announcements:', result);
+      return result;
+    },
     initialData: []
   });
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
+      console.log('Creating announcement with data:', data);
       const result = await base44.entities.Announcement.create(data);
       console.log('Create result:', result);
       return result;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log('Create success, new announcement:', data);
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      await queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      await refetch();
       setIsDialogOpen(false);
       resetForm();
     },
     onError: (error) => {
-      console.error('Create error:', error);
+      console.error('Create error details:', error);
       alert(`Failed to create announcement: ${error.message}`);
     }
   });
