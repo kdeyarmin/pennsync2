@@ -171,6 +171,9 @@ export default function Dashboard() {
       {/* New Features Banner */}
       <NewFeaturesBanner />
 
+      {/* Admin Announcements */}
+      <AnnouncementsWidget />
+
       {/* Nurse Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
