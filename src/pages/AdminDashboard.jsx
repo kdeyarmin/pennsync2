@@ -71,6 +71,7 @@ import UserActivityLog from "../components/admin/UserActivityLog";
 import NoteConversionReport from "../components/admin/NoteConversionReport";
 import AIAutoTagger from "../components/admin/AIAutoTagger";
 import AIKPIReportGenerator from "../components/admin/AIKPIReportGenerator";
+import { calculateStats } from "@/components/utils/statsCalculator";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -167,7 +168,6 @@ export default function AdminDashboard() {
 
   // Calculate centralized metrics
   const stats = React.useMemo(() => {
-    const { calculateStats } = require('@/components/utils/statsCalculator');
     return calculateStats({
       visits,
       noteConversions: allNoteConversions,

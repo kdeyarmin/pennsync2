@@ -31,6 +31,8 @@ import {
 import { BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
+import { calculateNurseStats } from "@/components/utils/statsCalculator";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ReportsCenter({ users, patients, visits, incidents }) {
   const [reportType, setReportType] = useState("productivity");
@@ -170,15 +172,15 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     setIsGenerating(false);
   };
 
+  // Fetch note conversions for productivity reports
+  const { data: allNoteConversions = [] } = useQuery({
+    queryKey: ['allNoteConversions'],
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
+    initialData: [],
+  });
+
   // Productivity Report
   const generateProductivityReport = (visits, users, startDate, endDate) => {
-    const { calculateNurseStats } = require('@/components/utils/statsCalculator');
-    const { data: allNoteConversions = [] } = useQuery({
-      queryKey: ['allNoteConversions'],
-      queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
-      initialData: [],
-    });
-    
     const nurseStats = {};
     
     users.filter(u => u.role === 'user').forEach(nurse => {

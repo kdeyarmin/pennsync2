@@ -24,6 +24,7 @@ import AITrainingRecommendations from "../components/training/AITrainingRecommen
 import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
 import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSupport";
 import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
+import { calculateNurseStats } from "@/components/utils/statsCalculator";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -133,7 +134,6 @@ export default function Dashboard() {
   };
 
   const stats = useMemo(() => {
-    const { calculateNurseStats } = require('../components/utils/statsCalculator');
     return calculateNurseStats(currentUser?.email, {
       visits,
       noteConversions,
