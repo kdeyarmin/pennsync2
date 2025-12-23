@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import HandoutCustomizer from "../components/education/HandoutCustomizer";
 import HandoutPreview from "../components/education/HandoutPreview";
 import HandoutStyleCustomizer from "../components/education/HandoutStyleCustomizer";
+import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 
 const educationTopics = [
   {
@@ -396,9 +397,20 @@ export default function PatientEducationHub() {
           <h1 className="text-3xl font-bold text-gray-900">Patient Education Hub</h1>
         </div>
         <p className="text-gray-600">
-          Generate and share educational handouts for common conditions
+          Generate personalized, AI-powered educational materials for your patients
         </p>
       </div>
+
+      {/* AI Personalized Generator for Selected Patient */}
+      {selectedPatient && (
+        <div className="mb-6">
+          <PersonalizedEducationGenerator
+            patient={selectedPatient}
+            carePlans={[]}
+            recentVisits={[]}
+          />
+        </div>
+      )}
 
       {/* Success Message */}
       {successMessage && (
@@ -410,17 +422,43 @@ export default function PatientEducationHub() {
         </Card>
       )}
 
-      {/* Search */}
+      {/* Search and Patient Selection */}
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search education topics..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs mb-2 block">Select Patient (Optional)</Label>
+              <Select value={patientId} onValueChange={(value) => {
+                setPatientId(value);
+                const patient = patients.find(p => p.id === value);
+                if (patient?.email) {
+                  setPatientEmail(patient.email);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select patient for personalization..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map(patient => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.first_name} {patient.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-2 block">Search Topics</Label>
+              <div className="relative">
+                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Search education topics..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -428,6 +466,7 @@ export default function PatientEducationHub() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Topics Grid */}
         <div className="lg:col-span-2">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Standard Education Templates</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredTopics.map((topic) => {
               const Icon = topic.icon;

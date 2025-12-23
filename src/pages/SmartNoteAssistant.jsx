@@ -1596,6 +1596,20 @@ Return JSON with:
                   <p className="text-sm text-gray-600">Incident reporting form will appear here.</p>
                 </AccordionContent>
               </AccordionItem>
+              <AccordionItem value="education">
+                <AccordionTrigger className="text-sm">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" /> Generate Patient Education
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <PersonalizedEducationGenerator
+                    patient={selectedPatient}
+                    carePlans={carePlans}
+                    recentVisits={recentVisits}
+                  />
+                </AccordionContent>
+              </AccordionItem>
             </Accordion>
           )}
         </div>
