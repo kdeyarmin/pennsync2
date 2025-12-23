@@ -109,8 +109,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
               { type: 'spacer', height: 5 },
               {
                 type: 'table',
-                headers: ['Nurse', 'Total Visits', 'Completed', 'Rate %', 'Enhancements', 'Time Saved (hrs)'],
-                rows: prodData.map(d => [d.name, d.totalVisits, d.completedVisits, d.completionRate, d.noteConversions, d.timeSavedHours])
+                headers: ['Nurse', 'Enhancements', 'Time Saved (hrs)'],
+                rows: prodData.map(d => [d.name, d.noteConversions, d.timeSavedHours])
               }
             ];
             break;
@@ -331,10 +331,10 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     let content = `Penn Sync Productivity Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
-    content += `Nurse,Total Visits,Completed,Completion Rate %,Note Enhancements,Time Saved (hours)\n`;
+    content += `Nurse,Note Enhancements,Time Saved (hours)\n`;
     
     data.forEach(stats => {
-      content += `${stats.name},${stats.totalVisits},${stats.completedVisits},${stats.completionRate},${stats.noteConversions},${stats.timeSavedHours}\n`;
+      content += `${stats.name},${stats.noteConversions},${stats.timeSavedHours}\n`;
     });
 
     return {
