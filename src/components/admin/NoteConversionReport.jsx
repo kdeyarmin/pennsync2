@@ -52,12 +52,8 @@ export default function NoteConversionReport() {
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 500),
   });
 
-  // Filter by time range
-  const filteredConversions = conversions.filter(c => {
-    const createdDate = new Date(c.created_date);
-    const cutoff = subDays(new Date(), parseInt(timeRange));
-    return createdDate >= cutoff;
-  });
+  // Filter by time range - no filtering, show ALL conversions
+  const filteredConversions = conversions;
 
   // Calculate stats
   const totalConversions = filteredConversions.length;
