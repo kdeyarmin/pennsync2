@@ -229,7 +229,7 @@ export default function NoteConversionReport() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -238,7 +238,7 @@ export default function NoteConversionReport() {
                     cy="50%"
                     labelLine={true}
                     label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    outerRadius={90}
+                    outerRadius={70}
                     fill="#8884d8"
                     dataKey="value"
                   >
