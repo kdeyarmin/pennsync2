@@ -325,6 +325,45 @@ export default function AdminDashboard() {
     log.user_email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Calculate time savings
+  const aiScriberUsage = userActivities.filter(a => a.action === 'ai_scribe_used').length;
+  const templateGenerated = userActivities.filter(a => a.action === 'template_generated').length;
+  const voiceCommandsUsed = userActivities.filter(a => a.action === 'voice_command_used').length;
+  
+  // Estimate time saved (AI scribe saves ~10 min/visit, templates save ~5 min, voice commands save ~2 min)
+  const estimatedTimeSaved = (aiScriberUsage * 10) + (templateGenerated * 5) + (voiceCommandsUsed * 2);
+  const timeSavedHours = Math.round(estimatedTimeSaved / 60);
+
+  // Calculate compliance metrics
+  const recentAudits = complianceAudits.filter(a => {
+    const auditDate = new Date(a.audit_date || a.created_date);
+    return auditDate >= new Date(last30Days);
+  });
+  const avgComplianceScore = recentAudits.length > 0
+    ? Math.round(recentAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / recentAudits.length)
+    : 0;
+
+  // Calculate AI adoption rate
+  const totalVisitsWithActivity = completedVisits;
+  const visitsWithAI = visits.filter(v => 
+    v.status === 'completed' && (v.audio_url || v.raw_transcription || v.ai_tags?.length > 0)
+  ).length;
+  const aiAdoptionRate = totalVisitsWithActivity > 0 
+    ? Math.round((visitsWithAI / totalVisitsWithActivity) * 100)
+    : 0;
+
+  // Calculate documentation quality (based on compliance audits)
+  const passedAudits = recentAudits.filter(a => a.status === 'passed').length;
+  const qualityScore = recentAudits.length > 0
+    ? Math.round((passedAudits / recentAudits.length) * 100)
+    : 0;
+
+  // Calculate incidents trend
+  const recentIncidents = incidents.filter(i => {
+    const incidentDate = new Date(i.incident_date);
+    return incidentDate >= new Date(last30Days);
+  }).length;
+
   // Security event counts
   const securityEventCounts = securityLogs.reduce((acc, log) => {
     const action = log.action || 'Unknown';
