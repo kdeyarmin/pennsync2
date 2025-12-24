@@ -50,58 +50,39 @@ export default function AnnouncementManager() {
     queryKey: ['announcements'],
     queryFn: async () => {
       try {
-        const result = await base44.entities.Announcement.list('-priority,-created_date');
-        console.log('Raw fetched announcements:', result);
-        
-        if (!result || result.length === 0) {
-          console.log('No announcements returned from API');
-          return [];
-        }
-        
-        // Flatten the structure - entities return {id, created_date, created_by, data: {...}}
-        const flattened = (result || []).map(item => {
-          if (item.data) {
-            // If data is nested, flatten it
-            return {
-              id: item.id,
-              created_date: item.created_date,
-              created_by: item.created_by,
-              ...item.data
-            };
-          }
-          // If already flat, return as is
-          return item;
-        });
-        console.log('Flattened announcements:', flattened);
-        return flattened;
+        const result = await base44.entities.Announcement.list('-created_date');
+        console.log('✅ Fetched announcements count:', result?.length);
+        console.log('✅ Raw announcements data:', result);
+        return result || [];
       } catch (error) {
-        console.error('Error fetching announcements:', error);
+        console.error('❌ Error fetching announcements:', error);
+        alert(`Error loading announcements: ${error.message}`);
         return [];
       }
     },
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    staleTime: 0,
-    cacheTime: 0
+    staleTime: 0
   });
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      console.log('Creating announcement with data:', data);
+      console.log('📤 Creating announcement:', data);
       const result = await base44.entities.Announcement.create(data);
-      console.log('Create result:', result);
+      console.log('✅ Created successfully:', result);
       return result;
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      console.log('🔄 Refetching announcements...');
       await queryClient.invalidateQueries({ queryKey: ['announcements'] });
-      await refetch();
+      const refetchResult = await refetch();
+      console.log('✅ Refetch complete, count:', refetchResult.data?.length);
       setIsDialogOpen(false);
       resetForm();
-      alert('Announcement created successfully!');
     },
     onError: (error) => {
-      console.error('Create error details:', error);
-      alert(`Failed to create announcement: ${error.message}`);
+      console.error('❌ Create failed:', error);
+      alert(`Failed to create: ${error.message}`);
     }
   });
 
@@ -178,16 +159,22 @@ export default function AnnouncementManager() {
     e.preventDefault();
     
     const dataToSubmit = {
-      title: formData.title,
-      content: formData.content,
+      title: formData.title.trim(),
+      content: formData.content.trim(),
       type: 'info',
       is_active: formData.is_active,
-      priority: 0,
-      scheduled_for: formData.scheduled_for ? formData.scheduled_for.toISOString() : null,
-      expires_at: formData.expires_at ? formData.expires_at.toISOString() : null
+      priority: 0
     };
+
+    // Only add dates if they exist
+    if (formData.scheduled_for) {
+      dataToSubmit.scheduled_for = formData.scheduled_for.toISOString();
+    }
+    if (formData.expires_at) {
+      dataToSubmit.expires_at = formData.expires_at.toISOString();
+    }
     
-    console.log('Submitting announcement:', dataToSubmit);
+    console.log('📝 Submitting announcement:', dataToSubmit);
     
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: dataToSubmit });
@@ -434,14 +421,15 @@ export default function AnnouncementManager() {
       <CardContent>
         {isLoading ? (
           <p className="text-sm text-gray-500 text-center py-4">Loading...</p>
+        ) : announcements.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-500">No announcements yet. Create one to get started!</p>
+            <p className="text-xs text-gray-400 mt-2">Check browser console for details</p>
+          </div>
         ) : filteredAnnouncements.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-500">
-              {searchTerm || statusFilter !== 'all' ? 'No announcements match your filters' : 'No announcements yet. Create one to get started!'}
-            </p>
-            <p className="text-xs text-gray-400 mt-2">
-              Total in database: {announcements.length}
-            </p>
+            <p className="text-sm text-gray-500">No announcements match your filters</p>
+            <p className="text-xs text-gray-400 mt-2">Total: {announcements.length}</p>
           </div>
         ) : (
           <ScrollArea className="h-[300px] sm:h-[400px]">
