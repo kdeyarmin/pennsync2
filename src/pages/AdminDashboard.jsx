@@ -319,10 +319,15 @@ export default function AdminDashboard() {
             <p className="text-gray-600">Comprehensive system management and analytics</p>
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* Key Metrics - Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        {/* Announcements Management */}
+        <div className="mb-6">
+        <AnnouncementManager />
+        </div>
+
+        {/* Key Metrics - Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
@@ -658,7 +663,6 @@ export default function AdminDashboard() {
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-6">
           <SystemSettings currentUser={currentUser} />
-          <AnnouncementManager />
         </TabsContent>
       </Tabs>
 
