@@ -89,6 +89,7 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
         { name: "Guidelines Library", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
+        { name: "Clinical Insights", icon: BarChart3, page: "ClinicalInsightsDashboard" },
         { name: "Features", icon: Sparkles, page: "Features" }
       ]
     }
@@ -96,6 +97,7 @@ export default function Layout({ children, currentPageName }) {
 
   const adminItems = [
     { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
+    { name: "Advanced Analytics", icon: BarChart3, page: "AdvancedAnalyticsDashboard" },
     { name: "Users & Settings", icon: Users, page: "UserManagement" },
     { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },

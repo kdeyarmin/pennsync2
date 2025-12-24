@@ -73,6 +73,8 @@ import AIAutoTagger from "../components/admin/AIAutoTagger";
 import AIKPIReportGenerator from "../components/admin/AIKPIReportGenerator";
 import AnnouncementManager from "../components/admin/AnnouncementManager";
 import { calculateStats } from "@/components/utils/statsCalculator";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -326,6 +328,45 @@ export default function AdminDashboard() {
           <AnnouncementManager />
         </div>
 
+        {/* Advanced Analytics Quick Access */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Link to={createPageUrl("AdvancedAnalyticsDashboard")}>
+            <Card className="bg-gradient-to-br from-purple-500 to-blue-600 text-white border-none shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium mb-1">Advanced Analytics</p>
+                    <p className="text-lg font-bold">Population Trends & Predictions</p>
+                    <p className="text-purple-100 text-xs mt-1">AI-powered insights →</p>
+                  </div>
+                  <BarChart3 className="w-10 h-10 text-purple-200" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Card className="bg-gradient-to-br from-red-500 to-orange-600 text-white border-none shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-100 text-sm font-medium mb-1">High Risk Patients</p>
+                  <p className="text-2xl font-bold">
+                    {patients.filter(p => {
+                      const recentHosp = incidents.filter(i => 
+                        i.patient_id === p.id && 
+                        i.incident_type === "hospitalized"
+                      ).length;
+                      return recentHosp > 0 || (p.secondary_diagnoses?.length || 0) >= 3;
+                    }).length}
+                  </p>
+                  <p className="text-red-100 text-xs mt-1">Readmission risk monitoring</p>
+                </div>
+                <AlertTriangle className="w-10 h-10 text-red-200" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Key Metrics - Row 1 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
@@ -397,6 +438,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="reports" className="gap-1 px-2 py-2 text-xs sm:text-sm">
             <BarChart3 className="w-4 h-4" />
             <span className="hidden sm:inline">Reports</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <TrendingUp className="w-4 h-4" />
+            <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
           <TabsTrigger value="quality" className="gap-1 px-2 py-2 text-xs sm:text-sm">
             <Award className="w-4 h-4" />
@@ -664,7 +709,88 @@ export default function AdminDashboard() {
         <TabsContent value="settings" className="space-y-6">
           <SystemSettings currentUser={currentUser} />
         </TabsContent>
-      </Tabs>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-purple-600" />
+                Advanced Analytics Dashboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Access sophisticated analytics including population trends, predictive readmission models, disease progression tracking, and custom reporting tools.
+              </p>
+              <Link to={createPageUrl("AdvancedAnalyticsDashboard")}>
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Open Advanced Analytics
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Population Health Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>• Patient admission and discharge trends</li>
+                  <li>• Visit volume analysis over time</li>
+                  <li>• Incident rate monitoring</li>
+                  <li>• Segmentation by diagnosis, age, and care type</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Predictive Models</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>• AI-powered readmission risk scoring</li>
+                  <li>• Disease progression predictions</li>
+                  <li>• Clinical intervention recommendations</li>
+                  <li>• Patient risk stratification</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Custom Report Builder</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>• Select custom metrics and timeframes</li>
+                  <li>• Multiple visualization options</li>
+                  <li>• CSV export functionality</li>
+                  <li>• Quality and performance tracking</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Clinical Insights</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>• Real-time patient monitoring</li>
+                  <li>• Vital signs trend analysis</li>
+                  <li>• Deterioration score calculations</li>
+                  <li>• Care plan optimization recommendations</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        </Tabs>
 
       {/* Voice Commands */}
       <VoiceCommandListener
