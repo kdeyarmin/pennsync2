@@ -78,6 +78,7 @@ import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../compon
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import MedicalTerminologyProcessor, { standardizeTerminology } from "../components/smartNote/MedicalTerminologyProcessor";
 import ComprehensivePatientContext, { buildComprehensiveContext, formatContextForAI } from "../components/smartNote/ComprehensivePatientContext";
+import { useAICache, clearAllAICache } from "../components/smartNote/CachedAIComponent";
 import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
@@ -300,6 +301,26 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
   );
 }
 
+// Smart caching for AI responses to prevent redundant API calls
+const aiResponseCache = new Map();
+
+const useCachedAIResponse = (cacheKey, fetcher, ttl = 300000) => { // 5 min TTL
+  const getCached = () => {
+    const cached = aiResponseCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < ttl) {
+      return cached.data;
+    }
+    return null;
+  };
+
+  const setCached = (data) => {
+    aiResponseCache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
+  };
+
+  return { getCached, setCached };
+};
+
 export default function SmartNoteAssistant() {
   const queryClient = useQueryClient();
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -307,6 +328,7 @@ export default function SmartNoteAssistant() {
   const [visitDate, setVisitDate] = useState(todayEastern());
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
+  const [activeAITab, setActiveAITab] = useState("workflow");
   const [vitalSigns, setVitalSigns] = useState({ bp: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
   const [roughNote, setRoughNote] = useState("");
   const [enhancedNote, setEnhancedNote] = useState("");
@@ -413,6 +435,13 @@ export default function SmartNoteAssistant() {
         setDiagnosis("Custom (type below)");
         setCustomDiagnosis(selectedPatient.primary_diagnosis);
       }
+    }
+  }, [selectedPatientId]);
+
+  // Clear AI cache when patient changes
+  React.useEffect(() => {
+    if (selectedPatientId) {
+      clearAllAICache();
     }
   }, [selectedPatientId]);
 
@@ -2026,7 +2055,7 @@ Return JSON with:
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <Tabs defaultValue="workflow" className="w-full">
+                <Tabs value={activeAITab} onValueChange={setActiveAITab} className="w-full">
                   <TabsList className="w-full grid grid-cols-3 rounded-none border-b">
                     <TabsTrigger value="workflow" className="text-xs">
                       Workflow
@@ -2039,8 +2068,10 @@ Return JSON with:
                     </TabsTrigger>
                   </TabsList>
 
-                  {/* Workflow Tab */}
+                  {/* Workflow Tab - Lazy Loaded */}
                   <TabsContent value="workflow" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+                    {activeAITab === "workflow" && (
+                      <>
                     {visitType && (
                       <GuidedDocumentationWorkflow
                         visitType={visitType}
@@ -2082,10 +2113,14 @@ Return JSON with:
                       }}
                       compact={true}
                     />
+                      </>
+                    )}
                   </TabsContent>
 
-                  {/* Compliance Tab */}
+                  {/* Compliance Tab - Lazy Loaded */}
                   <TabsContent value="compliance" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+                    {activeAITab === "compliance" && (
+                      <>
                     <ComplianceTargetSettings
                       currentTarget={complianceTarget}
                       onTargetChange={setComplianceTarget}
@@ -2139,11 +2174,14 @@ Return JSON with:
                           setComplianceIssues(prev => [...prev, ...gaps]);
                         }}
                       />
+                      </>
                     )}
                   </TabsContent>
 
-                  {/* Knowledge Tab */}
+                  {/* Knowledge Tab - Lazy Loaded */}
                   <TabsContent value="knowledge" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+                    {activeAITab === "knowledge" && (
+                      <>
                     <AIMedicalKnowledgeBase
                       patientData={selectedPatient}
                       diagnosis={finalDiagnosis}
@@ -2171,6 +2209,7 @@ Return JSON with:
                         }}
                         compact={true}
                       />
+                      </>
                     )}
                   </TabsContent>
                 </Tabs>
