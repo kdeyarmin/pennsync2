@@ -187,7 +187,7 @@ Format as a complete clinical narrative with clear sections. Do NOT write a fini
       {expanded && (
         <CardContent className="pt-4 space-y-3">
           <Alert className={`bg-${template.color}-50 border-${template.color}-200`}>
-            <Info className={`w-4 h-4 text-${template.color}-600`} />
+            <AlertCircle className={`w-4 h-4 text-${template.color}-600`} />
             <AlertDescription className={`text-xs text-${template.color}-900`}>
               <strong>AI Focus:</strong> {template.aiPromptFocus}
             </AlertDescription>

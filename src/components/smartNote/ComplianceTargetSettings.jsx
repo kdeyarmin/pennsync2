@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Target, Settings, CheckCircle2, Info } from "lucide-react";
+import { Target, Settings, CheckCircle2, AlertCircle } from "lucide-react";
 
 const PRESET_TARGETS = {
   standard: { value: 85, label: "Standard (85%)", description: "Medicare baseline compliance" },
@@ -126,7 +126,7 @@ export default function ComplianceTargetSettings({
             )}
 
             <Alert className="bg-blue-50 border-blue-200">
-              <Info className="w-4 h-4 text-blue-600" />
+              <AlertCircle className="w-4 h-4 text-blue-600" />
               <AlertDescription className="text-xs text-blue-900">
                 <strong>{visitType.replace('_', ' ').toUpperCase()} Recommendation:</strong> {recommendation.target}%
                 <br />
