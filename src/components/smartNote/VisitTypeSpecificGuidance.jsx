@@ -268,16 +268,6 @@ Format as a complete clinical narrative with clear sections. Do NOT write a fini
               </>
             )}
           </div>
-
-          {target < recommendation.target && (
-            <Alert className="bg-yellow-50 border-yellow-300">
-              <AlertDescription className="text-xs text-yellow-900">
-                <strong>Recommended:</strong> {recommendation.target}% for {visitType.replace('_', ' ')} visits
-                <br />
-                {recommendation.reason}
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       )}
     </Card>
