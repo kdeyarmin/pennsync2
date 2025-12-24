@@ -16,8 +16,6 @@ import {
   Loader2,
   Copy,
   CheckCircle2,
-  Info,
-  Languages,
   BookOpen,
   Heart
 } from "lucide-react";
@@ -215,7 +213,6 @@ Return JSON with the complete material:`,
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
           <Alert className="bg-blue-50 border-blue-200">
-            <Info className="w-4 h-4 text-blue-600" />
             <AlertDescription className="text-xs text-blue-900">
               Generates personalized education materials based on {patient.first_name}'s diagnosis, medications, care plan goals, and cognitive status.
             </AlertDescription>
