@@ -41,7 +41,8 @@ import {
   Lightbulb,
   MessageCircle,
   Edit3,
-  BookOpen
+  BookOpen,
+  DollarSign
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import { useQueryClient } from "@tanstack/react-query";
@@ -326,6 +327,9 @@ export default function SmartNoteAssistant() {
   const [oasisAutomationResults, setOasisAutomationResults] = useState(null);
   const [isRunningOASISAutomation, setIsRunningOASISAutomation] = useState(false);
   const [complianceTarget, setComplianceTarget] = useState(90);
+  const [documentationGaps, setDocumentationGaps] = useState([]);
+  const [pdgmOpportunities, setPdgmOpportunities] = useState(null);
+  const [isAnalyzingPDGM, setIsAnalyzingPDGM] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -465,34 +469,57 @@ export default function SmartNoteAssistant() {
     setIsProcessing(true);
     const enhanceStartTime = Date.now();
     const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
-    
+
     // Calculate compliance of rough note BEFORE enhancement
     let roughCompliance = null;
+    let identifiedGaps = [];
     try {
       const roughComplianceCheck = await base44.integrations.Core.InvokeLLM({
         prompt: `Analyze this rough clinical note for Medicare compliance. Return a compliance score (0-100) based on presence of required elements.
 
-ROUGH NOTE:
-${roughNote}
+  ROUGH NOTE:
+  ${roughNote}
 
-VISIT TYPE: ${visitType}
-DIAGNOSIS: ${finalDiagnosis}
+  VISIT TYPE: ${visitType}
+  DIAGNOSIS: ${finalDiagnosis}
 
-Return JSON with:
-{
-  "compliance_score": 0-100,
-  "missing_elements": ["element1", "element2"]
-}`,
+  Identify specific documentation gaps that must be addressed in enhancement.
+
+  Return JSON with:
+  {
+    "compliance_score": 0-100,
+    "missing_elements": ["element1", "element2"],
+    "specific_gaps": [
+      {
+        "element": "Homebound Status",
+        "reason": "No mention of mobility limitations or why leaving home is taxing",
+        "priority": "critical"
+      }
+    ]
+  }`,
         response_json_schema: {
           type: "object",
           properties: {
             compliance_score: { type: "number" },
-            missing_elements: { type: "array", items: { type: "string" } }
+            missing_elements: { type: "array", items: { type: "string" } },
+            specific_gaps: { 
+              type: "array", 
+              items: { 
+                type: "object",
+                properties: {
+                  element: { type: "string" },
+                  reason: { type: "string" },
+                  priority: { type: "string" }
+                }
+              }
+            }
           }
         }
       });
       roughCompliance = roughComplianceCheck.compliance_score || 0;
+      identifiedGaps = roughComplianceCheck.specific_gaps || [];
       setRoughNoteCompliance(roughComplianceCheck);
+      setDocumentationGaps(identifiedGaps);
     } catch (error) {
       console.error('Error checking rough compliance:', error);
     }
@@ -588,11 +615,24 @@ Return JSON with:
       9. FUNCTIONAL STATUS: Describe ADL limitations, mobility level, assistance needed
       10. PLAN OF CARE: State continuing plan, next visit schedule, when to contact nurse/MD`;
 
+      // Build gap-specific enhancement instructions
+      const gapInstructions = identifiedGaps.length > 0 ? `
+
+      CRITICAL DOCUMENTATION GAPS IDENTIFIED - MUST ADDRESS:
+      ${identifiedGaps.map((gap, idx) => `
+      ${idx + 1}. ${gap.element} [${gap.priority.toUpperCase()}]
+      Problem: ${gap.reason}
+      Required Action: Add specific, measurable documentation for this element
+      `).join('\n')}
+
+      ` : '';
+
       const prompt = `You are an expert clinical documentation specialist for home health nursing. Transform these rough notes into Medicare-compliant clinical narrative.
 
-CRITICAL: This visit is documented by a ${nurseTitle} (${nurseFullTitle}).
+      CRITICAL: This visit is documented by a ${nurseTitle} (${nurseFullTitle}).
+      ${gapInstructions}
 
-${contextualizedNote}
+      ${contextualizedNote}
 
       VISIT DETAILS:
       - Visit Type: ${visitType.replace(/_/g, ' ')}
@@ -861,24 +901,68 @@ Return JSON with:
 
   const handleRunOASISAutomation = async () => {
     if (!enhancedNote || !selectedPatientId) return;
-    
+
     setIsRunningOASISAutomation(true);
     try {
-      const response = await base44.functions.invoke('mapNoteToOASIS', {
-        enhancedNote,
-        patientId: selectedPatientId,
-        visitType,
-        diagnosis: finalDiagnosis,
-        vitalSigns
+      // Enhanced OASIS mapping with detailed justifications
+      const enhancedMapping = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are an OASIS-E expert. Analyze this clinical note and map it to specific OASIS items with detailed justifications.
+
+  ENHANCED CLINICAL NOTE:
+  ${enhancedNote}
+
+  PATIENT DATA:
+  - Diagnosis: ${finalDiagnosis}
+  - Visit Type: ${visitType}
+  - Vitals: ${JSON.stringify(vitalSigns)}
+  ${selectedPatient ? `- Age: ${selectedPatient.date_of_birth ? Math.floor((new Date() - new Date(selectedPatient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}` : ''}
+  ${selectedPatient?.functional_status ? `- Functional Status: ${JSON.stringify(selectedPatient.functional_status)}` : ''}
+
+  For EACH OASIS item you can confidently map, provide:
+  1. OASIS Item Number (e.g., M1800, M1810, M1860)
+  2. Suggested Value/Response
+  3. Confidence Score (0-100)
+  4. Specific Evidence from Note (quote exact phrases)
+  5. Clinical Justification for scoring
+  6. PDGM Impact (if applicable)
+
+  Focus on functional items (M1800-M1890), wounds (M1306-M1342), medications, and comorbidities.
+
+  Return JSON array of mappings with above fields.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            mappings: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  oasis_item: { type: "string" },
+                  item_description: { type: "string" },
+                  suggested_value: { type: "string" },
+                  confidence: { type: "number" },
+                  evidence_from_note: { type: "string" },
+                  clinical_justification: { type: "string" },
+                  pdgm_impact: { type: "string" },
+                  requires_verification: { type: "boolean" }
+                }
+              }
+            },
+            high_confidence_items: { type: "number" },
+            medium_confidence_items: { type: "number" },
+            low_confidence_items: { type: "number" }
+          }
+        }
       });
 
-      setOasisAutomationResults(response);
-      setActiveAccordion('oasis'); // Auto-expand the OASIS section
+      setOasisAutomationResults(enhancedMapping);
+      setActiveAccordion('oasis');
 
       logActivity(ActivityActions.AI_FEATURE_USED, {
-        feature: 'oasis_automation',
+        feature: 'oasis_automation_enhanced',
         patient_id: selectedPatientId,
-        items_mapped: response.overall_summary?.total_items_mapped || 0,
+        items_mapped: enhancedMapping.mappings?.length || 0,
+        high_confidence: enhancedMapping.high_confidence_items || 0,
         page: 'SmartNoteAssistant'
       });
     } catch (error) {
@@ -968,9 +1052,90 @@ Return JSON with:
     }
   };
 
+  const analyzePDGMOpportunities = async () => {
+    if (!enhancedNote || !selectedPatient) return;
+
+    setIsAnalyzingPDGM(true);
+    try {
+      const pdgmAnalysis = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a PDGM optimization expert. Analyze this clinical note and patient profile for revenue optimization opportunities.
+
+  ENHANCED NOTE:
+  ${enhancedNote}
+
+  PATIENT PROFILE:
+  - Primary Diagnosis: ${finalDiagnosis}
+  - Secondary Diagnoses: ${selectedPatient.secondary_diagnoses?.join(', ') || 'None documented'}
+  - Current Medications: ${selectedPatient.current_medications?.map(m => m.name).join(', ') || 'None'}
+  - Functional Status: ${JSON.stringify(selectedPatient.functional_status || {})}
+  - Age: ${selectedPatient.date_of_birth ? Math.floor((new Date() - new Date(selectedPatient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}
+
+  Identify PDGM optimization opportunities:
+
+  1. COMORBIDITY CAPTURE:
+   - Secondary diagnoses implied by medications but not documented
+   - Clinical findings suggesting additional diagnoses
+   - Comorbidity adjustments that would increase case-mix weight
+
+  2. FUNCTIONAL IMPAIRMENT:
+   - Current functional level vs documented level
+   - ADL/IADL limitations that should be documented
+   - GG items that could be scored more accurately
+
+  3. CLINICAL GROUP ASSIGNMENT:
+   - Current probable clinical group
+   - Alternative groups with higher reimbursement
+   - Documentation needed to support optimal grouping
+
+  4. TIMING FACTORS:
+   - Early vs Late timing considerations
+   - Admission source impact on reimbursement
+
+  Return specific, actionable opportunities with revenue impact estimates.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            current_estimated_case_mix: { type: "number" },
+            optimized_case_mix_potential: { type: "number" },
+            revenue_impact: { type: "number" },
+            opportunities: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  category: { type: "string" },
+                  finding: { type: "string" },
+                  suggested_documentation: { type: "string" },
+                  evidence_in_note: { type: "string" },
+                  revenue_impact: { type: "number" },
+                  priority: { type: "string" },
+                  actionable_now: { type: "boolean" }
+                }
+              }
+            },
+            summary: { type: "string" }
+          }
+        }
+      });
+
+      setPdgmOpportunities(pdgmAnalysis);
+
+      logActivity(ActivityActions.AI_FEATURE_USED, {
+        feature: 'pdgm_optimization_analysis',
+        patient_id: selectedPatientId,
+        opportunities_found: pdgmAnalysis.opportunities?.length || 0,
+        potential_impact: pdgmAnalysis.revenue_impact || 0,
+        page: 'SmartNoteAssistant'
+      });
+    } catch (error) {
+      console.error('Error analyzing PDGM opportunities:', error);
+    }
+    setIsAnalyzingPDGM(false);
+  };
+
   const handleSaveNote = async () => {
     if (!selectedPatientId || !enhancedNote) return;
-    
+
     setIsSaving(true);
     try {
       // Save visit note
@@ -1539,7 +1704,7 @@ Return JSON with:
                         <Sparkles className="w-5 h-5 text-purple-600" />
                         <div>
                           <p className="text-sm font-medium">AI OASIS Automation Available</p>
-                          <p className="text-xs text-gray-600">Automatically map note to OASIS fields</p>
+                          <p className="text-xs text-gray-600">Map note to OASIS with detailed justifications</p>
                         </div>
                       </div>
                       <Button
@@ -1557,6 +1722,68 @@ Return JSON with:
                   </CardContent>
                 </Card>
               )}
+
+              {/* PDGM Optimization Analysis */}
+              <Card className="border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium">PDGM Optimization Analysis</p>
+                        <p className="text-xs text-gray-600">Identify revenue optimization opportunities</p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={analyzePDGMOpportunities}
+                      disabled={isAnalyzingPDGM}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 w-full sm:w-auto"
+                    >
+                      {isAnalyzingPDGM ? (
+                        <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Analyzing...</>
+                      ) : (
+                        <><DollarSign className="w-4 h-4 mr-2" /> Analyze PDGM</>
+                      )}
+                    </Button>
+                  </div>
+                  {pdgmOpportunities && (
+                    <div className="mt-4 space-y-3">
+                      <div className="bg-white rounded-lg p-3 border border-green-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-green-900">Optimization Potential</span>
+                          <Badge className="bg-green-600">
+                            +${pdgmOpportunities.revenue_impact || 0}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-700">{pdgmOpportunities.summary}</p>
+                      </div>
+                      {pdgmOpportunities.opportunities?.slice(0, 3).map((opp, idx) => (
+                        <div key={idx} className={`bg-white rounded-lg p-3 border ${
+                          opp.priority === 'high' ? 'border-red-300' : 
+                          opp.priority === 'medium' ? 'border-yellow-300' : 'border-gray-200'
+                        }`}>
+                          <div className="flex items-start justify-between mb-1">
+                            <span className="text-xs font-semibold">{opp.category}</span>
+                            <Badge className={`text-xs ${
+                              opp.priority === 'high' ? 'bg-red-600' :
+                              opp.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-500'
+                            }`}>
+                              {opp.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-gray-700 mb-1">{opp.finding}</p>
+                          <p className="text-xs text-green-700 font-medium">
+                            Suggested: {opp.suggested_documentation}
+                          </p>
+                          {opp.revenue_impact > 0 && (
+                            <p className="text-xs text-green-600 mt-1">Impact: +${opp.revenue_impact}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </>
           )}
 
@@ -1566,27 +1793,92 @@ Return JSON with:
               <AccordionItem value="oasis">
                 <AccordionTrigger className="text-sm">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> AI OASIS Automation
+                    <Sparkles className="w-4 h-4" /> AI OASIS Automation with Justifications
                     {oasisAutomationResults && (
                       <Badge className="ml-2 bg-purple-100 text-purple-800">
-                        {oasisAutomationResults.overall_summary?.total_items_mapped || 0} items
+                        {oasisAutomationResults.mappings?.length || 0} items
                       </Badge>
                     )}
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <OASISAutomationPanel
-                    oasisSuggestions={oasisAutomationResults?.oasis_suggestions || []}
-                    overallSummary={oasisAutomationResults?.overall_summary || {}}
-                    missingCriticalInfo={oasisAutomationResults?.missing_critical_info || []}
-                    onApplySuggestion={handleApplyOASISSuggestion}
-                    onApplyAll={handleApplyAllOASIS}
-                    onReviewFlag={(suggestion) => {
-                      console.log('Flagged for review:', suggestion);
-                      // Could navigate to OASIS page or open a detailed review modal
-                    }}
-                    isLoading={isRunningOASISAutomation}
-                  />
+                  {oasisAutomationResults?.mappings ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 gap-2 mb-4">
+                        <div className="bg-green-50 p-2 rounded border border-green-200 text-center">
+                          <p className="text-xs text-green-600">High Confidence</p>
+                          <p className="text-lg font-bold text-green-900">
+                            {oasisAutomationResults.high_confidence_items || 0}
+                          </p>
+                        </div>
+                        <div className="bg-yellow-50 p-2 rounded border border-yellow-200 text-center">
+                          <p className="text-xs text-yellow-600">Medium Confidence</p>
+                          <p className="text-lg font-bold text-yellow-900">
+                            {oasisAutomationResults.medium_confidence_items || 0}
+                          </p>
+                        </div>
+                        <div className="bg-red-50 p-2 rounded border border-red-200 text-center">
+                          <p className="text-xs text-red-600">Low Confidence</p>
+                          <p className="text-lg font-bold text-red-900">
+                            {oasisAutomationResults.low_confidence_items || 0}
+                          </p>
+                        </div>
+                      </div>
+                      {oasisAutomationResults.mappings.map((mapping, idx) => (
+                        <Card key={idx} className={`border-l-4 ${
+                          mapping.confidence >= 80 ? 'border-l-green-500' :
+                          mapping.confidence >= 60 ? 'border-l-yellow-500' : 'border-l-red-500'
+                        }`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <p className="font-semibold text-sm">{mapping.oasis_item}</p>
+                                <p className="text-xs text-gray-600">{mapping.item_description}</p>
+                              </div>
+                              <Badge className={`${
+                                mapping.confidence >= 80 ? 'bg-green-600' :
+                                mapping.confidence >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                              }`}>
+                                {mapping.confidence}% confidence
+                              </Badge>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <div className="bg-blue-50 p-2 rounded">
+                                <p className="text-xs font-semibold text-blue-900">Suggested Value:</p>
+                                <p className="text-xs text-blue-800">{mapping.suggested_value}</p>
+                              </div>
+                              <div className="bg-gray-50 p-2 rounded">
+                                <p className="text-xs font-semibold text-gray-900">Evidence from Note:</p>
+                                <p className="text-xs text-gray-700 italic">"{mapping.evidence_from_note}"</p>
+                              </div>
+                              <div className="bg-purple-50 p-2 rounded">
+                                <p className="text-xs font-semibold text-purple-900">Clinical Justification:</p>
+                                <p className="text-xs text-purple-800">{mapping.clinical_justification}</p>
+                              </div>
+                              {mapping.pdgm_impact && (
+                                <div className="bg-green-50 p-2 rounded">
+                                  <p className="text-xs font-semibold text-green-900">PDGM Impact:</p>
+                                  <p className="text-xs text-green-800">{mapping.pdgm_impact}</p>
+                                </div>
+                              )}
+                              {mapping.requires_verification && (
+                                <Alert className="bg-amber-50 border-amber-200 p-2">
+                                  <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                  <AlertDescription className="text-xs text-amber-800">
+                                    Requires clinical verification before submission
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 text-center py-4">
+                      Run OASIS automation to see detailed mappings
+                    </p>
+                  )}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="tasks">
