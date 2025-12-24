@@ -2174,6 +2174,7 @@ Return JSON with:
                           setComplianceIssues(prev => [...prev, ...gaps]);
                         }}
                       />
+                    )}
                       </>
                     )}
                   </TabsContent>
