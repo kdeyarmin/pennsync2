@@ -42,7 +42,8 @@ import {
   MessageCircle,
   Edit3,
   BookOpen,
-  DollarSign
+  DollarSign,
+  AlertCircle
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import { useQueryClient } from "@tanstack/react-query";
