@@ -2210,6 +2210,7 @@ Return JSON with:
                         }}
                         compact={true}
                       />
+                    )}
                       </>
                     )}
                   </TabsContent>
