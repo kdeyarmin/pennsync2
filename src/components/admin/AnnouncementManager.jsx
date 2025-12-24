@@ -41,9 +41,7 @@ export default function AnnouncementManager() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    type: 'info',
     is_active: true,
-    priority: 0,
     scheduled_for: null,
     expires_at: null
   });
@@ -132,9 +130,7 @@ export default function AnnouncementManager() {
     setFormData({
       title: '',
       content: '',
-      type: 'info',
       is_active: true,
-      priority: 0,
       scheduled_for: null,
       expires_at: null
     });
@@ -145,9 +141,7 @@ export default function AnnouncementManager() {
     setFormData({
       title: announcement.title,
       content: announcement.content,
-      type: announcement.type,
       is_active: announcement.is_active,
-      priority: announcement.priority || 0,
       scheduled_for: announcement.scheduled_for ? new Date(announcement.scheduled_for) : null,
       expires_at: announcement.expires_at ? new Date(announcement.expires_at) : null
     });
@@ -180,13 +174,12 @@ export default function AnnouncementManager() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Ensure priority is a valid number
     const dataToSubmit = {
       title: formData.title,
       content: formData.content,
-      type: formData.type,
+      type: 'info',
       is_active: formData.is_active,
-      priority: parseInt(formData.priority) || 0,
+      priority: 0,
       scheduled_for: formData.scheduled_for ? formData.scheduled_for.toISOString() : null,
       expires_at: formData.expires_at ? formData.expires_at.toISOString() : null
     };
@@ -267,45 +260,20 @@ export default function AnnouncementManager() {
                     placeholder="Enter announcement content..."
                   />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label className="text-sm font-medium">Type</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="info">Info</SelectItem>
-                        <SelectItem value="success">Success</SelectItem>
-                        <SelectItem value="warning">Warning</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Priority</Label>
-                    <Input
-                      type="number"
-                      value={formData.priority}
-                      onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Status</Label>
-                    <Select 
-                      value={formData.is_active ? "active" : "inactive"} 
-                      onValueChange={(v) => setFormData({...formData, is_active: v === "active"})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <Select 
+                    value={formData.is_active ? "active" : "inactive"} 
+                    onValueChange={(v) => setFormData({...formData, is_active: v === "active"})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -491,9 +459,6 @@ export default function AnnouncementManager() {
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h4 className="font-semibold text-gray-900">{announcement.title}</h4>
-                        <Badge className={getTypeColor(announcement.type)}>
-                          {announcement.type}
-                        </Badge>
                         {status === 'scheduled' && (
                           <Badge className="bg-blue-500 text-white">
                             <Clock className="w-3 h-3 mr-1" />
