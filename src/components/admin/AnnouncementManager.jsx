@@ -188,22 +188,22 @@ export default function AnnouncementManager() {
     <Card>
       <CardHeader>
         <CardTitle>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <Bell className="w-5 h-5 text-blue-600" />
-              Manage Announcements
+              <Bell className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <span className="font-semibold">Manage Announcements</span>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
               setIsDialogOpen(open);
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   New Announcement
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingId ? 'Edit Announcement' : 'Create Announcement'}
@@ -396,7 +396,7 @@ export default function AnnouncementManager() {
             </Dialog>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
@@ -407,7 +407,7 @@ export default function AnnouncementManager() {
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -430,22 +430,22 @@ export default function AnnouncementManager() {
             {searchTerm || statusFilter !== 'all' ? 'No announcements match your filters' : 'No announcements yet'}
           </p>
         ) : (
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-3 pr-3">
+          <ScrollArea className="h-[300px] sm:h-[400px]">
+            <div className="space-y-3 pr-2 sm:pr-3">
               {filteredAnnouncements.map((announcement) => {
                 const status = getAnnouncementStatus(announcement);
                 return (
                 <div
                   key={announcement.id}
-                  className={`p-4 rounded-lg border ${
+                  className={`p-3 sm:p-4 rounded-lg border ${
                     status === 'active' ? 'bg-white' : 
                     status === 'scheduled' ? 'bg-blue-50 border-blue-200' :
                     status === 'expired' ? 'bg-gray-50 opacity-60' : 
                     'bg-gray-50 opacity-60'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-2 sm:gap-3">
+                    <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h4 className="font-semibold text-gray-900">{announcement.title}</h4>
                         <Badge className={getTypeColor(announcement.type)}>
@@ -486,12 +486,13 @@ export default function AnnouncementManager() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex sm:flex-col gap-1 shrink-0 w-full sm:w-auto">
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => toggleActive(announcement.id, announcement.is_active)}
                         title={announcement.is_active ? 'Deactivate' : 'Activate'}
+                        className="flex-1 sm:flex-none"
                       >
                         {announcement.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                       </Button>
@@ -499,13 +500,14 @@ export default function AnnouncementManager() {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleEdit(announcement)}
+                        className="flex-1 sm:flex-none"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
                         onClick={() => {
                           if (confirm('Delete this announcement?')) {
                             deleteMutation.mutate(announcement.id);

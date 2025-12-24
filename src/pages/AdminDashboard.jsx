@@ -307,75 +307,75 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-            <Shield className="w-6 h-6 text-white" />
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+            <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Penn Sync Admin Portal</h1>
-            <p className="text-gray-600">Comprehensive system management and analytics</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Penn Sync Admin Portal</h1>
+            <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Comprehensive system management and analytics</p>
           </div>
         </div>
-        </div>
+      </div>
 
         {/* Announcements Management */}
-        <div className="mb-6">
-        <AnnouncementManager />
+        <div className="mb-4 sm:mb-6">
+          <AnnouncementManager />
         </div>
 
         {/* Key Metrics - Row 1 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-xs font-medium mb-0.5">Total Users</p>
-                <p className="text-2xl font-bold">{stats.users.total}</p>
+              <div className="min-w-0 flex-1 mr-2">
+                <p className="text-blue-100 text-xs font-medium mb-0.5 truncate">Total Users</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.users.total}</p>
                 <p className="text-blue-100 text-[10px] mt-0.5">{stats.users.admins} admins</p>
               </div>
-              <Users className="w-8 h-8 text-blue-200" />
+              <Users className="w-7 h-7 sm:w-8 sm:h-8 text-blue-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-xs font-medium mb-0.5">Active Patients</p>
-                <p className="text-2xl font-bold">{stats.patients.active}</p>
+              <div className="min-w-0 flex-1 mr-2">
+                <p className="text-green-100 text-xs font-medium mb-0.5 truncate">Active Patients</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.patients.active}</p>
                 <p className="text-green-100 text-[10px] mt-0.5">{stats.patients.total} total</p>
               </div>
-              <FileText className="w-8 h-8 text-green-200" />
+              <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-green-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-xs font-medium mb-0.5">Note Enhancements</p>
-                <p className="text-2xl font-bold">{stats.noteConversions.inRange}</p>
+              <div className="min-w-0 flex-1 mr-2">
+                <p className="text-purple-100 text-xs font-medium mb-0.5 truncate">Note Enhancements</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.noteConversions.inRange}</p>
                 <p className="text-purple-100 text-[10px] mt-0.5">last 30 days</p>
               </div>
-              <FileText className="w-8 h-8 text-purple-200" />
+              <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-purple-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none shadow-lg">
-          <CardContent className="p-3">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-xs font-medium mb-0.5">Time Saved</p>
-                <p className="text-2xl font-bold">{stats.timeSaved.rangeHours}h</p>
+              <div className="min-w-0 flex-1 mr-2">
+                <p className="text-orange-100 text-xs font-medium mb-0.5 truncate">Time Saved</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.timeSaved.rangeHours}h</p>
                 <p className="text-orange-100 text-[10px] mt-0.5">{stats.timeSaved.totalHours}h total</p>
               </div>
-              <Clock className="w-8 h-8 text-orange-200" />
+              <Clock className="w-7 h-7 sm:w-8 sm:h-8 text-orange-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -384,34 +384,34 @@ export default function AdminDashboard() {
 
 
       {/* Tabs */}
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="flex flex-wrap h-auto gap-1 p-1 md:grid md:grid-cols-7 w-full">
-          <TabsTrigger value="users" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Users className="w-3 h-3 md:w-4 md:h-4" />
+      <Tabs defaultValue="users" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1 p-1 h-auto w-full">
+          <TabsTrigger value="users" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Users className="w-4 h-4" />
             <span className="hidden sm:inline">Users</span>
           </TabsTrigger>
-          <TabsTrigger value="activity" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Activity className="w-3 h-3 md:w-4 md:h-4" />
+          <TabsTrigger value="activity" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Activity className="w-4 h-4" />
             <span className="hidden sm:inline">Activity</span>
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <BarChart3 className="w-3 h-3 md:w-4 md:h-4" />
+          <TabsTrigger value="reports" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <BarChart3 className="w-4 h-4" />
             <span className="hidden sm:inline">Reports</span>
           </TabsTrigger>
-          <TabsTrigger value="quality" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Award className="w-3 h-3 md:w-4 md:h-4" />
+          <TabsTrigger value="quality" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Award className="w-4 h-4" />
             <span className="hidden sm:inline">Quality</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Shield className="w-3 h-3 md:w-4 md:h-4" />
+          <TabsTrigger value="security" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Shield className="w-4 h-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="encryption" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Lock className="w-3 h-3 md:w-4 md:h-4" />
+          <TabsTrigger value="encryption" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Lock className="w-4 h-4" />
             <span className="hidden sm:inline">Encrypt</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex-1 min-w-[70px] gap-1 px-2 py-1.5 text-xs md:text-sm">
-            <Settings className="w-3 h-3 md:w-4 md:h-4" />
+          <TabsTrigger value="settings" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Settings className="w-4 h-4" />
             <span className="hidden sm:inline">Settings</span>
           </TabsTrigger>
         </TabsList>
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-6">
           {/* Security Metrics */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
