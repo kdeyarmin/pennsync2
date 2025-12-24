@@ -74,6 +74,7 @@ import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestio
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
 import RealTimeClinicalAlertMonitor from "../components/smartNote/RealTimeClinicalAlertMonitor";
+import AIMedicalKnowledgeBase from "../components/smartNote/AIMedicalKnowledgeBase";
 import PatientHistoryTimeline from "../components/patient/PatientHistoryTimeline";
 import { buildComprehensivePatientHistory } from "../components/utils/patientHistoryAnalyzer";
 import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
@@ -1667,6 +1668,22 @@ Return JSON with:
 
         {/* Dynamic AI Sidebar */}
         <div className="space-y-4 md:space-y-6">
+          {/* AI Medical Knowledge Base */}
+          {selectedPatientId && (
+            <AIMedicalKnowledgeBase
+              patientData={selectedPatient}
+              diagnosis={finalDiagnosis}
+              currentMedications={selectedPatient?.current_medications || []}
+              onInsertToNote={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
+              }}
+              compact={false}
+            />
+          )}
           {/* Guided Documentation Workflow - Visit Type Checklist */}
           {selectedPatientId && visitType && (
             <GuidedDocumentationWorkflow
