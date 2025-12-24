@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, AlertCircle, CheckCircle2, Info } from "lucide-react";
-import { format, isAfter } from "date-fns";
+import { format } from "date-fns";
 
 export default function AnnouncementsWidget() {
   const { data: announcements = [], isLoading } = useQuery({
