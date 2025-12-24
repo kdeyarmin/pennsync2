@@ -48,30 +48,43 @@ export default function AnnouncementManager() {
     expires_at: null
   });
 
-  const { data: announcements = [], isLoading } = useQuery({
+  const { data: announcements = [], isLoading, refetch } = useQuery({
     queryKey: ['announcements'],
     queryFn: async () => {
-      const result = await base44.entities.Announcement.list('-priority,-created_date');
-      console.log('Raw fetched announcements:', result);
-      // Flatten the structure - entities return {id, created_date, created_by, data: {...}}
-      const flattened = (result || []).map(item => {
-        if (item.data) {
-          // If data is nested, flatten it
-          return {
-            id: item.id,
-            created_date: item.created_date,
-            created_by: item.created_by,
-            ...item.data
-          };
+      try {
+        const result = await base44.entities.Announcement.list('-priority,-created_date');
+        console.log('Raw fetched announcements:', result);
+        
+        if (!result || result.length === 0) {
+          console.log('No announcements returned from API');
+          return [];
         }
-        // If already flat, return as is
-        return item;
-      });
-      console.log('Flattened announcements:', flattened);
-      return flattened;
+        
+        // Flatten the structure - entities return {id, created_date, created_by, data: {...}}
+        const flattened = (result || []).map(item => {
+          if (item.data) {
+            // If data is nested, flatten it
+            return {
+              id: item.id,
+              created_date: item.created_date,
+              created_by: item.created_by,
+              ...item.data
+            };
+          }
+          // If already flat, return as is
+          return item;
+        });
+        console.log('Flattened announcements:', flattened);
+        return flattened;
+      } catch (error) {
+        console.error('Error fetching announcements:', error);
+        return [];
+      }
     },
-    refetchOnMount: true,
-    refetchOnWindowFocus: false
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+    cacheTime: 0
   });
 
   const createMutation = useMutation({
@@ -209,16 +222,24 @@ export default function AnnouncementManager() {
               <Bell className="w-5 h-5 text-blue-600 flex-shrink-0" />
               <span className="font-semibold">Manage Announcements</span>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Announcement
-                </Button>
-              </DialogTrigger>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => refetch()}
+                className="w-full sm:w-auto"
+              >
+                Refresh
+              </Button>
+              <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                setIsDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Announcement
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -410,6 +431,7 @@ export default function AnnouncementManager() {
                 </ScrollArea>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
