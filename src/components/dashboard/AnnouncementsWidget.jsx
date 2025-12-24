@@ -12,6 +12,7 @@ export default function AnnouncementsWidget() {
     queryKey: ['announcements'],
     queryFn: async () => {
       const result = await base44.entities.Announcement.filter({ is_active: true }, '-priority,-created_date');
+      console.log('Raw announcements:', result);
       // Flatten data structure
       const flattened = (result || []).map(item => {
         if (item.data) {
@@ -24,12 +25,20 @@ export default function AnnouncementsWidget() {
         }
         return item;
       });
-      // Filter out expired announcements
+      console.log('Flattened announcements:', flattened);
+      // Filter out expired and scheduled announcements
       const now = new Date();
-      return flattened.filter(a => !a.expires_at || isAfter(new Date(a.expires_at), now));
+      const filtered = flattened.filter(a => {
+        const notExpired = !a.expires_at || isAfter(new Date(a.expires_at), now);
+        const isScheduled = a.scheduled_for && isAfter(new Date(a.scheduled_for), now);
+        return notExpired && !isScheduled;
+      });
+      console.log('Filtered announcements for display:', filtered);
+      return filtered;
     },
     initialData: [],
-    refetchOnMount: true
+    refetchOnMount: true,
+    refetchOnWindowFocus: false
   });
 
   const getTypeIcon = (type) => {
@@ -66,8 +75,16 @@ export default function AnnouncementsWidget() {
     );
   }
 
+  console.log('Announcements to display:', announcements);
+
   if (announcements.length === 0) {
-    return null;
+    return (
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <p className="text-sm text-gray-500 text-center">No announcements at this time.</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
