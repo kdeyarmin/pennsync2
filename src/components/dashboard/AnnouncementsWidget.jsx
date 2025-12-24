@@ -11,12 +11,25 @@ export default function AnnouncementsWidget() {
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ['announcements'],
     queryFn: async () => {
-      const all = await base44.entities.Announcement.filter({ is_active: true }, '-priority,-created_date');
+      const result = await base44.entities.Announcement.filter({ is_active: true }, '-priority,-created_date');
+      // Flatten data structure
+      const flattened = (result || []).map(item => {
+        if (item.data) {
+          return {
+            id: item.id,
+            created_date: item.created_date,
+            created_by: item.created_by,
+            ...item.data
+          };
+        }
+        return item;
+      });
       // Filter out expired announcements
       const now = new Date();
-      return all.filter(a => !a.expires_at || isAfter(new Date(a.expires_at), now));
+      return flattened.filter(a => !a.expires_at || isAfter(new Date(a.expires_at), now));
     },
-    initialData: []
+    initialData: [],
+    refetchOnMount: true
   });
 
   const getTypeIcon = (type) => {
