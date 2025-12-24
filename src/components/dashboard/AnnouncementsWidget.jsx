@@ -11,30 +11,9 @@ export default function AnnouncementsWidget() {
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ['announcements'],
     queryFn: async () => {
-      const result = await base44.entities.Announcement.filter({ is_active: true }, '-priority,-created_date');
-      console.log('Raw announcements:', result);
-      // Flatten data structure
-      const flattened = (result || []).map(item => {
-        if (item.data) {
-          return {
-            id: item.id,
-            created_date: item.created_date,
-            created_by: item.created_by,
-            ...item.data
-          };
-        }
-        return item;
-      });
-      console.log('Flattened announcements:', flattened);
-      // Filter out expired and scheduled announcements
-      const now = new Date();
-      const filtered = flattened.filter(a => {
-        const notExpired = !a.expires_at || isAfter(new Date(a.expires_at), now);
-        const isScheduled = a.scheduled_for && isAfter(new Date(a.scheduled_for), now);
-        return notExpired && !isScheduled;
-      });
-      console.log('Filtered announcements for display:', filtered);
-      return filtered;
+      const result = await base44.entities.Announcement.filter({ is_active: true }, '-created_date');
+      console.log('Active announcements:', result);
+      return result || [];
     },
     initialData: [],
     refetchOnMount: true,
