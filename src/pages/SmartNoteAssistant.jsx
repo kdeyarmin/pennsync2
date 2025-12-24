@@ -87,6 +87,7 @@ import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentati
 import NuancedFeedbackPanel from "../components/smartNote/NuancedFeedbackPanel";
 import ComplianceTargetSettings from "../components/smartNote/ComplianceTargetSettings";
 import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecificGuidance";
+import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 
 // Common diagnoses list
 const commonDiagnoses = [
