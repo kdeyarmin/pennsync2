@@ -506,6 +506,92 @@ export default function SmartNoteAssistant() {
     const enhanceStartTime = Date.now();
     const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
 
+    try {
+      // Use optimized backend function for enhancement
+      const result = await base44.functions.invoke('enhanceNoteOptimized', {
+        roughNote,
+        patientId: selectedPatientId,
+        visitType,
+        visitDate,
+        diagnosis: finalDiagnosis,
+        vitalSigns,
+        nurseType: currentUser?.credential_type || 'RN'
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Enhancement failed');
+      }
+
+      setEnhancedNote(result.enhanced_note);
+      setAuditResults({ 
+        enhanced_note: result.enhanced_note,
+        quality_score: result.quality_score 
+      });
+      setRoughNoteCompliance(result.rough_compliance);
+      setEnhancedNoteCompliance(result.enhanced_compliance);
+      setDocumentationGaps(result.documentation_gaps || []);
+      setComplianceReviewComplete(false);
+
+      // Log activity
+      logActivity(ActivityActions.NOTE_ENHANCED, {
+        patient_id: selectedPatientId,
+        visit_type: visitType,
+        diagnosis: finalDiagnosis,
+        quality_score: result.quality_score,
+        compliance_improvement: result.compliance_improvement,
+        page: 'SmartNoteAssistant',
+        ai_utilization: true
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+
+    } catch (error) {
+      console.error("Error enhancing note:", error);
+      alert('Failed to enhance note. Please try again.');
+    }
+    setIsProcessing(false);
+  };
+
+  // Batch AI analysis for multiple operations
+  const runBatchAnalysis = async (analysisTypes) => {
+    try {
+      const result = await base44.functions.invoke('batchAIAnalysis', {
+        roughNote,
+        enhancedNote,
+        visitType,
+        diagnosis: finalDiagnosis,
+        vitalSigns,
+        patientId: selectedPatientId,
+        analysisTypes
+      });
+
+      if (result.success) {
+        if (result.analyses.compliance) {
+          setEnhancedNoteCompliance(result.analyses.compliance);
+        }
+        if (result.analyses.oasis) {
+          setOasisAutomationResults(result.analyses.oasis);
+        }
+        if (result.analyses.pdgm) {
+          setPdgmOpportunities(result.analyses.pdgm);
+        }
+        if (result.analyses.proactive) {
+          // Handle proactive suggestions
+          console.log('Proactive suggestions:', result.analyses.proactive);
+        }
+      }
+    } catch (error) {
+      console.error('Batch analysis error:', error);
+    }
+  };
+
+  // Old implementation kept as fallback
+  const handleEnhanceNoteFallback = async () => {
+    if (!roughNote.trim()) return;
+    setIsProcessing(true);
+    const enhanceStartTime = Date.now();
+    const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
+
     // Calculate compliance of rough note BEFORE enhancement
     let roughCompliance = null;
     let identifiedGaps = [];
@@ -940,6 +1026,28 @@ Return JSON with:
 
     setIsRunningOASISAutomation(true);
     try {
+      // Use batch analysis for OASIS
+      await runBatchAnalysis(['oasis']);
+      setActiveAccordion('oasis');
+      
+      logActivity(ActivityActions.AI_FEATURE_USED, {
+        feature: 'oasis_automation_batched',
+        patient_id: selectedPatientId,
+        page: 'SmartNoteAssistant'
+      });
+    } catch (error) {
+      console.error('Error running OASIS automation:', error);
+      alert('Failed to run OASIS automation. Please try again.');
+    }
+    setIsRunningOASISAutomation(false);
+  };
+
+  // Old OASIS implementation kept as fallback
+  const handleRunOASISAutomationFallback = async () => {
+    if (!enhancedNote || !selectedPatientId) return;
+
+    setIsRunningOASISAutomation(true);
+    try {
       // Enhanced OASIS mapping with detailed justifications
       const enhancedMapping = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an OASIS-E expert. Analyze this clinical note and map it to specific OASIS items with detailed justifications.
@@ -1089,6 +1197,26 @@ Return JSON with:
   };
 
   const analyzePDGMOpportunities = async () => {
+    if (!enhancedNote || !selectedPatient) return;
+
+    setIsAnalyzingPDGM(true);
+    try {
+      // Use batch analysis for PDGM
+      await runBatchAnalysis(['pdgm']);
+
+      logActivity(ActivityActions.AI_FEATURE_USED, {
+        feature: 'pdgm_optimization_batched',
+        patient_id: selectedPatientId,
+        page: 'SmartNoteAssistant'
+      });
+    } catch (error) {
+      console.error('Error analyzing PDGM opportunities:', error);
+    }
+    setIsAnalyzingPDGM(false);
+  };
+
+  // Old PDGM implementation kept as fallback
+  const analyzePDGMOpportunitiesFallback = async () => {
     if (!enhancedNote || !selectedPatient) return;
 
     setIsAnalyzingPDGM(true);
