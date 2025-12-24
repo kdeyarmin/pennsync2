@@ -33,6 +33,7 @@ import AutomatedTaskGenerator from "../components/carePlan/AutomatedTaskGenerato
 import CarePlanTimeline from "../components/carePlan/CarePlanTimeline";
 import AIEducationRecommender from "../components/carePlan/AIEducationRecommender";
 import EducationTracker from "../components/carePlan/EducationTracker";
+import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
@@ -288,6 +289,19 @@ export default function CarePlanManagement() {
       {/* AI Tools Section */}
       {selectedPatient && showAITools && (
         <div className="space-y-6 mb-6">
+          {/* Primary AI Care Plan Generator */}
+          <AICarePlanGenerator
+            patientId={selectedPatient.id}
+            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+            diagnosis={selectedPatient.primary_diagnosis}
+            careType={selectedPatient.care_type || "home_health"}
+            existingCarePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
+            onCarePlansCreated={(created) => {
+              queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+              alert(`Successfully created ${created.length} care plan(s)!`);
+            }}
+          />
+          
           <div className="grid md:grid-cols-2 gap-6">
             <AICarePlanRecommendations
               patient={selectedPatient}
