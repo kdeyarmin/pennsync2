@@ -28,7 +28,6 @@ import {
   BarChart3,
   LineChart as LineChartIcon,
   RefreshCw,
-  Info,
   PieChart as PieChartIcon,
   Calculator,
   Layers
@@ -681,7 +680,6 @@ Return JSON:
             {/* Simulation Tab */}
             <TabsContent value="simulation" className="space-y-4">
               <Alert className="bg-blue-50 border-blue-200">
-                <Info className="w-4 h-4 text-blue-600" />
                 <AlertDescription className="text-blue-800">
                   Simulated revenue impact of documentation improvements based on your patient population
                 </AlertDescription>
