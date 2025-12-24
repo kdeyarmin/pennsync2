@@ -193,44 +193,17 @@ export default function AnnouncementManager() {
               <Bell className="w-5 h-5 text-blue-600" />
               Manage Announcements
             </div>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" />
-                New Announcement
-              </Button>
-            </DialogTrigger>
-            </Dialog>
-            </div>
-
-            <div className="flex gap-3">
-            <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search announcements..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="scheduled">Scheduled</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-            </Select>
-            </div>
-            <DialogContent className="max-w-2xl">
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) resetForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Announcement
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
                   {editingId ? 'Edit Announcement' : 'Create Announcement'}
@@ -418,9 +391,35 @@ export default function AnnouncementManager() {
                   </Button>
                   </div>
                   </form>
-                  </ScrollArea>
-                  </DialogContent>
-                  </Dialog>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search announcements..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -516,14 +515,14 @@ export default function AnnouncementManager() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                    </div>
-                    </div>
-                    );
-                    })}
-                    </div>
-                    </ScrollArea>
-                    )}
-                    </CardContent>
-                    </Card>
-                    );
-                    }
+                  </div>
+                </div>
+              );
+            })}
+            </div>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
