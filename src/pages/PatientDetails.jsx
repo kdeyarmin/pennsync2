@@ -41,6 +41,8 @@ import ProgressReportGenerator from "../components/documents/ProgressReportGener
 import { Sparkles, FileOutput, GraduationCap, TrendingUp, Brain } from "lucide-react";
 import PredictiveAnalyticsPanel from "../components/oasis/PredictiveAnalyticsPanel";
 import PatientChartRecommendations from "../components/patient/PatientChartRecommendations";
+import AIPatientAnalyzer from "../components/patient/AIPatientAnalyzer";
+import PatientSummaryGenerator from "../components/patient/PatientSummaryGenerator";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -393,6 +395,30 @@ export default function PatientDetails() {
             visits={visits}
             carePlans={carePlans}
             oasisData={patientOASIS}
+            incidents={incidents}
+          />
+        </div>
+      )}
+
+      {/* AI-Powered Clinical Analysis - Diagnoses, Risks, Care Recommendations */}
+      {patient && (
+        <div className="mb-6">
+          <AIPatientAnalyzer
+            patient={patient}
+            visits={visits}
+            carePlans={carePlans}
+            incidents={incidents}
+          />
+        </div>
+      )}
+
+      {/* Patient Summary Generator - Multiple Formats */}
+      {patient && (
+        <div className="mb-6">
+          <PatientSummaryGenerator
+            patient={patient}
+            visits={visits}
+            carePlans={carePlans}
             incidents={incidents}
           />
         </div>
