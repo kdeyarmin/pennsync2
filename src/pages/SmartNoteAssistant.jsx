@@ -75,6 +75,7 @@ import GuidelineReferencePanel from "../components/guidelines/GuidelineReference
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
 import RealTimeClinicalAlertMonitor from "../components/smartNote/RealTimeClinicalAlertMonitor";
 import AIMedicalKnowledgeBase from "../components/smartNote/AIMedicalKnowledgeBase";
+import AIDocumentAnalyzer from "../components/smartNote/AIDocumentAnalyzer";
 import PatientHistoryTimeline from "../components/patient/PatientHistoryTimeline";
 import { buildComprehensivePatientHistory } from "../components/utils/patientHistoryAnalyzer";
 import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
@@ -1668,6 +1669,35 @@ Return JSON with:
 
         {/* Dynamic AI Sidebar */}
         <div className="space-y-4 md:space-y-6">
+          {/* AI Document Analyzer */}
+          {selectedPatientId && (
+            <AIDocumentAnalyzer
+              patientId={selectedPatientId}
+              patientData={selectedPatient}
+              onApplyToPatient={async (field, value) => {
+                try {
+                  const updateData = {};
+                  if (field === 'primary_diagnosis') {
+                    updateData.primary_diagnosis = value;
+                  } else if (field === 'medications') {
+                    updateData.current_medications = value;
+                  }
+                  await base44.entities.Patient.update(selectedPatientId, updateData);
+                  queryClient.invalidateQueries({ queryKey: ['patients'] });
+                } catch (error) {
+                  console.error('Error updating patient:', error);
+                }
+              }}
+              onInsertToNote={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
+              }}
+              compact={false}
+            />
+          )}
           {/* AI Medical Knowledge Base */}
           {selectedPatientId && (
             <AIMedicalKnowledgeBase
