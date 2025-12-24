@@ -1238,6 +1238,57 @@ Return JSON with:
             />
           )}
 
+          {/* Real-Time Clinical Alert Monitor */}
+          {selectedPatientId && (vitalSigns.bp || vitalSigns.hr || vitalSigns.temp || vitalSigns.o2 || roughNote.length > 50) && (
+            <RealTimeClinicalAlertMonitor
+              patientData={selectedPatient}
+              vitalSigns={vitalSigns}
+              noteContent={roughNote}
+              diagnosis={finalDiagnosis}
+              recentVisits={recentVisits}
+              onAlertAction={async (alert, action) => {
+                if (action === 'add_to_note') {
+                  const alertText = `\n\n⚠️ CLINICAL ALERT: ${alert.title}\n${alert.description}\nActions taken: ${alert.recommended_actions.join('; ')}`;
+                  setRoughNote(prev => prev + alertText);
+                } else if (action === 'create_task') {
+                  try {
+                    await base44.entities.Task.create({
+                      patient_id: selectedPatientId,
+                      title: `URGENT: ${alert.title}`,
+                      description: `${alert.description}\n\nRecommended actions:\n${alert.recommended_actions.join('\n')}`,
+                      type: 'safety',
+                      priority: alert.severity === 'CRITICAL' ? 'high' : 'medium',
+                      due_timeframe: alert.time_sensitivity === 'Minutes' ? 'today' : '24_hours',
+                      source: 'ai_generated',
+                      ai_reason: alert.rationale,
+                      assigned_to: currentUser?.email
+                    });
+                    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                  } catch (error) {
+                    console.error('Error creating alert task:', error);
+                  }
+                } else if (action === 'notify_md' || action === 'call_911') {
+                  // Log the action
+                  logActivity(ActivityActions.AI_FEATURE_USED, {
+                    feature: 'clinical_alert_action',
+                    action: action,
+                    alert_severity: alert.severity,
+                    patient_id: selectedPatientId,
+                    page: 'SmartNoteAssistant'
+                  });
+                }
+              }}
+              onDismissAlert={(alert) => {
+                logActivity(ActivityActions.AI_FEATURE_USED, {
+                  feature: 'clinical_alert_dismissed',
+                  alert_severity: alert.severity,
+                  patient_id: selectedPatientId,
+                  page: 'SmartNoteAssistant'
+                });
+              }}
+            />
+          )}
+
           {/* Step 3: Notes */}
           <Card id="step-notes" className={`border-2 ${currentStep === 'notes' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'}`}>
           <CardHeader className="py-4 md:py-5 bg-gradient-to-r from-purple-50 to-pink-50">
