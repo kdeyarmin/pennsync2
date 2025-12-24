@@ -17,7 +17,7 @@ import {
   AlertCircle,
   Zap,
   TrendingUp,
-  Info
+  InfoIcon
 } from "lucide-react";
 import {
   Accordion,
@@ -50,7 +50,7 @@ export default function OASISAutomationPanel({
       case "review": return <Eye className="w-4 h-4 text-yellow-600" />;
       case "flag": return <Flag className="w-4 h-4 text-red-600" />;
       case "no_change": return <Check className="w-4 h-4 text-gray-600" />;
-      default: return <Info className="w-4 h-4 text-blue-600" />;
+      default: return <InfoIcon className="w-4 h-4 text-blue-600" />;
     }
   };
 
@@ -119,7 +119,7 @@ export default function OASISAutomationPanel({
   if (oasisSuggestions.length === 0) {
     return (
       <Alert className="border-blue-200 bg-blue-50">
-        <Info className="w-4 h-4 text-blue-600" />
+        <InfoIcon className="w-4 h-4 text-blue-600" />
         <AlertDescription className="text-sm text-blue-800">
           No OASIS suggestions available yet. Enhance your note first, then run OASIS automation.
         </AlertDescription>
