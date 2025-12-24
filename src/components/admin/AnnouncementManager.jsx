@@ -48,14 +48,13 @@ export default function AnnouncementManager() {
     expires_at: null
   });
 
-  const { data: announcements = [], isLoading, refetch } = useQuery({
+  const { data: announcements = [], isLoading } = useQuery({
     queryKey: ['announcements'],
     queryFn: async () => {
       const result = await base44.entities.Announcement.list('-priority,-created_date');
       console.log('Fetched announcements:', result);
-      return result;
-    },
-    initialData: []
+      return result || [];
+    }
   });
 
   const createMutation = useMutation({
@@ -67,8 +66,7 @@ export default function AnnouncementManager() {
     },
     onSuccess: async (data) => {
       console.log('Create success, new announcement:', data);
-      await queryClient.invalidateQueries({ queryKey: ['announcements'] });
-      await refetch();
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
       setIsDialogOpen(false);
       resetForm();
     },
