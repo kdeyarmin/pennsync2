@@ -72,9 +72,6 @@ export default function AnnouncementsWidget() {
         <CardTitle className="text-lg flex items-center gap-2">
           <Bell className="w-5 h-5 text-blue-600" />
           Announcements
-          <Badge variant="secondary" className="ml-auto">
-            {announcements.length}
-          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
