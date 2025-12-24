@@ -110,7 +110,18 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
               {
                 type: 'table',
                 headers: ['Nurse', 'Enhancements', 'Time Saved (hrs)'],
-                rows: prodData.map(d => [d.name, d.noteConversions, d.timeSavedHours])
+                rows: prodData.nurses.map(d => [d.name, d.noteConversions, d.timeSavedHours])
+              },
+              { type: 'spacer', height: 10 },
+              { type: 'heading', text: 'Total Agency Productivity', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Metric', 'Value'],
+                rows: [
+                  ['Total Note Enhancements', prodData.totalEnhancements],
+                  ['Total Time Saved', `${prodData.totalTimeSaved} hours`]
+                ]
               }
             ];
             break;
@@ -290,7 +301,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
   // Helper functions for PDF data
   const generateProductivityReportData = (visits, users) => {
-    return users.filter(u => u.role === 'user').map(nurse => {
+    const nursesData = users.filter(u => u.role === 'user').map(nurse => {
       const stats = calculateNurseStats(nurse.email, {
         visits,
         noteConversions: allNoteConversions,
@@ -302,6 +313,15 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
         ...stats
       };
     });
+
+    const totalTimeSaved = nursesData.reduce((sum, nurse) => sum + (nurse.timeSavedHours || 0), 0);
+    const totalEnhancements = nursesData.reduce((sum, nurse) => sum + (nurse.noteConversions || 0), 0);
+
+    return {
+      nurses: nursesData,
+      totalTimeSaved,
+      totalEnhancements
+    };
   };
 
   const generateQualityReportData = (visits, incidents, patients) => {
@@ -333,9 +353,13 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     content += `Generated: ${formatEastern(new Date(), 'MMM d, yyyy hh:mm a')}\n\n`;
     content += `Nurse,Note Enhancements,Time Saved (hours)\n`;
     
-    data.forEach(stats => {
+    data.nurses.forEach(stats => {
       content += `${stats.name},${stats.noteConversions},${stats.timeSavedHours}\n`;
     });
+
+    content += `\nTOTAL AGENCY PRODUCTIVITY\n`;
+    content += `Total Note Enhancements,${data.totalEnhancements}\n`;
+    content += `Total Time Saved (hours),${data.totalTimeSaved}\n`;
 
     return {
       content,
