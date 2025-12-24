@@ -19,7 +19,12 @@ import {
   CheckCircle2,
   Lightbulb,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Heart,
+  Wind,
+  Activity,
+  Shield,
+  AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
