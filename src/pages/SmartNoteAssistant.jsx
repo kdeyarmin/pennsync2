@@ -73,6 +73,7 @@ import ComprehensivePatientContext, { buildComprehensiveContext, formatContextFo
 import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
+import RealTimeClinicalAlertMonitor from "../components/smartNote/RealTimeClinicalAlertMonitor";
 import PatientHistoryTimeline from "../components/patient/PatientHistoryTimeline";
 import { buildComprehensivePatientHistory } from "../components/utils/patientHistoryAnalyzer";
 import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
