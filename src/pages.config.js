@@ -56,6 +56,8 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
+import AdvancedAnalyticsDashboard from './pages/AdvancedAnalyticsDashboard';
+import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -118,6 +120,8 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
+    "AdvancedAnalyticsDashboard": AdvancedAnalyticsDashboard,
+    "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
 }
 
 export const pagesConfig = {
