@@ -40,8 +40,6 @@ import {
   RotateCcw,
   Lightbulb,
   MessageCircle,
-  Save,
-  Loader2,
   Edit3,
   BookOpen
 } from "lucide-react";

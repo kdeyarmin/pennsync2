@@ -1,12 +1,14 @@
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
+import AdvancedAnalyticsDashboard from './pages/AdvancedAnalyticsDashboard';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AuditTrail from './pages/AuditTrail';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import CarePlanManagement from './pages/CarePlanManagement';
+import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
 import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
 import ComplianceCenter from './pages/ComplianceCenter';
 import ComplianceDashboard from './pages/ComplianceDashboard';
@@ -56,8 +58,6 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
-import AdvancedAnalyticsDashboard from './pages/AdvancedAnalyticsDashboard';
-import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -65,12 +65,14 @@ export const PAGES = {
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
+    "AdvancedAnalyticsDashboard": AdvancedAnalyticsDashboard,
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
     "AuditTrail": AuditTrail,
     "AutomaticCarePlans": AutomaticCarePlans,
     "CarePlanManagement": CarePlanManagement,
+    "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
     "ClinicalPathwayManager": ClinicalPathwayManager,
     "ComplianceCenter": ComplianceCenter,
     "ComplianceDashboard": ComplianceDashboard,
@@ -120,8 +122,6 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
-    "AdvancedAnalyticsDashboard": AdvancedAnalyticsDashboard,
-    "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
 }
 
 export const pagesConfig = {
