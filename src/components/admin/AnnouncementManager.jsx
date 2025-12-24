@@ -53,13 +53,7 @@ export default function AnnouncementManager() {
     queryFn: async () => {
       const result = await base44.entities.Announcement.list('-priority,-created_date');
       console.log('Fetched announcements:', result);
-      // Map the data to flatten the structure
-      return (result || []).map(item => ({
-        id: item.id,
-        created_date: item.created_date,
-        created_by: item.created_by,
-        ...item.data
-      }));
+      return result || [];
     },
     refetchOnMount: true,
     refetchOnWindowFocus: false
