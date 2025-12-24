@@ -168,14 +168,25 @@ Deno.serve(async (req) => {
     const nurses = users.filter(u => u.role === 'user');
     addText(`Total Nurses: ${nurses.length}`, 11);
     
-    nurses.forEach(nurse => {
+    // Calculate note conversions per nurse and sort by highest first
+    const nurseStats = nurses.map(nurse => {
       const nurseVisits = filteredVisits.filter(v => v.created_by === nurse.email);
       const nurseCompleted = nurseVisits.filter(v => v.status === 'completed').length;
       const nurseRate = nurseVisits.length > 0 ? Math.round((nurseCompleted / nurseVisits.length) * 100) : 0;
+      const nurseNoteConversions = filteredNoteConversions.filter(n => n.nurse_email === nurse.email).length;
       
-      if (nurseVisits.length > 0) {
-        addText(`${nurse.full_name || nurse.email}: ${nurseCompleted}/${nurseVisits.length} visits (${nurseRate}%)`, 9);
-      }
+      return {
+        name: nurse.full_name || nurse.email,
+        completed: nurseCompleted,
+        total: nurseVisits.length,
+        rate: nurseRate,
+        noteConversions: nurseNoteConversions
+      };
+    }).filter(stat => stat.total > 0)
+      .sort((a, b) => b.noteConversions - a.noteConversions); // Sort by note conversions descending
+    
+    nurseStats.forEach(stat => {
+      addText(`${stat.name}: ${stat.noteConversions} notes, ${stat.completed}/${stat.total} visits (${stat.rate}%)`, 9);
     });
 
     // AI UTILIZATION & ROI
