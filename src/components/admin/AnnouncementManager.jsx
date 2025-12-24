@@ -52,8 +52,23 @@ export default function AnnouncementManager() {
     queryKey: ['announcements'],
     queryFn: async () => {
       const result = await base44.entities.Announcement.list('-priority,-created_date');
-      console.log('Fetched announcements:', result);
-      return result || [];
+      console.log('Raw fetched announcements:', result);
+      // Flatten the structure - entities return {id, created_date, created_by, data: {...}}
+      const flattened = (result || []).map(item => {
+        if (item.data) {
+          // If data is nested, flatten it
+          return {
+            id: item.id,
+            created_date: item.created_date,
+            created_by: item.created_by,
+            ...item.data
+          };
+        }
+        // If already flat, return as is
+        return item;
+      });
+      console.log('Flattened announcements:', flattened);
+      return flattened;
     },
     refetchOnMount: true,
     refetchOnWindowFocus: false
@@ -427,9 +442,14 @@ export default function AnnouncementManager() {
         {isLoading ? (
           <p className="text-sm text-gray-500 text-center py-4">Loading...</p>
         ) : filteredAnnouncements.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-8">
-            {searchTerm || statusFilter !== 'all' ? 'No announcements match your filters' : 'No announcements yet'}
-          </p>
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-500">
+              {searchTerm || statusFilter !== 'all' ? 'No announcements match your filters' : 'No announcements yet. Create one to get started!'}
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Total in database: {announcements.length}
+            </p>
+          </div>
         ) : (
           <ScrollArea className="h-[300px] sm:h-[400px]">
             <div className="space-y-3 pr-2 sm:pr-3">
