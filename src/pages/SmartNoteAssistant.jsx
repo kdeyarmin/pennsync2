@@ -1410,9 +1410,9 @@ Return JSON with:
         </CardContent>
       </Card>
 
-      {/* Enhanced Patient Overview - Sticky & Prominent */}
+      {/* Enhanced Patient Overview */}
       {selectedPatient && (
-        <div className="mb-6 sticky top-0 z-10 bg-blue-50/95 backdrop-blur-sm p-4 rounded-lg border-2 border-blue-300 shadow-lg">
+        <div className="mb-6 bg-blue-50 p-4 rounded-lg border-2 border-blue-300 shadow-lg">
           <UnifiedPatientOverview
             patient={selectedPatient}
             carePlans={carePlans}
