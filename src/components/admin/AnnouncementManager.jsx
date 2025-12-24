@@ -92,11 +92,12 @@ export default function AnnouncementManager() {
       console.log('Create result:', result);
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
-      queryClient.refetchQueries({ queryKey: ['announcements'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      await refetch();
       setIsDialogOpen(false);
       resetForm();
+      alert('Announcement created successfully!');
     },
     onError: (error) => {
       console.error('Create error details:', error);
@@ -106,11 +107,12 @@ export default function AnnouncementManager() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Announcement.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
-      queryClient.refetchQueries({ queryKey: ['announcements'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      await refetch();
       setIsDialogOpen(false);
       resetForm();
+      alert('Announcement updated successfully!');
     },
     onError: (error) => {
       console.error('Update error:', error);
@@ -120,9 +122,10 @@ export default function AnnouncementManager() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Announcement.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
-      queryClient.refetchQueries({ queryKey: ['announcements'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      await refetch();
+      alert('Announcement deleted successfully!');
     }
   });
 
