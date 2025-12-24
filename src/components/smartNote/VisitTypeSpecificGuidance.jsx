@@ -16,7 +16,8 @@ import {
   Copy,
   ChevronDown,
   ChevronUp,
-  AlertTriangle
+  AlertTriangle,
+  AlertCircle
 } from "lucide-react";
 
 const VISIT_TYPE_TEMPLATES = {
