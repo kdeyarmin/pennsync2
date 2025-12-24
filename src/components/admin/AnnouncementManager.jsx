@@ -57,9 +57,12 @@ export default function AnnouncementManager() {
       return (result || []).map(item => ({
         id: item.id,
         created_date: item.created_date,
+        created_by: item.created_by,
         ...item.data
       }));
-    }
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: false
   });
 
   const createMutation = useMutation({
@@ -69,9 +72,9 @@ export default function AnnouncementManager() {
       console.log('Create result:', result);
       return result;
     },
-    onSuccess: async (data) => {
-      console.log('Create success, new announcement:', data);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.refetchQueries({ queryKey: ['announcements'] });
       setIsDialogOpen(false);
       resetForm();
     },
@@ -85,9 +88,9 @@ export default function AnnouncementManager() {
     mutationFn: ({ id, data }) => base44.entities.Announcement.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.refetchQueries({ queryKey: ['announcements'] });
       setIsDialogOpen(false);
       resetForm();
-      alert('Announcement updated successfully!');
     },
     onError: (error) => {
       console.error('Update error:', error);
@@ -99,6 +102,7 @@ export default function AnnouncementManager() {
     mutationFn: (id) => base44.entities.Announcement.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.refetchQueries({ queryKey: ['announcements'] });
     }
   });
 
