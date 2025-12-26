@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -52,7 +52,6 @@ import {
   AlertCircle
 } from "lucide-react";
 import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
-import { useQueryClient } from "@tanstack/react-query";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
@@ -74,13 +73,11 @@ import { todayEastern, formatEastern } from "../components/utils/timezone";
 import ConsolidatedAIFeedback from "../components/smartNote/ConsolidatedAIFeedback";
 import NextStepsPanel from "../components/smartNote/NextStepsPanel";
 import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOverview";
-import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
 import UnifiedAISuggestions from "../components/smartNote/UnifiedAISuggestions";
 import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import MedicalTerminologyProcessor, { standardizeTerminology } from "../components/smartNote/MedicalTerminologyProcessor";
 import ComprehensivePatientContext, { buildComprehensiveContext, formatContextForAI } from "../components/smartNote/ComprehensivePatientContext";
-import { useAICache, clearAllAICache } from "../components/smartNote/CachedAIComponent";
 import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
