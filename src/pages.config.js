@@ -61,6 +61,7 @@ import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
 import CareCoordinationDashboard from './pages/CareCoordinationDashboard';
+import ReferralProcessor from './pages/ReferralProcessor';
 import __Layout from './Layout.jsx';
 
 
@@ -128,6 +129,7 @@ export const PAGES = {
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
     "CareCoordinationDashboard": CareCoordinationDashboard,
+    "ReferralProcessor": ReferralProcessor,
 }
 
 export const pagesConfig = {
