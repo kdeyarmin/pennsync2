@@ -61,7 +61,9 @@ import AICarePlanOptimizer from "../components/carePlan/AICarePlanOptimizer";
 import ComplianceSummaryReport from "../components/smartNote/ComplianceSummaryReport";
 import FloatingActionBar from "../components/smartNote/FloatingActionBar";
 import QuickPhraseButtons from "../components/smartNote/QuickPhraseButtons";
-import ImprovedStepIndicator from "../components/smartNote/ImprovedStepIndicator";
+import EnhancedStepIndicator from "../components/smartNote/EnhancedStepIndicator";
+import UnifiedAIPanel from "../components/smartNote/UnifiedAIPanel";
+import QuickActionsBar from "../components/smartNote/QuickActionsBar";
 import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
 import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
 import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
@@ -364,6 +366,8 @@ export default function SmartNoteAssistant() {
   const [documentationGaps, setDocumentationGaps] = useState([]);
   const [pdgmOpportunities, setPdgmOpportunities] = useState(null);
   const [isAnalyzingPDGM, setIsAnalyzingPDGM] = useState(false);
+  const [aiPanelCollapsed, setAiPanelCollapsed] = useState(false);
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -1405,15 +1409,15 @@ Return JSON with:
       </div>
 
       {/* Enhanced Step Progress */}
-      <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 mb-6 shadow-md">
-        <CardContent className="p-4">
-          <ImprovedStepIndicator 
-            currentStep={currentStep} 
-            completedSteps={completedSteps}
-            onStepClick={handleStepClick}
-          />
-        </CardContent>
-      </Card>
+      <EnhancedStepIndicator 
+        currentStep={currentStep} 
+        completedSteps={completedSteps}
+        onStepClick={handleStepClick}
+        patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
+        vitalStats={vitalSigns.bp || vitalSigns.hr ? `BP: ${vitalSigns.bp || '-'}, HR: ${vitalSigns.hr || '-'}` : null}
+        noteLength={roughNote.length}
+        complianceScore={enhancedNoteCompliance?.overall_score}
+      />
 
       {/* Enhanced Patient Overview */}
       {selectedPatient && (
@@ -2449,17 +2453,21 @@ Return JSON with:
 
 
 
-      {/* Floating Action Bar */}
-      <FloatingActionBar
-        roughNoteLength={roughNote.length}
-        hasEnhancedNote={!!enhancedNote}
+      {/* Quick Actions Bar */}
+      <QuickActionsBar
+        currentStep={currentStep}
         isProcessing={isProcessing}
+        isSaving={isSaving}
+        saved={savedSuccessfully}
         copied={copied}
-        complianceScore={enhancedNoteCompliance?.overall_score || roughNoteCompliance?.score || null}
+        isListening={isVoiceListening}
+        complianceScore={enhancedNoteCompliance?.overall_score}
         onEnhance={handleEnhanceNote}
         onCopy={handleCopy}
+        onSave={handleSaveNote}
         onClear={handleClearNote}
         onGenerateTasks={() => setActiveAccordion('tasks')}
+        onToggleVoice={() => setIsVoiceListening(!isVoiceListening)}
       />
     </div>
   );
