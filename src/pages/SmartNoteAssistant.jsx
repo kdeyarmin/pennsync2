@@ -83,6 +83,7 @@ import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestio
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
 import MedicareComplianceChecker from "../components/compliance/MedicareComplianceChecker";
+import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
 import RealTimeClinicalAlertMonitor from "../components/smartNote/RealTimeClinicalAlertMonitor";
 import AIMedicalKnowledgeBase from "../components/smartNote/AIMedicalKnowledgeBase";
 import AIDocumentAnalyzer from "../components/smartNote/AIDocumentAnalyzer";
@@ -2150,8 +2151,27 @@ Return JSON with:
                   />
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
-          )}
+              <AccordionItem value="review">
+                <AccordionTrigger className="text-sm">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Comprehensive Document Review
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <AutomaticDocumentReviewer
+                    noteContent={enhancedNote}
+                    visitType={visitType}
+                    diagnosis={finalDiagnosis}
+                    patientData={selectedPatient}
+                    vitalSigns={vitalSigns}
+                    nurseEmail={currentUser?.email}
+                    autoReview={false}
+                    onApplySuggestion={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+              </Accordion>
+              )}
         </div>
 
         {/* Enhanced AI Sidebar with Tabs */}
