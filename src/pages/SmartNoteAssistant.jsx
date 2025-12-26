@@ -99,6 +99,7 @@ import NuancedFeedbackPanel from "../components/smartNote/NuancedFeedbackPanel";
 import ComplianceTargetSettings from "../components/smartNote/ComplianceTargetSettings";
 import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecificGuidance";
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
+import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1457,6 +1458,34 @@ Return JSON with:
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
         <div className="xl:col-span-3 space-y-4 md:space-y-6">
           
+          {/* Referral PDF Upload - Before Patient Selection */}
+          {!selectedPatientId && (
+            <ReferralPDFSummarizer
+              onDataExtracted={(data) => {
+                console.log('Referral data extracted:', data);
+              }}
+              onUseForAdmission={(data) => {
+                // Auto-populate diagnosis if available
+                if (data.diagnoses?.primary_diagnosis) {
+                  setDiagnosis("Custom (type below)");
+                  setCustomDiagnosis(data.diagnoses.primary_diagnosis);
+                }
+
+                // Pre-populate rough note with key referral info
+                const referralSummary = `REFERRAL INFORMATION:
+          Admission Source: ${data.admission_details?.admission_source || 'Not specified'}
+          Primary Diagnosis: ${data.diagnoses?.primary_diagnosis || 'Not specified'}
+          Medications: ${data.medications?.length || 0} medications documented
+          Functional Status: ${data.functional_status?.ambulation || 'Not documented'}
+          Skilled Services Ordered: ${data.skilled_needs?.services_ordered?.join(', ') || 'Not specified'}
+
+          `;
+                setRoughNote(referralSummary);
+                setVisitType('admission');
+              }}
+            />
+          )}
+
           {/* Step 1: Patient Selection - Enhanced */}
           <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 ring-4 ring-blue-200 shadow-xl' : 'border-gray-300'}`}>
             <CardHeader className="py-5 md:py-6 bg-gradient-to-r from-blue-100 to-indigo-100">
