@@ -67,9 +67,14 @@ export default function PatientDetails() {
     status: 'scheduled'
   });
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   // Log access when component mounts
   React.useEffect(() => {
-    if (patientId) {
+    if (patientId && currentUser?.email) {
       logSecurityEvent('PATIENT_DETAILS_ACCESSED', { patient_id: patientId });
       logActivity(ActivityActions.VIEW, {
         entity_type: 'Patient',
@@ -77,7 +82,7 @@ export default function PatientDetails() {
         page: 'PatientDetails'
       });
     }
-  }, [patientId]);
+  }, [patientId, currentUser?.email]);
 
   const { data: patients } = useQuery({
     queryKey: ['patients'],
@@ -132,23 +137,6 @@ export default function PatientDetails() {
 
   const [detectedCarePlanGaps, setDetectedCarePlanGaps] = useState(null);
   const [detectedMedicationIssues, setDetectedMedicationIssues] = useState(null);
-
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
-  // Log page visit
-  useEffect(() => {
-    if (currentUser?.email && patient) {
-      logActivity(ActivityActions.VIEW, {
-        entity_type: 'Patient',
-        entity_id: patientId,
-        patient_name: `${patient.first_name} ${patient.last_name}`,
-        page: 'PatientDetails'
-      });
-    }
-  }, [currentUser?.email, patient, patientId]);
 
   // Calculate critical indicators
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');

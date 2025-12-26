@@ -28,6 +28,7 @@ import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import PaginatedPatientList from "../components/patient/PaginatedPatientList";
 import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import FavoriteButton from "../components/navigation/FavoriteButton";
+import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +54,21 @@ export default function Patients() {
   const [selectedPatients, setSelectedPatients] = useState([]);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  // Log page visit
+  React.useEffect(() => {
+    if (currentUser?.email) {
+      logActivity(ActivityActions.PAGE_VISIT, {
+        page: 'Patients',
+        page_title: 'Patient Management'
+      });
+    }
+  }, [currentUser?.email]);
 
   const { data: patients, isLoading, error: patientsError } = useQuery({
     queryKey: ['patients'],
@@ -97,19 +113,34 @@ export default function Patients() {
 
   const createPatientMutation = useMutation({
     mutationFn: (patientData) => base44.entities.Patient.create(patientData),
-    onSuccess: () => {
+    onSuccess: (newPatient) => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       setShowForm(false);
       setEditingPatient(null);
+      
+      // Log patient creation
+      logActivity(ActivityActions.CREATE, {
+        entity_type: 'Patient',
+        entity_id: newPatient.id,
+        patient_name: `${newPatient.first_name} ${newPatient.last_name}`,
+        page: 'Patients'
+      });
     },
   });
 
   const updatePatientMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Patient.update(id, data),
-    onSuccess: () => {
+    onSuccess: (updatedPatient, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       setShowForm(false);
       setEditingPatient(null);
+      
+      // Log patient update
+      logActivity(ActivityActions.UPDATE, {
+        entity_type: 'Patient',
+        entity_id: variables.id,
+        page: 'Patients'
+      });
     },
   });
 
@@ -117,11 +148,18 @@ export default function Patients() {
     mutationFn: async (patientId) => {
       await secureDelete(base44.entities.Patient, patientId, 'Patient');
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       setDeleteDialogOpen(false);
       setPatientToDelete(null);
       setIsDeleting(false);
+      
+      // Log patient deletion
+      logActivity(ActivityActions.DELETE, {
+        entity_type: 'Patient',
+        entity_id: deletedId,
+        page: 'Patients'
+      });
     },
     onError: async (error) => {
       setIsDeleting(false);

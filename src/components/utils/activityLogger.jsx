@@ -48,7 +48,10 @@ export const ActivityActions = {
   NOTE_AI_GENERATED: 'note_ai_generated',
   NOTE_COMPLIANCE_CHECK: 'note_compliance_check',
   ALERT_VIEWED: 'alert_viewed',
-  ALERT_DISMISSED: 'alert_dismissed'
+  ALERT_DISMISSED: 'alert_dismissed',
+  AI_FEATURE_USED: 'ai_feature_used',
+  SEARCH: 'search',
+  FILTER_APPLIED: 'filter_applied'
 };
 
 export const logError = async (errorMessage, errorDetails = {}) => {

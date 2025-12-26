@@ -35,6 +35,8 @@ import CarePlanTimeline from "../components/carePlan/CarePlanTimeline";
 import AIEducationRecommender from "../components/carePlan/AIEducationRecommender";
 import EducationTracker from "../components/carePlan/EducationTracker";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
+import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import FavoriteButton from "../components/navigation/FavoriteButton";
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
@@ -44,6 +46,21 @@ export default function CarePlanManagement() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showAITools, setShowAITools] = useState(false);
   const [viewMode, setViewMode] = useState("list"); // "list" or "timeline"
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  // Log page visit
+  React.useEffect(() => {
+    if (currentUser?.email) {
+      logActivity(ActivityActions.PAGE_VISIT, {
+        page: 'CarePlanManagement',
+        page_title: 'Care Plan Management'
+      });
+    }
+  }, [currentUser?.email]);
 
   // Fetch all patients
   const { data: patients = [] } = useQuery({
@@ -70,16 +87,31 @@ export default function CarePlanManagement() {
   // Update care plan status
   const updateCarePlanMutation = useMutation({
     mutationFn: ({ id, updates }) => base44.entities.CarePlan.update(id, updates),
-    onSuccess: () => {
+    onSuccess: (updatedPlan, variables) => {
       queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+      
+      // Log care plan update
+      logActivity(ActivityActions.CARE_PLAN_UPDATE, {
+        entity_type: 'CarePlan',
+        entity_id: variables.id,
+        updates: variables.updates,
+        page: 'CarePlanManagement'
+      });
     },
   });
 
   // Delete care plan
   const deleteCarePlanMutation = useMutation({
     mutationFn: (id) => base44.entities.CarePlan.delete(id),
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+      
+      // Log care plan deletion
+      logActivity(ActivityActions.DELETE, {
+        entity_type: 'CarePlan',
+        entity_id: deletedId,
+        page: 'CarePlanManagement'
+      });
     },
   });
 
@@ -162,6 +194,17 @@ export default function CarePlanManagement() {
 
       queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
       queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
+      
+      // Log care plan creation from AI recommendation
+      logActivity(ActivityActions.CARE_PLAN_CREATE, {
+        entity_type: 'CarePlan',
+        entity_id: newCarePlan.id,
+        patient_id: selectedPatient.id,
+        problem: recommendation.problem,
+        source: 'ai_recommendation',
+        page: 'CarePlanManagement'
+      });
+      
       alert('Care plan created successfully with education materials!');
     } catch (error) {
       console.error('Error creating care plan:', error);
@@ -205,6 +248,7 @@ export default function CarePlanManagement() {
             <h1 className="text-3xl font-bold text-gray-900">Care Plan Management</h1>
             <p className="text-gray-600">Manage and track patient care plans</p>
           </div>
+          <FavoriteButton type="page" id="CarePlanManagement" name="Care Plan Management" />
         </div>
       </div>
 
@@ -336,6 +380,16 @@ export default function CarePlanManagement() {
                 
                 queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
                 queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
+                
+                // Log AI care plan creation
+                logActivity(ActivityActions.CARE_PLAN_CREATE, {
+                  entity_type: 'CarePlan',
+                  entity_id: newPlan.id,
+                  patient_id: selectedPatient.id,
+                  source: 'ai_suggestion_engine',
+                  education_topics: educationTopics?.length || 0,
+                  page: 'CarePlanManagement'
+                });
               } catch (error) {
                 console.error('Error creating care plan:', error);
                 alert('Failed to create care plan. Please try again.');
