@@ -43,6 +43,7 @@ import MedicationInteractionChecker from "../components/medication/MedicationInt
 import CarePlanGapAnalyzer from "../components/carePlan/CarePlanGapAnalyzer";
 import PatientEducationGenerator from "../components/documents/PatientEducationGenerator";
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
+import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
 import { Sparkles, FileOutput, GraduationCap, TrendingUp, Brain } from "lucide-react";
 import PredictiveAnalyticsPanel from "../components/oasis/PredictiveAnalyticsPanel";
 import PatientChartRecommendations from "../components/patient/PatientChartRecommendations";
@@ -345,30 +346,7 @@ export default function PatientDetails() {
           patientData={patient}
           autoAnalyze={true}
         />
-
-        {/* Advanced AI Analytics */}
-        <PatientDeteriorationPredictor
-          patientId={patientId}
-          recentVisits={recentVisits}
-          autoAnalyze={true}
-        />
-
-        <MedicationInteractionChecker
-          medications={patient?.current_medications || []}
-          patientDiagnoses={[patient?.primary_diagnosis, ...(patient?.secondary_diagnoses || [])].filter(Boolean)}
-          patientAge={patient?.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null}
-          patientAllergies={patient?.allergies}
-          autoCheck={true}
-        />
-
-        <CarePlanGapAnalyzer
-          patientId={patientId}
-          diagnosis={patient?.primary_diagnosis}
-          carePlans={carePlans}
-          recentVisits={recentVisits}
-          patientData={patient}
-          autoAnalyze={true}
-        />
+        
         <PredictiveRiskAnalyzer 
           patientId={patientId} 
           patientName={`${patient.first_name} ${patient.last_name}`}
