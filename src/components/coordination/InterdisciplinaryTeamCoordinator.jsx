@@ -51,7 +51,8 @@ export default function InterdisciplinaryTeamCoordinator({
           return daysSince <= 30;
         }).length || 0,
         active_alerts: alerts?.length || 0,
-        recent_hospitalizations: incidents?.filter(i => i.incident_type === 'hospitalized' && {
+        recent_hospitalizations: incidents?.filter(i => {
+          if (i.incident_type !== 'hospitalized') return false;
           const incidentDate = new Date(i.incident_date);
           const daysSince = (new Date() - incidentDate) / (1000 * 60 * 60 * 24);
           return daysSince <= 30;
