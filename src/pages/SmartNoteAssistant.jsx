@@ -448,7 +448,7 @@ export default function SmartNoteAssistant() {
   // Clear AI cache when patient changes
   React.useEffect(() => {
     if (selectedPatientId) {
-      clearAllAICache();
+      aiResponseCache.clear();
     }
   }, [selectedPatientId]);
 
