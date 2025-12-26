@@ -100,6 +100,7 @@ import ComplianceTargetSettings from "../components/smartNote/ComplianceTargetSe
 import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecificGuidance";
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
+import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -2373,6 +2374,10 @@ Return JSON with:
                   <TabsContent value="knowledge" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
                     {activeAITab === "knowledge" && (
                       <>
+                    <AIComplianceAssistant 
+                      compact={true}
+                      context={enhancedNote ? `Current note context: ${enhancedNote.substring(0, 500)}...` : null}
+                    />
                     <AIMedicalKnowledgeBase
                       patientData={selectedPatient}
                       diagnosis={finalDiagnosis}
