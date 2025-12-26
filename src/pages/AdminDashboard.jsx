@@ -745,6 +745,7 @@ export default function AdminDashboard() {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-6">
+          <AIConfigurationManager />
           <SystemSettings currentUser={currentUser} />
         </TabsContent>
 
