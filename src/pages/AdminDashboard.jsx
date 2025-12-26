@@ -77,6 +77,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import AIStaffPerformanceAnalytics from "../components/analytics/AIStaffPerformanceAnalytics";
 import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
+import AIConfigurationManager from "../components/admin/AIConfigurationManager";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
