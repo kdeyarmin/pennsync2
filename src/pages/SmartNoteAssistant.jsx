@@ -74,6 +74,7 @@ import ConsolidatedAIFeedback from "../components/smartNote/ConsolidatedAIFeedba
 import NextStepsPanel from "../components/smartNote/NextStepsPanel";
 import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOverview";
 import UnifiedAISuggestions from "../components/smartNote/UnifiedAISuggestions";
+import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
 import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import MedicalTerminologyProcessor, { standardizeTerminology } from "../components/smartNote/MedicalTerminologyProcessor";
