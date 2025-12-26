@@ -24,7 +24,8 @@ import {
   ChevronRight,
   Sparkles,
   Clock,
-  BookOpen
+  BookOpen,
+  WifiOff
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
@@ -82,6 +83,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Documentation",
       items: [
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
+        { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Referral Processor", icon: FileText, page: "ReferralProcessor" },
         { name: "Patient Education", icon: FileText, page: "PatientEducationHub" },
         { name: "Education Generator", icon: BookOpen, page: "PatientEducationGenerator" }

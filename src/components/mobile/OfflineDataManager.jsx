@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Database, 
   Download, 
@@ -13,8 +14,12 @@ import {
   AlertTriangle,
   Loader2,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from "lucide-react";
+import OfflinePatientSelector from "./OfflinePatientSelector";
+import OfflineSyncManager from "./OfflineSyncManager";
 
 export default function OfflineDataManager() {
   const queryClient = useQueryClient();
@@ -176,14 +181,35 @@ export default function OfflineDataManager() {
     <Card className={`border-2 ${isOnline ? 'border-green-300' : 'border-orange-300'}`}>
       <CardHeader className={`${isOnline ? 'bg-green-50' : 'bg-orange-50'}`}>
         <CardTitle className="text-base flex items-center gap-2">
-          <Database className="w-5 h-5" />
-          Offline Data Management
+          {isOnline ? <Wifi className="w-5 h-5 text-green-600" /> : <WifiOff className="w-5 h-5 text-orange-600" />}
+          Offline Mode
           <Badge className={`ml-auto ${isOnline ? 'bg-green-600' : 'bg-orange-600'}`}>
             {isOnline ? 'Online' : 'Offline'}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
+        <Tabs defaultValue="sync" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="sync">Sync Status</TabsTrigger>
+            <TabsTrigger value="download">Download Data</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="sync" className="space-y-4 mt-4">
+            <OfflineSyncManager />
+          </TabsContent>
+
+          <TabsContent value="download" className="space-y-4 mt-4">
+            <OfflinePatientSelector 
+              onCacheComplete={(count) => {
+                queryClient.invalidateQueries();
+              }}
+            />
+          </TabsContent>
+        </Tabs>
+
+        {/* Legacy content below */}
+        <div className="hidden">
         {!isOnline && (
           <Alert className="bg-orange-50 border-orange-300">
             <AlertTriangle className="w-4 h-4 text-orange-600" />
@@ -269,6 +295,7 @@ export default function OfflineDataManager() {
             Clear Cache
           </Button>
         )}
+        </div>
       </CardContent>
     </Card>
   );
