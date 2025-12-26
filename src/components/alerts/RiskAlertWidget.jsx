@@ -10,13 +10,12 @@ import {
   CheckCircle2,
   X,
   Eye,
-  TrendingUp,
   Users
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }) {
+function RiskAlertWidget({ patientId, compact = false, showAllPatients = false }) {
   const queryClient = useQueryClient();
 
   const { data: alerts = [], isLoading } = useQuery({
@@ -211,3 +210,5 @@ export default function RiskAlertWidget({ patientId, compact = false, showAllPat
     </Card>
   );
 }
+
+export default RiskAlertWidget;
