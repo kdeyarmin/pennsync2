@@ -7,6 +7,7 @@ import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AuditTrail from './pages/AuditTrail';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
+import CareCoordinationDashboard from './pages/CareCoordinationDashboard';
 import CarePlanManagement from './pages/CarePlanManagement';
 import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
 import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
@@ -48,6 +49,7 @@ import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
+import ReferralProcessor from './pages/ReferralProcessor';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
 import SecurityPolicy from './pages/SecurityPolicy';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
@@ -60,8 +62,6 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
-import CareCoordinationDashboard from './pages/CareCoordinationDashboard';
-import ReferralProcessor from './pages/ReferralProcessor';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +75,7 @@ export const PAGES = {
     "AnalyticsDashboard": AnalyticsDashboard,
     "AuditTrail": AuditTrail,
     "AutomaticCarePlans": AutomaticCarePlans,
+    "CareCoordinationDashboard": CareCoordinationDashboard,
     "CarePlanManagement": CarePlanManagement,
     "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
     "ClinicalPathwayManager": ClinicalPathwayManager,
@@ -116,6 +117,7 @@ export const PAGES = {
     "Patients": Patients,
     "PredictiveAnalytics": PredictiveAnalytics,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
+    "ReferralProcessor": ReferralProcessor,
     "RegulatoryCompliance": RegulatoryCompliance,
     "SecurityPolicy": SecurityPolicy,
     "SmartNoteAssistant": SmartNoteAssistant,
@@ -128,8 +130,6 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
-    "CareCoordinationDashboard": CareCoordinationDashboard,
-    "ReferralProcessor": ReferralProcessor,
 }
 
 export const pagesConfig = {

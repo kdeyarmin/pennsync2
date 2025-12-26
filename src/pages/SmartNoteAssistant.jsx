@@ -104,6 +104,7 @@ import PersonalizedEducationGenerator from "../components/education/Personalized
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
 import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
+import AITemplateGenerator from "../components/smartNote/AITemplateGenerator";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1617,8 +1618,26 @@ Return JSON with:
             />
           )}
 
+          {/* AI Documentation Template Generator */}
+          {selectedPatientId && visitType && finalDiagnosis && roughNote.length < 50 && !enhancedNote && (
+            <AITemplateGenerator
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              patientData={selectedPatient}
+              carePlans={carePlans}
+              recentVisits={recentVisits}
+              onUseTemplate={(template) => {
+                setRoughNote(template);
+                if (!noteStartTime) {
+                  setNoteStartTime(Date.now());
+                }
+              }}
+              autoGenerate={true}
+            />
+          )}
+
           {/* Patient History Auto-Populator */}
-          {selectedPatientId && recentVisits.length > 0 && !enhancedNote && (
+          {selectedPatientId && recentVisits.length > 0 && !enhancedNote && roughNote.length < 100 && (
             <PatientHistoryAutoPopulator
               patient={selectedPatient}
               recentVisits={recentVisits}
