@@ -26,13 +26,15 @@ import {
   FileText,
   Calendar,
   BarChart3,
-  Download
+  Download,
+  Sparkles
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { format, subDays, startOfDay } from "date-fns";
 import ComplianceReportGenerator from "../components/compliance/ComplianceReportGenerator";
 import ProactiveComplianceMonitor from "../components/compliance/ProactiveComplianceMonitor";
 import AdvancedComplianceRiskScoring from "../components/compliance/AdvancedComplianceRiskScoring";
+import AITrainingModuleGenerator from "../components/training/AITrainingModuleGenerator";
 
 export default function MedicareComplianceDashboard() {
   const [timeRange, setTimeRange] = useState(30);
@@ -726,6 +728,19 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
             <ComplianceReportGenerator dateRange={timeRange} nurseEmail={selectedNurse === "all" ? null : selectedNurse} />
             <ProactiveComplianceMonitor autoMonitor={true} />
           </div>
+          
+          {/* AI Training Module Generator */}
+          <Card className="border-2 border-purple-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-600" />
+                Generate Training from Compliance Data
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AITrainingModuleGenerator />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
