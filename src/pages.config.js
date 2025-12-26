@@ -60,6 +60,7 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
+import CareCoordinationDashboard from './pages/CareCoordinationDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -126,6 +127,7 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
+    "CareCoordinationDashboard": CareCoordinationDashboard,
 }
 
 export const pagesConfig = {
