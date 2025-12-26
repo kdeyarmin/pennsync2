@@ -11,6 +11,7 @@ import { formatEastern, todayEastern } from "../components/utils/timezone";
 import { isValid } from "date-fns";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
+import EnhancedVoiceCommands from "../components/voice/EnhancedVoiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
 
 import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
@@ -321,12 +322,16 @@ export default function Dashboard() {
       {/* Add Compliance Widget */}
       <ComplianceDashboardWidget />
 
-      {/* Voice Commands */}
-      <VoiceCommandListener
-        onCommand={handleVoiceCommand}
-        commands={getCommandsForContext('dashboard')}
-        context="dashboard"
-      />
+      {/* Enhanced Voice Commands */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <EnhancedVoiceCommands
+          onTranscription={(text) => console.log('Dictation:', text)}
+          onCommand={handleVoiceCommand}
+          commands={getCommandsForContext('dashboard')}
+          mode="command"
+          showSettings={true}
+        />
+      </div>
     </div>
   );
 }

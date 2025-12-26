@@ -126,11 +126,41 @@ const commonDiagnoses = [
 
 
 
-// Voice Hub Component - Real-time Dictation
-function VoiceHub({ onTranscription, onInterimTranscription }) {
+// Voice Hub Component - Enhanced with Commands and Multi-language
+function VoiceHub({ onTranscription, onInterimTranscription, onCommand }) {
   const [listening, setListening] = useState(false);
   const [interimText, setInterimText] = useState('');
+  const [language, setLanguage] = useState('en-US');
+  const [commandMode, setCommandMode] = useState(false);
+  const [lastCommand, setLastCommand] = useState(null);
   const recognitionRef = React.useRef(null);
+
+  const voiceCommands = [
+    { trigger: "enhance note", action: "enhance" },
+    { trigger: "copy note", action: "copy" },
+    { trigger: "save note", action: "save" },
+    { trigger: "clear note", action: "clear" },
+    { trigger: "next step", action: "next" },
+    { trigger: "blood pressure", action: "bp", extract: true },
+    { trigger: "heart rate", action: "hr", extract: true },
+    { trigger: "temperature", action: "temp", extract: true },
+    { trigger: "oxygen", action: "o2", extract: true },
+    { trigger: "pain level", action: "pain", extract: true }
+  ];
+
+  const matchCommand = (text) => {
+    const lower = text.toLowerCase();
+    for (const cmd of voiceCommands) {
+      if (lower.includes(cmd.trigger)) {
+        if (cmd.extract) {
+          const numbers = text.match(/\d+\.?\d*/g);
+          return { ...cmd, value: numbers };
+        }
+        return cmd;
+      }
+    }
+    return null;
+  };
 
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -144,7 +174,8 @@ function VoiceHub({ onTranscription, onInterimTranscription }) {
     
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = language;
+    recognition.maxAlternatives = 2;
 
     recognition.onresult = (event) => {
       let interimTranscript = '';
@@ -160,7 +191,18 @@ function VoiceHub({ onTranscription, onInterimTranscription }) {
       }
       
       if (finalTranscript) {
-        onTranscription?.(finalTranscript.trim());
+        const trimmedText = finalTranscript.trim();
+        
+        // Check for commands if in command mode or if text starts with command trigger
+        const matchedCommand = matchCommand(trimmedText);
+        if (matchedCommand && (commandMode || trimmedText.toLowerCase().startsWith(matchedCommand.trigger))) {
+          setLastCommand(matchedCommand.action);
+          onCommand?.(matchedCommand.action, trimmedText, matchedCommand.value);
+          setTimeout(() => setLastCommand(null), 2000);
+        } else {
+          onTranscription?.(trimmedText);
+        }
+        
         setInterimText('');
       } else if (interimTranscript) {
         setInterimText(interimTranscript);
@@ -170,8 +212,11 @@ function VoiceHub({ onTranscription, onInterimTranscription }) {
     
     recognition.onend = () => {
       if (listening) {
-        // Auto-restart if still supposed to be listening
-        recognition.start();
+        try {
+          recognition.start();
+        } catch (e) {
+          console.error('Restart error:', e);
+        }
       } else {
         setListening(false);
         setInterimText('');
@@ -181,9 +226,12 @@ function VoiceHub({ onTranscription, onInterimTranscription }) {
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        // Auto-restart on these errors if still listening
         if (listening) {
-          setTimeout(() => recognition.start(), 100);
+          setTimeout(() => {
+            try {
+              recognition.start();
+            } catch (e) {}
+          }, 100);
         }
       } else {
         setListening(false);
@@ -213,20 +261,55 @@ function VoiceHub({ onTranscription, onInterimTranscription }) {
   }, []);
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        size="default"
-        variant={listening ? "destructive" : "outline"}
-        onClick={listening ? stopListening : startListening}
-        className="gap-2 min-h-[44px] px-4 flex-shrink-0"
-      >
-        {listening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
-        <span className="text-sm md:text-base">{listening ? 'Stop Dictating' : 'Start Dictating'}</span>
-      </Button>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <Button
+          size="default"
+          variant={listening ? "destructive" : "outline"}
+          onClick={listening ? stopListening : startListening}
+          className="gap-2 min-h-[44px] px-4 flex-shrink-0"
+        >
+          {listening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
+          <span className="text-sm md:text-base">{listening ? 'Stop' : 'Voice'}</span>
+        </Button>
+        {!listening && (
+          <select 
+            value={language} 
+            onChange={(e) => setLanguage(e.target.value)}
+            className="text-xs border rounded px-2 py-1 h-[44px]"
+          >
+            <option value="en-US">🇺🇸 English</option>
+            <option value="es-ES">🇪🇸 Spanish</option>
+            <option value="fr-FR">🇫🇷 French</option>
+            <option value="de-DE">🇩🇪 German</option>
+            <option value="pt-BR">🇧🇷 Portuguese</option>
+            <option value="zh-CN">🇨🇳 Chinese</option>
+          </select>
+        )}
+        {!listening && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCommandMode(!commandMode)}
+            className="text-xs"
+          >
+            {commandMode ? '🎤 Commands' : '✍️ Dictation'}
+          </Button>
+        )}
+      </div>
       {listening && (
-        <div className="flex items-center gap-2 animate-pulse">
-          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-          <span className="text-xs text-gray-600">Listening...</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 animate-pulse">
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            <span className="text-xs text-gray-600">
+              {commandMode ? 'Command Mode' : 'Dictating'}
+            </span>
+          </div>
+          {lastCommand && (
+            <Badge className="bg-green-600 text-white text-xs animate-pulse">
+              ✓ {lastCommand}
+            </Badge>
+          )}
         </div>
       )}
     </div>
@@ -1033,6 +1116,64 @@ Return JSON with:
 
   const handleInterimTranscription = (text) => {
     setInterimVoiceText(text);
+  };
+
+  const handleVoiceCommand = (action, spokenText, extractedValue) => {
+    switch (action) {
+      case 'enhance':
+        handleEnhanceNote();
+        break;
+      case 'copy':
+        handleCopy();
+        break;
+      case 'save':
+        handleSaveNote();
+        break;
+      case 'clear':
+        handleClearNote();
+        break;
+      case 'next':
+        const currentIndex = stepOrder.indexOf(currentStep);
+        if (currentIndex < stepOrder.length - 1) {
+          handleStepClick(stepOrder[currentIndex + 1]);
+        }
+        break;
+      case 'bp':
+        if (extractedValue && extractedValue.length >= 2) {
+          setVitalSigns(prev => ({ ...prev, bp: `${extractedValue[0]}/${extractedValue[1]}` }));
+        }
+        break;
+      case 'hr':
+        if (extractedValue && extractedValue[0]) {
+          setVitalSigns(prev => ({ ...prev, hr: extractedValue[0] }));
+        }
+        break;
+      case 'temp':
+        if (extractedValue && extractedValue[0]) {
+          setVitalSigns(prev => ({ ...prev, temp: extractedValue[0] }));
+        }
+        break;
+      case 'o2':
+        if (extractedValue && extractedValue[0]) {
+          setVitalSigns(prev => ({ ...prev, o2: extractedValue[0] }));
+        }
+        break;
+      case 'pain':
+        if (extractedValue && extractedValue[0]) {
+          setVitalSigns(prev => ({ ...prev, pain: extractedValue[0] }));
+        }
+        break;
+      default:
+        console.log('Unknown voice command:', action);
+    }
+    
+    // Log voice command usage
+    logActivity(ActivityActions.AI_FEATURE_USED, {
+      feature: 'voice_command',
+      command: action,
+      patient_id: selectedPatientId,
+      page: 'SmartNoteAssistant'
+    });
   };
 
 
@@ -1886,6 +2027,7 @@ Return JSON with:
             <VoiceHub 
               onTranscription={handleVoiceTranscription}
               onInterimTranscription={handleInterimTranscription}
+              onCommand={handleVoiceCommand}
             />
           </CardTitle>
           </CardHeader>

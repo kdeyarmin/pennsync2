@@ -20,6 +20,7 @@ import {
 import PatientForm from "../components/patient/PatientForm";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
+import EnhancedVoiceCommands from "../components/voice/EnhancedVoiceCommands";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
@@ -576,12 +577,16 @@ export default function Patients() {
         patient2={patientsToMerge.patient2}
       />
 
-      {/* Voice Commands */}
-      <VoiceCommandListener
-        onCommand={handleVoiceCommand}
-        commands={getCommandsForContext('patients')}
-        context="patients"
-      />
+      {/* Enhanced Voice Commands */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <EnhancedVoiceCommands
+          onTranscription={(text) => setSearchTerm(text)}
+          onCommand={handleVoiceCommand}
+          commands={getCommandsForContext('patients')}
+          mode="command"
+          showSettings={true}
+        />
+      </div>
 
       {/* Patient Summary Dialog */}
                   <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
