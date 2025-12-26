@@ -436,7 +436,9 @@ export default function ClinicalDecisionSupport({
     setIsProactiveAnalyzing(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a proactive Clinical Decision Support AI for home health nursing. Based on the EARLY information available (before full documentation), identify potential issues and suggest assessments/interventions the nurse should consider.
+        prompt: `You are an expert Clinical Decision Support AI for home health nursing. Based on REAL-TIME information as the nurse is documenting, provide IMMEDIATE, ACTIONABLE clinical guidance.
+
+CRITICAL: Provide SPECIFIC intervention suggestions nurses can implement NOW during the visit, not generic advice.
 
 AVAILABLE INFORMATION:
 - Diagnosis: ${diagnosis || 'Not yet specified'}
@@ -449,66 +451,118 @@ AVAILABLE INFORMATION:
 - Care Type: ${careType === 'hospice' ? 'Hospice' : 'Home Health'}
 - Initial Notes: ${roughNote || 'None yet'}
 
-PROACTIVELY IDENTIFY:
-1. VITAL SIGN CONCERNS: Flag abnormal vitals and what to watch for
-2. DIAGNOSIS-SPECIFIC ASSESSMENTS: What assessments should definitely be done for this diagnosis?
-3. POTENTIAL MISSED ELEMENTS: Based on notes so far, what might the nurse be forgetting to document/assess?
-4. PATIENT EDUCATION OPPORTUNITIES: What education points are critical for this diagnosis?
-5. SAFETY CONSIDERATIONS: Any safety checks that should be performed?
-6. RECOMMENDED INTERVENTIONS: What interventions should be considered based on what we know?
+REAL-TIME CLINICAL GUIDANCE NEEDED:
 
-Be helpful and proactive - catch issues BEFORE they become problems. Keep suggestions practical for home health setting.
+1. IMMEDIATE INTERVENTIONS: Based on vitals/diagnosis, what interventions should the nurse perform RIGHT NOW during this visit?
+   - Specific actions the nurse can take immediately
+   - Positioning, oxygen adjustments, medication administration reminders
+   - Comfort measures or symptom management
 
-Return JSON:
+2. CRITICAL ASSESSMENTS STILL NEEDED: What specific assessments are essential for this diagnosis that haven't been documented yet?
+   - System-specific assessments (cardiovascular, respiratory, neuro, skin, etc.)
+   - Functional assessments
+   - Risk assessments (falls, wounds, medication compliance)
+
+3. PHYSICIAN COMMUNICATION TRIGGERS: Based on findings so far, does anything warrant physician notification?
+   - Vital sign changes requiring MD contact
+   - New or worsening symptoms
+   - Medication concerns
+
+4. PATIENT/CAREGIVER EDUCATION: What education should happen during THIS visit?
+   - Disease-specific education priorities
+   - Medication teaching points
+   - Safety education
+   - Provide specific teach-back questions
+
+5. NEXT VISIT PLANNING: What should be monitored or reassessed next visit based on today's findings?
+
+6. EVIDENCE-BASED INTERVENTIONS: What evidence-based interventions match this patient's needs?
+   - Cite clinical guidelines or evidence when possible
+   - Prioritize by impact and feasibility
+
+Be SPECIFIC and ACTIONABLE - imagine you're advising the nurse during the visit, not after. Focus on what can be done NOW.
+
+Return JSON with SPECIFIC, ACTIONABLE guidance:
 {
+  "immediate_actions": [
+    {
+      "action": "Specific action to take NOW",
+      "rationale": "Why this is needed",
+      "how_to": "Step-by-step instructions",
+      "priority": "critical" | "high" | "medium",
+      "time_sensitive": true/false
+    }
+  ],
   "vital_concerns": [
     {
       "vital": "Which vital",
       "value": "The value if abnormal",
-      "concern": "Why this is concerning",
-      "action": "What to do",
+      "concern": "Clinical significance",
+      "immediate_action": "What to do right now",
+      "physician_notification_needed": true/false,
       "severity": "high" | "medium" | "low"
     }
   ],
-  "required_assessments": [
+  "assessments_needed_now": [
     {
-      "assessment": "Assessment name",
-      "rationale": "Why this is important for this patient",
+      "assessment": "Specific assessment name",
+      "what_to_look_for": "Exactly what to assess and how",
+      "normal_findings": "What normal looks like",
+      "abnormal_findings": "Red flags to watch for",
+      "documentation_template": "Template text for documentation",
       "priority": "high" | "medium" | "low"
     }
   ],
-  "potentially_missed": [
-    {
-      "element": "What might be missed",
-      "why_important": "Why this matters",
-      "suggested_text": "Example text to add to notes"
-    }
-  ],
-  "education_points": [
+  "physician_notification": {
+    "needed": true/false,
+    "urgency": "immediate" | "today" | "routine",
+    "findings_to_report": "What to tell the physician",
+    "suggested_orders_to_request": ["order 1", "order 2"]
+  },
+  "patient_education_now": [
     {
       "topic": "Education topic",
-      "key_points": "Key points to cover",
-      "teach_back": "Suggested teach-back question"
+      "specific_teaching_points": ["point 1", "point 2", "point 3"],
+      "teach_back_question": "Exact question to ask patient",
+      "demonstration_needed": true/false,
+      "handout_recommendation": "Handout to provide if available"
     }
   ],
-  "safety_checks": [
+  "evidence_based_interventions": [
     {
-      "check": "Safety check to perform",
-      "rationale": "Why this is important"
-    }
-  ],
-  "suggested_interventions": [
-    {
-      "intervention": "Intervention name",
-      "rationale": "Why recommended",
+      "intervention": "Specific intervention",
+      "clinical_indication": "Why for this patient",
+      "how_to_perform": "Instructions",
+      "evidence_source": "Guideline or study reference",
+      "expected_outcome": "What to expect",
       "priority": "high" | "medium" | "low"
     }
   ],
-  "quick_summary": "One sentence summary of key proactive alerts"
+  "next_visit_planning": [
+    {
+      "item_to_monitor": "What to reassess",
+      "why": "Rationale",
+      "timeframe": "When to reassess"
+    }
+  ],
+  "clinical_summary": "Brief summary of most critical real-time guidance"
 }`,
         response_json_schema: {
           type: "object",
           properties: {
+            immediate_actions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  action: { type: "string" },
+                  rationale: { type: "string" },
+                  how_to: { type: "string" },
+                  priority: { type: "string" },
+                  time_sensitive: { type: "boolean" }
+                }
+              }
+            },
             vital_concerns: {
               type: "array",
               items: {
@@ -517,66 +571,74 @@ Return JSON:
                   vital: { type: "string" },
                   value: { type: "string" },
                   concern: { type: "string" },
-                  action: { type: "string" },
+                  immediate_action: { type: "string" },
+                  physician_notification_needed: { type: "boolean" },
                   severity: { type: "string" }
                 }
               }
             },
-            required_assessments: {
+            assessments_needed_now: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   assessment: { type: "string" },
-                  rationale: { type: "string" },
+                  what_to_look_for: { type: "string" },
+                  normal_findings: { type: "string" },
+                  abnormal_findings: { type: "string" },
+                  documentation_template: { type: "string" },
                   priority: { type: "string" }
                 }
               }
             },
-            potentially_missed: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  element: { type: "string" },
-                  why_important: { type: "string" },
-                  suggested_text: { type: "string" }
-                }
+            physician_notification: {
+              type: "object",
+              properties: {
+                needed: { type: "boolean" },
+                urgency: { type: "string" },
+                findings_to_report: { type: "string" },
+                suggested_orders_to_request: { type: "array", items: { type: "string" } }
               }
             },
-            education_points: {
+            patient_education_now: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   topic: { type: "string" },
-                  key_points: { type: "string" },
-                  teach_back: { type: "string" }
+                  specific_teaching_points: { type: "array", items: { type: "string" } },
+                  teach_back_question: { type: "string" },
+                  demonstration_needed: { type: "boolean" },
+                  handout_recommendation: { type: "string" }
                 }
               }
             },
-            safety_checks: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  check: { type: "string" },
-                  rationale: { type: "string" }
-                }
-              }
-            },
-            suggested_interventions: {
+            evidence_based_interventions: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   intervention: { type: "string" },
-                  rationale: { type: "string" },
+                  clinical_indication: { type: "string" },
+                  how_to_perform: { type: "string" },
+                  evidence_source: { type: "string" },
+                  expected_outcome: { type: "string" },
                   priority: { type: "string" }
                 }
               }
             },
-            quick_summary: { type: "string" }
+            next_visit_planning: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  item_to_monitor: { type: "string" },
+                  why: { type: "string" },
+                  timeframe: { type: "string" }
+                }
+              }
+            },
+            clinical_summary: { type: "string" }
           }
         }
       });
@@ -956,141 +1018,261 @@ Return JSON:
             </div>
           )}
 
-          {/* Proactive Alerts Section - Shows before enhanced note */}
+          {/* Real-Time Proactive Clinical Guidance - Shows DURING note-taking */}
           {!enhancedNote && proactiveAlerts && hasProactiveAlerts && (
             <div className="space-y-3">
-              {proactiveAlerts.quick_summary && (
-                <Alert className="bg-amber-50 border-amber-200">
-                  <Lightbulb className="w-4 h-4 text-amber-600" />
-                  <AlertDescription className="text-xs text-amber-800">
-                    <strong>Proactive Alert:</strong> {proactiveAlerts.quick_summary}
+              {proactiveAlerts.clinical_summary && (
+                <Alert className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-300">
+                  <Brain className="w-4 h-4 text-indigo-600" />
+                  <AlertDescription className="text-xs text-indigo-900">
+                    <strong>Real-Time Clinical Guidance:</strong> {proactiveAlerts.clinical_summary}
                   </AlertDescription>
                 </Alert>
               )}
 
-              {/* Vital Concerns */}
+              {/* IMMEDIATE ACTIONS - Critical Priority */}
+              {proactiveAlerts.immediate_actions?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-red-800 mb-2 flex items-center gap-1">
+                    <Zap className="w-4 h-4" /> Immediate Actions Needed
+                  </p>
+                  {proactiveAlerts.immediate_actions.map((action, idx) => (
+                    <Card key={idx} className={`border-l-4 mb-2 ${
+                      action.priority === 'critical' ? 'border-l-red-600 bg-red-50' :
+                      action.priority === 'high' ? 'border-l-orange-500 bg-orange-50' :
+                      'border-l-yellow-500 bg-yellow-50'
+                    }`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between mb-1">
+                          <p className="text-sm font-bold text-gray-900">{action.action}</p>
+                          <Badge className={action.priority === 'critical' ? 'bg-red-600' : action.priority === 'high' ? 'bg-orange-500' : 'bg-yellow-500'}>
+                            {action.priority}
+                          </Badge>
+                        </div>
+                        {action.time_sensitive && (
+                          <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
+                            <Clock className="w-3 h-3 mr-1" /> Time Sensitive
+                          </Badge>
+                        )}
+                        <div className="bg-white p-2 rounded border mb-2">
+                          <p className="text-xs font-semibold text-gray-700 mb-1">Why:</p>
+                          <p className="text-xs text-gray-600">{action.rationale}</p>
+                        </div>
+                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                          <p className="text-xs font-semibold text-blue-900 mb-1">How to Perform:</p>
+                          <p className="text-xs text-gray-700">{action.how_to}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* PHYSICIAN NOTIFICATION */}
+              {proactiveAlerts.physician_notification?.needed && (
+                <Alert className={`${
+                  proactiveAlerts.physician_notification.urgency === 'immediate' ? 'bg-red-100 border-red-400' :
+                  proactiveAlerts.physician_notification.urgency === 'today' ? 'bg-orange-100 border-orange-400' :
+                  'bg-yellow-100 border-yellow-400'
+                }`}>
+                  <Phone className="w-4 h-4" />
+                  <AlertDescription>
+                    <p className="text-xs font-bold mb-1">
+                      Physician Notification Required - {proactiveAlerts.physician_notification.urgency.toUpperCase()}
+                    </p>
+                    <div className="bg-white p-2 rounded text-xs space-y-1">
+                      <p><strong>Report to MD:</strong> {proactiveAlerts.physician_notification.findings_to_report}</p>
+                      {proactiveAlerts.physician_notification.suggested_orders_to_request?.length > 0 && (
+                        <div>
+                          <p className="font-semibold mt-1">Consider requesting:</p>
+                          <ul className="ml-3">
+                            {proactiveAlerts.physician_notification.suggested_orders_to_request.map((order, i) => (
+                              <li key={i}>• {order}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* ASSESSMENTS TO PERFORM NOW */}
+              {proactiveAlerts.assessments_needed_now?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-blue-800 mb-2 flex items-center gap-1">
+                    <Eye className="w-4 h-4" /> Assessments to Complete This Visit
+                  </p>
+                  {proactiveAlerts.assessments_needed_now.map((assessment, idx) => (
+                    <Card key={idx} className="border-l-4 border-l-blue-500 mb-2">
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between mb-1">
+                          <p className="text-sm font-semibold text-gray-900">{assessment.assessment}</p>
+                          <Badge className={getPriorityColor(assessment.priority)}>
+                            {assessment.priority}
+                          </Badge>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                            <p className="text-xs font-semibold text-blue-900 mb-1">What to Look For:</p>
+                            <p className="text-xs text-gray-700">{assessment.what_to_look_for}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-green-50 p-2 rounded border border-green-200">
+                              <p className="text-xs font-semibold text-green-900">Normal:</p>
+                              <p className="text-xs text-gray-700">{assessment.normal_findings}</p>
+                            </div>
+                            <div className="bg-red-50 p-2 rounded border border-red-200">
+                              <p className="text-xs font-semibold text-red-900">Red Flags:</p>
+                              <p className="text-xs text-gray-700">{assessment.abnormal_findings}</p>
+                            </div>
+                          </div>
+                          {assessment.documentation_template && (
+                            <Button
+                              size="sm"
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-xs h-7"
+                              onClick={() => onInsertRecommendation && onInsertRecommendation(assessment.documentation_template)}
+                            >
+                              <Plus className="w-3 h-3 mr-1" /> Use Documentation Template
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Vital Concerns - Enhanced Display */}
               {proactiveAlerts.vital_concerns?.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-red-800 mb-1 flex items-center gap-1">
-                    <HeartPulse className="w-3 h-3" /> Vital Sign Concerns
+                    <HeartPulse className="w-3 h-3" /> Vital Sign Clinical Guidance
                   </p>
                   {proactiveAlerts.vital_concerns.map((vc, idx) => (
-                    <div key={idx} className={`p-2 rounded border mb-1 ${getPriorityColor(vc.severity)}`}>
-                      <p className="text-xs font-medium">{vc.vital}: {vc.value}</p>
-                      <p className="text-xs text-gray-700">{vc.concern}</p>
-                      <p className="text-xs font-medium mt-1">→ {vc.action}</p>
-                    </div>
+                    <Card key={idx} className={`border-l-4 mb-2 ${
+                      vc.severity === 'high' ? 'border-l-red-500 bg-red-50' :
+                      vc.severity === 'medium' ? 'border-l-orange-500 bg-orange-50' :
+                      'border-l-yellow-500 bg-yellow-50'
+                    }`}>
+                      <CardContent className="p-2">
+                        <div className="flex items-start justify-between mb-1">
+                          <p className="text-xs font-bold">{vc.vital}: {vc.value}</p>
+                          {vc.physician_notification_needed && (
+                            <Badge className="bg-red-600 text-white text-xs">
+                              <Phone className="w-3 h-3 mr-1" /> Notify MD
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-700 mb-1">{vc.concern}</p>
+                        <div className="bg-white p-2 rounded border">
+                          <p className="text-xs font-semibold mb-1">Immediate Action:</p>
+                          <p className="text-xs text-gray-700">{vc.immediate_action}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
 
-              {/* Required Assessments */}
-              {proactiveAlerts.required_assessments?.length > 0 && (
+              {/* PATIENT EDUCATION THIS VISIT */}
+              {proactiveAlerts.patient_education_now?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-blue-800 mb-1 flex items-center gap-1">
-                    <Eye className="w-3 h-3" /> Recommended Assessments for {diagnosis || 'This Patient'}
+                  <p className="text-xs font-semibold text-green-800 mb-2 flex items-center gap-1">
+                    <BookOpen className="w-4 h-4" /> Education to Provide This Visit
                   </p>
-                  <div className="space-y-1">
-                    {proactiveAlerts.required_assessments.map((ra, idx) => (
-                      <div key={idx} className="bg-blue-50 p-2 rounded border border-blue-200 flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-xs font-medium">{ra.assessment}</p>
-                          <p className="text-xs text-gray-600">{ra.rationale}</p>
+                  {proactiveAlerts.patient_education_now.map((ed, idx) => (
+                    <Card key={idx} className="border-l-4 border-l-green-500 mb-2">
+                      <CardContent className="p-3">
+                        <p className="text-sm font-semibold text-gray-900 mb-2">{ed.topic}</p>
+                        <div className="bg-green-50 p-2 rounded border border-green-200 mb-2">
+                          <p className="text-xs font-semibold text-green-900 mb-1">Key Teaching Points:</p>
+                          <ul className="text-xs text-gray-700 space-y-0.5">
+                            {ed.specific_teaching_points?.map((point, i) => (
+                              <li key={i}>• {point}</li>
+                            ))}
+                          </ul>
                         </div>
-                        <Badge className={getPriorityColor(ra.priority)} variant="outline">
-                          {ra.priority}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Potentially Missed Elements */}
-              {proactiveAlerts.potentially_missed?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-orange-800 mb-1 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" /> Don't Forget to Document
-                  </p>
-                  {proactiveAlerts.potentially_missed.map((pm, idx) => (
-                    <div key={idx} className="bg-orange-50 p-2 rounded border border-orange-200 mb-1">
-                      <p className="text-xs font-medium">{pm.element}</p>
-                      <p className="text-xs text-gray-600">{pm.why_important}</p>
-                      {pm.suggested_text && (
+                        {ed.demonstration_needed && (
+                          <Badge className="bg-blue-100 text-blue-800 text-xs mb-2">
+                            <Activity className="w-3 h-3 mr-1" /> Demonstration Recommended
+                          </Badge>
+                        )}
+                        <div className="bg-purple-50 p-2 rounded border border-purple-200 mb-2">
+                          <p className="text-xs font-semibold text-purple-900 mb-1">Teach-Back Question:</p>
+                          <p className="text-xs italic text-purple-800">"{ed.teach_back_question}"</p>
+                        </div>
+                        {ed.handout_recommendation && (
+                          <p className="text-xs text-gray-600">💡 Handout: {ed.handout_recommendation}</p>
+                        )}
                         <Button
                           size="sm"
-                          variant="ghost"
-                          className="h-5 text-xs mt-1 text-orange-800"
-                          onClick={() => onInsertRecommendation && onInsertRecommendation(pm.suggested_text)}
+                          className="w-full bg-green-600 hover:bg-green-700 text-xs h-7 mt-2"
+                          onClick={() => onInsertRecommendation && onInsertRecommendation(
+                            `Patient education provided on ${ed.topic}. Key points covered: ${ed.specific_teaching_points?.join('; ')}. Teach-back completed - patient ${ed.demonstration_needed ? 'demonstrated understanding and' : ''} verbalized understanding of ${ed.topic}.`
+                          )}
                         >
-                          <Plus className="w-3 h-3 mr-1" /> Add to notes
+                          <Plus className="w-3 h-3 mr-1" /> Document Education Provided
                         </Button>
-                      )}
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
 
-              {/* Patient Education Points */}
-              {proactiveAlerts.education_points?.length > 0 && (
+              {/* EVIDENCE-BASED INTERVENTIONS */}
+              {proactiveAlerts.evidence_based_interventions?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-green-800 mb-1 flex items-center gap-1">
-                    <BookOpen className="w-3 h-3" /> Patient Education Opportunities
+                  <p className="text-xs font-semibold text-indigo-800 mb-2 flex items-center gap-1">
+                    <Stethoscope className="w-4 h-4" /> Evidence-Based Interventions to Consider
                   </p>
-                  {proactiveAlerts.education_points.map((ep, idx) => (
-                    <div key={idx} className="bg-green-50 p-2 rounded border border-green-200 mb-1">
-                      <p className="text-xs font-medium">{ep.topic}</p>
-                      <p className="text-xs text-gray-600">{ep.key_points}</p>
-                      {ep.teach_back && (
-                        <p className="text-xs text-green-700 mt-1 italic">Teach-back: "{ep.teach_back}"</p>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-5 text-xs mt-1 text-green-800"
-                        onClick={() => onInsertRecommendation && onInsertRecommendation(`Patient education provided on ${ep.topic}. ${ep.key_points} Patient verbalized understanding.`)}
-                      >
-                        <Plus className="w-3 h-3 mr-1" /> Add education to notes
-                      </Button>
-                    </div>
+                  {proactiveAlerts.evidence_based_interventions.map((intervention, idx) => (
+                    <Card key={idx} className="border-l-4 border-l-indigo-500 mb-2">
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between mb-1">
+                          <p className="text-sm font-semibold text-gray-900">{intervention.intervention}</p>
+                          <Badge className={getPriorityColor(intervention.priority)}>
+                            {intervention.priority}
+                          </Badge>
+                        </div>
+                        <div className="bg-indigo-50 p-2 rounded border border-indigo-200 mb-2">
+                          <p className="text-xs font-semibold text-indigo-900 mb-1">Clinical Indication:</p>
+                          <p className="text-xs text-gray-700">{intervention.clinical_indication}</p>
+                        </div>
+                        <div className="bg-blue-50 p-2 rounded border border-blue-200 mb-2">
+                          <p className="text-xs font-semibold text-blue-900 mb-1">How to Perform:</p>
+                          <p className="text-xs text-gray-700">{intervention.how_to_perform}</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <BookOpen className="w-3 h-3 text-gray-500 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-gray-600 italic">{intervention.evidence_source}</p>
+                        </div>
+                        <p className="text-xs text-green-700 mt-1">Expected: {intervention.expected_outcome}</p>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
 
-              {/* Safety Checks */}
-              {proactiveAlerts.safety_checks?.length > 0 && (
+              {/* NEXT VISIT PLANNING */}
+              {proactiveAlerts.next_visit_planning?.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-purple-800 mb-1 flex items-center gap-1">
-                    <Shield className="w-3 h-3" /> Safety Checks
+                    <Calendar className="w-3 h-3" /> Plan for Next Visit
                   </p>
-                  <div className="space-y-1">
-                    {proactiveAlerts.safety_checks.map((sc, idx) => (
-                      <div key={idx} className="bg-purple-50 p-2 rounded border border-purple-200">
-                        <p className="text-xs font-medium">{sc.check}</p>
-                        <p className="text-xs text-gray-600">{sc.rationale}</p>
-                      </div>
-                    ))}
+                  <div className="bg-purple-50 p-2 rounded border border-purple-200">
+                    <ul className="text-xs text-gray-700 space-y-1">
+                      {proactiveAlerts.next_visit_planning.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="font-semibold text-purple-800">•</span>
+                          <div>
+                            <p className="font-medium">{item.item_to_monitor}</p>
+                            <p className="text-gray-600">{item.why} - Check {item.timeframe}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
-              )}
-
-              {/* Suggested Interventions from Proactive */}
-              {proactiveAlerts.suggested_interventions?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-indigo-800 mb-1 flex items-center gap-1">
-                    <Stethoscope className="w-3 h-3" /> Consider These Interventions
-                  </p>
-                  {proactiveAlerts.suggested_interventions.map((si, idx) => (
-                    <div key={idx} className="bg-indigo-50 p-2 rounded border border-indigo-200 mb-1 flex items-start justify-between">
-                      <div>
-                        <p className="text-xs font-medium">{si.intervention}</p>
-                        <p className="text-xs text-gray-600">{si.rationale}</p>
-                      </div>
-                      <Badge className={getPriorityColor(si.priority)} variant="outline">
-                        {si.priority}
-                      </Badge>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>

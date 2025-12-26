@@ -1625,6 +1625,25 @@ Return JSON with:
             />
           )}
 
+          {/* Real-Time Clinical Decision Support */}
+          {selectedPatientId && (diagnosis || vitalSigns.bp || vitalSigns.hr || roughNote.length > 30) && (
+            <ClinicalDecisionSupport
+              enhancedNote={enhancedNote}
+              extractedData={null}
+              diagnosis={finalDiagnosis}
+              careType={selectedPatient?.care_type || "home_health"}
+              vitalSigns={vitalSigns}
+              roughNote={roughNote}
+              onInsertRecommendation={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
+              }}
+            />
+          )}
+
           {/* Real-Time Clinical Alert Monitor */}
           {selectedPatientId && (vitalSigns.bp || vitalSigns.hr || vitalSigns.temp || vitalSigns.o2 || roughNote.length > 50) && (
             <RealTimeClinicalAlertMonitor
