@@ -35,6 +35,8 @@ import EducationVideos from "../components/training/EducationVideos";
 import AIPersonalizedTrainingHub from "../components/training/AIPersonalizedTrainingHub";
 import TrainingProgressDashboard from "../components/training/TrainingProgressDashboard";
 import StaffEducationComplianceReport from "../components/training/StaffEducationComplianceReport";
+import ModuleViewer from "../components/training/ModuleViewer";
+import AIQuizGenerator from "../components/training/AIQuizGenerator";
 
 export default function StaffTrainingHub() {
   const { data: currentUser } = useQuery({
@@ -74,6 +76,13 @@ export default function StaffTrainingHub() {
 
   const [selectedQuizTopic, setSelectedQuizTopic] = useState(null);
   const [selectedSimScenario, setSelectedSimScenario] = useState(null);
+  const [selectedModule, setSelectedModule] = useState(null);
+
+  const { data: trainingModules = [] } = useQuery({
+    queryKey: ['trainingModules'],
+    queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
+    initialData: [],
+  });
 
   const saveProgressMutation = useMutation({
     mutationFn: (data) => base44.entities.MicroLearningProgress.create(data),
@@ -181,9 +190,43 @@ export default function StaffTrainingHub() {
         </Card>
       </div>
 
+      {/* Module Viewer Modal */}
+      {selectedModule && (
+        <div className="mb-6">
+          <Card className="border-2 border-purple-300">
+            <CardHeader className="bg-purple-50">
+              <div className="flex items-center justify-between">
+                <CardTitle>Currently Viewing: {selectedModule.title}</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedModule(null)}
+                >
+                  Close
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <ModuleViewer
+                module={selectedModule}
+                userEmail={currentUser?.email}
+                onComplete={() => {
+                  setSelectedModule(null);
+                  queryClient.invalidateQueries({ queryKey: ['myTrainingCompletions'] });
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Individual User Training Hub */}
       <Tabs defaultValue="aipath" className="w-full">
-          <TabsList className="grid grid-cols-10 w-full mb-6">
+          <TabsList className="grid grid-cols-11 w-full mb-6">
+            <TabsTrigger value="modules" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Modules</span>
+            </TabsTrigger>
             <TabsTrigger value="aipath" className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-indigo-50 data-[state=active]:bg-purple-100">
               <Star className="w-4 h-4" />
               <span className="hidden sm:inline">AI Path</span>
@@ -225,6 +268,68 @@ export default function StaffTrainingHub() {
             <span className="hidden sm:inline">Simulate</span>
           </TabsTrigger>
           </TabsList>
+
+          {/* Training Modules Tab */}
+          <TabsContent value="modules">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {trainingModules.map((module) => {
+                const userCompletion = completions.find(c => c.training_module_id === module.id);
+                const isCompleted = userCompletion?.status === 'completed';
+                
+                return (
+                  <Card key={module.id} className={`cursor-pointer hover:shadow-lg transition-all ${
+                    isCompleted ? 'border-green-300 bg-green-50' : 'border-gray-200'
+                  }`} onClick={() => setSelectedModule(module)}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 mb-1">{module.title}</h3>
+                          <p className="text-xs text-gray-600 line-clamp-2">{module.description}</p>
+                        </div>
+                        {isCompleted && (
+                          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <Badge variant="outline" className="text-xs">{module.category}</Badge>
+                        <Badge variant="outline" className="text-xs">{module.difficulty_level}</Badge>
+                        <Badge variant="outline" className="text-xs flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {module.duration_minutes}m
+                        </Badge>
+                      </div>
+
+                      {userCompletion && (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Progress</span>
+                            <span className="font-medium">{userCompletion.status}</span>
+                          </div>
+                          {userCompletion.score && (
+                            <div className="flex justify-between text-xs">
+                              <span className="text-gray-600">Score</span>
+                              <Badge className="bg-blue-600">{userCompletion.score}%</Badge>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {module.is_required && (
+                        <Badge className="mt-2 bg-red-600 text-xs">Required</Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              {trainingModules.length === 0 && (
+                <div className="col-span-3 text-center py-12 text-gray-500">
+                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                  <p>No training modules available yet</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
 
           {/* AI Personalized Training Path */}
           <TabsContent value="aipath">

@@ -29,6 +29,9 @@ import {
 } from "lucide-react";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import StaffTrainingOverview from "../components/training/StaffTrainingOverview";
+import TrainingMaterialUploader from "../components/training/TrainingMaterialUploader";
+import AIQuizGenerator from "../components/training/AIQuizGenerator";
+import CompletionTracker from "../components/training/CompletionTracker";
 
 export default function TrainingManagement() {
   const queryClient = useQueryClient();
@@ -49,6 +52,8 @@ export default function TrainingManagement() {
     is_active: true,
     content: {}
   });
+  const [selectedModuleForView, setSelectedModuleForView] = useState(null);
+  const [viewingQuiz, setViewingQuiz] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -332,33 +337,20 @@ export default function TrainingManagement() {
               </div>
             </div>
 
-            {/* File Upload */}
-            {(newModule.content_type === 'document' || newModule.content_type === 'video') && (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <input
-                  type="file"
-                  id="training-file"
-                  className="hidden"
-                  accept={newModule.content_type === 'video' ? 'video/*' : '.pdf,.doc,.docx'}
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      setSelectedFile(file);
-                      handleFileUpload(file);
-                    }
-                  }}
-                />
-                <label htmlFor="training-file" className="cursor-pointer">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-600">
-                    {isUploading ? 'Uploading...' : 'Click to upload ' + newModule.content_type}
-                  </p>
-                  {newModule.content.document_url || newModule.content.video_url ? (
-                    <Badge className="mt-2 bg-green-600">File uploaded ✓</Badge>
-                  ) : null}
-                </label>
-              </div>
-            )}
+            {/* Enhanced File Upload */}
+            <TrainingMaterialUploader
+              moduleId={editingModule?.id}
+              existingContent={newModule.content?.materials || []}
+              onUploadComplete={(materials) => {
+                setNewModule({
+                  ...newModule,
+                  content: {
+                    ...newModule.content,
+                    materials
+                  }
+                });
+              }}
+            />
 
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -407,6 +399,85 @@ export default function TrainingManagement() {
           <StaffTrainingOverview />
         </TabsContent>
 
+        {/* Module Detail View */}
+        {selectedModuleForView && (
+          <div className="mb-6">
+            <Card className="border-2 border-blue-300">
+              <CardHeader className="bg-blue-50">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Module Details: {selectedModuleForView.title}</CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedModuleForView(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <Tabs defaultValue="tracking">
+                  <TabsList className="grid grid-cols-3 w-full mb-4">
+                    <TabsTrigger value="tracking">Completion Tracking</TabsTrigger>
+                    <TabsTrigger value="quiz">Generate Quiz</TabsTrigger>
+                    <TabsTrigger value="materials">Materials</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="tracking">
+                    <CompletionTracker
+                      moduleId={selectedModuleForView.id}
+                      moduleTitle={selectedModuleForView.title}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="quiz">
+                    <AIQuizGenerator
+                      trainingContent={selectedModuleForView.description + '\n\n' + (selectedModuleForView.content?.text || '')}
+                      moduleTitle={selectedModuleForView.title}
+                      onComplete={(result) => console.log('Quiz completed:', result)}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="materials">
+                    <Card>
+                      <CardContent className="p-6">
+                        {selectedModuleForView.content?.materials?.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedModuleForView.content.materials.map((material, idx) => (
+                              <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                {material.type === 'video' ? (
+                                  <Video className="w-5 h-5 text-purple-600" />
+                                ) : (
+                                  <FileText className="w-5 h-5 text-blue-600" />
+                                )}
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">{material.name}</p>
+                                  <p className="text-xs text-gray-500">{material.type}</p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => window.open(material.url, '_blank')}
+                                >
+                                  View
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 text-center py-8">
+                            No materials uploaded yet
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <TabsContent value="all" className="space-y-3">
           <ScrollArea className="h-[600px]">
             {trainingModules.map((module) => {
@@ -436,6 +507,14 @@ export default function TrainingManagement() {
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedModuleForView(module)}
+                          title="View details and tracking"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
