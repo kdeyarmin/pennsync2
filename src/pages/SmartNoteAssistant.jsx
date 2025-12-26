@@ -1336,6 +1336,16 @@ Return JSON with:
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
 
+      // Trigger predictive risk analysis after visit completion
+      try {
+        await base44.functions.invoke('predictiveRiskAnalysis', {
+          patient_id: selectedPatientId
+        });
+        queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts', selectedPatientId] });
+      } catch (riskError) {
+        console.error('Risk analysis error:', riskError);
+      }
+
       logActivity(ActivityActions.VISIT_DOCUMENT, {
         patient_id: selectedPatientId,
         visit_date: visitDate,
