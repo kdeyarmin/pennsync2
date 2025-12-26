@@ -27,6 +27,7 @@ import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
 import AnnouncementsWidget from "../components/dashboard/AnnouncementsWidget";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
 import OfflineDataManager from "../components/mobile/OfflineDataManager";
+import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 
 export default function Dashboard() {
     const navigate = useNavigate();
