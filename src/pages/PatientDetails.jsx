@@ -38,6 +38,9 @@ import FavoriteButton from "../components/navigation/FavoriteButton";
 import PredictiveRiskAnalyzer from "../components/analytics/PredictiveRiskAnalyzer";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import ReferralLetterGenerator from "../components/documents/ReferralLetterGenerator";
+import PatientDeteriorationPredictor from "../components/predictive/PatientDeteriorationPredictor";
+import MedicationInteractionChecker from "../components/medication/MedicationInteractionChecker";
+import CarePlanGapAnalyzer from "../components/carePlan/CarePlanGapAnalyzer";
 import PatientEducationGenerator from "../components/documents/PatientEducationGenerator";
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
 import { Sparkles, FileOutput, GraduationCap, TrendingUp, Brain } from "lucide-react";
@@ -319,6 +322,29 @@ export default function PatientDetails() {
       {/* Risk Alerts & Predictive Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <RiskAlertWidget patientId={patientId} compact={false} />
+        
+        <PatientDeteriorationPredictor
+          patientId={patientId}
+          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 10)}
+          autoAnalyze={true}
+        />
+        
+        <MedicationInteractionChecker
+          medications={patient?.current_medications || []}
+          patientDiagnoses={[patient?.primary_diagnosis, ...(patient?.secondary_diagnoses || [])].filter(Boolean)}
+          patientAge={patient?.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null}
+          patientAllergies={patient?.allergies}
+          autoCheck={true}
+        />
+        
+        <CarePlanGapAnalyzer
+          patientId={patientId}
+          diagnosis={patient?.primary_diagnosis}
+          carePlans={carePlans}
+          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
+          patientData={patient}
+          autoAnalyze={true}
+        />
 
         {/* Advanced AI Analytics */}
         <PatientDeteriorationPredictor
