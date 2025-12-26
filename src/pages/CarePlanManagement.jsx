@@ -133,7 +133,7 @@ export default function CarePlanManagement() {
     try {
       const targetDate = format(addDays(new Date(), recommendation.target_days || 60), 'yyyy-MM-dd');
       
-      await base44.entities.CarePlan.create({
+      const newCarePlan = await base44.entities.CarePlan.create({
         patient_id: selectedPatient.id,
         problem: recommendation.problem,
         goal: recommendation.goal,
@@ -144,8 +144,25 @@ export default function CarePlanManagement() {
         status: 'active'
       });
 
+      // Auto-create education assignments if topics provided
+      if (recommendation.education_topics?.length > 0) {
+        for (const topic of recommendation.education_topics) {
+          await base44.entities.PatientEducationAssignment.create({
+            patient_id: selectedPatient.id,
+            care_plan_id: newCarePlan.id,
+            topic: topic,
+            content: `Education on ${topic} for ${selectedPatient.primary_diagnosis}`,
+            format: 'handout',
+            status: 'assigned',
+            assigned_date: new Date().toISOString().split('T')[0],
+            assigned_by: 'AI System'
+          });
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
-      alert('Care plan created successfully!');
+      queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
+      alert('Care plan created successfully with education materials!');
     } catch (error) {
       console.error('Error creating care plan:', error);
       alert('Failed to create care plan. Please try again.');
@@ -290,17 +307,41 @@ export default function CarePlanManagement() {
       {/* AI Tools Section */}
       {selectedPatient && showAITools && (
         <div className="space-y-6 mb-6">
-          {/* Primary AI Care Plan Generator */}
-          <AICarePlanGenerator
+          {/* AI Suggestion Engine */}
+          <AICarePlanSuggestionEngine
             patientId={selectedPatient.id}
-            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+            patientData={selectedPatient}
             diagnosis={selectedPatient.primary_diagnosis}
-            careType={selectedPatient.care_type || "home_health"}
             existingCarePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
-            onCarePlansCreated={(created) => {
-              queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
-              alert(`Successfully created ${created.length} care plan(s)!`);
+            onAcceptSuggestion={async (carePlanData, educationTopics) => {
+              try {
+                const newPlan = await base44.entities.CarePlan.create(carePlanData);
+                
+                // Auto-assign education materials
+                if (educationTopics?.length > 0) {
+                  for (const topic of educationTopics) {
+                    await base44.entities.PatientEducationAssignment.create({
+                      patient_id: selectedPatient.id,
+                      care_plan_id: newPlan.id,
+                      topic: topic,
+                      content: `Medicare-compliant education on ${topic} for ${selectedPatient.primary_diagnosis}`,
+                      format: 'handout',
+                      status: 'assigned',
+                      assigned_date: new Date().toISOString().split('T')[0],
+                      assigned_by: 'AI Care Plan System',
+                      priority: 'high'
+                    });
+                  }
+                }
+                
+                queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+                queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
+              } catch (error) {
+                console.error('Error creating care plan:', error);
+                alert('Failed to create care plan. Please try again.');
+              }
             }}
+            autoGenerate={true}
           />
           
           <div className="grid md:grid-cols-2 gap-6">
