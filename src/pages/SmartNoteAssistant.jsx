@@ -378,6 +378,16 @@ export default function SmartNoteAssistant() {
     queryFn: () => base44.auth.me(),
   });
 
+  // Log page visit
+  useEffect(() => {
+    if (currentUser?.email) {
+      logActivity(ActivityActions.PAGE_VISIT, {
+        page: 'SmartNoteAssistant',
+        page_title: 'Smart Note Assistant'
+      });
+    }
+  }, [currentUser?.email]);
+
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list(),
@@ -993,6 +1003,15 @@ Return JSON with:
     navigator.clipboard.writeText(enhancedNote);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    
+    // Log copy action
+    logActivity(ActivityActions.EXPORT, {
+      type: 'clipboard_copy',
+      patient_id: selectedPatientId,
+      content_type: 'enhanced_note',
+      note_length: enhancedNote.length,
+      page: 'SmartNoteAssistant'
+    });
   };
 
   const handleVoiceTranscription = (text) => {
@@ -1001,6 +1020,13 @@ Return JSON with:
     }
     setRoughNote(prev => prev ? prev + ' ' + text : text);
     setInterimVoiceText('');
+    
+    // Log voice transcription usage
+    logActivity(ActivityActions.AI_FEATURE_USED, {
+      feature: 'voice_transcription',
+      patient_id: selectedPatientId,
+      page: 'SmartNoteAssistant'
+    });
   };
 
   const handleInterimTranscription = (text) => {
@@ -1316,7 +1342,7 @@ Return JSON with:
     setIsSaving(true);
     try {
       // Save visit note
-      await base44.entities.Visit.create({
+      const visit = await base44.entities.Visit.create({
         patient_id: selectedPatientId,
         visit_date: visitDate,
         visit_type: visitType,
@@ -1335,6 +1361,18 @@ Return JSON with:
 
       setSavedSuccessfully(true);
       setTimeout(() => setSavedSuccessfully(false), 3000);
+
+      // Log visit save
+      logActivity(ActivityActions.VISIT_DOCUMENT, {
+        patient_id: selectedPatientId,
+        visit_id: visit.id,
+        visit_date: visitDate,
+        visit_type: visitType,
+        note_length: enhancedNote.length,
+        note_quality_score: auditResults?.quality_score,
+        compliance_score: enhancedNoteCompliance?.overall_score,
+        page: 'SmartNoteAssistant'
+      });
 
       // Refresh patient and recent visits
       queryClient.invalidateQueries({ queryKey: ['patients'] });

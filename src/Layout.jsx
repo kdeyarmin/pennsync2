@@ -47,17 +47,36 @@ export default function Layout({ children, currentPageName }) {
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
 
-  // Track user login once when user data loads
+  // Track user login and session
   useEffect(() => {
     if (currentUser?.email) {
-      const hasTrackedLogin = sessionStorage.getItem('login_tracked');
+      const sessionKey = `login_tracked_${currentUser.email}`;
+      const hasTrackedLogin = sessionStorage.getItem(sessionKey);
+      
       if (!hasTrackedLogin) {
+        // Track via backend function
         base44.functions.invoke('trackUserLogin').then(() => {
-          sessionStorage.setItem('login_tracked', 'true');
+          sessionStorage.setItem(sessionKey, 'true');
         }).catch(err => {
           console.error('Login tracking failed:', err);
-          sessionStorage.setItem('login_tracked', 'true');
         });
+        
+        // Also log directly to UserActivity
+        base44.entities.UserActivity.create({
+          user_email: currentUser.email,
+          user_name: currentUser.full_name,
+          action: 'login',
+          details: {
+            timestamp: new Date().toISOString(),
+            user_role: currentUser.role,
+            session_start: true
+          },
+          page: 'login'
+        }).catch(err => {
+          console.error('Direct login logging failed:', err);
+        });
+        
+        sessionStorage.setItem(sessionKey, 'true');
       }
     }
   }, [currentUser?.email]);

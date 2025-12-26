@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brain, Shield, DollarSign, ClipboardList, Target, FileText, CheckCircle2, Plus, Sparkles } from "lucide-react";
+import { logActivity, ActivityActions } from "../utils/activityLogger";
 
 export default function ConsolidatedAISuggestions({ 
   roughNote,
@@ -167,6 +168,18 @@ Return comprehensive JSON with all categories.`,
       });
 
       setAnalysis(result);
+      
+      // Log AI analysis usage
+      logActivity(ActivityActions.AI_FEATURE_USED, {
+        feature: 'comprehensive_ai_analysis',
+        patient_id: patientId,
+        compliance_score: result.compliance?.score,
+        pdgm_opportunity: result.pdgm?.revenue_opportunity,
+        tasks_suggested: result.tasks?.length || 0,
+        care_plans_suggested: result.care_plans?.length || 0,
+        oasis_items_found: result.oasis?.length || 0,
+        page: 'SmartNoteAssistant'
+      });
     } catch (error) {
       console.error('Comprehensive analysis error:', error);
     }
@@ -178,6 +191,14 @@ Return comprehensive JSON with all categories.`,
     const allText = pending.map(g => g.suggested_text).join('\n\n');
     onApplyCompliance(allText);
     setAppliedCompliance(new Set([...Array(analysis.compliance?.gaps?.length || 0).keys()]));
+    
+    // Log bulk compliance acceptance
+    logActivity(ActivityActions.AI_FEATURE_USED, {
+      feature: 'accept_all_compliance_suggestions',
+      patient_id: patientId,
+      suggestions_applied: pending.length,
+      page: 'SmartNoteAssistant'
+    });
   };
 
   const handleAcceptAllPDGM = () => {
@@ -185,6 +206,15 @@ Return comprehensive JSON with all categories.`,
     const allText = pending.map(o => o.suggested_text).join('\n\n');
     onApplyPDGM(allText);
     setAppliedPDGM(new Set([...Array(analysis.pdgm?.opportunities?.length || 0).keys()]));
+    
+    // Log bulk PDGM acceptance
+    logActivity(ActivityActions.AI_FEATURE_USED, {
+      feature: 'accept_all_pdgm_suggestions',
+      patient_id: patientId,
+      suggestions_applied: pending.length,
+      estimated_revenue_impact: pending.reduce((sum, o) => sum + (o.revenue_impact || 0), 0),
+      page: 'SmartNoteAssistant'
+    });
   };
 
   const handleAcceptAllTasks = async () => {
@@ -201,6 +231,14 @@ Return comprehensive JSON with all categories.`,
       });
     }
     setAppliedTasks(new Set([...Array(analysis.tasks?.length || 0).keys()]));
+    
+    // Log bulk task creation
+    logActivity(ActivityActions.AI_FEATURE_USED, {
+      feature: 'accept_all_ai_tasks',
+      patient_id: patientId,
+      tasks_created: pending.length,
+      page: 'SmartNoteAssistant'
+    });
   };
 
   const handleAcceptAllGoals = async () => {
@@ -215,12 +253,28 @@ Return comprehensive JSON with all categories.`,
       });
     }
     setAppliedGoals(new Set([...Array(analysis.care_plans?.length || 0).keys()]));
+    
+    // Log bulk care plan creation
+    logActivity(ActivityActions.AI_FEATURE_USED, {
+      feature: 'accept_all_ai_care_plans',
+      patient_id: patientId,
+      care_plans_created: pending.length,
+      page: 'SmartNoteAssistant'
+    });
   };
 
   const handleAcceptAllOASIS = () => {
     const pending = analysis.oasis?.filter((_, idx) => !appliedOASIS.has(idx)) || [];
     onApplyOASIS(pending);
     setAppliedOASIS(new Set([...Array(analysis.oasis?.length || 0).keys()]));
+    
+    // Log bulk OASIS application
+    logActivity(ActivityActions.AI_FEATURE_USED, {
+      feature: 'accept_all_oasis_suggestions',
+      patient_id: patientId,
+      oasis_items_applied: pending.length,
+      page: 'SmartNoteAssistant'
+    });
   };
 
   const mapTimeframe = (tf) => {

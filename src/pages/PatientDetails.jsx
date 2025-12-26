@@ -138,6 +138,18 @@ export default function PatientDetails() {
     queryFn: () => base44.auth.me(),
   });
 
+  // Log page visit
+  useEffect(() => {
+    if (currentUser?.email && patient) {
+      logActivity(ActivityActions.VIEW, {
+        entity_type: 'Patient',
+        entity_id: patientId,
+        patient_name: `${patient.first_name} ${patient.last_name}`,
+        page: 'PatientDetails'
+      });
+    }
+  }, [currentUser?.email, patient, patientId]);
+
   // Calculate critical indicators
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
   const hasHighAlerts = activeAlerts.some(a => a.severity === 'high');
