@@ -2152,10 +2152,17 @@ Return JSON with:
               <AccordionItem value="tasks">
                 <AccordionTrigger className="text-sm">
                   <div className="flex items-center gap-2">
-                    <ClipboardList className="w-4 h-4" /> Generate Follow-up Tasks
+                    <ClipboardList className="w-4 h-4" /> AI Task Generator
+                    <Badge className="bg-orange-100 text-orange-800 text-xs">Smart</Badge>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
+                  <Alert className="bg-blue-50 border-blue-200 mb-3">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <AlertDescription className="text-xs text-blue-800">
+                      AI analyzes your note to generate specific, actionable follow-up tasks based on interventions documented, patient status, and care plan goals.
+                    </AlertDescription>
+                  </Alert>
                   <TaskGenerator
                     enhancedNote={enhancedNote}
                     narrativeText={roughNote}
@@ -2164,7 +2171,7 @@ Return JSON with:
                     diagnosis={finalDiagnosis}
                     complianceGaps={enhancedNoteCompliance?.flagged_issues || roughNoteCompliance?.elements?.filter(e => e.status !== 'present') || []}
                     nurseEmail={currentUser?.email}
-                    autoGenerate={false}
+                    autoGenerate={true}
                   />
                 </AccordionContent>
               </AccordionItem>

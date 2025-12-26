@@ -146,7 +146,7 @@ export default function TaskGenerator({
       }
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a clinical workflow AI for home health/hospice. Analyze this nursing documentation and generate context-aware follow-up tasks.
+        prompt: `You are an expert clinical workflow AI for home health/hospice. Analyze this nursing documentation and the patient's current status to generate SMART, actionable follow-up tasks.
 
 PATIENT: ${patientName || 'Unknown'}
 DIAGNOSIS: ${diagnosis || 'Not specified'}
@@ -155,16 +155,55 @@ ${additionalContext}
 NURSING DOCUMENTATION:
 ${noteToAnalyze}
 
+TASK GENERATION STRATEGY - Generate tasks that are:
+✓ SPECIFIC: Clear, concrete actions (not vague reminders)
+✓ MEASURABLE: Include what to assess/verify
+✓ ACTIONABLE: Nurse knows exactly what to do
+✓ RELEVANT: Tied to patient's diagnosis, interventions, or care plan
+✓ TIME-BOUND: Appropriate urgency based on clinical need
+
 Generate follow-up tasks considering:
-      1. Clinical interventions mentioned that need follow-up
-      2. Physician notifications needed (vital sign changes, symptom changes, medication issues)
-      3. Follow-up calls to patient/caregiver for teaching reinforcement
-      4. Appointment scheduling needs
-      5. Supply/equipment orders
-      6. Care coordination with other disciplines
-      7. Documentation completion tasks (especially for missing critical elements)
-      8. Safety follow-ups (fall risk, medication safety, etc.)
-      9. Tasks to address any missing critical documentation elements
+      1. CLINICAL INTERVENTIONS REQUIRING FOLLOW-UP:
+         - Wound care: "Re-assess wound healing progress - measure dimensions, document wound bed changes"
+         - New medications: "Monitor for [medication name] side effects - assess for [specific side effects]"
+         - Lab work ordered: "Follow up on [test] results with physician - review and document in chart"
+         - Symptom management: "Assess effectiveness of [intervention] for [symptom] - document improvement/worsening"
+
+      2. PHYSICIAN NOTIFICATIONS:
+         - "Contact Dr. [Name] regarding [vital sign/symptom change] - report findings and obtain orders"
+         - "Request medication adjustment for [condition] - provide clinical justification"
+         - "Notify physician of hospitalization - request discharge summary and medication changes"
+
+      3. PATIENT/CAREGIVER EDUCATION REINFORCEMENT:
+         - "Follow-up call to verify [medication/treatment] understanding - complete teach-back assessment"
+         - "Reinforce education on [topic] - assess retention and correct misconceptions"
+         - "Schedule caregiver training session for [skill] - demonstrate and verify competency"
+
+      4. APPOINTMENT COORDINATION:
+         - "Schedule [specialist] appointment - ensure transportation arranged"
+         - "Coordinate labs at [location] - verify patient fasting requirements and transportation"
+
+      5. SUPPLIES & EQUIPMENT:
+         - "Order wound care supplies for next 2 weeks - specific dressings: [list]"
+         - "Coordinate DME for [equipment] - obtain physician orders if needed"
+
+      6. MULTIDISCIPLINARY COORDINATION:
+         - "PT referral for [mobility/strength issue] - provide clinical justification"
+         - "Social work consult for [psychosocial need] - arrange within 48 hours"
+         - "Dietitian referral for [nutritional concern] - request home visit"
+
+      7. DOCUMENTATION COMPLETION:
+         - "Complete missing [assessment element] on next visit - ensure Medicare compliance"
+         - "Update care plan to reflect [new problem/goal]"
+
+      8. SAFETY & RISK MANAGEMENT:
+         - "Conduct fall risk reassessment - implement additional precautions if score increased"
+         - "Medication safety check - verify no duplicates, interactions, or expired medications"
+         - "Home safety evaluation - assess for hazards related to [condition]"
+
+      9. CARE PLAN PROGRESS MONITORING:
+         - "Assess progress toward goal: [specific goal] - document objective measurements"
+         - "Re-evaluate interventions for [problem] - modify plan if goal not progressing"
       10. COMPLIANCE GAP TASKS (CRITICAL - generate for EACH compliance gap identified):
           - Homebound Status: "Re-assess homebound status on next visit - document specific limitations, taxing effort required, and frequency of absences"
           - Skilled Need: "Document skilled nursing justification - specify interventions requiring RN assessment/judgment"
@@ -190,16 +229,28 @@ Be specific and actionable. Each task should be clear enough to be completed by 
 
 Also identify if there are documentation skill gaps that suggest training would be helpful.
 
-Return JSON:
+EXAMPLES OF GOOD TASKS:
+✓ "Monitor blood pressure trends - recheck BP at next visit, assess medication compliance, notify MD if >140/90"
+✓ "Follow up on wound healing progress - measure Stage 2 sacral wound, assess for signs of infection, document drainage"
+✓ "Reinforce CHF education - verify patient understanding of daily weights, fluid restriction, and when to call nurse"
+✓ "Contact Dr. Smith re: elevated glucose readings (180-220 range) - request medication adjustment or diabetic educator referral"
+
+EXAMPLES OF POOR TASKS (too vague):
+✗ "Check on patient"
+✗ "Follow up"
+✗ "Review medications"
+
+Return JSON with SPECIFIC, ACTIONABLE tasks:
 {
   "tasks": [
     {
       "type": "call" | "notify" | "schedule" | "order" | "coordinate" | "document" | "safety" | "followup" | "assessment" | "care_plan_update" | "referral",
-      "title": "Concise task title",
-      "description": "Detailed task description with specific actions",
+      "title": "Specific, actionable title (include WHAT to do)",
+      "description": "Detailed description with EXACTLY what to assess/do/verify - include specific parameters, measurements, or criteria",
       "priority": "high" | "medium" | "low",
       "due_timeframe": "today" | "24_hours" | "48_hours" | "this_week" | "next_visit",
-      "auto_generated_reason": "Clinical rationale for this task"
+      "auto_generated_reason": "Clinical rationale based on documentation findings",
+      "clinical_context": "Reference to specific finding/intervention in the note"
     }
   ],
   "urgent_alerts": [
@@ -242,7 +293,8 @@ Return JSON:
                   description: { type: "string" },
                   priority: { type: "string" },
                   due_timeframe: { type: "string" },
-                  auto_generated_reason: { type: "string" }
+                  auto_generated_reason: { type: "string" },
+                  clinical_context: { type: "string" }
                 }
               }
             },
@@ -582,6 +634,9 @@ Return JSON:
                         </div>
                         {task.auto_generated_reason && (
                           <p className="text-xs text-gray-400 italic mt-1">💡 {task.auto_generated_reason}</p>
+                        )}
+                        {task.clinical_context && (
+                          <p className="text-xs text-indigo-600 mt-1">📋 From note: "{task.clinical_context}"</p>
                         )}
                       </div>
                     </div>
