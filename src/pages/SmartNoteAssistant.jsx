@@ -82,6 +82,7 @@ import { useAICache, clearAllAICache } from "../components/smartNote/CachedAICom
 import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
+import MedicareComplianceChecker from "../components/compliance/MedicareComplianceChecker";
 import RealTimeClinicalAlertMonitor from "../components/smartNote/RealTimeClinicalAlertMonitor";
 import AIMedicalKnowledgeBase from "../components/smartNote/AIMedicalKnowledgeBase";
 import AIDocumentAnalyzer from "../components/smartNote/AIDocumentAnalyzer";
@@ -2292,16 +2293,28 @@ Return JSON with:
                       />
                     )}
                     {enhancedNote && (
-                      <GuidelineComplianceChecker
-                        noteContent={enhancedNote}
-                        diagnosis={finalDiagnosis}
-                        visitType={visitType}
-                        patientData={selectedPatient}
-                        careType={selectedPatient?.care_type || "home_health"}
-                        onIssueFound={(gaps) => {
-                          setComplianceIssues(prev => [...prev, ...gaps]);
-                        }}
-                      />
+                      <>
+                        <MedicareComplianceChecker
+                          noteContent={enhancedNote}
+                          visitType={visitType}
+                          patientData={selectedPatient}
+                          diagnosis={finalDiagnosis}
+                          vitalSigns={vitalSigns}
+                          nurseType={currentUser?.credential_type || 'RN'}
+                          onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+                          autoCheck={true}
+                        />
+                        <GuidelineComplianceChecker
+                          noteContent={enhancedNote}
+                          diagnosis={finalDiagnosis}
+                          visitType={visitType}
+                          patientData={selectedPatient}
+                          careType={selectedPatient?.care_type || "home_health"}
+                          onIssueFound={(gaps) => {
+                            setComplianceIssues(prev => [...prev, ...gaps]);
+                          }}
+                        />
+                      </>
                     )}
                       </>
                     )}
