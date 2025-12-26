@@ -26,6 +26,7 @@ import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSu
 import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
 import AnnouncementsWidget from "../components/dashboard/AnnouncementsWidget";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
+import OfflineDataManager from "../components/mobile/OfflineDataManager";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -240,6 +241,11 @@ export default function Dashboard() {
       {/* High-Risk Patient Alerts */}
       <div className="mb-6">
         <RiskAlertWidget showAllPatients={true} compact={false} />
+      </div>
+
+      {/* Offline Data Manager */}
+      <div className="mb-6">
+        <OfflineDataManager />
       </div>
 
       {/* Dashboard Widgets */}
