@@ -76,6 +76,7 @@ import { calculateStats } from "@/components/utils/statsCalculator";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import AIStaffPerformanceAnalytics from "../components/analytics/AIStaffPerformanceAnalytics";
+import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();

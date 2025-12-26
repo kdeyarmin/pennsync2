@@ -1,0 +1,503 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import {
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Lightbulb,
+  DollarSign,
+  Shield,
+  TrendingUp,
+  Eye
+} from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+export default function ClinicalNoteReviewer({ 
+  noteContent,
+  visitType,
+  diagnosis,
+  patientData,
+  autoReview = false,
+  onApplySuggestion
+}) {
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [reviewResults, setReviewResults] = useState(null);
+
+  React.useEffect(() => {
+    if (autoReview && noteContent && noteContent.length > 100 && !reviewResults) {
+      reviewNote();
+    }
+  }, [autoReview, noteContent]);
+
+  const reviewNote = async () => {
+    if (!noteContent || noteContent.length < 50) return;
+
+    setIsReviewing(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are an expert clinical documentation auditor specializing in home health Medicare compliance and billing optimization.
+
+REVIEW THIS CLINICAL NOTE:
+
+${noteContent}
+
+CONTEXT:
+- Visit Type: ${visitType || 'Not specified'}
+- Primary Diagnosis: ${diagnosis || 'Not specified'}
+- Patient: ${patientData ? `${patientData.first_name} ${patientData.last_name}` : 'Not specified'}
+
+PERFORM COMPREHENSIVE REVIEW FOR:
+
+1. COMPLETENESS - Missing Required Elements:
+   ✓ Homebound status clearly documented
+   ✓ Skilled need justified
+   ✓ Patient response to care
+   ✓ Safety assessment
+   ✓ Functional status
+   ✓ Coordination of care
+   ✓ Visit-specific requirements (admission, recert, discharge, etc.)
+
+2. ACCURACY - Clinical Quality:
+   ✓ Specific, measurable observations (not vague terms)
+   ✓ Objective data included (vitals, measurements)
+   ✓ Clinical language appropriate
+   ✓ Contradictions or inconsistencies
+   ✓ Terminology correctness
+
+3. COMPLIANCE - Medicare Requirements (42 CFR 484):
+   ✓ Meets CoP documentation standards
+   ✓ Supports medical necessity
+   ✓ Demonstrates skilled need
+   ✓ Homebound criteria met
+   ✓ No compliance red flags
+
+4. BILLING OPTIMIZATION - Revenue Impact:
+   ✓ Documentation supports appropriate PDGM grouping
+   ✓ Comorbidities sufficiently documented
+   ✓ Functional impairment captured
+   ✓ Clinical complexity reflected
+   ✓ Opportunities for case-mix optimization
+
+5. CLARITY & SPECIFICITY:
+   ✓ Clear chronological flow
+   ✓ Specific rather than generic statements
+   ✓ Quantifiable when possible
+   ✓ Professional language
+   ✓ Free of documentation clichés
+
+Return detailed analysis with:
+- Overall scores for each category (0-100)
+- Specific missing elements with severity
+- Improvement suggestions with examples
+- Compliance risks flagged
+- Billing optimization opportunities`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            overall_score: { type: "number" },
+            completeness_score: { type: "number" },
+            accuracy_score: { type: "number" },
+            compliance_score: { type: "number" },
+            billing_optimization_score: { type: "number" },
+            clarity_score: { type: "number" },
+            summary: { type: "string" },
+            missing_elements: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  element: { type: "string" },
+                  severity: { type: "string" },
+                  explanation: { type: "string" },
+                  example: { type: "string" },
+                  cop_reference: { type: "string" }
+                }
+              }
+            },
+            accuracy_issues: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  issue: { type: "string" },
+                  location: { type: "string" },
+                  suggestion: { type: "string" }
+                }
+              }
+            },
+            compliance_risks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  risk: { type: "string" },
+                  severity: { type: "string" },
+                  explanation: { type: "string" },
+                  remediation: { type: "string" }
+                }
+              }
+            },
+            billing_opportunities: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  opportunity: { type: "string" },
+                  potential_impact: { type: "string" },
+                  documentation_needed: { type: "string" }
+                }
+              }
+            },
+            clarity_improvements: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  current_phrase: { type: "string" },
+                  suggested_phrase: { type: "string" },
+                  reason: { type: "string" }
+                }
+              }
+            },
+            strengths: {
+              type: "array",
+              items: { type: "string" }
+            }
+          }
+        }
+      });
+
+      setReviewResults(result);
+    } catch (error) {
+      console.error('Error reviewing note:', error);
+      alert('Failed to review note. Please try again.');
+    }
+    setIsReviewing(false);
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 90) return 'text-green-600';
+    if (score >= 80) return 'text-blue-600';
+    if (score >= 70) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getSeverityColor = (severity) => {
+    const colors = {
+      critical: 'bg-red-100 text-red-800 border-red-300',
+      high: 'bg-orange-100 text-orange-800 border-orange-300',
+      medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      low: 'bg-blue-100 text-blue-800 border-blue-300'
+    };
+    return colors[severity] || 'bg-gray-100 text-gray-800';
+  };
+
+  if (isReviewing) {
+    return (
+      <Card className="border-2 border-purple-300">
+        <CardContent className="p-8 text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4" />
+          <p className="text-lg font-medium text-gray-900 mb-2">Reviewing Clinical Note...</p>
+          <p className="text-sm text-gray-600">Analyzing completeness, accuracy, compliance & billing optimization</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!reviewResults) {
+    return (
+      <Card className="border-2 border-blue-300">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="w-5 h-5 text-blue-600" />
+            AI Clinical Note Reviewer
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-gray-600">
+            Comprehensive analysis for completeness, accuracy, Medicare compliance, and billing optimization.
+          </p>
+          <Button onClick={reviewNote} className="w-full bg-blue-600 hover:bg-blue-700">
+            <FileText className="w-4 h-4 mr-2" />
+            Review Note
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Overall Scores */}
+      <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-purple-600" />
+              Clinical Note Review Results
+            </span>
+            <Badge className={`${getScoreColor(reviewResults.overall_score)} bg-white text-2xl px-4 py-2`}>
+              {reviewResults.overall_score}%
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-gray-700">{reviewResults.summary}</p>
+
+          {/* Score Breakdown */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {[
+              { label: 'Completeness', score: reviewResults.completeness_score, icon: CheckCircle2 },
+              { label: 'Accuracy', score: reviewResults.accuracy_score, icon: TrendingUp },
+              { label: 'Compliance', score: reviewResults.compliance_score, icon: Shield },
+              { label: 'Billing', score: reviewResults.billing_optimization_score, icon: DollarSign },
+              { label: 'Clarity', score: reviewResults.clarity_score, icon: Lightbulb }
+            ].map((item, idx) => (
+              <div key={idx} className="bg-white p-3 rounded border text-center">
+                <item.icon className={`w-5 h-5 mx-auto mb-1 ${getScoreColor(item.score)}`} />
+                <p className="text-xs text-gray-600 mb-1">{item.label}</p>
+                <p className={`text-xl font-bold ${getScoreColor(item.score)}`}>{item.score}%</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Strengths */}
+      {reviewResults.strengths?.length > 0 && (
+        <Card className="border-2 border-green-300 bg-green-50">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              Documentation Strengths
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-1">
+              {reviewResults.strengths.map((strength, i) => (
+                <li key={i} className="text-sm text-green-800 flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  {strength}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      <Accordion type="multiple" defaultValue={["missing", "compliance"]}>
+        {/* Missing Elements */}
+        {reviewResults.missing_elements?.length > 0 && (
+          <AccordionItem value="missing">
+            <AccordionTrigger className="bg-red-50 px-4 py-3 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-red-600" />
+                <span className="font-semibold">Missing Required Elements ({reviewResults.missing_elements.length})</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg space-y-3">
+              {reviewResults.missing_elements.map((missing, idx) => (
+                <Card key={idx} className={`border-l-4 ${
+                  missing.severity === 'critical' ? 'border-l-red-500 bg-red-50' :
+                  missing.severity === 'high' ? 'border-l-orange-500 bg-orange-50' :
+                  'border-l-yellow-500 bg-yellow-50'
+                }`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">{missing.element}</p>
+                        {missing.cop_reference && (
+                          <Badge variant="outline" className="mt-1 text-xs">{missing.cop_reference}</Badge>
+                        )}
+                      </div>
+                      <Badge className={getSeverityColor(missing.severity)}>
+                        {missing.severity}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-2">{missing.explanation}</p>
+                    {missing.example && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-gray-900 mb-1">Example Documentation:</p>
+                        <p className="text-sm text-gray-700 italic">"{missing.example}"</p>
+                        {onApplySuggestion && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-2"
+                            onClick={() => onApplySuggestion(missing.example)}
+                          >
+                            Add to Note
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Compliance Risks */}
+        {reviewResults.compliance_risks?.length > 0 && (
+          <AccordionItem value="compliance">
+            <AccordionTrigger className="bg-orange-50 px-4 py-3 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-orange-600" />
+                <span className="font-semibold">Compliance Risks ({reviewResults.compliance_risks.length})</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg space-y-3">
+              {reviewResults.compliance_risks.map((risk, idx) => (
+                <Card key={idx} className={`border-l-4 ${
+                  risk.severity === 'critical' ? 'border-l-red-500' : 'border-l-orange-500'
+                }`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="font-semibold text-gray-900 flex-1">{risk.risk}</p>
+                      <Badge className={getSeverityColor(risk.severity)}>{risk.severity}</Badge>
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded border border-orange-200 mb-2">
+                      <p className="text-xs font-semibold text-orange-900 mb-1">Why This Matters:</p>
+                      <p className="text-sm text-gray-700">{risk.explanation}</p>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded border border-green-200">
+                      <p className="text-xs font-semibold text-green-900 mb-1">How to Fix:</p>
+                      <p className="text-sm text-gray-700">{risk.remediation}</p>
+                      {onApplySuggestion && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() => onApplySuggestion(risk.remediation)}
+                        >
+                          Apply Fix
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Accuracy Issues */}
+        {reviewResults.accuracy_issues?.length > 0 && (
+          <AccordionItem value="accuracy">
+            <AccordionTrigger className="bg-yellow-50 px-4 py-3 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                <span className="font-semibold">Accuracy & Quality Issues ({reviewResults.accuracy_issues.length})</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg space-y-2">
+              {reviewResults.accuracy_issues.map((issue, idx) => (
+                <div key={idx} className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                  <p className="text-sm font-semibold text-gray-900">{issue.issue}</p>
+                  {issue.location && (
+                    <p className="text-xs text-gray-600 mt-1">Location: {issue.location}</p>
+                  )}
+                  <div className="bg-white p-2 rounded border mt-2">
+                    <p className="text-xs font-semibold text-gray-900 mb-1">Suggested Improvement:</p>
+                    <p className="text-sm text-gray-700">{issue.suggestion}</p>
+                  </div>
+                </div>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Billing Optimization */}
+        {reviewResults.billing_opportunities?.length > 0 && (
+          <AccordionItem value="billing">
+            <AccordionTrigger className="bg-green-50 px-4 py-3 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-green-600" />
+                <span className="font-semibold">Billing Optimization Opportunities ({reviewResults.billing_opportunities.length})</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg space-y-3">
+              {reviewResults.billing_opportunities.map((opp, idx) => (
+                <Card key={idx} className="border-l-4 border-l-green-500">
+                  <CardContent className="p-4">
+                    <p className="font-semibold text-gray-900 mb-2">{opp.opportunity}</p>
+                    <div className="bg-green-50 p-3 rounded border border-green-200">
+                      <p className="text-xs font-semibold text-green-900 mb-1">Potential Impact:</p>
+                      <p className="text-sm text-green-800">{opp.potential_impact}</p>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded border border-blue-200 mt-2">
+                      <p className="text-xs font-semibold text-blue-900 mb-1">Documentation Needed:</p>
+                      <p className="text-sm text-gray-700">{opp.documentation_needed}</p>
+                      {onApplySuggestion && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() => onApplySuggestion(opp.documentation_needed)}
+                        >
+                          Add to Note
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Clarity Improvements */}
+        {reviewResults.clarity_improvements?.length > 0 && (
+          <AccordionItem value="clarity">
+            <AccordionTrigger className="bg-blue-50 px-4 py-3 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="w-5 h-5 text-blue-600" />
+                <span className="font-semibold">Clarity & Specificity Improvements ({reviewResults.clarity_improvements.length})</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg space-y-2">
+              {reviewResults.clarity_improvements.map((improvement, idx) => (
+                <div key={idx} className="bg-blue-50 p-3 rounded border border-blue-200">
+                  <div className="grid md:grid-cols-2 gap-3 mb-2">
+                    <div className="bg-red-50 p-2 rounded border border-red-200">
+                      <p className="text-xs font-semibold text-red-900 mb-1">Current (Vague):</p>
+                      <p className="text-sm text-gray-900 italic">"{improvement.current_phrase}"</p>
+                    </div>
+                    <div className="bg-green-50 p-2 rounded border border-green-200">
+                      <p className="text-xs font-semibold text-green-900 mb-1">Suggested (Specific):</p>
+                      <p className="text-sm text-gray-900 italic">"{improvement.suggested_phrase}"</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600">{improvement.reason}</p>
+                </div>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+      </Accordion>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          setReviewResults(null);
+          reviewNote();
+        }}
+      >
+        Re-Review Note
+      </Button>
+    </div>
+  );
+}

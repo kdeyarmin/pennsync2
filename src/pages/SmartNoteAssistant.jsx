@@ -101,6 +101,7 @@ import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecific
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
+import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -2184,17 +2185,15 @@ Return JSON with:
               <AccordionItem value="review">
                 <AccordionTrigger className="text-sm">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> Comprehensive Document Review
+                    <Sparkles className="w-4 h-4" /> Clinical Note Review (Completeness & Billing)
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <AutomaticDocumentReviewer
+                  <ClinicalNoteReviewer
                     noteContent={enhancedNote}
                     visitType={visitType}
                     diagnosis={finalDiagnosis}
                     patientData={selectedPatient}
-                    vitalSigns={vitalSigns}
-                    nurseEmail={currentUser?.email}
                     autoReview={false}
                     onApplySuggestion={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
                   />
