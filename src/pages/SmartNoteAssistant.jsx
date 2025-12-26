@@ -104,6 +104,9 @@ import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
 import AITemplateGenerator from "../components/smartNote/AITemplateGenerator";
 import RealTimeComplianceAnalyzer from "../components/smartNote/RealTimeComplianceAnalyzer";
 import PDGMOptimizationSuggester from "../components/smartNote/PDGMOptimizationSuggester";
+import AIDraftGenerator from "../components/smartNote/AIDraftGenerator";
+import BulletPointExpander from "../components/smartNote/BulletPointExpander";
+import AISmartSuggester from "../components/smartNote/AISmartSuggester";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1643,21 +1646,36 @@ Return JSON with:
             />
           )}
 
-          {/* AI Documentation Template Generator */}
+          {/* AI Draft Generator - Generate complete preliminary note */}
           {selectedPatientId && visitType && finalDiagnosis && roughNote.length < 50 && !enhancedNote && (
-            <AITemplateGenerator
+            <AIDraftGenerator
               visitType={visitType}
               diagnosis={finalDiagnosis}
               patientData={selectedPatient}
-              carePlans={carePlans}
+              vitalSigns={vitalSigns}
               recentVisits={recentVisits}
-              onUseTemplate={(template) => {
-                setRoughNote(template);
+              carePlans={carePlans}
+              onDraftGenerated={(draft) => {
+                setRoughNote(draft);
                 if (!noteStartTime) {
                   setNoteStartTime(Date.now());
                 }
               }}
-              autoGenerate={true}
+            />
+          )}
+
+          {/* Bullet Point Expander */}
+          {selectedPatientId && visitType && finalDiagnosis && roughNote.length < 100 && !enhancedNote && (
+            <BulletPointExpander
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
+              onExpanded={(text) => {
+                setRoughNote(prev => prev ? prev + '\n\n' + text : text);
+                if (!noteStartTime) {
+                  setNoteStartTime(Date.now());
+                }
+              }}
             />
           )}
 
@@ -1862,56 +1880,35 @@ Return JSON with:
               />
             )}
 
-            {/* AI Proactive Suggestions - Tasks, Care Plans, Clinical Alerts */}
-            {(roughNote.length >= 100 || enhancedNote) && comprehensiveContext && (
-              <AIProactiveSuggestions
+            {/* AI Smart Suggester - Tasks & Care Plans */}
+            {(roughNote.length >= 100 || enhancedNote) && selectedPatientId && (
+              <AISmartSuggester
+                noteContent={enhancedNote || roughNote}
                 roughNote={roughNote}
                 enhancedNote={enhancedNote}
-                patientContext={patientContext}
-                comprehensiveContext={comprehensiveContext}
+                patientId={selectedPatientId}
+                patientData={selectedPatient}
                 diagnosis={finalDiagnosis}
-                vitalSigns={vitalSigns}
                 visitType={visitType}
-                onCreateTask={async (task) => {
+                carePlans={carePlans}
+                currentUserEmail={currentUser?.email}
+                onCreateTask={async (taskData) => {
                   try {
-                    await base44.entities.Task.create({
-                      patient_id: selectedPatientId,
-                      title: task.title,
-                      description: task.description,
-                      type: task.type,
-                      priority: task.priority,
-                      due_timeframe: task.due_timeframe,
-                      source: 'ai_generated',
-                      ai_reason: task.reasoning,
-                      assigned_to: currentUser?.email
-                    });
+                    await base44.entities.Task.create(taskData);
                     queryClient.invalidateQueries({ queryKey: ['tasks'] });
                   } catch (error) {
                     console.error('Error creating task:', error);
                   }
                 }}
-                onUpdateCarePlan={async (carePlan) => {
+                onCreateCarePlan={async (carePlanData) => {
                   try {
-                    await base44.entities.CarePlan.create({
-                      patient_id: selectedPatientId,
-                      problem: carePlan.problem,
-                      goal: carePlan.goal,
-                      interventions: carePlan.interventions,
-                      status: 'active',
-                      target_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-                    });
+                    await base44.entities.CarePlan.create(carePlanData);
                     queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
                   } catch (error) {
                     console.error('Error creating care plan:', error);
                   }
                 }}
-                onAddToNote={(text) => {
-                  if (enhancedNote) {
-                    setEnhancedNote(prev => prev + '\n\n' + text);
-                  } else {
-                    setRoughNote(prev => prev + '\n\n' + text);
-                  }
-                }}
+                autoAnalyze={true}
               />
             )}
 
