@@ -41,6 +41,9 @@ import ReferralLetterGenerator from "../components/documents/ReferralLetterGener
 import PatientDeteriorationPredictor from "../components/predictive/PatientDeteriorationPredictor";
 import MedicationInteractionChecker from "../components/medication/MedicationInteractionChecker";
 import CarePlanGapAnalyzer from "../components/carePlan/CarePlanGapAnalyzer";
+import InterdisciplinaryTeamCoordinator from "../components/coordination/InterdisciplinaryTeamCoordinator";
+import AutomatedTaskAssigner from "../components/coordination/AutomatedTaskAssigner";
+import OptimalCommunicationAdvisor from "../components/coordination/OptimalCommunicationAdvisor";
 import PatientEducationGenerator from "../components/documents/PatientEducationGenerator";
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
 import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
@@ -126,6 +129,9 @@ export default function PatientDetails() {
     initialData: [],
     enabled: !!patientId,
   });
+
+  const [detectedCarePlanGaps, setDetectedCarePlanGaps] = useState(null);
+  const [detectedMedicationIssues, setDetectedMedicationIssues] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -320,6 +326,40 @@ export default function PatientDetails() {
         <PatientChartRecommendations patientId={patientId} />
       </div>
 
+      {/* Care Coordination Tools */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <InterdisciplinaryTeamCoordinator
+          patientId={patientId}
+          patientData={patient}
+          carePlans={carePlans}
+          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
+          incidents={incidents}
+          alerts={activeAlerts}
+          autoAnalyze={true}
+        />
+        
+        <OptimalCommunicationAdvisor
+          patientId={patientId}
+          patientData={patient}
+          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 3)}
+          upcomingVisits={visits?.filter(v => v.status === 'scheduled')}
+          outreachPurpose="Care coordination and status update"
+        />
+      </div>
+
+      {/* Automated Task Assignment */}
+      {(detectedCarePlanGaps || detectedMedicationIssues || activeAlerts.length > 0) && (
+        <div className="mb-6">
+          <AutomatedTaskAssigner
+            patientId={patientId}
+            patientName={`${patient?.first_name} ${patient?.last_name}`}
+            detectedGaps={detectedCarePlanGaps?.missing_elements}
+            medicationIssues={detectedMedicationIssues?.critical_interactions}
+            carePlanGaps={detectedCarePlanGaps}
+          />
+        </div>
+      )}
+
       {/* Risk Alerts & Predictive Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <RiskAlertWidget patientId={patientId} compact={false} />
@@ -338,14 +378,16 @@ export default function PatientDetails() {
           autoCheck={true}
         />
         
-        <CarePlanGapAnalyzer
-          patientId={patientId}
-          diagnosis={patient?.primary_diagnosis}
-          carePlans={carePlans}
-          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
-          patientData={patient}
-          autoAnalyze={true}
-        />
+        <div>
+          <CarePlanGapAnalyzer
+            patientId={patientId}
+            diagnosis={patient?.primary_diagnosis}
+            carePlans={carePlans}
+            recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
+            patientData={patient}
+            autoAnalyze={true}
+          />
+        </div>
         
         <PredictiveRiskAnalyzer 
           patientId={patientId} 
