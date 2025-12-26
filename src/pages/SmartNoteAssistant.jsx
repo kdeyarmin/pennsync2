@@ -107,6 +107,7 @@ import PDGMOptimizationSuggester from "../components/smartNote/PDGMOptimizationS
 import AIDraftGenerator from "../components/smartNote/AIDraftGenerator";
 import BulletPointExpander from "../components/smartNote/BulletPointExpander";
 import AISmartSuggester from "../components/smartNote/AISmartSuggester";
+import ConsolidatedAISuggestions from "../components/smartNote/ConsolidatedAISuggestions";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1589,54 +1590,82 @@ Return JSON with:
             </CardContent>
           </Card>
 
-          {/* Real-Time Compliance Analyzer - BEFORE Enhancement */}
-          {roughNote && roughNote.length >= 100 && !enhancedNote && selectedPatientId && (
-            <RealTimeComplianceAnalyzer
+          {/* Consolidated AI Suggestions - All Categories */}
+          {(roughNote.length >= 150 || enhancedNote) && selectedPatientId && (
+            <ConsolidatedAISuggestions
               roughNote={roughNote}
+              enhancedNote={enhancedNote}
               visitType={visitType}
               diagnosis={finalDiagnosis}
               patientData={selectedPatient}
-              onApplySuggestion={(text, category) => {
-                setRoughNote(prev => prev + '\n\n' + text);
+              vitalSigns={vitalSigns}
+              carePlans={carePlans}
+              patientId={selectedPatientId}
+              currentUserEmail={currentUser?.email}
+              onApplyCompliance={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
               }}
-              onApplyAll={(text) => {
-                setRoughNote(prev => prev + '\n\n' + text);
+              onApplyPDGM={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
+              }}
+              onCreateTask={async (taskData) => {
+                await base44.entities.Task.create({
+                  patient_id: selectedPatientId,
+                  ...taskData,
+                  assigned_to: currentUser?.email
+                });
+                queryClient.invalidateQueries({ queryKey: ['tasks'] });
+              }}
+              onCreateCarePlan={async (carePlanData) => {
+                await base44.entities.CarePlan.create({
+                  patient_id: selectedPatientId,
+                  ...carePlanData
+                });
+                queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
+              }}
+              onApplyOASIS={async (oasisItems) => {
+                try {
+                  const extractedData = {};
+                  oasisItems.forEach(item => {
+                    extractedData[item.item_number] = {
+                      value: item.suggested_value,
+                      confidence: item.confidence,
+                      evidence: item.evidence,
+                      source: 'ai_note_analysis',
+                      applied_by: currentUser?.email,
+                      applied_at: new Date().toISOString()
+                    };
+                  });
+
+                  if (patientOASIS?.length > 0) {
+                    const existing = patientOASIS[0];
+                    await base44.entities.OASISUpload.update(existing.id, {
+                      extracted_data: { ...existing.extracted_data, ...extractedData }
+                    });
+                  } else {
+                    await base44.entities.OASISUpload.create({
+                      patient_id: selectedPatientId,
+                      extracted_data: extractedData
+                    });
+                  }
+                  queryClient.invalidateQueries({ queryKey: ['patientOASISForNotes', selectedPatientId] });
+                } catch (error) {
+                  console.error('Error applying OASIS:', error);
+                }
               }}
               autoAnalyze={true}
             />
           )}
 
-          {/* PDGM Optimization - Real-time for Rough Notes */}
-          {roughNote && roughNote.length >= 150 && !enhancedNote && selectedPatientId && (
-            <PDGMOptimizationSuggester
-              roughNote={roughNote}
-              patientData={selectedPatient}
-              diagnosis={finalDiagnosis}
-              visitType={visitType}
-              onApplySuggestion={(text, category) => {
-                setRoughNote(prev => prev + '\n\n' + text);
-              }}
-              onApplyAll={(text) => {
-                setRoughNote(prev => prev + '\n\n' + text);
-              }}
-              autoAnalyze={true}
-            />
-          )}
 
-          {/* Real-Time AI Documentation Assistant */}
-          {roughNote && roughNote.length > 50 && !enhancedNote && (
-            <RealTimeDocumentationAI
-              noteContent={roughNote}
-              visitType={visitType}
-              diagnosis={finalDiagnosis}
-              patientData={selectedPatient}
-              oasisData={patientOASIS?.[0]}
-              careType={selectedPatient?.care_type || "home_health"}
-              onSuggestionApply={(text) => {
-                setRoughNote(prev => prev + '\n\n' + text);
-              }}
-            />
-          )}
 
           {/* Comprehensive Patient Context Loader */}
           {selectedPatientId && (
@@ -1880,37 +1909,7 @@ Return JSON with:
               />
             )}
 
-            {/* AI Smart Suggester - Tasks & Care Plans */}
-            {(roughNote.length >= 100 || enhancedNote) && selectedPatientId && (
-              <AISmartSuggester
-                noteContent={enhancedNote || roughNote}
-                roughNote={roughNote}
-                enhancedNote={enhancedNote}
-                patientId={selectedPatientId}
-                patientData={selectedPatient}
-                diagnosis={finalDiagnosis}
-                visitType={visitType}
-                carePlans={carePlans}
-                currentUserEmail={currentUser?.email}
-                onCreateTask={async (taskData) => {
-                  try {
-                    await base44.entities.Task.create(taskData);
-                    queryClient.invalidateQueries({ queryKey: ['tasks'] });
-                  } catch (error) {
-                    console.error('Error creating task:', error);
-                  }
-                }}
-                onCreateCarePlan={async (carePlanData) => {
-                  try {
-                    await base44.entities.CarePlan.create(carePlanData);
-                    queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
-                  } catch (error) {
-                    console.error('Error creating care plan:', error);
-                  }
-                }}
-                autoAnalyze={true}
-              />
-            )}
+
 
             {/* Enhance Button - Prominent CTA */}
             {!enhancedNote && roughNote.length >= 20 && (
@@ -2013,20 +2012,7 @@ Return JSON with:
                 </Card>
               )}
 
-              {/* PDGM Optimization for Enhanced Notes */}
-              <PDGMOptimizationSuggester
-                enhancedNote={enhancedNote}
-                patientData={selectedPatient}
-                diagnosis={finalDiagnosis}
-                visitType={visitType}
-                onApplySuggestion={(text, category) => {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                }}
-                onApplyAll={(text) => {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                }}
-                autoAnalyze={true}
-              />
+
             </>
           )}
 
