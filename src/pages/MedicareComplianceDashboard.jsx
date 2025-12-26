@@ -32,6 +32,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { format, subDays, startOfDay } from "date-fns";
 import ComplianceReportGenerator from "../components/compliance/ComplianceReportGenerator";
 import ProactiveComplianceMonitor from "../components/compliance/ProactiveComplianceMonitor";
+import AdvancedComplianceRiskScoring from "../components/compliance/AdvancedComplianceRiskScoring";
 
 export default function MedicareComplianceDashboard() {
   const [timeRange, setTimeRange] = useState(30);
@@ -436,8 +437,9 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
       )}
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="risk">Risk Scoring</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
           <TabsTrigger value="issues">Top Issues</TabsTrigger>
           <TabsTrigger value="nurses">Nurse Performance</TabsTrigger>
@@ -520,6 +522,15 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
 
           {/* Proactive Monitor */}
           <ProactiveComplianceMonitor autoMonitor={true} />
+        </TabsContent>
+
+        {/* Risk Scoring Tab */}
+        <TabsContent value="risk" className="space-y-6">
+          <AdvancedComplianceRiskScoring
+            timeRange={timeRange}
+            audits={filteredAudits}
+            autoAnalyze={true}
+          />
         </TabsContent>
 
         {/* Trends Tab */}
