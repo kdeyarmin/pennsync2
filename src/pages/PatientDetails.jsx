@@ -316,6 +316,20 @@ export default function PatientDetails() {
         <PatientChartRecommendations patientId={patientId} />
       </div>
 
+      {/* Risk Alerts & Predictive Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <RiskAlertWidget patientId={patientId} compact={false} />
+        <PredictiveRiskAnalyzer 
+          patientId={patientId} 
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          onAlertsCreated={(count) => {
+            queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts', patientId] });
+            queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
+          }}
+          autoAnalyze={false}
+        />
+      </div>
+
       {/* AI Patient Dashboard Summary & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <div className="lg:col-span-2">
