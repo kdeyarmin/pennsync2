@@ -108,6 +108,8 @@ import AIDraftGenerator from "../components/smartNote/AIDraftGenerator";
 import BulletPointExpander from "../components/smartNote/BulletPointExpander";
 import AISmartSuggester from "../components/smartNote/AISmartSuggester";
 import ConsolidatedAISuggestions from "../components/smartNote/ConsolidatedAISuggestions";
+import RealTimeDeteriorationPredictor from "../components/smartNote/RealTimeDeteriorationPredictor";
+import AIEducationMaterialSuggester from "../components/smartNote/AIEducationMaterialSuggester";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1774,6 +1776,48 @@ Return JSON with:
                   setRoughNote(prev => prev + '\n\n' + text);
                 }
               }}
+            />
+          )}
+
+          {/* Real-Time Deterioration Predictor */}
+          {selectedPatientId && (roughNote.length >= 100 || enhancedNote) && (
+            <RealTimeDeteriorationPredictor
+              noteContent={enhancedNote || roughNote}
+              patientData={selectedPatient}
+              vitalSigns={vitalSigns}
+              recentVisits={recentVisits}
+              diagnosis={finalDiagnosis}
+              onCreateAlert={async (alertData) => {
+                await base44.entities.PatientAlert.create(alertData);
+                queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', selectedPatientId] });
+              }}
+              onAddToNote={(text) => {
+                if (enhancedNote) {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                } else {
+                  setRoughNote(prev => prev + '\n\n' + text);
+                }
+              }}
+              autoAnalyze={true}
+            />
+          )}
+
+          {/* AI Education Material Suggester */}
+          {selectedPatientId && (roughNote.length >= 100 || enhancedNote) && (
+            <AIEducationMaterialSuggester
+              noteContent={enhancedNote || roughNote}
+              diagnosis={finalDiagnosis}
+              patientData={selectedPatient}
+              visitType={visitType}
+              patientId={selectedPatientId}
+              onAssignEducation={async (educationData) => {
+                await base44.entities.PatientEducationAssignment.create({
+                  ...educationData,
+                  assigned_by: currentUser?.email
+                });
+                queryClient.invalidateQueries({ queryKey: ['patientEducation', selectedPatientId] });
+              }}
+              autoAnalyze={true}
             />
           )}
 
