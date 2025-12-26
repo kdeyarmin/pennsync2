@@ -35,6 +35,8 @@ import QuickActionsPanel from "../components/patient/QuickActionsPanel";
 import AIPatientHistoryAnalyzer from "../components/patient/AIPatientHistoryAnalyzer";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 import FavoriteButton from "../components/navigation/FavoriteButton";
+import PredictiveRiskAnalyzer from "../components/analytics/PredictiveRiskAnalyzer";
+import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import ReferralLetterGenerator from "../components/documents/ReferralLetterGenerator";
 import PatientEducationGenerator from "../components/documents/PatientEducationGenerator";
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
