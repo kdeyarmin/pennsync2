@@ -102,6 +102,8 @@ import PersonalizedEducationGenerator from "../components/education/Personalized
 import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
 import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
 import AITemplateGenerator from "../components/smartNote/AITemplateGenerator";
+import RealTimeComplianceAnalyzer from "../components/smartNote/RealTimeComplianceAnalyzer";
+import PDGMOptimizationSuggester from "../components/smartNote/PDGMOptimizationSuggester";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1584,6 +1586,40 @@ Return JSON with:
             </CardContent>
           </Card>
 
+          {/* Real-Time Compliance Analyzer - BEFORE Enhancement */}
+          {roughNote && roughNote.length >= 100 && !enhancedNote && selectedPatientId && (
+            <RealTimeComplianceAnalyzer
+              roughNote={roughNote}
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              patientData={selectedPatient}
+              onApplySuggestion={(text, category) => {
+                setRoughNote(prev => prev + '\n\n' + text);
+              }}
+              onApplyAll={(text) => {
+                setRoughNote(prev => prev + '\n\n' + text);
+              }}
+              autoAnalyze={true}
+            />
+          )}
+
+          {/* PDGM Optimization - Real-time for Rough Notes */}
+          {roughNote && roughNote.length >= 150 && !enhancedNote && selectedPatientId && (
+            <PDGMOptimizationSuggester
+              roughNote={roughNote}
+              patientData={selectedPatient}
+              diagnosis={finalDiagnosis}
+              visitType={visitType}
+              onApplySuggestion={(text, category) => {
+                setRoughNote(prev => prev + '\n\n' + text);
+              }}
+              onApplyAll={(text) => {
+                setRoughNote(prev => prev + '\n\n' + text);
+              }}
+              autoAnalyze={true}
+            />
+          )}
+
           {/* Real-Time AI Documentation Assistant */}
           {roughNote && roughNote.length > 50 && !enhancedNote && (
             <RealTimeDocumentationAI
@@ -1980,67 +2016,20 @@ Return JSON with:
                 </Card>
               )}
 
-              {/* PDGM Optimization Analysis */}
-              <Card className="border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50">
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-green-600" />
-                      <div>
-                        <p className="text-sm font-medium">PDGM Optimization Analysis</p>
-                        <p className="text-xs text-gray-600">Identify revenue optimization opportunities</p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={analyzePDGMOpportunities}
-                      disabled={isAnalyzingPDGM}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 w-full sm:w-auto"
-                    >
-                      {isAnalyzingPDGM ? (
-                        <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Analyzing...</>
-                      ) : (
-                        <><DollarSign className="w-4 h-4 mr-2" /> Analyze PDGM</>
-                      )}
-                    </Button>
-                  </div>
-                  {pdgmOpportunities && (
-                    <div className="mt-4 space-y-3">
-                      <div className="bg-white rounded-lg p-3 border border-green-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-green-900">Optimization Potential</span>
-                          <Badge className="bg-green-600">
-                            +${pdgmOpportunities.revenue_impact || 0}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-gray-700">{pdgmOpportunities.summary}</p>
-                      </div>
-                      {pdgmOpportunities.opportunities?.slice(0, 3).map((opp, idx) => (
-                        <div key={idx} className={`bg-white rounded-lg p-3 border ${
-                          opp.priority === 'high' ? 'border-red-300' : 
-                          opp.priority === 'medium' ? 'border-yellow-300' : 'border-gray-200'
-                        }`}>
-                          <div className="flex items-start justify-between mb-1">
-                            <span className="text-xs font-semibold">{opp.category}</span>
-                            <Badge className={`text-xs ${
-                              opp.priority === 'high' ? 'bg-red-600' :
-                              opp.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-500'
-                            }`}>
-                              {opp.priority}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-700 mb-1">{opp.finding}</p>
-                          <p className="text-xs text-green-700 font-medium">
-                            Suggested: {opp.suggested_documentation}
-                          </p>
-                          {opp.revenue_impact > 0 && (
-                            <p className="text-xs text-green-600 mt-1">Impact: +${opp.revenue_impact}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              {/* PDGM Optimization for Enhanced Notes */}
+              <PDGMOptimizationSuggester
+                enhancedNote={enhancedNote}
+                patientData={selectedPatient}
+                diagnosis={finalDiagnosis}
+                visitType={visitType}
+                onApplySuggestion={(text, category) => {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                }}
+                onApplyAll={(text) => {
+                  setEnhancedNote(prev => prev + '\n\n' + text);
+                }}
+                autoAnalyze={true}
+              />
             </>
           )}
 
