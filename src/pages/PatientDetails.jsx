@@ -818,6 +818,16 @@ export default function PatientDetails() {
 
             {/* Visit Notes Tab */}
             <TabsContent value="visits" className="space-y-4">
+              {visits.length > 0 && visits[0].nurse_notes && (
+                <ClinicalNoteReviewer
+                  noteContent={visits[0].nurse_notes}
+                  visitType={visits[0].visit_type}
+                  diagnosis={patient?.primary_diagnosis}
+                  patientData={patient}
+                  autoReview={false}
+                  onApplySuggestion={(text) => console.log('Suggestion:', text)}
+                />
+              )}
               {visits.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />

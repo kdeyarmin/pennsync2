@@ -453,6 +453,10 @@ export default function AdminDashboard() {
             <Award className="w-4 h-4" />
             <span className="hidden sm:inline">Quality</span>
           </TabsTrigger>
+          <TabsTrigger value="notereview" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">Notes</span>
+          </TabsTrigger>
           <TabsTrigger value="security" className="gap-1 px-2 py-2 text-xs sm:text-sm">
             <Shield className="w-4 h-4" />
             <span className="hidden sm:inline">Security</span>
@@ -500,6 +504,29 @@ export default function AdminDashboard() {
         {/* Quality Metrics Tab */}
         <TabsContent value="quality" className="space-y-6">
           <QualityMetricsDashboard />
+        </TabsContent>
+
+        {/* Note Review Tab */}
+        <TabsContent value="notereview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Clinical Note Quality Reviewer</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                Review recent clinical notes for completeness, accuracy, compliance, and billing optimization.
+              </p>
+              {visits.length > 0 && visits.filter(v => v.nurse_notes).length > 0 && (
+                <ClinicalNoteReviewer
+                  noteContent={visits.filter(v => v.nurse_notes)[0].nurse_notes}
+                  visitType={visits.filter(v => v.nurse_notes)[0].visit_type}
+                  patientData={null}
+                  autoReview={false}
+                  onApplySuggestion={(text) => console.log('Suggestion:', text)}
+                />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Security Tab */}
