@@ -34,10 +34,16 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    // Log page visit once on mount
+    // Log page visit with user context
     React.useEffect(() => {
-      logActivity(ActivityActions.PAGE_VISIT, { page: 'Dashboard' });
-    }, []);
+      if (currentUser?.email) {
+        logActivity(ActivityActions.PAGE_VISIT, {
+          page: 'Dashboard',
+          page_title: 'Dashboard',
+          user_role: currentUser.role
+        });
+      }
+    }, [currentUser?.email]);
 
     const { data: currentUser } = useQuery({
       queryKey: ['currentUser'],
