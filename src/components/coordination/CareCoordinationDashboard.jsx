@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { Label } from "@/components/ui/label";
 
 export default function CareCoordinationDashboard() {
   const queryClient = useQueryClient();
