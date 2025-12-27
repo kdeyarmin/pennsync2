@@ -174,7 +174,7 @@ function VoiceHub({ onTranscription, onInterimTranscription, onCommand }) {
     
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = language;
+    recognition.lang = 'en-US';
     recognition.maxAlternatives = 2;
 
     recognition.onresult = (event) => {
@@ -272,20 +272,7 @@ function VoiceHub({ onTranscription, onInterimTranscription, onCommand }) {
           {listening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
           <span className="text-sm md:text-base">{listening ? 'Stop' : 'Voice'}</span>
         </Button>
-        {!listening && (
-          <select 
-            value={language} 
-            onChange={(e) => setLanguage(e.target.value)}
-            className="text-xs border rounded px-2 py-1 h-[44px]"
-          >
-            <option value="en-US">🇺🇸 English</option>
-            <option value="es-ES">🇪🇸 Spanish</option>
-            <option value="fr-FR">🇫🇷 French</option>
-            <option value="de-DE">🇩🇪 German</option>
-            <option value="pt-BR">🇧🇷 Portuguese</option>
-            <option value="zh-CN">🇨🇳 Chinese</option>
-          </select>
-        )}
+
         {!listening && (
           <Button
             size="sm"
