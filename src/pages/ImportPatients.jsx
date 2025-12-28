@@ -1634,9 +1634,9 @@ export default function ImportPatients() {
                       checked={skipErrors}
                       onCheckedChange={setSkipErrors}
                     />
-                    <Label htmlFor="skip-errors" className="text-sm cursor-pointer">
+                    <label htmlFor="skip-errors" className="text-sm cursor-pointer">
                       Skip rows with errors and import only valid records ({validRecords.length} records)
-                    </Label>
+                    </label>
                   </div>
                 </div>
               )}
