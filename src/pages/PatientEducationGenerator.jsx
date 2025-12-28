@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -233,7 +232,7 @@ ${currentUser?.full_name || 'Your Home Health Team'}
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Select Condition</Label>
+                <p className="text-sm font-medium mb-2">Select Condition</p>
                 <Select value={selectedCondition} onValueChange={setSelectedCondition}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose condition..." />
@@ -253,7 +252,7 @@ ${currentUser?.full_name || 'Your Home Health Team'}
 
               {selectedCondition === "Custom" && (
                 <div>
-                  <Label>Custom Topic</Label>
+                  <p className="text-sm font-medium mb-2">Custom Topic</p>
                   <Input 
                     placeholder="Enter condition or topic..."
                     value={customTopic}
@@ -263,7 +262,7 @@ ${currentUser?.full_name || 'Your Home Health Team'}
               )}
 
               <div>
-                <Label>Reading Level</Label>
+                <p className="text-sm font-medium mb-2">Reading Level</p>
                 <Select value={readingLevel} onValueChange={setReadingLevel}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -275,7 +274,7 @@ ${currentUser?.full_name || 'Your Home Health Team'}
               </div>
 
               <div>
-                <Label>Format</Label>
+                <p className="text-sm font-medium mb-2">Format</p>
                 <Select value={format} onValueChange={setFormat}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
