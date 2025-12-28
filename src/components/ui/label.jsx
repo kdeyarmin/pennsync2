@@ -3,7 +3,7 @@ import * as LabelPrimitive from "@radix-ui/react-label"
 import { clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-function cn(...inputs) {
+export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
@@ -20,3 +20,4 @@ const Label = React.forwardRef(({ className, ...props }, ref) => (
 Label.displayName = LabelPrimitive.Root.displayName
 
 export { Label }
+export default Label
