@@ -1,26 +1,20 @@
-import * as React from "react";
-import * as LabelPrimitive from "@radix-ui/react-label";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import * as React from "react"
+import * as LabelPrimitive from "@radix-ui/react-label"
 
 function cn(...inputs) {
-  return twMerge(clsx(inputs));
+  return inputs.filter(Boolean).join(' ')
 }
 
-const Label = React.forwardRef((props, ref) => {
-  const { className, ...otherProps } = props;
-  return (
-    <LabelPrimitive.Root
-      ref={ref}
-      className={cn(
-        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-        className
-      )}
-      {...otherProps}
-    />
-  );
-});
+const Label = React.forwardRef((props, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn(
+      "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+      props.className
+    )}
+    {...props}
+  />
+))
+Label.displayName = "Label"
 
-Label.displayName = LabelPrimitive.Root.displayName;
-
-export { Label };
+export { Label }
