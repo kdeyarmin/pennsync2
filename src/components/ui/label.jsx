@@ -1,7 +1,11 @@
-
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
-import { cn } from "@/utils" // Changed from "@/lib/utils"
+import { clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+function cn(...inputs) {
+  return twMerge(clsx(inputs))
+}
 
 const Label = React.forwardRef(({ className, ...props }, ref) => (
   <LabelPrimitive.Root
