@@ -92,10 +92,7 @@ import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
 import GuidedDocumentationWorkflow from "../components/smartNote/GuidedDocumentationWorkflow";
 import PatientHistoryAutoPopulator from "../components/smartNote/PatientHistoryAutoPopulator";
 import ConditionalAIAssistant from "../components/smartNote/ConditionalAIAssistant";
-import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
 import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
-import NuancedFeedbackPanel from "../components/smartNote/NuancedFeedbackPanel";
-import ComplianceTargetSettings from "../components/smartNote/ComplianceTargetSettings";
 import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecificGuidance";
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
@@ -2515,66 +2512,30 @@ Return JSON with:
                     )}
                   </TabsContent>
 
-                  {/* Compliance Tab - Lazy Loaded */}
+                  {/* Compliance Tab - Unified Engine */}
                   <TabsContent value="compliance" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
                     {activeAITab === "compliance" && (
                       <>
-                    <ComplianceTargetSettings
-                      currentTarget={complianceTarget}
-                      onTargetChange={setComplianceTarget}
-                      visitType={visitType}
-                    />
-                    {(roughNote.length >= 100 || enhancedNote) && (
-                      <NuancedFeedbackPanel
-                        noteContent={enhancedNote || roughNote}
-                        visitType={visitType}
-                        diagnosis={finalDiagnosis}
-                        complianceTarget={complianceTarget}
-                        onApplyFix={(textOrUpdatedNote, category, isReplacement) => {
-                          if (isReplacement) {
-                            if (enhancedNote) {
-                              setEnhancedNote(textOrUpdatedNote);
-                            } else {
-                              setRoughNote(textOrUpdatedNote);
-                            }
-                          } else {
-                            if (enhancedNote) {
-                              setEnhancedNote(prev => prev + '\n\n' + textOrUpdatedNote);
-                            } else {
-                              setRoughNote(prev => prev + '\n\n' + textOrUpdatedNote);
-                            }
-                          }
-                        }}
-                      />
-                    )}
-                    {enhancedNote && (
-                      <VisitTypeComplianceChecker
-                        visitType={visitType}
-                        noteContent={enhancedNote}
-                        oasisData={patientOASIS?.[0]}
-                        patientData={selectedPatient}
-                        vitalSigns={vitalSigns}
-                        careType={selectedPatient?.care_type || "home_health"}
-                        autoCheck={true}
-                        onIssuesDetected={(issues) => {
-                          setComplianceIssues(prev => [...prev, ...issues]);
-                        }}
-                      />
-                    )}
-                    {enhancedNote && (
-                      <UnifiedComplianceEngine
-                        noteContent={enhancedNote}
-                        visitType={visitType}
-                        patientData={selectedPatient}
-                        diagnosis={finalDiagnosis}
-                        vitalSigns={vitalSigns}
-                        nurseType={currentUser?.credential_type || 'RN'}
-                        careType={selectedPatient?.care_type || "home_health"}
-                        oasisData={oasisContext}
-                        onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
-                        autoCheck={true}
-                      />
-                    )}
+                        {(roughNote.length >= 100 || enhancedNote) && (
+                          <UnifiedComplianceEngine
+                            noteContent={enhancedNote || roughNote}
+                            visitType={visitType}
+                            patientData={selectedPatient}
+                            diagnosis={finalDiagnosis}
+                            vitalSigns={vitalSigns}
+                            nurseType={currentUser?.credential_type || 'RN'}
+                            careType={selectedPatient?.care_type || "home_health"}
+                            oasisData={oasisContext}
+                            onApplyFix={(text) => {
+                              if (enhancedNote) {
+                                setEnhancedNote(prev => prev + '\n\n' + text);
+                              } else {
+                                setRoughNote(prev => prev + '\n\n' + text);
+                              }
+                            }}
+                            autoCheck={true}
+                          />
+                        )}
                       </>
                     )}
                   </TabsContent>
