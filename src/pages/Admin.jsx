@@ -35,7 +35,10 @@ import {
   Search,
   Eye,
   Trash2,
-  Mail
+  Mail,
+  RefreshCw,
+  BookOpen,
+  Download
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -46,6 +49,8 @@ export default function Admin() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
+  const [isSyncingRegulations, setIsSyncingRegulations] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState(null);
 
   // Check if current user is admin
   const { data: currentUser } = useQuery({
@@ -85,6 +90,14 @@ export default function Admin() {
   const { data: securityLogs } = useQuery({
     queryKey: ['securityLogs'],
     queryFn: () => base44.entities.SecurityLog.list('-timestamp', 100),
+    initialData: [],
+    enabled: isAdmin === true,
+  });
+
+  // Fetch regulatory updates
+  const { data: regulatoryUpdates, refetch: refetchRegulations } = useQuery({
+    queryKey: ['regulatoryUpdates'],
+    queryFn: () => base44.entities.RegulatoryUpdate.list('-created_date', 50),
     initialData: [],
     enabled: isAdmin === true,
   });
@@ -158,6 +171,20 @@ If you have any questions, please contact your administrator.`,
       console.error('Failed to send invite:', error);
       alert('Failed to send invitation. Please try again.');
     }
+  };
+
+  const handleSyncCMSRegulations = async () => {
+    setIsSyncingRegulations(true);
+    try {
+      const result = await base44.functions.invoke('syncCMSRegulations');
+      setLastSyncResult(result);
+      refetchRegulations();
+      alert(`✅ Successfully synced ${result.regulations_count} CMS regulations!\n\n${result.key_changes_summary}`);
+    } catch (error) {
+      console.error('Failed to sync regulations:', error);
+      alert('Failed to sync CMS regulations. Please try again.');
+    }
+    setIsSyncingRegulations(false);
   };
 
   // Check if user is admin
@@ -254,6 +281,7 @@ If you have any questions, please contact your administrator.`,
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="compliance">CMS Compliance</TabsTrigger>
           <TabsTrigger value="security">Security Logs</TabsTrigger>
           <TabsTrigger value="data">Data Browser</TabsTrigger>
         </TabsList>
@@ -321,6 +349,116 @@ If you have any questions, please contact your administrator.`,
                     </div>
                   );
                 })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* CMS Compliance Tab */}
+        <TabsContent value="compliance" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                CMS Regulations Sync
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Alert className="bg-blue-50 border-blue-300">
+                  <RefreshCw className="w-4 h-4 text-blue-600" />
+                  <AlertDescription className="text-blue-900">
+                    <p className="font-semibold mb-2">Live Internet-Based Regulatory Updates</p>
+                    <p className="text-sm">
+                      This feature uses AI with live internet access to fetch the latest CMS regulations, Medicare policy updates, 
+                      and home health compliance requirements directly from CMS.gov and official sources.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+
+                {lastSyncResult && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="font-semibold text-green-900 mb-2">Last Sync: {new Date(lastSyncResult.sync_date).toLocaleString()}</p>
+                    <div className="grid md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-green-700">📋 Regulations Found: <span className="font-bold">{lastSyncResult.regulations_count}</span></p>
+                      </div>
+                      <div>
+                        <p className="text-green-700">🔔 Recent Updates: <span className="font-bold">{lastSyncResult.recent_updates?.length || 0}</span></p>
+                      </div>
+                    </div>
+                    {lastSyncResult.key_changes_summary && (
+                      <p className="mt-3 text-sm text-green-800 bg-green-100 p-2 rounded">{lastSyncResult.key_changes_summary}</p>
+                    )}
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleSyncCMSRegulations}
+                  disabled={isSyncingRegulations}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                >
+                  {isSyncingRegulations ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                      Syncing from Internet...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5 mr-2" />
+                      Sync Latest CMS Regulations
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-gray-500">This may take 30-60 seconds as it searches live CMS sources</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Synced Regulations ({regulatoryUpdates.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {regulatoryUpdates.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p>No regulations synced yet. Click "Sync Latest CMS Regulations" to fetch updates.</p>
+                  </div>
+                ) : (
+                  regulatoryUpdates.map((update) => (
+                    <div key={update.id} className={`p-4 rounded-lg border-l-4 ${
+                      update.impact_level === 'critical' ? 'border-l-red-500 bg-red-50' :
+                      update.impact_level === 'high' ? 'border-l-orange-500 bg-orange-50' :
+                      update.impact_level === 'medium' ? 'border-l-yellow-500 bg-yellow-50' :
+                      'border-l-blue-500 bg-blue-50'
+                    }`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">{update.title}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{update.summary}</p>
+                          <div className="flex gap-3 mt-2 text-xs">
+                            <Badge className={`${
+                              update.impact_level === 'critical' ? 'bg-red-600' :
+                              update.impact_level === 'high' ? 'bg-orange-600' :
+                              update.impact_level === 'medium' ? 'bg-yellow-600' :
+                              'bg-blue-600'
+                            }`}>
+                              {update.impact_level} impact
+                            </Badge>
+                            <span className="text-gray-500">Effective: {update.effective_date}</span>
+                            <span className="text-gray-500">Source: {update.source}</span>
+                          </div>
+                        </div>
+                        <Badge variant={update.status === 'implemented' ? 'default' : 'outline'}>
+                          {update.status.replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
