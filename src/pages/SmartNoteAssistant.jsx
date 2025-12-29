@@ -623,6 +623,35 @@ export default function SmartNoteAssistant() {
       setDocumentationGaps(result.documentation_gaps || []);
       setComplianceReviewComplete(false);
 
+      // Automatically save enhanced note to patient's chart
+      try {
+        const savedVisit = await base44.entities.Visit.create({
+          patient_id: selectedPatientId,
+          visit_date: visitDate,
+          visit_type: visitType,
+          status: 'completed',
+          nurse_notes: result.enhanced_note,
+          raw_transcription: roughNote,
+          vital_signs: {
+            blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
+            blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
+            heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
+            temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
+            oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
+            pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null
+          }
+        });
+
+        setSavedSuccessfully(true);
+        setTimeout(() => setSavedSuccessfully(false), 3000);
+
+        // Invalidate queries to update patient visit history
+        queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
+        queryClient.invalidateQueries({ queryKey: ['patientVisits', selectedPatientId] });
+      } catch (saveError) {
+        console.error('Auto-save to chart error:', saveError);
+      }
+
       // Log activity
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
@@ -630,6 +659,7 @@ export default function SmartNoteAssistant() {
         diagnosis: finalDiagnosis,
         quality_score: result.quality_score,
         compliance_improvement: result.compliance_improvement,
+        auto_saved: true,
         page: 'SmartNoteAssistant',
         ai_utilization: true
       });
