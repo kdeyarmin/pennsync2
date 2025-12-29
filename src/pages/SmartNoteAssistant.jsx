@@ -55,6 +55,7 @@ import { trackRecommendation, categorizeRecommendation } from "../components/tra
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
+import UnifiedComplianceEngine from "../components/compliance/UnifiedComplianceEngine";
 import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 import AICarePlanOptimizer from "../components/carePlan/AICarePlanOptimizer";
 import ComplianceSummaryReport from "../components/smartNote/ComplianceSummaryReport";
@@ -81,8 +82,6 @@ import MedicalTerminologyProcessor, { standardizeTerminology } from "../componen
 import ComprehensivePatientContext, { buildComprehensiveContext, formatContextForAI } from "../components/smartNote/ComprehensivePatientContext";
 import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
-import GuidelineComplianceChecker from "../components/guidelines/GuidelineComplianceChecker";
-import MedicareComplianceChecker from "../components/compliance/MedicareComplianceChecker";
 import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
 import RealTimeClinicalAlertMonitor from "../components/smartNote/RealTimeClinicalAlertMonitor";
 import AIMedicalKnowledgeBase from "../components/smartNote/AIMedicalKnowledgeBase";
@@ -2563,28 +2562,18 @@ Return JSON with:
                       />
                     )}
                     {enhancedNote && (
-                      <>
-                        <MedicareComplianceChecker
-                          noteContent={enhancedNote}
-                          visitType={visitType}
-                          patientData={selectedPatient}
-                          diagnosis={finalDiagnosis}
-                          vitalSigns={vitalSigns}
-                          nurseType={currentUser?.credential_type || 'RN'}
-                          onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
-                          autoCheck={true}
-                        />
-                        <GuidelineComplianceChecker
-                          noteContent={enhancedNote}
-                          diagnosis={finalDiagnosis}
-                          visitType={visitType}
-                          patientData={selectedPatient}
-                          careType={selectedPatient?.care_type || "home_health"}
-                          onIssueFound={(gaps) => {
-                            setComplianceIssues(prev => [...prev, ...gaps]);
-                          }}
-                        />
-                      </>
+                      <UnifiedComplianceEngine
+                        noteContent={enhancedNote}
+                        visitType={visitType}
+                        patientData={selectedPatient}
+                        diagnosis={finalDiagnosis}
+                        vitalSigns={vitalSigns}
+                        nurseType={currentUser?.credential_type || 'RN'}
+                        careType={selectedPatient?.care_type || "home_health"}
+                        oasisData={oasisContext}
+                        onApplyFix={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+                        autoCheck={true}
+                      />
                     )}
                       </>
                     )}
