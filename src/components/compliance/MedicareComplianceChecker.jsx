@@ -70,7 +70,7 @@ Examples (Non-compliant): ${rule.examples_non_compliant?.[0] || 'N/A'}
 `).join('\n');
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a Medicare home health compliance expert. Analyze this clinical note against 42 CFR 484 Conditions of Participation for Pennsylvania home health agencies.
+        prompt: `You are a Medicare home health compliance expert with access to live internet data from CMS.gov. Analyze this clinical note against the LATEST 2025 42 CFR 484 Conditions of Participation for home health agencies.
 
 CLINICAL NOTE:
 ${noteContent}
@@ -80,19 +80,27 @@ CONTEXT:
 - Diagnosis: ${diagnosis || 'Not specified'}
 - Nurse Type: ${nurseType}
 - Patient: ${patientData?.first_name} ${patientData?.last_name}
+- Current Date: ${new Date().toISOString().split('T')[0]}
 
 MEDICARE COMPLIANCE RULES TO CHECK:
 ${ruleContext}
 
+CRITICAL: Use live internet search to verify:
+1. Latest CMS policy updates for home health (2024-2025)
+2. Most recent 42 CFR 484 requirements
+3. Current OASIS-E documentation standards
+4. Recent Medicare Learning Network (MLN) guidance
+5. Any new compliance requirements effective in 2025
+
 For EACH rule, determine:
-1. Is it met? (fully_met, partially_met, not_met)
+1. Is it met per CURRENT 2025 standards? (fully_met, partially_met, not_met)
 2. What evidence exists in the note?
-3. What is missing?
-4. Specific remediation with compliant phrasing example
-5. CoP reference violated
+3. What is missing based on LATEST CMS requirements?
+4. Specific remediation with compliant phrasing example using 2025 standards
+5. CoP reference violated (cite specific 2025 regulation)
 6. Severity (critical, high, medium)
 
-CRITICAL REQUIREMENTS:
+CRITICAL REQUIREMENTS (2025):
 - Homebound Status: Must have specific mobility limitation + why leaving home is taxing
 - Skilled Need: Must explain WHY skilled nursing required (not just what was done)
 - Patient Response: Must document response to treatment/teaching
@@ -101,7 +109,8 @@ CRITICAL REQUIREMENTS:
 
 ${nurseType === 'LPN' ? 'LPN-SPECIFIC: Must state "under RN supervision" and document care per established plan. Cannot perform comprehensive assessments or change care plans.' : ''}
 
-Return JSON with overall_compliance_score (0-100), rule_violations array with rule_name, cop_reference, status, missing_elements, evidence_found, remediation_text, compliant_example, severity.`,
+Return JSON with overall_compliance_score (0-100), rule_violations array with rule_name, cop_reference, status, missing_elements, evidence_found, remediation_text, compliant_example, severity, latest_cms_guidance (string describing any 2025 policy changes relevant to this rule).`,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {
@@ -118,7 +127,8 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
                   evidence_found: { type: "string" },
                   remediation_text: { type: "string" },
                   compliant_example: { type: "string" },
-                  severity: { type: "string" }
+                  severity: { type: "string" },
+                  latest_cms_guidance: { type: "string" }
                 }
               }
             },
@@ -163,7 +173,8 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
       <Card className="border-2 border-blue-200">
         <CardContent className="p-6 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-600">Analyzing against 42 CFR 484 Medicare requirements...</p>
+          <p className="text-sm text-gray-600 font-semibold">Analyzing against latest 2025 Medicare requirements...</p>
+          <p className="text-xs text-gray-500 mt-2">🌐 Using live internet data from CMS.gov</p>
         </CardContent>
       </Card>
     );
@@ -175,13 +186,18 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <Shield className="w-4 h-4 text-blue-600" />
-            Medicare Compliance Checker
+            Medicare Compliance Checker (2025)
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <Alert className="bg-blue-50 border-blue-200 mb-3">
+            <AlertDescription className="text-xs text-blue-900">
+              🌐 Uses live internet data from CMS.gov for the most current 2025 compliance requirements
+            </AlertDescription>
+          </Alert>
           <Button onClick={analyzeCompliance} disabled={!noteContent || noteContent.length < 100}>
             <Sparkles className="w-4 h-4 mr-2" />
-            Check Medicare Compliance
+            Check Medicare Compliance (2025)
           </Button>
         </CardContent>
       </Card>
@@ -304,23 +320,31 @@ Return JSON with overall_compliance_score (0-100), rule_violations array with ru
                       </div>
                     )}
 
+                    {/* Latest CMS Guidance */}
+                    {violation.latest_cms_guidance && (
+                     <div className="bg-purple-50 p-3 rounded border border-purple-200">
+                       <p className="text-xs font-semibold text-purple-900 mb-1">🌐 2025 CMS Guidance:</p>
+                       <p className="text-xs text-purple-800">{violation.latest_cms_guidance}</p>
+                     </div>
+                    )}
+
                     {/* Compliant Example */}
                     {violation.compliant_example && (
-                      <div className="bg-green-50 p-3 rounded border border-green-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-semibold text-green-900">✓ Compliant Example:</p>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              navigator.clipboard.writeText(violation.compliant_example);
-                            }}
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-green-800 italic">"{violation.compliant_example}"</p>
-                      </div>
+                     <div className="bg-green-50 p-3 rounded border border-green-200">
+                       <div className="flex items-center justify-between mb-2">
+                         <p className="text-xs font-semibold text-green-900">✓ Compliant Example (2025 Standards):</p>
+                         <Button
+                           size="sm"
+                           variant="ghost"
+                           onClick={() => {
+                             navigator.clipboard.writeText(violation.compliant_example);
+                           }}
+                         >
+                           <Copy className="w-3 h-3" />
+                         </Button>
+                       </div>
+                       <p className="text-xs text-green-800 italic">"{violation.compliant_example}"</p>
+                     </div>
                     )}
 
                     {/* Action Buttons */}
