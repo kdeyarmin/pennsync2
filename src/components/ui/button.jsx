@@ -4,9 +4,7 @@ function cn(...inputs) {
   return inputs.filter(Boolean).join(' ')
 }
 
-const Button = React.forwardRef((props, ref) => {
-  const { className, variant = "default", size = "default", asChild = false, ...otherProps } = props
-  
+const buttonVariants = ({ variant = "default", size = "default", className }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
   
   const variants = {
@@ -24,7 +22,13 @@ const Button = React.forwardRef((props, ref) => {
     icon: "h-10 w-10",
   }
   
-  const classes = cn(baseStyles, variants[variant], sizes[size], className)
+  return cn(baseStyles, variants[variant], sizes[size], className)
+}
+
+const Button = React.forwardRef((props, ref) => {
+  const { className, variant = "default", size = "default", asChild = false, ...otherProps } = props
+  
+  const classes = buttonVariants({ variant, size, className })
   
   if (asChild && props.children && React.isValidElement(props.children)) {
     return React.cloneElement(props.children, { className: classes, ref })
@@ -35,4 +39,4 @@ const Button = React.forwardRef((props, ref) => {
 
 Button.displayName = "Button"
 
-export { Button }
+export { Button, buttonVariants }
