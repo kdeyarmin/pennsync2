@@ -43,26 +43,26 @@ export default function PatientAlerts() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-          <Bell className="w-8 h-8 text-orange-600" />
-          Patient Alerts
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+          <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 flex-shrink-0" />
+          <span className="truncate">Patient Alerts</span>
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600">
           AI-powered proactive identification of critical events and potential deteriorations
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Alerts Dashboard */}
         <div className="lg:col-span-2">
           <PatientAlertsDashboard showAllPatients={true} />
         </div>
 
         {/* Sidebar - Analyzer & Quick Actions */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Patient Selector for Analysis */}
           <Card className="border-blue-200">
             <CardHeader className="py-3 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -71,15 +71,15 @@ export default function PatientAlerts() {
                 Analyze Patient
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <Select value={selectedPatientId || "none"} onValueChange={(val) => setSelectedPatientId(val === "none" ? "" : val)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 touch-target">
                   <SelectValue placeholder="Select patient to analyze..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Select a patient</SelectItem>
+                  <SelectItem value="none" className="py-3">Select a patient</SelectItem>
                   {patients.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
+                    <SelectItem key={p.id} value={p.id} className="py-3">
                       {p.first_name} {p.last_name} - {p.primary_diagnosis || 'No diagnosis'}
                     </SelectItem>
                   ))}
@@ -150,27 +150,27 @@ export default function PatientAlerts() {
 
           {/* Quick Tips */}
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
-            <CardContent className="p-4">
-              <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
-                <Zap className="w-4 h-4" />
-                Alert Response Guide
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-bold text-sm sm:text-base text-orange-900 mb-2 flex items-center gap-2">
+                <Zap className="w-4 h-4 flex-shrink-0" />
+                <span>Alert Response Guide</span>
               </h3>
-              <ul className="text-sm text-orange-800 space-y-2">
+              <ul className="text-xs sm:text-sm text-orange-800 space-y-2">
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-red-600 text-white text-xs shrink-0">Critical</Badge>
-                  <span>Immediate action within 1 hour</span>
+                  <Badge className="bg-red-600 text-white text-xs shrink-0 min-w-[60px] justify-center">Critical</Badge>
+                  <span className="flex-1">Immediate action within 1 hour</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-orange-500 text-white text-xs shrink-0">High</Badge>
-                  <span>Address within 24 hours</span>
+                  <Badge className="bg-orange-500 text-white text-xs shrink-0 min-w-[60px] justify-center">High</Badge>
+                  <span className="flex-1">Address within 24 hours</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-yellow-500 text-white text-xs shrink-0">Medium</Badge>
-                  <span>Address within 48-72 hours</span>
+                  <Badge className="bg-yellow-500 text-white text-xs shrink-0 min-w-[60px] justify-center">Medium</Badge>
+                  <span className="flex-1">Address within 48-72 hours</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge className="bg-blue-500 text-white text-xs shrink-0">Low</Badge>
-                  <span>Monitor at next visit</span>
+                  <Badge className="bg-blue-500 text-white text-xs shrink-0 min-w-[60px] justify-center">Low</Badge>
+                  <span className="flex-1">Monitor at next visit</span>
                 </li>
               </ul>
             </CardContent>
