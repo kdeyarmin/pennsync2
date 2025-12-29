@@ -46,6 +46,8 @@ import AutomatedTaskAssigner from "../components/coordination/AutomatedTaskAssig
 import OptimalCommunicationAdvisor from "../components/coordination/OptimalCommunicationAdvisor";
 import PatientEducationGenerator from "../components/documents/PatientEducationGenerator";
 import ProgressReportGenerator from "../components/documents/ProgressReportGenerator";
+import AIPatientInsights from "../components/patient/AIPatientInsights";
+import PersonalizedEducationGenerator from "../components/patient/PersonalizedEducationGenerator";
 import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
 import { Sparkles, FileOutput, GraduationCap, TrendingUp, Brain } from "lucide-react";
 import PredictiveAnalyticsPanel from "../components/oasis/PredictiveAnalyticsPanel";
@@ -324,6 +326,16 @@ export default function PatientDetails() {
       {/* AI-Generated Recommendations from OASIS */}
       <div className="mb-6">
         <PatientChartRecommendations patientId={patientId} />
+      </div>
+
+      {/* AI Patient Insights - Future Health Risks & Predictions */}
+      <div className="mb-6">
+        <AIPatientInsights patient={patient} visits={visits} carePlans={carePlans} incidents={incidents} />
+      </div>
+
+      {/* Personalized Patient Education */}
+      <div className="mb-6">
+        <PersonalizedEducationGenerator patient={patient} visits={visits} />
       </div>
 
       {/* Care Coordination Tools */}
