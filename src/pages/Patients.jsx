@@ -324,12 +324,12 @@ export default function Patients() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Patient Management</h1>
-            <p className="text-sm md:text-base text-gray-600 mt-1">Manage your patient roster</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Patient Management</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Manage your patient roster</p>
           </div>
           <FavoriteButton type="page" id="Patients" name="Patients" />
         </div>
@@ -338,10 +338,10 @@ export default function Patients() {
             setEditingPatient(null);
             setShowForm(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px]"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Patient
+          <span>Add Patient</span>
         </Button>
       </div>
 
@@ -391,16 +391,16 @@ export default function Patients() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {isLoading ? (
           <Card>
-            <CardContent className="p-8 text-center text-gray-500">
+            <CardContent className="p-6 sm:p-8 text-center text-gray-500">
               Loading patients...
             </CardContent>
           </Card>
         ) : filteredPatients.length === 0 ? (
           <Card className="md:col-span-2 border-2 border-dashed">
-            <CardContent className="p-12 text-center">
+            <CardContent className="p-8 sm:p-12 text-center">
               <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
               <p className="text-gray-500 mb-6">
@@ -590,7 +590,7 @@ export default function Patients() {
 
       {/* Patient Summary Dialog */}
                   <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
-                    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                           <FileText className="w-5 h-5 text-indigo-600" />

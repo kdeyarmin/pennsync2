@@ -332,10 +332,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Advanced Analytics Quick Access */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Link to={createPageUrl("AdvancedAnalyticsDashboard")}>
-            <Card className="bg-gradient-to-br from-purple-500 to-blue-600 text-white border-none shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-              <CardContent className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <Link to={createPageUrl("AdvancedAnalyticsDashboard")}>
+          <Card className="bg-gradient-to-br from-purple-500 to-blue-600 text-white border-none shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+            <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100 text-sm font-medium mb-1">Advanced Analytics</p>
@@ -349,7 +349,7 @@ export default function AdminDashboard() {
           </Link>
 
           <Card className="bg-gradient-to-br from-red-500 to-orange-600 text-white border-none shadow-lg">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-red-100 text-sm font-medium mb-1">High Risk Patients</p>
@@ -429,46 +429,46 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <Tabs defaultValue="users" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-1 p-1 h-auto w-full">
-          <TabsTrigger value="users" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+        <TabsList className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-1 p-1 h-auto w-full">
+          <TabsTrigger value="users" className="gap-1 px-2 py-2 text-xs touch-target">
             <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">Users</span>
+            <span className="hidden md:inline">Users</span>
           </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="activity" className="gap-1 px-2 py-2 text-xs touch-target">
             <Activity className="w-4 h-4" />
-            <span className="hidden sm:inline">Activity</span>
+            <span className="hidden md:inline">Activity</span>
           </TabsTrigger>
-          <TabsTrigger value="reports" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="reports" className="gap-1 px-2 py-2 text-xs touch-target">
             <BarChart3 className="w-4 h-4" />
-            <span className="hidden sm:inline">Reports</span>
+            <span className="hidden md:inline">Reports</span>
           </TabsTrigger>
-          <TabsTrigger value="performance" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="performance" className="gap-1 px-2 py-2 text-xs touch-target">
             <Target className="w-4 h-4" />
-            <span className="hidden sm:inline">Staff</span>
+            <span className="hidden md:inline">Staff</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="analytics" className="gap-1 px-2 py-2 text-xs touch-target">
             <TrendingUp className="w-4 h-4" />
-            <span className="hidden sm:inline">Analytics</span>
+            <span className="hidden md:inline">Analytics</span>
           </TabsTrigger>
-          <TabsTrigger value="quality" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="quality" className="gap-1 px-2 py-2 text-xs touch-target">
             <Award className="w-4 h-4" />
-            <span className="hidden sm:inline">Quality</span>
+            <span className="hidden md:inline">Quality</span>
           </TabsTrigger>
-          <TabsTrigger value="notereview" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="notereview" className="gap-1 px-2 py-2 text-xs touch-target">
             <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Notes</span>
+            <span className="hidden md:inline">Notes</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="security" className="gap-1 px-2 py-2 text-xs touch-target">
             <Shield className="w-4 h-4" />
-            <span className="hidden sm:inline">Security</span>
+            <span className="hidden md:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="encryption" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="encryption" className="gap-1 px-2 py-2 text-xs touch-target">
             <Lock className="w-4 h-4" />
-            <span className="hidden sm:inline">Encrypt</span>
+            <span className="hidden md:inline">Encrypt</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-1 px-2 py-2 text-xs sm:text-sm">
+          <TabsTrigger value="settings" className="gap-1 px-2 py-2 text-xs touch-target">
             <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Settings</span>
+            <span className="hidden md:inline">Settings</span>
           </TabsTrigger>
         </TabsList>
 
@@ -588,37 +588,37 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Timestamp</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Details</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Timestamp</TableHead>
+                      <TableHead className="text-xs sm:text-sm">User</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Action</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">Details</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredLogs.slice(0, 50).map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell className="text-sm">
-                          {log.timestamp ? formatEastern(log.timestamp, 'MMM d, HH:mm:ss') : 'N/A'}
+                        <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                          {log.timestamp ? formatEastern(log.timestamp, 'MMM d, HH:mm') : 'N/A'}
                         </TableCell>
-                        <TableCell className="text-sm">{log.user_email}</TableCell>
+                        <TableCell className="text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{log.user_email}</TableCell>
                         <TableCell>
                           <Badge
-                            className={
+                            className={`text-xs ${
                               log.action?.includes('UNAUTHORIZED') || log.action?.includes('FAILED')
                                 ? 'bg-red-500'
                                 : log.action?.includes('SUCCESS') || log.action?.includes('COMPLETED')
                                 ? 'bg-green-500'
                                 : 'bg-blue-500'
-                            }
+                            }`}
                           >
                             {log.action}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-gray-600 max-w-xs truncate">
+                        <TableCell className="text-xs sm:text-sm text-gray-600 max-w-xs truncate hidden md:table-cell">
                           {JSON.stringify(log.details)}
                         </TableCell>
                       </TableRow>

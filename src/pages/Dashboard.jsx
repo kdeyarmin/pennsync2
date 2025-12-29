@@ -186,62 +186,62 @@ export default function Dashboard() {
       <AnnouncementsWidget />
 
       {/* Nurse Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-600 font-medium mb-1">Note Enhancements</p>
-                <p className="text-3xl font-bold text-blue-900">{stats.noteConversions}</p>
+                <p className="text-xs sm:text-sm text-blue-600 font-medium mb-1">Note Enhancements</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-900">{stats.noteConversions}</p>
               </div>
-              <FileText className="w-12 h-12 text-blue-400" />
+              <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-blue-400 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 font-medium mb-1">Time Saved</p>
-                <p className="text-3xl font-bold text-green-900">{stats.timeSavedDisplay}</p>
+                <p className="text-xs sm:text-sm text-green-600 font-medium mb-1">Time Saved</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-900">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-12 h-12 text-green-400" />
+              <Clock className="w-10 h-10 sm:w-12 sm:h-12 text-green-400 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Action Buttons */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Link to={createPageUrl("SmartNoteAssistant")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-blue-200 hover:border-blue-400">
-            <CardContent className="p-6 text-center">
-              <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-gray-900">Smart Note</h3>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-blue-200 hover:border-blue-400 active:scale-95">
+            <CardContent className="p-4 sm:p-6 text-center touch-target">
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Smart Note</h3>
             </CardContent>
           </Card>
         </Link>
         <Link to={createPageUrl("CarePlanManagement")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-green-200 hover:border-green-400">
-            <CardContent className="p-6 text-center">
-              <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-gray-900">Care Plans</h3>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-green-200 hover:border-green-400 active:scale-95">
+            <CardContent className="p-4 sm:p-6 text-center touch-target">
+              <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Care Plans</h3>
             </CardContent>
           </Card>
         </Link>
         <Link to={createPageUrl("PatientEducationHub")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-purple-200 hover:border-purple-400">
-            <CardContent className="p-6 text-center">
-              <User className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-gray-900">Patient Education</h3>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-purple-200 hover:border-purple-400 active:scale-95">
+            <CardContent className="p-4 sm:p-6 text-center touch-target">
+              <User className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Patient Education</h3>
             </CardContent>
           </Card>
         </Link>
         <Link to={createPageUrl("StaffTrainingHub")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-orange-200 hover:border-orange-400">
-            <CardContent className="p-6 text-center">
-              <Calendar className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-gray-900">Nurse Training Hub</h3>
+          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-orange-200 hover:border-orange-400 active:scale-95">
+            <CardContent className="p-4 sm:p-6 text-center touch-target">
+              <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">Training Hub</h3>
             </CardContent>
           </Card>
         </Link>
@@ -271,7 +271,7 @@ export default function Dashboard() {
       </div>
 
       {/* Dashboard Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
         <ComplianceAlertNotifications 
           nurseEmail={currentUser?.email}
           showAll={false}

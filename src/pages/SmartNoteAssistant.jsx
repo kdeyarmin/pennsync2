@@ -1649,8 +1649,8 @@ Return JSON with:
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
-        <div className="xl:col-span-3 space-y-4 md:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
 
           {/* Step 1: Patient Selection - Enhanced */}
           <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 ring-4 ring-blue-200 shadow-xl' : 'border-gray-300'}`}>
@@ -2421,9 +2421,9 @@ Return JSON with:
         </div>
 
         {/* Enhanced AI Sidebar with Tabs */}
-        <div className="space-y-4 md:space-y-6">
-          {/* Primary AI Assistant Card - Always Visible */}
-          <DynamicAISidebar
+        <div className="space-y-4 md:space-y-6 lg:sticky lg:top-4">
+        {/* Primary AI Assistant Card - Always Visible */}
+        <DynamicAISidebar
             currentStep={currentStep}
             hasPatient={!!selectedPatientId}
             hasNotes={roughNote.length >= 20}
@@ -2451,14 +2451,14 @@ Return JSON with:
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs value={activeAITab} onValueChange={setActiveAITab} className="w-full">
-                  <TabsList className="w-full grid grid-cols-3 rounded-none border-b">
-                    <TabsTrigger value="workflow" className="text-xs">
+                  <TabsList className="w-full grid grid-cols-3 rounded-none border-b touch-target">
+                    <TabsTrigger value="workflow" className="text-xs sm:text-sm py-3">
                       Workflow
                     </TabsTrigger>
-                    <TabsTrigger value="compliance" className="text-xs">
+                    <TabsTrigger value="compliance" className="text-xs sm:text-sm py-3">
                       Compliance
                     </TabsTrigger>
-                    <TabsTrigger value="knowledge" className="text-xs">
+                    <TabsTrigger value="knowledge" className="text-xs sm:text-sm py-3">
                       Knowledge
                     </TabsTrigger>
                   </TabsList>
