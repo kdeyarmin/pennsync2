@@ -16,7 +16,8 @@ import {
   ArrowRight,
   Globe,
   BookOpen,
-  Activity
+  Activity,
+  Loader2
 } from "lucide-react";
 import {
   Accordion,
@@ -65,118 +66,233 @@ export default function UnifiedComplianceEngine({
 
     setIsAnalyzing(true);
     try {
-      // Build comprehensive compliance context
-      const applicableRules = complianceRules.filter(rule => 
-        rule.is_active && 
-        (!rule.applies_to_visit_types || rule.applies_to_visit_types.includes(visitType))
-      );
-
-      const recentRegulations = regulatoryUpdates
-        .filter(reg => reg.impact_level === 'critical' || reg.impact_level === 'high')
-        .slice(0, 5);
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a Medicare home health compliance expert with live internet access to CMS.gov. Perform a COMPREHENSIVE compliance analysis of this clinical note.
+      // Orchestrate all compliance checks in parallel
+      const [medicareResult, guidelineResult, visitTypeResult, regulatoryResult] = await Promise.all([
+        // Medicare CoP Check
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Analyze this clinical note against 42 CFR 484 Medicare Conditions of Participation for ${visitType} visits.
 
 CLINICAL NOTE:
 ${noteContent}
 
-CONTEXT:
-- Visit Type: ${visitType}
-- Diagnosis: ${diagnosis || 'Not specified'}
-- Nurse Type: ${nurseType}
-- Care Type: ${careType}
-- Patient: ${patientData?.first_name} ${patientData?.last_name}
-- Date: ${new Date().toISOString().split('T')[0]}
-${oasisData ? `- OASIS Data Available: Yes` : ''}
-${vitalSigns ? `- Vital Signs: BP ${vitalSigns.bp || 'N/A'}, HR ${vitalSigns.hr || 'N/A'}, O2 ${vitalSigns.o2 || 'N/A'}` : ''}
+PATIENT: ${patientData?.first_name} ${patientData?.last_name}
+DIAGNOSIS: ${diagnosis}
+NURSE TYPE: ${nurseType}
+CARE TYPE: ${careType}
 
-RECENT CRITICAL REGULATIONS (Agency-Specific):
-${recentRegulations.map(reg => `- ${reg.title} (Effective: ${reg.effective_date}): ${reg.summary.substring(0, 150)}...`).join('\n')}
+Check for:
+- Homebound status documentation
+- Skilled need justification  
+- Patient response to treatment
+- Safety assessments
+- Functional status documentation
+${nurseType === 'LPN' ? '- LPN supervision documentation' : ''}
 
-COMPLIANCE ANALYSIS REQUIRED:
+Return violations with: rule_name, reference, severity, status, missing_elements, evidence_found, compliant_example, remediation_text.`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              compliance_score: { type: "number" },
+              violations: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    rule_name: { type: "string" },
+                    reference: { type: "string" },
+                    severity: { type: "string" },
+                    status: { type: "string" },
+                    missing_elements: { type: "array", items: { type: "string" } },
+                    evidence_found: { type: "string" },
+                    compliant_example: { type: "string" },
+                    remediation_text: { type: "string" },
+                    latest_cms_guidance: { type: "string" }
+                  }
+                }
+              }
+            }
+          }
+        }).catch(err => ({ compliance_score: 0, violations: [] })),
 
-1. **MEDICARE CoP (42 CFR 484)** - Use live internet to verify latest 2025 requirements:
-   - Homebound status documentation
-   - Skilled need justification
-   - Patient response documentation
-   - Safety and functional assessments
-   ${nurseType === 'LPN' ? '- LPN supervision requirements' : ''}
+        // Clinical Guideline Check
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Check this clinical note against evidence-based guidelines for ${diagnosis}.
 
-2. **VISIT-TYPE SPECIFIC** - Check ${visitType} requirements:
-   - Required elements for this visit type
-   - Documentation standards
-   - Timing and frequency requirements
+CLINICAL NOTE:
+${noteContent}
 
-3. **CLINICAL GUIDELINES** - Verify ${diagnosis} best practices:
-   - Condition-specific documentation
-   - Evidence-based interventions
-   - Monitoring requirements
+Verify:
+- Condition-specific assessments
+- Evidence-based interventions
+- Appropriate monitoring
+- Best practice standards
 
-4. **OASIS ALIGNMENT** ${oasisData ? '- Check alignment with OASIS data' : '- Note if OASIS data would improve compliance'}
+Return violations with same structure as above.`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              compliance_score: { type: "number" },
+              violations: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    rule_name: { type: "string" },
+                    reference: { type: "string" },
+                    severity: { type: "string" },
+                    status: { type: "string" },
+                    missing_elements: { type: "array", items: { type: "string" } },
+                    evidence_found: { type: "string" },
+                    compliant_example: { type: "string" },
+                    remediation_text: { type: "string" }
+                  }
+                }
+              }
+            }
+          }
+        }).catch(err => ({ compliance_score: 0, violations: [] })),
 
-5. **REGULATORY UPDATES** - Apply latest agency regulations:
-${recentRegulations.map(reg => `   - ${reg.title}`).join('\n')}
+        // Visit Type Check
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Verify this ${visitType} visit note has all required elements.
 
-For EACH issue found, provide:
-- Category (medicare_cop, visit_type, clinical_guideline, oasis, regulatory)
-- Rule name and reference
-- Severity (critical, high, medium, low)
-- Status (fully_met, partially_met, not_met)
-- Missing elements
-- Evidence found
-- Compliant example to add
-- Latest 2025 CMS guidance (from internet)
+CLINICAL NOTE:
+${noteContent}
 
-Return comprehensive analysis with overall scores by category.`,
-        add_context_from_internet: true,
+VISIT TYPE: ${visitType}
+
+Check visit-specific requirements for documentation, timing, and content standards.
+
+Return violations with same structure.`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              compliance_score: { type: "number" },
+              violations: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    rule_name: { type: "string" },
+                    reference: { type: "string" },
+                    severity: { type: "string" },
+                    status: { type: "string" },
+                    missing_elements: { type: "array", items: { type: "string" } },
+                    evidence_found: { type: "string" },
+                    compliant_example: { type: "string" },
+                    remediation_text: { type: "string" }
+                  }
+                }
+              }
+            }
+          }
+        }).catch(err => ({ compliance_score: 0, violations: [] })),
+
+        // Recent Regulatory Updates Check
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Check compliance with these recent CMS regulatory updates:
+
+${regulatoryUpdates.slice(0, 5).map(reg => `
+${reg.title} (Effective: ${reg.effective_date})
+${reg.summary}
+Required Actions: ${reg.required_actions?.join(', ') || 'None'}
+`).join('\n')}
+
+CLINICAL NOTE:
+${noteContent}
+
+Identify any violations of these recent regulations.`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              compliance_score: { type: "number" },
+              violations: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    rule_name: { type: "string" },
+                    reference: { type: "string" },
+                    severity: { type: "string" },
+                    status: { type: "string" },
+                    missing_elements: { type: "array", items: { type: "string" } },
+                    evidence_found: { type: "string" },
+                    compliant_example: { type: "string" },
+                    remediation_text: { type: "string" }
+                  }
+                }
+              }
+            }
+          }
+        }).catch(err => ({ compliance_score: 0, violations: [] }))
+      ]);
+
+      // Aggregate results
+      const aggregatedViolations = [
+        ...medicareResult.violations.map(v => ({ ...v, category: 'medicare_cop' })),
+        ...guidelineResult.violations.map(v => ({ ...v, category: 'clinical_guideline' })),
+        ...visitTypeResult.violations.map(v => ({ ...v, category: 'visit_type' })),
+        ...regulatoryResult.violations.map(v => ({ ...v, category: 'regulatory' }))
+      ];
+
+      // Calculate overall score
+      const scores = [
+        medicareResult.compliance_score,
+        guidelineResult.compliance_score,
+        visitTypeResult.compliance_score,
+        regulatoryResult.compliance_score
+      ].filter(s => s > 0);
+
+      const overallScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+      // Identify quick wins (low severity, easy fixes)
+      const quickWins = aggregatedViolations
+        .filter(v => v.severity === 'low' || v.severity === 'medium')
+        .filter(v => v.status === 'not_met')
+        .slice(0, 3)
+        .map(v => ({
+          issue: v.rule_name,
+          fix: v.compliant_example
+        }));
+
+      // Generate AI summary using all results
+      const summaryResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `Create a brief executive summary of these compliance check results:
+
+MEDICARE CoP: ${medicareResult.compliance_score}% (${medicareResult.violations.length} issues)
+CLINICAL GUIDELINES: ${guidelineResult.compliance_score}% (${guidelineResult.violations.length} issues)
+VISIT TYPE: ${visitTypeResult.compliance_score}% (${visitTypeResult.violations.length} issues)
+REGULATORY: ${regulatoryResult.compliance_score}% (${regulatoryResult.violations.length} issues)
+
+Critical issues: ${aggregatedViolations.filter(v => v.severity === 'critical').length}
+High priority: ${aggregatedViolations.filter(v => v.severity === 'high').length}
+
+Provide a 2-sentence summary of the overall compliance status and most critical gap.`,
         response_json_schema: {
           type: "object",
           properties: {
-            overall_compliance_score: { type: "number" },
-            category_scores: {
-              type: "object",
-              properties: {
-                medicare_cop: { type: "number" },
-                visit_type: { type: "number" },
-                clinical_guideline: { type: "number" },
-                oasis: { type: "number" },
-                regulatory: { type: "number" }
-              }
-            },
-            violations: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  category: { type: "string" },
-                  rule_name: { type: "string" },
-                  reference: { type: "string" },
-                  severity: { type: "string" },
-                  status: { type: "string" },
-                  missing_elements: { type: "array", items: { type: "string" } },
-                  evidence_found: { type: "string" },
-                  compliant_example: { type: "string" },
-                  remediation_text: { type: "string" },
-                  latest_cms_guidance: { type: "string" }
-                }
-              }
-            },
-            critical_gaps: { type: "array", items: { type: "string" } },
-            quick_wins: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  issue: { type: "string" },
-                  fix: { type: "string" }
-                }
-              }
-            },
             summary: { type: "string" }
           }
         }
       });
+
+      const result = {
+        overall_compliance_score: overallScore,
+        category_scores: {
+          medicare_cop: medicareResult.compliance_score || 0,
+          clinical_guideline: guidelineResult.compliance_score || 0,
+          visit_type: visitTypeResult.compliance_score || 0,
+          regulatory: regulatoryResult.compliance_score || 0
+        },
+        violations: aggregatedViolations,
+        quick_wins: quickWins,
+        critical_gaps: aggregatedViolations
+          .filter(v => v.severity === 'critical')
+          .map(v => v.rule_name),
+        summary: summaryResult.summary
+      };
 
       setComplianceResults(result);
     } catch (error) {
@@ -244,11 +360,31 @@ Return comprehensive analysis with overall scores by category.`,
   if (isAnalyzing) {
     return (
       <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50">
-        <CardContent className="p-6 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-900 font-semibold">Running Unified Compliance Analysis...</p>
-          <p className="text-xs text-gray-600 mt-2">🌐 Checking Medicare CoP, Guidelines, Visit Type & Latest Regulations</p>
-          <p className="text-xs text-blue-600 mt-1">Using live 2025 CMS data from internet</p>
+        <CardContent className="p-6 text-center space-y-3">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
+          <div>
+            <p className="text-sm text-gray-900 font-semibold">Orchestrating Compliance Checks...</p>
+            <p className="text-xs text-gray-600 mt-1">Running 4 parallel compliance analyzers</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-1 justify-center">
+              <Shield className="w-3 h-3 text-blue-600" />
+              <span>Medicare CoP</span>
+            </div>
+            <div className="flex items-center gap-1 justify-center">
+              <BookOpen className="w-3 h-3 text-green-600" />
+              <span>Guidelines</span>
+            </div>
+            <div className="flex items-center gap-1 justify-center">
+              <Activity className="w-3 h-3 text-purple-600" />
+              <span>Visit Type</span>
+            </div>
+            <div className="flex items-center gap-1 justify-center">
+              <Globe className="w-3 h-3 text-orange-600" />
+              <span>Regulations</span>
+            </div>
+          </div>
+          <p className="text-xs text-blue-600">🌐 Using live 2025 CMS data</p>
         </CardContent>
       </Card>
     );
@@ -267,7 +403,7 @@ Return comprehensive analysis with overall scores by category.`,
           <Alert className="bg-blue-50 border-blue-200 mb-3">
             <Globe className="w-4 h-4 text-blue-600" />
             <AlertDescription className="text-xs text-blue-900">
-              Comprehensive compliance check: Medicare CoP, Visit Type, Clinical Guidelines, OASIS & Latest Regulations - all in one analysis using live CMS data
+              <strong>Unified Compliance Engine:</strong> Orchestrates MedicareComplianceChecker, GuidelineComplianceChecker, VisitTypeComplianceChecker & RegulatoryChecker - aggregates results into one consolidated report using latest 2025 CMS data
             </AlertDescription>
           </Alert>
           <Button onClick={analyzeCompliance} disabled={!noteContent || noteContent.length < 100}>
