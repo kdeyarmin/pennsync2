@@ -40,10 +40,13 @@ export default function RealTimePatientAlerts({
     // Get favorited patient IDs
     const favoritedPatientIds = currentUser?.favorited_patients?.map(p => p.id) || [];
     
-    // Filter to only favorited patients, or all if none favorited
-    const patientsToCheck = favoritedPatientIds.length > 0
-      ? (patients || []).filter(p => favoritedPatientIds.includes(p.id))
-      : (patients || []);
+    // Only check favorited patients - if none, show no alerts
+    if (favoritedPatientIds.length === 0) {
+      setAlerts([]);
+      return;
+    }
+    
+    const patientsToCheck = (patients || []).filter(p => favoritedPatientIds.includes(p.id));
 
     // Check each patient
     patientsToCheck.forEach(patient => {
