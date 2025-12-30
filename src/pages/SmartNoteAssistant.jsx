@@ -1681,6 +1681,8 @@ Return JSON with:
             </CardContent>
           </Card>
 
+
+
           {/* Step 2: Vitals - Enhanced */}
           <Card id="step-vitals" className={`border-2 transition-all duration-300 ${currentStep === 'vitals' ? 'border-green-500 ring-4 ring-green-200 shadow-xl' : 'border-gray-300'}`}>
             <CardHeader className="py-5 md:py-6 bg-gradient-to-r from-green-100 to-emerald-100">
@@ -1700,289 +1702,32 @@ Return JSON with:
             </CardContent>
           </Card>
 
-          {/* Consolidated AI Suggestions - All Categories */}
-          {(roughNote.length >= 150 || enhancedNote) && selectedPatientId && (
-            <ConsolidatedAISuggestions
-              roughNote={roughNote}
-              enhancedNote={enhancedNote}
-              visitType={visitType}
-              diagnosis={finalDiagnosis}
-              patientData={selectedPatient}
-              vitalSigns={vitalSigns}
-              carePlans={carePlans}
-              patientId={selectedPatientId}
-              currentUserEmail={currentUser?.email}
-              onApplyCompliance={(text) => {
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                } else {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                }
-              }}
-              onApplyPDGM={(text) => {
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                } else {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                }
-              }}
-              onCreateTask={async (taskData) => {
-                await base44.entities.Task.create({
-                  patient_id: selectedPatientId,
-                  ...taskData,
-                  assigned_to: currentUser?.email
-                });
-                queryClient.invalidateQueries({ queryKey: ['tasks'] });
-              }}
-              onCreateCarePlan={async (carePlanData) => {
-                await base44.entities.CarePlan.create({
-                  patient_id: selectedPatientId,
-                  ...carePlanData
-                });
-                queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
-              }}
-              onApplyOASIS={async (oasisItems) => {
-                try {
-                  const extractedData = {};
-                  oasisItems.forEach(item => {
-                    extractedData[item.item_number] = {
-                      value: item.suggested_value,
-                      confidence: item.confidence,
-                      evidence: item.evidence,
-                      source: 'ai_note_analysis',
-                      applied_by: currentUser?.email,
-                      applied_at: new Date().toISOString()
-                    };
-                  });
-
-                  if (patientOASIS?.length > 0) {
-                    const existing = patientOASIS[0];
-                    await base44.entities.OASISUpload.update(existing.id, {
-                      extracted_data: { ...existing.extracted_data, ...extractedData }
-                    });
-                  } else {
-                    await base44.entities.OASISUpload.create({
-                      patient_id: selectedPatientId,
-                      extracted_data: extractedData
-                    });
-                  }
-                  queryClient.invalidateQueries({ queryKey: ['patientOASISForNotes', selectedPatientId] });
-                } catch (error) {
-                  console.error('Error applying OASIS:', error);
-                }
-              }}
-              autoAnalyze={true}
-            />
-          )}
-
-
-
-          {/* Comprehensive Patient Context Loader */}
-          {selectedPatientId && (
-            <ComprehensivePatientContext
-              patientId={selectedPatientId}
-              onContextReady={setComprehensiveContext}
-            />
-          )}
-
-          {/* AI Draft Generator - Generate complete preliminary note */}
-          {selectedPatientId && visitType && finalDiagnosis && roughNote.length < 50 && !enhancedNote && (
-            <AIDraftGenerator
-              visitType={visitType}
-              diagnosis={finalDiagnosis}
-              patientData={selectedPatient}
-              vitalSigns={vitalSigns}
-              recentVisits={recentVisits}
-              carePlans={carePlans}
-              onDraftGenerated={(draft) => {
-                setRoughNote(draft);
-                if (!noteStartTime) {
-                  setNoteStartTime(Date.now());
-                }
-              }}
-            />
-          )}
-
-          {/* Bullet Point Expander */}
-          {selectedPatientId && visitType && finalDiagnosis && roughNote.length < 100 && !enhancedNote && (
-            <BulletPointExpander
-              visitType={visitType}
-              diagnosis={finalDiagnosis}
-              patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ''}
-              onExpanded={(text) => {
-                setRoughNote(prev => prev ? prev + '\n\n' + text : text);
-                if (!noteStartTime) {
-                  setNoteStartTime(Date.now());
-                }
-              }}
-            />
-          )}
-
-          {/* Patient History Auto-Populator */}
-          {selectedPatientId && recentVisits.length > 0 && !enhancedNote && roughNote.length < 100 && (
-            <PatientHistoryAutoPopulator
-              patient={selectedPatient}
-              recentVisits={recentVisits}
-              carePlans={carePlans}
-              diagnosis={finalDiagnosis}
-              visitType={visitType}
-              onPopulate={(text) => setRoughNote(prev => text + '\n\n' + prev)}
-            />
-          )}
-
-          {/* Real-Time Clinical Decision Support */}
-          {selectedPatientId && (diagnosis || vitalSigns.bp || vitalSigns.hr || roughNote.length > 30) && (
-            <ClinicalDecisionSupport
-              enhancedNote={enhancedNote}
-              extractedData={null}
-              diagnosis={finalDiagnosis}
-              careType={selectedPatient?.care_type || "home_health"}
-              vitalSigns={vitalSigns}
-              roughNote={roughNote}
-              onInsertRecommendation={(text) => {
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                } else {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                }
-              }}
-            />
-          )}
-
-          {/* Real-Time Deterioration Predictor */}
-          {selectedPatientId && (roughNote.length >= 100 || enhancedNote) && (
-            <RealTimeDeteriorationPredictor
-              noteContent={enhancedNote || roughNote}
-              patientData={selectedPatient}
-              vitalSigns={vitalSigns}
-              recentVisits={recentVisits}
-              diagnosis={finalDiagnosis}
-              onCreateAlert={async (alertData) => {
-                await base44.entities.PatientAlert.create(alertData);
-                queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', selectedPatientId] });
-              }}
-              onAddToNote={(text) => {
-                if (enhancedNote) {
-                  setEnhancedNote(prev => prev + '\n\n' + text);
-                } else {
-                  setRoughNote(prev => prev + '\n\n' + text);
-                }
-              }}
-              autoAnalyze={true}
-            />
-          )}
-
-          {/* AI Education Material Suggester */}
-          {selectedPatientId && (roughNote.length >= 100 || enhancedNote) && (
-            <AIEducationMaterialSuggester
-              noteContent={enhancedNote || roughNote}
-              diagnosis={finalDiagnosis}
-              patientData={selectedPatient}
-              visitType={visitType}
-              patientId={selectedPatientId}
-              onAssignEducation={async (educationData) => {
-                await base44.entities.PatientEducationAssignment.create({
-                  ...educationData,
-                  assigned_by: currentUser?.email
-                });
-                queryClient.invalidateQueries({ queryKey: ['patientEducation', selectedPatientId] });
-              }}
-              autoAnalyze={true}
-            />
-          )}
-
-          {/* Real-Time Clinical Alert Monitor */}
-          {selectedPatientId && (vitalSigns.bp || vitalSigns.hr || vitalSigns.temp || vitalSigns.o2 || roughNote.length > 50) && (
-            <RealTimeClinicalAlertMonitor
-              patientData={selectedPatient}
-              vitalSigns={vitalSigns}
-              noteContent={roughNote}
-              diagnosis={finalDiagnosis}
-              recentVisits={recentVisits}
-              onAlertAction={async (alert, action) => {
-                if (action === 'add_to_note') {
-                  const alertText = `\n\n⚠️ CLINICAL ALERT: ${alert.title}\n${alert.description}\nActions taken: ${alert.recommended_actions.join('; ')}`;
-                  setRoughNote(prev => prev + alertText);
-                } else if (action === 'create_task') {
-                  try {
-                    await base44.entities.Task.create({
-                      patient_id: selectedPatientId,
-                      title: `URGENT: ${alert.title}`,
-                      description: `${alert.description}\n\nRecommended actions:\n${alert.recommended_actions.join('\n')}`,
-                      type: 'safety',
-                      priority: alert.severity === 'CRITICAL' ? 'high' : 'medium',
-                      due_timeframe: alert.time_sensitivity === 'Minutes' ? 'today' : '24_hours',
-                      source: 'ai_generated',
-                      ai_reason: alert.rationale,
-                      assigned_to: currentUser?.email
-                    });
-                    queryClient.invalidateQueries({ queryKey: ['tasks'] });
-                  } catch (error) {
-                    console.error('Error creating alert task:', error);
-                  }
-                } else if (action === 'notify_md' || action === 'call_911') {
-                  // Log the action
-                  logActivity(ActivityActions.AI_FEATURE_USED, {
-                    feature: 'clinical_alert_action',
-                    action: action,
-                    alert_severity: alert.severity,
-                    patient_id: selectedPatientId,
-                    page: 'SmartNoteAssistant'
-                  });
-                }
-              }}
-              onDismissAlert={(alert) => {
-                logActivity(ActivityActions.AI_FEATURE_USED, {
-                  feature: 'clinical_alert_dismissed',
-                  alert_severity: alert.severity,
-                  patient_id: selectedPatientId,
-                  page: 'SmartNoteAssistant'
-                });
-              }}
-            />
-          )}
-
-          {/* Step 3: Notes - Enhanced */}
+          {/* Step 3: Rough Notes */}
           <Card id="step-notes" className={`border-2 transition-all duration-300 ${currentStep === 'notes' ? 'border-purple-500 ring-4 ring-purple-200 shadow-xl' : 'border-gray-300'}`}>
-          <CardHeader className="py-5 md:py-6 bg-gradient-to-r from-purple-100 to-pink-100">
-          <CardTitle className="text-lg md:text-xl flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className={`p-2 rounded-full ${currentStep === 'notes' ? 'bg-purple-500' : 'bg-gray-400'}`}>
-                <Edit3 className="w-5 h-5 text-white flex-shrink-0" />
-              </div>
-              <span className="truncate">3. Your Notes</span>
-              {roughNote.length >= 20 && <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 animate-pulse" />}
-            </div>
-            <VoiceHub 
-              onTranscription={handleVoiceTranscription}
-              onInterimTranscription={handleInterimTranscription}
-              onCommand={handleVoiceCommand}
-            />
-          </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 md:p-6 space-y-4">
-          {/* Medical Terminology Processor */}
-          {roughNote.length > 50 && (
-            <MedicalTerminologyProcessor 
-              text={roughNote} 
-              onSuggestion={(suggestion) => console.log('Terminology suggestion:', suggestion)}
-            />
-          )}
-              {/* Smart auto-complete textarea with phrase categories */}
-              <div className="relative">
-                <SmartAutoComplete
-                  value={roughNote}
-                  onChange={(value) => {
-                    if (!noteStartTime && value.length > 0) {
-                      setNoteStartTime(Date.now());
-                    }
-                    setRoughNote(value);
-                  }}
-                  placeholder="Type or dictate your notes... Start typing trigger words like 'lungs', 'heart', 'wound' for quick phrases"
-                  diagnosis={finalDiagnosis}
-                  className="min-h-[150px]"
+            <CardHeader className="py-5 md:py-6 bg-gradient-to-r from-purple-100 to-pink-100">
+              <CardTitle className="text-lg md:text-xl flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`p-2 rounded-full ${currentStep === 'notes' ? 'bg-purple-500' : 'bg-gray-400'}`}>
+                    <Edit3 className="w-5 h-5 text-white flex-shrink-0" />
+                  </div>
+                  <span className="truncate">3. Your Notes or Bullet Points</span>
+                  {roughNote.length >= 20 && <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 animate-pulse" />}
+                </div>
+                <VoiceHub 
+                  onTranscription={handleVoiceTranscription}
+                  onInterimTranscription={handleInterimTranscription}
+                  onCommand={handleVoiceCommand}
                 />
-                {/* Interim voice transcription overlay */}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 space-y-4">
+              <div className="relative">
+                <Textarea
+                  value={roughNote}
+                  onChange={(e) => setRoughNote(e.target.value)}
+                  placeholder="Type or dictate your rough notes or bullet points...&#10;&#10;Examples:&#10;• Patient states feeling better&#10;• Wound improving, less drainage&#10;• Taught medication management&#10;• BP elevated, pt needs MD follow-up"
+                  className="min-h-[200px] text-base"
+                />
                 {interimVoiceText && (
                   <div className="absolute bottom-2 left-2 right-2 bg-blue-100/90 border border-blue-300 rounded px-3 py-2 text-sm text-blue-900 italic pointer-events-none">
                     <Mic className="w-3 h-3 inline mr-1" />
@@ -1990,199 +1735,84 @@ Return JSON with:
                   </div>
                 )}
               </div>
+              <p className={`text-sm ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                {roughNote.length} characters {roughNote.length < 20 && roughNote.length > 0 && <span className="text-orange-500">(min 20 required)</span>}
+              </p>
+            </CardContent>
+          </Card>
 
-              {/* Character count */}
-              <div className="flex items-center gap-2">
-                <p className={`text-sm ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                  {roughNote.length} characters
-                </p>
-                {roughNote.length < 20 && roughNote.length > 0 && (
-                  <p className="text-sm text-orange-500">(min 20 required)</p>
-                )}
-              </div>
-              </CardContent>
-              </Card>
-
-            {/* Conditional AI Assistant - Visit & Diagnosis Specific */}
-            {!enhancedNote && roughNote.length >= 100 && (
-              <ConditionalAIAssistant
+          {/* Step 4: Unified Analysis & Review */}
+          {roughNote.length >= 20 && !enhancedNote && (
+            <div id="step-review">
+              <UnifiedDocumentReview
+                roughNote={roughNote}
                 visitType={visitType}
                 diagnosis={finalDiagnosis}
-                roughNote={roughNote}
                 patientData={selectedPatient}
                 vitalSigns={vitalSigns}
-                onSuggestion={(text) => setRoughNote(prev => prev + '\n\n' + text)}
+                carePlans={carePlans}
+                recentVisits={recentVisits}
+                nurseType={currentUser?.credential_type || 'RN'}
+                onEnhancedNoteReady={handleEnhancedNoteReady}
+                autoRun={false}
               />
-            )}
-
-            {/* Unified AI Suggestions - Compliance + Quality */}
-            {!enhancedNote && roughNote.length >= 100 && (
-              <UnifiedAISuggestions
-                roughNote={roughNote}
-                diagnosis={finalDiagnosis}
-                vitalSigns={vitalSigns}
-                patientData={selectedPatient}
-                patientContext={patientContext}
-                careType="home_health"
-                visitType={visitType}
-                appliedFixes={appliedFixes}
-                onApplyFix={(textOrUpdatedNote, category, isReplacement) => {
-                  if (isReplacement) {
-                    // Replace entire note with updated version (for quality fixes)
-                    setRoughNote(textOrUpdatedNote);
-                  } else {
-                    // Add text to note (for compliance additions)
-                    const normalizedText = textOrUpdatedNote.trim().toLowerCase();
-                    const normalizedNote = roughNote.trim().toLowerCase();
-                    
-                    if (!normalizedNote.includes(normalizedText.substring(0, 100))) {
-                      setRoughNote(prev => prev + '\n\n' + textOrUpdatedNote);
-                    }
-                  }
-                  
-                  if (category && !appliedFixes.includes(category)) {
-                    setAppliedFixes(prev => [...prev, category]);
-                  }
-                }}
-                onApplyAll={(replacements, additions) => {
-                  // Apply quality replacements first
-                  let updatedNote = roughNote;
-                  replacements.forEach(({ from, to }) => {
-                    updatedNote = updatedNote.replace(from, to);
-                  });
-                  
-                  // Then add compliance additions
-                  if (additions.length > 0) {
-                    updatedNote = updatedNote + '\n\n' + additions.join('\n\n');
-                  }
-                  
-                  setRoughNote(updatedNote);
-                  setAppliedFixes(prev => [...prev, ...additions.map(a => a.split(':')[0].trim())]);
-                }}
-              />
-            )}
-
-
-
-            {/* Enhance Button - Prominent CTA */}
-            {!enhancedNote && roughNote.length >= 20 && (
-              <Card className="border-4 border-purple-400 bg-gradient-to-r from-purple-100 to-pink-100 shadow-2xl animate-pulse">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="p-4 bg-purple-500 rounded-full">
-                      <Sparkles className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-purple-900 mb-1">Ready to Transform!</h3>
-                      <p className="text-sm text-purple-700">Click below to create your Medicare-compliant note</p>
-                    </div>
-                    <Button
-                      onClick={handleEnhanceNote}
-                      disabled={isProcessing}
-                      size="lg"
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto text-lg font-bold shadow-lg"
-                    >
-                      {isProcessing ? (
-                        <><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2" /> Enhancing...</>
-                      ) : (
-                        <><Sparkles className="w-6 h-6 mr-2" /> Enhance with AI</>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-
-
-          {/* Step 4: Enhanced Note - Celebration */}
-          {enhancedNote && (
-            <>
-              <Card id="step-enhance" className="border-4 border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-2xl">
-                <CardHeader className="py-6 md:py-7 bg-gradient-to-r from-green-100 to-emerald-100">
-                  <CardTitle className="text-lg md:text-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-green-500 rounded-full">
-                        <CheckCircle2 className="w-6 h-6 text-white" />
-                      </div>
-                      <span>✨ Note Enhanced - Ready for EHR!</span>
-                    </div>
-                    <span className="text-xs md:text-sm text-gray-600 font-normal sm:ml-auto bg-yellow-100 px-3 py-1 rounded-full">💡 Yellow highlights = areas needing completion</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 md:p-6">
-                  <RichTextNoteEditor
-                    value={enhancedNote}
-                    onChange={setEnhancedNote}
-                    onCopy={() => {
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    copied={copied}
-                    qualityScore={auditResults?.quality_score}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* AI Document Reviewer - Automatic Quality Check */}
-              <ClinicalNoteReviewer
-                noteContent={enhancedNote}
-                visitType={visitType}
-                diagnosis={finalDiagnosis}
-                patientData={selectedPatient}
-                autoReview={true}
-                prominent={true}
-                onApplySuggestion={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
-              />
-
-              {/* Next Steps Panel - Clear action-oriented summary */}
-              <NextStepsPanel
-                copied={copied}
-                isSaving={isSaving}
-                savedSuccessfully={savedSuccessfully}
-                onCopy={handleCopy}
-                onSave={handleSaveNote}
-                onGenerateTasks={() => setActiveAccordion('tasks')}
-                onGenerateCarePlans={() => setActiveAccordion('careplans')}
-                onStartNew={handleClearNote}
-                complianceScore={enhancedNoteCompliance?.overall_score}
-              />
-
-              {/* OASIS Automation Trigger */}
-              {patientOASIS?.length > 0 && (
-                <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-purple-600" />
-                        <div>
-                          <p className="text-sm font-medium">AI OASIS Automation Available</p>
-                          <p className="text-xs text-gray-600">Map note to OASIS with detailed justifications</p>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={handleRunOASISAutomation}
-                        disabled={isRunningOASISAutomation}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto"
-                      >
-                        {isRunningOASISAutomation ? (
-                          <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Analyzing...</>
-                        ) : (
-                          <><Sparkles className="w-4 h-4 mr-2" /> Run OASIS Automation</>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-
-            </>
+            </div>
           )}
 
-          {/* Additional Tools */}
-          {enhancedNote && selectedPatientId && (
-            <Accordion type="single" collapsible value={activeAccordion} onValueChange={setActiveAccordion}>
+
+
+          {/* Step 5: Final Enhanced Note */}
+          {enhancedNote && (
+            <Card id="step-complete" className="border-4 border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-2xl">
+              <CardHeader className="py-6 md:py-7 bg-gradient-to-r from-green-100 to-emerald-100">
+                <CardTitle className="text-lg md:text-2xl flex items-center gap-3">
+                  <div className="p-3 bg-green-500 rounded-full">
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  </div>
+                  <span>✨ Enhanced Note - Ready for EHR</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 space-y-4">
+                <Textarea
+                  value={enhancedNote}
+                  onChange={(e) => setEnhancedNote(e.target.value)}
+                  className="min-h-[300px] font-mono text-sm"
+                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleCopy}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    {copied ? (
+                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Copied!</>
+                    ) : (
+                      <><Copy className="w-4 h-4 mr-2" /> Copy to EHR</>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleClearNote}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Start New Note
+                  </Button>
+                </div>
+                {savedSuccessfully && (
+                  <Alert className="bg-green-50 border-green-300">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      Note saved to patient chart successfully!
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Old additional tools accordion - now removed */}
+          {false && enhancedNote && selectedPatientId && (
+            <Accordion type="single" collapsible>
               <AccordionItem value="oasis">
                 <AccordionTrigger className="text-sm">
                   <div className="flex items-center gap-2">
@@ -2274,261 +1904,14 @@ Return JSON with:
                   )}
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="tasks">
-                <AccordionTrigger className="text-sm">
-                  <div className="flex items-center gap-2">
-                    <ClipboardList className="w-4 h-4" /> AI Task Generator
-                    <Badge className="bg-orange-100 text-orange-800 text-xs">Smart</Badge>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Alert className="bg-blue-50 border-blue-200 mb-3">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
-                    <AlertDescription className="text-xs text-blue-800">
-                      AI analyzes your note to generate specific, actionable follow-up tasks based on interventions documented, patient status, and care plan goals.
-                    </AlertDescription>
-                  </Alert>
-                  <TaskGenerator
-                    enhancedNote={enhancedNote}
-                    narrativeText={roughNote}
-                    patientId={selectedPatientId}
-                    patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
-                    diagnosis={finalDiagnosis}
-                    complianceGaps={enhancedNoteCompliance?.flagged_issues || roughNoteCompliance?.elements?.filter(e => e.status !== 'present') || []}
-                    nurseEmail={currentUser?.email}
-                    autoGenerate={true}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="careplans">
-                <AccordionTrigger className="text-sm">
-                  <div className="flex items-center gap-2">
-                    <Stethoscope className="w-4 h-4" /> AI Care Plan Optimizer
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <AICarePlanOptimizer
-                    enhancedNote={enhancedNote}
-                    patientData={selectedPatient}
-                    existingCarePlans={carePlans}
-                    recentVisits={recentVisits}
-                    diagnosis={finalDiagnosis}
-                    onCreateCarePlan={async (carePlanData) => {
-                      try {
-                        await base44.entities.CarePlan.create({
-                          patient_id: selectedPatientId,
-                          ...carePlanData
-                        });
-                        queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
-                      } catch (error) {
-                        console.error('Error creating care plan:', error);
-                      }
-                    }}
-                    onModifyCarePlan={async (modification) => {
-                      console.log('Care plan modification suggested:', modification);
-                      // Could implement update logic here
-                    }}
-                    autoAnalyze={false}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="incident">
-                <AccordionTrigger className="text-sm">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4" /> Report Incident
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <p className="text-sm text-gray-600">Incident reporting form will appear here.</p>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="education">
-                <AccordionTrigger className="text-sm">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" /> Generate Patient Education
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <PersonalizedEducationGenerator
-                    patient={selectedPatient}
-                    carePlans={carePlans}
-                    recentVisits={recentVisits}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-
-              </Accordion>
-              )}
-        </div>
-
-        {/* Enhanced AI Sidebar with Tabs */}
-        <div className="space-y-4 md:space-y-6 lg:sticky lg:top-4">
-        {/* Primary AI Assistant Card - Always Visible */}
-        <DynamicAISidebar
-            currentStep={currentStep}
-            hasPatient={!!selectedPatientId}
-            hasNotes={roughNote.length >= 20}
-            hasEnhancedNote={!!enhancedNote}
-            diagnosis={finalDiagnosis}
-            complianceScore={enhancedNoteCompliance?.overall_score}
-            patientData={selectedPatient}
-            vitalSigns={vitalSigns}
-            hasOASIS={patientOASIS?.length > 0}
-            oasisLinkedItems={oasisLinkedItems}
-            onAction={handleContextualAction}
-            onInsertGuideline={(text) => setRoughNote(prev => prev + '\n\n' + text)}
-            onAddOASISLink={(link) => setOasisLinkedItems(prev => [...prev, link])}
-            onRemoveOASISLink={(idx) => setOasisLinkedItems(prev => prev.filter((_, i) => i !== idx))}
-          />
-
-          {/* Tabbed AI Tools - Only show when patient selected */}
-          {selectedPatientId && (
-            <Card className="border-2 border-blue-200 shadow-lg">
-              <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-blue-600" />
-                  AI Tools & Resources
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Tabs value={activeAITab} onValueChange={setActiveAITab} className="w-full">
-                  <TabsList className="w-full grid grid-cols-3 rounded-none border-b touch-target">
-                    <TabsTrigger value="workflow" className="text-xs sm:text-sm py-3">
-                      Workflow
-                    </TabsTrigger>
-                    <TabsTrigger value="compliance" className="text-xs sm:text-sm py-3">
-                      Compliance
-                    </TabsTrigger>
-                    <TabsTrigger value="knowledge" className="text-xs sm:text-sm py-3">
-                      Knowledge
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {/* Workflow Tab - Lazy Loaded */}
-                  <TabsContent value="workflow" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
-                    {activeAITab === "workflow" && (
-                      <>
-                    {visitType && (
-                      <GuidedDocumentationWorkflow
-                        visitType={visitType}
-                        diagnosis={finalDiagnosis}
-                        careType={selectedPatient?.care_type || "home_health"}
-                      />
-                    )}
-                    {visitType && (
-                      <VisitTypeSpecificGuidance
-                        visitType={visitType}
-                        diagnosis={finalDiagnosis}
-                        patientData={selectedPatient}
-                        onGenerateTemplate={(template) => setRoughNote(prev => template + '\n\n' + prev)}
-                      />
-                    )}
-                    <AIDocumentAnalyzer
-                      patientId={selectedPatientId}
-                      patientData={selectedPatient}
-                      onApplyToPatient={async (field, value) => {
-                        try {
-                          const updateData = {};
-                          if (field === 'primary_diagnosis') {
-                            updateData.primary_diagnosis = value;
-                          } else if (field === 'medications') {
-                            updateData.current_medications = value;
-                          }
-                          await base44.entities.Patient.update(selectedPatientId, updateData);
-                          queryClient.invalidateQueries({ queryKey: ['patients'] });
-                        } catch (error) {
-                          console.error('Error updating patient:', error);
-                        }
-                      }}
-                      onInsertToNote={(text) => {
-                        if (enhancedNote) {
-                          setEnhancedNote(prev => prev + '\n\n' + text);
-                        } else {
-                          setRoughNote(prev => prev + '\n\n' + text);
-                        }
-                      }}
-                      compact={true}
-                    />
-                      </>
-                    )}
-                  </TabsContent>
-
-                  {/* Compliance Tab - Unified Engine */}
-                  <TabsContent value="compliance" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
-                    {activeAITab === "compliance" && (
-                      <>
-                        {(roughNote.length >= 100 || enhancedNote) && (
-                          <UnifiedComplianceEngine
-                            noteContent={enhancedNote || roughNote}
-                            visitType={visitType}
-                            patientData={selectedPatient}
-                            diagnosis={finalDiagnosis}
-                            vitalSigns={vitalSigns}
-                            nurseType={currentUser?.credential_type || 'RN'}
-                            careType={selectedPatient?.care_type || "home_health"}
-                            oasisData={oasisContext}
-                            onApplyFix={(text) => {
-                              if (enhancedNote) {
-                                setEnhancedNote(prev => prev + '\n\n' + text);
-                              } else {
-                                setRoughNote(prev => prev + '\n\n' + text);
-                              }
-                            }}
-                            autoCheck={true}
-                          />
-                        )}
-                      </>
-                    )}
-                  </TabsContent>
-
-                  {/* Knowledge Tab - Lazy Loaded */}
-                  <TabsContent value="knowledge" className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
-                    {activeAITab === "knowledge" && (
-                      <>
-                    <AIComplianceAssistant 
-                      compact={true}
-                      context={enhancedNote ? `Current note context: ${enhancedNote.substring(0, 500)}...` : null}
-                    />
-                    <AIMedicalKnowledgeBase
-                      patientData={selectedPatient}
-                      diagnosis={finalDiagnosis}
-                      currentMedications={selectedPatient?.current_medications || []}
-                      onInsertToNote={(text) => {
-                        if (enhancedNote) {
-                          setEnhancedNote(prev => prev + '\n\n' + text);
-                        } else {
-                          setRoughNote(prev => prev + '\n\n' + text);
-                        }
-                      }}
-                      compact={true}
-                    />
-                    {(roughNote.length >= 50 || enhancedNote) && (
-                      <GuidelineReferencePanel
-                        diagnosis={finalDiagnosis}
-                        visitType={visitType}
-                        noteContent={roughNote || enhancedNote}
-                        onInsertGuideline={(text) => {
-                          if (enhancedNote) {
-                            setEnhancedNote(prev => prev + '\n\n' + text);
-                          } else {
-                            setRoughNote(prev => prev + '\n\n' + text);
-                          }
-                        }}
-                        compact={true}
-                      />
-                    )}
-                      </>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+            </Accordion>
           )}
-          </div>
         </div>
 
-        {/* AI Patient History Summarizer - Moved to bottom */}
-        {selectedPatient && (
+        </div>
+      </div>
+
+      {selectedPatient && !enhancedNote && (
         <AIPatientHistorySummarizer
           patientId={selectedPatientId}
           patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
@@ -2536,13 +1919,9 @@ Return JSON with:
           previousVisits={recentVisits}
           carePlans={carePlans}
           onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
-          compact={false}
+          compact={true}
         />
-        )}
-
-
-
-
+      )}
     </div>
   );
 }
