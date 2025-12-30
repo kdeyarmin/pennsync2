@@ -96,16 +96,7 @@ import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentati
 import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecificGuidance";
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
-import ClinicalNoteReviewer from "../components/review/ClinicalNoteReviewer";
-import AITemplateGenerator from "../components/smartNote/AITemplateGenerator";
-import RealTimeComplianceAnalyzer from "../components/smartNote/RealTimeComplianceAnalyzer";
-import PDGMOptimizationSuggester from "../components/smartNote/PDGMOptimizationSuggester";
-import AIDraftGenerator from "../components/smartNote/AIDraftGenerator";
-import BulletPointExpander from "../components/smartNote/BulletPointExpander";
-import AISmartSuggester from "../components/smartNote/AISmartSuggester";
-import ConsolidatedAISuggestions from "../components/smartNote/ConsolidatedAISuggestions";
-import RealTimeDeteriorationPredictor from "../components/smartNote/RealTimeDeteriorationPredictor";
-import AIEducationMaterialSuggester from "../components/smartNote/AIEducationMaterialSuggester";
+import UnifiedDocumentReview from "../components/smartNote/UnifiedDocumentReview";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -407,39 +398,14 @@ export default function SmartNoteAssistant() {
   const [visitDate, setVisitDate] = useState(todayEastern());
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
-  const [activeAITab, setActiveAITab] = useState("workflow");
   const [vitalSigns, setVitalSigns] = useState({ bp: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
   const [roughNote, setRoughNote] = useState("");
   const [enhancedNote, setEnhancedNote] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [auditResults, setAuditResults] = useState(null);
-  const [activeAccordion, setActiveAccordion] = useState("");
-  const [roughNoteCompliance, setRoughNoteCompliance] = useState(null);
-  const [enhancedNoteCompliance, setEnhancedNoteCompliance] = useState(null);
-  const [appliedFixes, setAppliedFixes] = useState([]);
-  const [dismissedElementNames, setDismissedElementNames] = useState([]);
-  const [complianceIssues, setComplianceIssues] = useState([]);
-  const [oasisLinkedItems, setOasisLinkedItems] = useState([]);
-  const [oasisDiscrepancies, setOasisDiscrepancies] = useState([]);
+  const [analysisResults, setAnalysisResults] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
-  const [detectedComplianceRisks, setDetectedComplianceRisks] = useState([]);
-  const [pdgmOptimizationWarnings, setPdgmOptimizationWarnings] = useState([]);
-  const [noteStartTime, setNoteStartTime] = useState(null);
-  const [complianceReviewComplete, setComplianceReviewComplete] = useState(false);
-  const [appliedFixesText, setAppliedFixesText] = useState(new Set());
-  const [isAnalyzingCompliance, setIsAnalyzingCompliance] = useState(false);
   const [interimVoiceText, setInterimVoiceText] = useState('');
-  const [comprehensiveContext, setComprehensiveContext] = useState(null);
-  const [oasisAutomationResults, setOasisAutomationResults] = useState(null);
-  const [isRunningOASISAutomation, setIsRunningOASISAutomation] = useState(false);
-  const [complianceTarget, setComplianceTarget] = useState(90);
-  const [documentationGaps, setDocumentationGaps] = useState([]);
-  const [pdgmOpportunities, setPdgmOpportunities] = useState(null);
-  const [isAnalyzingPDGM, setIsAnalyzingPDGM] = useState(false);
-  const [aiPanelCollapsed, setAiPanelCollapsed] = useState(false);
-  const [isVoiceListening, setIsVoiceListening] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -553,14 +519,13 @@ export default function SmartNoteAssistant() {
 
   const currentStep = useMemo(() => {
     if (!selectedPatientId) return 'patient';
-    if (!vitalSigns.bp && !vitalSigns.hr && !roughNote) return 'vitals';
+    if (!vitalSigns.bp && !vitalSigns.hr) return 'vitals';
     if (!roughNote || roughNote.length < 20) return 'notes';
-    if (!enhancedNote) return 'enhance';
-    return 'review';
+    if (!enhancedNote) return 'review';
+    return 'complete';
   }, [selectedPatientId, vitalSigns, roughNote, enhancedNote]);
 
-  // Step navigation helpers
-  const stepOrder = ['patient', 'vitals', 'notes', 'enhance', 'review'];
+  const stepOrder = ['patient', 'vitals', 'notes', 'review', 'complete'];
   
   const handleStepClick = (stepId) => {
     const targetIndex = stepOrder.indexOf(stepId);
@@ -585,92 +550,54 @@ export default function SmartNoteAssistant() {
   const completedSteps = useMemo(() => {
     const steps = [];
     if (selectedPatientId) steps.push('patient');
-    if (vitalSigns.bp || vitalSigns.hr || vitalSigns.temp) steps.push('vitals');
+    if (vitalSigns.bp || vitalSigns.hr) steps.push('vitals');
     if (roughNote.length >= 20) steps.push('notes');
-    if (enhancedNote) steps.push('enhance');
+    if (analysisResults) steps.push('review');
+    if (enhancedNote) steps.push('complete');
     return steps;
-  }, [selectedPatientId, vitalSigns, roughNote, enhancedNote]);
+  }, [selectedPatientId, vitalSigns, roughNote, enhancedNote, analysisResults]);
 
-  const handleEnhanceNote = async () => {
-    if (!roughNote.trim()) return;
-    setIsProcessing(true);
-    const enhanceStartTime = Date.now();
-    const actualDocTime = noteStartTime ? (enhanceStartTime - noteStartTime) : 0;
+  const handleEnhancedNoteReady = async ({ enhancedNote: finalNote, analysis, appliedSuggestions }) => {
+    setEnhancedNote(finalNote);
+    setAnalysisResults(analysis);
 
+    // Auto-save to patient chart
     try {
-      // Use optimized backend function for enhancement
-      const result = await base44.functions.invoke('enhanceNoteOptimized', {
-        roughNote,
-        patientId: selectedPatientId,
-        visitType,
-        visitDate,
-        diagnosis: finalDiagnosis,
-        vitalSigns,
-        nurseType: currentUser?.credential_type || 'RN'
+      await base44.entities.Visit.create({
+        patient_id: selectedPatientId,
+        visit_date: visitDate,
+        visit_type: visitType,
+        status: 'completed',
+        nurse_notes: finalNote,
+        raw_transcription: roughNote,
+        vital_signs: {
+          blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
+          blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
+          heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
+          temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
+          oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
+          pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null
+        }
       });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Enhancement failed');
-      }
+      setSavedSuccessfully(true);
+      setTimeout(() => setSavedSuccessfully(false), 3000);
 
-      setEnhancedNote(result.enhanced_note);
-      setAuditResults({ 
-        enhanced_note: result.enhanced_note,
-        quality_score: result.quality_score 
-      });
-      setRoughNoteCompliance(result.rough_compliance);
-      setEnhancedNoteCompliance(result.enhanced_compliance);
-      setDocumentationGaps(result.documentation_gaps || []);
-      setComplianceReviewComplete(false);
-
-      // Automatically save enhanced note to patient's chart
-      try {
-        const savedVisit = await base44.entities.Visit.create({
-          patient_id: selectedPatientId,
-          visit_date: visitDate,
-          visit_type: visitType,
-          status: 'completed',
-          nurse_notes: result.enhanced_note,
-          raw_transcription: roughNote,
-          vital_signs: {
-            blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
-            blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
-            heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
-            temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
-            oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
-            pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null
-          }
-        });
-
-        setSavedSuccessfully(true);
-        setTimeout(() => setSavedSuccessfully(false), 3000);
-
-        // Invalidate queries to update patient visit history
-        queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
-        queryClient.invalidateQueries({ queryKey: ['patientVisits', selectedPatientId] });
-      } catch (saveError) {
-        console.error('Auto-save to chart error:', saveError);
-      }
-
-      // Log activity
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
         visit_type: visitType,
         diagnosis: finalDiagnosis,
-        quality_score: result.quality_score,
-        compliance_improvement: result.compliance_improvement,
-        auto_saved: true,
+        overall_score: analysis.overall_score,
+        suggestions_applied: appliedSuggestions.length,
         page: 'SmartNoteAssistant',
         ai_utilization: true
       });
 
+      queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
       queryClient.invalidateQueries({ queryKey: ['patients'] });
-
     } catch (error) {
-      console.error("Error enhancing note:", error);
-      alert('Failed to enhance note. Please try again.');
+      console.error('Error saving note:', error);
     }
-    setIsProcessing(false);
   };
 
   // Batch AI analysis for multiple operations
@@ -1113,18 +1040,8 @@ Return JSON with:
   };
 
   const handleVoiceTranscription = (text) => {
-    if (!noteStartTime) {
-      setNoteStartTime(Date.now());
-    }
     setRoughNote(prev => prev ? prev + ' ' + text : text);
     setInterimVoiceText('');
-    
-    // Log voice transcription usage
-    logActivity(ActivityActions.AI_FEATURE_USED, {
-      feature: 'voice_transcription',
-      patient_id: selectedPatientId,
-      page: 'SmartNoteAssistant'
-    });
   };
 
   const handleInterimTranscription = (text) => {
@@ -1133,23 +1050,11 @@ Return JSON with:
 
   const handleVoiceCommand = (action, spokenText, extractedValue) => {
     switch (action) {
-      case 'enhance':
-        handleEnhanceNote();
-        break;
       case 'copy':
         handleCopy();
         break;
-      case 'save':
-        handleSaveNote();
-        break;
       case 'clear':
         handleClearNote();
-        break;
-      case 'next':
-        const currentIndex = stepOrder.indexOf(currentStep);
-        if (currentIndex < stepOrder.length - 1) {
-          handleStepClick(stepOrder[currentIndex + 1]);
-        }
         break;
       case 'bp':
         if (extractedValue && extractedValue.length >= 2) {
@@ -1179,37 +1084,48 @@ Return JSON with:
       default:
         console.log('Unknown voice command:', action);
     }
-    
-    // Log voice command usage
-    logActivity(ActivityActions.AI_FEATURE_USED, {
-      feature: 'voice_command',
-      command: action,
-      patient_id: selectedPatientId,
-      page: 'SmartNoteAssistant'
-    });
-  };
-
-
-
-  const handleContextualAction = (action) => {
-    if (action === 'enhance') handleEnhanceNote();
-    if (action === 'copy') handleCopy();
-    if (action === 'tasks') setActiveAccordion('tasks');
-    if (action === 'clear') handleClearNote();
   };
 
   const handleClearNote = () => {
     setRoughNote("");
     setEnhancedNote("");
-    setAuditResults(null);
-    setAppliedFixes([]);
-    setDismissedElementNames([]);
-    setRoughNoteCompliance(null);
-    setEnhancedNoteCompliance(null);
+    setAnalysisResults(null);
     setVisitDate(todayEastern());
-    setNoteStartTime(null);
-    setComplianceReviewComplete(false);
-    setAppliedFixesText(new Set());
+    setCopied(false);
+    setSavedSuccessfully(false);
+  };
+
+  const handleSaveNote = async () => {
+    if (!selectedPatientId || !enhancedNote) return;
+
+    setIsSaving(true);
+    try {
+      await base44.entities.Visit.create({
+        patient_id: selectedPatientId,
+        visit_date: visitDate,
+        visit_type: visitType,
+        status: 'completed',
+        nurse_notes: enhancedNote,
+        raw_transcription: roughNote,
+        vital_signs: {
+          blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
+          blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
+          heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
+          temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
+          oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
+          pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null
+        }
+      });
+
+      setSavedSuccessfully(true);
+      setTimeout(() => setSavedSuccessfully(false), 3000);
+
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
+    } catch (error) {
+      console.error('Error saving note:', error);
+    }
+    setIsSaving(false);
   };
 
   const handleInsertPhrase = (text) => {
