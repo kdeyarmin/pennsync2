@@ -97,6 +97,8 @@ import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecific
 import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
 import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
 import UnifiedDocumentReview from "../components/smartNote/UnifiedDocumentReview";
+import AIScenarioTemplates from "../components/smartNote/AIScenarioTemplates";
+import ProactiveEducationSuggester from "../components/smartNote/ProactiveEducationSuggester";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -1021,15 +1023,37 @@ export default function SmartNoteAssistant() {
       </div>
 
       {selectedPatient && !enhancedNote && (
-        <AIPatientHistorySummarizer
-          patientId={selectedPatientId}
-          patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
-          diagnosis={finalDiagnosis || selectedPatient.primary_diagnosis}
-          previousVisits={recentVisits}
-          carePlans={carePlans}
-          onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
-          compact={true}
-        />
+        <div className="space-y-4 mt-6">
+          <AIScenarioTemplates
+            visitType={visitType}
+            diagnosis={finalDiagnosis}
+            patientData={selectedPatient}
+            onInsertTemplate={(text) => setRoughNote(prev => prev ? prev + '\n\n' + text : text)}
+          />
+
+          <AIPatientHistorySummarizer
+            patientId={selectedPatientId}
+            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+            diagnosis={finalDiagnosis || selectedPatient.primary_diagnosis}
+            previousVisits={recentVisits}
+            carePlans={carePlans}
+            onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
+            compact={true}
+          />
+        </div>
+      )}
+
+      {selectedPatient && (roughNote.length > 50 || enhancedNote) && (
+        <div className="mt-6">
+          <ProactiveEducationSuggester
+            diagnosis={finalDiagnosis}
+            roughNote={roughNote}
+            enhancedNote={enhancedNote}
+            patientId={selectedPatientId}
+            patientEmail={selectedPatient.email}
+            caregiverEmail={selectedPatient.caregiver_email}
+          />
+        </div>
       )}
     </div>
   );
