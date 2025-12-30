@@ -18,22 +18,22 @@ export default function RegulatoryCompliance() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
-        <Link to={createPageUrl("ComplianceDashboard")}>
-          <Button variant="outline" size="sm">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <Link to={createPageUrl("ComplianceDashboard")} className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="min-h-[44px] w-full sm:w-auto">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Regulatory Compliance Center</h1>
-          <p className="text-gray-600">Monitor healthcare regulations and manage compliance updates</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Regulatory Compliance Center</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Monitor healthcare regulations and manage compliance updates</p>
         </div>
       </div>
 
       {!isAdmin && (
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <NurseRegulatoryAlerts nurseEmail={currentUser?.email} />
         </div>
       )}

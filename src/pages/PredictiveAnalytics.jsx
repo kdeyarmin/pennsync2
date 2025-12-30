@@ -58,19 +58,19 @@ export default function PredictiveAnalytics() {
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Brain className="w-7 h-7 text-purple-600" />
-            Predictive Analytics
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 flex-shrink-0" />
+            <span className="truncate">Predictive Analytics</span>
           </h1>
-          <p className="text-sm text-gray-600">AI-powered patient outcome forecasting and risk assessment</p>
+          <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">AI-powered patient outcome forecasting and risk assessment</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Select value={riskFilter} onValueChange={setRiskFilter}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-full sm:w-36 h-11 touch-target">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -83,7 +83,7 @@ export default function PredictiveAnalytics() {
           </Select>
 
           <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48 h-11 touch-target">
               <Users className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Select Patient" />
             </SelectTrigger>
@@ -100,23 +100,25 @@ export default function PredictiveAnalytics() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6">
-          <TabsTrigger value="overview" className="gap-1">
-            <Activity className="w-4 h-4" /> Overview
-          </TabsTrigger>
-          <TabsTrigger value="rehospitalization" className="gap-1">
-            <AlertTriangle className="w-4 h-4" /> Rehospitalization
-          </TabsTrigger>
-          <TabsTrigger value="therapy" className="gap-1">
-            <TrendingUp className="w-4 h-4" /> Therapy Need
-          </TabsTrigger>
-          <TabsTrigger value="insights" className="gap-1">
-            <Brain className="w-4 h-4" /> AI Insights
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
+          <TabsList className="inline-flex md:grid md:w-full md:max-w-2xl md:grid-cols-4 gap-1 min-w-max h-auto">
+            <TabsTrigger value="overview" className="gap-1 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <Activity className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="rehospitalization" className="gap-1 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden md:inline">Rehospitalization</span><span className="md:hidden">Rehosp</span>
+            </TabsTrigger>
+            <TabsTrigger value="therapy" className="gap-1 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden md:inline">Therapy Need</span><span className="md:hidden">Therapy</span>
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="gap-1 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <Brain className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">AI Insights</span><span className="sm:hidden">AI</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
           <PopulationRiskOverview 
             patients={patients}
             oasisData={oasisData}

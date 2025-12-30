@@ -584,32 +584,32 @@ export default function RealTimeComplianceDashboard() {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
-          <div className="flex items-center gap-3">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
               <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Real-Time Compliance</h1>
-              <p className="text-xs sm:text-sm text-gray-600">Aggregated insights across all features</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Real-Time Compliance</h1>
+              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Aggregated insights across all features</p>
             </div>
           </div>
-          <Button onClick={exportComplianceData} variant="outline" className="gap-2 w-full sm:w-auto">
+          <Button onClick={exportComplianceData} variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
             <Download className="w-4 h-4" />
-            <span className="sm:inline">Export</span>
+            <span>Export</span>
           </Button>
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-3">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px] h-11 touch-target">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -621,7 +621,7 @@ export default function RealTimeComplianceDashboard() {
             </Select>
 
             <Select value={selectedFeature} onValueChange={setSelectedFeature}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px] h-11 touch-target">
                 <SelectValue placeholder="All Features" />
               </SelectTrigger>
               <SelectContent>
@@ -633,7 +633,7 @@ export default function RealTimeComplianceDashboard() {
             </Select>
 
             <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px] h-11 touch-target">
                 <SelectValue placeholder="All Nurses" />
               </SelectTrigger>
               <SelectContent>

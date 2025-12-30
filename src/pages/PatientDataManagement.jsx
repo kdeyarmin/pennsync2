@@ -259,72 +259,72 @@ export default function PatientDataManagement() {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Patient Data Management</h1>
-        <p className="text-gray-600">Comprehensive overview and management of all patients</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Patient Data Management</h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Comprehensive overview and management of all patients</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Patients</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Total Patients</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
               </div>
-              <Users className="w-8 h-8 text-blue-500" />
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Active</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</p>
               </div>
-              <Activity className="w-8 h-8 text-green-500" />
+              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">With Alerts</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.withAlerts}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">With Alerts</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.withAlerts}</p>
               </div>
-              <Bell className="w-8 h-8 text-yellow-500" />
+              <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Critical</p>
-                <p className="text-2xl font-bold text-red-600">{stats.critical}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Critical</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.critical}</p>
               </div>
-              <AlertTriangle className="w-8 h-8 text-red-500" />
+              <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-500 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Duplicate Scanner */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <DuplicateScanner />
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <div className="lg:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -332,13 +332,13 @@ export default function PatientDataManagement() {
                   placeholder="Search by name or MRN..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-11 touch-target"
                 />
               </div>
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -350,7 +350,7 @@ export default function PatientDataManagement() {
             </Select>
 
             <Select value={diagnosisFilter} onValueChange={setDiagnosisFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Diagnosis" />
               </SelectTrigger>
               <SelectContent>
@@ -362,7 +362,7 @@ export default function PatientDataManagement() {
             </Select>
 
             <Select value={alertFilter} onValueChange={setAlertFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Alerts" />
               </SelectTrigger>
               <SelectContent>
@@ -378,87 +378,87 @@ export default function PatientDataManagement() {
 
       {/* Patient Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 text-base sm:text-lg">
             <span>Patients ({filteredAndSortedPatients.length})</span>
-            <Link to={createPageUrl("Patients")}>
-              <Button size="sm">Manage Patients</Button>
+            <Link to={createPageUrl("Patients")} className="w-full sm:w-auto">
+              <Button size="sm" className="min-h-[44px] w-full sm:w-auto">Manage Patients</Button>
             </Link>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>
+                  <TableHead className="text-xs sm:text-sm">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => toggleSort('name')}
-                      className="gap-2"
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm p-1"
                     >
                       Patient <SortIcon field="name" />
                     </Button>
                   </TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Diagnosis</TableHead>
-                  <TableHead>
+                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="text-xs sm:text-sm hidden md:table-cell">Diagnosis</TableHead>
+                  <TableHead className="text-xs sm:text-sm">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => toggleSort('alerts')}
-                      className="gap-2"
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm p-1"
                     >
                       Alerts <SortIcon field="alerts" />
                     </Button>
                   </TableHead>
-                  <TableHead>Risk</TableHead>
-                  <TableHead>
+                  <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Risk</TableHead>
+                  <TableHead className="text-xs sm:text-sm hidden lg:table-cell">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => toggleSort('visits')}
-                      className="gap-2"
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm p-1"
                     >
                       Visits <SortIcon field="visits" />
                     </Button>
                   </TableHead>
-                  <TableHead>
+                  <TableHead className="text-xs sm:text-sm hidden xl:table-cell">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => toggleSort('lastActivity')}
-                      className="gap-2"
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm p-1"
                     >
                       Last Activity <SortIcon field="lastActivity" />
                     </Button>
                   </TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAndSortedPatients.map((patient) => (
                   <TableRow key={patient.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
+                    <TableCell className="text-xs sm:text-sm">
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">
                           {patient.first_name} {patient.last_name}
                         </p>
                         {patient.medical_record_number && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-500 truncate">
                             MRN: {patient.medical_record_number}
                           </p>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(patient.status)}>
+                      <Badge className={`${getStatusColor(patient.status)} text-xs`}>
                         {patient.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <span className="text-sm">
+                    <TableCell className="text-xs sm:text-sm hidden md:table-cell">
+                      <span className="truncate block max-w-[150px]">
                         {patient.primary_diagnosis || 'Not specified'}
                       </span>
                     </TableCell>
@@ -484,27 +484,29 @@ export default function PatientDataManagement() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge className={getRiskColor(patient.riskLevel)}>
+                    <TableCell className="hidden lg:table-cell">
+                      <Badge className={`${getRiskColor(patient.riskLevel)} text-xs`}>
                         {patient.riskLevel}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <span className="text-sm">{patient.totalVisits}</span>
+                    <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                      <span>{patient.totalVisits}</span>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <TableCell className="text-xs hidden xl:table-cell">
+                      <div className="flex items-center gap-1 text-gray-600">
                         <Clock className="w-3 h-3" />
-                        {patient.lastActivity ? 
-                          formatEastern(patient.lastActivity, 'MMM d, yyyy') : 
-                          'No activity'
-                        }
+                        <span className="whitespace-nowrap">
+                          {patient.lastActivity ? 
+                            formatEastern(patient.lastActivity, 'MMM d, yyyy') : 
+                            'No activity'
+                          }
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="min-h-[44px] w-10">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>

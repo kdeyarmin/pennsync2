@@ -435,28 +435,30 @@ export default function AnalyticsDashboard() {
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Performance Analytics</h1>
-          <p className="text-sm text-gray-600 mt-1">Track metrics, trends, and outcomes</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Performance Analytics</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">Track metrics, trends, and outcomes</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={handleExportPDF} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
-            Export PDF
+            <span className="hidden sm:inline">Export PDF</span>
+            <span className="sm:hidden">PDF</span>
           </Button>
-          <Button onClick={handleExportReport} variant="outline">
+          <Button onClick={handleExportReport} variant="outline" className="min-h-[44px] w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
-            Export JSON
+            <span className="hidden sm:inline">Export JSON</span>
+            <span className="sm:hidden">JSON</span>
           </Button>
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div>
               <Label className="text-xs mb-1">Date Range</Label>
               <Select value={dateRange} onValueChange={handleDateRangeChange}>
@@ -504,7 +506,7 @@ export default function AnalyticsDashboard() {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <PerformanceMetricsCard
           title="Avg Doc Time"
           value={`${metrics.avgDocTime} min`}
@@ -523,8 +525,8 @@ export default function AnalyticsDashboard() {
 
 
       {/* Charts */}
-      <Tabs defaultValue="time" className="mb-6">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="time" className="mb-4 sm:mb-6">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
           <TabsTrigger value="time">Documentation Time</TabsTrigger>
           <TabsTrigger value="ai">AI Utilization</TabsTrigger>
         </TabsList>
