@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -51,7 +52,9 @@ import {
   Bell,
   CheckCircle2,
   XCircle,
-  Clock
+  Clock,
+  Upload,
+  Database
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -59,6 +62,7 @@ import { formatEastern } from "../components/utils/timezone";
 
 export default function PatientDataManagement() {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [diagnosisFilter, setDiagnosisFilter] = useState("all");
@@ -259,14 +263,34 @@ export default function PatientDataManagement() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Patient Data Management</h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Comprehensive overview and management of all patients</p>
-      </div>
+    <div className="min-h-screen">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex md:grid md:w-full md:max-w-md md:grid-cols-2 gap-1 min-w-max h-auto md:h-14">
+                <TabsTrigger value="overview" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                  <Database className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="import" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Import Patients</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <TabsContent value="overview" className="m-0">
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+            <div className="mb-4 sm:mb-6">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Patient Data Management</h1>
+              <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Comprehensive overview and management of all patients</p>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
@@ -316,13 +340,13 @@ export default function PatientDataManagement() {
         </Card>
       </div>
 
-      {/* Duplicate Scanner */}
-      <div className="mb-4 sm:mb-6">
-        <DuplicateScanner />
-      </div>
+            {/* Duplicate Scanner */}
+            <div className="mb-4 sm:mb-6">
+              <DuplicateScanner />
+            </div>
 
-      {/* Filters */}
-      <Card className="mb-4 sm:mb-6">
+            {/* Filters */}
+            <Card className="mb-4 sm:mb-6">
         <CardContent className="p-3 sm:p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             <div className="lg:col-span-2">
@@ -376,8 +400,8 @@ export default function PatientDataManagement() {
         </CardContent>
       </Card>
 
-      {/* Patient Table */}
-      <Card>
+            {/* Patient Table */}
+            <Card>
         <CardHeader className="p-3 sm:p-4 md:p-6">
           <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 text-base sm:text-lg">
             <span>Patients ({filteredAndSortedPatients.length})</span>
@@ -554,12 +578,12 @@ export default function PatientDataManagement() {
               <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No patients found matching your filters.</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Flag Dialog */}
-      <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
+            {/* Flag Dialog */}
+            <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Flag Patient</DialogTitle>
@@ -580,9 +604,224 @@ export default function PatientDataManagement() {
                 Go to Alerts
               </Link>
             </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
           </div>
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+
+        <TabsContent value="import" className="m-0">
+          <ImportPatientsTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// Import Patients Component - extracted from ImportPatients.jsx
+function ImportPatientsTab() {
+  const [file, setFile] = useState(null);
+  const [autoImporting, setAutoImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importResults, setImportResults] = useState(null);
+  const queryClient = useQueryClient();
+
+  const handleAutoImport = async (selectedFile) => {
+    if (!selectedFile) return;
+
+    setAutoImporting(true);
+    setImportProgress(0);
+    setImportResults(null);
+
+    try {
+      const text = await selectedFile.text();
+      const response = await base44.functions.invoke('autoImportPatients', { fileContent: text });
+      const data = response.data || response;
+      
+      if (data.success) {
+        setImportResults(data.results);
+        queryClient.invalidateQueries({ queryKey: ['patients'] });
+        setImportProgress(100);
+      } else {
+        alert('Import failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Auto import error:', error);
+      alert('Auto import failed: ' + (error.response?.data?.error || error.message));
+    }
+
+    setAutoImporting(false);
+  };
+
+  const downloadTemplate = () => {
+    const headers = [
+      'first_name', 'last_name', 'middle_name', 'date_of_birth', 'medical_record_number',
+      'phone', 'email', 'address', 'payor',
+      'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+      'physician_name', 'physician_phone', 'physician_email',
+      'primary_diagnosis', 'allergies',
+      'admission_date', 'care_type', 'status'
+    ];
+    const sampleRow = [
+      'John', 'Doe', 'A', '1950-05-20', '12345',
+      '555-123-4567', 'john.doe@email.com', '123 Main St, City, PA 12345', 'Medicare',
+      'Jane Doe', '555-987-6543', 'Spouse',
+      'Dr. Smith', '555-111-2222', 'dr.smith@clinic.com',
+      'Congestive Heart Failure', 'NKDA',
+      '2024-01-15', 'home_health', 'active'
+    ];
+    const csv = headers.join(',') + '\n' + sampleRow.join(',') + '\n';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'patient_import_template.csv';
+    a.click();
+  };
+
+  return (
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+          <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+          <span className="truncate">Import Patients</span>
+        </h2>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">
+          Upload a CSV file to import multiple patient records at once
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card>
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-base sm:text-lg">Get Started</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <p className="text-xs sm:text-sm text-gray-600 mb-4">
+              Download our CSV template to ensure your data is formatted correctly
+            </p>
+            <Button onClick={downloadTemplate} variant="outline" className="w-full min-h-[44px]">
+              <FileText className="w-4 h-4 mr-2" />
+              Download CSV Template
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Upload className="w-5 h-5 text-green-600" />
+              Quick Import
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <p className="text-xs sm:text-sm text-gray-600 mb-4">
+              Upload your CSV file and automatically import all patients
+            </p>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleAutoImport(file);
+              }}
+              className="hidden"
+              id="auto-import"
+              disabled={autoImporting}
+            />
+            <label htmlFor="auto-import" className="block">
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700 min-h-[44px]" 
+                disabled={autoImporting}
+                asChild
+              >
+                <span>
+                  {autoImporting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload & Import
+                    </>
+                  )}
+                </span>
+              </Button>
+            </label>
+          </CardContent>
+        </Card>
+      </div>
+
+      {autoImporting && (
+        <Card className="mb-4 sm:mb-6">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Importing patients...</span>
+              <span className="text-sm text-gray-600">{importProgress}%</span>
+            </div>
+            <Progress value={importProgress} className="h-2" />
+          </CardContent>
+        </Card>
+      )}
+
+      {importResults && (
+        <Card className="border-green-300 border-2">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-lg sm:text-xl flex items-center gap-2 sm:gap-3 text-green-900">
+              <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0" />
+              <span className="truncate">Import Completed!</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <Card className="bg-green-50 border-green-200 border-2">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-green-600 text-xs sm:text-sm font-medium mb-1 truncate">Processed</p>
+                      <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-700">{importResults.success}</p>
+                    </div>
+                    <Users className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-green-500 flex-shrink-0" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {importResults.failed > 0 && (
+                <Card className="bg-red-50 border-red-200 border-2">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-red-600 text-xs sm:text-sm font-medium mb-1 truncate">Failed</p>
+                        <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-700">{importResults.failed}</p>
+                      </div>
+                      <AlertTriangle className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-red-500 flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="mt-4 sm:mt-6">
+        <CardContent className="p-4 sm:p-6 text-center text-gray-500">
+          <p className="text-xs sm:text-sm">
+            For advanced import options with manual column mapping and validation, use the full Import Patients feature.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Reusable import component
+const ImportPatientsTabContent = () => {
+  return (
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+      <p className="text-gray-600 text-center py-8">Import functionality placeholder</p>
     </div>
   );
 }
