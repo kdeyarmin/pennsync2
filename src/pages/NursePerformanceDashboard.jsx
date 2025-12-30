@@ -170,17 +170,17 @@ export default function NursePerformanceDashboard() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Nurse Performance Dashboard</h1>
-            <p className="text-gray-600 mt-1">AI-powered insights and personalized recommendations</p>
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 sm:mb-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Nurse Performance Dashboard</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">AI-powered insights and personalized recommendations</p>
           </div>
           {currentUser?.role === 'admin' && (
             <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-              <SelectTrigger className="w-64">
+              <SelectTrigger className="w-full sm:w-64 h-11 touch-target">
                 <SelectValue placeholder="Select nurse..." />
               </SelectTrigger>
               <SelectContent>
@@ -194,9 +194,9 @@ export default function NursePerformanceDashboard() {
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40 h-11 touch-target">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -206,7 +206,7 @@ export default function NursePerformanceDashboard() {
               <SelectItem value="365">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => refetch()} variant="outline">
+          <Button onClick={() => refetch()} variant="outline" className="min-h-[44px] w-full sm:w-auto">
             Refresh
           </Button>
         </div>
@@ -239,17 +239,17 @@ export default function NursePerformanceDashboard() {
           </Card>
 
           {/* Key Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Compliance Score</p>
-                    <p className={`text-3xl font-bold ${getScoreColor(metrics?.avg_compliance_score)}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">Compliance Score</p>
+                    <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${getScoreColor(metrics?.avg_compliance_score)}`}>
                       {metrics?.avg_compliance_score || 0}%
                     </p>
                   </div>
-                  <CheckCircle2 className="w-8 h-8 text-blue-400" />
+                  <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 flex-shrink-0" />
                 </div>
               </CardContent>
             </Card>
@@ -295,17 +295,19 @@ export default function NursePerformanceDashboard() {
             </Card>
           </div>
 
-          <Tabs defaultValue="insights" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="insights">Insights</TabsTrigger>
-            <TabsTrigger value="quality">Quality</TabsTrigger>
-            <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
-            <TabsTrigger value="utilization">Utilization</TabsTrigger>
-            <TabsTrigger value="burnout">Burnout</TabsTrigger>
-            <TabsTrigger value="goals">My Goals</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
-          </TabsList>
+          <Tabs defaultValue="insights" className="space-y-4 sm:space-y-6">
+          <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex md:grid md:w-full md:grid-cols-8 gap-1 min-w-max h-auto">
+              <TabsTrigger value="insights" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Insights</TabsTrigger>
+              <TabsTrigger value="quality" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Quality</TabsTrigger>
+              <TabsTrigger value="outcomes" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Outcomes</TabsTrigger>
+              <TabsTrigger value="utilization" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Utilization</TabsTrigger>
+              <TabsTrigger value="burnout" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Burnout</TabsTrigger>
+              <TabsTrigger value="goals" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Goals</TabsTrigger>
+              <TabsTrigger value="trends" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Trends</TabsTrigger>
+              <TabsTrigger value="suggestions" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Suggest</TabsTrigger>
+            </TabsList>
+          </div>
 
             {/* Documentation Quality Tab */}
             <TabsContent value="quality" className="space-y-6">

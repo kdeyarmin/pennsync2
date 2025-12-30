@@ -51,21 +51,23 @@ export default function OASIS() {
     <div className="min-h-screen">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-3 h-14">
-              <TabsTrigger value="analyzer" className="gap-2">
-                <FileText className="w-4 h-4" />
-                Analyzer
-              </TabsTrigger>
-              <TabsTrigger value="audits" className="gap-2">
-                <ClipboardCheck className="w-4 h-4" />
-                Audits
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Analytics
-              </TabsTrigger>
-            </TabsList>
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex md:grid md:w-full md:max-w-2xl md:grid-cols-3 gap-1 min-w-max h-auto md:h-14">
+                <TabsTrigger value="analyzer" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                  <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Analyzer</span>
+                </TabsTrigger>
+                <TabsTrigger value="audits" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                  <ClipboardCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Audits</span>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                  <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Analytics</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
         </div>
 
