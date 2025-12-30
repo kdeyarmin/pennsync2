@@ -1371,6 +1371,21 @@ Return JSON with:
       {/* Enhanced Patient Overview */}
       {selectedPatient && (
         <div className="mb-6 bg-blue-50 p-4 rounded-lg border-2 border-blue-300 shadow-lg">
+          {/* Patient Diagnosis Display */}
+          {selectedPatient.primary_diagnosis && (
+            <Alert className="mb-3 bg-white border-blue-400">
+              <Stethoscope className="w-4 h-4 text-blue-600" />
+              <AlertDescription className="text-sm font-medium text-gray-900">
+                <strong className="text-blue-800">Primary Diagnosis:</strong> {selectedPatient.primary_diagnosis}
+                {selectedPatient.secondary_diagnoses && selectedPatient.secondary_diagnoses.length > 0 && (
+                  <span className="text-gray-600 ml-2">
+                    | Secondary: {selectedPatient.secondary_diagnoses.slice(0, 2).join(', ')}
+                    {selectedPatient.secondary_diagnoses.length > 2 && ` +${selectedPatient.secondary_diagnoses.length - 2} more`}
+                  </span>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
           <UnifiedPatientOverview
             patient={selectedPatient}
             carePlans={carePlans}
