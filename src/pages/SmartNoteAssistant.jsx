@@ -570,8 +570,8 @@ export default function SmartNoteAssistant() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 md:mb-6 flex items-center justify-between gap-2 md:gap-4">
-        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+      <div className="mb-4 md:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0 w-full sm:w-auto">
           {currentStep !== 'patient' && (
             <Button 
               variant="outline" 
@@ -583,17 +583,19 @@ export default function SmartNoteAssistant() {
               <span className="hidden md:inline">Back</span>
             </Button>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Smart Note Assistant</h1>
             <p className="text-sm md:text-base text-gray-600 hidden md:block">Transform rough notes into Medicare-compliant documentation</p>
           </div>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
-          <FavoriteButton type="page" id="SmartNoteAssistant" name="Smart Note Assistant" />
+        <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
+          <div className="flex-1 sm:flex-initial">
+            <FavoriteButton type="page" id="SmartNoteAssistant" name="Smart Note Assistant" />
+          </div>
           <Button 
             variant="ghost" 
             size="default" 
-            className="text-gray-500 gap-1 min-h-[44px]"
+            className="text-gray-500 gap-1 min-h-[44px] flex-1 sm:flex-initial"
             onClick={async () => {
               try {
                 const response = await base44.functions.invoke('generateSmartNoteGuide');
@@ -795,12 +797,12 @@ export default function SmartNoteAssistant() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-4">
                 <div className="relative">
-                  <Textarea
-                    value={roughNote}
-                    onChange={(e) => setRoughNote(e.target.value)}
-                    placeholder="Type or dictate your rough notes or bullet points...&#10;&#10;Examples:&#10;• Patient states feeling better&#10;• Wound improving, less drainage&#10;• Taught medication management&#10;• BP elevated, pt needs MD follow-up"
-                    className="min-h-[200px] text-base"
-                  />
+                 <Textarea
+                   value={roughNote}
+                   onChange={(e) => setRoughNote(e.target.value)}
+                   placeholder="Type or dictate your rough notes or bullet points...&#10;&#10;Examples:&#10;• Patient states feeling better&#10;• Wound improving, less drainage&#10;• Taught medication management&#10;• BP elevated, pt needs MD follow-up"
+                   className="min-h-[200px] text-base touch-target"
+                 />
                   {interimText && (
                     <div className="absolute bottom-2 left-2 right-2 bg-blue-100/90 border border-blue-300 rounded px-3 py-2 text-sm text-blue-900 italic pointer-events-none">
                       <Mic className="w-3 h-3 inline mr-1" />
@@ -810,10 +812,10 @@ export default function SmartNoteAssistant() {
                 </div>
                 <div className="flex items-center justify-between">
                   <Button
-                    size="sm"
-                    variant={listening ? "destructive" : "outline"}
-                    onClick={listening ? stopDictation : startDictation}
-                    className="gap-2"
+                   size="sm"
+                   variant={listening ? "destructive" : "outline"}
+                   onClick={listening ? stopDictation : startDictation}
+                   className="gap-2 min-h-[44px]"
                   >
                     {listening ? (
                       <>
@@ -876,12 +878,12 @@ export default function SmartNoteAssistant() {
                 <Textarea
                   value={enhancedNote}
                   onChange={(e) => setEnhancedNote(e.target.value)}
-                  className="min-h-[300px] font-mono text-sm"
+                  className="min-h-[300px] font-mono text-sm touch-target"
                 />
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={handleCopy}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1 bg-green-600 hover:bg-green-700 min-h-[44px]"
                   >
                     {copied ? (
                       <><CheckCircle2 className="w-4 h-4 mr-2" /> Copied!</>
@@ -892,7 +894,7 @@ export default function SmartNoteAssistant() {
                   <Button
                     onClick={handleRecheck}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 min-h-[44px]"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
                     Re-check Note
@@ -900,7 +902,7 @@ export default function SmartNoteAssistant() {
                   <Button
                     onClick={handleClearNote}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 min-h-[44px]"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Start New
