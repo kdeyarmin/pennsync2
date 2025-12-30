@@ -148,7 +148,9 @@ Return violations with: rule_name, reference, severity, status, missing_elements
                     missing_elements: { type: "array", items: { type: "string" } },
                     evidence_found: { type: "string" },
                     compliant_example: { type: "string" },
-                    remediation_text: { type: "string" }
+                    remediation_text: { type: "string" },
+                    regulatory_reference: { type: "string" },
+                    specific_documentation_changes: { type: "array", items: { type: "string" } }
                   }
                 }
               }
@@ -184,7 +186,9 @@ Return violations with: rule_name, reference, severity, status, missing_elements
                     missing_elements: { type: "array", items: { type: "string" } },
                     evidence_found: { type: "string" },
                     compliant_example: { type: "string" },
-                    remediation_text: { type: "string" }
+                    remediation_text: { type: "string" },
+                    regulatory_reference: { type: "string" },
+                    specific_documentation_changes: { type: "array", items: { type: "string" } }
                   }
                 }
               }
@@ -222,7 +226,9 @@ Identify any violations of these recent regulations.`,
                     missing_elements: { type: "array", items: { type: "string" } },
                     evidence_found: { type: "string" },
                     compliant_example: { type: "string" },
-                    remediation_text: { type: "string" }
+                    remediation_text: { type: "string" },
+                    regulatory_reference: { type: "string" },
+                    specific_documentation_changes: { type: "array", items: { type: "string" } }
                   }
                 }
               }
