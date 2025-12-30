@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
+import FeedbackButton from "../components/feedback/FeedbackButton";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
