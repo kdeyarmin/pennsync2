@@ -3,7 +3,7 @@ import ComplianceTrendsDashboard from "../components/compliance/ComplianceTrends
 
 export default function ComplianceTrendsDashboardPage() {
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <ComplianceTrendsDashboard />
     </div>
   );

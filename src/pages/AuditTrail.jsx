@@ -149,69 +149,70 @@ export default function AuditTrail() {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Trail</h1>
-          <p className="text-gray-600">Comprehensive log of all user actions and system events</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Audit Trail</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Comprehensive log of all user actions and system events</p>
         </div>
-        <Button onClick={exportAuditLog} variant="outline">
+        <Button onClick={exportAuditLog} variant="outline" className="w-full sm:w-auto min-h-[44px]">
           <Download className="w-4 h-4 mr-2" />
-          Export CSV
+          <span className="hidden sm:inline">Export CSV</span>
+          <span className="sm:hidden">Export</span>
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-600">Total Events</p>
-            <p className="text-2xl font-bold">{auditLogs.length}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 truncate">Total Events</p>
+            <p className="text-xl sm:text-2xl font-bold">{auditLogs.length}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-600">Filtered</p>
-            <p className="text-2xl font-bold">{filteredLogs.length}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 truncate">Filtered</p>
+            <p className="text-xl sm:text-2xl font-bold">{filteredLogs.length}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-600">Critical Events</p>
-            <p className="text-2xl font-bold text-red-600">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 truncate">Critical Events</p>
+            <p className="text-xl sm:text-2xl font-bold text-red-600">
               {auditLogs.filter(l => l.severity === 'critical').length}
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-600">Active Users</p>
-            <p className="text-2xl font-bold">{uniqueUsers.length}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 truncate">Active Users</p>
+            <p className="text-xl sm:text-2xl font-bold">{uniqueUsers.length}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardHeader className="py-4">
-          <CardTitle className="text-base flex items-center gap-2">
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="p-3 sm:p-4">
+          <CardTitle className="text-sm sm:text-base flex items-center gap-2">
             <Filter className="w-4 h-4" />
             Filters
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder="Search users, actions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-11 touch-target"
               />
             </div>
             <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Action Type" />
               </SelectTrigger>
               <SelectContent>
@@ -222,7 +223,7 @@ export default function AuditTrail() {
               </SelectContent>
             </Select>
             <Select value={entityFilter} onValueChange={setEntityFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Entity Type" />
               </SelectTrigger>
               <SelectContent>
@@ -233,7 +234,7 @@ export default function AuditTrail() {
               </SelectContent>
             </Select>
             <Select value={userFilter} onValueChange={setUserFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="User" />
               </SelectTrigger>
               <SelectContent>
@@ -244,7 +245,7 @@ export default function AuditTrail() {
               </SelectContent>
             </Select>
             <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Severity" />
               </SelectTrigger>
               <SelectContent>
@@ -255,7 +256,7 @@ export default function AuditTrail() {
               </SelectContent>
             </Select>
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Time Range" />
               </SelectTrigger>
               <SelectContent>
@@ -273,18 +274,19 @@ export default function AuditTrail() {
       {/* Audit Log Table */}
       <Card>
         <CardContent className="p-0">
-          <ScrollArea className="h-[600px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Entity</TableHead>
-                  <TableHead>Severity</TableHead>
-                  <TableHead>Details</TableHead>
-                </TableRow>
-              </TableHeader>
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <ScrollArea className="h-[400px] sm:h-[600px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs sm:text-sm">Timestamp</TableHead>
+                    <TableHead className="text-xs sm:text-sm">User</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Action</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Entity</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Severity</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Details</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
@@ -301,42 +303,43 @@ export default function AuditTrail() {
                 ) : (
                   filteredLogs.map((log, idx) => (
                     <TableRow key={idx} className="hover:bg-gray-50">
-                      <TableCell className="text-xs">
+                      <TableCell className="text-xs whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-gray-400" />
-                          {formatEastern(new Date(log.created_date), 'MMM d, yyyy HH:mm:ss')}
+                          <Calendar className="w-3 h-3 text-gray-400 hidden sm:inline" />
+                          <span className="hidden sm:inline">{formatEastern(new Date(log.created_date), 'MMM d, yyyy HH:mm:ss')}</span>
+                          <span className="sm:hidden">{formatEastern(new Date(log.created_date), 'MMM d, HH:mm')}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-xs">
                         <div className="flex items-center gap-1">
-                          <User className="w-3 h-3 text-gray-400" />
-                          <div>
-                            <p className="text-xs font-medium">{log.user_name}</p>
-                            <p className="text-xs text-gray-500">{log.user_email}</p>
+                          <User className="w-3 h-3 text-gray-400 hidden sm:inline flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate">{log.user_name}</p>
+                            <p className="text-xs text-gray-500 truncate hidden sm:block">{log.user_email}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <span className={`text-xs font-medium ${getActionColor(log.action)}`}>
+                      <TableCell className="text-xs">
+                        <span className={`font-medium ${getActionColor(log.action)} truncate block`}>
                           {log.action?.replace(/_/g, ' ')}
                         </span>
                       </TableCell>
-                      <TableCell className="text-xs">
+                      <TableCell className="text-xs hidden md:table-cell">
                         {log.entity_type && (
                           <div>
                             <Badge variant="outline" className="text-xs">
                               {log.entity_type}
                             </Badge>
                             {log.entity_id && (
-                              <p className="text-gray-500 mt-1">ID: {log.entity_id.substring(0, 8)}...</p>
+                              <p className="text-gray-500 mt-1 truncate">ID: {log.entity_id.substring(0, 8)}...</p>
                             )}
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {getSeverityBadge(log.severity)}
                       </TableCell>
-                      <TableCell className="text-xs max-w-xs">
+                      <TableCell className="text-xs max-w-xs hidden lg:table-cell">
                         {log.details && (
                           <details className="cursor-pointer">
                             <summary className="text-blue-600 hover:text-blue-700">
@@ -354,6 +357,7 @@ export default function AuditTrail() {
               </TableBody>
             </Table>
           </ScrollArea>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -336,37 +336,39 @@ export default function ClinicalPathwayManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Brain className="w-8 h-8 text-indigo-600" />
-              Clinical & OASIS Management
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 flex-shrink-0" />
+              <span className="truncate">Clinical & OASIS Management</span>
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 hidden sm:block">
               AI-powered clinical documentation, OASIS assessments, and care planning
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             {pathways.length === 0 && (
               <Button
                 onClick={createSamplePathways}
                 variant="outline"
                 disabled={createMutation.isPending}
+                className="w-full sm:w-auto min-h-[44px]"
               >
                 {createMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</>
                 ) : (
-                  <>Load Sample Pathways</>
+                  <><span className="hidden sm:inline">Load Sample Pathways</span><span className="sm:hidden">Load Samples</span></>
                 )}
               </Button>
             )}
             <Dialog open={showDialog} onOpenChange={setShowDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setEditingPathway(null)}>
+                <Button className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto min-h-[44px]" onClick={() => setEditingPathway(null)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  New Pathway
+                  <span className="hidden sm:inline">New Pathway</span>
+                  <span className="sm:hidden">New</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -391,28 +393,32 @@ export default function ClinicalPathwayManager() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 w-full mb-6">
-            <TabsTrigger value="pathways" className="flex items-center gap-2">
-              <Route className="w-4 h-4" />
-              Pathways
-            </TabsTrigger>
-            <TabsTrigger value="ai-generate" className="flex items-center gap-2">
-              <Brain className="w-4 h-4" />
-              AI Generate
-            </TabsTrigger>
-            <TabsTrigger value="oasis" className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              OASIS
-            </TabsTrigger>
-            <TabsTrigger value="icd10" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              ICD-10
-            </TabsTrigger>
-            <TabsTrigger value="careplan" className="flex items-center gap-2">
-              <ClipboardList className="w-4 h-4" />
-              Care Plan
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
+            <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
+              <TabsTrigger value="pathways" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                <Route className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>Pathways</span>
+              </TabsTrigger>
+              <TabsTrigger value="ai-generate" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden md:inline">AI Generate</span>
+                <span className="md:hidden">AI Gen</span>
+              </TabsTrigger>
+              <TabsTrigger value="oasis" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>OASIS</span>
+              </TabsTrigger>
+              <TabsTrigger value="icd10" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>ICD-10</span>
+              </TabsTrigger>
+              <TabsTrigger value="careplan" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+                <ClipboardList className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden md:inline">Care Plan</span>
+                <span className="md:hidden">Plan</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="pathways">
             {pathways.length === 0 ? (
@@ -483,14 +489,15 @@ export default function ClinicalPathwayManager() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-wrap gap-2 pt-2">
                    <Button
                      variant="outline"
                      size="sm"
                      onClick={() => handleEdit(pathway)}
+                     className="min-h-[44px]"
                    >
-                     <Edit className="w-3 h-3 mr-2" />
-                     Edit
+                     <Edit className="w-3 h-3 mr-1 sm:mr-2" />
+                     <span className="hidden sm:inline">Edit</span>
                    </Button>
                    <Button
                      variant="outline"
@@ -499,29 +506,32 @@ export default function ClinicalPathwayManager() {
                        setSelectedPathwayForUpdate(pathway);
                        setActiveTab("ai-generate");
                      }}
-                     className="text-blue-600 hover:bg-blue-50"
+                     className="text-blue-600 hover:bg-blue-50 min-h-[44px]"
                    >
-                     <Brain className="w-3 h-3 mr-2" />
-                     AI Update
+                     <Brain className="w-3 h-3 mr-1 sm:mr-2" />
+                     <span className="hidden sm:inline">AI Update</span>
+                     <span className="sm:hidden">AI</span>
                    </Button>
                    <Button
                      variant="outline"
                      size="sm"
                      onClick={() => handleDuplicate(pathway)}
                      disabled={createMutation.isPending}
+                     className="min-h-[44px]"
                    >
-                     <Copy className="w-3 h-3 mr-2" />
-                     Duplicate
+                     <Copy className="w-3 h-3 mr-1 sm:mr-2" />
+                     <span className="hidden sm:inline">Duplicate</span>
+                     <span className="sm:hidden">Copy</span>
                    </Button>
                    <Button
                      variant="outline"
                      size="sm"
                      onClick={() => deleteMutation.mutate(pathway.id)}
                      disabled={deleteMutation.isPending}
-                     className="text-red-600 hover:bg-red-50"
+                     className="text-red-600 hover:bg-red-50 min-h-[44px]"
                    >
-                     <Trash2 className="w-3 h-3 mr-2" />
-                     Delete
+                     <Trash2 className="w-3 h-3 mr-1 sm:mr-2" />
+                     <span className="hidden sm:inline">Delete</span>
                    </Button>
                   </div>
                 </CardContent>
@@ -532,7 +542,7 @@ export default function ClinicalPathwayManager() {
           </TabsContent>
 
           <TabsContent value="ai-generate">
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <AIPathwayGenerator
                 onPathwayGenerated={(pathway) => {
                   queryClient.invalidateQueries({ queryKey: ['clinicalPathways'] });
@@ -562,7 +572,7 @@ export default function ClinicalPathwayManager() {
           </TabsContent>
 
           <TabsContent value="oasis">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
                 <AIAssessmentDrafter
                   onDraftComplete={(assessment) => {
