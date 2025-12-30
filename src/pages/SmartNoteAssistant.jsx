@@ -406,6 +406,7 @@ export default function SmartNoteAssistant() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [interimVoiceText, setInterimVoiceText] = useState('');
+  const [collapsedSteps, setCollapsedSteps] = useState([]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -520,10 +521,19 @@ export default function SmartNoteAssistant() {
   const currentStep = useMemo(() => {
     if (!selectedPatientId) return 'patient';
     if (!vitalSigns.bp && !vitalSigns.hr) return 'vitals';
-    if (!roughNote || roughNote.length < 20) return 'notes';
+    if (!roughNote || roughNote.length < 50) return 'notes';
     if (!enhancedNote) return 'review';
     return 'complete';
   }, [selectedPatientId, vitalSigns, roughNote, enhancedNote]);
+
+  // Auto-collapse completed steps
+  useEffect(() => {
+    const newCollapsed = [];
+    if (selectedPatientId && currentStep !== 'patient') newCollapsed.push('patient');
+    if ((vitalSigns.bp || vitalSigns.hr) && currentStep !== 'vitals') newCollapsed.push('vitals');
+    if (roughNote.length >= 50 && currentStep !== 'notes' && !enhancedNote) newCollapsed.push('notes');
+    setCollapsedSteps(newCollapsed);
+  }, [currentStep, selectedPatientId, vitalSigns, roughNote, enhancedNote]);
 
   const stepOrder = ['patient', 'vitals', 'notes', 'review', 'complete'];
   
@@ -551,11 +561,17 @@ export default function SmartNoteAssistant() {
     const steps = [];
     if (selectedPatientId) steps.push('patient');
     if (vitalSigns.bp || vitalSigns.hr) steps.push('vitals');
-    if (roughNote.length >= 20) steps.push('notes');
+    if (roughNote.length >= 50) steps.push('notes');
     if (analysisResults) steps.push('review');
     if (enhancedNote) steps.push('complete');
     return steps;
   }, [selectedPatientId, vitalSigns, roughNote, enhancedNote, analysisResults]);
+
+  const toggleStepCollapse = (step) => {
+    setCollapsedSteps(prev => 
+      prev.includes(step) ? prev.filter(s => s !== step) : [...prev, step]
+    );
+  };
 
   const handleEnhancedNoteReady = async ({ enhancedNote: finalNote, analysis, appliedSuggestions }) => {
     setEnhancedNote(finalNote);
@@ -671,6 +687,7 @@ export default function SmartNoteAssistant() {
     setVisitDate(todayEastern());
     setCopied(false);
     setSavedSuccessfully(false);
+    setCollapsedSteps([]);
   };
 
 
@@ -734,89 +751,55 @@ export default function SmartNoteAssistant() {
         </div>
       </div>
 
-      {/* Enhanced Step Progress */}
-      <EnhancedStepIndicator 
-        currentStep={currentStep} 
-        completedSteps={completedSteps}
-        onStepClick={handleStepClick}
-        patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
-        vitalStats={vitalSigns.bp || vitalSigns.hr ? `BP: ${vitalSigns.bp || '-'}, HR: ${vitalSigns.hr || '-'}` : null}
-        noteLength={roughNote.length}
-        complianceScore={analysisResults?.overall_score}
-      />
-
-      {/* Enhanced Patient Overview */}
-      {selectedPatient && (
-        <div className="mb-6 bg-blue-50 p-4 rounded-lg border-2 border-blue-300 shadow-lg">
-          {/* Patient Diagnosis Display */}
-          {selectedPatient.primary_diagnosis && (
-            <Alert className="mb-3 bg-white border-blue-400">
-              <Activity className="w-4 h-4 text-blue-600" />
-              <AlertDescription className="text-sm font-medium text-gray-900">
-                <strong className="text-blue-800">Primary Diagnosis:</strong> {selectedPatient.primary_diagnosis}
-                {selectedPatient.secondary_diagnoses && Array.isArray(selectedPatient.secondary_diagnoses) && selectedPatient.secondary_diagnoses.length > 0 && (
-                  <span className="text-gray-600 ml-2">
-                    | Secondary: {selectedPatient.secondary_diagnoses.slice(0, 2).join(', ')}
-                    {selectedPatient.secondary_diagnoses.length > 2 && ` +${selectedPatient.secondary_diagnoses.length - 2} more`}
-                  </span>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-          <UnifiedPatientOverview
-            patient={selectedPatient}
-            carePlans={carePlans}
-            recentVisits={recentVisits}
-            patientOASIS={patientOASIS}
-            vitalSigns={vitalSigns}
-            diagnosis={finalDiagnosis}
-            onClear={() => setSelectedPatientId("")}
-            onSyncData={(syncData) => {
-              if (syncData.diagnosis) {
-                setDiagnosis("Custom (type below)");
-                setCustomDiagnosis(syncData.diagnosis);
-              }
-              const narrativeIntro = [];
-              if (syncData.diagnosis) narrativeIntro.push(`Patient with ${syncData.diagnosis}`);
-              if (Array.isArray(syncData.comorbidities) && syncData.comorbidities.length > 0) {
-                narrativeIntro.push(`and ${syncData.comorbidities.slice(0, 3).join(', ')}`);
-              }
-              if (syncData.admissionSource === 'institutional') {
-                narrativeIntro.push('Recently discharged from facility.');
-              }
-              if (narrativeIntro.length > 0) {
-                setRoughNote(prev => narrativeIntro.join(' ') + '. ' + prev);
-              }
-            }}
-            onInsertTemplate={(template) => setRoughNote(prev => prev + '\n\n' + template)}
-          />
-          {/* Quick Patient Info Bar */}
-          {selectedPatient.allergies && (
-            <Alert className="mt-3 bg-red-50 border-red-300">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <AlertDescription className="text-sm font-medium text-red-800">
-                <strong>ALLERGIES:</strong> {selectedPatient.allergies}
-              </AlertDescription>
-            </Alert>
-          )}
+      {/* Simplified Progress */}
+      {!enhancedNote && (
+        <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+          <span className="font-medium">{currentStep === 'patient' ? '1/3' : currentStep === 'vitals' ? '2/3' : '3/3'}</span>
+          <ChevronRight className="w-4 h-4" />
+          <span>{currentStep === 'patient' ? 'Select Patient' : currentStep === 'vitals' ? 'Enter Vitals' : currentStep === 'notes' ? 'Write Notes' : 'Reviewing...'}</span>
         </div>
+      )}
+
+      {/* Compact Patient Overview */}
+      {selectedPatient && currentStep !== 'patient' && (
+        <Card className="mb-4 bg-blue-50 border-blue-300">
+          <CardContent className="p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="font-medium text-gray-900">{selectedPatient.first_name} {selectedPatient.last_name}</p>
+                <p className="text-xs text-gray-600">{selectedPatient.primary_diagnosis}</p>
+              </div>
+            </div>
+            {selectedPatient.allergies && (
+              <Badge variant="destructive" className="text-xs"><AlertTriangle className="w-3 h-3 mr-1" /> Allergies</Badge>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="lg:col-span-2 space-y-4 md:space-y-6">
 
-          {/* Step 1: Patient Selection - Enhanced */}
-          <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 ring-4 ring-blue-200 shadow-xl' : 'border-gray-300'}`}>
-            <CardHeader className="py-5 md:py-6 bg-gradient-to-r from-blue-100 to-indigo-100">
-              <CardTitle className="text-lg md:text-xl flex items-center gap-3">
-                <div className={`p-2 rounded-full ${currentStep === 'patient' ? 'bg-blue-500' : 'bg-gray-400'}`}>
-                  <User className="w-5 h-5 text-white" />
+          {/* Step 1: Patient Selection - Collapsible */}
+          <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
+            <CardHeader 
+              className={`py-4 md:py-5 cursor-pointer ${currentStep === 'patient' ? 'bg-gradient-to-r from-blue-100 to-indigo-100' : 'bg-gray-50'}`}
+              onClick={() => collapsedSteps.includes('patient') && toggleStepCollapse('patient')}
+            >
+              <CardTitle className="text-base md:text-lg flex items-center gap-3">
+                <div className={`p-2 rounded-full ${selectedPatient ? 'bg-green-500' : 'bg-blue-500'}`}>
+                  <User className="w-4 h-4 text-white" />
                 </div>
-                <span>1. Select Patient & Visit Type</span>
-                {selectedPatient && <CheckCircle2 className="w-6 h-6 text-green-600 ml-auto animate-pulse" />}
+                <span>1. Patient & Visit</span>
+                {selectedPatient && (
+                  <span className="text-sm text-gray-600 ml-2">{selectedPatient.first_name} {selectedPatient.last_name}</span>
+                )}
+                {selectedPatient && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 md:p-6 space-y-4">
+            {!collapsedSteps.includes('patient') && (
+              <CardContent className="p-4 md:p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <div>
                   <Label className="text-sm md:text-base mb-2 block">Patient</Label>
@@ -885,49 +868,61 @@ export default function SmartNoteAssistant() {
                   className="h-11 md:h-12 text-base"
                 />
               )}
-            </CardContent>
+              </CardContent>
+            )}
           </Card>
 
 
 
-          {/* Step 2: Vitals - Enhanced */}
-          <Card id="step-vitals" className={`border-2 transition-all duration-300 ${currentStep === 'vitals' ? 'border-green-500 ring-4 ring-green-200 shadow-xl' : 'border-gray-300'}`}>
-            <CardHeader className="py-5 md:py-6 bg-gradient-to-r from-green-100 to-emerald-100">
-              <CardTitle className="text-lg md:text-xl flex items-center gap-3">
-                <div className={`p-2 rounded-full ${currentStep === 'vitals' ? 'bg-green-500' : 'bg-gray-400'}`}>
-                  <Activity className="w-5 h-5 text-white" />
-                </div>
-                <span>2. Vital Signs</span>
-                {(vitalSigns.bp || vitalSigns.hr) && <CheckCircle2 className="w-6 h-6 text-green-600 ml-auto animate-pulse" />}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6">
-              <SmartVitalsInput 
-                vitalSigns={vitalSigns} 
-                onChange={setVitalSigns} 
-              />
-            </CardContent>
-          </Card>
+          {/* Step 2: Vitals - Collapsible */}
+          {selectedPatientId && (
+            <Card id="step-vitals" className={`border-2 transition-all duration-300 ${currentStep === 'vitals' ? 'border-green-500 shadow-lg' : 'border-gray-300'}`}>
+              <CardHeader 
+                className={`py-4 md:py-5 cursor-pointer ${currentStep === 'vitals' ? 'bg-gradient-to-r from-green-100 to-emerald-100' : 'bg-gray-50'}`}
+                onClick={() => collapsedSteps.includes('vitals') && toggleStepCollapse('vitals')}
+              >
+                <CardTitle className="text-base md:text-lg flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${(vitalSigns.bp || vitalSigns.hr) ? 'bg-green-500' : 'bg-gray-400'}`}>
+                    <Activity className="w-4 h-4 text-white" />
+                  </div>
+                  <span>2. Vitals</span>
+                  {(vitalSigns.bp || vitalSigns.hr) && (
+                    <span className="text-sm text-gray-600 ml-2">BP: {vitalSigns.bp || '-'} | HR: {vitalSigns.hr || '-'}</span>
+                  )}
+                  {(vitalSigns.bp || vitalSigns.hr) && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
+                </CardTitle>
+              </CardHeader>
+              {!collapsedSteps.includes('vitals') && (
+                <CardContent className="p-4 md:p-6">
+                  <SmartVitalsInput 
+                    vitalSigns={vitalSigns} 
+                    onChange={setVitalSigns} 
+                  />
+                </CardContent>
+              )}
+            </Card>
+          )}
 
           {/* Step 3: Rough Notes */}
-          <Card id="step-notes" className={`border-2 transition-all duration-300 ${currentStep === 'notes' ? 'border-purple-500 ring-4 ring-purple-200 shadow-xl' : 'border-gray-300'}`}>
-            <CardHeader className="py-5 md:py-6 bg-gradient-to-r from-purple-100 to-pink-100">
-              <CardTitle className="text-lg md:text-xl flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`p-2 rounded-full ${currentStep === 'notes' ? 'bg-purple-500' : 'bg-gray-400'}`}>
-                    <Edit3 className="w-5 h-5 text-white flex-shrink-0" />
+          {selectedPatientId && (vitalSigns.bp || vitalSigns.hr) && (
+            <Card id="step-notes" className={`border-2 transition-all duration-300 ${currentStep === 'notes' ? 'border-purple-500 shadow-lg' : 'border-gray-300'}`}>
+              <CardHeader className={`py-4 md:py-5 ${currentStep === 'notes' ? 'bg-gradient-to-r from-purple-100 to-pink-100' : 'bg-gray-50'}`}>
+                <CardTitle className="text-base md:text-lg flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`p-2 rounded-full ${roughNote.length >= 50 ? 'bg-green-500' : 'bg-purple-500'}`}>
+                      <Edit3 className="w-4 h-4 text-white flex-shrink-0" />
+                    </div>
+                    <span className="truncate">3. Notes</span>
+                    {roughNote.length >= 50 && <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />}
                   </div>
-                  <span className="truncate">3. Your Notes or Bullet Points</span>
-                  {roughNote.length >= 20 && <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 animate-pulse" />}
-                </div>
                 <VoiceHub 
                   onTranscription={handleVoiceTranscription}
                   onInterimTranscription={handleInterimTranscription}
-                  onCommand={handleVoiceCommand}
-                />
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 space-y-4">
+                    onCommand={handleVoiceCommand}
+                  />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 space-y-4">
               <div className="relative">
                 <Textarea
                   value={roughNote}
@@ -942,14 +937,15 @@ export default function SmartNoteAssistant() {
                   </div>
                 )}
               </div>
-              <p className={`text-sm ${roughNote.length >= 20 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                {roughNote.length} characters {roughNote.length < 20 && roughNote.length > 0 && <span className="text-orange-500">(min 20 required)</span>}
-              </p>
-            </CardContent>
-          </Card>
+                <p className={`text-sm ${roughNote.length >= 50 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                  {roughNote.length} characters {roughNote.length < 50 && roughNote.length > 0 && <span className="text-orange-500">(min 50 for auto-enhance)</span>}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Step 4: Unified Analysis & Review */}
-          {roughNote.length >= 20 && !enhancedNote && (
+          {/* Step 4: Auto-Enhancement */}
+          {roughNote.length >= 50 && !enhancedNote && (
             <div id="step-review">
               <UnifiedDocumentReview
                 roughNote={roughNote}
@@ -961,22 +957,20 @@ export default function SmartNoteAssistant() {
                 recentVisits={recentVisits}
                 nurseType={currentUser?.credential_type || 'RN'}
                 onEnhancedNoteReady={handleEnhancedNoteReady}
-                autoRun={false}
+                autoRun={true}
               />
             </div>
           )}
 
 
 
-          {/* Step 5: Final Enhanced Note */}
+          {/* Final Enhanced Note */}
           {enhancedNote && (
-            <Card id="step-complete" className="border-4 border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-2xl">
-              <CardHeader className="py-6 md:py-7 bg-gradient-to-r from-green-100 to-emerald-100">
-                <CardTitle className="text-lg md:text-2xl flex items-center gap-3">
-                  <div className="p-3 bg-green-500 rounded-full">
-                    <CheckCircle2 className="w-6 h-6 text-white" />
-                  </div>
-                  <span>✨ Enhanced Note - Ready for EHR</span>
+            <Card id="step-complete" className="border-3 border-green-500 shadow-xl">
+              <CardHeader className="py-5 bg-green-100">
+                <CardTitle className="text-lg flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span>Ready for EHR</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-4">
@@ -1019,40 +1013,6 @@ export default function SmartNoteAssistant() {
 
         </div>
       </div>
-
-      {selectedPatient && !enhancedNote && (
-        <div className="space-y-4 mt-6">
-          <AIScenarioTemplates
-            visitType={visitType}
-            diagnosis={finalDiagnosis}
-            patientData={selectedPatient}
-            onInsertTemplate={(text) => setRoughNote(prev => prev ? prev + '\n\n' + text : text)}
-          />
-
-          <AIPatientHistorySummarizer
-            patientId={selectedPatientId}
-            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
-            diagnosis={finalDiagnosis || selectedPatient.primary_diagnosis}
-            previousVisits={recentVisits}
-            carePlans={carePlans}
-            onInsertSummary={(text) => setRoughNote(prev => text + '\n\n' + prev)}
-            compact={true}
-          />
-        </div>
-      )}
-
-      {selectedPatient && (roughNote.length > 50 || enhancedNote) && (
-        <div className="mt-6">
-          <ProactiveEducationSuggester
-            diagnosis={finalDiagnosis}
-            roughNote={roughNote}
-            enhancedNote={enhancedNote}
-            patientId={selectedPatientId}
-            patientEmail={selectedPatient.email}
-            caregiverEmail={selectedPatient.caregiver_email}
-          />
-        </div>
-      )}
     </div>
   );
 }
