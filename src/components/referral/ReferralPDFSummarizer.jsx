@@ -301,6 +301,33 @@ Extract everything mentioned, even if partial. If information is missing, note i
     navigator.clipboard.writeText(allText);
   };
 
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+
+  const generateAdmissionPacket = async () => {
+    if (!extractedData) return;
+    
+    setGeneratingPDF(true);
+    try {
+      const response = await base44.functions.invoke('generateReferralOASISPacket', {
+        referralData: extractedData
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `admission_packet_${extractedData.demographics?.full_name?.replace(/\s+/g, '_') || 'patient'}_${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate admission packet. Please try again.');
+    }
+    setGeneratingPDF(false);
+  };
+
   return (
     <div className="space-y-4">
       <Card className="border-2 border-blue-300">
@@ -353,10 +380,23 @@ Extract everything mentioned, even if partial. If information is missing, note i
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                   <p className="font-medium text-green-900">Referral Processed Successfully</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={copyAll}>
                     <Copy className="w-4 h-4 mr-1" />
                     Copy All
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={generateAdmissionPacket}
+                    disabled={generatingPDF}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {generatingPDF ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-1" />
+                    )}
+                    Admission Packet PDF
                   </Button>
                   {onUseForAdmission && (
                     <Button size="sm" onClick={() => onUseForAdmission(extractedData)} className="bg-green-600 hover:bg-green-700">
