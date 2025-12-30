@@ -104,18 +104,15 @@ export default function Layout({ children, currentPageName }) {
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
         { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Referral Processor", icon: FileText, page: "ReferralProcessor" },
-        { name: "Patient Education", icon: FileText, page: "PatientEducationHub" },
-        { name: "Education Generator", icon: BookOpen, page: "PatientEducationGenerator" }
+        { name: "Patient Education", icon: FileText, page: "PatientEducationHub" }
       ]
     },
     {
       category: "Quality & Compliance",
       items: [
         { name: "Medicare Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
-        { name: "Compliance Trends", icon: BarChart3, page: "ComplianceTrendsDashboard" },
         { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
         { name: "Guidelines Library", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
-        { name: "Clinical Insights", icon: BarChart3, page: "ClinicalInsightsDashboard" },
         { name: "Features", icon: Sparkles, page: "Features" }
       ]
     }
@@ -123,14 +120,12 @@ export default function Layout({ children, currentPageName }) {
 
   const adminItems = [
     { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
-    { name: "Advanced Analytics", icon: BarChart3, page: "AdvancedAnalyticsDashboard" },
     { name: "Users & Settings", icon: Users, page: "UserManagement" },
     { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
     { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
     { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
-    { name: "Import Patients", icon: Users, page: "ImportPatients" },
     { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
     ];
 
