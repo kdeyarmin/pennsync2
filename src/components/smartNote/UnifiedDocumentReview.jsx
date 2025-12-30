@@ -227,7 +227,7 @@ Also generate an ENHANCED VERSION of the note that addresses all critical issues
       compliance: Shield,
       quality: Lightbulb,
       billing: DollarSign,
-      clinical: Stethoscope
+      clinical: Target
     };
     return icons[category] || AlertCircle;
   };
