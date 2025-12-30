@@ -44,7 +44,6 @@ import PatientDashboard from './pages/PatientDashboard';
 import PatientDataManagement from './pages/PatientDataManagement';
 import PatientDetails from './pages/PatientDetails';
 import PatientEducation from './pages/PatientEducation';
-import PatientEducationGenerator from './pages/PatientEducationGenerator';
 import PatientEducationHub from './pages/PatientEducationHub';
 import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
@@ -113,7 +112,6 @@ export const PAGES = {
     "PatientDataManagement": PatientDataManagement,
     "PatientDetails": PatientDetails,
     "PatientEducation": PatientEducation,
-    "PatientEducationGenerator": PatientEducationGenerator,
     "PatientEducationHub": PatientEducationHub,
     "PatientRecordDashboard": PatientRecordDashboard,
     "Patients": Patients,

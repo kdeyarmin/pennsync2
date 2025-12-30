@@ -188,6 +188,8 @@ export default function PatientEducationHub() {
   const [customNotes, setCustomNotes] = useState("");
   const [showCustomization, setShowCustomization] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [readingLevel, setReadingLevel] = useState("5th-6th");
+  const [format, setFormat] = useState("comprehensive");
   const [styleOptions, setStyleOptions] = useState({
     colorScheme: 'penn_health',
     fontFamily: 'helvetica',
@@ -570,6 +572,34 @@ export default function PatientEducationHub() {
                   {/* Customization Panel */}
                   {showCustomization && (
                     <div className="space-y-4 pt-2">
+                      <div>
+                        <Label className="text-sm">Reading Level</Label>
+                        <Select value={readingLevel} onValueChange={setReadingLevel}>
+                          <SelectTrigger className="mt-2 h-11 touch-target">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="3rd-4th">3rd-4th Grade (Very Simple)</SelectItem>
+                            <SelectItem value="5th-6th">5th-6th Grade (Simple)</SelectItem>
+                            <SelectItem value="7th-8th">7th-8th Grade (Moderate)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className="text-sm">Format Style</Label>
+                        <Select value={format} onValueChange={setFormat}>
+                          <SelectTrigger className="mt-2 h-11 touch-target">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="comprehensive">Comprehensive</SelectItem>
+                            <SelectItem value="quick_reference">Quick Reference</SelectItem>
+                            <SelectItem value="caregiver_focused">Caregiver Focused</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <HandoutStyleCustomizer
                         styleOptions={styleOptions}
                         onStyleChange={setStyleOptions}
