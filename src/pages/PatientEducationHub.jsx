@@ -389,21 +389,21 @@ export default function PatientEducationHub() {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="w-8 h-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Patient Education Hub</h1>
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Patient Education Hub</h1>
         </div>
-        <p className="text-gray-600">
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">
           Generate personalized, AI-powered educational materials for your patients
         </p>
       </div>
 
       {/* AI Personalized Generator for Selected Patient */}
       {selectedPatient && (
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <PersonalizedEducationGenerator
             patient={selectedPatient}
             carePlans={[]}
@@ -414,8 +414,8 @@ export default function PatientEducationHub() {
 
       {/* Success Message */}
       {successMessage && (
-        <Card className="mb-6 border-green-200 bg-green-50">
-          <CardContent className="p-4 flex items-center gap-2">
+        <Card className="mb-4 sm:mb-6 border-green-200 bg-green-50">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-green-600" />
             <p className="text-green-800 font-medium">{successMessage}</p>
           </CardContent>
@@ -423,11 +423,11 @@ export default function PatientEducationHub() {
       )}
 
       {/* Search and Patient Selection */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <Label className="text-xs mb-2 block">Select Patient (Optional)</Label>
+              <Label className="text-xs sm:text-sm mb-2 block">Select Patient (Optional)</Label>
               <Select value={patientId} onValueChange={(value) => {
                 setPatientId(value);
                 const patient = patients.find(p => p.id === value);
@@ -435,7 +435,7 @@ export default function PatientEducationHub() {
                   setPatientEmail(patient.email);
                 }
               }}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 touch-target">
                   <SelectValue placeholder="Select patient for personalization..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -448,14 +448,14 @@ export default function PatientEducationHub() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs mb-2 block">Search Topics</Label>
+              <Label className="text-xs sm:text-sm mb-2 block">Search Topics</Label>
               <div className="relative">
                 <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Search education topics..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-11 touch-target"
                 />
               </div>
             </div>
@@ -463,11 +463,11 @@ export default function PatientEducationHub() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Topics Grid */}
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Standard Education Templates</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Standard Education Templates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {filteredTopics.map((topic) => {
               const Icon = topic.icon;
               const isSelected = selectedTopic?.id === topic.id;
@@ -475,19 +475,19 @@ export default function PatientEducationHub() {
               return (
                 <Card
                   key={topic.id}
-                  className={`cursor-pointer transition-all hover:shadow-lg ${
+                  className={`cursor-pointer transition-all hover:shadow-lg touch-target ${
                     isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''
                   }`}
                   onClick={() => setSelectedTopic(topic)}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-lg bg-gradient-to-br ${topic.color} shadow-md`}>
-                        <Icon className="w-6 h-6 text-white" />
+                  <CardContent className="p-3 sm:p-4 md:p-6">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${topic.color} shadow-md flex-shrink-0`}>
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">{topic.title}</h3>
-                        <p className="text-sm text-gray-600">{topic.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-1">{topic.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">{topic.description}</p>
                         {isSelected && (
                           <Badge className="mt-2 bg-blue-600">Selected</Badge>
                         )}
@@ -502,11 +502,11 @@ export default function PatientEducationHub() {
 
         {/* Actions Panel */}
         <div>
-          <Card className="sticky top-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Generate Handout</CardTitle>
+          <Card className="lg:sticky lg:top-6">
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Generate Handout</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
               {!selectedTopic ? (
                 <div className="text-center py-8 text-gray-500">
                   <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
@@ -522,7 +522,7 @@ export default function PatientEducationHub() {
                   </div>
 
                   <div>
-                    <Label>Patient (Optional)</Label>
+                    <Label className="text-sm">Patient (Optional)</Label>
                     <Select value={patientId} onValueChange={(value) => {
                       setPatientId(value);
                       const patient = patients.find(p => p.id === value);
@@ -530,7 +530,7 @@ export default function PatientEducationHub() {
                         setPatientEmail(patient.email);
                       }
                     }}>
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 h-11 touch-target">
                         <SelectValue placeholder="Select patient..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -544,13 +544,13 @@ export default function PatientEducationHub() {
                   </div>
 
                   <div>
-                    <Label>Email Address (for emailing)</Label>
+                    <Label className="text-sm">Email Address (for emailing)</Label>
                     <Input
                       type="email"
                       placeholder="patient@example.com"
                       value={patientEmail}
                       onChange={(e) => setPatientEmail(e.target.value)}
-                      className="mt-2"
+                      className="mt-2 h-11 touch-target"
                     />
                   </div>
 
@@ -560,7 +560,7 @@ export default function PatientEducationHub() {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowCustomization(!showCustomization)}
-                      className="w-full"
+                      className="w-full min-h-[44px]"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       {showCustomization ? 'Hide' : 'Show'} Customization
@@ -600,7 +600,7 @@ export default function PatientEducationHub() {
                     <Button
                       onClick={() => setShowPreview(true)}
                       variant="outline"
-                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 min-h-[44px]"
                     >
                       <BookOpen className="w-4 h-4 mr-2" />
                       Preview Handout
@@ -609,7 +609,7 @@ export default function PatientEducationHub() {
                     <Button
                       onClick={handleDownload}
                       disabled={isGenerating}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700 min-h-[44px]"
                     >
                       {isGenerating ? (
                         <>
@@ -628,7 +628,7 @@ export default function PatientEducationHub() {
                       onClick={handleEmail}
                       disabled={!patientEmail || isEmailing}
                       variant="outline"
-                      className="w-full"
+                      className="w-full min-h-[44px]"
                     >
                       {isEmailing ? (
                         <>

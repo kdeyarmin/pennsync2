@@ -129,62 +129,62 @@ export default function StaffTrainingHub() {
   const totalTime = trainingProgress.reduce((sum, p) => sum + (p.time_spent_minutes || 0), 0);
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <GraduationCap className="w-7 h-7 text-indigo-600" />
-          My Training Hub
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <GraduationCap className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600 flex-shrink-0" />
+          <span className="truncate">My Training Hub</span>
         </h1>
-        <p className="text-gray-600 mt-1">Your personalized training on documentation, compliance, and patient communication</p>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Your personalized training on documentation, compliance, and patient communication</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-xs">Quizzes Passed</p>
-                <p className="text-2xl font-bold">{completedQuizzes}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-blue-100 text-xs truncate">Quizzes Passed</p>
+                <p className="text-xl sm:text-2xl font-bold">{completedQuizzes}</p>
               </div>
-              <HelpCircle className="w-8 h-8 text-blue-200" />
+              <HelpCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-xs">Simulations</p>
-                <p className="text-2xl font-bold">{completedSimulations}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-purple-100 text-xs truncate">Simulations</p>
+                <p className="text-xl sm:text-2xl font-bold">{completedSimulations}</p>
               </div>
-              <Play className="w-8 h-8 text-purple-200" />
+              <Play className="w-6 h-6 sm:w-8 sm:h-8 text-purple-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-xs">Avg Score</p>
-                <p className="text-2xl font-bold">{averageScore}%</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-green-100 text-xs truncate">Avg Score</p>
+                <p className="text-xl sm:text-2xl font-bold">{averageScore}%</p>
               </div>
-              <Target className="w-8 h-8 text-green-200" />
+              <Target className="w-6 h-6 sm:w-8 sm:h-8 text-green-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-xs">Time Invested</p>
-                <p className="text-2xl font-bold">{totalTime}m</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-orange-100 text-xs truncate">Time Invested</p>
+                <p className="text-xl sm:text-2xl font-bold">{totalTime}m</p>
               </div>
-              <Clock className="w-8 h-8 text-orange-200" />
+              <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-orange-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -192,21 +192,22 @@ export default function StaffTrainingHub() {
 
       {/* Module Viewer Modal */}
       {selectedModule && (
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Card className="border-2 border-purple-300">
-            <CardHeader className="bg-purple-50">
-              <div className="flex items-center justify-between">
-                <CardTitle>Currently Viewing: {selectedModule.title}</CardTitle>
+            <CardHeader className="bg-purple-50 p-3 sm:p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                <CardTitle className="text-sm sm:text-base flex-1 min-w-0 truncate">Currently Viewing: {selectedModule.title}</CardTitle>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedModule(null)}
+                  className="min-h-[44px] w-full sm:w-auto"
                 >
                   Close
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 md:p-6">
               <ModuleViewer
                 module={selectedModule}
                 userEmail={currentUser?.email}
@@ -222,65 +223,65 @@ export default function StaffTrainingHub() {
 
       {/* Individual User Training Hub */}
       <Tabs defaultValue="aipath" className="w-full">
-          <TabsList className="grid grid-cols-11 w-full mb-6">
-            <TabsTrigger value="modules" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Modules</span>
+          <TabsList className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-11 w-full mb-4 sm:mb-6 gap-1 h-auto">
+            <TabsTrigger value="modules" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+              <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden lg:inline">Modules</span>
             </TabsTrigger>
-            <TabsTrigger value="aipath" className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-indigo-50 data-[state=active]:bg-purple-100">
-              <Star className="w-4 h-4" />
-              <span className="hidden sm:inline">AI Path</span>
+            <TabsTrigger value="aipath" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm bg-gradient-to-r from-purple-50 to-indigo-50 data-[state=active]:bg-purple-100">
+              <Star className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden lg:inline">AI Path</span>
             </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Progress</span>
+            <TabsTrigger value="progress" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden lg:inline">Progress</span>
             </TabsTrigger>
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            <span className="hidden sm:inline">Overview</span>
+          <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="survey" className="flex items-center gap-2 bg-gradient-to-r from-red-50 to-orange-50 data-[state=active]:bg-red-100">
-            <Trophy className="w-4 h-4" />
-            <span className="hidden sm:inline">Survey</span>
+          <TabsTrigger value="survey" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm bg-gradient-to-r from-red-50 to-orange-50 data-[state=active]:bg-red-100">
+            <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">Survey</span>
           </TabsTrigger>
-          <TabsTrigger value="videos" className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span className="hidden sm:inline">Videos</span>
+          <TabsTrigger value="videos" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">Videos</span>
           </TabsTrigger>
-          <TabsTrigger value="remediation" className="flex items-center gap-2">
-            <Target className="w-4 h-4" />
-            <span className="hidden sm:inline">Remediation</span>
+          <TabsTrigger value="remediation" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <Target className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">Remediation</span>
           </TabsTrigger>
-          <TabsTrigger value="myplan" className="flex items-center gap-2">
-            <Star className="w-4 h-4" />
-            <span className="hidden sm:inline">My Plan</span>
+          <TabsTrigger value="myplan" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <Star className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">My Plan</span>
           </TabsTrigger>
-          <TabsTrigger value="learn" className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span className="hidden sm:inline">Learn</span>
+          <TabsTrigger value="learn" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">Learn</span>
           </TabsTrigger>
-          <TabsTrigger value="quiz" className="flex items-center gap-2">
-            <HelpCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Quiz</span>
+          <TabsTrigger value="quiz" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <HelpCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">Quiz</span>
           </TabsTrigger>
-          <TabsTrigger value="simulate" className="flex items-center gap-2">
-            <Play className="w-4 h-4" />
-            <span className="hidden sm:inline">Simulate</span>
+          <TabsTrigger value="simulate" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden lg:inline">Simulate</span>
           </TabsTrigger>
           </TabsList>
 
           {/* Training Modules Tab */}
           <TabsContent value="modules">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {trainingModules.map((module) => {
                 const userCompletion = completions.find(c => c.training_module_id === module.id);
                 const isCompleted = userCompletion?.status === 'completed';
                 
                 return (
-                  <Card key={module.id} className={`cursor-pointer hover:shadow-lg transition-all ${
+                  <Card key={module.id} className={`cursor-pointer hover:shadow-lg transition-all touch-target ${
                     isCompleted ? 'border-green-300 bg-green-50' : 'border-gray-200'
                   }`} onClick={() => setSelectedModule(module)}>
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 sm:p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900 mb-1">{module.title}</h3>
@@ -512,36 +513,36 @@ export default function StaffTrainingHub() {
 
             {/* Quick Start */}
             <Card className="lg:col-span-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Start Training</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Start Training</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <Button 
                     variant="outline" 
-                    className="h-auto py-4 flex flex-col items-center gap-2 bg-white hover:bg-blue-50"
+                    className="h-auto py-3 sm:py-4 flex flex-col items-center gap-2 bg-white hover:bg-blue-50 min-h-[60px]"
                     onClick={() => setActiveTab('learn')}
                   >
-                    <BookOpen className="w-6 h-6 text-blue-600" />
-                    <span className="font-medium">Learn Best Practices</span>
+                    <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                    <span className="font-medium text-sm sm:text-base">Learn Best Practices</span>
                     <span className="text-xs text-gray-500">AI-generated content</span>
                   </Button>
                   
                   <Button 
                     variant="outline" 
-                    className="h-auto py-4 flex flex-col items-center gap-2 bg-white hover:bg-green-50"
+                    className="h-auto py-3 sm:py-4 flex flex-col items-center gap-2 bg-white hover:bg-green-50 min-h-[60px]"
                     onClick={() => setActiveTab('quiz')}
                   >
-                    <HelpCircle className="w-6 h-6 text-green-600" />
-                    <span className="font-medium">Take a Quiz</span>
+                    <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                    <span className="font-medium text-sm sm:text-base">Take a Quiz</span>
                     <span className="text-xs text-gray-500">Test your knowledge</span>
                   </Button>
                   
                   <Button 
                     variant="outline" 
-                    className="h-auto py-4 flex flex-col items-center gap-2 bg-white hover:bg-purple-50"
+                    className="h-auto py-3 sm:py-4 flex flex-col items-center gap-2 bg-white hover:bg-purple-50 min-h-[60px]"
                     onClick={() => setActiveTab('simulate')}
                   >
-                    <Play className="w-6 h-6 text-purple-600" />
-                    <span className="font-medium">Run Simulation</span>
+                    <Play className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                    <span className="font-medium text-sm sm:text-base">Run Simulation</span>
                     <span className="text-xs text-gray-500">Practice scenarios</span>
                   </Button>
                 </div>
@@ -560,7 +561,7 @@ export default function StaffTrainingHub() {
 
         {/* Quiz Tab */}
         <TabsContent value="quiz">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* AI Interactive Quiz */}
             <AIInteractiveQuiz
               topic={selectedQuizTopic || "Medicare Home Health Documentation"}
@@ -585,7 +586,7 @@ export default function StaffTrainingHub() {
 
         {/* Simulate Tab */}
         <TabsContent value="simulate">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* AI Patient Simulation */}
             <AIPatientSimulation
               scenario={selectedSimScenario || "general"}

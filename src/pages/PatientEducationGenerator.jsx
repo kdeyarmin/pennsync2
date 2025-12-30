@@ -214,27 +214,27 @@ ${currentUser?.full_name || 'Your Home Health Team'}
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <BookOpen className="w-8 h-8 text-blue-600" />
-          Patient Education Material Generator
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-5xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+          <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+          <span className="truncate">Patient Education Material Generator</span>
         </h1>
-        <p className="text-gray-600 mt-2">Create Medicare-compliant, easy-to-understand education materials for home health patients</p>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2">Create Medicare-compliant, easy-to-understand education materials for home health patients</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Input Panel */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-3 sm:space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Configure Material</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Configure Material</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
               <div>
-                <p className="text-sm font-medium mb-2">Select Condition</p>
+                <p className="text-xs sm:text-sm font-medium mb-2">Select Condition</p>
                 <Select value={selectedCondition} onValueChange={setSelectedCondition}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 touch-target">
                     <SelectValue placeholder="Choose condition..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,7 +288,7 @@ ${currentUser?.full_name || 'Your Home Health Team'}
               <Button 
                 onClick={generateMaterial}
                 disabled={isGenerating || !selectedCondition}
-                className="w-full"
+                className="w-full min-h-[44px]"
               >
                 {isGenerating ? (
                   <>
@@ -307,19 +307,19 @@ ${currentUser?.full_name || 'Your Home Health Team'}
 
           {generatedMaterial && (
             <Card className="border-green-200 bg-green-50">
-              <CardHeader>
-                <CardTitle className="text-sm text-green-900">Actions</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-xs sm:text-sm text-green-900">Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <Button onClick={handlePrint} variant="outline" className="w-full">
+              <CardContent className="p-3 sm:p-4 md:p-6 space-y-2">
+                <Button onClick={handlePrint} variant="outline" className="w-full min-h-[44px]">
                   <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>
-                <Button onClick={handleCopy} variant="outline" className="w-full">
+                <Button onClick={handleCopy} variant="outline" className="w-full min-h-[44px]">
                   <Copy className="w-4 h-4 mr-2" />
                   {copied ? 'Copied!' : 'Copy Text'}
                 </Button>
-                <Button onClick={handleEmail} variant="outline" className="w-full">
+                <Button onClick={handleEmail} variant="outline" className="w-full min-h-[44px]">
                   <Mail className="w-4 h-4 mr-2" />
                   Email to Patient
                 </Button>
@@ -332,18 +332,18 @@ ${currentUser?.full_name || 'Your Home Health Team'}
         <div className="lg:col-span-2">
           {!generatedMaterial ? (
             <Card className="h-full flex items-center justify-center border-dashed border-2">
-              <CardContent className="text-center py-12">
+              <CardContent className="text-center py-8 sm:py-12 p-4">
                 <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">Select a condition and click Generate to create patient education material</p>
               </CardContent>
             </Card>
           ) : (
             <Card className="print:shadow-none">
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
                 {/* Header */}
-                <div className="text-center border-b-2 border-blue-600 pb-4">
-                  <h1 className="text-3xl font-bold text-blue-900">{generatedMaterial.title}</h1>
-                  <p className="text-sm text-gray-600 mt-2">Patient Education Material</p>
+                <div className="text-center border-b-2 border-blue-600 pb-3 sm:pb-4">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">{generatedMaterial.title}</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-2">Patient Education Material</p>
                 </div>
 
                 {/* What Is It */}

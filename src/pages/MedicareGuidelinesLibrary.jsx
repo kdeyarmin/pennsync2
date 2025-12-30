@@ -154,24 +154,25 @@ export default function MedicareGuidelinesLibrary() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <BookOpen className="w-8 h-8 text-blue-600" />
-              Medicare Guidelines Library
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+              <span className="truncate">Medicare Guidelines Library</span>
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">
               Official CMS guidelines and regulations for home health documentation
             </p>
           </div>
           {isAdmin && (
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px]">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Guideline
+                  <span className="hidden sm:inline">Add Guideline</span>
+                  <span className="sm:hidden">Add</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
@@ -282,18 +283,18 @@ export default function MedicareGuidelinesLibrary() {
         </div>
 
         {/* Search and Filter */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               placeholder="Search guidelines by title, keywords, or content..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-11 touch-target"
             />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-64">
+            <SelectTrigger className="w-full sm:w-64 h-11 touch-target">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -340,21 +341,21 @@ export default function MedicareGuidelinesLibrary() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3 sm:gap-4">
           {filteredGuidelines.map((guideline) => (
             <Card
               key={guideline.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
+              className="hover:shadow-md transition-shadow cursor-pointer touch-target"
               onClick={() => {
                 setSelectedGuideline(guideline);
                 setDialogOpen(true);
               }}
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="p-3 sm:p-4 md:p-6 pb-2 sm:pb-3">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{guideline.title}</CardTitle>
-                    <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base sm:text-lg mb-2 break-words">{guideline.title}</CardTitle>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
                       <Badge className={getCategoryColor(guideline.category)}>
                         {getCategoryLabel(guideline.category)}
                       </Badge>
@@ -370,9 +371,9 @@ export default function MedicareGuidelinesLibrary() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-3">{guideline.summary}</p>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3">{guideline.summary}</p>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                   {guideline.effective_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
