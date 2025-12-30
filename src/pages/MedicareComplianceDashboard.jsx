@@ -263,19 +263,19 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-              <Shield className="w-6 h-6 text-white" />
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Medicare Compliance Dashboard</h1>
-              <p className="text-gray-600">42 CFR 484 CoP Monitoring for Pennsylvania Home Health</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Medicare Compliance Dashboard</h1>
+              <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">42 CFR 484 CoP Monitoring for Pennsylvania Home Health</p>
             </div>
           </div>
-          <Button onClick={generateAIInsights} disabled={isGeneratingInsights}>
+          <Button onClick={generateAIInsights} disabled={isGeneratingInsights} className="w-full sm:w-auto min-h-[44px]">
             {isGeneratingInsights ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
@@ -284,16 +284,17 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
             ) : (
               <>
                 <BarChart3 className="w-4 h-4 mr-2" />
-                Generate AI Insights
+                <span className="hidden sm:inline">Generate AI Insights</span>
+                <span className="sm:hidden">AI Insights</span>
               </>
             )}
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(parseInt(v))}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48 h-11 touch-target">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -306,7 +307,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
 
           {isAdmin && (
             <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-              <SelectTrigger className="w-64">
+              <SelectTrigger className="w-full sm:w-64 h-11 touch-target">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -321,51 +322,51 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm mb-1">Avg Compliance</p>
-                <p className="text-4xl font-bold">{avgComplianceScore.toFixed(1)}%</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-blue-100 text-xs sm:text-sm mb-1 truncate">Avg Compliance</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{avgComplianceScore.toFixed(1)}%</p>
               </div>
-              <Shield className="w-12 h-12 text-blue-200" />
+              <Shield className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm mb-1">Critical Issues</p>
-                <p className="text-4xl font-bold">{criticalIssuesCount}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-red-100 text-xs sm:text-sm mb-1 truncate">Critical Issues</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{criticalIssuesCount}</p>
               </div>
-              <AlertTriangle className="w-12 h-12 text-red-200" />
+              <AlertTriangle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-red-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm mb-1">Total Issues</p>
-                <p className="text-4xl font-bold">{totalIssuesCount}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-orange-100 text-xs sm:text-sm mb-1 truncate">Total Issues</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{totalIssuesCount}</p>
               </div>
-              <FileText className="w-12 h-12 text-orange-200" />
+              <FileText className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-orange-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm mb-1">Audits Reviewed</p>
-                <p className="text-4xl font-bold">{filteredAudits.length}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-green-100 text-xs sm:text-sm mb-1 truncate">Audits Reviewed</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{filteredAudits.length}</p>
               </div>
-              <Calendar className="w-12 h-12 text-green-200" />
+              <Calendar className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -373,23 +374,23 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
 
       {/* AI Insights */}
       {aiInsights && (
-        <Card className="mb-8 border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="mb-4 sm:mb-6 md:mb-8 border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <BarChart3 className="w-5 h-5 text-purple-600" />
               AI Strategic Insights
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
             {/* Overall Assessment */}
-            <div className="bg-white p-4 rounded-lg border-2 border-purple-200">
-              <h3 className="font-bold text-purple-900 mb-2">Overall Assessment</h3>
-              <p className="text-gray-700">{aiInsights.overall_assessment}</p>
+            <div className="bg-white p-3 sm:p-4 rounded-lg border-2 border-purple-200">
+              <h3 className="font-bold text-purple-900 mb-2 text-sm sm:text-base">Overall Assessment</h3>
+              <p className="text-sm sm:text-base text-gray-700">{aiInsights.overall_assessment}</p>
             </div>
 
             {/* Critical Priorities */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Critical Priorities (Immediate Action Required)</h3>
+              <h3 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Critical Priorities (Immediate Action Required)</h3>
               <div className="space-y-2">
                 {aiInsights.critical_priorities?.map((priority, idx) => (
                   <Card key={idx} className="border-l-4 border-l-red-500 bg-red-50">
@@ -439,19 +440,19 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
         </Card>
       )}
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="risk">Risk Scoring</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="issues">Top Issues</TabsTrigger>
-          <TabsTrigger value="nurses">Nurse Performance</TabsTrigger>
-          <TabsTrigger value="tools">Tools</TabsTrigger>
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-3">Overview</TabsTrigger>
+          <TabsTrigger value="risk" className="text-xs sm:text-sm py-2 sm:py-3">Risk</TabsTrigger>
+          <TabsTrigger value="trends" className="text-xs sm:text-sm py-2 sm:py-3">Trends</TabsTrigger>
+          <TabsTrigger value="issues" className="text-xs sm:text-sm py-2 sm:py-3">Issues</TabsTrigger>
+          <TabsTrigger value="nurses" className="text-xs sm:text-sm py-2 sm:py-3">Nurses</TabsTrigger>
+          <TabsTrigger value="tools" className="text-xs sm:text-sm py-2 sm:py-3">Tools</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Compliance Score Distribution */}
             <Card>
               <CardHeader>

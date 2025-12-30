@@ -55,13 +55,13 @@ export default function ReferralProcessor() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Referral Processor</h1>
-        <p className="text-gray-600">Upload and process patient referral PDFs for admission</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Referral Processor</h1>
+        <p className="text-sm sm:text-base text-gray-600">Upload and process patient referral PDFs for admission</p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <Alert className="bg-blue-50 border-blue-200">
           <FileText className="w-4 h-4 text-blue-600" />
           <AlertDescription className="text-blue-900">
@@ -78,28 +78,30 @@ export default function ReferralProcessor() {
 
         {extractedData && (
           <Card className="border-2 border-green-300 bg-green-50">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-green-900 mb-4">Next Steps</h3>
-              <div className="grid md:grid-cols-2 gap-3">
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-green-900 mb-3 sm:mb-4">Next Steps</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Button
                   onClick={createPatientFromReferral}
                   disabled={isCreatingPatient}
-                  className="bg-green-600 hover:bg-green-700 w-full"
+                  className="bg-green-600 hover:bg-green-700 w-full min-h-[44px]"
                 >
                   {isCreatingPatient ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                   ) : (
                     <UserPlus className="w-4 h-4 mr-2" />
                   )}
-                  Create Patient & Start Admission
+                  <span className="hidden sm:inline">Create Patient & Start Admission</span>
+                  <span className="sm:hidden">Create & Start</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => navigate(createPageUrl('SmartNoteAssistant'))}
-                  className="w-full"
+                  className="w-full min-h-[44px]"
                 >
                   <ArrowRight className="w-4 h-4 mr-2" />
-                  Go to Smart Note Assistant
+                  <span className="hidden sm:inline">Go to Smart Note Assistant</span>
+                  <span className="sm:hidden">Smart Notes</span>
                 </Button>
               </div>
             </CardContent>
