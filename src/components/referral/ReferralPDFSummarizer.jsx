@@ -16,8 +16,10 @@ import {
   Activity,
   Stethoscope,
   AlertCircle,
-  Download
+  Download,
+  Brain
 } from "lucide-react";
+import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
 import {
   Accordion,
   AccordionContent,
@@ -620,6 +622,30 @@ Extract everything mentioned, even if partial. If information is missing, note i
               </AccordionItem>
             )}
           </Accordion>
+
+          {/* AI OASIS Assistant */}
+          <Card className="border-2 border-purple-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-purple-600" />
+                AI OASIS Pre-Assessment
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                Based on the extracted referral data, our AI has analyzed and pre-populated relevant OASIS items with confidence scores and verification flags.
+              </p>
+              <AISmartOASISAssistant
+                patientData={extractedData}
+                referralData={extractedData}
+                autoAnalyze={true}
+                onApplySuggestion={(item) => {
+                  console.log('Applied OASIS suggestion:', item);
+                  // You can add custom logic here to populate OASIS forms
+                }}
+              />
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
