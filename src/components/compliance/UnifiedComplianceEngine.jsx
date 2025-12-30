@@ -88,7 +88,7 @@ Check for:
 - Functional status documentation
 ${nurseType === 'LPN' ? '- LPN supervision documentation' : ''}
 
-Return violations with: rule_name, reference, severity, status, missing_elements, evidence_found, compliant_example, remediation_text.`,
+Return violations with: rule_name, reference, severity, status, missing_elements, evidence_found, compliant_example, remediation_text, regulatory_reference, specific_documentation_changes.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
@@ -107,7 +107,9 @@ Return violations with: rule_name, reference, severity, status, missing_elements
                     evidence_found: { type: "string" },
                     compliant_example: { type: "string" },
                     remediation_text: { type: "string" },
-                    latest_cms_guidance: { type: "string" }
+                    latest_cms_guidance: { type: "string" },
+                    regulatory_reference: { type: "string" },
+                    specific_documentation_changes: { type: "array", items: { type: "string" } }
                   }
                 }
               }
@@ -128,7 +130,7 @@ Verify:
 - Appropriate monitoring
 - Best practice standards
 
-Return violations with same structure as above.`,
+Return violations with: rule_name, reference, severity, status, missing_elements, evidence_found, compliant_example, remediation_text, regulatory_reference, specific_documentation_changes.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
@@ -165,7 +167,7 @@ VISIT TYPE: ${visitType}
 
 Check visit-specific requirements for documentation, timing, and content standards.
 
-Return violations with same structure.`,
+Return violations with: rule_name, reference, severity, status, missing_elements, evidence_found, compliant_example, remediation_text, regulatory_reference, specific_documentation_changes.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -573,15 +575,35 @@ Provide a 2-sentence summary of the overall compliance status and most critical 
 
                           {violation.remediation_text && (
                             <div className="bg-blue-50 p-3 rounded border border-blue-200">
-                              <p className="text-xs font-semibold text-blue-900 mb-1">💡 Fix:</p>
-                              <p className="text-xs text-blue-800">{violation.remediation_text}</p>
+                              <p className="text-xs font-semibold text-blue-900 mb-1">💡 Specific Actions Required:</p>
+                              <p className="text-xs text-blue-800 whitespace-pre-line">{violation.remediation_text}</p>
+                            </div>
+                          )}
+
+                          {violation.regulatory_reference && (
+                            <div className="bg-gray-50 p-3 rounded border border-gray-300">
+                              <p className="text-xs font-semibold text-gray-900 mb-1">📋 Regulatory Reference:</p>
+                              <p className="text-xs text-gray-700">{violation.regulatory_reference}</p>
+                            </div>
+                          )}
+
+                          {violation.specific_documentation_changes?.length > 0 && (
+                            <div className="bg-indigo-50 p-3 rounded border border-indigo-200">
+                              <p className="text-xs font-semibold text-indigo-900 mb-2">📝 Specific Documentation Changes:</p>
+                              <ul className="space-y-1">
+                                {violation.specific_documentation_changes.map((change, i) => (
+                                  <li key={i} className="text-xs text-indigo-800">
+                                    <span className="font-medium">{i + 1}.</span> {change}
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           )}
 
                           {violation.compliant_example && (
                             <div className="bg-green-50 p-3 rounded border border-green-200">
                               <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-semibold text-green-900">✓ Compliant Example:</p>
+                                <p className="text-xs font-semibold text-green-900">✓ Compliant Example Text:</p>
                                 <Button
                                   size="sm"
                                   variant="ghost"

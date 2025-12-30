@@ -111,6 +111,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Quality & Compliance",
       items: [
         { name: "Medicare Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
+        { name: "Compliance Trends", icon: BarChart3, page: "ComplianceTrendsDashboard" },
         { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
         { name: "Guidelines Library", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
         { name: "Clinical Insights", icon: BarChart3, page: "ClinicalInsightsDashboard" },
