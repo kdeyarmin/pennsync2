@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText, Clock as ClockIcon } from "lucide-react";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import { isValid } from "date-fns";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";

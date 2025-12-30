@@ -373,7 +373,7 @@ export default function StaffTrainingHub() {
               onExit={() => setActiveModule(null)}
             />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* AI-Generated Training Plan */}
               <AIPersonalizedTrainingPlan
                 nurseEmail={currentUser?.email}
@@ -395,21 +395,21 @@ export default function StaffTrainingHub() {
                 {/* Quick Actions based on weak areas */}
                 {skillGaps.length > 0 && (
                   <Card className="border-orange-200 bg-orange-50">
-                    <CardHeader className="py-3">
+                    <CardHeader className="p-3 sm:p-4">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <Target className="w-4 h-4 text-orange-600" />
                         Recommended Actions
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2">
+                    <CardContent className="p-3 sm:p-4 space-y-2">
                       {skillGaps.slice(0, 3).map((gap, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-white rounded">
-                          <span className="text-sm">{gap.area || gap.skill_area}</span>
-                          <div className="flex gap-1">
+                        <div key={idx} className="flex items-center justify-between p-2 bg-white rounded min-h-[44px]">
+                          <span className="text-xs sm:text-sm truncate flex-1 mr-2">{gap.area || gap.skill_area}</span>
+                          <div className="flex gap-1 flex-shrink-0">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs"
+                              className="min-h-[36px] text-xs"
                               onClick={() => {
                                 setSelectedQuizTopic(gap.area || gap.skill_area);
                                 setActiveTab('quiz');
@@ -420,13 +420,13 @@ export default function StaffTrainingHub() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs"
+                              className="min-h-[36px] text-xs"
                               onClick={() => {
                                 setSelectedSimScenario(gap.area?.toLowerCase().replace(/\s+/g, '_') || 'general');
                                 setActiveTab('simulate');
                               }}
                             >
-                              Simulate
+                              Sim
                             </Button>
                           </div>
                         </div>

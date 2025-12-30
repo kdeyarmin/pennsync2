@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -241,20 +240,20 @@ export default function AutomaticCarePlans() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-            <Zap className="w-6 h-6 text-white" />
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Automatic Care Plans</h1>
-            <p className="text-gray-600">Set up care plans that trigger automatically based on diagnosis or medication</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Automatic Care Plans</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Set up care plans that trigger automatically based on diagnosis or medication</p>
           </div>
         </div>
       </div>
 
-      <Alert className="mb-6 bg-blue-50 border-blue-200">
+      <Alert className="mb-4 sm:mb-6 bg-blue-50 border-blue-200">
         <Shield className="w-4 h-4 text-blue-600" />
         <AlertDescription className="text-blue-900">
           <p className="font-semibold mb-2">How Automatic Care Plans Work:</p>
@@ -267,17 +266,17 @@ export default function AutomaticCarePlans() {
         </AlertDescription>
       </Alert>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Automatic Care Plan Triggers ({triggers.length})</CardTitle>
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <CardTitle className="text-base sm:text-lg">Automatic Care Plan Triggers ({triggers.length})</CardTitle>
             <Button
               onClick={() => {
                 resetForm();
                 setEditingTrigger(null);
                 setShowDialog(true);
               }}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px]"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Trigger
@@ -297,17 +296,17 @@ export default function AutomaticCarePlans() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Trigger</TableHead>
-                    <TableHead>Care Type</TableHead>
-                    <TableHead>Problem</TableHead>
-                    <TableHead>Goal</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Trigger</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Care Type</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Problem</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Goal</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Priority</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -318,7 +317,7 @@ export default function AutomaticCarePlans() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleToggleActive(trigger.id, trigger.is_active)}
-                          className={trigger.is_active ? "text-green-600" : "text-gray-400"}
+                          className={`min-h-[44px] ${trigger.is_active ? "text-green-600" : "text-gray-400"}`}
                         >
                           {trigger.is_active ? (
                             <CheckCircle2 className="w-5 h-5" />
@@ -327,42 +326,43 @@ export default function AutomaticCarePlans() {
                           )}
                         </Button>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm">
                         <div className="flex items-center gap-2">
                           {getTriggerIcon(trigger.trigger_type)}
-                          <div>
-                            <p className="font-medium text-gray-900">{trigger.trigger_value}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{trigger.trigger_value}</p>
                             <p className="text-xs text-gray-500 capitalize">{trigger.trigger_type}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge className={getCareTypeColor(trigger.care_type)}>
-                          {trigger.care_type === 'home_health' ? 'Home Health' :
+                      <TableCell className="hidden md:table-cell">
+                        <Badge className={`${getCareTypeColor(trigger.care_type)} text-xs`}>
+                          {trigger.care_type === 'home_health' ? 'HH' :
                            trigger.care_type === 'hospice' ? 'Hospice' : 'Both'}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <p className="text-sm font-medium text-gray-900 max-w-xs truncate">
+                      <TableCell className="text-xs sm:text-sm">
+                        <p className="font-medium text-gray-900 max-w-[150px] sm:max-w-xs truncate">
                           {trigger.problem}
                         </p>
                       </TableCell>
-                      <TableCell>
-                        <p className="text-sm text-gray-600 max-w-xs truncate">
+                      <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                        <p className="text-gray-600 max-w-xs truncate">
                           {trigger.goal}
                         </p>
                       </TableCell>
-                      <TableCell>
-                        <Badge className={getPriorityColor(trigger.priority)}>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge className={`${getPriorityColor(trigger.priority)} text-xs`}>
                           {trigger.priority}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 sm:gap-2">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(trigger)}
+                            className="min-h-[44px] w-10 sm:w-auto p-0 sm:px-3"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -370,7 +370,7 @@ export default function AutomaticCarePlans() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(trigger.id)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 min-h-[44px] w-10 sm:w-auto p-0 sm:px-3"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
