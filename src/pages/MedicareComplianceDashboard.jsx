@@ -441,14 +441,17 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
       )}
 
       <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-3">Overview</TabsTrigger>
-          <TabsTrigger value="risk" className="text-xs sm:text-sm py-2 sm:py-3">Risk</TabsTrigger>
-          <TabsTrigger value="trends" className="text-xs sm:text-sm py-2 sm:py-3">Trends</TabsTrigger>
-          <TabsTrigger value="issues" className="text-xs sm:text-sm py-2 sm:py-3">Issues</TabsTrigger>
-          <TabsTrigger value="nurses" className="text-xs sm:text-sm py-2 sm:py-3">Nurses</TabsTrigger>
-          <TabsTrigger value="tools" className="text-xs sm:text-sm py-2 sm:py-3">Tools</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-7 gap-1 min-w-max h-auto">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Overview</TabsTrigger>
+            <TabsTrigger value="risk" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Risk</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Trends</TabsTrigger>
+            <TabsTrigger value="issues" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Issues</TabsTrigger>
+            <TabsTrigger value="nurses" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Nurses</TabsTrigger>
+            <TabsTrigger value="patients" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Patients</TabsTrigger>
+            <TabsTrigger value="tools" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Tools</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4 sm:space-y-6">
@@ -658,32 +661,97 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
           </Card>
         </TabsContent>
 
-        {/* Nurse Performance Tab */}
-        <TabsContent value="nurses" className="space-y-6">
+        {/* Patients Tab - Compliance by Patient */}
+        <TabsContent value="patients" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Nurse Compliance Comparison</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <FileText className="w-5 h-5" />
+                Patients Needing Attention
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={nursePerformance}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="nurse" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="score" fill="#3B82F6" name="Avg Compliance %" />
-                </BarChart>
-              </ResponsiveContainer>
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <div className="space-y-2 sm:space-y-3">
+                {(() => {
+                  const byPatient = {};
+                  filteredAudits.forEach(audit => {
+                    if (!byPatient[audit.patient_id]) {
+                      byPatient[audit.patient_id] = { total: 0, score: 0, count: 0 };
+                    }
+                    byPatient[audit.patient_id].score += audit.compliance_score || 0;
+                    byPatient[audit.patient_id].count += 1;
+                  });
+
+                  const { data: patients = [] } = useQuery({
+                    queryKey: ['patients'],
+                    queryFn: () => base44.entities.Patient.list(),
+                    initialData: [],
+                  });
+
+                  const patientStats = Object.entries(byPatient).map(([id, data]) => {
+                    const patient = patients.find(p => p.id === id);
+                    return {
+                      id,
+                      name: patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown',
+                      avgScore: data.count > 0 ? (data.score / data.count) : 0,
+                      auditCount: data.count
+                    };
+                  }).sort((a, b) => a.avgScore - b.avgScore).slice(0, 10);
+
+                  return patientStats.map((patient, idx) => (
+                    <div key={patient.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-2 min-h-[44px]">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div>
+                          <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{patient.name}</p>
+                          <p className="text-xs text-gray-600">{patient.auditCount} visits audited</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Badge className={`${patient.avgScore >= 90 ? 'bg-green-100 border-green-300' : patient.avgScore >= 80 ? 'bg-yellow-100 border-yellow-300' : 'bg-red-100 border-red-300'} text-xs`}>
+                          <span className={patient.avgScore >= 90 ? 'text-green-600' : patient.avgScore >= 80 ? 'text-yellow-600' : 'text-red-600'}>
+                            {Math.round(patient.avgScore)}%
+                          </span>
+                        </Badge>
+                        {patient.avgScore < 80 && (
+                          <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                        )}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Nurse Performance Tab */}
+        <TabsContent value="nurses" className="space-y-4 sm:space-y-6">
+          <Card>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Nurse Compliance Comparison</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
+                <ResponsiveContainer width="100%" height={400} minWidth={300}>
+                  <BarChart data={nursePerformance}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="nurse" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    <Bar dataKey="score" fill="#3B82F6" name="Avg Compliance %" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
           {/* Nurse Details */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Nurse Performance Details</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Nurse Performance Details</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 md:p-6">
               <div className="space-y-2">
                 {nursePerformance.map((nurse, idx) => {
                   const nurseAudits = filteredAudits.filter(a => a.nurse_email?.split('@')[0] === nurse.nurse);
@@ -692,18 +760,18 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                   );
 
                   return (
-                    <div key={idx} className="p-4 bg-gray-50 rounded border">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                            <Users className="w-5 h-5 text-white" />
+                    <div key={idx} className="p-3 sm:p-4 bg-gray-50 rounded border min-h-[44px]">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                           </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">{nurse.nurse}</p>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">{nurse.nurse}</p>
                             <p className="text-xs text-gray-600">{nurse.audits} audits reviewed</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <Badge className={
                             nurse.score >= 90 ? 'bg-green-600' :
                             nurse.score >= 80 ? 'bg-blue-600' :
@@ -712,7 +780,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                             {nurse.score}%
                           </Badge>
                           {criticalCount > 0 && (
-                            <p className="text-xs text-red-600 mt-1">{criticalCount} critical issues</p>
+                            <p className="text-xs text-red-600 mt-1">{criticalCount} critical</p>
                           )}
                         </div>
                       </div>

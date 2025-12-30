@@ -13,7 +13,6 @@ import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
 import ComplianceCenter from './pages/ComplianceCenter';
 import ComplianceDashboard from './pages/ComplianceDashboard';
 import ComplianceRegulatory from './pages/ComplianceRegulatory';
-import ComplianceTrendsDashboard from './pages/ComplianceTrendsDashboard';
 import Dashboard from './pages/Dashboard';
 import DocumentGenerator from './pages/DocumentGenerator';
 import DocumentVisit from './pages/DocumentVisit';
@@ -81,7 +80,6 @@ export const PAGES = {
     "ComplianceCenter": ComplianceCenter,
     "ComplianceDashboard": ComplianceDashboard,
     "ComplianceRegulatory": ComplianceRegulatory,
-    "ComplianceTrendsDashboard": ComplianceTrendsDashboard,
     "Dashboard": Dashboard,
     "DocumentGenerator": DocumentGenerator,
     "DocumentVisit": DocumentVisit,
