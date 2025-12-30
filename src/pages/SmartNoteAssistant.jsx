@@ -754,7 +754,7 @@ export default function SmartNoteAssistant() {
               <Activity className="w-4 h-4 text-blue-600" />
               <AlertDescription className="text-sm font-medium text-gray-900">
                 <strong className="text-blue-800">Primary Diagnosis:</strong> {selectedPatient.primary_diagnosis}
-                {selectedPatient.secondary_diagnoses && selectedPatient.secondary_diagnoses.length > 0 && (
+                {selectedPatient.secondary_diagnoses && Array.isArray(selectedPatient.secondary_diagnoses) && selectedPatient.secondary_diagnoses.length > 0 && (
                   <span className="text-gray-600 ml-2">
                     | Secondary: {selectedPatient.secondary_diagnoses.slice(0, 2).join(', ')}
                     {selectedPatient.secondary_diagnoses.length > 2 && ` +${selectedPatient.secondary_diagnoses.length - 2} more`}
@@ -778,7 +778,7 @@ export default function SmartNoteAssistant() {
               }
               const narrativeIntro = [];
               if (syncData.diagnosis) narrativeIntro.push(`Patient with ${syncData.diagnosis}`);
-              if (syncData.comorbidities?.length > 0) {
+              if (Array.isArray(syncData.comorbidities) && syncData.comorbidities.length > 0) {
                 narrativeIntro.push(`and ${syncData.comorbidities.slice(0, 3).join(', ')}`);
               }
               if (syncData.admissionSource === 'institutional') {
