@@ -520,11 +520,10 @@ export default function SmartNoteAssistant() {
 
   const currentStep = useMemo(() => {
     if (!selectedPatientId) return 'patient';
-    if (!vitalSigns.bp && !vitalSigns.hr) return 'vitals';
     if (!roughNote || roughNote.length < 50) return 'notes';
     if (!enhancedNote) return 'review';
     return 'complete';
-  }, [selectedPatientId, vitalSigns, roughNote, enhancedNote]);
+  }, [selectedPatientId, roughNote, enhancedNote]);
 
   // Auto-collapse completed steps
   useEffect(() => {
@@ -754,9 +753,9 @@ export default function SmartNoteAssistant() {
       {/* Simplified Progress */}
       {!enhancedNote && (
         <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
-          <span className="font-medium">{currentStep === 'patient' ? '1/3' : currentStep === 'vitals' ? '2/3' : '3/3'}</span>
+          <span className="font-medium">{currentStep === 'patient' ? '1/2' : '2/2'}</span>
           <ChevronRight className="w-4 h-4" />
-          <span>{currentStep === 'patient' ? 'Select Patient' : currentStep === 'vitals' ? 'Enter Vitals' : currentStep === 'notes' ? 'Write Notes' : 'Reviewing...'}</span>
+          <span>{currentStep === 'patient' ? 'Select Patient' : currentStep === 'notes' ? 'Write Notes' : 'Reviewing...'}</span>
         </div>
       )}
 
@@ -904,7 +903,7 @@ export default function SmartNoteAssistant() {
           )}
 
           {/* Step 3: Rough Notes */}
-          {selectedPatientId && (vitalSigns.bp || vitalSigns.hr) && (
+          {selectedPatientId && (
             <Card id="step-notes" className={`border-2 transition-all duration-300 ${currentStep === 'notes' ? 'border-purple-500 shadow-lg' : 'border-gray-300'}`}>
               <CardHeader className={`py-4 md:py-5 ${currentStep === 'notes' ? 'bg-gradient-to-r from-purple-100 to-pink-100' : 'bg-gray-50'}`}>
                 <CardTitle className="text-base md:text-lg flex items-center justify-between gap-2">
