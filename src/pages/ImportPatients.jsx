@@ -642,23 +642,68 @@ export default function ImportPatients() {
   const handleDuplicateResolution = async (resolutionResults) => {
     setImportProgress(0);
     const startTime = Date.now();
-    const results = { success: 0, failed: 0, errors: [], failedRecords: [] };
+    const results = { success: 0, failed: 0, errors: [], failedRecords: [], updated: 0, added: 0 };
     let processed = 0;
     const total = resolutionResults.added.length + resolutionResults.updated.length + resolutionResults.closed.length;
 
-    // Add new patients using bulk create to avoid rate limiting
-    if (resolutionResults.added.length > 0) {
+    // Fetch all existing patients to check for MRN matches
+    const existingPatients = await base44.entities.Patient.list('-updated_date', 5000);
+    const mrnMap = new Map();
+    existingPatients.forEach(p => {
+      if (p.medical_record_number) {
+        mrnMap.set(p.medical_record_number.trim().toLowerCase(), p);
+      }
+    });
+
+    // Process patients to be added - check MRN first
+    const patientsToAdd = [];
+    const patientsToUpdate = [];
+
+    for (const patient of resolutionResults.added) {
+      if (patient.medical_record_number) {
+        const mrnKey = patient.medical_record_number.trim().toLowerCase();
+        const existing = mrnMap.get(mrnKey);
+        
+        if (existing) {
+          // Patient exists - check if anything changed
+          const hasChanges = Object.keys(patient).some(key => {
+            if (key === 'medical_record_number') return false; // Skip MRN itself
+            const newValue = patient[key];
+            const oldValue = existing[key];
+            // Compare values, handle null/undefined/empty
+            if (!newValue && !oldValue) return false;
+            if (typeof newValue === 'object' && typeof oldValue === 'object') {
+              return JSON.stringify(newValue) !== JSON.stringify(oldValue);
+            }
+            return newValue !== oldValue;
+          });
+          
+          if (hasChanges) {
+            patientsToUpdate.push({ id: existing.id, data: patient });
+          }
+        } else {
+          patientsToAdd.push(patient);
+        }
+      } else {
+        patientsToAdd.push(patient);
+      }
+    }
+
+    // Add new patients using bulk create
+    if (patientsToAdd.length > 0) {
       try {
-        const created = await base44.entities.Patient.bulkCreate(resolutionResults.added);
+        const created = await base44.entities.Patient.bulkCreate(patientsToAdd);
         results.success += created.length;
-        processed += resolutionResults.added.length;
+        results.added = created.length;
+        processed += patientsToAdd.length;
         setImportProgress(Math.round((processed / total) * 100));
       } catch (error) {
         // Fall back to individual creates with delay if bulk fails
-        for (const patient of resolutionResults.added) {
+        for (const patient of patientsToAdd) {
           try {
             await base44.entities.Patient.create(patient);
             results.success++;
+            results.added++;
           } catch (error) {
             results.failed++;
             results.errors.push({
@@ -668,17 +713,17 @@ export default function ImportPatients() {
           }
           processed++;
           setImportProgress(Math.round((processed / total) * 100));
-          // Small delay to prevent rate limiting
           await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
     }
 
-    // Update existing patients with small delays
-    for (const update of resolutionResults.updated) {
+    // Update existing patients with changes
+    for (const update of [...patientsToUpdate, ...resolutionResults.updated]) {
       try {
         await base44.entities.Patient.update(update.id, update.data);
         results.success++;
+        results.updated++;
       } catch (error) {
         results.failed++;
         results.errors.push({
@@ -1845,7 +1890,9 @@ export default function ImportPatients() {
               <Alert className="bg-green-50 border-green-300 border-2">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
                 <AlertDescription className="text-green-900 font-semibold text-lg">
-                  ✅ {importResults.success} new patient{importResults.success !== 1 ? 's' : ''} successfully added to the system!
+                  ✅ {importResults.success} patient record{importResults.success !== 1 ? 's' : ''} successfully processed!
+                  {importResults.added > 0 && ` (${importResults.added} added`}
+                  {importResults.updated > 0 && `${importResults.added > 0 ? ', ' : ' ('}${importResults.updated} updated)`}
                 </AlertDescription>
               </Alert>
 
@@ -1854,8 +1901,15 @@ export default function ImportPatients() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-green-600 text-sm font-medium mb-1">Patients Added</p>
+                        <p className="text-green-600 text-sm font-medium mb-1">Total Processed</p>
                         <p className="text-5xl font-bold text-green-700">{importResults.success}</p>
+                        {(importResults.added > 0 || importResults.updated > 0) && (
+                          <p className="text-xs text-green-600 mt-2">
+                            {importResults.added > 0 && `${importResults.added} added`}
+                            {importResults.added > 0 && importResults.updated > 0 && ', '}
+                            {importResults.updated > 0 && `${importResults.updated} updated`}
+                          </p>
+                        )}
                       </div>
                       <Users className="w-16 h-16 text-green-500" />
                     </div>
