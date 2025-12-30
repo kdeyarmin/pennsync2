@@ -231,6 +231,9 @@ export default function SmartNoteAssistant() {
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [collapsedSteps, setCollapsedSteps] = useState([]);
   const [recheckMode, setRecheckMode] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [interimText, setInterimText] = useState('');
+  const recognitionRef = React.useRef(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -476,6 +479,91 @@ export default function SmartNoteAssistant() {
     setAnalysisResults(null);
     setRecheckMode(true);
   };
+
+  const startDictation = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition not supported in your browser');
+      return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      let final = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          final += transcript + ' ';
+        } else {
+          interim += transcript;
+        }
+      }
+      
+      if (final) {
+        setRoughNote(prev => prev ? prev + ' ' + final.trim() : final.trim());
+        setInterimText('');
+      } else if (interim) {
+        setInterimText(interim);
+      }
+    };
+    
+    recognition.onend = () => {
+      if (listening) {
+        try {
+          recognition.start();
+        } catch (e) {
+          console.error('Restart error:', e);
+        }
+      } else {
+        setListening(false);
+        setInterimText('');
+      }
+    };
+    
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        if (listening) {
+          setTimeout(() => {
+            try {
+              recognition.start();
+            } catch (e) {}
+          }, 100);
+        }
+      } else {
+        setListening(false);
+        setInterimText('');
+      }
+    };
+    
+    setListening(true);
+    recognition.start();
+  };
+
+  const stopDictation = () => {
+    setListening(false);
+    setInterimText('');
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
 
 
