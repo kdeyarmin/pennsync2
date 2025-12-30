@@ -29,7 +29,8 @@ export default function ClinicalNoteReviewer({
   diagnosis,
   patientData,
   autoReview = false,
-  onApplySuggestion
+  onApplySuggestion,
+  prominent = false
 }) {
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewResults, setReviewResults] = useState(null);
@@ -55,7 +56,10 @@ ${noteContent}
 CONTEXT:
 - Visit Type: ${visitType || 'Not specified'}
 - Primary Diagnosis: ${diagnosis || 'Not specified'}
-- Patient: ${patientData ? `${patientData.first_name} ${patientData.last_name}` : 'Not specified'}
+- Patient: ${patientData ? `${patientData.first_name} ${patientData.last_name}, DOB: ${patientData.date_of_birth || 'Unknown'}` : 'Not specified'}
+- Care Type: ${patientData?.care_type || 'home_health'}
+${patientData?.current_medications?.length > 0 ? `- Current Medications: ${patientData.current_medications.map(m => m.name).slice(0, 5).join(', ')}` : ''}
+${patientData?.allergies ? `- Allergies: ${patientData.allergies}` : ''}
 
 PERFORM COMPREHENSIVE REVIEW FOR:
 
@@ -76,18 +80,25 @@ PERFORM COMPREHENSIVE REVIEW FOR:
    ✓ Terminology correctness
 
 3. COMPLIANCE - Medicare Requirements (42 CFR 484):
-   ✓ Meets CoP documentation standards
-   ✓ Supports medical necessity
-   ✓ Demonstrates skilled need
-   ✓ Homebound criteria met
-   ✓ No compliance red flags
+   ✓ Meets CoP 484.55 (Comprehensive Assessment)
+   ✓ Meets CoP 484.60 (Care Planning)
+   ✓ Supports medical necessity per Medicare guidelines
+   ✓ Demonstrates skilled need (cannot be performed by non-skilled personnel)
+   ✓ Homebound status criteria met (leaving home is taxing effort)
+   ✓ Safety measures documented
+   ✓ Patient/caregiver instruction documented
+   ✓ Physician coordination documented
+   ✓ No compliance red flags or audit risks
 
 4. BILLING OPTIMIZATION - Revenue Impact:
-   ✓ Documentation supports appropriate PDGM grouping
-   ✓ Comorbidities sufficiently documented
-   ✓ Functional impairment captured
-   ✓ Clinical complexity reflected
-   ✓ Opportunities for case-mix optimization
+   ✓ Documentation supports appropriate PDGM clinical grouping
+   ✓ All relevant comorbidities documented (for case-mix weight)
+   ✓ Functional impairment level captured (ADL/IADL limitations)
+   ✓ Clinical complexity reflected (medications, wound care, therapies)
+   ✓ Timing factors documented (admission source, prior hospitalization)
+   ✓ Secondary diagnoses that increase reimbursement identified
+   ✓ Opportunities for higher case-mix category
+   ✓ ICD-10 specificity sufficient
 
 5. CLARITY & SPECIFICITY:
    ✓ Clear chronological flow
@@ -121,7 +132,8 @@ Return detailed analysis with:
                   severity: { type: "string" },
                   explanation: { type: "string" },
                   example: { type: "string" },
-                  cop_reference: { type: "string" }
+                  cop_reference: { type: "string" },
+                  regulation: { type: "string" }
                 }
               }
             },
@@ -155,7 +167,9 @@ Return detailed analysis with:
                 properties: {
                   opportunity: { type: "string" },
                   potential_impact: { type: "string" },
-                  documentation_needed: { type: "string" }
+                  documentation_needed: { type: "string" },
+                  revenue_estimate: { type: "string" },
+                  icd10_suggestion: { type: "string" }
                 }
               }
             },
@@ -217,20 +231,39 @@ Return detailed analysis with:
 
   if (!reviewResults) {
     return (
-      <Card className="border-2 border-blue-300">
+      <Card className={`${prominent ? 'border-4 border-purple-400 shadow-2xl bg-gradient-to-r from-purple-50 to-pink-50' : 'border-2 border-blue-300'}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-blue-600" />
-            AI Clinical Note Reviewer
+            AI Document Reviewer
+            {prominent && <Badge className="bg-purple-600 text-white ml-2">Automatic Quality Check</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-gray-600">
-            Comprehensive analysis for completeness, accuracy, Medicare compliance, and billing optimization.
+            Comprehensive analysis for completeness, accuracy, Medicare compliance (42 CFR 484), and billing optimization.
           </p>
-          <Button onClick={reviewNote} className="w-full bg-blue-600 hover:bg-blue-700">
+          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 bg-white p-3 rounded border">
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-green-600" />
+              <span>Completeness</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Shield className="w-3 h-3 text-orange-600" />
+              <span>Compliance</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <DollarSign className="w-3 h-3 text-green-600" />
+              <span>Billing</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Lightbulb className="w-3 h-3 text-blue-600" />
+              <span>Quality</span>
+            </div>
+          </div>
+          <Button onClick={reviewNote} className={`w-full ${prominent ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6' : 'bg-blue-600 hover:bg-blue-700'}`}>
             <FileText className="w-4 h-4 mr-2" />
-            Review Note
+            {prominent ? 'Run Quality & Compliance Review' : 'Review Note'}
           </Button>
         </CardContent>
       </Card>
@@ -317,9 +350,14 @@ Return detailed analysis with:
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900">{missing.element}</p>
-                        {missing.cop_reference && (
-                          <Badge variant="outline" className="mt-1 text-xs">{missing.cop_reference}</Badge>
-                        )}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {missing.cop_reference && (
+                            <Badge variant="outline" className="text-xs">{missing.cop_reference}</Badge>
+                          )}
+                          {missing.regulation && (
+                            <Badge className="bg-blue-100 text-blue-800 text-xs">{missing.regulation}</Badge>
+                          )}
+                        </div>
                       </div>
                       <Badge className={getSeverityColor(missing.severity)}>
                         {missing.severity}
@@ -433,9 +471,20 @@ Return detailed analysis with:
                 <Card key={idx} className="border-l-4 border-l-green-500">
                   <CardContent className="p-4">
                     <p className="font-semibold text-gray-900 mb-2">{opp.opportunity}</p>
-                    <div className="bg-green-50 p-3 rounded border border-green-200">
-                      <p className="text-xs font-semibold text-green-900 mb-1">Potential Impact:</p>
-                      <p className="text-sm text-green-800">{opp.potential_impact}</p>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <div className="bg-green-50 p-3 rounded border border-green-200">
+                        <p className="text-xs font-semibold text-green-900 mb-1">Potential Impact:</p>
+                        <p className="text-sm text-green-800">{opp.potential_impact}</p>
+                        {opp.revenue_estimate && (
+                          <p className="text-xs text-green-700 font-bold mt-1">💰 {opp.revenue_estimate}</p>
+                        )}
+                      </div>
+                      {opp.icd10_suggestion && (
+                        <div className="bg-purple-50 p-3 rounded border border-purple-200">
+                          <p className="text-xs font-semibold text-purple-900 mb-1">ICD-10 Suggestion:</p>
+                          <p className="text-sm text-purple-800 font-mono">{opp.icd10_suggestion}</p>
+                        </div>
+                      )}
                     </div>
                     <div className="bg-blue-50 p-3 rounded border border-blue-200 mt-2">
                       <p className="text-xs font-semibold text-blue-900 mb-1">Documentation Needed:</p>

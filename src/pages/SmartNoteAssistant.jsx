@@ -2208,6 +2208,17 @@ Return JSON with:
                 </CardContent>
               </Card>
 
+              {/* AI Document Reviewer - Automatic Quality Check */}
+              <ClinicalNoteReviewer
+                noteContent={enhancedNote}
+                visitType={visitType}
+                diagnosis={finalDiagnosis}
+                patientData={selectedPatient}
+                autoReview={true}
+                prominent={true}
+                onApplySuggestion={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
+              />
+
               {/* Next Steps Panel - Clear action-oriented summary */}
               <NextStepsPanel
                 copied={copied}
@@ -2429,23 +2440,7 @@ Return JSON with:
                   />
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="review">
-                <AccordionTrigger className="text-sm">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> Clinical Note Review (Completeness & Billing)
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ClinicalNoteReviewer
-                    noteContent={enhancedNote}
-                    visitType={visitType}
-                    diagnosis={finalDiagnosis}
-                    patientData={selectedPatient}
-                    autoReview={false}
-                    onApplySuggestion={(text) => setEnhancedNote(prev => prev + '\n\n' + text)}
-                  />
-                </AccordionContent>
-              </AccordionItem>
+
               </Accordion>
               )}
         </div>
