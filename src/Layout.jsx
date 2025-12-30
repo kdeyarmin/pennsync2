@@ -94,8 +94,7 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Patients", icon: Users, page: "Patients" },
         { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
-        { name: "Alerts", icon: Bell, page: "PatientAlerts" },
-        { name: "Care Coordination", icon: Users, page: "CareCoordinationDashboard" }
+        { name: "Alerts", icon: Bell, page: "PatientAlerts" }
       ]
     },
     {
