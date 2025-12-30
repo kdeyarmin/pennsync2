@@ -600,40 +600,6 @@ export default function SmartNoteAssistant() {
     }
   };
 
-  // Batch AI analysis for multiple operations
-  const runBatchAnalysis = async (analysisTypes) => {
-    try {
-      const result = await base44.functions.invoke('batchAIAnalysis', {
-        roughNote,
-        enhancedNote,
-        visitType,
-        diagnosis: finalDiagnosis,
-        vitalSigns,
-        patientId: selectedPatientId,
-        analysisTypes
-      });
-
-      if (result.success) {
-        if (result.analyses.compliance) {
-          setEnhancedNoteCompliance(result.analyses.compliance);
-        }
-        if (result.analyses.oasis) {
-          setOasisAutomationResults(result.analyses.oasis);
-        }
-        if (result.analyses.pdgm) {
-          setPdgmOpportunities(result.analyses.pdgm);
-        }
-        if (result.analyses.proactive) {
-          // Handle proactive suggestions
-          console.log('Proactive suggestions:', result.analyses.proactive);
-        }
-      }
-    } catch (error) {
-      console.error('Batch analysis error:', error);
-    }
-  };
-
-  // Old implementation kept as fallback
   const handleEnhanceNoteFallback = async () => {
     if (!roughNote.trim()) return;
     setIsProcessing(true);
@@ -1021,10 +987,9 @@ Return JSON with:
     } catch (error) {
       console.error("Error enhancing note:", error);
     }
-    setIsProcessing(false);
-  };
+    };
 
-  const handleCopy = () => {
+    const handleCopy = () => {
     navigator.clipboard.writeText(enhancedNote);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -1095,65 +1060,10 @@ Return JSON with:
     setSavedSuccessfully(false);
   };
 
-  const handleSaveNote = async () => {
-    if (!selectedPatientId || !enhancedNote) return;
-
-    setIsSaving(true);
-    try {
-      await base44.entities.Visit.create({
-        patient_id: selectedPatientId,
-        visit_date: visitDate,
-        visit_type: visitType,
-        status: 'completed',
-        nurse_notes: enhancedNote,
-        raw_transcription: roughNote,
-        vital_signs: {
-          blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
-          blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
-          heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
-          temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
-          oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
-          pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null
-        }
-      });
-
-      setSavedSuccessfully(true);
-      setTimeout(() => setSavedSuccessfully(false), 3000);
-
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
-    } catch (error) {
-      console.error('Error saving note:', error);
-    }
-    setIsSaving(false);
-  };
-
   const handleInsertPhrase = (text) => {
     setRoughNote(prev => prev ? prev + ' ' + text : text);
   };
 
-  const handleRunOASISAutomation = async () => {
-    if (!enhancedNote || !selectedPatientId) return;
-
-    setIsRunningOASISAutomation(true);
-    try {
-      // Use batch analysis for OASIS
-      await runBatchAnalysis(['oasis']);
-      setActiveAccordion('oasis');
-      
-      logActivity(ActivityActions.AI_FEATURE_USED, {
-        feature: 'oasis_automation_batched',
-        patient_id: selectedPatientId,
-        page: 'SmartNoteAssistant'
-      });
-    } catch (error) {
-      console.error('Error running OASIS automation:', error);
-      alert('Failed to run OASIS automation. Please try again.');
-    }
-    setIsRunningOASISAutomation(false);
-  };
-
-  // Old OASIS implementation kept as fallback
   const handleRunOASISAutomationFallback = async () => {
     if (!enhancedNote || !selectedPatientId) return;
 
@@ -1307,26 +1217,6 @@ Return JSON with:
     }
   };
 
-  const analyzePDGMOpportunities = async () => {
-    if (!enhancedNote || !selectedPatient) return;
-
-    setIsAnalyzingPDGM(true);
-    try {
-      // Use batch analysis for PDGM
-      await runBatchAnalysis(['pdgm']);
-
-      logActivity(ActivityActions.AI_FEATURE_USED, {
-        feature: 'pdgm_optimization_batched',
-        patient_id: selectedPatientId,
-        page: 'SmartNoteAssistant'
-      });
-    } catch (error) {
-      console.error('Error analyzing PDGM opportunities:', error);
-    }
-    setIsAnalyzingPDGM(false);
-  };
-
-  // Old PDGM implementation kept as fallback
   const analyzePDGMOpportunitiesFallback = async () => {
     if (!enhancedNote || !selectedPatient) return;
 
@@ -1408,81 +1298,6 @@ Return JSON with:
     setIsAnalyzingPDGM(false);
   };
 
-  const handleSaveNote = async () => {
-    if (!selectedPatientId || !enhancedNote) return;
-
-    setIsSaving(true);
-    try {
-      // Save visit note
-      const visit = await base44.entities.Visit.create({
-        patient_id: selectedPatientId,
-        visit_date: visitDate,
-        visit_type: visitType,
-        status: 'completed',
-        nurse_notes: enhancedNote,
-        vital_signs: {
-          blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
-          blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
-          heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
-          temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
-          oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
-          pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null,
-          weight: vitalSigns.weight ? parseFloat(vitalSigns.weight) : null
-        }
-      });
-
-      setSavedSuccessfully(true);
-      setTimeout(() => setSavedSuccessfully(false), 3000);
-
-      // Log visit save
-      logActivity(ActivityActions.VISIT_DOCUMENT, {
-        patient_id: selectedPatientId,
-        visit_id: visit.id,
-        visit_date: visitDate,
-        visit_type: visitType,
-        note_length: enhancedNote.length,
-        note_quality_score: auditResults?.quality_score,
-        compliance_score: enhancedNoteCompliance?.overall_score,
-        page: 'SmartNoteAssistant'
-      });
-
-      // Refresh patient and recent visits
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
-
-      // Trigger predictive risk analysis after visit completion
-      try {
-        await base44.functions.invoke('predictiveRiskAnalysis', {
-          patient_id: selectedPatientId
-        });
-        queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts', selectedPatientId] });
-      } catch (riskError) {
-        console.error('Risk analysis error:', riskError);
-      }
-
-      // Trigger predictive risk analysis after visit completion
-      try {
-        await base44.functions.invoke('predictiveRiskAnalysis', {
-          patient_id: selectedPatientId
-        });
-        queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts', selectedPatientId] });
-      } catch (riskError) {
-        console.error('Risk analysis error:', riskError);
-      }
-
-      logActivity(ActivityActions.VISIT_DOCUMENT, {
-        patient_id: selectedPatientId,
-        visit_date: visitDate,
-        visit_type: visitType,
-        note_length: enhancedNote.length,
-        page: 'SmartNoteAssistant'
-      });
-    } catch (error) {
-      console.error("Error saving note:", error);
-    }
-    setIsSaving(false);
-  };
-
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-4 md:mb-6 flex items-center justify-between gap-2 md:gap-4">
@@ -1550,7 +1365,7 @@ Return JSON with:
         patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null}
         vitalStats={vitalSigns.bp || vitalSigns.hr ? `BP: ${vitalSigns.bp || '-'}, HR: ${vitalSigns.hr || '-'}` : null}
         noteLength={roughNote.length}
-        complianceScore={enhancedNoteCompliance?.overall_score}
+        complianceScore={analysisResults?.overall_score}
       />
 
       {/* Enhanced Patient Overview */}
@@ -1809,104 +1624,6 @@ Return JSON with:
               </CardContent>
             </Card>
           )}
-
-          {/* Old additional tools accordion - now removed */}
-          {false && enhancedNote && selectedPatientId && (
-            <Accordion type="single" collapsible>
-              <AccordionItem value="oasis">
-                <AccordionTrigger className="text-sm">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> AI OASIS Automation with Justifications
-                    {oasisAutomationResults && (
-                      <Badge className="ml-2 bg-purple-100 text-purple-800">
-                        {oasisAutomationResults.mappings?.length || 0} items
-                      </Badge>
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  {oasisAutomationResults?.mappings ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-3 gap-2 mb-4">
-                        <div className="bg-green-50 p-2 rounded border border-green-200 text-center">
-                          <p className="text-xs text-green-600">High Confidence</p>
-                          <p className="text-lg font-bold text-green-900">
-                            {oasisAutomationResults.high_confidence_items || 0}
-                          </p>
-                        </div>
-                        <div className="bg-yellow-50 p-2 rounded border border-yellow-200 text-center">
-                          <p className="text-xs text-yellow-600">Medium Confidence</p>
-                          <p className="text-lg font-bold text-yellow-900">
-                            {oasisAutomationResults.medium_confidence_items || 0}
-                          </p>
-                        </div>
-                        <div className="bg-red-50 p-2 rounded border border-red-200 text-center">
-                          <p className="text-xs text-red-600">Low Confidence</p>
-                          <p className="text-lg font-bold text-red-900">
-                            {oasisAutomationResults.low_confidence_items || 0}
-                          </p>
-                        </div>
-                      </div>
-                      {oasisAutomationResults.mappings.map((mapping, idx) => (
-                        <Card key={idx} className={`border-l-4 ${
-                          mapping.confidence >= 80 ? 'border-l-green-500' :
-                          mapping.confidence >= 60 ? 'border-l-yellow-500' : 'border-l-red-500'
-                        }`}>
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <p className="font-semibold text-sm">{mapping.oasis_item}</p>
-                                <p className="text-xs text-gray-600">{mapping.item_description}</p>
-                              </div>
-                              <Badge className={`${
-                                mapping.confidence >= 80 ? 'bg-green-600' :
-                                mapping.confidence >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}>
-                                {mapping.confidence}% confidence
-                              </Badge>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                              <div className="bg-blue-50 p-2 rounded">
-                                <p className="text-xs font-semibold text-blue-900">Suggested Value:</p>
-                                <p className="text-xs text-blue-800">{mapping.suggested_value}</p>
-                              </div>
-                              <div className="bg-gray-50 p-2 rounded">
-                                <p className="text-xs font-semibold text-gray-900">Evidence from Note:</p>
-                                <p className="text-xs text-gray-700 italic">"{mapping.evidence_from_note}"</p>
-                              </div>
-                              <div className="bg-purple-50 p-2 rounded">
-                                <p className="text-xs font-semibold text-purple-900">Clinical Justification:</p>
-                                <p className="text-xs text-purple-800">{mapping.clinical_justification}</p>
-                              </div>
-                              {mapping.pdgm_impact && (
-                                <div className="bg-green-50 p-2 rounded">
-                                  <p className="text-xs font-semibold text-green-900">PDGM Impact:</p>
-                                  <p className="text-xs text-green-800">{mapping.pdgm_impact}</p>
-                                </div>
-                              )}
-                              {mapping.requires_verification && (
-                                <Alert className="bg-amber-50 border-amber-200 p-2">
-                                  <AlertTriangle className="w-3 h-3 text-amber-600" />
-                                  <AlertDescription className="text-xs text-amber-800">
-                                    Requires clinical verification before submission
-                                  </AlertDescription>
-                                </Alert>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-600 text-center py-4">
-                      Run OASIS automation to see detailed mappings
-                    </p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
-        </div>
 
         </div>
       </div>
