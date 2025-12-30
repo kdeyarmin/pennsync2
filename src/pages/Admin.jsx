@@ -713,14 +713,6 @@ If you have any questions, please contact your administrator.`,
                     <span className="text-sm text-gray-600">Security Logs</span>
                     <span className="font-bold">{securityLogs.length}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Care Plans</span>
-                    <span className="font-bold">N/A</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Storage Used</span>
-                    <span className="font-bold">N/A</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -333,7 +333,7 @@ export default function AdminDashboard() {
 
         {/* Advanced Analytics Quick Access */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Link to={createPageUrl("AdvancedAnalyticsDashboard")}>
+        <Link to={createPageUrl("AgencyAnalytics")}>
           <Card className="bg-gradient-to-br from-purple-500 to-blue-600 text-white border-none shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
             <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
@@ -763,7 +763,7 @@ export default function AdminDashboard() {
               <p className="text-gray-600 mb-4">
                 Access sophisticated analytics including population trends, predictive readmission models, disease progression tracking, and custom reporting tools.
               </p>
-              <Link to={createPageUrl("AdvancedAnalyticsDashboard")}>
+              <Link to={createPageUrl("AgencyAnalytics")}>
                 <Button className="bg-purple-600 hover:bg-purple-700">
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Open Advanced Analytics
@@ -771,64 +771,6 @@ export default function AdminDashboard() {
               </Link>
             </CardContent>
           </Card>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Population Health Trends</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>• Patient admission and discharge trends</li>
-                  <li>• Visit volume analysis over time</li>
-                  <li>• Incident rate monitoring</li>
-                  <li>• Segmentation by diagnosis, age, and care type</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Predictive Models</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>• AI-powered readmission risk scoring</li>
-                  <li>• Disease progression predictions</li>
-                  <li>• Clinical intervention recommendations</li>
-                  <li>• Patient risk stratification</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Custom Report Builder</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>• Select custom metrics and timeframes</li>
-                  <li>• Multiple visualization options</li>
-                  <li>• CSV export functionality</li>
-                  <li>• Quality and performance tracking</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Clinical Insights</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>• Real-time patient monitoring</li>
-                  <li>• Vital signs trend analysis</li>
-                  <li>• Deterioration score calculations</li>
-                  <li>• Care plan optimization recommendations</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
         </Tabs>
 
