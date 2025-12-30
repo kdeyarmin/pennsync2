@@ -23,21 +23,30 @@ export default function RealTimePatientAlerts({
   patients = [], 
   visits = [], 
   carePlans = [],
-  incidents = []
+  incidents = [],
+  currentUser = null
 }) {
   const [alerts, setAlerts] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     generateAlerts();
-  }, [patients, visits, carePlans, incidents]);
+  }, [patients, visits, carePlans, incidents, currentUser]);
 
   const generateAlerts = () => {
     const newAlerts = [];
     const today = new Date();
 
+    // Get favorited patient IDs
+    const favoritedPatientIds = currentUser?.favorited_patients?.map(p => p.id) || [];
+    
+    // Filter to only favorited patients, or all if none favorited
+    const patientsToCheck = favoritedPatientIds.length > 0
+      ? (patients || []).filter(p => favoritedPatientIds.includes(p.id))
+      : (patients || []);
+
     // Check each patient
-    (patients || []).forEach(patient => {
+    patientsToCheck.forEach(patient => {
       const patientVisits = (visits || []).filter(v => v.patient_id === patient.id);
       const patientCarePlans = (carePlans || []).filter(cp => cp.patient_id === patient.id);
       const patientIncidents = (incidents || []).filter(i => i.patient_id === patient.id);

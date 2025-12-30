@@ -304,6 +304,7 @@ export default function Dashboard() {
           visits={visits}
           carePlans={carePlans}
           incidents={incidents}
+          currentUser={currentUser}
         />
       </div>
 
