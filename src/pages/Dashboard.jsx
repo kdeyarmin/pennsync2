@@ -317,16 +317,7 @@ export default function Dashboard() {
       {/* Add Compliance Widget */}
       <ComplianceDashboardWidget />
 
-      {/* Enhanced Voice Commands */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <EnhancedVoiceCommands
-          onTranscription={(text) => console.log('Dictation:', text)}
-          onCommand={handleVoiceCommand}
-          commands={getCommandsForContext('dashboard')}
-          mode="command"
-          showSettings={true}
-        />
-      </div>
+
     </div>
   );
 }

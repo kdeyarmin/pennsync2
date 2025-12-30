@@ -2631,22 +2631,7 @@ Return JSON with:
 
 
 
-      {/* Quick Actions Bar */}
-      <QuickActionsBar
-        currentStep={currentStep}
-        isProcessing={isProcessing}
-        isSaving={isSaving}
-        saved={savedSuccessfully}
-        copied={copied}
-        isListening={isVoiceListening}
-        complianceScore={enhancedNoteCompliance?.overall_score}
-        onEnhance={handleEnhanceNote}
-        onCopy={handleCopy}
-        onSave={handleSaveNote}
-        onClear={handleClearNote}
-        onGenerateTasks={() => setActiveAccordion('tasks')}
-        onToggleVoice={() => setIsVoiceListening(!isVoiceListening)}
-      />
+
     </div>
   );
 }
