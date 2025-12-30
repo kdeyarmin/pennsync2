@@ -375,7 +375,7 @@ export default function Patients() {
 
       {/* Bulk Actions Bar */}
       {selectedPatients.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <BulkPatientActions
             selectedPatients={selectedPatients}
             onClearSelection={() => setSelectedPatients([])}
@@ -383,7 +383,7 @@ export default function Patients() {
           {selectedPatients.length === 2 && (
             <Button
               onClick={handleMergeSelected}
-              className="mt-2 bg-purple-600 hover:bg-purple-700"
+              className="mt-2 bg-purple-600 hover:bg-purple-700 w-full sm:w-auto min-h-[44px]"
             >
               Merge Selected Patients
             </Button>
@@ -409,7 +409,7 @@ export default function Patients() {
               {!searchTerm && (
                 <Button
                   onClick={() => setShowForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 min-h-[44px]"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Your First Patient

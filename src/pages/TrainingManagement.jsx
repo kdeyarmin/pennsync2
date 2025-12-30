@@ -187,42 +187,43 @@ export default function TrainingManagement() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Training Management</h1>
-          <p className="text-gray-600">Create modules, assign training, and track staff completion</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Training Management</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Create modules, assign training, and track staff completion</p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => setShowCreateForm(true)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px]">
           <Plus className="w-4 h-4 mr-2" />
-          Create Training Module
+          <span className="hidden sm:inline">Create Training Module</span>
+          <span className="sm:hidden">Create Module</span>
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-blue-600" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Total Modules</p>
-                <p className="text-2xl font-bold">{trainingModules.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-500 truncate">Total Modules</p>
+                <p className="text-xl sm:text-2xl font-bold">{trainingModules.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Completions</p>
-                <p className="text-2xl font-bold">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-500 truncate">Completions</p>
+                <p className="text-xl sm:text-2xl font-bold">
                   {completions.filter(c => c.status === 'completed').length}
                 </p>
               </div>
@@ -261,11 +262,11 @@ export default function TrainingManagement() {
 
       {/* Create/Edit Module Form */}
       {(showCreateForm || editingModule) && (
-        <Card className="mb-6 border-2 border-blue-300">
-          <CardHeader>
-            <CardTitle>{editingModule ? 'Edit' : 'Create'} Training Module</CardTitle>
+        <Card className="mb-4 sm:mb-6 border-2 border-blue-300">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-base sm:text-lg">{editingModule ? 'Edit' : 'Create'} Training Module</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>Title</Label>
@@ -373,11 +374,11 @@ export default function TrainingManagement() {
               </label>
             </div>
 
-            <div className="flex gap-3">
-              <Button onClick={() => { setShowCreateForm(false); setEditingModule(null); }} variant="outline">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <Button onClick={() => { setShowCreateForm(false); setEditingModule(null); }} variant="outline" className="min-h-[44px] w-full sm:flex-1">
                 Cancel
               </Button>
-              <Button onClick={handleCreateModule} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={handleCreateModule} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:flex-1">
                 {editingModule ? 'Update' : 'Create'} Module
               </Button>
             </div>
@@ -386,14 +387,16 @@ export default function TrainingManagement() {
       )}
 
       {/* Training Modules List */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Staff Overview</TabsTrigger>
-          <TabsTrigger value="all">All Modules ({trainingModules.length})</TabsTrigger>
-          <TabsTrigger value="required">Required ({trainingModules.filter(m => m.is_required).length})</TabsTrigger>
-          <TabsTrigger value="clinical">Clinical</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="overview" className="space-y-3 sm:space-y-4">
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
+            <TabsTrigger value="overview" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Staff Overview</TabsTrigger>
+            <TabsTrigger value="all" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">All Modules ({trainingModules.length})</TabsTrigger>
+            <TabsTrigger value="required" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Required ({trainingModules.filter(m => m.is_required).length})</TabsTrigger>
+            <TabsTrigger value="clinical" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Clinical</TabsTrigger>
+            <TabsTrigger value="compliance" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Compliance</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <StaffTrainingOverview />
@@ -506,12 +509,13 @@ export default function TrainingManagement() {
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setSelectedModuleForView(module)}
                           title="View details and tracking"
+                          className="min-h-[44px] p-2"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -520,6 +524,7 @@ export default function TrainingManagement() {
                           variant="outline"
                           onClick={() => handleAssignToAll(module.id)}
                           title="Assign to all nurses"
+                          className="min-h-[44px] p-2"
                         >
                           <UserPlus className="w-4 h-4" />
                         </Button>
@@ -531,13 +536,14 @@ export default function TrainingManagement() {
                             setNewModule(module);
                             setShowCreateForm(true);
                           }}
+                          className="min-h-[44px] p-2"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-red-600 hover:bg-red-50"
+                          className="text-red-600 hover:bg-red-50 min-h-[44px] p-2"
                           onClick={() => {
                             if (confirm('Delete this training module?')) {
                               deleteModuleMutation.mutate(module.id);

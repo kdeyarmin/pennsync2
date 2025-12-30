@@ -50,15 +50,15 @@ export default function ComplianceRegulatory() {
     <div className="min-h-screen">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2 h-14">
-              <TabsTrigger value="compliance" className="gap-2">
-                <Shield className="w-4 h-4" />
-                Compliance
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2 h-12 sm:h-14">
+              <TabsTrigger value="compliance" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>Compliance</span>
               </TabsTrigger>
-              <TabsTrigger value="regulatory" className="gap-2">
-                <BookOpen className="w-4 h-4" />
-                Regulatory
+              <TabsTrigger value="regulatory" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>Regulatory</span>
               </TabsTrigger>
             </TabsList>
           </div>
