@@ -325,6 +325,11 @@ export default function Layout({ children, currentPageName }) {
               </div>
             )}
           </div>
+          {!sidebarCollapsed && (
+            <div className="mt-2">
+              <FeedbackButton />
+            </div>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -347,9 +352,12 @@ export default function Layout({ children, currentPageName }) {
           />
           <span className="font-bold text-lg text-white">Penn Sync</span>
         </Link>
-        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700 h-12 w-12">
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </Button>
+        <div className="flex items-center gap-2">
+          <FeedbackButton />
+          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700 h-12 w-12">
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </Button>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}
