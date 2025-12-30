@@ -34,8 +34,7 @@ import {
   Activity,
   ClipboardList,
   AlertTriangle,
-  Mic,
-  MicOff,
+
   ChevronRight,
   ChevronLeft,
   Brain,
@@ -113,182 +112,7 @@ const commonDiagnoses = [
 
 
 
-// Voice Hub Component - Enhanced with Commands and Multi-language
-function VoiceHub({ onTranscription, onInterimTranscription, onCommand }) {
-  const [listening, setListening] = useState(false);
-  const [interimText, setInterimText] = useState('');
-  const [language, setLanguage] = useState('en-US');
-  const [commandMode, setCommandMode] = useState(false);
-  const [lastCommand, setLastCommand] = useState(null);
-  const recognitionRef = React.useRef(null);
 
-  const voiceCommands = [
-    { trigger: "enhance note", action: "enhance" },
-    { trigger: "copy note", action: "copy" },
-    { trigger: "save note", action: "save" },
-    { trigger: "clear note", action: "clear" },
-    { trigger: "next step", action: "next" },
-    { trigger: "blood pressure", action: "bp", extract: true },
-    { trigger: "heart rate", action: "hr", extract: true },
-    { trigger: "temperature", action: "temp", extract: true },
-    { trigger: "oxygen", action: "o2", extract: true },
-    { trigger: "pain level", action: "pain", extract: true }
-  ];
-
-  const matchCommand = (text) => {
-    const lower = text.toLowerCase();
-    for (const cmd of voiceCommands) {
-      if (lower.includes(cmd.trigger)) {
-        if (cmd.extract) {
-          const numbers = text.match(/\d+\.?\d*/g);
-          return { ...cmd, value: numbers };
-        }
-        return cmd;
-      }
-    }
-    return null;
-  };
-
-  const startListening = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition not supported in your browser');
-      return;
-    }
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 2;
-
-    recognition.onresult = (event) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-      
-      if (finalTranscript) {
-        const trimmedText = finalTranscript.trim();
-        
-        // Check for commands if in command mode or if text starts with command trigger
-        const matchedCommand = matchCommand(trimmedText);
-        if (matchedCommand && (commandMode || trimmedText.toLowerCase().startsWith(matchedCommand.trigger))) {
-          setLastCommand(matchedCommand.action);
-          onCommand?.(matchedCommand.action, trimmedText, matchedCommand.value);
-          setTimeout(() => setLastCommand(null), 2000);
-        } else {
-          onTranscription?.(trimmedText);
-        }
-        
-        setInterimText('');
-      } else if (interimTranscript) {
-        setInterimText(interimTranscript);
-        onInterimTranscription?.(interimTranscript);
-      }
-    };
-    
-    recognition.onend = () => {
-      if (listening) {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.error('Restart error:', e);
-        }
-      } else {
-        setListening(false);
-        setInterimText('');
-      }
-    };
-    
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        if (listening) {
-          setTimeout(() => {
-            try {
-              recognition.start();
-            } catch (e) {}
-          }, 100);
-        }
-      } else {
-        setListening(false);
-        setInterimText('');
-      }
-    };
-    
-    setListening(true);
-    recognition.start();
-  };
-
-  const stopListening = () => {
-    setListening(false);
-    setInterimText('');
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-  };
-
-  React.useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <Button
-          size="default"
-          variant={listening ? "destructive" : "outline"}
-          onClick={listening ? stopListening : startListening}
-          className="gap-2 min-h-[44px] px-4 flex-shrink-0"
-        >
-          {listening ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
-          <span className="text-sm md:text-base">{listening ? 'Stop' : 'Voice'}</span>
-        </Button>
-
-        {!listening && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setCommandMode(!commandMode)}
-            className="text-xs"
-          >
-            {commandMode ? '🎤 Commands' : '✍️ Dictation'}
-          </Button>
-        )}
-      </div>
-      {listening && (
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 animate-pulse">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span className="text-xs text-gray-600">
-              {commandMode ? 'Command Mode' : 'Dictating'}
-            </span>
-          </div>
-          {lastCommand && (
-            <Badge className="bg-green-600 text-white text-xs animate-pulse">
-              ✓ {lastCommand}
-            </Badge>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Contextual AI Tools Sidebar - Enhanced with better guidance
 function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote, onAction, diagnosis, complianceScore }) {
@@ -405,7 +229,6 @@ export default function SmartNoteAssistant() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
-  const [interimVoiceText, setInterimVoiceText] = useState('');
   const [collapsedSteps, setCollapsedSteps] = useState([]);
   const [recheckMode, setRecheckMode] = useState(false);
 
@@ -634,52 +457,7 @@ export default function SmartNoteAssistant() {
     });
   };
 
-  const handleVoiceTranscription = (text) => {
-    setRoughNote(prev => prev ? prev + ' ' + text : text);
-    setInterimVoiceText('');
-  };
 
-  const handleInterimTranscription = (text) => {
-    setInterimVoiceText(text);
-  };
-
-  const handleVoiceCommand = (action, spokenText, extractedValue) => {
-    switch (action) {
-      case 'copy':
-        handleCopy();
-        break;
-      case 'clear':
-        handleClearNote();
-        break;
-      case 'bp':
-        if (extractedValue && extractedValue.length >= 2) {
-          setVitalSigns(prev => ({ ...prev, bp: `${extractedValue[0]}/${extractedValue[1]}` }));
-        }
-        break;
-      case 'hr':
-        if (extractedValue && extractedValue[0]) {
-          setVitalSigns(prev => ({ ...prev, hr: extractedValue[0] }));
-        }
-        break;
-      case 'temp':
-        if (extractedValue && extractedValue[0]) {
-          setVitalSigns(prev => ({ ...prev, temp: extractedValue[0] }));
-        }
-        break;
-      case 'o2':
-        if (extractedValue && extractedValue[0]) {
-          setVitalSigns(prev => ({ ...prev, o2: extractedValue[0] }));
-        }
-        break;
-      case 'pain':
-        if (extractedValue && extractedValue[0]) {
-          setVitalSigns(prev => ({ ...prev, pain: extractedValue[0] }));
-        }
-        break;
-      default:
-        console.log('Unknown voice command:', action);
-    }
-  };
 
   const handleClearNote = () => {
     setRoughNote("");
@@ -923,29 +701,16 @@ export default function SmartNoteAssistant() {
                     </div>
                     <span className="truncate">3. Notes</span>
                     {roughNote.length >= 50 && <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />}
-                  </div>
-                <VoiceHub 
-                  onTranscription={handleVoiceTranscription}
-                  onInterimTranscription={handleInterimTranscription}
-                    onCommand={handleVoiceCommand}
-                  />
-                </CardTitle>
+                    </div>
+                    </CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-4">
-              <div className="relative">
-                <Textarea
-                  value={roughNote}
-                  onChange={(e) => setRoughNote(e.target.value)}
-                  placeholder="Type or dictate your rough notes or bullet points...&#10;&#10;Examples:&#10;• Patient states feeling better&#10;• Wound improving, less drainage&#10;• Taught medication management&#10;• BP elevated, pt needs MD follow-up"
-                  className="min-h-[200px] text-base"
-                />
-                {interimVoiceText && (
-                  <div className="absolute bottom-2 left-2 right-2 bg-blue-100/90 border border-blue-300 rounded px-3 py-2 text-sm text-blue-900 italic pointer-events-none">
-                    <Mic className="w-3 h-3 inline mr-1" />
-                    {interimVoiceText}...
-                  </div>
-                )}
-              </div>
+              <Textarea
+                value={roughNote}
+                onChange={(e) => setRoughNote(e.target.value)}
+                placeholder="Type your rough notes or bullet points...&#10;&#10;Examples:&#10;• Patient states feeling better&#10;• Wound improving, less drainage&#10;• Taught medication management&#10;• BP elevated, pt needs MD follow-up"
+                className="min-h-[200px] text-base"
+              />
                 <p className={`text-sm ${roughNote.length >= 50 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
                   {roughNote.length} characters {roughNote.length < 50 && roughNote.length > 0 && <span className="text-orange-500">(min 50 for auto-enhance)</span>}
                 </p>
