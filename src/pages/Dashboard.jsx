@@ -260,11 +260,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* High-Risk Patient Alerts */}
-      <div className="mb-6">
-        <RiskAlertWidget showAllPatients={true} compact={false} />
-      </div>
-
       {/* Offline Data Manager */}
       <div className="mb-6">
         <OfflineDataManager />
