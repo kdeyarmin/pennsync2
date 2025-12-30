@@ -115,24 +115,24 @@ export default function PatientDashboard() {
   const criticalAlerts = activeAlerts.filter(a => a.severity === 'critical');
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-lg sm:text-xl md:text-2xl font-bold flex-shrink-0">
               {selectedPatient?.first_name?.[0]}{selectedPatient?.last_name?.[0]}
             </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
                 {selectedPatient?.first_name} {selectedPatient?.middle_name ? `${selectedPatient.middle_name} ` : ''}{selectedPatient?.last_name}
               </h1>
               <div className="flex flex-wrap items-center gap-2 mt-1">
-                <Badge variant="outline">{selectedPatient?.medical_record_number || 'No MRN'}</Badge>
-                <Badge className={selectedPatient?.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}>
+                <Badge variant="outline" className="text-xs">{selectedPatient?.medical_record_number || 'No MRN'}</Badge>
+                <Badge className={`text-xs ${selectedPatient?.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}`}>
                   {selectedPatient?.status || 'Unknown'}
                 </Badge>
-                <span className="text-sm text-gray-600">
+                <span className="text-xs sm:text-sm text-gray-600 truncate">
                   {selectedPatient?.primary_diagnosis || 'No primary diagnosis'}
                 </span>
               </div>
@@ -151,7 +151,7 @@ export default function PatientDashboard() {
 
         {/* Critical Alerts Banner */}
         {criticalAlerts.length > 0 && (
-          <Alert className="bg-red-50 border-red-300 mb-4">
+          <Alert className="bg-red-50 border-red-300 mb-3 sm:mb-4">
             <AlertTriangle className="w-5 h-5 text-red-600" />
             <AlertDescription className="text-red-900">
               <span className="font-semibold">{criticalAlerts.length} Critical Alert{criticalAlerts.length > 1 ? 's' : ''}</span>
@@ -192,43 +192,43 @@ export default function PatientDashboard() {
       />
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-2 min-w-max">
-            <TabsTrigger value="overview" className="gap-2 whitespace-nowrap">
-              <Activity className="w-4 h-4" />
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 sm:gap-2 min-w-max h-auto">
+            <TabsTrigger value="overview" className="gap-1 sm:gap-2 whitespace-nowrap py-2 sm:py-3 text-xs sm:text-sm">
+              <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="visits" className="gap-2 whitespace-nowrap">
-              <FileText className="w-4 h-4" />
+            <TabsTrigger value="visits" className="gap-1 sm:gap-2 whitespace-nowrap py-2 sm:py-3 text-xs sm:text-sm">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Visits</span>
             </TabsTrigger>
-            <TabsTrigger value="careplans" className="gap-2 whitespace-nowrap">
-              <Target className="w-4 h-4" />
+            <TabsTrigger value="careplans" className="gap-1 sm:gap-2 whitespace-nowrap py-2 sm:py-3 text-xs sm:text-sm">
+              <Target className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Care Plans</span>
             </TabsTrigger>
-            <TabsTrigger value="alerts" className="gap-2 whitespace-nowrap">
-              <Bell className="w-4 h-4" />
+            <TabsTrigger value="alerts" className="gap-1 sm:gap-2 whitespace-nowrap py-2 sm:py-3 text-xs sm:text-sm">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Alerts</span>
               {activeAlerts.length > 0 && (
-                <Badge className="ml-1 bg-red-500 text-white">{activeAlerts.length}</Badge>
+                <Badge className="ml-1 bg-red-500 text-white text-xs">{activeAlerts.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2 whitespace-nowrap">
-              <Clock className="w-4 h-4" />
+            <TabsTrigger value="history" className="gap-1 sm:gap-2 whitespace-nowrap py-2 sm:py-3 text-xs sm:text-sm">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>History</span>
             </TabsTrigger>
           </TabsList>
         </div>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid lg:grid-cols-2 gap-6">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <HealthTrendsChart visits={visits} patient={selectedPatient} />
             <UpcomingAppointments visits={visits} patientId={selectedPatientId} />
           </div>
           
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <ActiveCarePlansWidget carePlans={carePlans} patientId={selectedPatientId} />
             <RecentVisitsSummary visits={visits.slice(0, 5)} patient={selectedPatient} />
           </div>

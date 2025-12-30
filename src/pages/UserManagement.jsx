@@ -266,28 +266,28 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-            <Users className="w-6 h-6 text-white" />
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-            <p className="text-sm text-gray-600">Manage user accounts, roles, and permissions</p>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">User Management</h1>
+            <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Manage user accounts, roles, and permissions</p>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Total Users</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Total Users</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
               </div>
             </div>
           </CardContent>
@@ -339,24 +339,24 @@ export default function UserManagement() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium">Filters:</span>
             </div>
-            <div className="relative flex-1 max-w-xs">
+            <div className="relative flex-1 w-full sm:max-w-xs">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-11 touch-target"
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40 h-11 touch-target">
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
@@ -367,7 +367,7 @@ export default function UserManagement() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40 h-11 touch-target">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -382,16 +382,16 @@ export default function UserManagement() {
 
       {/* Pending Invitations */}
       {pendingInvitations.length > 0 && (
-        <Card className="mb-6 border-yellow-200 bg-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-lg">
+        <Card className="mb-4 sm:mb-6 border-yellow-200 bg-yellow-50">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center justify-between text-base sm:text-lg">
               <div className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-yellow-600" />
                 <span>Pending Invitations ({pendingInvitations.length})</span>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="space-y-2">
               {pendingInvitations.map((invitation) => {
                 const expiresAt = new Date(invitation.expires_at);
@@ -400,7 +400,7 @@ export default function UserManagement() {
                 const isExpiringSoon = hoursUntilExpiry > 0 && hoursUntilExpiry <= 24;
                 
                 return (
-                  <div key={invitation.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900">{invitation.full_name}</p>
@@ -428,7 +428,7 @@ export default function UserManagement() {
                       variant="outline"
                       onClick={() => resendInvitationMutation.mutate(invitation.id)}
                       disabled={resendInvitationMutation.isPending}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 min-h-[44px] w-full sm:w-auto"
                     >
                       <Send className="w-4 h-4" />
                       Resend
@@ -454,28 +454,28 @@ export default function UserManagement() {
 
       {/* Users Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="flex items-center justify-between text-base sm:text-lg">
             <span>Users ({filteredUsers.length})</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-4 md:p-6">
           {isLoading ? (
-            <div className="text-center py-12 text-gray-500">Loading users...</div>
+            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-gray-500">Loading users...</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">No users found</div>
+            <div className="text-center py-8 sm:py-12 text-sm sm:text-base text-gray-500">No users found</div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Activity</TableHead>
-                    <TableHead>Last Active</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-xs sm:text-sm">User</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Email</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Role</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Activity</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Last Active</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -486,35 +486,36 @@ export default function UserManagement() {
                     
                     return (
                       <TableRow key={user.id} className={!isActive ? 'opacity-50' : ''}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        <TableCell className="text-xs sm:text-sm">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium flex-shrink-0">
                               {user.full_name?.charAt(0) || 'U'}
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{user.full_name}</p>
+                            <div className="min-w-0">
+                              <p className="font-medium text-gray-900 truncate">{user.full_name}</p>
+                              <p className="text-xs text-gray-600 md:hidden truncate">{user.email}</p>
                               {currentUser.email === user.email && (
                                 <Badge className="text-xs bg-blue-500 text-white">You</Badge>
                               )}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                        <TableCell className="text-xs sm:text-sm hidden md:table-cell">
+                          <div className="flex items-center gap-1 text-gray-600">
                             <Mail className="w-3 h-3" />
-                            {user.email}
+                            <span className="truncate">{user.email}</span>
                           </div>
                         </TableCell>
                         <TableCell>{getRoleBadge(user.role)}</TableCell>
                         <TableCell>
-                          <Badge className={isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                          <Badge className={`text-xs ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
                           {activityCount > 0 ? `${activityCount} actions` : 'No activity'}
                         </TableCell>
-                        <TableCell className="text-sm text-gray-600">
+                        <TableCell className="text-xs sm:text-sm text-gray-600 hidden lg:table-cell">
                           {lastActivity ? (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -525,13 +526,14 @@ export default function UserManagement() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEditUser(user)}
                               disabled={currentUser.email === user.email}
                               title="Edit user role"
+                              className="min-h-[44px] w-10 sm:w-auto p-2"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -539,7 +541,7 @@ export default function UserManagement() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleResetPassword(user)}
-                              className="text-orange-600 hover:text-orange-700"
+                              className="text-orange-600 hover:text-orange-700 min-h-[44px] w-10 sm:w-auto p-2"
                               title="Reset password"
                             >
                               <Key className="w-4 h-4" />
@@ -549,7 +551,7 @@ export default function UserManagement() {
                               size="sm"
                               onClick={() => handleToggleActive(user)}
                               disabled={currentUser.email === user.email}
-                              className={isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
+                              className={`min-h-[44px] w-10 sm:w-auto p-2 ${isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
                               title={isActive ? 'Disable user' : 'Enable user'}
                             >
                               {isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
@@ -559,7 +561,7 @@ export default function UserManagement() {
                               size="sm"
                               onClick={() => handleDeleteUser(user)}
                               disabled={currentUser.email === user.email}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px] w-10 sm:w-auto p-2"
                               title="Delete user permanently"
                             >
                               <Trash2 className="w-4 h-4" />
