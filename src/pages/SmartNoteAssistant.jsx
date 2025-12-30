@@ -1018,6 +1018,7 @@ export default function SmartNoteAssistant() {
           )}
 
         </div>
+      </div>
 
       {selectedPatient && !enhancedNote && (
         <div className="space-y-4 mt-6">
