@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
+import ReferralAnalyzer from "../components/referral/ReferralAnalyzer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +14,7 @@ export default function ReferralProcessor() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [extractedData, setExtractedData] = useState(null);
+  const [referralAnalysis, setReferralAnalysis] = useState(null);
   const [isCreatingPatient, setIsCreatingPatient] = useState(false);
 
   const createPatientFromReferral = async () => {
@@ -75,6 +77,13 @@ export default function ReferralProcessor() {
             navigate(createPageUrl('SmartNoteAssistant'));
           }}
         />
+
+        {extractedData && (
+          <ReferralAnalyzer
+            referralData={extractedData}
+            onAnalysisComplete={(analysis) => setReferralAnalysis(analysis)}
+          />
+        )}
 
         {extractedData && (
           <Card className="border-2 border-green-300 bg-green-50">
