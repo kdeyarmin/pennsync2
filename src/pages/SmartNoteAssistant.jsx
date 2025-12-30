@@ -50,7 +50,6 @@ import {
   DollarSign,
   AlertCircle
 } from "lucide-react";
-import { trackRecommendation, categorizeRecommendation } from "../components/training/RecommendationTracker";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
 import TaskGenerator from "../components/smartNote/TaskGenerator";
@@ -1019,7 +1018,6 @@ export default function SmartNoteAssistant() {
           )}
 
         </div>
-      </div>
 
       {selectedPatient && !enhancedNote && (
         <div className="space-y-4 mt-6">
