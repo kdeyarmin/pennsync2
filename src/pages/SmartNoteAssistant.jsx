@@ -1374,7 +1374,7 @@ Return JSON with:
           {/* Patient Diagnosis Display */}
           {selectedPatient.primary_diagnosis && (
             <Alert className="mb-3 bg-white border-blue-400">
-              <Stethoscope className="w-4 h-4 text-blue-600" />
+              <Activity className="w-4 h-4 text-blue-600" />
               <AlertDescription className="text-sm font-medium text-gray-900">
                 <strong className="text-blue-800">Primary Diagnosis:</strong> {selectedPatient.primary_diagnosis}
                 {selectedPatient.secondary_diagnoses && selectedPatient.secondary_diagnoses.length > 0 && (
