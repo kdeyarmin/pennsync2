@@ -407,6 +407,7 @@ export default function SmartNoteAssistant() {
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [interimVoiceText, setInterimVoiceText] = useState('');
   const [collapsedSteps, setCollapsedSteps] = useState([]);
+  const [recheckMode, setRecheckMode] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -575,6 +576,7 @@ export default function SmartNoteAssistant() {
   const handleEnhancedNoteReady = async ({ enhancedNote: finalNote, analysis, appliedSuggestions }) => {
     setEnhancedNote(finalNote);
     setAnalysisResults(analysis);
+    setRecheckMode(false);
 
     // Auto-save to patient chart
     try {
@@ -687,6 +689,14 @@ export default function SmartNoteAssistant() {
     setCopied(false);
     setSavedSuccessfully(false);
     setCollapsedSteps([]);
+    setRecheckMode(false);
+  };
+
+  const handleRecheck = () => {
+    setRoughNote(enhancedNote);
+    setEnhancedNote("");
+    setAnalysisResults(null);
+    setRecheckMode(true);
   };
 
 
@@ -956,7 +966,7 @@ export default function SmartNoteAssistant() {
                 recentVisits={recentVisits}
                 nurseType={currentUser?.credential_type || 'RN'}
                 onEnhancedNoteReady={handleEnhancedNoteReady}
-                autoRun={true}
+                autoRun={!recheckMode}
               />
             </div>
           )}
@@ -990,12 +1000,20 @@ export default function SmartNoteAssistant() {
                     )}
                   </Button>
                   <Button
+                    onClick={handleRecheck}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Re-check Note
+                  </Button>
+                  <Button
                     onClick={handleClearNote}
                     variant="outline"
                     className="flex-1"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
-                    Start New Note
+                    Start New
                   </Button>
                 </div>
                 {savedSuccessfully && (
