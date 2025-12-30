@@ -32,7 +32,6 @@ import {
   CheckCircle2,
   User,
   Activity,
-  Stethoscope,
   ClipboardList,
   AlertTriangle,
   Mic,
