@@ -85,12 +85,24 @@ Analyze and provide:
    - Potential side effects appearing in timeline
    - Effectiveness indicators
 
-4. RISK INDICATORS:
+4. COMPARATIVE ANALYSIS: Identify correlations between:
+   - Symptoms appearing after medication changes
+   - Vital sign changes following symptom reports
+   - Lab results correlating with clinical deterioration
+   - Time-based patterns (e.g., symptoms worsening before hospitalization)
+
+5. PREDICTIVE ANALYTICS:
+   - Calculate hospital readmission risk (0-100 score)
+   - Identify early warning signs of clinical deterioration
+   - Predict likelihood of care plan goal achievement
+   - Forecast potential complications based on current trajectory
+
+6. RISK INDICATORS:
    - Early warning signs
    - Deteriorating metrics
    - Hospital readmission risks
 
-5. POSITIVE TRENDS:
+7. POSITIVE TRENDS:
    - Improvements
    - Goals being met
    - Successful interventions
@@ -154,6 +166,47 @@ Provide actionable insights for clinicians.`,
               properties: {
                 achievement: { type: "string" },
                 supporting_data: { type: "string" }
+              }
+            }
+          },
+          comparative_insights: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                correlation: { type: "string" },
+                metric_a: { type: "string" },
+                metric_b: { type: "string" },
+                relationship: { type: "string" },
+                clinical_significance: { type: "string" }
+              }
+            }
+          },
+          predictive_analytics: {
+            type: "object",
+            properties: {
+              readmission_risk_score: { type: "number" },
+              readmission_risk_level: { type: "string" },
+              deterioration_risk_score: { type: "number" },
+              deterioration_risk_level: { type: "string" },
+              key_risk_factors: {
+                type: "array",
+                items: { type: "string" }
+              },
+              predicted_outcomes: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    outcome: { type: "string" },
+                    probability: { type: "string" },
+                    timeframe: { type: "string" },
+                    prevention_strategies: {
+                      type: "array",
+                      items: { type: "string" }
+                    }
+                  }
+                }
               }
             }
           },

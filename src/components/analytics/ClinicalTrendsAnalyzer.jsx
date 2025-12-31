@@ -17,9 +17,12 @@ import {
   Heart,
   ThermometerSun,
   Weight,
-  Droplet
+  Droplet,
+  GitCompare,
+  Brain,
+  Shield
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format } from "date-fns";
 
 export default function ClinicalTrendsAnalyzer({ patientId }) {
@@ -268,6 +271,123 @@ export default function ClinicalTrendsAnalyzer({ patientId }) {
                     <p className="text-gray-600 italic mt-1">{pattern.clinical_notes}</p>
                   </div>
                 ))}
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {/* Comparative Insights */}
+        {analysis.comparative_insights?.length > 0 && (
+          <Card className="bg-white border-l-4 border-purple-400">
+            <CardHeader className="pb-2">
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => toggleSection('comparative')}
+              >
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <GitCompare className="w-4 h-4 text-purple-600" />
+                  Comparative Analysis
+                </h4>
+                {expandedSections.includes('comparative') ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </div>
+            </CardHeader>
+            {expandedSections.includes('comparative') && (
+              <CardContent className="space-y-2">
+                {analysis.comparative_insights.map((insight, idx) => (
+                  <Alert key={idx} className="bg-purple-50 border-purple-300">
+                    <GitCompare className="w-4 h-4 text-purple-600" />
+                    <AlertDescription className="text-xs">
+                      <p className="font-semibold text-purple-900 mb-1">{insight.correlation}</p>
+                      <div className="text-gray-700 space-y-1">
+                        <p>Metric A: {insight.metric_a}</p>
+                        <p>Metric B: {insight.metric_b}</p>
+                        <p>Relationship: {insight.relationship}</p>
+                        <p className="text-purple-700 font-medium mt-2">Clinical Significance: {insight.clinical_significance}</p>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {/* Predictive Analytics */}
+        {analysis.predictive_analytics && (
+          <Card className="bg-white border-l-4 border-indigo-400">
+            <CardHeader className="pb-2">
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => toggleSection('predictive')}
+              >
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-indigo-600" />
+                  Predictive Analytics
+                </h4>
+                {expandedSections.includes('predictive') ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </div>
+            </CardHeader>
+            {expandedSections.includes('predictive') && (
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <Alert className={`${analysis.predictive_analytics.readmission_risk_score > 70 ? 'bg-red-50 border-red-300' : analysis.predictive_analytics.readmission_risk_score > 40 ? 'bg-orange-50 border-orange-300' : 'bg-green-50 border-green-300'}`}>
+                    <Shield className="w-4 h-4" />
+                    <AlertDescription className="text-xs">
+                      <p className="font-semibold mb-1">Readmission Risk</p>
+                      <div className="text-2xl font-bold">{analysis.predictive_analytics.readmission_risk_score}%</div>
+                      <Badge className={`mt-1 ${getConcernColor(analysis.predictive_analytics.readmission_risk_level)} text-white text-xs`}>
+                        {analysis.predictive_analytics.readmission_risk_level}
+                      </Badge>
+                    </AlertDescription>
+                  </Alert>
+
+                  <Alert className={`${analysis.predictive_analytics.deterioration_risk_score > 70 ? 'bg-red-50 border-red-300' : analysis.predictive_analytics.deterioration_risk_score > 40 ? 'bg-orange-50 border-orange-300' : 'bg-green-50 border-green-300'}`}>
+                    <AlertTriangle className="w-4 h-4" />
+                    <AlertDescription className="text-xs">
+                      <p className="font-semibold mb-1">Deterioration Risk</p>
+                      <div className="text-2xl font-bold">{analysis.predictive_analytics.deterioration_risk_score}%</div>
+                      <Badge className={`mt-1 ${getConcernColor(analysis.predictive_analytics.deterioration_risk_level)} text-white text-xs`}>
+                        {analysis.predictive_analytics.deterioration_risk_level}
+                      </Badge>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+
+                {analysis.predictive_analytics.key_risk_factors?.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded p-2">
+                    <p className="text-xs font-semibold text-red-900 mb-1">Key Risk Factors:</p>
+                    <ul className="space-y-1">
+                      {analysis.predictive_analytics.key_risk_factors.map((factor, idx) => (
+                        <li key={idx} className="text-xs text-red-800">• {factor}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {analysis.predictive_analytics.predicted_outcomes?.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-gray-900">Predicted Outcomes:</p>
+                    {analysis.predictive_analytics.predicted_outcomes.map((outcome, idx) => (
+                      <div key={idx} className="bg-indigo-50 border border-indigo-200 rounded p-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-semibold text-indigo-900">{outcome.outcome}</p>
+                          <Badge className="bg-indigo-600 text-white text-xs">{outcome.probability}</Badge>
+                        </div>
+                        <p className="text-xs text-gray-700">Timeframe: {outcome.timeframe}</p>
+                        {outcome.prevention_strategies?.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs font-semibold text-indigo-800">Prevention:</p>
+                            <ul className="space-y-1">
+                              {outcome.prevention_strategies.map((strategy, sidx) => (
+                                <li key={sidx} className="text-xs text-indigo-700">• {strategy}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             )}
           </Card>
