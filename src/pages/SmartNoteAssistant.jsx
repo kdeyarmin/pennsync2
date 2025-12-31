@@ -759,7 +759,7 @@ export default function SmartNoteAssistant() {
           )}
 
           {/* Enhanced Patient Context Panel with Timeline */}
-          {selectedPatientId && (
+          {selectedPatientId && (recentVisits.length > 0 || carePlans.length > 0 || selectedPatient?.primary_diagnosis || selectedPatient?.current_medications?.length > 0) && (
             <Tabs defaultValue="context" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="context" className="font-semibold">
