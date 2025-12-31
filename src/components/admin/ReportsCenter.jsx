@@ -312,7 +312,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
         name: nurse.full_name || nurse.email,
         ...stats
       };
-    });
+    }).sort((a, b) => (b.noteConversions || 0) - (a.noteConversions || 0)); // Sort by highest enhancements first
 
     const totalTimeSaved = nursesData.reduce((sum, nurse) => sum + (nurse.timeSavedHours || 0), 0);
     const totalEnhancements = nursesData.reduce((sum, nurse) => sum + (nurse.noteConversions || 0), 0);
