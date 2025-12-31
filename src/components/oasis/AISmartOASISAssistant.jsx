@@ -147,6 +147,41 @@ For each suggested OASIS item, explicitly state:
 - **Documentation Needed**: Specific evidence nurse must observe/document
 - **Compliance Risk**: "HIGH" if missing this creates audit risk
 
+**COMPREHENSIVE PDGM ANALYSIS REQUIRED:**
+
+After analyzing all OASIS items, provide a detailed PDGM Analysis section that includes:
+
+1. **Current PDGM Status:**
+   - Clinical group based on primary diagnosis
+   - Estimated case-mix weight
+   - Functional impairment level (based on M1800-M1860 scores)
+   - Comorbidity tier
+
+2. **Optimization Opportunities:**
+   For each opportunity, specify:
+   - What could be optimized (diagnosis selection, functional scoring, comorbidity capture)
+   - Current status vs. optimal status
+   - Specific recommendations with action steps
+   - Estimated revenue impact (e.g., "$500-800 per episode")
+
+3. **Alternative Clinical Groups:**
+   - Other PDGM groups patient might qualify for
+   - Required primary diagnosis changes
+   - Case-mix weight comparison
+   - Documentation needed to support the change
+   - Feasibility assessment
+
+4. **Missing High-Value Data:**
+   - Critical information gaps that affect payment
+   - Why each missing element matters for PDGM
+   - How to obtain/assess during visit
+   - Potential value add if captured
+
+5. **Functional Score Optimization:**
+   - Current estimated functional scores
+   - Target scores for higher payment tier
+   - Specific assessment areas to focus on (e.g., "Assess toilet transferring - current data suggests assistance needed but not documented")
+
 CRITICAL: Only suggest items where you have reliable data. Mark items as NEEDS_MANUAL_ASSESSMENT when data is insufficient, but ALWAYS explain what to look for to capture maximum reimbursement.
 
 Patient Data: ${JSON.stringify(contextData)}`,
@@ -215,6 +250,62 @@ Patient Data: ${JSON.stringify(contextData)}`,
             nurse_assessment_checklist: {
               type: "array",
               items: { type: "string" }
+            },
+            pdgm_analysis: {
+              type: "object",
+              properties: {
+                current_clinical_group: { type: "string" },
+                current_case_mix_weight: { type: "number" },
+                functional_impairment_level: { type: "string", enum: ["Low", "Medium", "High"] },
+                comorbidity_tier: { type: "string", enum: ["None", "Low", "High"] },
+                optimization_opportunities: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      opportunity_type: { type: "string" },
+                      current_status: { type: "string" },
+                      recommendation: { type: "string" },
+                      potential_impact: { type: "string" },
+                      specific_actions: { type: "array", items: { type: "string" } },
+                      revenue_increase_estimate: { type: "string" }
+                    }
+                  }
+                },
+                alternative_clinical_groups: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      clinical_group: { type: "string" },
+                      required_primary_diagnosis: { type: "string" },
+                      case_mix_weight: { type: "number" },
+                      documentation_needed: { type: "string" },
+                      feasibility: { type: "string", enum: ["High", "Medium", "Low"] }
+                    }
+                  }
+                },
+                missing_high_value_data: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      data_element: { type: "string" },
+                      why_important: { type: "string" },
+                      how_to_obtain: { type: "string" },
+                      potential_value_add: { type: "string" }
+                    }
+                  }
+                },
+                functional_score_optimization: {
+                  type: "object",
+                  properties: {
+                    current_estimated_scores: { type: "string" },
+                    target_for_higher_payment: { type: "string" },
+                    assessment_focus_areas: { type: "array", items: { type: "string" } }
+                  }
+                }
+              }
             }
           }
         }
@@ -412,6 +503,137 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 </ul>
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* PDGM Analysis Section */}
+          {suggestions.pdgm_analysis && (
+            <Card className="border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-900">
+                  💰 PDGM Reimbursement Analysis
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Current PDGM Status */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-white p-4 rounded-lg border-2 border-green-200">
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Current Clinical Group</p>
+                    <p className="text-xl font-bold text-green-700">{suggestions.pdgm_analysis.current_clinical_group}</p>
+                    <p className="text-sm text-gray-600 mt-1">Case-Mix Weight: <span className="font-semibold">{suggestions.pdgm_analysis.current_case_mix_weight?.toFixed(3)}</span></p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border-2 border-blue-200">
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Payment Factors</p>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Functional Level:</strong> {suggestions.pdgm_analysis.functional_impairment_level}</p>
+                      <p><strong>Comorbidity Tier:</strong> {suggestions.pdgm_analysis.comorbidity_tier}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optimization Opportunities */}
+                {suggestions.pdgm_analysis.optimization_opportunities?.length > 0 && (
+                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+                    <h4 className="font-semibold text-yellow-900 mb-3 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      Revenue Optimization Opportunities
+                    </h4>
+                    <div className="space-y-3">
+                      {suggestions.pdgm_analysis.optimization_opportunities.map((opp, idx) => (
+                        <div key={idx} className="bg-white p-3 rounded-lg border border-yellow-200">
+                          <div className="flex items-start justify-between mb-2">
+                            <p className="font-semibold text-gray-900">{opp.opportunity_type}</p>
+                            {opp.revenue_increase_estimate && (
+                              <Badge className="bg-green-600">{opp.revenue_increase_estimate}</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2"><strong>Current:</strong> {opp.current_status}</p>
+                          <p className="text-sm text-green-700 font-medium mb-2">{opp.recommendation}</p>
+                          <p className="text-xs text-gray-500 mb-2"><strong>Impact:</strong> {opp.potential_impact}</p>
+                          {opp.specific_actions?.length > 0 && (
+                            <div className="mt-2 pl-3 border-l-2 border-green-500">
+                              <p className="text-xs font-semibold text-gray-700 mb-1">Action Steps:</p>
+                              <ul className="text-xs text-gray-600 space-y-1">
+                                {opp.specific_actions.map((action, i) => (
+                                  <li key={i}>• {action}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Alternative Clinical Groups */}
+                {suggestions.pdgm_analysis.alternative_clinical_groups?.length > 0 && (
+                  <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                    <h4 className="font-semibold text-purple-900 mb-3">Alternative Higher-Paying Clinical Groups</h4>
+                    <div className="space-y-2">
+                      {suggestions.pdgm_analysis.alternative_clinical_groups.map((alt, idx) => (
+                        <div key={idx} className="bg-white p-3 rounded-lg border border-purple-200">
+                          <div className="flex items-start justify-between mb-1">
+                            <p className="font-semibold text-gray-900">{alt.clinical_group}</p>
+                            <div className="flex items-center gap-2">
+                              <Badge className={alt.feasibility === 'High' ? 'bg-green-600' : alt.feasibility === 'Medium' ? 'bg-yellow-600' : 'bg-gray-600'}>
+                                {alt.feasibility} Feasibility
+                              </Badge>
+                              <Badge variant="outline">CMW: {alt.case_mix_weight?.toFixed(3)}</Badge>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 mb-1"><strong>Required Diagnosis:</strong> {alt.required_primary_diagnosis}</p>
+                          <p className="text-xs text-gray-600"><strong>Documentation:</strong> {alt.documentation_needed}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Missing High-Value Data */}
+                {suggestions.pdgm_analysis.missing_high_value_data?.length > 0 && (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
+                    <h4 className="font-semibold text-red-900 mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Missing High-Value Information
+                    </h4>
+                    <div className="space-y-2">
+                      {suggestions.pdgm_analysis.missing_high_value_data.map((missing, idx) => (
+                        <div key={idx} className="bg-white p-3 rounded-lg border border-red-200">
+                          <p className="font-semibold text-gray-900 text-sm mb-1">{missing.data_element}</p>
+                          <p className="text-xs text-gray-600 mb-1"><strong>Why Important:</strong> {missing.why_important}</p>
+                          <p className="text-xs text-blue-700 mb-1"><strong>How to Obtain:</strong> {missing.how_to_obtain}</p>
+                          <p className="text-xs text-green-700 font-medium">💰 {missing.potential_value_add}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Functional Score Optimization */}
+                {suggestions.pdgm_analysis.functional_score_optimization && (
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-900 mb-3">Functional Score Optimization</h4>
+                    <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3">
+                      <p className="text-sm mb-2"><strong>Current Estimated Scores:</strong> {suggestions.pdgm_analysis.functional_score_optimization.current_estimated_scores}</p>
+                      <p className="text-sm text-green-700 font-medium mb-2"><strong>Target for Higher Payment:</strong> {suggestions.pdgm_analysis.functional_score_optimization.target_for_higher_payment}</p>
+                    </div>
+                    {suggestions.pdgm_analysis.functional_score_optimization.assessment_focus_areas?.length > 0 && (
+                      <div className="bg-white p-3 rounded-lg border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-900 mb-2">Priority Assessment Areas:</p>
+                        <ul className="text-sm text-gray-700 space-y-1">
+                          {suggestions.pdgm_analysis.functional_score_optimization.assessment_focus_areas.map((area, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-blue-600">→</span>
+                              <span>{area}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {/* Nurse Assessment Checklist */}
