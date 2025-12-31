@@ -1,0 +1,468 @@
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Settings,
+  Brain,
+  Sparkles,
+  Save,
+  CheckCircle2,
+  RotateCcw,
+  FileText,
+  MessageSquare,
+  BookOpen
+} from "lucide-react";
+
+export default function UserSettings() {
+  const queryClient = useQueryClient();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: existingConfig } = useQuery({
+    queryKey: ['aiConfig', currentUser?.email],
+    queryFn: async () => {
+      const configs = await base44.entities.AIConfiguration.filter({
+        user_email: currentUser.email
+      });
+      return configs[0] || null;
+    },
+    enabled: !!currentUser?.email,
+  });
+
+  const [preferences, setPreferences] = useState({
+    ai_verbosity: 'balanced',
+    clinical_terminology: 'standard',
+    enable_oasis_analysis: true,
+    enable_auto_summarization: true,
+    enable_compliance_checking: true,
+    enable_care_plan_suggestions: true,
+    enable_task_generation: true,
+    enable_proactive_suggestions: false,
+    auto_enhance_on_completion: false,
+    preferred_note_style: 'narrative',
+    include_assessment_details: true,
+    include_teaching_points: true,
+    show_confidence_scores: false
+  });
+
+  useEffect(() => {
+    if (existingConfig) {
+      setPreferences({
+        ai_verbosity: existingConfig.ai_verbosity || 'balanced',
+        clinical_terminology: existingConfig.clinical_terminology || 'standard',
+        enable_oasis_analysis: existingConfig.enable_oasis_analysis ?? true,
+        enable_auto_summarization: existingConfig.enable_auto_summarization ?? true,
+        enable_compliance_checking: existingConfig.enable_compliance_checking ?? true,
+        enable_care_plan_suggestions: existingConfig.enable_care_plan_suggestions ?? true,
+        enable_task_generation: existingConfig.enable_task_generation ?? true,
+        enable_proactive_suggestions: existingConfig.enable_proactive_suggestions ?? false,
+        auto_enhance_on_completion: existingConfig.auto_enhance_on_completion ?? false,
+        preferred_note_style: existingConfig.preferred_note_style || 'narrative',
+        include_assessment_details: existingConfig.include_assessment_details ?? true,
+        include_teaching_points: existingConfig.include_teaching_points ?? true,
+        show_confidence_scores: existingConfig.show_confidence_scores ?? false
+      });
+    }
+  }, [existingConfig]);
+
+  const handleSave = async () => {
+    if (!currentUser?.email) return;
+
+    setIsSaving(true);
+    try {
+      const configData = {
+        user_email: currentUser.email,
+        user_name: currentUser.full_name,
+        ...preferences
+      };
+
+      if (existingConfig?.id) {
+        await base44.entities.AIConfiguration.update(existingConfig.id, configData);
+      } else {
+        await base44.entities.AIConfiguration.create(configData);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['aiConfig', currentUser.email] });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      alert('Failed to save preferences. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    setPreferences({
+      ai_verbosity: 'balanced',
+      clinical_terminology: 'standard',
+      enable_oasis_analysis: true,
+      enable_auto_summarization: true,
+      enable_compliance_checking: true,
+      enable_care_plan_suggestions: true,
+      enable_task_generation: true,
+      enable_proactive_suggestions: false,
+      auto_enhance_on_completion: false,
+      preferred_note_style: 'narrative',
+      include_assessment_details: true,
+      include_teaching_points: true,
+      show_confidence_scores: false
+    });
+  };
+
+  const togglePreference = (key) => {
+    setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  return (
+    <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <Settings className="w-8 h-8 text-blue-600" />
+          AI Settings & Preferences
+        </h1>
+        <p className="text-gray-600 mt-2">Customize how AI assists you in documentation</p>
+      </div>
+
+      {saveSuccess && (
+        <Alert className="mb-6 bg-green-50 border-green-300">
+          <CheckCircle2 className="w-4 h-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            Your preferences have been saved successfully!
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Tabs defaultValue="ai-behavior" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="ai-behavior">
+            <Brain className="w-4 h-4 mr-2" />
+            AI Behavior
+          </TabsTrigger>
+          <TabsTrigger value="features">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Features
+          </TabsTrigger>
+          <TabsTrigger value="documentation">
+            <FileText className="w-4 h-4 mr-2" />
+            Documentation
+          </TabsTrigger>
+        </TabsList>
+
+        {/* AI Behavior Tab */}
+        <TabsContent value="ai-behavior" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-blue-600" />
+                AI Verbosity
+              </CardTitle>
+              <CardDescription>
+                Control how much detail the AI includes in suggestions and enhancements
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-base font-medium mb-3 block">Verbosity Level</Label>
+                <Select
+                  value={preferences.ai_verbosity}
+                  onValueChange={(value) => setPreferences(prev => ({ ...prev, ai_verbosity: value }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="concise">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Concise</span>
+                        <span className="text-xs text-gray-500">Brief, essential information only</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="balanced">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Balanced</span>
+                        <span className="text-xs text-gray-500">Standard detail level (recommended)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="detailed">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Detailed</span>
+                        <span className="text-xs text-gray-500">Comprehensive documentation with full context</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                Clinical Terminology
+              </CardTitle>
+              <CardDescription>
+                Choose your preferred medical terminology style
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-base font-medium mb-3 block">Terminology Style</Label>
+                <Select
+                  value={preferences.clinical_terminology}
+                  onValueChange={(value) => setPreferences(prev => ({ ...prev, clinical_terminology: value }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Standard Medical</span>
+                        <span className="text-xs text-gray-500">Traditional clinical terminology</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="simplified">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Simplified</span>
+                        <span className="text-xs text-gray-500">Easier to understand, less jargon</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="technical">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Technical/Academic</span>
+                        <span className="text-xs text-gray-500">Advanced medical terminology</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Features Tab */}
+        <TabsContent value="features" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Features</CardTitle>
+              <CardDescription>
+                Enable or disable specific AI capabilities in Smart Note Assistant
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FeatureToggle
+                label="OASIS Analysis"
+                description="AI-powered OASIS assessment suggestions and compliance checking"
+                enabled={preferences.enable_oasis_analysis}
+                onToggle={() => togglePreference('enable_oasis_analysis')}
+                badge="Admission/Recert"
+              />
+              <FeatureToggle
+                label="Auto Summarization"
+                description="Automatically generate patient history and context summaries"
+                enabled={preferences.enable_auto_summarization}
+                onToggle={() => togglePreference('enable_auto_summarization')}
+              />
+              <FeatureToggle
+                label="Compliance Checking"
+                description="Real-time Medicare compliance validation and suggestions"
+                enabled={preferences.enable_compliance_checking}
+                onToggle={() => togglePreference('enable_compliance_checking')}
+              />
+              <FeatureToggle
+                label="Care Plan Suggestions"
+                description="AI-generated care plan recommendations based on assessments"
+                enabled={preferences.enable_care_plan_suggestions}
+                onToggle={() => togglePreference('enable_care_plan_suggestions')}
+              />
+              <FeatureToggle
+                label="Task Generation"
+                description="Automatically suggest follow-up tasks from visit notes"
+                enabled={preferences.enable_task_generation}
+                onToggle={() => togglePreference('enable_task_generation')}
+              />
+              <FeatureToggle
+                label="Proactive Suggestions"
+                description="AI offers real-time suggestions while you type (may slow typing)"
+                enabled={preferences.enable_proactive_suggestions}
+                onToggle={() => togglePreference('enable_proactive_suggestions')}
+                badge="Experimental"
+              />
+              <FeatureToggle
+                label="Auto-Enhance on Completion"
+                description="Automatically enhance notes when you finish typing (no review step)"
+                enabled={preferences.auto_enhance_on_completion}
+                onToggle={() => togglePreference('auto_enhance_on_completion')}
+                badge="Advanced"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Documentation Tab */}
+        <TabsContent value="documentation" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Note Formatting</CardTitle>
+              <CardDescription>
+                Customize how your enhanced notes are structured
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-base font-medium mb-3 block">Preferred Note Style</Label>
+                <Select
+                  value={preferences.preferred_note_style}
+                  onValueChange={(value) => setPreferences(prev => ({ ...prev, preferred_note_style: value }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="narrative">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Narrative</span>
+                        <span className="text-xs text-gray-500">Story-like flow, paragraph format</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="soap">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">SOAP Format</span>
+                        <span className="text-xs text-gray-500">Subjective, Objective, Assessment, Plan</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="structured">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Structured Sections</span>
+                        <span className="text-xs text-gray-500">Clear headings and bullet points</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="pt-4 border-t">
+                <Label className="text-base font-medium mb-3 block">Content Options</Label>
+                <div className="space-y-3">
+                  <FeatureToggle
+                    label="Include Assessment Details"
+                    description="Add detailed clinical assessment observations"
+                    enabled={preferences.include_assessment_details}
+                    onToggle={() => togglePreference('include_assessment_details')}
+                    compact
+                  />
+                  <FeatureToggle
+                    label="Include Teaching Points"
+                    description="Document patient education and teaching provided"
+                    enabled={preferences.include_teaching_points}
+                    onToggle={() => togglePreference('include_teaching_points')}
+                    compact
+                  />
+                  <FeatureToggle
+                    label="Show Confidence Scores"
+                    description="Display AI confidence levels for suggestions (for transparency)"
+                    enabled={preferences.show_confidence_scores}
+                    onToggle={() => togglePreference('show_confidence_scores')}
+                    compact
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 mt-6">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="bg-blue-600 hover:bg-blue-700 flex-1"
+        >
+          {isSaving ? (
+            <>
+              <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Save Preferences
+            </>
+          )}
+        </Button>
+        <Button
+          onClick={handleReset}
+          variant="outline"
+          className="flex-1"
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reset to Defaults
+        </Button>
+      </div>
+
+      <Alert className="mt-6 bg-blue-50 border-blue-200">
+        <Sparkles className="w-4 h-4 text-blue-600" />
+        <AlertDescription className="text-blue-900">
+          <strong>Note:</strong> These preferences will be applied across all your Smart Note Assistant sessions and affect how AI assists you with documentation.
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+}
+
+function FeatureToggle({ label, description, enabled, onToggle, badge, compact }) {
+  return (
+    <div className={`flex items-start justify-between ${compact ? 'py-2' : 'p-4'} bg-gray-50 rounded-lg border border-gray-200`}>
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-1">
+          <Label className="font-medium text-gray-900 cursor-pointer" onClick={onToggle}>
+            {label}
+          </Label>
+          {badge && (
+            <Badge variant="outline" className="text-xs">
+              {badge}
+            </Badge>
+          )}
+        </div>
+        <p className="text-sm text-gray-600">{description}</p>
+      </div>
+      <button
+        onClick={onToggle}
+        className={`ml-4 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          enabled ? 'bg-blue-600' : 'bg-gray-300'
+        }`}
+        role="switch"
+        aria-checked={enabled}
+      >
+        <span
+          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+            enabled ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        />
+      </button>
+    </div>
+  );
+}

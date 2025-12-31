@@ -323,19 +323,28 @@ export default function Layout({ children, currentPageName }) {
             )}
           </div>
           {!sidebarCollapsed && (
-            <div className="mt-2">
+            <div className="mt-2 space-y-1">
               <FeedbackButton />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.href = createPageUrl("UserSettings")}
+                className={`text-gray-600 hover:text-gray-900 hover:bg-gray-100 ${sidebarCollapsed ? 'w-full justify-center px-0' : 'w-full justify-start'}`}
+              >
+                <Settings className="w-4 h-4" />
+                {!sidebarCollapsed && <span className="ml-2">AI Settings</span>}
+              </Button>
             </div>
-          )}
-          <Button
+            )}
+            <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
             className={`mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${sidebarCollapsed ? 'w-full justify-center px-0' : 'w-full justify-start'}`}
-          >
+            >
             <LogOut className="w-4 h-4" />
             {!sidebarCollapsed && <span className="ml-2">Logout</span>}
-          </Button>
+            </Button>
         </div>
       </aside>
 
