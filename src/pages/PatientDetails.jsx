@@ -326,248 +326,6 @@ export default function PatientDetails() {
         </CardContent>
       </Card>
 
-      {/* AI-Generated Recommendations from OASIS */}
-      <div className="mb-6">
-        <PatientChartRecommendations patientId={patientId} />
-      </div>
-
-      {/* Advanced Predictive Analytics */}
-      <div className="mb-6">
-        <AdvancedPredictiveAnalytics patientId={patientId} autoAnalyze={false} />
-      </div>
-
-      {/* AI OASIS Documentation Assistant */}
-      <div className="mb-6">
-        <AIProactiveOASISAssistant patientId={patientId} autoAnalyze={false} />
-      </div>
-
-      {/* AI Risk Assessment */}
-      <div className="mb-6">
-        <AIPatientRiskAssessor patientId={patientId} autoAnalyze={false} />
-      </div>
-
-      {/* AI Patient Insights - Future Health Risks & Predictions */}
-      <div className="mb-6">
-        <AIPatientInsights patient={patient} visits={visits} carePlans={carePlans} incidents={incidents} />
-      </div>
-
-      {/* Personalized Patient Education */}
-      <div className="mb-6">
-        <PersonalizedEducationGenerator patient={patient} visits={visits} />
-      </div>
-
-      {/* Care Coordination Tools */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <InterdisciplinaryTeamCoordinator
-          patientId={patientId}
-          patientData={patient}
-          carePlans={carePlans}
-          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
-          incidents={incidents}
-          alerts={activeAlerts}
-          autoAnalyze={true}
-        />
-        
-        <OptimalCommunicationAdvisor
-          patientId={patientId}
-          patientData={patient}
-          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 3)}
-          upcomingVisits={visits?.filter(v => v.status === 'scheduled')}
-          outreachPurpose="Care coordination and status update"
-        />
-      </div>
-
-      {/* Automated Task Assignment */}
-      {(detectedCarePlanGaps || detectedMedicationIssues || activeAlerts.length > 0) && (
-        <div className="mb-6">
-          <AutomatedTaskAssigner
-            patientId={patientId}
-            patientName={`${patient?.first_name} ${patient?.last_name}`}
-            detectedGaps={detectedCarePlanGaps?.missing_elements}
-            medicationIssues={detectedMedicationIssues?.critical_interactions}
-            carePlanGaps={detectedCarePlanGaps}
-          />
-        </div>
-      )}
-
-      {/* Risk Alerts & Predictive Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <RiskAlertWidget patientId={patientId} compact={false} />
-        
-        <PatientDeteriorationPredictor
-          patientId={patientId}
-          recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 10)}
-          autoAnalyze={true}
-        />
-        
-        <MedicationInteractionChecker
-          medications={patient?.current_medications || []}
-          patientDiagnoses={[patient?.primary_diagnosis, ...(patient?.secondary_diagnoses || [])].filter(Boolean)}
-          patientAge={patient?.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null}
-          patientAllergies={patient?.allergies}
-          autoCheck={true}
-        />
-        
-        <div>
-          <CarePlanGapAnalyzer
-            patientId={patientId}
-            diagnosis={patient?.primary_diagnosis}
-            carePlans={carePlans}
-            recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
-            patientData={patient}
-            autoAnalyze={true}
-          />
-        </div>
-        
-        <PredictiveRiskAnalyzer 
-          patientId={patientId} 
-          patientName={`${patient.first_name} ${patient.last_name}`}
-          onAlertsCreated={(count) => {
-            queryClient.invalidateQueries({ queryKey: ['patientRiskAlerts', patientId] });
-            queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
-          }}
-          autoAnalyze={false}
-        />
-      </div>
-
-      {/* AI Patient Dashboard Summary & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <div className="lg:col-span-2">
-          <AIPatientDashboardSummary
-            patient={patient}
-            visits={visits}
-            carePlans={carePlans}
-            tasks={tasks}
-            incidents={incidents}
-          />
-        </div>
-        <div>
-          <QuickActionsPanel
-            patient={patient}
-            recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
-            upcomingVisits={visits.filter(v => v.status === 'scheduled')}
-            activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
-            pendingTasks={tasks.filter(t => t.status === 'pending')}
-          />
-        </div>
-      </div>
-
-      {/* AI Compliance Auditor - Prominent */}
-      {patient && (
-        <div className="mb-6">
-          <AIComplianceAuditor
-            patientId={patientId}
-            autoRun={false}
-            scope="comprehensive"
-          />
-        </div>
-      )}
-
-      {/* AI Risk Stratification - Prominent */}
-      {patient && (
-        <div className="mb-6">
-          <PatientRiskStratification
-            patient={patient}
-            visits={visits}
-            carePlans={carePlans}
-            incidents={incidents}
-            autoCalculate={true}
-          />
-        </div>
-      )}
-
-      {/* AI Patient History Summary - Prominent */}
-      {patient && (
-        <div className="mb-6">
-          <AIPatientHistorySummary
-            patient={patient}
-            visits={visits}
-            carePlans={carePlans}
-            incidents={incidents}
-            autoGenerate={true}
-            prominent={true}
-          />
-        </div>
-      )}
-
-      {/* AI Predictive Analytics - Outcomes & Interventions */}
-      {patient && (
-        <div className="mb-6">
-          <PredictiveAnalyticsPanel
-            patient={patient}
-            oasisData={patientOASIS[0]?.extracted_data}
-            historicalVisits={visits}
-            carePlans={carePlans}
-            incidents={incidents}
-          />
-        </div>
-      )}
-
-      {/* AI Patient History Analyzer - Comprehensive Analysis with Gap Detection */}
-      {patient && (
-        <div className="mb-6">
-          <AIPatientHistoryAnalyzer
-            patient={patient}
-            visits={visits}
-            carePlans={carePlans}
-            oasisData={patientOASIS}
-            incidents={incidents}
-          />
-        </div>
-      )}
-
-      {/* AI-Powered Clinical Analysis - Diagnoses, Risks, Care Recommendations */}
-      {patient && (
-        <div className="mb-6">
-          <AIPatientAnalyzer
-            patient={patient}
-            visits={visits}
-            carePlans={carePlans}
-            incidents={incidents}
-          />
-        </div>
-      )}
-
-      {/* Patient Summary Generator - Multiple Formats */}
-      {patient && (
-        <div className="mb-6">
-          <PatientSummaryGenerator
-            patient={patient}
-            visits={visits}
-            carePlans={carePlans}
-            incidents={incidents}
-          />
-        </div>
-      )}
-
-      {/* AI Care Plan Evolution */}
-      {patient && carePlans.length > 0 && (
-        <div className="mb-6">
-          <CarePlanEvolution
-            patientId={patientId}
-            patientName={`${patient.first_name} ${patient.last_name}`}
-            carePlans={carePlans}
-            visits={visits}
-            onCarePlanUpdated={() => queryClient.invalidateQueries({ queryKey: ['patientCarePlans', patientId] })}
-          />
-        </div>
-      )}
-
-      {/* AI Care Plan Tools */}
-      {patient && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
-          <AICarePlanSuggestions 
-            patient={patient} 
-            existingCarePlans={carePlans}
-            onAddCarePlan={(data) => createCarePlanMutation.mutate(data)}
-          />
-          <div className="space-y-4 md:space-y-6">
-            <CarePlanTimelinePredictor patient={patient} carePlans={carePlans} />
-            <PatientFriendlyCarePlanSummary patient={patient} carePlans={carePlans} />
-          </div>
-        </div>
-      )}
-
       {/* Critical Alerts Banner */}
       {activeAlerts.length > 0 && (
         <Alert className={`mb-6 ${hasCriticalAlerts ? 'bg-red-50 border-red-300' : 'bg-orange-50 border-orange-300'}`}>
@@ -586,145 +344,149 @@ export default function PatientDetails() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card>
-          <CardHeader className="p-3 sm:p-6">
-            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-600" />
-              Patient Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                Address
-              </p>
-              <p className="text-gray-900">{sanitizeInput(patient.address) || 'Not specified'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                <Phone className="w-3 h-3" />
-                Phone
-              </p>
-              <p className="text-gray-900">{sanitizeInput(patient.phone) || 'Not specified'}</p>
-            </div>
-            {patient.email && (
-              <div>
-                <p className="text-sm font-medium text-gray-500">Email</p>
-                <p className="text-gray-900">{sanitizeInput(patient.email)}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-medium text-gray-500">Status</p>
-              <Badge variant="outline">{patient.status || 'active'}</Badge>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Main Patient Tabs */}
+      <Tabs defaultValue="overview" className="mb-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="clinical">Clinical Info</TabsTrigger>
+          <TabsTrigger value="ai-tools" className="flex items-center gap-1">
+            <Brain className="w-3 h-3" />
+            AI Tools
+          </TabsTrigger>
+          <TabsTrigger value="care">Care Plans</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-red-600" />
-              Emergency Contact
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {patient.emergency_contact_name ? (
-              <>
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <AIPatientDashboardSummary
+                patient={patient}
+                visits={visits}
+                carePlans={carePlans}
+                tasks={tasks}
+                incidents={incidents}
+              />
+            </div>
+            <QuickActionsPanel
+              patient={patient}
+              recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
+              upcomingVisits={visits.filter(v => v.status === 'scheduled')}
+              activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
+              pendingTasks={tasks.filter(t => t.status === 'pending')}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <RiskAlertWidget patientId={patientId} compact={false} />
+            <MedicationInteractionChecker
+              medications={patient?.current_medications || []}
+              patientDiagnoses={[patient?.primary_diagnosis, ...(patient?.secondary_diagnoses || [])].filter(Boolean)}
+              patientAge={patient?.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null}
+              patientAllergies={patient?.allergies}
+              autoCheck={true}
+            />
+          </div>
+        </TabsContent>
+
+        {/* Clinical Info Tab */}
+        <TabsContent value="clinical" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Name</p>
-                  <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_name)}</p>
+                  <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    Address
+                  </p>
+                  <p className="text-gray-900">{sanitizeInput(patient.address) || 'Not specified'}</p>
                 </div>
-                {patient.emergency_contact_relationship && (
+                <div>
+                  <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                    <Phone className="w-3 h-3" />
+                    Phone
+                  </p>
+                  <p className="text-gray-900">{sanitizeInput(patient.phone) || 'Not specified'}</p>
+                </div>
+                {patient.email && (
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Relationship</p>
-                    <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_relationship)}</p>
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p className="text-gray-900">{sanitizeInput(patient.email)}</p>
                   </div>
                 )}
-                {patient.emergency_contact_phone && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      Phone
-                    </p>
-                    <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_phone)}</p>
-                  </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-red-600" />
+                  Emergency Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {patient.emergency_contact_name ? (
+                  <>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Name</p>
+                      <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_name)}</p>
+                    </div>
+                    {patient.emergency_contact_relationship && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Relationship</p>
+                        <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_relationship)}</p>
+                      </div>
+                    )}
+                    {patient.emergency_contact_phone && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Phone</p>
+                        <p className="text-gray-900">{sanitizeInput(patient.emergency_contact_phone)}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500">No emergency contact on file</p>
                 )}
-              </>
-            ) : (
-              <p className="text-sm text-gray-500">No emergency contact information on file</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-green-600" />
-              Physician & Payor
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Primary Care Physician</p>
-              {patient.physician_name ? (
-                <div className="space-y-2">
-                  <p className="text-gray-900 font-medium">{sanitizeInput(patient.physician_name)}</p>
-                  {patient.physician_phone && (
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      {sanitizeInput(patient.physician_phone)}
-                    </p>
-                  )}
-                  {patient.physician_email && (
-                    <p className="text-sm text-gray-600">{sanitizeInput(patient.physician_email)}</p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No physician information</p>
-              )}
-            </div>
-
-            <div className="border-t pt-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Payor / Insurance</p>
-              {patient.payor ? (
-                <Badge className="bg-purple-100 text-purple-800 text-sm">{sanitizeInput(patient.payor)}</Badge>
-              ) : (
-                <p className="text-sm text-gray-500">No payor specified</p>
-              )}
-            </div>
-
-            {(patient.insurance_primary?.provider || patient.insurance_secondary?.provider) && (
-              <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Additional Insurance</p>
-                {patient.insurance_primary?.provider && (
-                  <div className="mb-3">
-                    <p className="text-sm font-medium text-gray-700">Primary</p>
-                    <p className="text-gray-900">{sanitizeInput(patient.insurance_primary.provider)}</p>
-                    {patient.insurance_primary.policy_number && (
-                      <p className="text-xs text-gray-600">Policy: {sanitizeInput(patient.insurance_primary.policy_number)}</p>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Stethoscope className="w-5 h-5 text-green-600" />
+                  Physician & Payor
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {patient.physician_name ? (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Primary Physician</p>
+                    <p className="text-gray-900">{sanitizeInput(patient.physician_name)}</p>
+                    {patient.physician_phone && (
+                      <p className="text-sm text-gray-600">{sanitizeInput(patient.physician_phone)}</p>
                     )}
                   </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No physician on file</p>
                 )}
-                {patient.insurance_secondary?.provider && (
+                {patient.payor && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Secondary</p>
-                    <p className="text-gray-900">{sanitizeInput(patient.insurance_secondary.provider)}</p>
-                    {patient.insurance_secondary.policy_number && (
-                      <p className="text-xs text-gray-600">Policy: {sanitizeInput(patient.insurance_secondary.policy_number)}</p>
-                    )}
+                    <p className="text-sm font-medium text-gray-500">Payor</p>
+                    <Badge className="bg-purple-100 text-purple-800">{sanitizeInput(patient.payor)}</Badge>
                   </div>
                 )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* Detailed Medical Information Tabs */}
+          {/* Medical Information Tabs */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -1070,25 +832,207 @@ export default function PatientDetails() {
         </CardContent>
       </Card>
 
+        {/* AI Tools Tab */}
+        <TabsContent value="ai-tools" className="space-y-6">
+          <Tabs defaultValue="analysis" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="analysis">Analysis</TabsTrigger>
+              <TabsTrigger value="risk">Risk & Alerts</TabsTrigger>
+              <TabsTrigger value="coordination">Coordination</TabsTrigger>
+              <TabsTrigger value="documentation">Documentation</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="analysis" className="space-y-6">
+              <AIPatientHistorySummary
+                patient={patient}
+                visits={visits}
+                carePlans={carePlans}
+                incidents={incidents}
+                autoGenerate={false}
+              />
+              <AIPatientAnalyzer
+                patient={patient}
+                visits={visits}
+                carePlans={carePlans}
+                incidents={incidents}
+              />
+            </TabsContent>
+
+            <TabsContent value="risk" className="space-y-6">
+              <PatientRiskStratification
+                patient={patient}
+                visits={visits}
+                carePlans={carePlans}
+                incidents={incidents}
+                autoCalculate={false}
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <PatientDeteriorationPredictor
+                  patientId={patientId}
+                  recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 10)}
+                  autoAnalyze={false}
+                />
+                <PredictiveRiskAnalyzer 
+                  patientId={patientId} 
+                  patientName={`${patient.first_name} ${patient.last_name}`}
+                  onAlertsCreated={(count) => {
+                    queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
+                  }}
+                  autoAnalyze={false}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="coordination" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <InterdisciplinaryTeamCoordinator
+                  patientId={patientId}
+                  patientData={patient}
+                  carePlans={carePlans}
+                  recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
+                  incidents={incidents}
+                  alerts={activeAlerts}
+                  autoAnalyze={false}
+                />
+                <OptimalCommunicationAdvisor
+                  patientId={patientId}
+                  patientData={patient}
+                  recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 3)}
+                  upcomingVisits={visits?.filter(v => v.status === 'scheduled')}
+                  outreachPurpose="Care coordination and status update"
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="documentation" className="space-y-6">
+              <AIProactiveOASISAssistant patientId={patientId} autoAnalyze={false} />
+              <AIComplianceAuditor
+                patientId={patientId}
+                autoRun={false}
+                scope="comprehensive"
+              />
+              <PatientSummaryGenerator
+                patient={patient}
+                visits={visits}
+                carePlans={carePlans}
+                incidents={incidents}
+              />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Care Plans Tab */}
+        <TabsContent value="care" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AICarePlanSuggestions 
+              patient={patient} 
+              existingCarePlans={carePlans}
+              onAddCarePlan={(data) => createCarePlanMutation.mutate(data)}
+            />
+            <div className="space-y-6">
+              <CarePlanGapAnalyzer
+                patientId={patientId}
+                diagnosis={patient?.primary_diagnosis}
+                carePlans={carePlans}
+                recentVisits={visits?.filter(v => v.status === 'completed').slice(0, 5)}
+                patientData={patient}
+                autoAnalyze={false}
+              />
+            </div>
+          </div>
+
+          {carePlans.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Care Plans</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="max-h-[500px]">
+                  <div className="space-y-3">
+                    {carePlans.map((plan) => (
+                      <Card key={plan.id} className={`border-l-4 ${
+                        plan.status === 'met' ? 'border-l-green-500' :
+                        plan.status === 'not_met' ? 'border-l-red-500' :
+                        plan.status === 'revised' ? 'border-l-yellow-500' :
+                        'border-l-blue-500'
+                      }`}>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <p className="font-semibold text-gray-900">{sanitizeInput(plan.problem)}</p>
+                            <Badge className={
+                              plan.status === 'met' ? 'bg-green-500' :
+                              plan.status === 'not_met' ? 'bg-red-500' :
+                              plan.status === 'revised' ? 'bg-yellow-500' :
+                              'bg-blue-500'
+                            }>
+                              {plan.status.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">{sanitizeInput(plan.goal)}</p>
+                          {plan.target_date && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              Target: {format(new Date(plan.target_date), 'MMM d, yyyy')}
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Documents Tab */}
+        <TabsContent value="documents" className="space-y-6">
+          <Tabs defaultValue="discharge">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="discharge">Discharge</TabsTrigger>
+              <TabsTrigger value="referral">Referral</TabsTrigger>
+              <TabsTrigger value="education">Education</TabsTrigger>
+              <TabsTrigger value="progress">Progress</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="discharge">
+              <DischargeSummaryGenerator patientId={patientId} patient={patient} />
+            </TabsContent>
+
+            <TabsContent value="referral">
+              <ReferralLetterGenerator patientId={patientId} patient={patient} />
+            </TabsContent>
+
+            <TabsContent value="education">
+              <PersonalizedEducationGenerator patient={patient} visits={visits} />
+            </TabsContent>
+
+            <TabsContent value="progress">
+              <ProgressReportGenerator patientId={patientId} patient={patient} />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+      </Tabs>
+
+      {/* Schedule Visit Card */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Quick Actions
+              Schedule New Visit
             </CardTitle>
             <Button
               onClick={() => setShowVisitForm(!showVisitForm)}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Schedule Visit
+              New Visit
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          {showVisitForm && (
-            <Card className="mb-6 bg-blue-50 border-blue-200">
+        {showVisitForm && (
+          <CardContent>
+            <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-4 space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
@@ -1137,8 +1081,8 @@ export default function PatientDetails() {
                 </div>
               </CardContent>
             </Card>
-          )}
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
     </div>
   );
