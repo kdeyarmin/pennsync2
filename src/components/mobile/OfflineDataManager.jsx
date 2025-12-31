@@ -190,9 +190,10 @@ export default function OfflineDataManager() {
       </CardHeader>
       <CardContent className="p-4 space-y-4">
         <Tabs defaultValue="sync" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="sync">Sync Status</TabsTrigger>
-            <TabsTrigger value="download">Download Data</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="sync">Sync</TabsTrigger>
+            <TabsTrigger value="download">Download</TabsTrigger>
+            <TabsTrigger value="tasks">Tasks</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sync" className="space-y-4 mt-4">
@@ -205,6 +206,14 @@ export default function OfflineDataManager() {
                 queryClient.invalidateQueries();
               }}
             />
+          </TabsContent>
+
+          <TabsContent value="tasks" className="space-y-4 mt-4">
+            <Alert className="bg-blue-50 border-blue-300">
+              <AlertDescription className="text-sm">
+                Use the Offline Mode page to document visits and incidents offline. Changes will sync automatically.
+              </AlertDescription>
+            </Alert>
           </TabsContent>
         </Tabs>
 
