@@ -43,30 +43,30 @@ import { format, subDays, startOfDay, endOfDay } from "date-fns";
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
-export default function NoteConversionReport() {
+export default function NoteEnhancementReport() {
   const [timeRange, setTimeRange] = useState("7");
 
-  const { data: conversions = [], isLoading } = useQuery({
+  const { data: enhancements = [], isLoading } = useQuery({
     queryKey: ['noteConversions'],
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
   });
 
-  // Filter by time range - no filtering, show ALL conversions
-  const filteredConversions = conversions;
+  // Filter by time range - no filtering, show ALL enhancements
+  const filteredEnhancements = enhancements;
 
   // Calculate stats
-  const totalConversions = filteredConversions.length;
-  const avgQualityScore = filteredConversions.length > 0
-    ? Math.round(filteredConversions.reduce((sum, c) => sum + (c.quality_score || 0), 0) / filteredConversions.length)
+  const totalEnhancements = filteredEnhancements.length;
+  const avgQualityScore = filteredEnhancements.length > 0
+    ? Math.round(filteredEnhancements.reduce((sum, c) => sum + (c.quality_score || 0), 0) / filteredEnhancements.length)
     : 0;
-  const avgConversionTime = filteredConversions.length > 0
-    ? Math.round(filteredConversions.reduce((sum, c) => sum + (c.conversion_time_ms || 0), 0) / filteredConversions.length / 60000)
+  const avgEnhancementTime = filteredEnhancements.length > 0
+    ? Math.round(filteredEnhancements.reduce((sum, c) => sum + (c.conversion_time_ms || 0), 0) / filteredEnhancements.length / 60000)
     : 0;
-  const uniqueNurses = new Set(filteredConversions.map(c => c.nurse_email)).size;
+  const uniqueNurses = new Set(filteredEnhancements.map(c => c.nurse_email)).size;
 
   // Group by date for trend chart
   const dailyData = {};
-  filteredConversions.forEach(c => {
+  filteredEnhancements.forEach(c => {
     const date = format(new Date(c.created_date), 'MM/dd');
     if (!dailyData[date]) {
       dailyData[date] = { date, count: 0, totalQuality: 0 };
@@ -81,7 +81,7 @@ export default function NoteConversionReport() {
 
   // Group by nurse
   const nurseData = {};
-  filteredConversions.forEach(c => {
+  filteredEnhancements.forEach(c => {
     const nurse = c.nurse_email || 'Unknown';
     if (!nurseData[nurse]) {
       nurseData[nurse] = { nurse, count: 0, totalQuality: 0 };
@@ -98,7 +98,7 @@ export default function NoteConversionReport() {
 
   // Group by visit type
   const visitTypeData = {};
-  filteredConversions.forEach(c => {
+  filteredEnhancements.forEach(c => {
     const type = c.visit_type || 'Unknown';
     if (!visitTypeData[type]) {
       visitTypeData[type] = { name: type.replace(/_/g, ' '), value: 0 };
@@ -111,7 +111,7 @@ export default function NoteConversionReport() {
     return (
       <Card>
         <CardContent className="py-8 text-center text-gray-500">
-          Loading conversion data...
+          Loading enhancement data...
         </CardContent>
       </Card>
     );
@@ -146,8 +146,8 @@ export default function NoteConversionReport() {
                 <FileText className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{totalConversions}</p>
-                <p className="text-xs text-gray-500">Total Conversions</p>
+                <p className="text-2xl font-bold">{totalEnhancements}</p>
+                <p className="text-xs text-gray-500">Total Enhancements</p>
               </div>
             </div>
           </CardContent>
@@ -172,8 +172,8 @@ export default function NoteConversionReport() {
                 <Clock className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{avgConversionTime} min</p>
-                <p className="text-xs text-gray-500">Avg Conversion Time</p>
+                <p className="text-2xl font-bold">{avgEnhancementTime} min</p>
+                <p className="text-xs text-gray-500">Avg Enhancement Time</p>
               </div>
             </div>
           </CardContent>
@@ -200,7 +200,7 @@ export default function NoteConversionReport() {
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
-              Daily Conversions
+              Daily Enhancements
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -211,7 +211,7 @@ export default function NoteConversionReport() {
                   <XAxis dataKey="date" fontSize={12} />
                   <YAxis fontSize={12} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#3B82F6" name="Conversions" />
+                  <Bar dataKey="count" fill="#3B82F6" name="Enhancements" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
