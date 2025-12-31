@@ -105,6 +105,7 @@ import GuidedVisitWorkflow from "../components/visit/GuidedVisitWorkflow";
 import EnhancedPatientContextPanel from "../components/smartNote/EnhancedPatientContextPanel";
 import PatientTimelineView from "../components/smartNote/PatientTimelineView";
 import IntegratedOASISAnalyzer from "../components/smartNote/IntegratedOASISAnalyzer";
+import AutoEventExtractor from "../components/smartNote/AutoEventExtractor";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -246,6 +247,7 @@ export default function SmartNoteAssistant() {
   const [oasisSuggestions, setOasisSuggestions] = useState(null);
   const [admissionDocumentation, setAdmissionDocumentation] = useState({});
   const [useGuidedWorkflow, setUseGuidedWorkflow] = useState(false);
+  const [savedVisitId, setSavedVisitId] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -418,7 +420,7 @@ export default function SmartNoteAssistant() {
 
     // Auto-save to patient chart
     try {
-      await base44.entities.Visit.create({
+      const savedVisit = await base44.entities.Visit.create({
         patient_id: selectedPatientId,
         visit_date: visitDate,
         visit_type: visitType,
@@ -435,6 +437,7 @@ export default function SmartNoteAssistant() {
         }
       });
 
+      setSavedVisitId(savedVisit.id);
       setSavedSuccessfully(true);
       setTimeout(() => setSavedSuccessfully(false), 3000);
 
@@ -1141,19 +1144,33 @@ export default function SmartNoteAssistant() {
                   </Button>
                 </div>
                 {savedSuccessfully && (
-                  <Alert className="bg-green-50 border-green-300">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    <AlertDescription className="text-green-800">
-                      Note saved to patient chart successfully!
-                    </AlertDescription>
-                  </Alert>
+                 <Alert className="bg-green-50 border-green-300">
+                   <CheckCircle2 className="w-4 h-4 text-green-600" />
+                   <AlertDescription className="text-green-800">
+                     Note saved to patient chart successfully!
+                   </AlertDescription>
+                 </Alert>
                 )}
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+                </Card>
+                )}
 
-          </React.Fragment>
-          )}
+                {/* Auto Event Extractor - shows after note is saved */}
+                {savedVisitId && enhancedNote && (
+                <AutoEventExtractor
+                visitId={savedVisitId}
+                patientId={selectedPatientId}
+                nurseNotes={enhancedNote}
+                visitDate={visitDate}
+                onEventsExtracted={(events) => {
+                console.log('Events extracted:', events);
+                queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
+                }}
+                />
+                )}
+
+                </React.Fragment>
+                )}
         </div>
       </div>
     </div>
