@@ -31,6 +31,7 @@ import AnnouncementsWidget from "../components/dashboard/AnnouncementsWidget";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
 import OfflineDataManager from "../components/mobile/OfflineDataManager";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
+import DashboardSkeleton from "../components/loading/DashboardSkeleton";
 
 
 export default function Dashboard() {
@@ -162,6 +163,10 @@ export default function Dashboard() {
   };
 
   const fullName = currentUser?.full_name || 'there';
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">

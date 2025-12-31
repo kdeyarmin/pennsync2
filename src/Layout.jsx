@@ -31,6 +31,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
 import FeedbackButton from "../components/feedback/FeedbackButton";
+import { Toaster } from "sonner";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -218,6 +219,9 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen bg-blue-100 flex">
+      {/* Toast Notifications */}
+      <Toaster position="top-right" richColors closeButton />
+
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 shadow-lg border-r border-blue-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden`}>
         {/* Logo */}

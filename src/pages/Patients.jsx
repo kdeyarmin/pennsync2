@@ -30,6 +30,8 @@ import PaginatedPatientList from "../components/patient/PaginatedPatientList";
 import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,6 +121,8 @@ export default function Patients() {
       setShowForm(false);
       setEditingPatient(null);
       
+      toast.success(`Patient ${newPatient.first_name} ${newPatient.last_name} created successfully`);
+      
       // Log patient creation
       logActivity(ActivityActions.CREATE, {
         entity_type: 'Patient',
@@ -127,6 +131,9 @@ export default function Patients() {
         page: 'Patients'
       });
     },
+    onError: (error) => {
+      toast.error(`Failed to create patient: ${error.message}`);
+    }
   });
 
   const updatePatientMutation = useMutation({
@@ -136,6 +143,8 @@ export default function Patients() {
       setShowForm(false);
       setEditingPatient(null);
       
+      toast.success('Patient updated successfully');
+      
       // Log patient update
       logActivity(ActivityActions.UPDATE, {
         entity_type: 'Patient',
@@ -143,6 +152,9 @@ export default function Patients() {
         page: 'Patients'
       });
     },
+    onError: (error) => {
+      toast.error(`Failed to update patient: ${error.message}`);
+    }
   });
 
   const deletePatientMutation = useMutation({
@@ -393,11 +405,12 @@ export default function Patients() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {isLoading ? (
-          <Card>
-            <CardContent className="p-6 sm:p-8 text-center text-gray-500">
-              Loading patients...
-            </CardContent>
-          </Card>
+          <>
+            <PatientCardSkeleton />
+            <PatientCardSkeleton />
+            <PatientCardSkeleton />
+            <PatientCardSkeleton />
+          </>
         ) : filteredPatients.length === 0 ? (
           <Card className="md:col-span-2 border-2 border-dashed">
             <CardContent className="p-8 sm:p-12 text-center">

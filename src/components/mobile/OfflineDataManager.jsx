@@ -21,6 +21,7 @@ import {
 import OfflinePatientSelector from "./OfflinePatientSelector";
 import OfflineSyncManager from "./OfflineSyncManager";
 import OfflineCacheSettings from "./OfflineCacheSettings";
+import { toast } from "sonner";
 
 export default function OfflineDataManager() {
   const queryClient = useQueryClient();
@@ -100,9 +101,11 @@ export default function OfflineDataManager() {
       
       queryClient.invalidateQueries({ queryKey: ['offlineCache'] });
       setSyncStatus({ type: 'success', message: `Cached ${todayPatients.length} patients for offline access` });
+      toast.success(`${todayPatients.length} patients cached for offline access`);
     } catch (error) {
       console.error('Caching error:', error);
       setSyncStatus({ type: 'error', message: 'Failed to cache data' });
+      toast.error('Failed to cache data for offline use');
     }
     setIsCaching(false);
   };
@@ -149,10 +152,15 @@ export default function OfflineDataManager() {
           type: 'success', 
           message: `Synced ${successCount} item${successCount !== 1 ? 's' : ''}${errorCount > 0 ? `, ${errorCount} failed` : ''}`
         });
+        toast.success(`${successCount} item${successCount !== 1 ? 's' : ''} synced successfully`);
+      }
+      if (errorCount > 0) {
+        toast.error(`${errorCount} item${errorCount !== 1 ? 's' : ''} failed to sync`);
       }
     } catch (error) {
       console.error('Sync error:', error);
       setSyncStatus({ type: 'error', message: 'Sync failed' });
+      toast.error('Sync failed. Please try again.');
     }
 
     setIsSyncing(false);

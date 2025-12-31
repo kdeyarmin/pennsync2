@@ -100,13 +100,9 @@ export default function OfflineIndicator() {
     setTimeout(() => setSyncProgress(0), 2000);
   };
 
-  // Don't show when online and fully synced
-  if (isOnline && syncStatus.total === 0 && !isSyncing && !lastSyncResult) {
-    return null;
-  }
-
+  // Always show indicator with current status
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom max-w-sm">
+    <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom max-w-sm print:hidden">
       {expanded ? (
         <Card className="shadow-2xl border-2 border-blue-300">
           <CardContent className="p-4 space-y-3">
@@ -168,15 +164,27 @@ export default function OfflineIndicator() {
             {/* Status Details */}
             <div className="space-y-2">
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm text-gray-600">Pending</span>
+                <span className="text-sm text-gray-600">Connection</span>
+                <Badge className={isOnline ? 'bg-green-600' : 'bg-red-600'}>
+                  {isOnline ? 'Online' : 'Offline'}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                <span className="text-sm text-gray-600">Pending Sync</span>
                 <Badge variant="outline" className={syncStatus.pending > 0 ? 'bg-yellow-100' : ''}>
-                  {syncStatus.pending}
+                  {syncStatus.pending} items
                 </Badge>
               </div>
               {syncStatus.failed > 0 && (
                 <div className="flex items-center justify-between p-2 bg-red-50 rounded">
                   <span className="text-sm text-gray-600">Failed</span>
                   <Badge className="bg-red-600">{syncStatus.failed}</Badge>
+                </div>
+              )}
+              {syncStatus.synced > 0 && (
+                <div className="flex items-center justify-between p-2 bg-green-50 rounded">
+                  <span className="text-sm text-gray-600">Synced</span>
+                  <Badge className="bg-green-600">{syncStatus.synced}</Badge>
                 </div>
               )}
             </div>

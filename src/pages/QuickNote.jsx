@@ -27,6 +27,7 @@ import { todayEastern } from "../components/utils/timezone";
 import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
 import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
 import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
+import { toast } from "sonner";
 
 export default function QuickNote() {
   const queryClient = useQueryClient();
@@ -106,9 +107,11 @@ export default function QuickNote() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       
+      toast.success('Note enhanced and saved to patient chart');
+      
       queryClient.invalidateQueries(['patients']);
     } catch (error) {
-      alert('Enhancement failed: ' + error.message);
+      toast.error(`Enhancement failed: ${error.message}`);
     }
     setEnhancing(false);
   };
