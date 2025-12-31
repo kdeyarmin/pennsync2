@@ -135,18 +135,20 @@ export default function GuidedVisitWorkflow({
   };
 
   const generateSmartSuggestions = async (stepId) => {
+    if (!patientData) return;
+    
     setIsGeneratingSuggestions(true);
     
     try {
       const context = buildContextForAI(stepId);
       
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a home health nursing assistant. Based on the following context, provide 3-5 smart suggestions for the ${currentStep.title} step.
+        prompt: `You are a home health nursing assistant. Based on the following context, provide 3-5 brief, actionable suggestions for the ${currentStep.title} step.
 
 Context:
 ${context}
 
-Provide actionable, specific suggestions that would help the nurse complete this step efficiently and comprehensively. Format as a JSON array of strings.`,
+Provide specific suggestions that would help the nurse complete this step efficiently. Return as JSON with a suggestions array.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -155,13 +157,13 @@ Provide actionable, specific suggestions that would help the nurse complete this
         }
       });
 
-      setSmartSuggestions(result.suggestions || []);
+      setSmartSuggestions(result?.suggestions || []);
     } catch (error) {
       console.error('Error generating suggestions:', error);
       setSmartSuggestions([]);
+    } finally {
+      setIsGeneratingSuggestions(false);
     }
-
-    setIsGeneratingSuggestions(false);
   };
 
   const buildContextForAI = (stepId) => {
