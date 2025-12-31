@@ -18,6 +18,69 @@ Deno.serve(async (req) => {
     const { action, ...params } = await req.json();
 
     switch (action) {
+      case 'extract_events': {
+        const { noteText, patientId } = params;
+        
+        const eventsResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: `Analyze this clinical note and extract ALL significant clinical events with high accuracy.
+
+Clinical Note:
+${noteText}
+
+Extract events such as:
+- Medication changes (started, stopped, dose changes, side effects)
+- Vital sign abnormalities or concerning trends
+- New symptoms, symptom exacerbations, or resolutions
+- Falls, injuries, or safety incidents
+- Wound assessments or changes in wound status
+- Cognitive changes or behavioral changes
+- Functional status changes (ADL, mobility)
+- Pain level changes
+- Hospitalizations, ER visits, or physician appointments
+- New diagnoses or complications
+- Lab results or test results
+- Infections or signs of infection
+- Equipment/DME orders or changes
+
+For each event:
+- type: medication_change, medication_started, medication_stopped, fall, vital_change, symptom_new, symptom_resolved, wound_new, wound_change, cognitive_change, functional_change, pain_change, hospitalization, er_visit, physician_appointment, lab_result, infection, surgery, dme_ordered, other
+- title: Brief, specific title (e.g., "BP Elevated to 160/95" not just "Vital Change")
+- description: Detailed clinical description with context
+- date: Date mentioned or infer from context
+- severity: low/medium/high/critical based on clinical significance
+- structured_data: Specific details (med name, dosage, vital values, location, etc.)
+- source_text: Exact relevant text from note
+- requires_followup: true if needs action/monitoring
+- confidence: 0-100 (only include events with confidence >= 70)
+
+Be thorough - extract ALL clinically significant events, not just major ones.`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              events: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    type: { type: "string" },
+                    title: { type: "string" },
+                    description: { type: "string" },
+                    date: { type: "string" },
+                    severity: { type: "string" },
+                    structured_data: { type: "object" },
+                    source_text: { type: "string" },
+                    requires_followup: { type: "boolean" },
+                    confidence: { type: "number" }
+                  }
+                }
+              }
+            }
+          }
+        });
+        
+        return Response.json({ events: eventsResponse.events || [] });
+      }
+      
       case 'extract_events':
         return await extractEvents(base44, params);
       

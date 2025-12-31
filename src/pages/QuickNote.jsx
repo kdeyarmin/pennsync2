@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
 import { todayEastern } from "../components/utils/timezone";
+import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
+import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
 
 export default function QuickNote() {
   const queryClient = useQueryClient();
@@ -43,6 +45,7 @@ export default function QuickNote() {
   const [enhancing, setEnhancing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [detectedEvents, setDetectedEvents] = useState([]);
   
   const [listening, setListening] = useState(false);
   const recognitionRef = React.useRef(null);
@@ -70,10 +73,16 @@ export default function QuickNote() {
         visitDate,
         diagnosis: patient?.primary_diagnosis,
         vitalSigns,
-        nurseType: 'RN'
+        nurseType: 'RN',
+        autoExtractEvents: true
       });
 
       setEnhancedNote(response.data.enhanced_note);
+      
+      // Display detected events if any
+      if (response.data.detected_events && response.data.detected_events.length > 0) {
+        setDetectedEvents(response.data.detected_events);
+      }
       
       // Auto-save to visit
       await base44.entities.Visit.create({
@@ -224,6 +233,9 @@ export default function QuickNote() {
 
         {patient && (
           <>
+            {/* Clinical Events Summary */}
+            <ClinicalEventsSummary patientId={patientId} />
+            
             {/* Vitals - Inline Quick Entry */}
             <Card>
               <CardHeader className="pb-3">
@@ -335,6 +347,14 @@ export default function QuickNote() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Real-time Event Detection */}
+            <RealTimeClinicalEventTracker
+              noteText={enhancedNote || roughNote}
+              patientId={patientId}
+              visitId={null}
+              autoDetect={false}
+            />
 
             {/* Enhanced Note Output */}
             {enhancedNote && (
