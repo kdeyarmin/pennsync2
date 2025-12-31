@@ -58,6 +58,7 @@ import AIPatientRiskAssessor from "../components/risk/AIPatientRiskAssessor";
 import AIProactiveOASISAssistant from "../components/oasis/AIProactiveOASISAssistant";
 import AdvancedPredictiveAnalytics from "../components/predictive/AdvancedPredictiveAnalytics";
 import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAssessment";
+import ReferralDocumentViewer from "../components/documents/ReferralDocumentViewer";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -805,13 +806,18 @@ export default function PatientDetails() {
 
         {/* Documents Tab */}
         <TabsContent value="documents" className="space-y-6">
-          <Tabs defaultValue="discharge">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="referral-docs">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="referral-docs">Referral PDFs</TabsTrigger>
               <TabsTrigger value="discharge">Discharge</TabsTrigger>
-              <TabsTrigger value="referral">Referral</TabsTrigger>
+              <TabsTrigger value="referral">Referral Letter</TabsTrigger>
               <TabsTrigger value="education">Education</TabsTrigger>
               <TabsTrigger value="progress">Progress</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="referral-docs">
+              <ReferralDocumentViewer patientId={patientId} />
+            </TabsContent>
 
             <TabsContent value="discharge">
               <DischargeSummaryGenerator patientId={patientId} patient={patient} />

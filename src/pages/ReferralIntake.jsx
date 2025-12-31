@@ -177,7 +177,7 @@ export default function ReferralIntake() {
       
       await base44.entities.Referral.update(referralId, { assigned_to: nurseEmail });
 
-      // Send secure message to assigned nurse
+      // Send secure message to assigned nurse with document attachment
       const messageData = {
         patient_id: referral.patient_id,
         thread_id: `referral-${referralId}`,
@@ -196,12 +196,12 @@ Actions available:
 • Create admission note in Smart Note (prepopulated with referral info)
 • Review patient information
 
-Referral ID: ${referralId}
-Document URL: ${referral.document_url || 'N/A'}`,
+📎 Referral document is attached to this message.`,
         sender_name: 'System',
         sender_email: currentUser?.email,
         recipients: [nurseEmail],
         priority: referral.priority === 'urgent' ? 'urgent' : 'high',
+        attachments: referral.document_url ? [referral.document_url] : [],
         related_event_id: referralId,
         related_event_type: 'referral'
       };
