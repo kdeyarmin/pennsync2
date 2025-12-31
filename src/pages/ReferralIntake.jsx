@@ -158,6 +158,64 @@ export default function ReferralIntake() {
     }
   };
 
+  const handleNurseAssignment = async (referralId, nurseEmail) => {
+    if (nurseEmail === 'unassigned') {
+      try {
+        await base44.entities.Referral.update(referralId, { assigned_to: null });
+        queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      } catch (error) {
+        console.error('Error unassigning nurse:', error);
+      }
+      return;
+    }
+
+    try {
+      const referral = referrals.find(r => r.id === referralId);
+      const nurse = users.find(u => u.email === nurseEmail);
+      
+      await base44.entities.Referral.update(referralId, { assigned_to: nurseEmail });
+
+      // Send secure message to assigned nurse
+      const messageData = {
+        patient_id: referral.patient_id,
+        thread_id: `referral-${referralId}`,
+        subject: `New Referral Assignment: ${referral.patient_name || 'Unknown Patient'}`,
+        message_text: `You have been assigned a new referral.
+
+Patient: ${referral.patient_name || 'Unknown'}
+Referral Source: ${referral.referral_source || 'N/A'}
+Priority: ${referral.priority}
+Referral Date: ${referral.referral_date ? format(new Date(referral.referral_date), 'MM/dd/yyyy') : 'N/A'}
+
+${referral.extracted_data ? 'Referral has been processed with AI analysis.' : 'Please process this referral to extract patient information.'}
+
+Actions available:
+• View analyzed referral data
+• Create admission note in Smart Note (prepopulated with referral info)
+• Review patient information
+
+Referral ID: ${referralId}
+Document URL: ${referral.document_url || 'N/A'}`,
+        sender_name: 'System',
+        sender_email: currentUser?.email,
+        recipients: [nurseEmail],
+        priority: referral.priority === 'urgent' ? 'urgent' : 'high',
+        related_event_id: referralId,
+        related_event_type: 'referral'
+      };
+
+      await base44.entities.Message.create(messageData);
+      
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      
+      alert(`Referral assigned to ${nurse?.full_name || nurseEmail}. Secure message sent.`);
+    } catch (error) {
+      console.error('Error assigning nurse:', error);
+      alert('Failed to assign nurse');
+    }
+  };
+
   const handleProcessingComplete = async (referralId, extractedData, analysisResults) => {
     try {
       const updates = {
@@ -533,9 +591,22 @@ export default function ReferralIntake() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
-                        {referral.assigned_to ? 
-                          users.find(u => u.email === referral.assigned_to)?.full_name || referral.assigned_to
-                          : 'Unassigned'}
+                        <Select
+                          value={referral.assigned_to || "unassigned"}
+                          onValueChange={(value) => handleNurseAssignment(referral.id, value)}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Assign nurse" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                            {users.filter(u => u.role === 'user' || u.role === 'admin').map(u => (
+                              <SelectItem key={u.email} value={u.email}>
+                                {u.full_name || u.email}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">

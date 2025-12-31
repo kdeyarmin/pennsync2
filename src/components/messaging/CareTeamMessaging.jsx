@@ -22,6 +22,7 @@ import {
   Lightbulb
 } from "lucide-react";
 import { format } from "date-fns";
+import { createPageUrl } from "@/utils";
 
 export default function CareTeamMessaging({ patientId, relatedEventId, relatedEventType }) {
   const queryClient = useQueryClient();
@@ -359,6 +360,29 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                   </div>
                 </div>
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.message_text}</p>
+                
+                {/* Referral Action Buttons */}
+                {msg.related_event_type === 'referral' && msg.related_event_id && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.location.href = createPageUrl(`ReferralIntake`)}
+                      className="text-xs"
+                    >
+                      <FileText className="w-3 h-3 mr-1" />
+                      View Referral
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-xs"
+                      onClick={() => window.location.href = createPageUrl(`ReferralAdmissionNote?referral_id=${msg.related_event_id}`)}
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Create Admission Note
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
