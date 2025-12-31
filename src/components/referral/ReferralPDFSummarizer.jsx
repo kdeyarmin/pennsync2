@@ -41,8 +41,10 @@ export default function ReferralPDFSummarizer({
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
-      alert('Please upload a PDF file');
+    // Support multiple formats
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/tiff'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload a PDF, PNG, JPG, or TIFF file (common for faxes)');
       return;
     }
 
@@ -50,7 +52,7 @@ export default function ReferralPDFSummarizer({
     try {
       const result = await base44.integrations.Core.UploadFile({ file });
       setFileUrl(result.file_url);
-      await processReferral(result.file_url);
+      await processReferral(result.file_url, file.type);
     } catch (error) {
       console.error('Error uploading file:', error);
       alert('Failed to upload file. Please try again.');
@@ -58,11 +60,18 @@ export default function ReferralPDFSummarizer({
     setIsUploading(false);
   };
 
-  const processReferral = async (url) => {
+  const processReferral = async (url, fileType) => {
     setIsProcessing(true);
     try {
+      // Add context about file type for better extraction
+      const fileTypeContext = fileType && fileType.includes('image') 
+        ? 'This is a scanned/faxed document image. Extract text carefully, accounting for potential OCR errors or handwriting.' 
+        : 'This is a PDF document.';
+      
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert home health intake coordinator. Analyze this patient referral document and extract ALL relevant information needed for:
+        prompt: `You are an expert home health intake coordinator. ${fileTypeContext}
+        
+Analyze this patient referral document and extract ALL relevant information needed for:
 1. Admission nursing assessment
 2. OASIS-E completion
 3. Care planning
@@ -347,7 +356,7 @@ Extract everything mentioned, even if partial. If information is missing, note i
           <div className="flex items-center gap-2">
             <Input
               type="file"
-              accept=".pdf"
+              accept=".pdf,.png,.jpg,.jpeg,.tiff"
               onChange={handleFileUpload}
               disabled={isUploading || isProcessing}
               className="flex-1"
@@ -361,6 +370,9 @@ Extract everything mentioned, even if partial. If information is missing, note i
               Upload
             </Button>
           </div>
+          <p className="text-xs text-gray-500">
+            Supports PDFs, faxed images (PNG, JPG, TIFF), and scanned documents
+          </p>
 
           {isProcessing && (
             <Alert className="bg-blue-50 border-blue-200">
