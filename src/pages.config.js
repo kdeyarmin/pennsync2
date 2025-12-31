@@ -7,6 +7,7 @@ import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AuditTrail from './pages/AuditTrail';
+import AutomatedReports from './pages/AutomatedReports';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import CarePlanManagement from './pages/CarePlanManagement';
 import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
@@ -29,6 +30,7 @@ import NurseEducationVideos from './pages/NurseEducationVideos';
 import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
 import NurseTraining from './pages/NurseTraining';
 import NurseTrainingHub from './pages/NurseTrainingHub';
+import NurseWorkflow from './pages/NurseWorkflow';
 import OASIS from './pages/OASIS';
 import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
 import OASISAnalyzer from './pages/OASISAnalyzer';
@@ -49,6 +51,7 @@ import PatientEducationHub from './pages/PatientEducationHub';
 import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
+import QuickNote from './pages/QuickNote';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import ReferralAdmissionNote from './pages/ReferralAdmissionNote';
 import ReferralIntake from './pages/ReferralIntake';
@@ -66,9 +69,6 @@ import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import AutomatedReports from './pages/AutomatedReports';
-import NurseWorkflow from './pages/NurseWorkflow';
-import QuickNote from './pages/QuickNote';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +82,7 @@ export const PAGES = {
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
     "AuditTrail": AuditTrail,
+    "AutomatedReports": AutomatedReports,
     "AutomaticCarePlans": AutomaticCarePlans,
     "CarePlanManagement": CarePlanManagement,
     "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
@@ -104,6 +105,7 @@ export const PAGES = {
     "NursePerformanceDashboard": NursePerformanceDashboard,
     "NurseTraining": NurseTraining,
     "NurseTrainingHub": NurseTrainingHub,
+    "NurseWorkflow": NurseWorkflow,
     "OASIS": OASIS,
     "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
     "OASISAnalyzer": OASISAnalyzer,
@@ -124,6 +126,7 @@ export const PAGES = {
     "PatientRecordDashboard": PatientRecordDashboard,
     "Patients": Patients,
     "PredictiveAnalytics": PredictiveAnalytics,
+    "QuickNote": QuickNote,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
     "ReferralAdmissionNote": ReferralAdmissionNote,
     "ReferralIntake": ReferralIntake,
@@ -141,9 +144,6 @@ export const PAGES = {
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "AutomatedReports": AutomatedReports,
-    "NurseWorkflow": NurseWorkflow,
-    "QuickNote": QuickNote,
 }
 
 export const pagesConfig = {

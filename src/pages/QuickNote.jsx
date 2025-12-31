@@ -169,15 +169,15 @@ export default function QuickNote() {
       <div className="max-w-5xl mx-auto space-y-4">
         
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Quick Note</h1>
-          <Button variant="outline" onClick={handleClear}>Start Over</Button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Quick Note</h1>
+          <Button variant="outline" onClick={handleClear} className="min-h-[44px] w-full sm:w-auto">Start Over</Button>
         </div>
 
         {/* Patient & Visit Info - Always Visible */}
         <Card>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <CardContent className="p-3 sm:p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <Label className="text-xs mb-1 block">Patient</Label>
                 <SearchablePatientSelect
@@ -210,9 +210,9 @@ export default function QuickNote() {
                   className="h-10"
                 />
               </div>
-              <div className="flex items-end">
+              <div className="sm:col-span-2 md:col-span-1 flex items-end">
                 {patient && (
-                  <div className="text-xs">
+                  <div className="text-xs w-full">
                     <p className="font-semibold text-gray-900 truncate">{patient.first_name} {patient.last_name}</p>
                     <p className="text-gray-600 truncate">{patient.primary_diagnosis}</p>
                   </div>
@@ -227,13 +227,13 @@ export default function QuickNote() {
             {/* Vitals - Inline Quick Entry */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
                   <Activity className="w-4 h-4" />
                   Vitals (Optional)
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                   <Input placeholder="BP (120/80)" value={bp} onChange={(e) => setBp(e.target.value)} className="h-9 text-sm" />
                   <Input placeholder="HR (72)" value={hr} onChange={(e) => setHr(e.target.value)} className="h-9 text-sm" />
                   <Input placeholder="Temp (98.6)" value={temp} onChange={(e) => setTemp(e.target.value)} className="h-9 text-sm" />
@@ -259,7 +259,7 @@ export default function QuickNote() {
             {/* Main Note Area */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center justify-between">
+                <CardTitle className="text-sm sm:text-base flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <span className="flex items-center gap-2">
                     Write Your Notes
                     {roughNote.length > 0 && (
@@ -318,7 +318,7 @@ export default function QuickNote() {
                   <Button
                     onClick={handleEnhance}
                     disabled={enhancing}
-                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 h-12"
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 min-h-[44px] h-auto py-3 text-sm sm:text-base"
                   >
                     {enhancing ? (
                       <>
@@ -352,10 +352,10 @@ export default function QuickNote() {
                     className="min-h-[300px] text-sm font-mono"
                   />
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       onClick={handleCopy}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      className="flex-1 bg-green-600 hover:bg-green-700 min-h-[44px]"
                     >
                       {copied ? (
                         <>
@@ -372,7 +372,7 @@ export default function QuickNote() {
                     <Button
                       onClick={handleClear}
                       variant="outline"
-                      className="flex-1"
+                      className="flex-1 min-h-[44px]"
                     >
                       New Note
                     </Button>

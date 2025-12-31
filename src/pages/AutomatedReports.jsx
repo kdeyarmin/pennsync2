@@ -164,9 +164,9 @@ export default function AutomatedReports() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="w-8 h-8 text-blue-600" />
               AI-Driven Automated Reports
             </h1>
@@ -175,7 +175,7 @@ export default function AutomatedReports() {
         </div>
 
         {/* Quick Generate Cards */}
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {reportTypes.slice(0, 3).map((type) => {
             const Icon = type.icon;
             return (
@@ -191,7 +191,7 @@ export default function AutomatedReports() {
                   <Button
                     onClick={() => handleGenerateNow({ report_type: type.value, date_range_days: 30 })}
                     disabled={generating}
-                    className="w-full"
+                    className="w-full min-h-[44px]"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Generate Now
@@ -212,7 +212,7 @@ export default function AutomatedReports() {
             <CardDescription>Set up recurring reports delivered via email</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Report Name</Label>
                 <Input
@@ -276,7 +276,7 @@ export default function AutomatedReports() {
                 </Select>
               </div>
 
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <Label>Email Recipients (comma-separated)</Label>
                 <Input
                   value={newSchedule.recipients}
@@ -302,7 +302,7 @@ export default function AutomatedReports() {
             <Button
               onClick={() => createScheduleMutation.mutate(newSchedule)}
               disabled={!newSchedule.name || !newSchedule.recipients || createScheduleMutation.isLoading}
-              className="w-full"
+              className="w-full min-h-[44px]"
             >
               <Calendar className="w-4 h-4 mr-2" />
               Create Schedule
@@ -326,15 +326,15 @@ export default function AutomatedReports() {
             ) : (
               <div className="space-y-3">
                 {scheduledTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
+                  <div key={task.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{task.name}</h3>
                         <Badge variant={task.is_active ? 'default' : 'secondary'}>
                           {task.is_active ? 'Active' : 'Paused'}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
                         {task.description} • Recipients: {task.function_args?.recipients?.join(', ') || 'None'}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -342,7 +342,7 @@ export default function AutomatedReports() {
                         {task.start_time && ` at ${task.start_time}`}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"

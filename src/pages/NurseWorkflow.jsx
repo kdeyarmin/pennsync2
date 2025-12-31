@@ -135,15 +135,15 @@ export default function NurseWorkflow() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Welcome, {currentUser?.full_name?.split(' ')[0] || 'Nurse'}!
           </h1>
-          <p className="text-gray-600">Your streamlined workflow dashboard</p>
+          <p className="text-sm sm:text-base text-gray-600">Your streamlined workflow dashboard</p>
         </div>
 
         {/* Workflow Cards */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 sm:mb-6">
           {workflows.map((workflow) => {
             const Icon = workflow.icon;
             const colorClasses = {
@@ -173,15 +173,15 @@ export default function NurseWorkflow() {
                     </Badge>
                   )}
                 </CardHeader>
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-3 sm:p-4 space-y-3">
                   {workflow.items.length > 0 ? (
                     workflow.items.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                          <p className="text-xs text-gray-500">{item.value}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate">{item.label}</p>
+                          <p className="text-xs text-gray-500 truncate">{item.value}</p>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-gray-400" />
+                        <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
                       </div>
                     ))
                   ) : (
@@ -190,7 +190,7 @@ export default function NurseWorkflow() {
                   
                   <Button 
                     onClick={workflow.action}
-                    className="w-full mt-2"
+                    className="w-full mt-2 min-h-[44px]"
                     variant="outline"
                   >
                     {workflow.actionLabel}
@@ -210,39 +210,39 @@ export default function NurseWorkflow() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <Link to={createPageUrl("QuickNote")} className="block">
-                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-purple-400">
-                  <CardContent className="p-4 text-center">
-                    <FileText className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                    <p className="font-semibold text-sm">New Note</p>
+                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-purple-400 active:scale-95">
+                  <CardContent className="p-4 text-center touch-target min-h-[100px] flex flex-col items-center justify-center">
+                    <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-2" />
+                    <p className="font-semibold text-xs sm:text-sm">New Note</p>
                   </CardContent>
                 </Card>
               </Link>
 
               <Link to={createPageUrl("Patients")} className="block">
-                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-blue-400">
-                  <CardContent className="p-4 text-center">
-                    <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                    <p className="font-semibold text-sm">Find Patient</p>
+                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-blue-400 active:scale-95">
+                  <CardContent className="p-4 text-center touch-target min-h-[100px] flex flex-col items-center justify-center">
+                    <User className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-2" />
+                    <p className="font-semibold text-xs sm:text-sm">Find Patient</p>
                   </CardContent>
                 </Card>
               </Link>
 
               <Link to={createPageUrl("CarePlanManagement")} className="block">
-                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-green-400">
-                  <CardContent className="p-4 text-center">
-                    <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                    <p className="font-semibold text-sm">Care Plans</p>
+                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-green-400 active:scale-95">
+                  <CardContent className="p-4 text-center touch-target min-h-[100px] flex flex-col items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                    <p className="font-semibold text-xs sm:text-sm">Care Plans</p>
                   </CardContent>
                 </Card>
               </Link>
 
               <Link to={createPageUrl("Messages")} className="block">
-                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-indigo-400">
-                  <CardContent className="p-4 text-center">
-                    <Bell className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
-                    <p className="font-semibold text-sm">Messages</p>
+                <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-indigo-400 active:scale-95">
+                  <CardContent className="p-4 text-center touch-target min-h-[100px] flex flex-col items-center justify-center">
+                    <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 mx-auto mb-2" />
+                    <p className="font-semibold text-xs sm:text-sm">Messages</p>
                   </CardContent>
                 </Card>
               </Link>
