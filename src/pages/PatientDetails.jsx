@@ -486,351 +486,151 @@ export default function PatientDetails() {
             </Card>
           </div>
 
-          {/* Medical Information Tabs */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-blue-600" />
-            Medical Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="allergies" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="allergies">Allergies</TabsTrigger>
-              <TabsTrigger value="medications">Medications</TabsTrigger>
-              <TabsTrigger value="history">Medical History</TabsTrigger>
-              <TabsTrigger value="careplans">Care Plans</TabsTrigger>
-              <TabsTrigger value="visits">Visit Notes</TabsTrigger>
-              <TabsTrigger value="documents" className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                Documents
-              </TabsTrigger>
-            </TabsList>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-600" />
+                Medical Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="allergies">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="allergies">Allergies</TabsTrigger>
+                  <TabsTrigger value="medications">Medications</TabsTrigger>
+                  <TabsTrigger value="history">History</TabsTrigger>
+                  <TabsTrigger value="visits">Recent Visits</TabsTrigger>
+                </TabsList>
 
-            {/* Allergies Tab */}
-            <TabsContent value="allergies" className="space-y-4">
-              <Alert className={patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}>
-                <AlertTriangle className={`w-4 h-4 ${patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'text-red-600' : 'text-green-600'}`} />
-                <AlertDescription>
-                  <p className="font-semibold mb-2">Allergy Information</p>
-                  <p className="text-sm">{sanitizeInput(patient.allergies) || 'No Known Drug Allergies (NKDA)'}</p>
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
+                <TabsContent value="allergies" className="space-y-4">
+                  <Alert className={patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}>
+                    <AlertTriangle className={`w-4 h-4 ${patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'text-red-600' : 'text-green-600'}`} />
+                    <AlertDescription>
+                      <p className="font-semibold mb-2">Allergy Information</p>
+                      <p className="text-sm">{sanitizeInput(patient.allergies) || 'No Known Drug Allergies (NKDA)'}</p>
+                    </AlertDescription>
+                  </Alert>
+                </TabsContent>
 
-            {/* Medications Tab */}
-            <TabsContent value="medications" className="space-y-4">
-              {patient.current_medications && patient.current_medications.length > 0 ? (
-                <div className="space-y-3">
-                  {patient.current_medications.map((med, index) => (
-                    <Card key={index} className="border-l-4 border-l-blue-500">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Pill className="w-4 h-4 text-blue-600" />
-                              <h4 className="font-semibold text-gray-900">{sanitizeInput(med.name)}</h4>
-                            </div>
-                            <div className="space-y-1 text-sm">
-                              <p className="text-gray-700">
-                                <span className="font-medium">Dosage:</span> {sanitizeInput(med.dosage) || 'Not specified'}
-                              </p>
-                              <p className="text-gray-700">
-                                <span className="font-medium">Frequency:</span> {sanitizeInput(med.frequency) || 'Not specified'}
-                              </p>
-                              {med.prescriber && (
-                                <p className="text-gray-600">
-                                  <span className="font-medium">Prescriber:</span> {sanitizeInput(med.prescriber)}
-                                </p>
-                              )}
-                              {med.start_date && (
-                                <p className="text-gray-600 text-xs">
-                                  Started: {isValid(new Date(med.start_date)) ? format(new Date(med.start_date), 'MMM d, yyyy') : 'N/A'}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Pill className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p>No current medications documented</p>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Medical History Tab */}
-            <TabsContent value="history" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Diagnoses</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Primary Diagnosis</p>
-                    <p className="text-gray-900 font-semibold">{sanitizeInput(patient.primary_diagnosis) || 'Not specified'}</p>
-                  </div>
-                  {patient.secondary_diagnoses && patient.secondary_diagnoses.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 mb-2">Secondary Diagnoses</p>
-                      <div className="flex flex-wrap gap-2">
-                        {patient.secondary_diagnoses.map((diagnosis, index) => (
-                          <Badge key={index} variant="outline">{sanitizeInput(diagnosis)}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {patient.past_medical_history && patient.past_medical_history.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <History className="w-4 h-4" />
-                      Past Medical Conditions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {patient.past_medical_history.map((condition, index) => (
-                        <li key={index} className="flex items-start gap-2 p-2 bg-gray-50 rounded">
-                          <span className="text-blue-600 font-bold">•</span>
-                          <span className="text-sm text-gray-900">{sanitizeInput(condition)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
-
-              {patient.past_hospitalizations && patient.past_hospitalizations.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Hospitalization History</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="max-h-96">
+                <TabsContent value="medications" className="space-y-4">
+                  {patient.current_medications && patient.current_medications.length > 0 ? (
+                    <ScrollArea className="max-h-[500px]">
                       <div className="space-y-3">
-                        {patient.past_hospitalizations.map((hosp, index) => (
-                          <Card key={index} className="border-l-4 border-l-purple-500">
-                            <CardContent className="p-3">
-                              <p className="font-semibold text-gray-900">{hosp.reason}</p>
-                              <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-gray-600">
-                                <p><span className="font-medium">Date:</span> {hosp.date && isValid(new Date(hosp.date)) ? format(new Date(hosp.date), 'MMM d, yyyy') : 'Unknown'}</p>
-                                <p><span className="font-medium">Hospital:</span> {hosp.hospital || 'N/A'}</p>
-                                {hosp.length_of_stay && (
-                                  <p className="col-span-2"><span className="font-medium">Length:</span> {hosp.length_of_stay} days</p>
-                                )}
+                        {patient.current_medications.map((med, index) => (
+                          <Card key={index} className="border-l-4 border-l-blue-500">
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Pill className="w-4 h-4 text-blue-600" />
+                                <h4 className="font-semibold text-gray-900">{sanitizeInput(med.name)}</h4>
+                              </div>
+                              <div className="space-y-1 text-sm">
+                                <p className="text-gray-700">
+                                  <span className="font-medium">Dosage:</span> {sanitizeInput(med.dosage) || 'Not specified'}
+                                </p>
+                                <p className="text-gray-700">
+                                  <span className="font-medium">Frequency:</span> {sanitizeInput(med.frequency) || 'Not specified'}
+                                </p>
                               </div>
                             </CardContent>
                           </Card>
                         ))}
                       </div>
                     </ScrollArea>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Pill className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p>No current medications documented</p>
+                    </div>
+                  )}
+                </TabsContent>
 
-            {/* Care Plans Tab */}
-            <TabsContent value="careplans" className="space-y-4">
-              {carePlans.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p>No care plans on file</p>
-                </div>
-              ) : (
-                <ScrollArea className="max-h-[500px]">
-                  <div className="space-y-3">
-                    {carePlans.map((plan) => (
-                      <Card key={plan.id} className={`border-l-4 ${
-                        plan.status === 'met' ? 'border-l-green-500 bg-green-50' :
-                        plan.status === 'not_met' ? 'border-l-red-500 bg-red-50' :
-                        plan.status === 'revised' ? 'border-l-yellow-500 bg-yellow-50' :
-                        'border-l-blue-500'
-                      }`}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <p className="font-semibold text-gray-900">{sanitizeInput(plan.problem)}</p>
-                              <p className="text-sm text-gray-600 mt-1">{sanitizeInput(plan.goal)}</p>
-                            </div>
-                            <Badge className={
-                              plan.status === 'met' ? 'bg-green-500' :
-                              plan.status === 'not_met' ? 'bg-red-500' :
-                              plan.status === 'revised' ? 'bg-yellow-500' :
-                              'bg-blue-500'
-                            }>
-                              {plan.status.replace('_', ' ')}
-                            </Badge>
+                <TabsContent value="history" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Diagnoses</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Primary</p>
+                        <p className="text-gray-900 font-semibold">{sanitizeInput(patient.primary_diagnosis) || 'Not specified'}</p>
+                      </div>
+                      {patient.secondary_diagnoses && patient.secondary_diagnoses.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-500 mb-2">Secondary</p>
+                          <div className="flex flex-wrap gap-2">
+                            {patient.secondary_diagnoses.map((diagnosis, index) => (
+                              <Badge key={index} variant="outline">{sanitizeInput(diagnosis)}</Badge>
+                            ))}
                           </div>
-                          {plan.interventions && plan.interventions.length > 0 && (
-                            <div className="mb-3">
-                              <p className="text-xs font-semibold text-gray-500 mb-1">Interventions:</p>
-                              <ul className="space-y-1">
-                                {plan.interventions.map((intervention, idx) => (
-                                  <li key={idx} className="text-xs text-gray-700">• {sanitizeInput(intervention)}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center text-xs text-gray-500">
-                            {plan.target_date && (
-                              <span>Target: {isValid(new Date(plan.target_date)) ? format(new Date(plan.target_date), 'MMM d, yyyy') : 'N/A'}</span>
-                            )}
-                            {plan.frequency && <span>Frequency: {sanitizeInput(plan.frequency)}</span>}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </TabsContent>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
 
-            {/* Visit Notes Tab */}
-            <TabsContent value="visits" className="space-y-4">
-              {visits.length > 0 && visits[0].nurse_notes && (
-                <div className="mb-6">
-                  <ClinicalNoteReviewer
-                    noteContent={visits[0].nurse_notes}
-                    visitType={visits[0].visit_type}
-                    diagnosis={patient?.primary_diagnosis}
-                    patientData={patient}
-                    autoReview={true}
-                    prominent={true}
-                    onApplySuggestion={(text) => console.log('Suggestion:', text)}
-                  />
-                </div>
-              )}
-              {visits.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p>No visit notes available</p>
-                </div>
-              ) : (
-                <ScrollArea className="max-h-[500px]">
-                  <div className="space-y-3">
-                    {visits.filter(v => v.nurse_notes || v.status === 'completed').map((visit) => (
-                      <Card key={visit.id} className="border-l-4 border-l-indigo-500">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-semibold text-gray-900">
-                                  {visit.visit_date && isValid(new Date(visit.visit_date)) ? format(new Date(visit.visit_date), 'MMM d, yyyy') : 'Invalid date'}
-                                </p>
-                                <Badge variant="outline" className="text-xs">
-                                  {visit.visit_type.replace(/_/g, ' ')}
-                                </Badge>
+                  {patient.past_medical_history && patient.past_medical_history.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Past Conditions</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {patient.past_medical_history.map((condition, index) => (
+                            <Badge key={index} variant="outline">{sanitizeInput(condition)}</Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="visits" className="space-y-4">
+                  {visits.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p>No visit notes available</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="max-h-[500px]">
+                      <div className="space-y-3">
+                        {visits.filter(v => v.nurse_notes).slice(0, 5).map((visit) => (
+                          <Card key={visit.id} className="border-l-4 border-l-indigo-500">
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-semibold text-gray-900">
+                                    {visit.visit_date && isValid(new Date(visit.visit_date)) ? format(new Date(visit.visit_date), 'MMM d, yyyy') : 'Invalid date'}
+                                  </p>
+                                  <Badge variant="outline" className="text-xs mt-1">
+                                    {visit.visit_type.replace(/_/g, ' ')}
+                                  </Badge>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => navigate(`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`)}
+                                >
+                                  <ExternalLink className="w-3 h-3 mr-1" />
+                                  View
+                                </Button>
                               </div>
-                              <p className="text-xs text-gray-500">
-                                By: {visit.created_by} • {visit.created_date ? formatEastern(visit.created_date, 'hh:mm a') : ''}
-                              </p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => navigate(`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`)}
-                            >
-                              <ExternalLink className="w-3 h-3 mr-1" />
-                              View
-                            </Button>
-                          </div>
-                          {visit.nurse_notes && (
-                            <div className="bg-gray-50 p-3 rounded-lg">
-                              <p className="text-sm text-gray-900 whitespace-pre-wrap line-clamp-4">
-                                {sanitizeInput(visit.nurse_notes)}
-                              </p>
-                            </div>
-                          )}
-                          {visit.vital_signs && Object.keys(visit.vital_signs).length > 0 && (
-                            <div className="mt-3 pt-3 border-t">
-                              <p className="text-xs font-semibold text-gray-500 mb-2">Vital Signs:</p>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                {visit.vital_signs.blood_pressure_systolic && (
-                                  <div className="bg-white p-2 rounded">
-                                    <p className="text-gray-500">BP</p>
-                                    <p className="font-semibold">{visit.vital_signs.blood_pressure_systolic}/{visit.vital_signs.blood_pressure_diastolic}</p>
-                                  </div>
-                                )}
-                                {visit.vital_signs.heart_rate && (
-                                  <div className="bg-white p-2 rounded">
-                                    <p className="text-gray-500">HR</p>
-                                    <p className="font-semibold">{visit.vital_signs.heart_rate} bpm</p>
-                                  </div>
-                                )}
-                                {visit.vital_signs.temperature && (
-                                  <div className="bg-white p-2 rounded">
-                                    <p className="text-gray-500">Temp</p>
-                                    <p className="font-semibold">{visit.vital_signs.temperature}°F</p>
-                                  </div>
-                                )}
-                                {visit.vital_signs.oxygen_saturation && (
-                                  <div className="bg-white p-2 rounded">
-                                    <p className="text-gray-500">O2 Sat</p>
-                                    <p className="font-semibold">{visit.vital_signs.oxygen_saturation}%</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </TabsContent>
-
-            {/* Documents Tab */}
-            <TabsContent value="documents" className="space-y-4">
-              <Tabs defaultValue="discharge" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2">
-                  <TabsTrigger value="discharge" className="gap-2">
-                    <FileOutput className="w-4 h-4" />
-                    Discharge
-                  </TabsTrigger>
-                  <TabsTrigger value="referral" className="gap-2">
-                    <FileText className="w-4 h-4" />
-                    Referral
-                  </TabsTrigger>
-                  <TabsTrigger value="education" className="gap-2">
-                    <GraduationCap className="w-4 h-4" />
-                    Education
-                  </TabsTrigger>
-                  <TabsTrigger value="progress" className="gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Progress
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="discharge">
-                  <DischargeSummaryGenerator patientId={patientId} patient={patient} />
-                </TabsContent>
-
-                <TabsContent value="referral">
-                  <ReferralLetterGenerator patientId={patientId} patient={patient} />
-                </TabsContent>
-
-                <TabsContent value="education">
-                  <PatientEducationGenerator patientId={patientId} patient={patient} />
-                </TabsContent>
-
-                <TabsContent value="progress">
-                  <ProgressReportGenerator patientId={patientId} patient={patient} />
+                              {visit.nurse_notes && (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                  <p className="text-sm text-gray-900 whitespace-pre-wrap line-clamp-3">
+                                    {sanitizeInput(visit.nurse_notes)}
+                                  </p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
                 </TabsContent>
               </Tabs>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* AI Tools Tab */}
         <TabsContent value="ai-tools" className="space-y-6">
