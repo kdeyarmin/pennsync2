@@ -357,15 +357,22 @@ export default function PatientDetails() {
 
       {/* Main Patient Tabs */}
       <Tabs defaultValue="overview" className="mb-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="clinical">Clinical Info</TabsTrigger>
-          <TabsTrigger value="ai-tools" className="flex items-center gap-1">
-            <Brain className="w-3 h-3" />
-            AI Tools
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="clinical" className="text-xs sm:text-sm">Clinical</TabsTrigger>
+          <TabsTrigger value="events" className="text-xs sm:text-sm">
+            <Activity className="w-3 h-3 mr-1" />
+            <span className="hidden sm:inline">Events</span>
           </TabsTrigger>
-          <TabsTrigger value="care">Care Plans</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="ai-tools" className="flex items-center gap-1 text-xs sm:text-sm">
+            <Brain className="w-3 h-3" />
+            <span className="hidden sm:inline">AI Tools</span>
+          </TabsTrigger>
+          <TabsTrigger value="care" className="text-xs sm:text-sm">Care Plans</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Documents</span>
+            <span className="sm:hidden">Docs</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -399,6 +406,11 @@ export default function PatientDetails() {
               autoCheck={true}
             />
           </div>
+        </TabsContent>
+
+        {/* Clinical Events Tab */}
+        <TabsContent value="events" className="space-y-4 mt-4">
+          <ClinicalEventsTimeline patientId={patient.id} limit={30} />
         </TabsContent>
 
         {/* Clinical Info Tab */}
