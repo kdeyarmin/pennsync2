@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       return false;
     };
 
-    const addText = (text, fontSize = 9, isBold = false, color = [0, 0, 0]) => {
+    const addText = (text, fontSize = 10, isBold = false, color = [0, 0, 0]) => {
       doc.setFontSize(fontSize);
       doc.setFont('helvetica', isBold ? 'bold' : 'normal');
       doc.setTextColor(...color);
@@ -34,27 +34,28 @@ Deno.serve(async (req) => {
     };
 
     const addSectionHeader = (title, color = [37, 99, 235]) => {
-      checkPageBreak(12);
+      checkPageBreak(14);
       doc.setFillColor(...color);
-      doc.rect(margin - 5, yPos - 4, 190, 8, 'F');
+      doc.rect(margin - 5, yPos - 4, 190, 10, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.text(title, margin, yPos);
-      yPos += 8;
+      yPos += 10;
       doc.setTextColor(0, 0, 0);
     };
 
     const addKeyValue = (key, value) => {
       if (value && value !== "Not documented in referral.") {
         checkPageBreak();
-        doc.setFontSize(8);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text(key + ':', margin, yPos);
         doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
         const lines = doc.splitTextToSize(String(value), 130);
         doc.text(lines, margin + 50, yPos);
-        yPos += Math.max(lineHeight, lines.length * 5);
+        yPos += Math.max(lineHeight + 1, lines.length * 5.5);
       }
     };
 
@@ -131,30 +132,31 @@ Deno.serve(async (req) => {
 
     if (dx.secondary_diagnoses?.length > 0) {
       checkPageBreak();
-      doc.setFontSize(8);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('Secondary Diagnoses:', margin, yPos);
-      yPos += 5;
+      yPos += 6;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
       dx.secondary_diagnoses.forEach((diag, idx) => {
         checkPageBreak();
-        doc.text(`  ${idx + 1}. ${diag}`, margin + 3, yPos);
-        yPos += 5;
+        doc.text(`${idx + 1}. ${diag}`, margin + 3, yPos);
+        yPos += 6;
       });
-      yPos += 2;
+      yPos += 3;
     }
 
     if (dx.allergies && dx.allergies !== "Not documented in referral.") {
-      checkPageBreak(12);
+      checkPageBreak(14);
       doc.setFillColor(254, 243, 199);
-      doc.rect(margin - 2, yPos - 3, 180, 10, 'F');
-      doc.setFontSize(8);
+      doc.rect(margin - 2, yPos - 3, 180, 12, 'F');
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(161, 98, 7);
-      const allergyLines = doc.splitTextToSize('⚠ ALLERGIES: ' + dx.allergies, 175);
+      const allergyLines = doc.splitTextToSize('WARNING - ALLERGIES: ' + dx.allergies, 175);
       allergyLines.forEach(line => {
         doc.text(line, margin, yPos);
-        yPos += 5;
+        yPos += 6;
       });
       yPos += 3;
       doc.setTextColor(0, 0, 0);
@@ -174,26 +176,26 @@ Deno.serve(async (req) => {
     const meds = referralData.medications || [];
     if (meds.length > 0) {
       meds.forEach((med, idx) => {
-        checkPageBreak(15);
+        checkPageBreak(18);
         doc.setFillColor(240, 253, 244);
-        doc.rect(margin - 2, yPos - 2, 180, 14, 'F');
-        doc.setFontSize(8);
+        doc.rect(margin - 2, yPos - 2, 180, 16, 'F');
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text(`${idx + 1}. ${med.name}`, margin, yPos);
-        yPos += 5;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7);
-        if (med.dosage) doc.text(`Dosage: ${med.dosage}`, margin + 3, yPos);
-        if (med.frequency) doc.text(`Freq: ${med.frequency}`, margin + 70, yPos);
-        yPos += 4;
-        if (med.route) doc.text(`Route: ${med.route}`, margin + 3, yPos);
-        if (med.prescriber) doc.text(`By: ${med.prescriber}`, margin + 70, yPos);
         yPos += 6;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        if (med.dosage) doc.text(`Dosage: ${med.dosage}`, margin + 3, yPos);
+        if (med.frequency) doc.text(`Freq: ${med.frequency}`, margin + 75, yPos);
+        yPos += 5;
+        if (med.route) doc.text(`Route: ${med.route}`, margin + 3, yPos);
+        if (med.prescriber) doc.text(`By: ${med.prescriber}`, margin + 75, yPos);
+        yPos += 7;
       });
     } else {
-      addText('No medications documented in referral', 8);
+      addText('No medications documented in referral', 10);
     }
-    yPos += 4;
+    yPos += 5;
 
     // FUNCTIONAL STATUS - OASIS RELEVANT
     doc.addPage();
@@ -226,41 +228,43 @@ Deno.serve(async (req) => {
     addSectionHeader('SKILLED NEEDS & SERVICES', [251, 146, 60]);
     const skilled = referralData.skilled_needs || {};
     if (skilled.services_ordered?.length > 0) {
-      doc.setFontSize(8);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('Services Ordered:', margin, yPos);
-      yPos += 5;
+      yPos += 6;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
       const servicesLines = doc.splitTextToSize(skilled.services_ordered.join(', '), 175);
       servicesLines.forEach(line => {
         doc.text(line, margin + 3, yPos);
-        yPos += 5;
+        yPos += 6;
       });
-      yPos += 2;
+      yPos += 3;
     }
     addKeyValue('Frequency/Duration', skilled.frequency_duration);
     if (skilled.specific_interventions?.length > 0) {
       checkPageBreak();
-      doc.setFontSize(8);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('Specific Interventions:', margin, yPos);
-      yPos += 5;
+      yPos += 6;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
       skilled.specific_interventions.forEach(int => {
         checkPageBreak();
         const intLines = doc.splitTextToSize(`• ${int}`, 175);
         intLines.forEach(line => {
           doc.text(line, margin + 3, yPos);
-          yPos += 5;
+          yPos += 6;
         });
       });
-      yPos += 2;
+      yPos += 3;
     }
     if (skilled.dme_supplies?.length > 0) {
       addKeyValue('DME/Supplies Needed', skilled.dme_supplies.join(', '));
     }
     addKeyValue('Goals of Care', skilled.goals_of_care);
-    yPos += 4;
+    yPos += 5;
 
     // PSYCHOSOCIAL
     addSectionHeader('PSYCHOSOCIAL ASSESSMENT', [236, 72, 153]);
@@ -276,40 +280,42 @@ Deno.serve(async (req) => {
     addSectionHeader('PHYSICIAN ORDERS & TREATMENTS', [5, 150, 105]);
     const orders = referralData.orders_treatments || {};
     if (orders.physician_orders?.length > 0) {
-      doc.setFontSize(8);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('Physician Orders:', margin, yPos);
-      yPos += 5;
+      yPos += 6;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
       orders.physician_orders.forEach(order => {
         checkPageBreak();
         const orderLines = doc.splitTextToSize(`• ${order}`, 175);
         orderLines.forEach(line => {
           doc.text(line, margin + 3, yPos);
-          yPos += 5;
+          yPos += 6;
         });
       });
-      yPos += 2;
+      yPos += 3;
     }
     if (orders.treatments?.length > 0) {
-      doc.setFontSize(8);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('Treatments:', margin, yPos);
-      yPos += 5;
+      yPos += 6;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
       orders.treatments.forEach(tx => {
         checkPageBreak();
         const txLines = doc.splitTextToSize(`• ${tx}`, 175);
         txLines.forEach(line => {
           doc.text(line, margin + 3, yPos);
-          yPos += 5;
+          yPos += 6;
         });
       });
-      yPos += 2;
+      yPos += 3;
     }
     addKeyValue('Diet', orders.diet);
     addKeyValue('Activity Restrictions', orders.activity_restrictions);
-    yPos += 4;
+    yPos += 5;
 
     // SAFETY CONCERNS
     addSectionHeader('SAFETY CONCERNS', [239, 68, 68]);
@@ -327,192 +333,197 @@ Deno.serve(async (req) => {
     yPos = 20;
     addSectionHeader('OASIS-E PRE-ASSESSMENT GUIDE', [5, 150, 105]);
     
-    doc.setFontSize(7);
-    doc.setTextColor(107, 114, 128);
+    doc.setFontSize(10);
+    doc.setTextColor(75, 85, 99);
+    doc.setFont('helvetica', 'normal');
     const oasisIntro = doc.splitTextToSize('Based on referral information, the following OASIS items can be pre-populated or verified during visit:', 175);
     oasisIntro.forEach(line => {
       doc.text(line, margin, yPos);
-      yPos += 4;
+      yPos += 6;
     });
-    yPos += 5;
+    yPos += 6;
     doc.setTextColor(0, 0, 0);
 
     // M1021 - Primary Diagnosis
-    checkPageBreak(20);
+    checkPageBreak(24);
     doc.setFillColor(254, 226, 226);
-    doc.rect(margin - 2, yPos - 3, 180, 7, 'F');
-    doc.setFontSize(8);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('M1021-M1029: DIAGNOSES', margin, yPos);
-    yPos += 8;
+    yPos += 10;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(10);
     addKeyValue('M1021 - Primary Diagnosis', dx.primary_diagnosis);
     addKeyValue('M1023 - Primary Diagnosis ICD-10', dx.primary_icd10 || 'Verify code');
     if (dx.secondary_diagnoses?.length > 0) {
-      doc.setFontSize(7);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
       doc.text('M1024-M1029 - Other Diagnoses:', margin, yPos);
-      yPos += 5;
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
       dx.secondary_diagnoses.slice(0, 5).forEach((d, i) => {
         checkPageBreak();
         const dxLines = doc.splitTextToSize(`${i + 2}. ${d}`, 172);
         dxLines.forEach(line => {
           doc.text(line, margin + 3, yPos);
-          yPos += 4;
+          yPos += 5.5;
         });
       });
-      yPos += 2;
+      yPos += 3;
     }
-    yPos += 4;
+    yPos += 5;
 
     // M1030 - Therapies
-    checkPageBreak(16);
+    checkPageBreak(20);
     doc.setFillColor(254, 249, 195);
-    doc.rect(margin - 2, yPos - 3, 180, 7, 'F');
-    doc.setFontSize(8);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('M1030-M1032: THERAPIES AT HOME', margin, yPos);
-    yPos += 8;
+    yPos += 10;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(10);
     doc.text('M1030 - Therapies Received at Home:', margin, yPos);
-    yPos += 5;
-    doc.text('☐ IV/Infusion  ☐ Parenteral nutrition  ☐ Enteral nutrition  ☐ None', margin + 3, yPos);
-    yPos += 5;
-    doc.text('⚠ Assess at visit based on current treatments', margin + 3, yPos);
+    yPos += 6;
+    doc.text('[ ] IV/Infusion  [ ] Parenteral nutrition  [ ] Enteral nutrition  [ ] None', margin + 3, yPos);
+    yPos += 6;
+    doc.setTextColor(185, 28, 28);
+    doc.text('NOTE: Assess at visit based on current treatments', margin + 3, yPos);
     yPos += 8;
+    doc.setTextColor(0, 0, 0);
 
     // M1033 - Risk Factors
-    checkPageBreak(25);
+    checkPageBreak(30);
     doc.setFillColor(254, 243, 199);
-    doc.rect(margin - 2, yPos - 3, 180, 7, 'F');
-    doc.setFontSize(8);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('M1033: RISK FOR HOSPITALIZATION', margin, yPos);
-    yPos += 8;
+    yPos += 10;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.text('☐ History of falls: ' + (func.fall_risk ? `Yes - ${func.fall_risk}` : 'Assess at visit'), margin, yPos);
-    yPos += 5;
-    doc.text('☐ Unintentional weight loss: Assess at visit', margin, yPos);
-    yPos += 5;
-    doc.text('☐ Multiple hospitalizations: ' + (dx.recent_hospitalizations ? 'Yes - see history' : 'Assess'), margin, yPos);
-    yPos += 5;
-    doc.text('☐ Multiple ED visits: Assess at visit', margin, yPos);
-    yPos += 5;
-    doc.text('☐ Decline in mental/emotional/behavioral status: Assess', margin, yPos);
-    yPos += 5;
-    doc.text('☐ 5+ medications: ' + (meds.length >= 5 ? `Yes (${meds.length} meds)` : `No (${meds.length} meds)`), margin, yPos);
+    doc.setFontSize(10);
+    doc.text('[ ] History of falls: ' + (func.fall_risk ? `Yes - ${func.fall_risk}` : 'Assess at visit'), margin, yPos);
+    yPos += 6;
+    doc.text('[ ] Unintentional weight loss: Assess at visit', margin, yPos);
+    yPos += 6;
+    doc.text('[ ] Multiple hospitalizations: ' + (dx.recent_hospitalizations ? 'Yes - see history' : 'Assess'), margin, yPos);
+    yPos += 6;
+    doc.text('[ ] Multiple ED visits: Assess at visit', margin, yPos);
+    yPos += 6;
+    doc.text('[ ] Decline in mental/emotional/behavioral status: Assess', margin, yPos);
+    yPos += 6;
+    doc.text('[ ] 5+ medications: ' + (meds.length >= 5 ? `Yes (${meds.length} meds)` : `No (${meds.length} meds)`), margin, yPos);
     yPos += 8;
 
     // M1400 - Living Arrangements
-    checkPageBreak(18);
+    checkPageBreak(22);
     doc.setFillColor(219, 234, 254);
-    doc.rect(margin - 2, yPos - 3, 180, 7, 'F');
-    doc.setFontSize(8);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('M1400-M1870: LIVING ARRANGEMENTS & ADLs', margin, yPos);
-    yPos += 8;
+    yPos += 10;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    addKeyValue('M1400 - Lives With', admission.current_living_situation || '☐ Assess at visit');
-    addKeyValue('M1810 - Dress Upper Body', func.adl_status || '☐ Assess');
-    addKeyValue('M1820 - Dress Lower Body', func.adl_status || '☐ Assess');
-    addKeyValue('M1830 - Bathing', '☐ Assess');
-    addKeyValue('M1840 - Toilet Transfer', '☐ Assess');
-    addKeyValue('M1845 - Toileting Hygiene', '☐ Assess');
-    yPos += 4;
+    doc.setFontSize(10);
+    addKeyValue('M1400 - Lives With', admission.current_living_situation || '[ ] Assess at visit');
+    addKeyValue('M1810 - Dress Upper Body', func.adl_status || '[ ] Assess');
+    addKeyValue('M1820 - Dress Lower Body', func.adl_status || '[ ] Assess');
+    addKeyValue('M1830 - Bathing', '[ ] Assess');
+    addKeyValue('M1840 - Toilet Transfer', '[ ] Assess');
+    addKeyValue('M1845 - Toileting Hygiene', '[ ] Assess');
+    yPos += 5;
 
     // M1850 - Ambulation
-    checkPageBreak(15);
+    checkPageBreak(18);
     doc.setFillColor(254, 226, 226);
-    doc.rect(margin - 2, yPos - 3, 180, 7, 'F');
-    doc.setFontSize(8);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('M1850-M1860: TRANSFERRING & AMBULATION', margin, yPos);
-    yPos += 8;
+    yPos += 10;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    addKeyValue('M1850 - Transferring', '☐ Assess');
-    addKeyValue('M1860 - Ambulation', func.ambulation || '☐ Assess');
-    yPos += 4;
+    doc.setFontSize(10);
+    addKeyValue('M1850 - Transferring', '[ ] Assess');
+    addKeyValue('M1860 - Ambulation', func.ambulation || '[ ] Assess');
+    yPos += 5;
 
     // M1870 - Feeding
-    checkPageBreak(12);
+    checkPageBreak(16);
     doc.setFillColor(240, 253, 244);
-    doc.rect(margin - 2, yPos - 3, 180, 7, 'F');
-    doc.setFontSize(8);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('M1870: FEEDING OR EATING', margin, yPos);
-    yPos += 8;
+    yPos += 10;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.text('☐ 0 - Able to independently feed self', margin, yPos);
-    yPos += 4;
-    doc.text('☐ 1 - Requires setup', margin, yPos);
-    yPos += 4;
-    doc.text('☐ Assess level during visit', margin, yPos);
+    doc.setFontSize(10);
+    doc.text('[ ] 0 - Able to independently feed self', margin, yPos);
+    yPos += 5;
+    doc.text('[ ] 1 - Requires setup', margin, yPos);
+    yPos += 5;
+    doc.text('[ ] Assess level during visit', margin, yPos);
     yPos += 8;
 
     // IMPORTANT NOTES SECTION
     doc.addPage();
     yPos = 20;
     doc.setFillColor(239, 68, 68);
-    doc.rect(0, yPos - 8, 210, 12, 'F');
+    doc.rect(0, yPos - 8, 210, 14, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('⚠ IMPORTANT NURSING NOTES', margin, yPos);
-    yPos += 12;
+    doc.text('IMPORTANT NURSING NOTES', margin, yPos);
+    yPos += 14;
     doc.setTextColor(0, 0, 0);
 
     doc.setFillColor(254, 242, 242);
-    doc.rect(margin - 5, yPos, 190, 60, 'F');
-    yPos += 6;
-    doc.setFontSize(8);
+    doc.rect(margin - 5, yPos, 190, 70, 'F');
+    yPos += 8;
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('CRITICAL ITEMS TO VERIFY DURING ADMISSION VISIT:', margin, yPos);
-    yPos += 6;
+    yPos += 8;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(10);
     const criticalItems = [
-      '☐ Verify all medications - check bottles, dosages, compliance',
-      '☐ Assess functional status for all OASIS ADL items',
-      '☐ Complete comprehensive skin assessment (M1306-M1308)',
-      '☐ Verify allergies and document reactions',
-      '☐ Assess home safety and environmental hazards',
-      '☐ Obtain baseline vital signs and weight',
-      '☐ Assess pain comprehensively (M1242)',
-      '☐ Complete cognitive/behavioral assessment',
-      '☐ Verify emergency contacts and advance directives',
-      '☐ Document homebound status clearly (M1910)'
+      '• Verify all medications - check bottles, dosages, compliance',
+      '• Assess functional status for all OASIS ADL items',
+      '• Complete comprehensive skin assessment (M1306-M1308)',
+      '• Verify allergies and document reactions',
+      '• Assess home safety and environmental hazards',
+      '• Obtain baseline vital signs and weight',
+      '• Assess pain comprehensively (M1242)',
+      '• Complete cognitive/behavioral assessment',
+      '• Verify emergency contacts and advance directives',
+      '• Document homebound status clearly (M1910)'
     ];
     
     criticalItems.forEach(item => {
       const itemLines = doc.splitTextToSize(item, 180);
       itemLines.forEach(line => {
         doc.text(line, margin + 2, yPos);
-        yPos += 5;
+        yPos += 6;
       });
     });
     yPos += 8;
 
     if (referralData.oasis_relevant_notes) {
-      checkPageBreak(25);
+      checkPageBreak(30);
       doc.setFillColor(219, 234, 254);
-      doc.rect(margin - 5, yPos, 190, 35, 'F');
-      yPos += 6;
-      doc.setFontSize(8);
+      doc.rect(margin - 5, yPos, 190, 40, 'F');
+      yPos += 8;
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('AI-GENERATED OASIS NOTES:', margin, yPos);
-      yPos += 6;
+      yPos += 8;
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
+      doc.setFontSize(10);
       const notes = doc.splitTextToSize(referralData.oasis_relevant_notes, 175);
       notes.forEach(line => {
         checkPageBreak();
         doc.text(line, margin + 2, yPos);
-        yPos += 4;
+        yPos += 5.5;
       });
     }
 
