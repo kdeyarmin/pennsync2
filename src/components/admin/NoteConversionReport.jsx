@@ -94,8 +94,7 @@ export default function NoteConversionReport() {
       ...d,
       avgQuality: d.count > 0 ? Math.round(d.totalQuality / d.count) : 0
     }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
+    .sort((a, b) => b.count - a.count); // Sort by highest notes first
 
   // Group by visit type
   const visitTypeData = {};
@@ -265,16 +264,18 @@ export default function NoteConversionReport() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Rank</TableHead>
                 <TableHead>Nurse</TableHead>
                 <TableHead className="text-right">Conversions</TableHead>
                 <TableHead className="text-right">Avg Quality</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nurseStats.map((nurse) => (
+              {nurseStats.map((nurse, index) => (
                 <TableRow key={nurse.nurse}>
+                  <TableCell className="font-bold text-blue-600">#{index + 1}</TableCell>
                   <TableCell className="font-medium">{nurse.nurse}</TableCell>
-                  <TableCell className="text-right">{nurse.count}</TableCell>
+                  <TableCell className="text-right font-semibold">{nurse.count}</TableCell>
                   <TableCell className="text-right">
                     <Badge className={nurse.avgQuality >= 80 ? 'bg-green-100 text-green-800' : nurse.avgQuality >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
                       {nurse.avgQuality}%
