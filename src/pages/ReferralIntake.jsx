@@ -177,23 +177,118 @@ export default function ReferralIntake() {
         updates.missing_information = missingInfo;
       }
 
-      // Check if patient exists in system, create if not
+      // Enhanced patient matching logic
       const fullName = extractedData.demographics?.full_name || '';
       const dob = extractedData.demographics?.date_of_birth;
+      const phone = extractedData.demographics?.phone;
+      const address = extractedData.demographics?.address;
       
       let existingPatient = null;
-      if (fullName && dob) {
-        const nameParts = fullName.split(' ');
-        const firstName = nameParts[0];
+      if (fullName || dob || phone) {
+        const nameParts = fullName.split(' ').filter(p => p.length > 0);
+        const firstName = nameParts[0] || '';
+        const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
         const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
         
-        // Search for existing patient by name and DOB
         const allPatients = await base44.entities.Patient.list('-created_date', 500);
-        existingPatient = allPatients.find(p => 
-          p.first_name?.toLowerCase() === firstName?.toLowerCase() &&
-          p.last_name?.toLowerCase() === lastName?.toLowerCase() &&
-          p.date_of_birth === dob
-        );
+        
+        // Helper: normalize string for comparison
+        const normalize = (str) => str?.toLowerCase().trim().replace(/[^a-z0-9]/g, '') || '';
+        
+        // Helper: calculate string similarity (Levenshtein-like)
+        const similarity = (s1, s2) => {
+          if (!s1 || !s2) return 0;
+          const longer = s1.length > s2.length ? s1 : s2;
+          const shorter = s1.length > s2.length ? s2 : s1;
+          if (longer.length === 0) return 1.0;
+          const editDistance = [...longer].reduce((prev, curr, i) => {
+            return shorter[i] === curr ? prev : prev + 1;
+          }, 0);
+          return (longer.length - editDistance) / longer.length;
+        };
+        
+        // Score each patient for match likelihood
+        const scoredPatients = allPatients.map(p => {
+          let score = 0;
+          const reasons = [];
+          
+          // Name matching (40 points max)
+          if (firstName && p.first_name) {
+            const firstNameSim = similarity(normalize(firstName), normalize(p.first_name));
+            if (firstNameSim >= 0.8) {
+              score += firstNameSim * 20;
+              reasons.push(`First name: ${(firstNameSim * 100).toFixed(0)}%`);
+            }
+          }
+          
+          if (lastName && p.last_name) {
+            const lastNameSim = similarity(normalize(lastName), normalize(p.last_name));
+            if (lastNameSim >= 0.8) {
+              score += lastNameSim * 20;
+              reasons.push(`Last name: ${(lastNameSim * 100).toFixed(0)}%`);
+            }
+          }
+          
+          // Middle name/initial bonus (5 points)
+          if (middleName && p.middle_name) {
+            const m1 = normalize(middleName);
+            const m2 = normalize(p.middle_name);
+            if (m1 === m2 || m1[0] === m2[0]) {
+              score += 5;
+              reasons.push('Middle name match');
+            }
+          }
+          
+          // DOB matching (30 points)
+          if (dob && p.date_of_birth) {
+            if (dob === p.date_of_birth) {
+              score += 30;
+              reasons.push('Exact DOB match');
+            } else {
+              // Partial DOB match (year and month)
+              const [y1, m1] = dob.split('-');
+              const [y2, m2] = p.date_of_birth.split('-');
+              if (y1 === y2 && m1 === m2) {
+                score += 15;
+                reasons.push('Partial DOB match');
+              }
+            }
+          }
+          
+          // Phone matching (15 points)
+          if (phone && p.phone) {
+            const p1 = normalize(phone);
+            const p2 = normalize(p.phone);
+            if (p1 === p2 || p1.includes(p2.slice(-7)) || p2.includes(p1.slice(-7))) {
+              score += 15;
+              reasons.push('Phone match');
+            }
+          }
+          
+          // Address matching (10 points)
+          if (address && p.address) {
+            const a1 = normalize(address);
+            const a2 = normalize(p.address);
+            if (similarity(a1, a2) >= 0.7) {
+              score += 10;
+              reasons.push('Address match');
+            }
+          }
+          
+          return { patient: p, score, reasons };
+        });
+        
+        // Sort by score and get best match
+        const bestMatch = scoredPatients.sort((a, b) => b.score - a.score)[0];
+        
+        // Match threshold: 60+ points = high confidence match
+        if (bestMatch && bestMatch.score >= 60) {
+          existingPatient = bestMatch.patient;
+          console.log(`Patient match found: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score}, Reasons: ${bestMatch.reasons.join(', ')})`);
+        } else if (bestMatch && bestMatch.score >= 40) {
+          // Possible match but not certain - log for review
+          console.warn(`Possible patient match: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score})`);
+        }
       }
 
       if (!existingPatient && extractedData.demographics) {
