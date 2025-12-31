@@ -32,6 +32,7 @@ import ClinicalEventValidator from "./ClinicalEventValidator";
 import LinkedNoteViewer from "./LinkedNoteViewer";
 import AICarePlanSuggester from "../carePlan/AICarePlanSuggester";
 import PatientEducationPanel from "../education/PatientEducationPanel";
+import ClinicalTrendsAnalyzer from "../analytics/ClinicalTrendsAnalyzer";
 
 const EVENT_TYPES = {
   visit: { label: 'Visits', icon: Activity, color: 'blue' },
@@ -422,6 +423,9 @@ Be specific and reference actual events by date and type.`,
       )}
 
     <div className="space-y-4">
+      {/* Clinical Trends Analyzer */}
+      <ClinicalTrendsAnalyzer patientId={patient?.id} />
+
       {/* Patient Education Materials */}
       <PatientEducationPanel patientId={patient?.id} />
 
