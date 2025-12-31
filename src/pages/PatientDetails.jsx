@@ -54,6 +54,7 @@ import PredictiveAnalyticsPanel from "../components/oasis/PredictiveAnalyticsPan
 import PatientChartRecommendations from "../components/patient/PatientChartRecommendations";
 import AIPatientAnalyzer from "../components/patient/AIPatientAnalyzer";
 import PatientSummaryGenerator from "../components/patient/PatientSummaryGenerator";
+import AIPatientRiskAssessor from "../components/risk/AIPatientRiskAssessor";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -326,6 +327,11 @@ export default function PatientDetails() {
       {/* AI-Generated Recommendations from OASIS */}
       <div className="mb-6">
         <PatientChartRecommendations patientId={patientId} />
+      </div>
+
+      {/* AI Risk Assessment */}
+      <div className="mb-6">
+        <AIPatientRiskAssessor patientId={patientId} autoAnalyze={false} />
       </div>
 
       {/* AI Patient Insights - Future Health Risks & Predictions */}
