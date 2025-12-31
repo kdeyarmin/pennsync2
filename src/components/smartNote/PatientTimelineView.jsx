@@ -18,9 +18,15 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
-  Clock
+  Clock,
+  FlaskConical,
+  MessageSquare,
+  Link as LinkIcon,
+  ExternalLink
 } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
+import { createPageUrl } from "@/utils";
+import { Link } from "react-router-dom";
 
 const EVENT_TYPES = {
   visit: { label: 'Visits', icon: Activity, color: 'blue' },
@@ -28,7 +34,9 @@ const EVENT_TYPES = {
   incident: { label: 'Incidents', icon: AlertCircle, color: 'red' },
   hospitalization: { label: 'Hospitalizations', icon: Hospital, color: 'purple' },
   diagnosis: { label: 'Diagnoses', icon: FileText, color: 'indigo' },
-  medication: { label: 'Medications', icon: Pill, color: 'orange' }
+  medication: { label: 'Medications', icon: Pill, color: 'orange' },
+  lab_result: { label: 'Lab Results', icon: FlaskConical, color: 'teal' },
+  symptom: { label: 'Symptoms', icon: MessageSquare, color: 'pink' }
 };
 
 export default function PatientTimelineView({ patient }) {
@@ -39,6 +47,8 @@ export default function PatientTimelineView({ patient }) {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState([]);
   const [periodSummaries, setPeriodSummaries] = useState({});
+  const [correlations, setCorrelations] = useState(null);
+  const [isAnalyzingCorrelations, setIsAnalyzingCorrelations] = useState(false);
 
   useEffect(() => {
     if (patient?.id) {
@@ -133,6 +143,63 @@ export default function PatientTimelineView({ patient }) {
           color: 'indigo'
         });
       }
+
+      // Add medication changes from patient data
+      if (patient.current_medications?.length > 0) {
+        patient.current_medications.forEach((med, idx) => {
+          events.push({
+            id: `med-${idx}`,
+            type: 'medication',
+            date: med.start_date || patient.admission_date || patient.created_date,
+            title: `Medication: ${med.name}`,
+            description: `${med.dosage} ${med.frequency}`,
+            fullData: med,
+            icon: Pill,
+            color: 'orange'
+          });
+        });
+      }
+
+      // Extract lab results and symptoms from visit notes
+      visits.forEach(visit => {
+        if (visit.nurse_notes) {
+          const notes = visit.nurse_notes.toLowerCase();
+          
+          // Detect lab results mentions
+          const labKeywords = ['lab', 'test result', 'blood work', 'glucose', 'hemoglobin', 'a1c', 'inr', 'pt/inr'];
+          if (labKeywords.some(keyword => notes.includes(keyword))) {
+            events.push({
+              id: `lab-${visit.id}`,
+              type: 'lab_result',
+              date: visit.visit_date,
+              title: 'Lab Results Documented',
+              description: visit.nurse_notes.substring(0, 200),
+              fullData: visit,
+              linkedRecordId: visit.id,
+              linkedRecordType: 'visit',
+              icon: FlaskConical,
+              color: 'teal'
+            });
+          }
+
+          // Detect symptom reports
+          const symptomKeywords = ['reports', 'complains', 'pain', 'shortness of breath', 'sob', 'nausea', 'dizzy', 'weakness', 'fatigue', 'symptom'];
+          if (symptomKeywords.some(keyword => notes.includes(keyword))) {
+            events.push({
+              id: `symptom-${visit.id}`,
+              type: 'symptom',
+              date: visit.visit_date,
+              title: 'Symptom Reported',
+              description: visit.nurse_notes.substring(0, 200),
+              fullData: visit,
+              linkedRecordId: visit.id,
+              linkedRecordType: 'visit',
+              icon: MessageSquare,
+              color: 'pink'
+            });
+          }
+        }
+      });
 
       // Sort by date (most recent first)
       events.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -245,6 +312,79 @@ Provide a concise 2-3 sentence summary highlighting the most significant events 
     );
   };
 
+  const analyzeCorrelations = async () => {
+    if (!patient || timelineEvents.length < 5) return;
+
+    setIsAnalyzingCorrelations(true);
+    try {
+      const eventsContext = timelineEvents.map(e => ({
+        date: e.date,
+        type: e.type,
+        title: e.title,
+        description: e.description?.substring(0, 150)
+      }));
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this patient timeline for correlations and causal relationships:
+
+Patient: ${patient.first_name} ${patient.last_name}
+Events: ${JSON.stringify(eventsContext, null, 2)}
+
+Identify:
+1. Potential causal links (e.g., medication change → symptom improvement)
+2. Patterns preceding incidents or hospitalizations
+3. Early warning signs that appeared before deterioration
+4. Treatment effectiveness indicators
+5. Risk factors or triggers
+
+Be specific and reference actual events by date and type.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            causal_links: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  cause_event: { type: "string" },
+                  effect_event: { type: "string" },
+                  confidence: { type: "string" },
+                  explanation: { type: "string" }
+                }
+              }
+            },
+            warning_signs: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  event: { type: "string" },
+                  preceded: { type: "string" },
+                  timeframe: { type: "string" },
+                  recommendation: { type: "string" }
+                }
+              }
+            },
+            patterns: {
+              type: "array",
+              items: { type: "string" }
+            },
+            risk_triggers: {
+              type: "array",
+              items: { type: "string" }
+            }
+          }
+        }
+      });
+
+      setCorrelations(result);
+    } catch (error) {
+      console.error('Error analyzing correlations:', error);
+    } finally {
+      setIsAnalyzingCorrelations(false);
+    }
+  };
+
   const groupEventsByMonth = () => {
     const groups = {};
     filteredEvents.forEach(event => {
@@ -278,25 +418,46 @@ Provide a concise 2-3 sentence summary highlighting the most significant events 
               <Clock className="w-5 h-5 text-indigo-700" />
               Patient Timeline
             </CardTitle>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={generateAISummary}
-              disabled={isGeneratingSummary || timelineEvents.length === 0}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold min-h-[36px]"
-            >
-              {isGeneratingSummary ? (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  AI Summary
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={analyzeCorrelations}
+                disabled={isAnalyzingCorrelations || timelineEvents.length < 5}
+                className="bg-white border-2 border-indigo-400 text-indigo-700 hover:bg-indigo-50 font-semibold min-h-[36px]"
+              >
+                {isAnalyzingCorrelations ? (
+                  <>
+                    <TrendingUp className="w-4 h-4 mr-2 animate-pulse" />
+                    Finding Patterns...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Correlations
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={generateAISummary}
+                disabled={isGeneratingSummary || timelineEvents.length === 0}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold min-h-[36px]"
+              >
+                {isGeneratingSummary ? (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI Summary
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         {aiSummary && (
@@ -349,6 +510,82 @@ Provide a concise 2-3 sentence summary highlighting the most significant events 
                 </Alert>
               )}
             </div>
+          </CardContent>
+        )}
+
+        {correlations && (
+          <CardContent className="pt-0 space-y-3 border-t-2 border-indigo-200 mt-3">
+            <h3 className="font-bold text-lg text-indigo-900 flex items-center gap-2">
+              <LinkIcon className="w-5 h-5" />
+              AI Correlation Analysis
+            </h3>
+
+            {correlations.causal_links?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">Potential Causal Links</h4>
+                <div className="space-y-2">
+                  {correlations.causal_links.map((link, idx) => (
+                    <Alert key={idx} className="bg-blue-50 border-blue-300">
+                      <AlertDescription>
+                        <div className="flex items-start gap-2">
+                          <Badge className="bg-blue-600 text-white text-xs">{link.confidence}</Badge>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-blue-950">
+                              {link.cause_event} → {link.effect_event}
+                            </p>
+                            <p className="text-xs text-blue-800 mt-1">{link.explanation}</p>
+                          </div>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {correlations.warning_signs?.length > 0 && (
+              <Alert className="bg-yellow-50 border-yellow-400">
+                <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                <AlertDescription>
+                  <strong className="text-yellow-950">Early Warning Signs Identified:</strong>
+                  <div className="mt-2 space-y-2">
+                    {correlations.warning_signs.map((warning, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded border border-yellow-300">
+                        <p className="text-sm font-medium text-yellow-950">{warning.event} preceded {warning.preceded}</p>
+                        <p className="text-xs text-yellow-800">Timeframe: {warning.timeframe}</p>
+                        <p className="text-xs text-yellow-900 mt-1">💡 {warning.recommendation}</p>
+                      </div>
+                    ))}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {correlations.patterns?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">Patterns Detected</h4>
+                <div className="space-y-1">
+                  {correlations.patterns.map((pattern, idx) => (
+                    <div key={idx} className="text-sm bg-purple-50 p-2 rounded border border-purple-200 text-purple-900">
+                      📊 {pattern}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {correlations.risk_triggers?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">Risk Triggers</h4>
+                <div className="space-y-1">
+                  {correlations.risk_triggers.map((trigger, idx) => (
+                    <div key={idx} className="text-sm bg-red-50 p-2 rounded border border-red-200 text-red-900">
+                      ⚠️ {trigger}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         )}
       </Card>
@@ -471,6 +708,17 @@ Provide a concise 2-3 sentence summary highlighting the most significant events 
                                     {isExpanded ? event.description : `${event.description.substring(0, 100)}...`}
                                   </p>
                                 )}
+                                {event.linkedRecordId && (
+                                  <div className="mt-2">
+                                    <Link 
+                                      to={createPageUrl("SmartNoteAssistant")}
+                                      className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                                    >
+                                      <ExternalLink className="w-3 h-3" />
+                                      View full {event.linkedRecordType} record
+                                    </Link>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <Button variant="ghost" size="sm" className="flex-shrink-0">
@@ -479,37 +727,57 @@ Provide a concise 2-3 sentence summary highlighting the most significant events 
                           </div>
 
                           {isExpanded && event.fullData && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 text-sm space-y-2">
-                              {event.type === 'visit' && event.fullData.vital_signs && (
-                                <div className="bg-white p-2 rounded">
-                                  <strong className="text-gray-900">Vitals:</strong>
-                                  <div className="flex flex-wrap gap-3 mt-1 text-xs">
-                                    {event.fullData.vital_signs.blood_pressure_systolic && (
-                                      <span>BP: {event.fullData.vital_signs.blood_pressure_systolic}/{event.fullData.vital_signs.blood_pressure_diastolic}</span>
-                                    )}
-                                    {event.fullData.vital_signs.heart_rate && (
-                                      <span>HR: {event.fullData.vital_signs.heart_rate}</span>
-                                    )}
-                                    {event.fullData.vital_signs.temperature && (
-                                      <span>Temp: {event.fullData.vital_signs.temperature}°F</span>
-                                    )}
-                                    {event.fullData.vital_signs.oxygen_saturation && (
-                                      <span>O2: {event.fullData.vital_signs.oxygen_saturation}%</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              {event.type === 'care_plan' && event.fullData.interventions && (
-                                <div className="bg-white p-2 rounded">
-                                  <strong className="text-gray-900">Interventions:</strong>
-                                  <ul className="mt-1 space-y-1">
-                                    {event.fullData.interventions.map((intervention, idx) => (
-                                      <li key={idx} className="text-xs">• {intervention}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
+                           <div className="mt-3 pt-3 border-t border-gray-200 text-sm space-y-2">
+                             {event.type === 'visit' && event.fullData.vital_signs && (
+                               <div className="bg-white p-2 rounded">
+                                 <strong className="text-gray-900">Vitals:</strong>
+                                 <div className="flex flex-wrap gap-3 mt-1 text-xs">
+                                   {event.fullData.vital_signs.blood_pressure_systolic && (
+                                     <span>BP: {event.fullData.vital_signs.blood_pressure_systolic}/{event.fullData.vital_signs.blood_pressure_diastolic}</span>
+                                   )}
+                                   {event.fullData.vital_signs.heart_rate && (
+                                     <span>HR: {event.fullData.vital_signs.heart_rate}</span>
+                                   )}
+                                   {event.fullData.vital_signs.temperature && (
+                                     <span>Temp: {event.fullData.vital_signs.temperature}°F</span>
+                                   )}
+                                   {event.fullData.vital_signs.oxygen_saturation && (
+                                     <span>O2: {event.fullData.vital_signs.oxygen_saturation}%</span>
+                                   )}
+                                 </div>
+                               </div>
+                             )}
+                             {event.type === 'care_plan' && event.fullData.interventions && (
+                               <div className="bg-white p-2 rounded">
+                                 <strong className="text-gray-900">Interventions:</strong>
+                                 <ul className="mt-1 space-y-1">
+                                   {event.fullData.interventions.map((intervention, idx) => (
+                                     <li key={idx} className="text-xs">• {intervention}</li>
+                                   ))}
+                                 </ul>
+                               </div>
+                             )}
+                             {event.type === 'medication' && (
+                               <div className="bg-white p-2 rounded">
+                                 <div className="text-xs space-y-1">
+                                   {event.fullData.prescriber && <p><strong>Prescriber:</strong> {event.fullData.prescriber}</p>}
+                                   {event.fullData.start_date && <p><strong>Started:</strong> {format(new Date(event.fullData.start_date), 'MMM d, yyyy')}</p>}
+                                 </div>
+                               </div>
+                             )}
+                             {event.type === 'incident' && event.fullData.resolution_notes && (
+                               <div className="bg-white p-2 rounded">
+                                 <strong className="text-gray-900">Resolution:</strong>
+                                 <p className="text-xs mt-1 text-gray-700">{event.fullData.resolution_notes}</p>
+                               </div>
+                             )}
+                             {event.fullData.nurse_notes && (
+                               <div className="bg-white p-2 rounded">
+                                 <strong className="text-gray-900">Full Note:</strong>
+                                 <p className="text-xs mt-1 text-gray-700">{event.fullData.nurse_notes}</p>
+                               </div>
+                             )}
+                           </div>
                           )}
                         </div>
                       );
@@ -525,10 +793,10 @@ Provide a concise 2-3 sentence summary highlighting the most significant events 
       {/* Summary Stats */}
       <Card className="bg-gradient-to-r from-gray-50 to-gray-100">
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-indigo-600">{timelineEvents.filter(e => e.type === 'visit').length}</p>
-              <p className="text-xs text-gray-600">Total Visits</p>
+              <p className="text-2xl font-bold text-blue-600">{timelineEvents.filter(e => e.type === 'visit').length}</p>
+              <p className="text-xs text-gray-600">Visits</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-green-600">{timelineEvents.filter(e => e.type === 'care_plan').length}</p>
@@ -541,6 +809,14 @@ Provide a concise 2-3 sentence summary highlighting the most significant events 
             <div>
               <p className="text-2xl font-bold text-purple-600">{timelineEvents.filter(e => e.type === 'hospitalization').length}</p>
               <p className="text-xs text-gray-600">Hospitalizations</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-teal-600">{timelineEvents.filter(e => e.type === 'lab_result').length}</p>
+              <p className="text-xs text-gray-600">Lab Results</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-pink-600">{timelineEvents.filter(e => e.type === 'symptom').length}</p>
+              <p className="text-xs text-gray-600">Symptoms</p>
             </div>
           </div>
         </CardContent>
