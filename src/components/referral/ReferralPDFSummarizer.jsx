@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,14 @@ export default function ReferralPDFSummarizer({
   const [isProcessing, setIsProcessing] = useState(false);
   const [fileUrl, setFileUrl] = useState(externalFileUrl);
   const [extractedData, setExtractedData] = useState(null);
+
+  // Check if current user is admin
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   // Auto-process if fileUrl is provided externally
   React.useEffect(() => {
@@ -602,7 +611,7 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-red-600" />
                   <span className="font-semibold">Diagnoses & Medical History</span>
-                  {extractedData.diagnoses?.pdgm_clinical_group && (
+                  {isAdmin && extractedData.diagnoses?.pdgm_clinical_group && (
                     <Badge className="bg-green-600 text-white">PDGM: {extractedData.diagnoses.pdgm_clinical_group}</Badge>
                   )}
                 </div>
@@ -610,17 +619,17 @@ HANDWRITTEN NOTES HANDLING:
               <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
                 <div className="space-y-3">
                   <div className="bg-red-50 p-3 rounded border-l-4 border-red-500">
-                    <p className="text-xs font-semibold text-red-900">Primary Diagnosis (PDGM Optimized)</p>
+                    <p className="text-xs font-semibold text-red-900">Primary Diagnosis</p>
                     <p className="text-sm font-bold text-gray-900">{extractedData.diagnoses?.primary_diagnosis}</p>
                     {extractedData.diagnoses?.primary_icd10 && (
                       <Badge className="mt-1">{extractedData.diagnoses.primary_icd10}</Badge>
                     )}
-                    {extractedData.diagnoses?.pdgm_clinical_group && (
+                    {isAdmin && extractedData.diagnoses?.pdgm_clinical_group && (
                       <p className="text-xs text-green-700 font-semibold mt-1">PDGM Group: {extractedData.diagnoses.pdgm_clinical_group}</p>
                     )}
                   </div>
                   
-                  {extractedData.diagnoses?.pdgm_optimization_notes && (
+                  {isAdmin && extractedData.diagnoses?.pdgm_optimization_notes && (
                     <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
                       <p className="text-xs font-semibold text-green-900 mb-1">💰 PDGM Optimization Notes</p>
                       <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.diagnoses.pdgm_optimization_notes}</p>
@@ -638,7 +647,7 @@ HANDWRITTEN NOTES HANDLING:
                     </div>
                   )}
                   
-                  {extractedData.diagnoses?.comorbidity_adjustments?.length > 0 && (
+                  {isAdmin && extractedData.diagnoses?.comorbidity_adjustments?.length > 0 && (
                     <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
                       <p className="text-xs font-semibold text-blue-900 mb-1">💵 Case-Mix Comorbidities</p>
                       <p className="text-xs text-blue-800 mb-2">These comorbidities increase PDGM reimbursement:</p>
