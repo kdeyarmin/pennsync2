@@ -147,6 +147,40 @@ For each suggested OASIS item, explicitly state:
 - **Documentation Needed**: Specific evidence nurse must observe/document
 - **Compliance Risk**: "HIGH" if missing this creates audit risk
 
+**CRITICAL: CROSS-VALIDATION ACROSS DATA SOURCES**
+
+You have access to multiple data sources: referral data, patient history, and visit notes. You MUST perform cross-validation for these critical OASIS sections:
+
+1. **Diagnoses (M1021-M1029):**
+   - Compare primary diagnosis across referral, patient record, and visit notes
+   - Flag if diagnoses are inconsistent or contradict each other
+   - Identify if a higher-paying diagnosis appears in one source but not selected as primary
+   - Check ICD-10 codes match diagnosis descriptions
+
+2. **Functional Status (M1800-M1910):**
+   - Compare functional descriptions from referral vs. patient baseline
+   - Flag if referral says "independent" but patient history shows assistance needed
+   - Identify functional decline or improvement trends
+   - Ensure functional scores align with diagnoses (e.g., CVA should show ADL impairment)
+
+3. **Medications (M2102-M2250):**
+   - Reconcile medication lists from referral, patient record, and recent visit
+   - Flag missing medications, duplicates, or dosage discrepancies
+   - Identify high-risk medications requiring OASIS documentation
+   - Check for medication-diagnosis alignment (e.g., diabetic without diabetes meds)
+
+4. **Clinical Consistency:**
+   - Ensure wounds documented in referral appear in current assessment
+   - Verify hospitalization history matches across sources
+   - Check vital signs trends for concerning changes
+
+For each discrepancy found, provide:
+- **What's Inconsistent:** Specific data elements that don't match
+- **Sources Compared:** Which documents/records show the conflict
+- **Compliance Risk:** How this affects OASIS accuracy and audit risk
+- **Resolution Steps:** Specific actions to reconcile the discrepancy
+- **Reimbursement Impact:** How fixing this could affect payment
+
 **COMPREHENSIVE PDGM ANALYSIS REQUIRED:**
 
 After analyzing all OASIS items, provide a detailed PDGM Analysis section that includes:
@@ -250,6 +284,26 @@ Patient Data: ${JSON.stringify(contextData)}`,
             nurse_assessment_checklist: {
               type: "array",
               items: { type: "string" }
+            },
+            cross_validation_findings: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  category: { type: "string", enum: ["Diagnoses", "Functional Status", "Medications", "Clinical Data", "Other"] },
+                  oasis_items_affected: { type: "array", items: { type: "string" } },
+                  discrepancy_description: { type: "string" },
+                  data_source_1: { type: "string" },
+                  data_source_1_value: { type: "string" },
+                  data_source_2: { type: "string" },
+                  data_source_2_value: { type: "string" },
+                  severity: { type: "string", enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
+                  compliance_risk: { type: "string" },
+                  reimbursement_impact: { type: "string" },
+                  resolution_steps: { type: "array", items: { type: "string" } },
+                  recommended_action: { type: "string" }
+                }
+              }
             },
             pdgm_analysis: {
               type: "object",
@@ -486,6 +540,98 @@ Patient Data: ${JSON.stringify(contextData)}`,
 
       {suggestions && (
         <>
+          {/* Cross-Validation Findings */}
+          {suggestions.cross_validation_findings?.length > 0 && (
+            <Card className="border-2 border-orange-300 bg-orange-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-900">
+                  <AlertCircle className="w-5 h-5" />
+                  Data Discrepancies Detected - Requires Review
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Alert className="bg-orange-100 border-orange-400">
+                  <AlertDescription className="text-orange-900 text-sm">
+                    <strong>⚠️ Cross-validation analysis found inconsistencies across referral data, patient history, and visit notes.</strong> 
+                    <br/>Review and resolve these before finalizing OASIS to ensure compliance and maximize reimbursement.
+                  </AlertDescription>
+                </Alert>
+                
+                {suggestions.cross_validation_findings.map((finding, idx) => (
+                  <div key={idx} className={`p-4 rounded-lg border-2 ${
+                    finding.severity === 'CRITICAL' ? 'bg-red-50 border-red-400' :
+                    finding.severity === 'HIGH' ? 'bg-orange-50 border-orange-400' :
+                    finding.severity === 'MEDIUM' ? 'bg-yellow-50 border-yellow-400' :
+                    'bg-blue-50 border-blue-300'
+                  }`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge className={
+                          finding.severity === 'CRITICAL' ? 'bg-red-600' :
+                          finding.severity === 'HIGH' ? 'bg-orange-600' :
+                          finding.severity === 'MEDIUM' ? 'bg-yellow-600' :
+                          'bg-blue-600'
+                        }>
+                          {finding.severity}
+                        </Badge>
+                        <span className="font-semibold text-gray-900">{finding.category}</span>
+                      </div>
+                      {finding.oasis_items_affected?.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          {finding.oasis_items_affected.map((item, i) => (
+                            <Badge key={i} variant="outline" className="text-xs">{item}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-gray-900 font-medium mb-3">{finding.discrepancy_description}</p>
+
+                    <div className="grid md:grid-cols-2 gap-3 mb-3">
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-gray-600 mb-1">{finding.data_source_1}</p>
+                        <p className="text-sm text-gray-900">{finding.data_source_1_value}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs font-semibold text-gray-600 mb-1">{finding.data_source_2}</p>
+                        <p className="text-sm text-gray-900">{finding.data_source_2_value}</p>
+                      </div>
+                    </div>
+
+                    {finding.compliance_risk && (
+                      <Alert className="bg-red-100 border-red-300 mb-3">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <AlertDescription className="text-red-900 text-xs">
+                          <strong>Compliance Risk:</strong> {finding.compliance_risk}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {finding.reimbursement_impact && (
+                      <div className="bg-green-100 border border-green-300 rounded p-2 mb-3">
+                        <p className="text-xs text-green-900"><strong>💰 Reimbursement Impact:</strong> {finding.reimbursement_impact}</p>
+                      </div>
+                    )}
+
+                    <div className="bg-white p-3 rounded border border-blue-300">
+                      <p className="text-xs font-semibold text-blue-900 mb-2">✓ Resolution Steps:</p>
+                      <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                        {finding.resolution_steps?.map((step, i) => (
+                          <li key={i}>{step}</li>
+                        ))}
+                      </ol>
+                      {finding.recommended_action && (
+                        <p className="text-sm font-semibold text-blue-900 mt-2 bg-blue-50 p-2 rounded">
+                          → {finding.recommended_action}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Critical Gaps Alert */}
           {suggestions.critical_gaps?.length > 0 && (
             <Alert className="bg-red-50 border-red-300">
