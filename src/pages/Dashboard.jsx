@@ -31,7 +31,7 @@ import AnnouncementsWidget from "../components/dashboard/AnnouncementsWidget";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
 import OfflineDataManager from "../components/mobile/OfflineDataManager";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
-import ProactiveCareGapIdentifier from "../components/predictive/ProactiveCareGapIdentifier";
+
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -247,19 +247,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </Link>
-      </div>
-
-      {/* Proactive Care Gap Identification */}
-      <div className="mb-6">
-        <ProactiveCareGapIdentifier
-          patients={patients}
-          visits={visits}
-          carePlans={carePlans}
-          alerts={[]}
-          autoAnalyze={false}
-          maxGaps={8}
-          compact={false}
-        />
       </div>
 
       {/* Offline Data Manager */}
