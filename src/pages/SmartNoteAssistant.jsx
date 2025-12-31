@@ -109,6 +109,7 @@ import AutoEventExtractor from "../components/smartNote/AutoEventExtractor";
 import ReferralBasedDocumentationAssistant from "../components/smartNote/ReferralBasedDocumentationAssistant";
 import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
 import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
+import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
 
 // Common diagnoses list
 const commonDiagnoses = [

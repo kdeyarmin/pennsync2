@@ -25,6 +25,7 @@ import {
 import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
 import { todayEastern } from "../components/utils/timezone";
 import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
+import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
 import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
 
 export default function QuickNote() {
