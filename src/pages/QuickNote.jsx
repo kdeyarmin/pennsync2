@@ -25,8 +25,8 @@ import {
 import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
 import { todayEastern } from "../components/utils/timezone";
 import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
-import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
 import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
+import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
 
 export default function QuickNote() {
   const queryClient = useQueryClient();
@@ -236,6 +236,13 @@ export default function QuickNote() {
           <>
             {/* Clinical Events Summary */}
             <ClinicalEventsSummary patientId={patientId} />
+
+            {/* AI Draft SOAP Note Generator */}
+            <AIDraftSOAPNote
+              patientId={patientId}
+              visitType={visitType}
+              onUseNote={(note) => setRoughNote(note)}
+            />
             
             {/* Vitals - Inline Quick Entry */}
             <Card>
