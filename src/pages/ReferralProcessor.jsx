@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import ReferralAnalyzer from "../components/referral/ReferralAnalyzer";
+import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
