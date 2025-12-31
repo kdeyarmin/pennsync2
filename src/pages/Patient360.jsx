@@ -399,23 +399,27 @@ export default function Patient360() {
                 <CardTitle className="text-base">Recent Visits ({visits.slice(0, 5).length})</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {visits.slice(0, 5).map((visit) => (
-                    <div key={visit.id} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-sm">{visit.visit_date}</p>
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {visit.visit_type.replace(/_/g, ' ')}
+                {visits.length > 0 ? (
+                  <div className="space-y-3">
+                    {visits.slice(0, 5).map((visit) => (
+                      <div key={visit.id} className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-sm">{visit.visit_date}</p>
+                            <Badge variant="outline" className="text-xs mt-1">
+                              {visit.visit_type.replace(/_/g, ' ')}
+                            </Badge>
+                          </div>
+                          <Badge className={visit.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'}>
+                            {visit.status}
                           </Badge>
                         </div>
-                        <Badge className={visit.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'}>
-                          {visit.status}
-                        </Badge>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No visits recorded</p>
+                )}
               </CardContent>
             </Card>
 
@@ -424,24 +428,28 @@ export default function Patient360() {
                 <CardTitle className="text-base">Care Plans ({carePlans.length})</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {carePlans.slice(0, 5).map((plan) => (
-                    <div key={plan.id} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-sm">{plan.problem}</p>
-                          <p className="text-xs text-gray-600 mt-1">{plan.goal}</p>
+                {carePlans.length > 0 ? (
+                  <div className="space-y-3">
+                    {carePlans.slice(0, 5).map((plan) => (
+                      <div key={plan.id} className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-sm">{plan.problem}</p>
+                            <p className="text-xs text-gray-600 mt-1">{plan.goal}</p>
+                          </div>
+                          <Badge className={
+                            plan.status === 'met' ? 'bg-green-500' :
+                            plan.status === 'active' ? 'bg-blue-500' : 'bg-gray-500'
+                          }>
+                            {plan.status}
+                          </Badge>
                         </div>
-                        <Badge className={
-                          plan.status === 'met' ? 'bg-green-500' :
-                          plan.status === 'active' ? 'bg-blue-500' : 'bg-gray-500'
-                        }>
-                          {plan.status}
-                        </Badge>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No care plans recorded</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -449,20 +457,24 @@ export default function Patient360() {
 
         {/* AI Insights Tab */}
         <TabsContent value="ai-insights" className="space-y-6">
-          <AIPatientRiskAssessor patientId={selectedPatientId} autoAnalyze={false} />
-          <AIPatientInsights patient={patient} visits={visits} carePlans={carePlans} incidents={incidents} />
-          <PatientRiskStratification
-            patient={patient}
-            visits={visits}
-            carePlans={carePlans}
-            incidents={incidents}
-            autoCalculate={false}
-          />
+          {patient && (
+            <>
+              <AIPatientRiskAssessor patientId={selectedPatientId} autoAnalyze={false} />
+              <AIPatientInsights patient={patient} visits={visits} carePlans={carePlans} incidents={incidents} />
+              <PatientRiskStratification
+                patient={patient}
+                visits={visits}
+                carePlans={carePlans}
+                incidents={incidents}
+                autoCalculate={false}
+              />
+            </>
+          )}
         </TabsContent>
 
         {/* Compliance Tab */}
         <TabsContent value="compliance" className="space-y-6">
-          <AIProactiveOASISAssistant patientId={selectedPatientId} autoAnalyze={false} />
+          {patient && <AIProactiveOASISAssistant patientId={selectedPatientId} autoAnalyze={false} />}
         </TabsContent>
 
         {/* Trends Tab */}
