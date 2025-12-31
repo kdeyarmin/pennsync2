@@ -366,10 +366,11 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       });
     }
     
-    // Generate visit type distribution for chart
+    // Generate visit type distribution for chart (based on note enhancements)
     const visitTypeData = {};
-    visits.forEach(v => {
-      const type = v.visit_type || 'unknown';
+    filteredEnhancements.forEach(nc => {
+      const visit = visits.find(v => v.id === nc.visit_id);
+      const type = visit?.visit_type || nc.visit_type || 'unknown';
       visitTypeData[type] = (visitTypeData[type] || 0) + 1;
     });
     const visitTypeChart = Object.entries(visitTypeData).map(([type, count]) => ({
