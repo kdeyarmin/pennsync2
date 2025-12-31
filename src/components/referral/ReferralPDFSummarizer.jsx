@@ -92,8 +92,33 @@ When you encounter handwritten text:
 
 Analyze this patient referral document and extract ALL relevant information needed for:
 1. Admission nursing assessment
-2. OASIS-E completion
+2. OASIS-E completion  
 3. Care planning
+4. **PDGM reimbursement optimization**
+
+**CRITICAL - PDGM DIAGNOSIS SELECTION:**
+When determining primary and secondary diagnoses, you MUST optimize for maximum PDGM reimbursement by:
+- Identifying the PDGM Clinical Group (MS-Rehab, Neuro/Rehab, Complex Nursing, etc.)
+- Selecting the primary diagnosis that provides the highest case-mix weight
+- Ensuring comorbidities are properly captured to increase case-mix adjustment
+- Considering how functional impairment scores (OASIS M1800-M1860) interact with diagnosis selection
+- If multiple diagnoses are present, prioritize those in higher-paying clinical groups
+- Flag if additional clinical information is needed to optimize the PDGM group assignment
+
+**PDGM Clinical Groups (highest to lowest reimbursement generally):**
+1. MS-Rehab (Multiple Sclerosis, ALS, Parkinson's with rehab needs)
+2. Neuro/Rehab (CVA, traumatic brain injury, spinal cord disorders)
+3. Wounds/Surgical Aftercare (pressure ulcers, post-surgical wounds)
+4. MMTA-NT-Surgical Rehab (joint replacement, fractures)
+5. Behavioral Health (depression, anxiety as primary with ADL impact)
+6. Complex Nursing (cancer care, diabetes with complications, heart failure)
+7. MMTA - Cardiac/Circulatory (cardiac conditions, COPD)
+
+**For each diagnosis extraction:**
+- Note the ICD-10 code AND its PDGM clinical group
+- If diagnosis could qualify for multiple groups, specify which is optimal
+- Identify missing clinical details that could upgrade the PDGM group
+- Flag if additional documentation is needed to support higher reimbursement
 
 Extract comprehensive details organized by category. Be thorough and specific.
 
@@ -223,9 +248,29 @@ HANDWRITTEN NOTES HANDLING:
             diagnoses: {
               type: "object",
               properties: {
-                primary_diagnosis: { type: "string" },
+                primary_diagnosis: { 
+                  type: "string",
+                  description: "Primary diagnosis selected for OPTIMAL PDGM reimbursement"
+                },
                 primary_icd10: { type: "string" },
-                secondary_diagnoses: { type: "array", items: { type: "string" } },
+                pdgm_clinical_group: { 
+                  type: "string",
+                  description: "PDGM Clinical Group (e.g., MS-Rehab, Neuro/Rehab, Complex Nursing)"
+                },
+                pdgm_optimization_notes: { 
+                  type: "string",
+                  description: "Why this primary diagnosis was selected for PDGM optimization, alternatives considered, missing info needed"
+                },
+                secondary_diagnoses: { 
+                  type: "array", 
+                  items: { type: "string" },
+                  description: "Secondary diagnoses that increase case-mix through comorbidity adjustments"
+                },
+                comorbidity_adjustments: { 
+                  type: "array", 
+                  items: { type: "string" },
+                  description: "Specific comorbidities that will increase PDGM case-mix weight"
+                },
                 past_medical_history: { type: "array", items: { type: "string" } },
                 surgical_history: { type: "array", items: { type: "string" } },
                 recent_hospitalizations: { type: "string" },
@@ -525,23 +570,49 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-red-600" />
                   <span className="font-semibold">Diagnoses & Medical History</span>
+                  {extractedData.diagnoses?.pdgm_clinical_group && (
+                    <Badge className="bg-green-600 text-white">PDGM: {extractedData.diagnoses.pdgm_clinical_group}</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
                 <div className="space-y-3">
                   <div className="bg-red-50 p-3 rounded border-l-4 border-red-500">
-                    <p className="text-xs font-semibold text-red-900">Primary Diagnosis</p>
+                    <p className="text-xs font-semibold text-red-900">Primary Diagnosis (PDGM Optimized)</p>
                     <p className="text-sm font-bold text-gray-900">{extractedData.diagnoses?.primary_diagnosis}</p>
                     {extractedData.diagnoses?.primary_icd10 && (
                       <Badge className="mt-1">{extractedData.diagnoses.primary_icd10}</Badge>
                     )}
+                    {extractedData.diagnoses?.pdgm_clinical_group && (
+                      <p className="text-xs text-green-700 font-semibold mt-1">PDGM Group: {extractedData.diagnoses.pdgm_clinical_group}</p>
+                    )}
                   </div>
+                  
+                  {extractedData.diagnoses?.pdgm_optimization_notes && (
+                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
+                      <p className="text-xs font-semibold text-green-900 mb-1">💰 PDGM Optimization Notes</p>
+                      <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.diagnoses.pdgm_optimization_notes}</p>
+                    </div>
+                  )}
+                  
                   {extractedData.diagnoses?.secondary_diagnoses?.length > 0 && (
                     <div className="bg-orange-50 p-3 rounded">
                       <p className="text-xs font-semibold text-orange-900 mb-1">Secondary Diagnoses</p>
                       <ul className="list-disc list-inside text-sm text-gray-900">
                         {extractedData.diagnoses.secondary_diagnoses.map((dx, i) => (
                           <li key={i}>{dx}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {extractedData.diagnoses?.comorbidity_adjustments?.length > 0 && (
+                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                      <p className="text-xs font-semibold text-blue-900 mb-1">💵 Case-Mix Comorbidities</p>
+                      <p className="text-xs text-blue-800 mb-2">These comorbidities increase PDGM reimbursement:</p>
+                      <ul className="list-disc list-inside text-sm text-gray-900">
+                        {extractedData.diagnoses.comorbidity_adjustments.map((comorb, i) => (
+                          <li key={i}>{comorb}</li>
                         ))}
                       </ul>
                     </div>
