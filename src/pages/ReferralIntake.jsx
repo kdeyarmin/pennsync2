@@ -407,6 +407,7 @@ Document URL: ${referral.document_url || 'N/A'}`,
           first_name: firstName,
           middle_name: middleName,
           last_name: lastName,
+          medical_record_number: extractedData.demographics.medical_record_number || extractedData.demographics.mrn || null,
           date_of_birth: extractedData.demographics.date_of_birth,
           address: extractedData.demographics.address,
           phone: extractedData.demographics.phone,
@@ -417,6 +418,10 @@ Document URL: ${referral.document_url || 'N/A'}`,
           emergency_contact_relationship: extractedData.demographics.emergency_relationship,
           physician_name: extractedData.demographics.referring_physician || extractedData.demographics.primary_care_physician,
           physician_phone: extractedData.demographics.referring_physician_contact || extractedData.demographics.pcp_contact,
+          physician_email: extractedData.demographics.referring_physician_email || extractedData.demographics.pcp_email,
+          caregiver_name: extractedData.demographics.caregiver_name,
+          caregiver_phone: extractedData.demographics.caregiver_phone,
+          caregiver_email: extractedData.demographics.caregiver_email,
           primary_diagnosis: extractedData.diagnoses?.primary_diagnosis,
           secondary_diagnoses: extractedData.diagnoses?.secondary_diagnoses || [],
           allergies: extractedData.diagnoses?.allergies,
@@ -424,13 +429,21 @@ Document URL: ${referral.document_url || 'N/A'}`,
             name: med.name,
             dosage: med.dosage,
             frequency: med.frequency,
-            prescriber: med.prescriber
+            prescriber: med.prescriber,
+            start_date: med.start_date
           })) || [],
           past_medical_history: extractedData.diagnoses?.past_medical_history || [],
+          past_hospitalizations: extractedData.diagnoses?.past_hospitalizations || [],
+          baseline_vitals: extractedData.vital_signs || {},
+          functional_status: extractedData.functional_status || {},
+          social_history: extractedData.social_history || {},
+          advance_directives: extractedData.advance_directives || {},
+          insurance_primary: extractedData.demographics.insurance_details?.primary || {},
+          insurance_secondary: extractedData.demographics.insurance_details?.secondary || {},
           admission_date: extractedData.admission_details?.admission_date,
           admission_source: extractedData.admission_details?.admission_source,
           status: 'active',
-          care_type: 'home_health',
+          care_type: extractedData.admission_details?.care_type || 'home_health',
           clinical_notes: `Referral received from ${extractedData.demographics.referring_physician || 'physician'} on ${extractedData.admission_details?.referral_date || 'unknown date'}.\n\nReason: ${extractedData.admission_details?.referral_reason || 'Not specified'}`,
           goals_of_care: extractedData.skilled_needs?.goals_of_care ? [extractedData.skilled_needs.goals_of_care] : []
         });
@@ -438,6 +451,34 @@ Document URL: ${referral.document_url || 'N/A'}`,
         updates.patient_id = newPatient.id;
         existingPatient = newPatient;
       } else if (existingPatient) {
+        // Pull MRN from existing patient and update with referral data
+        const updateData = {
+          medical_record_number: existingPatient.medical_record_number || extractedData.demographics?.medical_record_number || extractedData.demographics?.mrn,
+        };
+        
+        // Update fields only if they're missing or empty in existing record
+        if (!existingPatient.physician_name && (extractedData.demographics?.referring_physician || extractedData.demographics?.primary_care_physician)) {
+          updateData.physician_name = extractedData.demographics.referring_physician || extractedData.demographics.primary_care_physician;
+        }
+        if (!existingPatient.physician_phone && (extractedData.demographics?.referring_physician_contact || extractedData.demographics?.pcp_contact)) {
+          updateData.physician_phone = extractedData.demographics.referring_physician_contact || extractedData.demographics.pcp_contact;
+        }
+        if (!existingPatient.emergency_contact_name && extractedData.demographics?.emergency_contact) {
+          updateData.emergency_contact_name = extractedData.demographics.emergency_contact;
+        }
+        if (!existingPatient.emergency_contact_phone && extractedData.demographics?.emergency_phone) {
+          updateData.emergency_contact_phone = extractedData.demographics.emergency_phone;
+        }
+        if (extractedData.diagnoses?.secondary_diagnoses?.length > 0) {
+          const existingDiagnoses = existingPatient.secondary_diagnoses || [];
+          const newDiagnoses = extractedData.diagnoses.secondary_diagnoses.filter(d => !existingDiagnoses.includes(d));
+          if (newDiagnoses.length > 0) {
+            updateData.secondary_diagnoses = [...existingDiagnoses, ...newDiagnoses];
+          }
+        }
+        
+        // Update patient with new information
+        await base44.entities.Patient.update(existingPatient.id, updateData);
         updates.patient_id = existingPatient.id;
       }
 
@@ -482,14 +523,29 @@ Document URL: ${referral.document_url || 'N/A'}`,
         first_name: nameParts[0] || '',
         middle_name: nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '',
         last_name: nameParts.length > 1 ? nameParts[nameParts.length - 1] : '',
+        medical_record_number: data.demographics?.medical_record_number || data.demographics?.mrn || null,
         date_of_birth: data.demographics.date_of_birth,
         address: data.demographics.address,
         phone: data.demographics.phone,
         email: data.demographics.email || null,
         payor: data.demographics.insurance_primary || 'Unknown',
         emergency_contact_name: data.demographics.emergency_contact,
+        emergency_contact_phone: data.demographics.emergency_phone,
+        emergency_contact_relationship: data.demographics.emergency_relationship,
+        physician_name: data.demographics.referring_physician || data.demographics.primary_care_physician,
+        physician_phone: data.demographics.referring_physician_contact || data.demographics.pcp_contact,
         primary_diagnosis: data.diagnoses?.primary_diagnosis,
-        status: 'active'
+        secondary_diagnoses: data.diagnoses?.secondary_diagnoses || [],
+        allergies: data.diagnoses?.allergies,
+        current_medications: data.medications?.map(med => ({
+          name: med.name,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          prescriber: med.prescriber
+        })) || [],
+        past_medical_history: data.diagnoses?.past_medical_history || [],
+        status: 'active',
+        care_type: data.admission_details?.care_type || 'home_health'
       });
 
       await base44.entities.Referral.update(matchReviewReferral.id, {
