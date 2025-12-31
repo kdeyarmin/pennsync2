@@ -120,16 +120,17 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const adminItems = [
-      { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
-      { name: "KPI Dashboard", icon: BarChart3, page: "AdminKPIDashboard" },
-      { name: "Users & Settings", icon: Users, page: "UserManagement" },
-      { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
-      { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
-      { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
-      { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
-      { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
-      { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
-      ];
+    { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
+    { name: "Advanced Reports", icon: BarChart3, page: "AdvancedReports" },
+    { name: "KPI Dashboard", icon: BarChart3, page: "AdminKPIDashboard" },
+    { name: "Users & Settings", icon: Users, page: "UserManagement" },
+    { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
+    { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
+    { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
+    { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
+    { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
+    { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
+    ];
 
   const handleLogout = async () => {
     // Log logout before actually logging out

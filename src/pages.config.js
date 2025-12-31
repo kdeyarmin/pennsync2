@@ -64,6 +64,7 @@ import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
+import AdvancedReports from './pages/AdvancedReports';
 import __Layout from './Layout.jsx';
 
 
@@ -134,6 +135,7 @@ export const PAGES = {
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
+    "AdvancedReports": AdvancedReports,
 }
 
 export const pagesConfig = {
