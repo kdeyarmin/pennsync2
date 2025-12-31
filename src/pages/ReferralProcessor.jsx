@@ -94,35 +94,46 @@ export default function ReferralProcessor() {
         )}
 
         {extractedData && (
-          <Card className="border-2 border-green-300 bg-green-50">
-            <CardContent className="p-3 sm:p-4 md:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-green-900 mb-3 sm:mb-4">Next Steps</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Button
-                  onClick={createPatientFromReferral}
-                  disabled={isCreatingPatient}
-                  className="bg-green-600 hover:bg-green-700 w-full min-h-[44px]"
-                >
-                  {isCreatingPatient ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  ) : (
-                    <UserPlus className="w-4 h-4 mr-2" />
-                  )}
-                  <span className="hidden sm:inline">Create Patient & Start Admission</span>
-                  <span className="sm:hidden">Create & Start</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(createPageUrl('SmartNoteAssistant'))}
-                  className="w-full min-h-[44px]"
-                >
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Go to Smart Note Assistant</span>
-                  <span className="sm:hidden">Smart Notes</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <>
+            <AIAdmissionDocumentationAssistant
+              referralData={extractedData}
+              oasisSuggestions={null}
+              patientData={null}
+              onSaveSection={(title, content) => {
+                console.log(`Saving ${title}:`, content);
+              }}
+            />
+
+            <Card className="border-2 border-green-300 bg-green-50">
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-green-900 mb-3 sm:mb-4">Next Steps</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Button
+                    onClick={createPatientFromReferral}
+                    disabled={isCreatingPatient}
+                    className="bg-green-600 hover:bg-green-700 w-full min-h-[44px]"
+                  >
+                    {isCreatingPatient ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    ) : (
+                      <UserPlus className="w-4 h-4 mr-2" />
+                    )}
+                    <span className="hidden sm:inline">Create Patient & Start Admission</span>
+                    <span className="sm:hidden">Create & Start</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(createPageUrl('SmartNoteAssistant'))}
+                    className="w-full min-h-[44px]"
+                  >
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Go to Smart Note Assistant</span>
+                    <span className="sm:hidden">Smart Notes</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </div>
