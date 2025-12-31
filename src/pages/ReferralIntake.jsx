@@ -766,7 +766,7 @@ Actions available:
                           value={referral.assigned_to || "unassigned"}
                           onValueChange={(value) => handleNurseAssignment(referral.id, value)}
                         >
-                          <SelectTrigger className="w-[180px] flex-row-reverse">
+                          <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Assign nurse" />
                           </SelectTrigger>
                           <SelectContent>
