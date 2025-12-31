@@ -192,7 +192,7 @@ export default function OASISComplianceReport({ dateRange }) {
               </p>
             </div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm font-semibold text-red-900 mb-1">Needs Improvement (<80%)</p>
+              <p className="text-sm font-semibold text-red-900 mb-1">Needs Improvement (&lt;80%)</p>
               <p className="text-2xl font-bold text-red-600">
                 {filteredAudits.filter(a => a.compliance_score < 80).length}
               </p>
