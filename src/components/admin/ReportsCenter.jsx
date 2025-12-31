@@ -314,7 +314,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       });
       
       const noteEnhancements = nurseEnhancements.length;
-      const timeSavedMinutes = noteEnhancements * 95; // 95 minutes saved per note enhancement
+      const timeSavedMinutes = noteEnhancements * 20; // 20 minutes saved per note enhancement
       const timeSavedHours = parseFloat((timeSavedMinutes / 60).toFixed(1));
       
       return {
