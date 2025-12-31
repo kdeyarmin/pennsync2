@@ -68,6 +68,7 @@ import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import AutomatedReports from './pages/AutomatedReports';
 import NurseWorkflow from './pages/NurseWorkflow';
+import QuickNote from './pages/QuickNote';
 import __Layout from './Layout.jsx';
 
 
@@ -142,6 +143,7 @@ export const PAGES = {
     "UserSettings": UserSettings,
     "AutomatedReports": AutomatedReports,
     "NurseWorkflow": NurseWorkflow,
+    "QuickNote": QuickNote,
 }
 
 export const pagesConfig = {

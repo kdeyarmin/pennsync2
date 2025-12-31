@@ -122,6 +122,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Documentation",
       items: [
+        { name: "Quick Note", icon: Sparkles, page: "QuickNote" },
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
         { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Referral Intake", icon: FileText, page: "ReferralIntake" },

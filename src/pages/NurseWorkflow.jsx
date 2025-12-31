@@ -211,7 +211,7 @@ export default function NurseWorkflow() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Link to={createPageUrl("SmartNoteAssistant")} className="block">
+              <Link to={createPageUrl("QuickNote")} className="block">
                 <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-purple-400">
                   <CardContent className="p-4 text-center">
                     <FileText className="w-8 h-8 text-purple-600 mx-auto mb-2" />
