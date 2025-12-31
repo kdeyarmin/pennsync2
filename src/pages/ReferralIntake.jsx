@@ -177,7 +177,8 @@ export default function ReferralIntake() {
       
       await base44.entities.Referral.update(referralId, { assigned_to: nurseEmail });
 
-      // Send secure message to assigned nurse with document attachment
+      // Send secure message to assigned nurse with PROCESSED PDF document (not original upload)
+      const attachmentUrl = referral.processed_document_url || referral.document_url;
       const messageData = {
         patient_id: referral.patient_id,
         thread_id: `referral-${referralId}`,
@@ -189,19 +190,19 @@ Referral Source: ${referral.referral_source || 'N/A'}
 Priority: ${referral.priority}
 Referral Date: ${referral.referral_date ? format(new Date(referral.referral_date), 'MM/dd/yyyy') : 'N/A'}
 
-${referral.extracted_data ? 'Referral has been processed with AI analysis.' : 'Please process this referral to extract patient information.'}
+${referral.extracted_data ? 'Referral has been processed with AI analysis and formatted into an admission packet.' : 'Please process this referral to extract patient information.'}
 
 Actions available:
 • View analyzed referral data
 • Create admission note in Smart Note (prepopulated with referral info)
 • Review patient information
 
-📎 Referral document is attached to this message.`,
+📎 ${referral.processed_document_url ? 'AI-processed admission packet PDF is attached.' : 'Referral document is attached.'}`,
         sender_name: 'System',
         sender_email: currentUser?.email,
         recipients: [nurseEmail],
         priority: referral.priority === 'urgent' ? 'urgent' : 'high',
-        attachments: referral.document_url ? [referral.document_url] : [],
+        attachments: attachmentUrl ? [attachmentUrl] : [],
         related_event_id: referralId,
         related_event_type: 'referral'
       };
@@ -218,7 +219,7 @@ Actions available:
     }
   };
 
-  const handleProcessingComplete = async (referralId, extractedData, analysisResults) => {
+  const handleProcessingComplete = async (referralId, extractedData, analysisResults, generatedPdfUrl = null) => {
     try {
       // AI-powered priority analysis
       const priorityResponse = await base44.functions.invoke('analyzeReferralPriority', {
@@ -480,6 +481,11 @@ Actions available:
         // Update patient with new information
         await base44.entities.Patient.update(existingPatient.id, updateData);
         updates.patient_id = existingPatient.id;
+      }
+
+      // Store the generated PDF URL in referral
+      if (generatedPdfUrl) {
+        updates.processed_document_url = generatedPdfUrl;
       }
 
       await base44.entities.Referral.update(referralId, updates);
@@ -951,7 +957,7 @@ Actions available:
             </DialogHeader>
             <ReferralPDFSummarizer
               fileUrl={referrals.find(r => r.id === processingReferralId)?.document_url}
-              onExtractionComplete={(data, analysis) => handleProcessingComplete(processingReferralId, data, analysis)}
+              onExtractionComplete={(data, analysis, pdfUrl) => handleProcessingComplete(processingReferralId, data, analysis, pdfUrl)}
             />
           </DialogContent>
         </Dialog>

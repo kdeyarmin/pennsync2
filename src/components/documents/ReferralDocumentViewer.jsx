@@ -32,6 +32,9 @@ export default function ReferralDocumentViewer({ patientId }) {
     enabled: !!patientId,
   });
 
+  // Filter to only show processed documents
+  const processedReferrals = referrals.filter(r => r.processed_document_url || r.document_url);
+
   const { data: users = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
@@ -52,12 +55,12 @@ export default function ReferralDocumentViewer({ patientId }) {
         patient_id: patientId,
         thread_id: `referral-doc-${selectedReferral.id}`,
         subject: `Referral Document: ${selectedReferral.patient_name || 'Patient'}`,
-        message_text: messageText || `Referral document for ${selectedReferral.patient_name}.\n\nReferral Date: ${selectedReferral.referral_date ? format(new Date(selectedReferral.referral_date), 'MM/dd/yyyy') : 'N/A'}\nSource: ${selectedReferral.referral_source || 'N/A'}`,
+        message_text: messageText || `${selectedReferral.documentUrl === selectedReferral.processed_document_url ? 'AI-processed admission packet' : 'Referral document'} for ${selectedReferral.patient_name}.\n\nReferral Date: ${selectedReferral.referral_date ? format(new Date(selectedReferral.referral_date), 'MM/dd/yyyy') : 'N/A'}\nSource: ${selectedReferral.referral_source || 'N/A'}`,
         sender_name: currentUser?.full_name || 'System',
         sender_email: currentUser?.email,
         recipients: [recipientEmail],
         priority: selectedReferral.priority === 'urgent' ? 'urgent' : 'normal',
-        attachments: [selectedReferral.document_url],
+        attachments: [selectedReferral.documentUrl],
         related_event_id: selectedReferral.id,
         related_event_type: 'referral'
       });
@@ -74,7 +77,7 @@ export default function ReferralDocumentViewer({ patientId }) {
     }
   };
 
-  if (referrals.length === 0) {
+  if (processedReferrals.length === 0) {
     return (
       <Card>
         <CardContent className="p-8 text-center text-gray-500">
@@ -87,7 +90,12 @@ export default function ReferralDocumentViewer({ patientId }) {
 
   return (
     <div className="space-y-4">
-      {referrals.map((referral) => (
+      {processedReferrals.map((referral) => {
+        // Prefer processed document, fall back to original
+        const documentUrl = referral.processed_document_url || referral.document_url;
+        const isProcessed = !!referral.processed_document_url;
+        
+        return (
         <Card key={referral.id} className="border-l-4 border-l-purple-500">
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
@@ -97,6 +105,11 @@ export default function ReferralDocumentViewer({ patientId }) {
                   <p className="font-semibold text-gray-900">
                     {referral.patient_name || 'Unknown Patient'}
                   </p>
+                  {isProcessed && (
+                    <Badge className="bg-green-600">
+                      AI Processed
+                    </Badge>
+                  )}
                   {referral.priority && (
                     <Badge className={
                       referral.priority === 'urgent' ? 'bg-red-600' :
@@ -116,21 +129,30 @@ export default function ReferralDocumentViewer({ patientId }) {
                 </div>
               </div>
               <div className="flex gap-2">
-                {referral.document_url && (
+                {documentUrl && (
                   <>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(referral.document_url, '_blank')}
+                      onClick={() => window.open(documentUrl, '_blank')}
                     >
                       <ExternalLink className="w-4 h-4 mr-1" />
-                      View
+                      {isProcessed ? 'View Processed' : 'View'}
                     </Button>
+                    {referral.document_url && referral.processed_document_url && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(referral.document_url, '_blank')}
+                      >
+                        Original
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       className="bg-purple-600 hover:bg-purple-700"
                       onClick={() => {
-                        setSelectedReferral(referral);
+                        setSelectedReferral({ ...referral, documentUrl });
                         setSendDialogOpen(true);
                       }}
                     >
@@ -149,7 +171,9 @@ export default function ReferralDocumentViewer({ patientId }) {
             )}
           </CardContent>
         </Card>
-      ))}
+      )})}
+    </div>
+  );
 
       {/* Send Document Dialog */}
       <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
@@ -160,7 +184,7 @@ export default function ReferralDocumentViewer({ patientId }) {
           <div className="space-y-4">
             <Alert className="bg-blue-50 border-blue-200">
               <AlertDescription className="text-blue-900 text-sm">
-                Sending: {selectedReferral?.patient_name || 'Unknown Patient'} referral document
+                Sending: {selectedReferral?.patient_name || 'Unknown Patient'} {selectedReferral?.documentUrl === selectedReferral?.processed_document_url ? 'processed admission packet' : 'referral document'}
               </AlertDescription>
             </Alert>
 

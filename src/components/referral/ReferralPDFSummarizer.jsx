@@ -396,9 +396,12 @@ HANDWRITTEN NOTES HANDLING:
       setExtractedData(result);
       onDataExtracted?.(result);
       
+      // Auto-generate PDF after extraction
+      const pdfUrl = await generateAdmissionPacket();
+      
       // Callback for external workflows (referral intake)
       if (onExtractionComplete) {
-        onExtractionComplete(result, result);
+        onExtractionComplete(result, result, pdfUrl);
       }
     } catch (error) {
       console.error('Error processing referral:', error);
@@ -417,6 +420,7 @@ HANDWRITTEN NOTES HANDLING:
   };
 
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
 
   const generateAdmissionPacket = async () => {
     if (!extractedData) return;
@@ -427,20 +431,32 @@ HANDWRITTEN NOTES HANDLING:
         referralData: extractedData
       });
       
+      // Convert blob to file and upload to get permanent URL
       const blob = new Blob([response.data], { type: 'application/pdf' });
+      const file = new File([blob], `admission_packet_${extractedData.demographics?.full_name?.replace(/\s+/g, '_') || 'patient'}_${Date.now()}.pdf`, { type: 'application/pdf' });
+      
+      // Upload to get permanent URL
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setGeneratedPdfUrl(file_url);
+      
+      // Also trigger download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `admission_packet_${extractedData.demographics?.full_name?.replace(/\s+/g, '_') || 'patient'}_${Date.now()}.pdf`;
+      a.download = file.name;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
+      
+      return file_url;
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate admission packet. Please try again.');
+      return null;
+    } finally {
+      setGeneratingPDF(false);
     }
-    setGeneratingPDF(false);
   };
 
   return (
