@@ -1,0 +1,480 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+/**
+ * Unified Smart Note Assistant Function
+ * Handles: note enhancement, voice transcription, event extraction, and compliance checking
+ * Replaces: enhanceNoteOptimized, transcribeAndExtractClinicalData, extractClinicalEvents
+ */
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { action, ...params } = await req.json();
+
+    switch (action) {
+      case 'enhance_note':
+        return await enhanceNote(base44, user, params);
+      
+      case 'transcribe_audio':
+        return await transcribeAudio(base44, user, params);
+      
+      case 'extract_events':
+        return await extractEventsFromNote(base44, user, params);
+      
+      case 'full_documentation':
+        // Complete workflow: transcribe -> enhance -> extract events
+        return await fullDocumentation(base44, user, params);
+      
+      default:
+        return Response.json({ error: 'Invalid action' }, { status: 400 });
+    }
+  } catch (error) {
+    console.error('Smart note assistant error:', error);
+    return Response.json({ 
+      error: error.message,
+      success: false
+    }, { status: 500 });
+  }
+});
+
+async function enhanceNote(base44, user, params) {
+  const { 
+    roughNote,
+    patientId,
+    visitType,
+    visitDate,
+    diagnosis,
+    vitalSigns,
+    nurseType = 'RN'
+  } = params;
+
+  if (!roughNote || !patientId) {
+    return Response.json({ error: 'roughNote and patientId required' }, { status: 400 });
+  }
+
+  // Fetch patient context
+  const [patient, carePlans, recentVisits, oasisData] = await Promise.all([
+    base44.asServiceRole.entities.Patient.filter({ id: patientId }, '', 1),
+    base44.asServiceRole.entities.CarePlan.filter({ patient_id: patientId, status: 'active' }),
+    base44.asServiceRole.entities.Visit.filter({ patient_id: patientId, status: 'completed' }, '-visit_date', 3),
+    base44.asServiceRole.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 1)
+  ]);
+
+  const patientData = patient[0];
+  if (!patientData) {
+    return Response.json({ error: 'Patient not found' }, { status: 404 });
+  }
+
+  const contextPrompt = buildPatientContext(patientData, carePlans, recentVisits, oasisData[0], {
+    visitType,
+    visitDate,
+    diagnosis,
+    vitalSigns,
+    nurseType,
+    roughNote
+  });
+
+  // Parallel compliance check and enhancement
+  const [roughComplianceResult, enhancementResult] = await Promise.all([
+    base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `Analyze rough note for MEDICARE HOME HEALTH compliance per 42 CFR 484.
+
+${contextPrompt}
+
+Return JSON with compliance_score (0-100), missing_elements array, and specific_gaps array.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          compliance_score: { type: "number" },
+          missing_elements: { type: "array", items: { type: "string" } },
+          specific_gaps: { 
+            type: "array", 
+            items: { 
+              type: "object",
+              properties: {
+                element: { type: "string" },
+                reason: { type: "string" },
+                cop_reference: { type: "string" },
+                severity: { type: "string" }
+              }
+            }
+          }
+        }
+      }
+    }),
+    base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `Transform rough notes into MEDICARE HOME HEALTH COMPLIANT clinical narrative per 42 CFR 484.
+
+${contextPrompt}
+
+${getComplianceRequirements(visitType, diagnosis, nurseType)}
+
+Return JSON with enhanced_note and quality_score (0-100).`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          enhanced_note: { type: "string" },
+          quality_score: { type: "number" }
+        }
+      }
+    })
+  ]);
+
+  // Check enhanced compliance
+  const enhancedComplianceResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    prompt: `Analyze enhanced note for compliance.
+
+ENHANCED NOTE:
+${enhancementResult.enhanced_note}
+
+VISIT TYPE: ${visitType}
+
+Return compliance_score and compliant_elements.`,
+    response_json_schema: {
+      type: "object",
+      properties: {
+        compliance_score: { type: "number" },
+        compliant_elements: { type: "array", items: { type: "string" } }
+      }
+    }
+  });
+
+  // Save to patient history
+  const currentHistory = patientData.enhanced_notes_history || [];
+  const updatedHistory = [
+    ...currentHistory,
+    {
+      date: new Date().toISOString(),
+      visit_type: visitType,
+      diagnosis,
+      enhanced_note: enhancementResult.enhanced_note,
+      rough_note: roughNote,
+      quality_score: enhancementResult.quality_score,
+      nurse_email: user.email,
+      vital_signs: vitalSigns
+    }
+  ].slice(-10);
+
+  await base44.asServiceRole.entities.Patient.update(patientId, {
+    enhanced_notes_history: updatedHistory
+  });
+
+  // Track conversion
+  const complianceImprovement = enhancedComplianceResult.compliance_score - roughComplianceResult.compliance_score;
+
+  await base44.asServiceRole.entities.NoteConversion.create({
+    nurse_email: user.email,
+    patient_id: patientId,
+    visit_type: visitType,
+    diagnosis,
+    rough_note_length: roughNote.length,
+    enhanced_note_length: enhancementResult.enhanced_note.length,
+    quality_score: enhancementResult.quality_score,
+    rough_note_compliance: roughComplianceResult.compliance_score,
+    enhanced_note_compliance: enhancedComplianceResult.compliance_score,
+    compliance_improvement: complianceImprovement
+  });
+
+  return Response.json({
+    success: true,
+    enhanced_note: enhancementResult.enhanced_note,
+    quality_score: enhancementResult.quality_score,
+    rough_compliance: roughComplianceResult,
+    enhanced_compliance: enhancedComplianceResult,
+    compliance_improvement: complianceImprovement,
+    documentation_gaps: roughComplianceResult.specific_gaps
+  });
+}
+
+async function transcribeAudio(base44, user, params) {
+  const { audio_url, patient_id } = params;
+
+  if (!audio_url) {
+    return Response.json({ error: 'audio_url is required' }, { status: 400 });
+  }
+
+  let patientContext = '';
+  if (patient_id) {
+    const patient = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
+    if (patient.length > 0) {
+      const p = patient[0];
+      patientContext = `Patient: ${p.first_name} ${p.last_name}, DOB: ${p.date_of_birth}, Primary Diagnosis: ${p.primary_diagnosis || 'None'}`;
+    }
+  }
+
+  // Transcribe audio
+  const transcriptionResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    prompt: `Transcribe the following medical conversation audio file. Provide a clear, accurate transcription.`,
+    file_urls: [audio_url]
+  });
+
+  // Extract structured clinical data
+  const structuredData = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    prompt: `Extract structured clinical information from this transcript.
+
+${patientContext ? `Patient Context: ${patientContext}\n\n` : ''}Transcript:
+${transcriptionResponse}
+
+Extract: Chief Complaint, HPI, Vital Signs, Assessment, Medications, Allergies, Plan, Education, Follow-up, Action Items, Symptoms.`,
+    response_json_schema: {
+      type: 'object',
+      properties: {
+        chief_complaint: { type: 'string' },
+        hpi: { type: 'string' },
+        vital_signs: { type: 'object' },
+        assessment: { type: 'array', items: { type: 'string' } },
+        current_medications: { type: 'array', items: { type: 'object' } },
+        new_medications: { type: 'array', items: { type: 'object' } },
+        allergies: { type: 'array', items: { type: 'string' } },
+        plan: { type: 'string' },
+        patient_education: { type: 'array', items: { type: 'string' } },
+        follow_up: { type: 'string' },
+        action_items: { type: 'array', items: { type: 'string' } },
+        symptoms: { type: 'array', items: { type: 'string' } }
+      }
+    }
+  });
+
+  // Generate clinical narrative
+  const clinicalNarrative = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    prompt: `Generate a Medicare-compliant clinical narrative from this data:
+
+${JSON.stringify(structuredData, null, 2)}
+
+Include: homebound status, skilled needs, patient response, observations, teaching, care plan progress.`
+  });
+
+  await base44.asServiceRole.entities.SystemLog.create({
+    job_name: 'Medical Scribe Transcription',
+    job_type: 'other',
+    status: 'success',
+    message: `Transcribed and extracted clinical data`,
+    details: {
+      user_email: user.email,
+      patient_id,
+      audio_url,
+      transcript_length: transcriptionResponse.length
+    }
+  });
+
+  return Response.json({
+    success: true,
+    transcript: transcriptionResponse,
+    structured_data: structuredData,
+    clinical_narrative: clinicalNarrative
+  });
+}
+
+async function extractEventsFromNote(base44, user, params) {
+  const { visit_id, patient_id, nurse_notes, visit_date } = params;
+
+  if (!visit_id || !patient_id || !nurse_notes) {
+    return Response.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  const result = await base44.integrations.Core.InvokeLLM({
+    prompt: `Extract ALL significant clinical events from this note.
+
+${nurse_notes}
+
+Extract: medication changes, appointments, hospitalizations, falls, wounds, labs, symptoms, vital changes, cognitive/functional changes, pain, infections, procedures, therapy changes, DME.
+
+For each: event_type, event_title, event_description, structured_data, severity, requires_followup, followup_notes, source_text (exact quote), source_section, extraction_confidence (0-100).`,
+    response_json_schema: {
+      type: "object",
+      properties: {
+        events: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              event_type: { type: "string" },
+              event_title: { type: "string" },
+              event_description: { type: "string" },
+              structured_data: { type: "object" },
+              severity: { type: "string" },
+              requires_followup: { type: "boolean" },
+              followup_notes: { type: "string" },
+              source_text: { type: "string" },
+              source_section: { type: "string" },
+              extraction_confidence: { type: "number" }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Save events
+  const savedEvents = [];
+  for (const event of result.events || []) {
+    let text_anchor_start = null;
+    let text_anchor_end = null;
+    
+    if (event.source_text && nurse_notes) {
+      const index = nurse_notes.indexOf(event.source_text.trim());
+      if (index !== -1) {
+        text_anchor_start = index;
+        text_anchor_end = index + event.source_text.length;
+      }
+    }
+
+    const savedEvent = await base44.asServiceRole.entities.ClinicalEvent.create({
+      patient_id,
+      visit_id,
+      event_date: visit_date,
+      ...event,
+      text_anchor_start,
+      text_anchor_end,
+      verified: false
+    });
+    savedEvents.push(savedEvent);
+  }
+
+  return Response.json({
+    success: true,
+    events_extracted: savedEvents.length,
+    events: savedEvents
+  });
+}
+
+async function fullDocumentation(base44, user, params) {
+  const { audio_url, patient_id, visit_type, visit_date, diagnosis, vital_signs, nurse_type, visit_id } = params;
+
+  // Step 1: Transcribe if audio provided
+  let roughNote = params.rough_note;
+  let transcript = null;
+  let structuredData = null;
+
+  if (audio_url && !roughNote) {
+    const transcribeResult = await transcribeAudio(base44, user, { audio_url, patient_id });
+    const transcribeData = await transcribeResult.json();
+    
+    if (!transcribeData.success) {
+      return transcribeResult;
+    }
+
+    transcript = transcribeData.transcript;
+    structuredData = transcribeData.structured_data;
+    roughNote = transcribeData.clinical_narrative;
+  }
+
+  // Step 2: Enhance the note
+  const enhanceResult = await enhanceNote(base44, user, {
+    roughNote,
+    patientId: patient_id,
+    visitType: visit_type,
+    visitDate: visit_date,
+    diagnosis,
+    vitalSigns: vital_signs,
+    nurseType: nurse_type
+  });
+
+  const enhanceData = await enhanceResult.json();
+  if (!enhanceData.success) {
+    return enhanceResult;
+  }
+
+  // Step 3: Extract clinical events if visit_id provided
+  let eventsData = null;
+  if (visit_id) {
+    const eventsResult = await extractEventsFromNote(base44, user, {
+      visit_id,
+      patient_id,
+      nurse_notes: enhanceData.enhanced_note,
+      visit_date
+    });
+    eventsData = await eventsResult.json();
+  }
+
+  return Response.json({
+    success: true,
+    transcript,
+    structured_data: structuredData,
+    enhanced_note: enhanceData.enhanced_note,
+    quality_score: enhanceData.quality_score,
+    compliance_improvement: enhanceData.compliance_improvement,
+    documentation_gaps: enhanceData.documentation_gaps,
+    events_extracted: eventsData?.events_extracted || 0,
+    events: eventsData?.events || []
+  });
+}
+
+function buildPatientContext(patient, carePlans, recentVisits, oasis, visitInfo) {
+  return `
+PATIENT CONTEXT:
+- Name: ${patient.first_name} ${patient.last_name}
+- Primary Diagnosis: ${patient.primary_diagnosis || visitInfo.diagnosis}
+- Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
+- Allergies: ${patient.allergies || 'None'}
+- Current Medications: ${patient.current_medications?.map(m => m.name).slice(0, 5).join(', ') || 'None'}
+- Age: ${patient.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}
+
+VISIT DETAILS:
+- Visit Type: ${visitInfo.visitType}
+- Visit Date: ${visitInfo.visitDate}
+- Nurse: ${visitInfo.nurseType}
+- Vitals: ${JSON.stringify(visitInfo.vitalSigns)}
+
+ACTIVE CARE PLANS:
+${carePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- None'}
+
+RECENT HISTORY:
+${recentVisits.length > 0 ? `Last visit ${recentVisits[0].visit_date}: ${recentVisits[0].visit_type}` : 'No previous visits'}
+
+${oasis ? `OASIS DATA:
+- Functional Level: ${oasis.pdgm_data?.functional_impairment_level || 'Not specified'}
+- Clinical Group: ${oasis.pdgm_data?.clinical_grouping || 'Not specified'}` : ''}
+
+ROUGH NOTES:
+${visitInfo.roughNote}
+`;
+}
+
+function getComplianceRequirements(visitType, diagnosis, nurseType) {
+  let requirements = `
+CRITICAL MEDICARE CoP REQUIREMENTS (42 CFR 484):
+
+1. HOMEBOUND STATUS (484.55(a)) - MANDATORY
+2. SKILLED NURSING NEED (484.20) - MANDATORY
+3. PATIENT RESPONSE TO TREATMENT (484.60) - MANDATORY
+4. COORDINATION OF CARE (484.60)
+5. SAFETY ASSESSMENT (484.80)
+6. FUNCTIONAL STATUS & PROGRESS (484.55)
+7. PATIENT/CAREGIVER EDUCATION (484.60)
+`;
+
+  // Add condition-specific requirements
+  if (diagnosis?.includes('CHF') || diagnosis?.includes('Heart Failure')) {
+    requirements += `\nCHF DOCUMENTATION: Daily weight, edema, lung sounds, fluid restriction compliance, medication compliance, patient knowledge.`;
+  }
+
+  if (diagnosis?.includes('COPD')) {
+    requirements += `\nCOPD DOCUMENTATION: O2 saturation (room air & O2), respiratory rate, lung sounds, dyspnea level, inhaler technique, O2 safety.`;
+  }
+
+  if (diagnosis?.includes('Diabetes')) {
+    requirements += `\nDIABETES DOCUMENTATION: Blood glucose, diabetic foot exam, neuropathy assessment, monitoring technique, hypoglycemia plan, foot care education.`;
+  }
+
+  if (diagnosis?.includes('Wound') || diagnosis?.includes('Ulcer')) {
+    requirements += `\nWOUND DOCUMENTATION: Measurements (L×W×D), wound bed %, exudate, periwound skin, undermining/tunneling, treatment, pain, infection signs.`;
+  }
+
+  // Add visit-type specific requirements
+  if (visitType === 'admission' || visitType === 'start_of_care') {
+    requirements += `\nSTART OF CARE MANDATORY: Comprehensive assessment, admission source, medication reconciliation, skilled need establishment, homebound justification, baseline functional status, safety assessment, patient rights, emergency plan.`;
+  } else if (visitType === 'recertification') {
+    requirements += `\nRECERTIFICATION MANDATORY: Progress toward goals with data, functional changes from baseline, continued homebound status, continued skilled need, medication review, safety update.`;
+  } else if (visitType === 'discharge') {
+    requirements += `\nDISCHARGE MANDATORY: Discharge reason, goals met/not met, functional status at discharge vs admission, education completed, discharge instructions, follow-up arranged, physician notified, safety measures.`;
+  }
+
+  return requirements;
+}
