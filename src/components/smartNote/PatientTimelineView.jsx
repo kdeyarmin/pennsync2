@@ -62,10 +62,11 @@ export default function PatientTimelineView({ patient }) {
     setIsLoading(true);
     try {
       // Fetch all relevant data
-      const [visits, carePlans, incidents] = await Promise.all([
+      const [visits, carePlans, incidents, clinicalEvents] = await Promise.all([
         base44.entities.Visit.filter({ patient_id: patient.id }, '-visit_date'),
         base44.entities.CarePlan.filter({ patient_id: patient.id }),
-        base44.entities.Incident.filter({ patient_id: patient.id }, '-incident_date')
+        base44.entities.Incident.filter({ patient_id: patient.id }, '-incident_date'),
+        base44.entities.ClinicalEvent.filter({ patient_id: patient.id }, '-event_date')
       ]);
 
       // Compile timeline events
@@ -160,45 +161,36 @@ export default function PatientTimelineView({ patient }) {
         });
       }
 
-      // Extract lab results and symptoms from visit notes
-      visits.forEach(visit => {
-        if (visit.nurse_notes) {
-          const notes = visit.nurse_notes.toLowerCase();
-          
-          // Detect lab results mentions
-          const labKeywords = ['lab', 'test result', 'blood work', 'glucose', 'hemoglobin', 'a1c', 'inr', 'pt/inr'];
-          if (labKeywords.some(keyword => notes.includes(keyword))) {
-            events.push({
-              id: `lab-${visit.id}`,
-              type: 'lab_result',
-              date: visit.visit_date,
-              title: 'Lab Results Documented',
-              description: visit.nurse_notes.substring(0, 200),
-              fullData: visit,
-              linkedRecordId: visit.id,
-              linkedRecordType: 'visit',
-              icon: FlaskConical,
-              color: 'teal'
-            });
-          }
+      // Add extracted clinical events (from AI auto-extraction)
+      clinicalEvents.forEach(event => {
+        const eventIcon = event.event_type.includes('medication') ? Pill :
+                         event.event_type.includes('appointment') ? Calendar :
+                         event.event_type.includes('fall') || event.event_type.includes('wound') ? AlertCircle :
+                         event.event_type.includes('lab') ? FlaskConical :
+                         event.event_type.includes('symptom') ? MessageSquare :
+                         Activity;
+        
+        const eventColor = event.event_type.includes('medication') ? 'orange' :
+                          event.event_type.includes('fall') || event.event_type.includes('wound') ? 'red' :
+                          event.event_type.includes('lab') ? 'teal' :
+                          event.event_type.includes('symptom') ? 'pink' :
+                          'blue';
 
-          // Detect symptom reports
-          const symptomKeywords = ['reports', 'complains', 'pain', 'shortness of breath', 'sob', 'nausea', 'dizzy', 'weakness', 'fatigue', 'symptom'];
-          if (symptomKeywords.some(keyword => notes.includes(keyword))) {
-            events.push({
-              id: `symptom-${visit.id}`,
-              type: 'symptom',
-              date: visit.visit_date,
-              title: 'Symptom Reported',
-              description: visit.nurse_notes.substring(0, 200),
-              fullData: visit,
-              linkedRecordId: visit.id,
-              linkedRecordType: 'visit',
-              icon: MessageSquare,
-              color: 'pink'
-            });
-          }
-        }
+        events.push({
+          id: `clinical-${event.id}`,
+          type: event.event_type,
+          date: event.event_date,
+          title: event.event_title,
+          description: event.event_description,
+          severity: event.severity,
+          fullData: event,
+          linkedRecordId: event.visit_id,
+          linkedRecordType: 'visit',
+          extractedEvent: true,
+          verified: event.verified,
+          icon: eventIcon,
+          color: eventColor
+        });
       });
 
       // Sort by date (most recent first)
