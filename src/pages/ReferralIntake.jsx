@@ -693,8 +693,8 @@ export default function ReferralIntake() {
 
       {/* Processing Dialog */}
       {processingReferralId && (
-        <Dialog open={!!processingReferralId} onOpenChange={() => setProcessingReferralId(null)}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={!!processingReferralId} onOpenChange={(open) => !open && setProcessingReferralId(null)}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-purple-600" />
