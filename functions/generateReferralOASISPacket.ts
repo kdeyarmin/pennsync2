@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
       doc.setFontSize(10);
       skilled.specific_interventions.forEach(int => {
         checkPageBreak();
-        doc.text('\u2022', margin + 3, yPos);
+        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
         const intLines = doc.splitTextToSize(int, 170);
         intLines.forEach((line, idx) => {
           doc.text(line, margin + 8, yPos + (idx * 6));
@@ -289,7 +289,7 @@ Deno.serve(async (req) => {
       doc.setFontSize(10);
       orders.physician_orders.forEach(order => {
         checkPageBreak();
-        doc.text('\u2022', margin + 3, yPos);
+        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
         const orderLines = doc.splitTextToSize(order, 170);
         orderLines.forEach((line, idx) => {
           doc.text(line, margin + 8, yPos + (idx * 6));
@@ -307,7 +307,7 @@ Deno.serve(async (req) => {
       doc.setFontSize(10);
       orders.treatments.forEach(tx => {
         checkPageBreak();
-        doc.text('\u2022', margin + 3, yPos);
+        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
         const txLines = doc.splitTextToSize(tx, 170);
         txLines.forEach((line, idx) => {
           doc.text(line, margin + 8, yPos + (idx * 6));
@@ -504,7 +504,7 @@ Deno.serve(async (req) => {
     
     criticalItems.forEach(item => {
       checkPageBreak();
-      doc.text('\u2022', margin + 2, yPos);
+      doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
       const itemLines = doc.splitTextToSize(item, 175);
       itemLines.forEach((line, idx) => {
         doc.text(line, margin + 7, yPos + (idx * 6));
@@ -582,7 +582,7 @@ Deno.serve(async (req) => {
     
     homeboundReasons.forEach(reason => {
       checkPageBreak();
-      doc.text('\u2022', margin + 2, yPos);
+      doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
       const reasonLines = doc.splitTextToSize(reason, 175);
       reasonLines.forEach((line, idx) => {
         doc.text(line, margin + 7, yPos + (idx * 6));
@@ -643,14 +643,14 @@ Safety: Home environment assessed - ${safety.environmental_hazards || 'daughter 
 ASSESSMENT: ${demo.age || '96'}-year-old with recent pelvic fracture requiring skilled nursing for assessment, medication management, and coordination of therapy services. Patient is HOMEBOUND due to inability to ambulate safely without assistance, high fall risk, significant pain with movement, and taxing effort required to leave home. Patient demonstrates good rehab potential with supportive family.
 
 PLAN: 
-\u2022 Skilled nursing visits for comprehensive assessment, medication review, vital signs monitoring, and care coordination
-\u2022 PT/OT services for strength, balance, mobility, and ADL training
-\u2022 Pain management per MD orders - monitor effectiveness and side effects
-\u2022 Fall prevention education - proper walker use, home safety modifications
-\u2022 Monitor for complications: infection, DVT, deconditioning
-\u2022 Coordinate with MD for lab work, medication adjustments as needed
-\u2022 Teach patient/caregiver signs/symptoms to report
-\u2022 Goals: Improve functional mobility, pain management, prevent complications, maximize independence
+- Skilled nursing visits for comprehensive assessment, medication review, vital signs monitoring, and care coordination
+- PT/OT services for strength, balance, mobility, and ADL training
+- Pain management per MD orders - monitor effectiveness and side effects
+- Fall prevention education - proper walker use, home safety modifications
+- Monitor for complications: infection, DVT, deconditioning
+- Coordinate with MD for lab work, medication adjustments as needed
+- Teach patient/caregiver signs/symptoms to report
+- Goals: Improve functional mobility, pain management, prevent complications, maximize independence
 
 Patient/caregiver verbalize understanding of plan of care and agree with goals. All questions answered.`;
 
