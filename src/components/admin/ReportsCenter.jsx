@@ -122,6 +122,22 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
                   ['Total Note Enhancements', prodData.totalEnhancements],
                   ['Total Time Saved', `${prodData.totalTimeSaved} hours`]
                 ]
+              },
+              { type: 'pageBreak' },
+              { type: 'heading', text: 'Daily Enhancement Trend', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Date', 'Enhancements'],
+                rows: prodData.dailyEnhancements.map(d => [d.date, d.count])
+              },
+              { type: 'pageBreak' },
+              { type: 'heading', text: 'Visit Type Distribution', size: 14 },
+              { type: 'spacer', height: 5 },
+              {
+                type: 'table',
+                headers: ['Visit Type', 'Count'],
+                rows: prodData.visitTypeChart.map(d => [d.type, d.count])
               }
             ];
             break;
@@ -304,14 +320,15 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     const endDate = todayEastern();
     const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
     
+    // Filter all note enhancements by date range FIRST
+    const filteredEnhancements = allNoteEnhancements.filter(nc => {
+      const createdDate = nc.created_date ? nc.created_date.split('T')[0] : null;
+      return createdDate && createdDate >= startDate && createdDate <= endDate;
+    });
+    
     const nursesData = users.filter(u => u.role === 'user').map(nurse => {
-      // Filter note enhancements by date range for this nurse
-      const nurseEnhancements = allNoteEnhancements.filter(nc => {
-        const createdDate = nc.created_date ? nc.created_date.split('T')[0] : null;
-        return nc.nurse_email === nurse.email && 
-               createdDate >= startDate && 
-               createdDate <= endDate;
-      });
+      // Filter note enhancements for this specific nurse
+      const nurseEnhancements = filteredEnhancements.filter(nc => nc.nurse_email === nurse.email);
       
       const noteEnhancements = nurseEnhancements.length;
       const timeSavedMinutes = noteEnhancements * 20; // 20 minutes saved per note enhancement
@@ -320,17 +337,48 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       return {
         name: nurse.full_name || nurse.email,
         noteEnhancements,
-        timeSavedHours
+        timeSavedHours,
+        dailyData: [] // Will populate for chart
       };
     }).sort((a, b) => (b.noteEnhancements || 0) - (a.noteEnhancements || 0)); // Sort by highest enhancements first
 
-    const totalTimeSaved = nursesData.reduce((sum, nurse) => sum + (nurse.timeSavedHours || 0), 0);
-    const totalEnhancements = nursesData.reduce((sum, nurse) => sum + (nurse.noteEnhancements || 0), 0);
+    // Calculate totals from the filtered enhancements directly
+    const totalEnhancements = filteredEnhancements.length;
+    const totalTimeSavedMinutes = totalEnhancements * 20;
+    const totalTimeSaved = parseFloat((totalTimeSavedMinutes / 60).toFixed(1));
+    
+    // Generate daily enhancement data for chart
+    const days = parseInt(dateRange);
+    const dailyEnhancements = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
+      const dayEnhancements = filteredEnhancements.filter(nc => {
+        const createdDate = nc.created_date ? nc.created_date.split('T')[0] : null;
+        return createdDate === date;
+      });
+      dailyEnhancements.push({
+        date: format(new Date(date), 'MM/dd'),
+        count: dayEnhancements.length
+      });
+    }
+    
+    // Generate visit type distribution for chart
+    const visitTypeData = {};
+    visits.forEach(v => {
+      const type = v.visit_type || 'unknown';
+      visitTypeData[type] = (visitTypeData[type] || 0) + 1;
+    });
+    const visitTypeChart = Object.entries(visitTypeData).map(([type, count]) => ({
+      type: type.replace(/_/g, ' '),
+      count
+    }));
 
     return {
       nurses: nursesData,
-      totalTimeSaved: parseFloat(totalTimeSaved.toFixed(1)),
-      totalEnhancements
+      totalTimeSaved,
+      totalEnhancements,
+      dailyEnhancements,
+      visitTypeChart
     };
   };
 

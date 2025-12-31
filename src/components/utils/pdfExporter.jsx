@@ -162,6 +162,9 @@ export const exportToPDF = async (options = {}) => {
         doc.setDrawColor(200);
         doc.line(margin, yPosition, pageWidth - margin, yPosition);
         yPosition += 5;
+      } else if (section.type === 'pageBreak') {
+        doc.addPage();
+        yPosition = margin;
       }
     }
   }
