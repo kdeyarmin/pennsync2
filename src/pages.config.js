@@ -46,6 +46,7 @@ import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
+import ReferralIntake from './pages/ReferralIntake';
 import ReferralProcessor from './pages/ReferralProcessor';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
 import SecurityPolicy from './pages/SecurityPolicy';
@@ -59,7 +60,8 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
-import ReferralIntake from './pages/ReferralIntake';
+import AdminKPIDashboard from './pages/AdminKPIDashboard';
+import Patient360 from './pages/Patient360';
 import __Layout from './Layout.jsx';
 
 
@@ -112,6 +114,7 @@ export const PAGES = {
     "Patients": Patients,
     "PredictiveAnalytics": PredictiveAnalytics,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
+    "ReferralIntake": ReferralIntake,
     "ReferralProcessor": ReferralProcessor,
     "RegulatoryCompliance": RegulatoryCompliance,
     "SecurityPolicy": SecurityPolicy,
@@ -125,7 +128,8 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
-    "ReferralIntake": ReferralIntake,
+    "AdminKPIDashboard": AdminKPIDashboard,
+    "Patient360": Patient360,
 }
 
 export const pagesConfig = {
