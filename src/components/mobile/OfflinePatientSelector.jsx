@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, Loader2, CheckCircle2, Users, Calendar } from "lucide-react";
 import { todayEastern } from "../utils/timezone";
 
-export default function OfflinePatientSelector({ onCacheComplete }) {
+export default function OfflinePatientSelector({ onCacheComplete, showDetails = false, selectedPatientId, onSelectPatient }) {
   const [selectedPatients, setSelectedPatients] = useState([]);
   const [dateRange, setDateRange] = useState(1); // days
   const [isCaching, setIsCaching] = useState(false);
@@ -216,12 +216,20 @@ export default function OfflinePatientSelector({ onCacheComplete }) {
                   <div
                     key={patient.id}
                     className="flex items-start gap-3 p-3 bg-white rounded-lg border hover:bg-blue-50 cursor-pointer"
-                    onClick={() => handleTogglePatient(patient.id)}
+                    onClick={() => {
+                      if (onSelectPatient) {
+                        onSelectPatient(patient.id, patient);
+                      } else {
+                        handleTogglePatient(patient.id);
+                      }
+                    }}
                   >
-                    <Checkbox
-                      checked={selectedPatients.includes(patient.id)}
-                      onCheckedChange={() => handleTogglePatient(patient.id)}
-                    />
+                    {!onSelectPatient && (
+                      <Checkbox
+                        checked={selectedPatients.includes(patient.id)}
+                        onCheckedChange={() => handleTogglePatient(patient.id)}
+                      />
+                    )}
                     <div className="flex-1">
                       <p className="font-medium text-sm">
                         {patient.first_name} {patient.last_name}
@@ -238,23 +246,25 @@ export default function OfflinePatientSelector({ onCacheComplete }) {
               </div>
             </ScrollArea>
 
-            <Button
-              onClick={handleCacheData}
-              disabled={selectedPatients.length === 0 || isCaching}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              {isCaching ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Caching Data...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Cache {selectedPatients.length} Patient{selectedPatients.length !== 1 ? 's' : ''} for Offline
-                </>
-              )}
-            </Button>
+            {!onSelectPatient && (
+              <Button
+                onClick={handleCacheData}
+                disabled={selectedPatients.length === 0 || isCaching}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                {isCaching ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Caching Data...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Cache {selectedPatients.length} Patient{selectedPatients.length !== 1 ? 's' : ''} for Offline
+                  </>
+                )}
+              </Button>
+            )}
           </>
         )}
       </CardContent>
