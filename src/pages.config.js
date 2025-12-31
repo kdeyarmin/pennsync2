@@ -24,6 +24,7 @@ import Home from './pages/Home';
 import ManageNewFeatures from './pages/ManageNewFeatures';
 import MedicareComplianceDashboard from './pages/MedicareComplianceDashboard';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
+import Messages from './pages/Messages';
 import NurseEducationVideos from './pages/NurseEducationVideos';
 import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
 import NurseTraining from './pages/NurseTraining';
@@ -65,7 +66,7 @@ import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import Messages from './pages/Messages';
+import AutomatedReports from './pages/AutomatedReports';
 import __Layout from './Layout.jsx';
 
 
@@ -96,6 +97,7 @@ export const PAGES = {
     "ManageNewFeatures": ManageNewFeatures,
     "MedicareComplianceDashboard": MedicareComplianceDashboard,
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
+    "Messages": Messages,
     "NurseEducationVideos": NurseEducationVideos,
     "NursePerformanceDashboard": NursePerformanceDashboard,
     "NurseTraining": NurseTraining,
@@ -137,7 +139,7 @@ export const PAGES = {
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "Messages": Messages,
+    "AutomatedReports": AutomatedReports,
 }
 
 export const pagesConfig = {
