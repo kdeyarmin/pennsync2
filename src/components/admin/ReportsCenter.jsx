@@ -110,7 +110,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
               {
                 type: 'table',
                 headers: ['Nurse', 'Enhancements', 'Time Saved (hrs)'],
-                rows: prodData.nurses.map(d => [d.name, d.noteConversions, d.timeSavedHours])
+                rows: prodData.nurses.map(d => [d.name, d.noteEnhancements, d.timeSavedHours])
               },
               { type: 'spacer', height: 10 },
               { type: 'heading', text: 'Total Agency Productivity', size: 14 },
@@ -313,19 +313,19 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
                createdDate <= endDate;
       });
       
-      const noteConversions = nurseConversions.length;
-      const timeSavedMinutes = noteConversions * 95; // 95 minutes saved per note enhancement
+      const noteEnhancements = nurseConversions.length;
+      const timeSavedMinutes = noteEnhancements * 95; // 95 minutes saved per note enhancement
       const timeSavedHours = parseFloat((timeSavedMinutes / 60).toFixed(1));
       
       return {
         name: nurse.full_name || nurse.email,
-        noteConversions,
+        noteEnhancements,
         timeSavedHours
       };
-    }).sort((a, b) => (b.noteConversions || 0) - (a.noteConversions || 0)); // Sort by highest enhancements first
+    }).sort((a, b) => (b.noteEnhancements || 0) - (a.noteEnhancements || 0)); // Sort by highest enhancements first
 
     const totalTimeSaved = nursesData.reduce((sum, nurse) => sum + (nurse.timeSavedHours || 0), 0);
-    const totalEnhancements = nursesData.reduce((sum, nurse) => sum + (nurse.noteConversions || 0), 0);
+    const totalEnhancements = nursesData.reduce((sum, nurse) => sum + (nurse.noteEnhancements || 0), 0);
 
     return {
       nurses: nursesData,
@@ -364,7 +364,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     content += `Nurse,Note Enhancements,Time Saved (hours)\n`;
     
     data.nurses.forEach(stats => {
-      content += `${stats.name},${stats.noteConversions},${stats.timeSavedHours}\n`;
+      content += `${stats.name},${stats.noteEnhancements},${stats.timeSavedHours}\n`;
     });
 
     content += `\nTOTAL AGENCY PRODUCTIVITY\n`;

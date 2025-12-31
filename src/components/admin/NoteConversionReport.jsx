@@ -266,7 +266,7 @@ export default function NoteConversionReport() {
               <TableRow>
                 <TableHead>Rank</TableHead>
                 <TableHead>Nurse</TableHead>
-                <TableHead className="text-right">Conversions</TableHead>
+                <TableHead className="text-right">Enhancements</TableHead>
                 <TableHead className="text-right">Avg Quality</TableHead>
               </TableRow>
             </TableHeader>

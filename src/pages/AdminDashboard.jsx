@@ -68,7 +68,7 @@ import UserManagement from "../components/admin/UserManagement";
 import ReportsCenter from "../components/admin/ReportsCenter";
 import SystemSettings from "../components/admin/SystemSettings";
 import UserActivityLog from "../components/admin/UserActivityLog";
-import NoteConversionReport from "../components/admin/NoteConversionReport";
+import NoteEnhancementReport from "../components/admin/NoteConversionReport";
 import AIAutoTagger from "../components/admin/AIAutoTagger";
 import AIKPIReportGenerator from "../components/admin/AIKPIReportGenerator";
 import AnnouncementManager from "../components/admin/AnnouncementManager";
@@ -488,7 +488,7 @@ export default function AdminDashboard() {
             <AIKPIReportGenerator />
             <AIAutoTagger />
           </div>
-          <NoteConversionReport />
+          <NoteEnhancementReport />
           <ReportsCenter 
             users={users}
             patients={patients}
