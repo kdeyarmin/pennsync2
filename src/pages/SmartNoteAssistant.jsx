@@ -104,6 +104,7 @@ import AISmartOASISAssistant from "../components/oasis/AISmartOASISAssistant";
 import GuidedVisitWorkflow from "../components/visit/GuidedVisitWorkflow";
 import EnhancedPatientContextPanel from "../components/smartNote/EnhancedPatientContextPanel";
 import PatientTimelineView from "../components/smartNote/PatientTimelineView";
+import IntegratedOASISAnalyzer from "../components/smartNote/IntegratedOASISAnalyzer";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -925,6 +926,20 @@ export default function SmartNoteAssistant() {
                 </Tabs>
               </CardContent>
             </Card>
+          )}
+
+          {/* Integrated OASIS Analyzer */}
+          {selectedPatientId && roughNote.length >= 100 && (
+            <IntegratedOASISAnalyzer
+              patientData={selectedPatient}
+              visitType={visitType}
+              roughNote={roughNote}
+              vitalSigns={vitalSigns}
+              timelineData={recentVisits}
+              onApplySuggestion={(text) => {
+                setRoughNote(prev => prev + text);
+              }}
+            />
           )}
 
           {/* Step 3: Rough Notes */}
