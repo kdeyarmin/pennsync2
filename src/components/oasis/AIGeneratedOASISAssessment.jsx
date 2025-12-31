@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles,
   ClipboardList,
@@ -14,15 +16,21 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
-  FileText
+  FileText,
+  Save,
+  Edit
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQueryClient } from "@tanstack/react-query";
 
-export default function AIGeneratedOASISAssessment({ patientId, visitType = "Start of Care", referralData }) {
+export default function AIGeneratedOASISAssessment({ patientId, visitId, visitType = "Start of Care", referralData, onSaved }) {
+  const queryClient = useQueryClient();
   const [assessment, setAssessment] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
   const [copiedItems, setCopiedItems] = useState([]);
+  const [editingItems, setEditingItems] = useState({});
 
   const generateAssessment = async () => {
     setIsGenerating(true);
@@ -38,6 +46,20 @@ export default function AIGeneratedOASISAssessment({ patientId, visitType = "Sta
       }
 
       const { data } = await base44.functions.invoke('generateOASISAssessment', payload);
+      
+      // Filter out administrative items
+      if (data.oasis_items) {
+        data.oasis_items = data.oasis_items.filter(item => {
+          const itemNum = item.item_number?.toUpperCase() || '';
+          const numMatch = itemNum.match(/M(\d+)/);
+          if (numMatch) {
+            const num = parseInt(numMatch[1]);
+            if (num >= 1000 && num <= 1060) return false;
+          }
+          return true;
+        });
+      }
+      
       setAssessment(data);
     } catch (error) {
       console.error('Error generating OASIS assessment:', error);
@@ -45,6 +67,55 @@ export default function AIGeneratedOASISAssessment({ patientId, visitType = "Sta
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const saveAssessment = async () => {
+    if (!assessment || !patientId) return;
+    
+    setIsSaving(true);
+    try {
+      // Apply edited values to assessment
+      const updatedItems = assessment.oasis_items.map(item => ({
+        ...item,
+        response: editingItems[item.item_number] !== undefined ? editingItems[item.item_number] : item.suggested_response,
+        manually_edited: editingItems[item.item_number] !== undefined,
+        ai_suggested: true
+      }));
+
+      const completedCount = updatedItems.filter(item => item.response).length;
+      const completionPercentage = Math.round((completedCount / updatedItems.length) * 100);
+
+      const oasisData = {
+        patient_id: patientId,
+        visit_id: visitId || null,
+        visit_type: visitType,
+        assessment_date: new Date().toISOString().split('T')[0],
+        oasis_items: updatedItems,
+        clinical_summary: assessment.clinical_summary,
+        estimated_pdgm_group: assessment.estimated_pdgm_group,
+        status: completionPercentage === 100 ? 'completed' : 'in_progress',
+        completion_percentage: completionPercentage
+      };
+
+      await base44.entities.OASISAssessment.create(oasisData);
+      
+      queryClient.invalidateQueries({ queryKey: ['oasisAssessments', patientId] });
+      onSaved?.();
+      
+      alert('OASIS assessment saved successfully!');
+    } catch (error) {
+      console.error('Error saving OASIS assessment:', error);
+      alert('Failed to save OASIS assessment. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const updateItemResponse = (itemNumber, newValue) => {
+    setEditingItems(prev => ({
+      ...prev,
+      [itemNumber]: newValue
+    }));
   };
 
   const toggleItemExpand = (index) => {
@@ -267,6 +338,22 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
                   {isExpanded && (
                     <div className="border-t border-indigo-200 bg-indigo-50 p-3 space-y-3">
                       <div>
+                        <p className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                          <Edit className="w-3 h-3" />
+                          Edit Response:
+                        </p>
+                        <Textarea
+                          value={editingItems[item.item_number] !== undefined ? editingItems[item.item_number] : item.suggested_response}
+                          onChange={(e) => updateItemResponse(item.item_number, e.target.value)}
+                          className="text-xs min-h-[60px]"
+                          placeholder="Enter OASIS response..."
+                        />
+                        {editingItems[item.item_number] !== undefined && (
+                          <Badge className="bg-blue-600 text-white text-xs mt-1">Edited</Badge>
+                        )}
+                      </div>
+
+                      <div>
                         <p className="text-xs font-semibold text-gray-900 mb-1">Rationale:</p>
                         <p className="text-xs text-gray-700">{item.rationale}</p>
                       </div>
@@ -373,15 +460,33 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
           </Alert>
         )}
 
-        <Button
-          onClick={generateAssessment}
-          variant="outline"
-          size="sm"
-          className="w-full"
-        >
-          <Sparkles className="w-4 h-4 mr-2" />
-          Regenerate Assessment
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={saveAssessment}
+            disabled={isSaving || !patientId}
+            className="flex-1 bg-green-600 hover:bg-green-700"
+          >
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Assessment
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={generateAssessment}
+            variant="outline"
+            size="sm"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Regenerate
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

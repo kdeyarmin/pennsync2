@@ -57,6 +57,7 @@ import PatientSummaryGenerator from "../components/patient/PatientSummaryGenerat
 import AIPatientRiskAssessor from "../components/risk/AIPatientRiskAssessor";
 import AIProactiveOASISAssistant from "../components/oasis/AIProactiveOASISAssistant";
 import AdvancedPredictiveAnalytics from "../components/predictive/AdvancedPredictiveAnalytics";
+import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAssessment";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -65,6 +66,8 @@ export default function PatientDetails() {
   const patientId = urlParams.get('id') || urlParams.get('patientId');
 
   const [showVisitForm, setShowVisitForm] = useState(false);
+  const [showOASISPrompt, setShowOASISPrompt] = useState(false);
+  const [oasisTriggerVisit, setOasisTriggerVisit] = useState(null);
   const [newVisit, setNewVisit] = useState({
     visit_date: format(new Date(), 'yyyy-MM-dd'),
     visit_time: '',
@@ -182,6 +185,13 @@ export default function PatientDetails() {
         visit_date: newVisit.visit_date,
         page: 'PatientDetails'
       });
+      
+      // Trigger OASIS prompt for admission or recertification visits
+      const oasisTriggerTypes = ['admission', 'recertification', 'discharge'];
+      if (oasisTriggerTypes.includes(newVisit.visit_type)) {
+        setOasisTriggerVisit(newVisit);
+        setShowOASISPrompt(true);
+      }
     },
   });
 
@@ -705,6 +715,15 @@ export default function PatientDetails() {
             </TabsContent>
 
             <TabsContent value="documentation" className="space-y-6">
+              <AIGeneratedOASISAssessment
+                patientId={patientId}
+                visitId={oasisTriggerVisit?.id}
+                visitType={oasisTriggerVisit?.visit_type === 'admission' ? 'Start of Care' : oasisTriggerVisit?.visit_type === 'recertification' ? 'Recertification' : 'Start of Care'}
+                onSaved={() => {
+                  queryClient.invalidateQueries({ queryKey: ['oasisAssessments', patientId] });
+                  setOasisTriggerVisit(null);
+                }}
+              />
               <AIProactiveOASISAssistant patientId={patientId} autoAnalyze={false} />
               <AIComplianceAuditor
                 patientId={patientId}
@@ -812,6 +831,47 @@ export default function PatientDetails() {
           </Tabs>
         </TabsContent>
       </Tabs>
+
+      {/* OASIS Generation Prompt */}
+      {showOASISPrompt && oasisTriggerVisit && (
+        <Alert className="mb-6 bg-purple-50 border-purple-300">
+          <Sparkles className="w-4 h-4 text-purple-600" />
+          <AlertDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-purple-900 mb-1">OASIS Assessment Required</p>
+                <p className="text-sm text-purple-800">
+                  A {oasisTriggerVisit.visit_type} visit has been created. Generate OASIS assessment now?
+                </p>
+              </div>
+              <div className="flex gap-2 ml-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowOASISPrompt(false)}
+                >
+                  Later
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-purple-600 hover:bg-purple-700"
+                  onClick={() => {
+                    setShowOASISPrompt(false);
+                    // Scroll to AI Tools tab and switch to documentation
+                    document.querySelector('[value="ai-tools"]')?.click();
+                    setTimeout(() => {
+                      document.querySelector('[value="documentation"]')?.click();
+                    }, 100);
+                  }}
+                >
+                  <ClipboardList className="w-4 h-4 mr-1" />
+                  Generate Now
+                </Button>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Schedule Visit Card */}
       <Card>
