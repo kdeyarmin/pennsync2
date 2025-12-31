@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, Calendar, TrendingUp, AlertCircle } from "lucide-react";
+import { Activity, Calendar, TrendingUp, AlertCircle, CheckSquare, Bell } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -13,6 +13,27 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['clinicalEvents', patientId],
     queryFn: () => base44.entities.ClinicalEvent.filter({ patient_id: patientId }, '-created_date', 50),
+    initialData: [],
+    enabled: !!patientId
+  });
+
+  const { data: relatedTasks = [] } = useQuery({
+    queryKey: ['eventTasks', patientId],
+    queryFn: () => base44.entities.Task.filter({ 
+      patient_id: patientId, 
+      source: 'ai_generated',
+      status: 'pending'
+    }, '-created_date', 20),
+    initialData: [],
+    enabled: !!patientId
+  });
+
+  const { data: relatedAlerts = [] } = useQuery({
+    queryKey: ['eventAlerts', patientId],
+    queryFn: () => base44.entities.PatientAlert.filter({ 
+      patient_id: patientId,
+      status: 'active'
+    }, '-created_date', 20),
     initialData: [],
     enabled: !!patientId
   });
@@ -43,6 +64,9 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
     );
   }
 
+  const pendingTaskCount = relatedTasks.filter(t => t.status === 'pending').length;
+  const activeAlertCount = relatedAlerts.filter(a => a.status === 'active').length;
+
   return (
     <Card className="border-blue-300">
       <CardHeader className="pb-3">
@@ -57,6 +81,21 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {/* Quick Stats */}
+        <div className="flex gap-2 flex-wrap">
+          {pendingTaskCount > 0 && (
+            <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-300 text-yellow-700">
+              <CheckSquare className="w-3 h-3 mr-1" />
+              {pendingTaskCount} Task{pendingTaskCount > 1 ? 's' : ''}
+            </Badge>
+          )}
+          {activeAlertCount > 0 && (
+            <Badge variant="outline" className="text-xs bg-red-50 border-red-300 text-red-700">
+              <Bell className="w-3 h-3 mr-1" />
+              {activeAlertCount} Alert{activeAlertCount > 1 ? 's' : ''}
+            </Badge>
+          )}
+        </div>
         {/* Top Event Types */}
         <div className="flex flex-wrap gap-2">
           {topEventTypes.map(([type, count]) => (
@@ -84,9 +123,19 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
                   </span>
                 </div>
                 <p className="font-medium text-gray-900 truncate">{event.event_title}</p>
-                {event.requires_followup && (
-                  <Badge className="bg-yellow-600 text-xs mt-1">Follow-up needed</Badge>
-                )}
+                <div className="flex gap-1 mt-1 flex-wrap">
+                  {event.requires_followup && (
+                    <Badge className="bg-yellow-600 text-xs">
+                      <CheckSquare className="w-3 h-3 mr-1" />
+                      Task
+                    </Badge>
+                  )}
+                  {(event.severity === 'high' || event.severity === 'critical') && (
+                    <Badge className="bg-red-600 text-xs">
+                      <Bell className="w-3 h-3 mr-1" />
+                      Alert
+                    </Badge>
+                  )}
               </div>
             </div>
           ))}

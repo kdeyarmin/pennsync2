@@ -114,12 +114,66 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
 
       const savedEvent = await base44.asServiceRole.entities.ClinicalEvent.create(eventData);
       savedEvents.push(savedEvent);
+
+      // Auto-create follow-up task if needed
+      if (event.requires_followup) {
+        const taskPriority = event.severity === 'critical' ? 'high' : 
+                           event.severity === 'high' ? 'high' : 'medium';
+        
+        let taskType = 'followup';
+        if (event.event_type.includes('medication')) taskType = 'call';
+        if (event.event_type === 'fall') taskType = 'safety';
+        if (event.event_type.includes('wound')) taskType = 'document';
+        
+        await base44.asServiceRole.entities.Task.create({
+          patient_id,
+          title: `Follow-up: ${event.event_title}`,
+          description: event.followup_notes || event.event_description,
+          type: taskType,
+          priority: taskPriority,
+          status: 'pending',
+          due_timeframe: event.severity === 'critical' ? 'today' : '48_hours',
+          source: 'ai_generated',
+          ai_reason: `Auto-generated from clinical event: ${event.event_type}`,
+          related_visit_id: visit_id
+        });
+      }
+
+      // Create patient alert for high/critical events
+      if (event.severity === 'high' || event.severity === 'critical') {
+        let alertType = 'urgent_intervention';
+        if (event.event_type.includes('medication')) alertType = 'medication_risk';
+        if (event.event_type === 'fall') alertType = 'fall_risk';
+        if (event.event_type.includes('vital')) alertType = 'vital_deterioration';
+        if (event.event_type === 'infection') alertType = 'infection_risk';
+        if (event.event_type === 'cognitive_change') alertType = 'symptom_escalation';
+        
+        await base44.asServiceRole.entities.PatientAlert.create({
+          patient_id,
+          alert_type: alertType,
+          severity: event.severity,
+          title: event.event_title,
+          message: event.event_description,
+          contributing_factors: [event.event_type, `Detected from visit ${visit_id}`],
+          recommended_actions: event.followup_notes ? [event.followup_notes] : [],
+          data_sources: {
+            clinical_event_id: savedEvent.id,
+            visit_id,
+            event_type: event.event_type,
+            structured_data: event.structured_data
+          },
+          status: 'active',
+          flagged_urgent: event.severity === 'critical'
+        });
+      }
     }
 
     return Response.json({
       success: true,
       events_extracted: savedEvents.length,
-      events: savedEvents
+      events: savedEvents,
+      tasks_created: savedEvents.filter(e => e.requires_followup).length,
+      alerts_created: savedEvents.filter(e => e.severity === 'high' || e.severity === 'critical').length
     });
 
   } catch (error) {

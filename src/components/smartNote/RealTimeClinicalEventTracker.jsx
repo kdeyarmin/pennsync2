@@ -104,13 +104,70 @@ export default function RealTimeClinicalEventTracker({
       structured_data: event.structured_data || {},
       severity: event.severity || 'medium',
       requires_followup: event.requires_followup || false,
+      followup_notes: event.followup_notes,
       source_text: event.source_text,
       extraction_confidence: event.confidence,
       verified: true,
       verified_by: 'current_user'
     };
 
-    await createEventMutation.mutateAsync(eventData);
+    const savedEvent = await createEventMutation.mutateAsync(eventData);
+
+    // Auto-create follow-up task
+    if (event.requires_followup) {
+      const taskPriority = event.severity === 'critical' ? 'high' : 
+                         event.severity === 'high' ? 'high' : 'medium';
+      
+      let taskType = 'followup';
+      if (event.type?.includes('medication')) taskType = 'call';
+      if (event.type === 'fall') taskType = 'safety';
+      if (event.type?.includes('wound')) taskType = 'document';
+      
+      await base44.entities.Task.create({
+        patient_id: patientId,
+        title: `Follow-up: ${event.title}`,
+        description: event.followup_notes || event.description,
+        type: taskType,
+        priority: taskPriority,
+        status: 'pending',
+        due_timeframe: event.severity === 'critical' ? 'today' : '48_hours',
+        source: 'ai_generated',
+        ai_reason: `Auto-generated from clinical event: ${event.type}`,
+        related_visit_id: visitId
+      });
+    }
+
+    // Create patient alert for high/critical events
+    if (event.severity === 'high' || event.severity === 'critical') {
+      let alertType = 'urgent_intervention';
+      if (event.type?.includes('medication')) alertType = 'medication_risk';
+      if (event.type === 'fall') alertType = 'fall_risk';
+      if (event.type?.includes('vital')) alertType = 'vital_deterioration';
+      if (event.type === 'infection') alertType = 'infection_risk';
+      if (event.type === 'cognitive_change') alertType = 'symptom_escalation';
+      
+      await base44.entities.PatientAlert.create({
+        patient_id: patientId,
+        alert_type: alertType,
+        severity: event.severity,
+        title: event.title,
+        message: event.description,
+        contributing_factors: [event.type, `Detected during documentation`],
+        recommended_actions: event.followup_notes ? [event.followup_notes] : [],
+        data_sources: {
+          clinical_event_id: savedEvent.id,
+          visit_id: visitId,
+          event_type: event.type,
+          structured_data: event.structured_data
+        },
+        status: 'active',
+        flagged_urgent: event.severity === 'critical'
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['patientAlerts'] });
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
     setConfirmedEvents([...confirmedEvents, event.id || event.title]);
     setDetectedEvents(detectedEvents.filter(e => e !== event));
   };
@@ -209,7 +266,23 @@ export default function RealTimeClinicalEventTracker({
                         )}
 
                         {event.requires_followup && (
-                          <Badge className="bg-yellow-600 text-xs mb-2">Requires Follow-up</Badge>
+                          <div className="bg-yellow-50 border border-yellow-300 rounded p-2 mb-2">
+                            <Badge className="bg-yellow-600 text-xs mb-1">Requires Follow-up</Badge>
+                            {event.followup_notes && (
+                              <p className="text-xs text-yellow-900 mt-1">{event.followup_notes}</p>
+                            )}
+                            <p className="text-xs text-yellow-700 mt-1">
+                              ✓ Task will be auto-created upon confirmation
+                            </p>
+                          </div>
+                        )}
+
+                        {(event.severity === 'high' || event.severity === 'critical') && (
+                          <div className="bg-red-50 border border-red-300 rounded p-2 mb-2">
+                            <p className="text-xs text-red-900">
+                              ⚠ Patient alert will be auto-created for care team review
+                            </p>
+                          </div>
                         )}
 
                         <div className="flex gap-2 mt-2">
