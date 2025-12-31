@@ -337,22 +337,6 @@ Deno.serve(async (req) => {
     yPos += 5;
     doc.setTextColor(0, 0, 0);
 
-    // M1000 - Demographics
-    checkPageBreak(25);
-    doc.setFillColor(219, 234, 254);
-    doc.rect(margin - 2, yPos - 3, 180, 7, 'F');
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.text('M1000-M1060: ADMINISTRATIVE INFORMATION', margin, yPos);
-    yPos += 8;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    addKeyValue('M1005 - Medicare Number', demo.policy_numbers || 'Verify at visit');
-    addKeyValue('M1010 - Medicaid Number', 'Verify at visit');
-    addKeyValue('M1016 - Physician Name', demo.primary_care_physician || demo.referring_physician);
-    addKeyValue('M1018 - Physician Phone', demo.pcp_contact || demo.referring_physician_contact);
-    yPos += 4;
-
     // M1021 - Primary Diagnosis
     checkPageBreak(20);
     doc.setFillColor(254, 226, 226);
