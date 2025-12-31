@@ -100,6 +100,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Overview",
       items: [
         { name: "Dashboard", icon: Home, page: "Dashboard" },
+        { name: "My Workflow", icon: Sparkles, page: "NurseWorkflow" },
         { name: "Patient Dashboard", icon: BarChart3, page: "PatientDashboard" }
       ]
     },
@@ -141,6 +142,7 @@ export default function Layout({ children, currentPageName }) {
   const adminItems = [
     { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
     { name: "Advanced Reports", icon: BarChart3, page: "AdvancedReports" },
+    { name: "Automated Reports", icon: Sparkles, page: "AutomatedReports" },
     { name: "KPI Dashboard", icon: BarChart3, page: "AdminKPIDashboard" },
     { name: "Users & Settings", icon: Users, page: "UserManagement" },
     { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },

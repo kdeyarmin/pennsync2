@@ -67,6 +67,7 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import AutomatedReports from './pages/AutomatedReports';
+import NurseWorkflow from './pages/NurseWorkflow';
 import __Layout from './Layout.jsx';
 
 
@@ -140,6 +141,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "AutomatedReports": AutomatedReports,
+    "NurseWorkflow": NurseWorkflow,
 }
 
 export const pagesConfig = {
