@@ -47,6 +47,12 @@ export default function Patient360() {
   const urlParams = new URLSearchParams(window.location.search);
   const [selectedPatientId, setSelectedPatientId] = useState(urlParams.get('id') || null);
 
+  const { data: allPatients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.list('-updated_date', 500),
+    initialData: []
+  });
+
   const { data: patient } = useQuery({
     queryKey: ['patient', selectedPatientId],
     queryFn: async () => {
@@ -140,9 +146,11 @@ export default function Patient360() {
             <p className="text-gray-600 mb-6">Choose a patient to view their comprehensive 360° profile</p>
             <div className="max-w-md mx-auto">
               <SearchablePatientSelect
-                onSelect={(patient) => {
-                  setSelectedPatientId(patient.id);
-                  window.history.pushState({}, '', `${createPageUrl('Patient360')}?id=${patient.id}`);
+                patients={allPatients}
+                value={selectedPatientId}
+                onValueChange={(patientId) => {
+                  setSelectedPatientId(patientId);
+                  window.history.pushState({}, '', `${createPageUrl('Patient360')}?id=${patientId}`);
                 }}
               />
             </div>
