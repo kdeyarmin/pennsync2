@@ -14,7 +14,11 @@ import {
   ThumbsUp,
   ThumbsDown,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  DollarSign,
+  Target,
+  Activity,
+  ArrowRight
 } from "lucide-react";
 import {
   Accordion,
@@ -331,6 +335,68 @@ Patient Data: ${JSON.stringify(contextData)}`,
                   reimbursement_impact: { type: "string" },
                   resolution_steps: { type: "array", items: { type: "string" } },
                   recommended_action: { type: "string" }
+                }
+              }
+            },
+            diagnosis_optimization: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  current_primary: { type: "string" },
+                  recommended_primary: { type: "string" },
+                  recommended_icd10: { type: "string" },
+                  clinical_group_current: { type: "string" },
+                  clinical_group_recommended: { type: "string" },
+                  revenue_impact: { type: "number" },
+                  documentation_template: { type: "string" },
+                  required_clinical_observations: { type: "array", items: { type: "string" } },
+                  justification_rationale: { type: "string" }
+                }
+              }
+            },
+            functional_optimization: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  oasis_item: { type: "string" },
+                  item_description: { type: "string" },
+                  current_score: { type: "string" },
+                  recommended_score: { type: "string" },
+                  observational_points: { type: "array", items: { type: "string" } },
+                  documentation_example: { type: "string" },
+                  clinical_indicators: { type: "array", items: { type: "string" } },
+                  case_mix_impact: { type: "string" },
+                  revenue_impact: { type: "number" }
+                }
+              }
+            },
+            missing_data_revenue_analysis: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  data_element: { type: "string" },
+                  pdgm_component_affected: { type: "string" },
+                  revenue_at_risk: { type: "number" },
+                  specific_questions: { type: "array", items: { type: "string" } },
+                  assessment_method: { type: "string" },
+                  priority: { type: "string", enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW"] }
+                }
+              }
+            },
+            oasis_mapping_recommendations: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  oasis_item: { type: "string" },
+                  recommended_selection: { type: "string" },
+                  clinical_reasoning: { type: "string" },
+                  decision_criteria: { type: "string" },
+                  payment_impact: { type: "number" },
+                  documentation_needed: { type: "string" }
                 }
               }
             },
@@ -654,6 +720,249 @@ Patient Data: ${JSON.stringify(contextData)}`,
                           → {finding.recommended_action}
                         </p>
                       )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Diagnosis Optimization */}
+          {suggestions.diagnosis_optimization?.length > 0 && (
+            <Card className="border-2 border-purple-400 bg-purple-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-purple-900">
+                  <Target className="w-5 h-5" />
+                  Primary Diagnosis Optimization for Maximum Reimbursement
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert className="bg-purple-100 border-purple-400">
+                  <AlertDescription className="text-purple-900 text-sm">
+                    <strong>Strategic Diagnosis Selection:</strong> Choosing the optimal primary diagnosis can significantly impact your PDGM clinical group and reimbursement.
+                  </AlertDescription>
+                </Alert>
+                {suggestions.diagnosis_optimization.map((diag, idx) => (
+                  <div key={idx} className="bg-white p-4 rounded-lg border-2 border-purple-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex-1">
+                        <Badge className="bg-red-500 mb-2">Current</Badge>
+                        <p className="text-sm text-gray-700">{diag.current_primary}</p>
+                        <p className="text-xs text-gray-500">{diag.clinical_group_current}</p>
+                      </div>
+                      <ArrowRight className="w-8 h-8 text-purple-600 mx-4" />
+                      <div className="flex-1">
+                        <Badge className="bg-green-500 mb-2">Recommended</Badge>
+                        <p className="text-sm font-semibold text-gray-900">{diag.recommended_primary}</p>
+                        <p className="text-xs text-blue-600 font-mono">{diag.recommended_icd10}</p>
+                        <p className="text-xs text-gray-500">{diag.clinical_group_recommended}</p>
+                      </div>
+                      <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
+                        <p className="text-xs text-green-700">Revenue Impact</p>
+                        <p className="text-lg font-bold text-green-900">+${diag.revenue_impact}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-900 mb-2">📝 Documentation Template:</p>
+                        <p className="text-sm text-gray-800 font-mono whitespace-pre-wrap">{diag.documentation_template}</p>
+                      </div>
+
+                      <div className="bg-orange-50 p-3 rounded border border-orange-200">
+                        <p className="text-xs font-semibold text-orange-900 mb-2">🔍 Required Clinical Observations:</p>
+                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                          {diag.required_clinical_observations?.map((obs, oIdx) => (
+                            <li key={oIdx}>{obs}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                        <p className="text-xs font-semibold text-gray-900 mb-1">💡 Clinical Rationale:</p>
+                        <p className="text-sm text-gray-700">{diag.justification_rationale}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Functional Status Optimization */}
+          {suggestions.functional_optimization?.length > 0 && (
+            <Card className="border-2 border-blue-400 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <Activity className="w-5 h-5" />
+                  Functional Status Optimization (M1800-M1860)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert className="bg-blue-100 border-blue-400">
+                  <AlertDescription className="text-blue-900 text-sm">
+                    <strong>Case-Mix Maximization:</strong> Accurate functional scoring directly impacts your case-mix weight and payment. Document specific observations to support appropriate impairment levels.
+                  </AlertDescription>
+                </Alert>
+                {suggestions.functional_optimization.map((func, idx) => (
+                  <div key={idx} className="bg-white p-4 rounded-lg border-2 border-blue-300">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="outline" className="text-xs">{func.oasis_item}</Badge>
+                          <Badge className="bg-blue-600">{func.item_description}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mt-3">
+                          <div>
+                            <p className="text-xs text-gray-600">Current Score</p>
+                            <p className="text-lg font-bold text-gray-900">{func.current_score}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600">Recommended Score</p>
+                            <p className="text-lg font-bold text-green-600">{func.recommended_score}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg text-right">
+                        <p className="text-xs text-green-700">Payment Impact</p>
+                        <p className="text-lg font-bold text-green-900">+${func.revenue_impact}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                        <p className="text-xs font-semibold text-yellow-900 mb-2">👀 Specific Observational Points:</p>
+                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                          {func.observational_points?.map((point, pIdx) => (
+                            <li key={pIdx}>{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="bg-green-50 p-3 rounded border border-green-200">
+                        <p className="text-xs font-semibold text-green-900 mb-2">📝 Documentation Example:</p>
+                        <p className="text-sm text-gray-800 font-mono whitespace-pre-wrap">{func.documentation_example}</p>
+                      </div>
+
+                      <div className="bg-purple-50 p-3 rounded border border-purple-200">
+                        <p className="text-xs font-semibold text-purple-900 mb-2">🔬 Clinical Indicators to Assess:</p>
+                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                          {func.clinical_indicators?.map((ind, iIdx) => (
+                            <li key={iIdx}>{ind}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="bg-blue-100 p-2 rounded">
+                        <p className="text-xs text-blue-900"><strong>Case-Mix Impact:</strong> {func.case_mix_impact}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Missing Data Revenue Analysis */}
+          {suggestions.missing_data_revenue_analysis?.length > 0 && (
+            <Card className="border-2 border-red-400 bg-red-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-900">
+                  <AlertCircle className="w-5 h-5" />
+                  Critical Missing Data - Revenue at Risk
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Alert className="bg-red-100 border-red-400">
+                  <AlertDescription className="text-red-900 text-sm">
+                    <strong>High Priority:</strong> The following data gaps are preventing optimal PDGM classification. Total revenue at risk: ${suggestions.missing_data_revenue_analysis.reduce((sum, item) => sum + (item.revenue_at_risk || 0), 0).toLocaleString()}
+                  </AlertDescription>
+                </Alert>
+                {suggestions.missing_data_revenue_analysis
+                  .sort((a, b) => (b.revenue_at_risk || 0) - (a.revenue_at_risk || 0))
+                  .map((missing, idx) => (
+                  <div key={idx} className={`bg-white p-4 rounded-lg border-2 ${
+                    missing.priority === 'CRITICAL' ? 'border-red-500' :
+                    missing.priority === 'HIGH' ? 'border-orange-500' :
+                    missing.priority === 'MEDIUM' ? 'border-yellow-500' :
+                    'border-blue-500'
+                  }`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className={
+                            missing.priority === 'CRITICAL' ? 'bg-red-600' :
+                            missing.priority === 'HIGH' ? 'bg-orange-600' :
+                            missing.priority === 'MEDIUM' ? 'bg-yellow-600' :
+                            'bg-blue-600'
+                          }>{missing.priority}</Badge>
+                          <p className="font-semibold text-gray-900">{missing.data_element}</p>
+                        </div>
+                        <p className="text-xs text-gray-600">Affects: {missing.pdgm_component_affected}</p>
+                      </div>
+                      <div className="ml-4 bg-red-100 px-3 py-2 rounded-lg text-right">
+                        <p className="text-xs text-red-700">Revenue at Risk</p>
+                        <p className="text-xl font-bold text-red-900">${missing.revenue_at_risk}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                      <div className="bg-orange-50 p-3 rounded border border-orange-200">
+                        <p className="text-xs font-semibold text-orange-900 mb-2">❓ Specific Questions to Ask:</p>
+                        <ul className="text-sm text-gray-800 space-y-1 list-disc list-inside">
+                          {missing.specific_questions?.map((q, qIdx) => (
+                            <li key={qIdx}>{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">🔍 Assessment Method:</p>
+                        <p className="text-sm text-gray-800">{missing.assessment_method}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* OASIS Mapping Recommendations */}
+          {suggestions.oasis_mapping_recommendations?.length > 0 && (
+            <Card className="border-2 border-indigo-400 bg-indigo-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-indigo-900">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Strategic OASIS Item Selections
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {suggestions.oasis_mapping_recommendations.map((mapping, idx) => (
+                  <div key={idx} className="bg-white p-4 rounded-lg border-2 border-indigo-300">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <Badge variant="outline" className="mb-2">{mapping.oasis_item}</Badge>
+                        <p className="font-semibold text-lg text-gray-900 mb-2">{mapping.recommended_selection}</p>
+                        <p className="text-sm text-gray-700 mb-3">{mapping.clinical_reasoning}</p>
+                      </div>
+                      {mapping.payment_impact > 0 && (
+                        <div className="ml-4 bg-green-100 px-3 py-2 rounded-lg">
+                          <p className="text-xs text-green-700">Impact</p>
+                          <p className="text-lg font-bold text-green-900">+${mapping.payment_impact}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                        <p className="text-xs font-semibold text-yellow-900 mb-1">📋 Decision Criteria:</p>
+                        <p className="text-sm text-gray-800">{mapping.decision_criteria}</p>
+                      </div>
+
+                      <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">📝 Documentation Needed:</p>
+                        <p className="text-sm text-gray-800">{mapping.documentation_needed}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
