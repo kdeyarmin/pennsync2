@@ -181,6 +181,35 @@ For each discrepancy found, provide:
 - **Resolution Steps:** Specific actions to reconcile the discrepancy
 - **Reimbursement Impact:** How fixing this could affect payment
 
+**PROACTIVE PDGM OPTIMIZATION STRATEGY:**
+
+You must provide actionable, revenue-maximizing recommendations:
+
+1. **Diagnosis Optimization (M1021-M1029):**
+   - If multiple diagnoses exist, analyze which should be PRIMARY for highest-paying clinical group
+   - Provide specific ICD-10 code recommendations
+   - Give concrete documentation templates/examples to justify primary diagnosis selection
+   - Explain EXACTLY what clinical observations/assessments the nurse needs to document
+   - Compare revenue potential: "Making X primary vs Y primary = $Z difference per episode"
+
+2. **Functional Status Optimization (M1800-M1860):**
+   - For EACH functional item, identify specific observational points that support higher impairment
+   - Suggest exact wording for documentation (e.g., "Document: Patient requires physical assist with...")
+   - Provide clinical examples: "If patient uses walker, document specific limitations and assist needed"
+   - Explain how each functional scoring change impacts case-mix weight
+   - Revenue impact: "Scoring M1850 as '2' instead of '1' increases payment by $X"
+
+3. **Missing Data Revenue Analysis:**
+   - Identify EACH missing data element that affects PDGM
+   - Calculate potential revenue at risk: "Missing wound staging data = potential $X loss"
+   - Prioritize by dollar impact (highest revenue impact first)
+   - Provide specific questions nurse must ask or observations to make
+
+4. **Specific OASIS Mappings:**
+   - Recommend optimal OASIS item selections with exact reasoning
+   - Format: "M1XXX: Select [option] because [clinical reasoning] → Increases payment by $X"
+   - Provide decision trees: "If patient has X condition, then score M1XXX as Y"
+
 **COMPREHENSIVE PDGM ANALYSIS REQUIRED:**
 
 After analyzing all OASIS items, provide a detailed PDGM Analysis section that includes:
