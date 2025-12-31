@@ -48,7 +48,8 @@ import {
   Edit3,
   BookOpen,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from "lucide-react";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
@@ -97,6 +98,8 @@ import AIComplianceAssistant from "../components/compliance/AIComplianceAssistan
 import UnifiedDocumentReview from "../components/smartNote/UnifiedDocumentReview";
 import AIScenarioTemplates from "../components/smartNote/AIScenarioTemplates";
 import ProactiveEducationSuggester from "../components/smartNote/ProactiveEducationSuggester";
+import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
+import AISmartOASISAssistant from "../components/oasis/AISmartOASISAssistant";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -235,6 +238,8 @@ export default function SmartNoteAssistant() {
   const [listening, setListening] = useState(false);
   const [interimText, setInterimText] = useState('');
   const recognitionRef = React.useRef(null);
+  const [oasisSuggestions, setOasisSuggestions] = useState(null);
+  const [admissionDocumentation, setAdmissionDocumentation] = useState({});
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -566,7 +571,19 @@ export default function SmartNoteAssistant() {
     };
   }, []);
 
+  const handleSaveAdmissionSection = (sectionTitle, content) => {
+    setAdmissionDocumentation(prev => ({
+      ...prev,
+      [sectionTitle]: content
+    }));
+    
+    // Optionally append to rough notes for continuity
+    const sectionText = `\n\n=== ${sectionTitle} ===\n${content}`;
+    setRoughNote(prev => prev + sectionText);
+  };
 
+  // Show admission tools only for admission visits
+  const showAdmissionTools = visitType === 'admission' && selectedPatientId;
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -778,6 +795,62 @@ export default function SmartNoteAssistant() {
                   />
                 </CardContent>
               )}
+            </Card>
+          )}
+
+          {/* Step 2.5: Admission Documentation Tools (Admission Visits Only) */}
+          {showAdmissionTools && !enhancedNote && (
+            <Card className="border-2 border-indigo-500 bg-gradient-to-r from-indigo-50 to-blue-50">
+              <CardHeader className="py-4">
+                <CardTitle className="text-base md:text-lg flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-indigo-500">
+                    <FileText className="w-4 h-4 text-white" />
+                  </div>
+                  <span>Admission Documentation Tools</span>
+                  <Badge className="bg-indigo-600">Admission Only</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Tabs defaultValue="oasis" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="oasis">OASIS Assistant</TabsTrigger>
+                    <TabsTrigger value="documentation">Admission Documentation</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="oasis" className="space-y-4 mt-4">
+                    <AISmartOASISAssistant
+                      patientData={selectedPatient}
+                      referralData={null}
+                      visitData={{
+                        visitType,
+                        vitalSigns,
+                        roughNote
+                      }}
+                      onApplySuggestion={(suggestion) => {
+                        setOasisSuggestions(prev => prev ? [...prev, suggestion] : [suggestion]);
+                      }}
+                      autoAnalyze={true}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="documentation" className="space-y-4 mt-4">
+                    <AIAdmissionDocumentationAssistant
+                      referralData={null}
+                      oasisSuggestions={oasisSuggestions}
+                      patientData={selectedPatient}
+                      onSaveSection={handleSaveAdmissionSection}
+                    />
+                    {Object.keys(admissionDocumentation).length > 0 && (
+                      <Alert className="bg-green-50 border-green-300">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <AlertDescription className="text-green-900">
+                          <strong>Sections Saved:</strong> {Object.keys(admissionDocumentation).length} admission sections have been added to your notes.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
             </Card>
           )}
 
