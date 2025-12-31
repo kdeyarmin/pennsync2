@@ -31,6 +31,7 @@ import { Link } from "react-router-dom";
 import ClinicalEventValidator from "./ClinicalEventValidator";
 import LinkedNoteViewer from "./LinkedNoteViewer";
 import AICarePlanSuggester from "../carePlan/AICarePlanSuggester";
+import PatientEducationPanel from "../education/PatientEducationPanel";
 
 const EVENT_TYPES = {
   visit: { label: 'Visits', icon: Activity, color: 'blue' },
@@ -421,6 +422,9 @@ Be specific and reference actual events by date and type.`,
       )}
 
     <div className="space-y-4">
+      {/* Patient Education Materials */}
+      <PatientEducationPanel patientId={patient?.id} />
+
       {/* AI Care Plan Suggester */}
       <AICarePlanSuggester 
         patientId={patient?.id}
