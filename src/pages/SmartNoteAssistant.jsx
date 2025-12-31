@@ -107,6 +107,8 @@ import PatientTimelineView from "../components/smartNote/PatientTimelineView";
 import IntegratedOASISAnalyzer from "../components/smartNote/IntegratedOASISAnalyzer";
 import AutoEventExtractor from "../components/smartNote/AutoEventExtractor";
 import ReferralBasedDocumentationAssistant from "../components/smartNote/ReferralBasedDocumentationAssistant";
+import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
+import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -770,13 +772,16 @@ export default function SmartNoteAssistant() {
               </TabsList>
 
               <TabsContent value="context">
-                <EnhancedPatientContextPanel
-                  patient={selectedPatient}
-                  onContextUpdate={(context) => {
-                    // Context is available for use in other components
-                    console.log('Patient context updated:', context);
-                  }}
-                />
+                <div className="space-y-4">
+                  <ClinicalEventsSummary patientId={selectedPatientId} />
+                  <EnhancedPatientContextPanel
+                    patient={selectedPatient}
+                    onContextUpdate={(context) => {
+                      // Context is available for use in other components
+                      console.log('Patient context updated:', context);
+                    }}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="timeline">
@@ -1076,6 +1081,16 @@ export default function SmartNoteAssistant() {
                     </CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-4">
+                {/* Real-time event detection while typing */}
+                {roughNote.length >= 100 && (
+                  <RealTimeClinicalEventTracker
+                    noteText={roughNote}
+                    patientId={selectedPatientId}
+                    visitId={savedVisitId}
+                    autoDetect={true}
+                  />
+                )}
+                
                 <div className="relative">
                  <Textarea
                    value={roughNote}
@@ -1195,6 +1210,16 @@ export default function SmartNoteAssistant() {
                      Note saved to patient chart successfully!
                    </AlertDescription>
                  </Alert>
+                )}
+                
+                {/* Post-enhancement event detection */}
+                {enhancedNote && (
+                  <RealTimeClinicalEventTracker
+                    noteText={enhancedNote}
+                    patientId={selectedPatientId}
+                    visitId={savedVisitId}
+                    autoDetect={false}
+                  />
                 )}
                 </CardContent>
                 </Card>

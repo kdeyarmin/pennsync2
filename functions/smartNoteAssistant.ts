@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { action, ...params } = await req.json();
+    const { action, autoExtractEvents = false, ...params } = await req.json();
 
     switch (action) {
       case 'enhance_note':
@@ -181,6 +181,77 @@ Return compliance_score and compliant_elements.`,
     compliance_improvement: complianceImprovement
   });
 
+  // Auto-extract clinical events if enabled
+  let detectedEvents = [];
+  if (autoExtractEvents && patientId) {
+    try {
+      const eventsResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `Analyze this clinical note and extract ALL significant clinical events. Be thorough and specific.
+
+ENHANCED NOTE:
+${enhancementResult.enhanced_note}
+
+ROUGH NOTE (for context):
+${roughNote}
+
+Extract events such as:
+- Medication changes (started, stopped, dose changes, side effects reported)
+- Vital sign abnormalities or concerning trends
+- New symptoms, symptom exacerbations, or symptom resolutions
+- Falls, injuries, or safety incidents  
+- Wound assessments or changes in wound status
+- Cognitive changes or behavioral changes
+- Functional status changes (mobility, ADLs)
+- Pain level changes or new pain
+- Hospitalizations, ER visits, or physician appointments mentioned
+- New diagnoses or complications
+- Lab results or test results
+- Infections or signs of infection
+- Equipment/DME orders or changes
+- Patient education topics or concerns
+
+For each event, provide:
+- type: medication_change, medication_started, medication_stopped, fall, vital_change, symptom_new, symptom_resolved, wound_new, wound_change, cognitive_change, functional_change, pain_change, hospitalization, er_visit, physician_appointment, lab_result, infection, surgery, therapy_change, dme_ordered, other
+- title: Brief, specific title (e.g., "Metoprolol increased to 50mg BID" not just "Medication Change")
+- description: Detailed clinical description with full context
+- date: Visit date or date mentioned in note
+- severity: low/medium/high/critical based on clinical significance
+- structured_data: Object with specific details (medication name, dosage, vital values, wound location/size, etc.)
+- source_text: Exact relevant text from note (verbatim quote)
+- requires_followup: true if needs action/monitoring/physician notification
+- confidence: 0-100 (only include events with confidence >= 75)
+
+Be thorough - extract ALL clinically significant events, not just major ones. Include both positive and negative findings.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            events: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  type: { type: "string" },
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  date: { type: "string" },
+                  severity: { type: "string" },
+                  structured_data: { type: "object" },
+                  source_text: { type: "string" },
+                  requires_followup: { type: "boolean" },
+                  confidence: { type: "number" }
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      detectedEvents = eventsResponse.events || [];
+    } catch (error) {
+      console.error('Auto event extraction error:', error);
+    }
+  }
+
   return Response.json({
     success: true,
     enhanced_note: enhancementResult.enhanced_note,
@@ -188,7 +259,8 @@ Return compliance_score and compliant_elements.`,
     rough_compliance: roughComplianceResult,
     enhanced_compliance: enhancedComplianceResult,
     compliance_improvement: complianceImprovement,
-    documentation_gaps: roughComplianceResult.specific_gaps
+    documentation_gaps: roughComplianceResult.specific_gaps,
+    detected_events: detectedEvents
   });
 }
 
