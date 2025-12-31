@@ -195,7 +195,7 @@ export default function AdminDashboard() {
   const stats = React.useMemo(() => {
     return calculateStats({
       visits,
-      noteConversions: allNoteConversions,
+      noteConversions: allNoteConversions, // Backend entity name
       users,
       patients,
       incidents,
@@ -403,7 +403,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1 mr-2">
                 <p className="text-purple-100 text-xs font-medium mb-0.5 truncate">Note Enhancements</p>
-                <p className="text-xl sm:text-2xl font-bold">{stats.noteConversions.inRange}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.noteEnhancements.inRange}</p>
                 <p className="text-purple-100 text-[10px] mt-0.5">last 30 days</p>
               </div>
               <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-purple-200 flex-shrink-0" />

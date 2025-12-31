@@ -47,9 +47,9 @@ export const calculateStats = (data) => {
     : 0;
 
   // ====================
-  // NOTE CONVERSION STATISTICS
+  // NOTE ENHANCEMENT STATISTICS
   // ====================
-  // Note conversions = times the "enhance note" button was clicked and AI generated a note
+  // Note enhancements = times the "enhance note" button was clicked and AI generated a note
   const totalNoteConversions = noteConversions.length;
   
   const noteConversionsInRange = noteConversions.filter(nc => {
@@ -167,8 +167,8 @@ export const calculateStats = (data) => {
       completionRate
     },
 
-    // Note conversion stats (enhance button clicks)
-    noteConversions: {
+    // Note enhancement stats (enhance button clicks)
+    noteEnhancements: {
       total: totalNoteConversions,
       inRange: noteConversionsInRange
     },

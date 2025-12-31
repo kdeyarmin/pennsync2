@@ -292,8 +292,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     setIsGenerating(false);
   };
 
-  // Fetch note conversions for productivity reports
-  const { data: allNoteConversions = [] } = useQuery({
+  // Fetch note enhancements for productivity reports (backend entity: NoteConversion)
+  const { data: allNoteEnhancements = [] } = useQuery({
     queryKey: ['allNoteConversions'],
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
     initialData: [],
@@ -305,15 +305,15 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
     
     const nursesData = users.filter(u => u.role === 'user').map(nurse => {
-      // Filter note conversions by date range for this nurse
-      const nurseConversions = allNoteConversions.filter(nc => {
+      // Filter note enhancements by date range for this nurse
+      const nurseEnhancements = allNoteEnhancements.filter(nc => {
         const createdDate = nc.created_date ? nc.created_date.split('T')[0] : null;
         return nc.nurse_email === nurse.email && 
                createdDate >= startDate && 
                createdDate <= endDate;
       });
       
-      const noteEnhancements = nurseConversions.length;
+      const noteEnhancements = nurseEnhancements.length;
       const timeSavedMinutes = noteEnhancements * 95; // 95 minutes saved per note enhancement
       const timeSavedHours = parseFloat((timeSavedMinutes / 60).toFixed(1));
       
