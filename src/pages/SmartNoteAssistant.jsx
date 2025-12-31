@@ -102,6 +102,7 @@ import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissio
 import AISmartOASISAssistant from "../components/oasis/AISmartOASISAssistant";
 import GuidedVisitWorkflow from "../components/visit/GuidedVisitWorkflow";
 import EnhancedPatientContextPanel from "../components/smartNote/EnhancedPatientContextPanel";
+import PatientTimelineView from "../components/smartNote/PatientTimelineView";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -714,15 +715,34 @@ export default function SmartNoteAssistant() {
             />
           )}
 
-          {/* Enhanced Patient Context Panel */}
+          {/* Enhanced Patient Context Panel with Timeline */}
           {selectedPatientId && (
-            <EnhancedPatientContextPanel
-              patient={selectedPatient}
-              onContextUpdate={(context) => {
-                // Context is available for use in other components
-                console.log('Patient context updated:', context);
-              }}
-            />
+            <Tabs defaultValue="context" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="context" className="font-semibold">
+                  <Brain className="w-4 h-4 mr-2" />
+                  Patient Context
+                </TabsTrigger>
+                <TabsTrigger value="timeline" className="font-semibold">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Timeline
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="context">
+                <EnhancedPatientContextPanel
+                  patient={selectedPatient}
+                  onContextUpdate={(context) => {
+                    // Context is available for use in other components
+                    console.log('Patient context updated:', context);
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="timeline">
+                <PatientTimelineView patient={selectedPatient} />
+              </TabsContent>
+            </Tabs>
           )}
 
           {!useGuidedWorkflow && (

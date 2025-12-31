@@ -1,0 +1,550 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { base44 } from "@/api/base44Client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Calendar,
+  Activity,
+  Target,
+  AlertCircle,
+  Hospital,
+  Pill,
+  FileText,
+  TrendingUp,
+  Filter,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Clock
+} from "lucide-react";
+import { format, parseISO, differenceInDays } from "date-fns";
+
+const EVENT_TYPES = {
+  visit: { label: 'Visits', icon: Activity, color: 'blue' },
+  care_plan: { label: 'Care Plans', icon: Target, color: 'green' },
+  incident: { label: 'Incidents', icon: AlertCircle, color: 'red' },
+  hospitalization: { label: 'Hospitalizations', icon: Hospital, color: 'purple' },
+  diagnosis: { label: 'Diagnoses', icon: FileText, color: 'indigo' },
+  medication: { label: 'Medications', icon: Pill, color: 'orange' }
+};
+
+export default function PatientTimelineView({ patient }) {
+  const [timelineEvents, setTimelineEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeFilters, setActiveFilters] = useState(Object.keys(EVENT_TYPES));
+  const [aiSummary, setAiSummary] = useState(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [expandedEvents, setExpandedEvents] = useState([]);
+  const [periodSummaries, setPeriodSummaries] = useState({});
+
+  useEffect(() => {
+    if (patient?.id) {
+      loadTimelineData();
+    }
+  }, [patient?.id]);
+
+  const loadTimelineData = async () => {
+    if (!patient?.id) return;
+
+    setIsLoading(true);
+    try {
+      // Fetch all relevant data
+      const [visits, carePlans, incidents] = await Promise.all([
+        base44.entities.Visit.filter({ patient_id: patient.id }, '-visit_date'),
+        base44.entities.CarePlan.filter({ patient_id: patient.id }),
+        base44.entities.Incident.filter({ patient_id: patient.id }, '-incident_date')
+      ]);
+
+      // Compile timeline events
+      const events = [];
+
+      // Add visits
+      visits.forEach(visit => {
+        events.push({
+          id: `visit-${visit.id}`,
+          type: 'visit',
+          date: visit.visit_date,
+          title: `${visit.visit_type.replace('_', ' ').toUpperCase()}`,
+          description: visit.nurse_notes?.substring(0, 200),
+          fullData: visit,
+          icon: Activity,
+          color: 'blue'
+        });
+      });
+
+      // Add care plans
+      carePlans.forEach(cp => {
+        events.push({
+          id: `careplan-${cp.id}`,
+          type: 'care_plan',
+          date: cp.created_date,
+          title: `Care Plan: ${cp.problem}`,
+          description: `Goal: ${cp.goal}`,
+          status: cp.status,
+          fullData: cp,
+          icon: Target,
+          color: 'green'
+        });
+      });
+
+      // Add incidents
+      incidents.forEach(incident => {
+        events.push({
+          id: `incident-${incident.id}`,
+          type: 'incident',
+          date: incident.incident_date,
+          title: `Incident: ${incident.incident_name || incident.incident_type}`,
+          description: incident.report?.substring(0, 200),
+          severity: incident.severity,
+          fullData: incident,
+          icon: AlertCircle,
+          color: 'red'
+        });
+      });
+
+      // Add hospitalizations from patient data
+      if (patient.past_hospitalizations?.length > 0) {
+        patient.past_hospitalizations.forEach((hosp, idx) => {
+          events.push({
+            id: `hosp-${idx}`,
+            type: 'hospitalization',
+            date: hosp.date,
+            title: `Hospitalization: ${hosp.reason}`,
+            description: `${hosp.hospital} (${hosp.length_of_stay} days)`,
+            fullData: hosp,
+            icon: Hospital,
+            color: 'purple'
+          });
+        });
+      }
+
+      // Add diagnosis changes
+      if (patient.primary_diagnosis) {
+        events.push({
+          id: 'dx-primary',
+          type: 'diagnosis',
+          date: patient.admission_date || patient.created_date,
+          title: `Primary Diagnosis`,
+          description: patient.primary_diagnosis,
+          icon: FileText,
+          color: 'indigo'
+        });
+      }
+
+      // Sort by date (most recent first)
+      events.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      setTimelineEvents(events);
+    } catch (error) {
+      console.error('Error loading timeline data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredEvents = useMemo(() => {
+    return timelineEvents.filter(event => activeFilters.includes(event.type));
+  }, [timelineEvents, activeFilters]);
+
+  const toggleFilter = (type) => {
+    setActiveFilters(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const generateAISummary = async () => {
+    if (!patient || timelineEvents.length === 0) return;
+
+    setIsGeneratingSummary(true);
+    try {
+      const eventsContext = timelineEvents.slice(0, 20).map(e => 
+        `${e.date}: ${e.title} - ${e.description || ''}`
+      ).join('\n');
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this patient's timeline and provide a comprehensive clinical summary:
+
+Patient: ${patient.first_name} ${patient.last_name}
+Timeline Events:
+${eventsContext}
+
+Provide:
+1. Overall clinical trajectory
+2. Key milestones and turning points
+3. Patterns or trends
+4. Current status assessment
+5. Notable concerns or successes`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            overall_trajectory: { type: "string" },
+            key_milestones: { type: "array", items: { type: "string" } },
+            patterns: { type: "array", items: { type: "string" } },
+            current_status: { type: "string" },
+            concerns: { type: "array", items: { type: "string" } },
+            positive_developments: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
+
+      setAiSummary(result);
+    } catch (error) {
+      console.error('Error generating summary:', error);
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+  const generatePeriodSummary = async (startDate, endDate) => {
+    const periodKey = `${startDate}-${endDate}`;
+    if (periodSummaries[periodKey]) return;
+
+    const periodEvents = filteredEvents.filter(e => {
+      const eventDate = new Date(e.date);
+      return eventDate >= new Date(startDate) && eventDate <= new Date(endDate);
+    });
+
+    if (periodEvents.length === 0) return;
+
+    try {
+      const eventsContext = periodEvents.map(e => 
+        `${e.date}: ${e.title} - ${e.description || ''}`
+      ).join('\n');
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Summarize this period in the patient's care journey (${format(new Date(startDate), 'MMM d')} - ${format(new Date(endDate), 'MMM d, yyyy')}):
+
+${eventsContext}
+
+Provide a concise 2-3 sentence summary highlighting the most significant events and outcomes.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            summary: { type: "string" }
+          }
+        }
+      });
+
+      setPeriodSummaries(prev => ({
+        ...prev,
+        [periodKey]: result.summary
+      }));
+    } catch (error) {
+      console.error('Error generating period summary:', error);
+    }
+  };
+
+  const toggleEventExpand = (eventId) => {
+    setExpandedEvents(prev =>
+      prev.includes(eventId) ? prev.filter(id => id !== eventId) : [...prev, eventId]
+    );
+  };
+
+  const groupEventsByMonth = () => {
+    const groups = {};
+    filteredEvents.forEach(event => {
+      const monthKey = format(new Date(event.date), 'yyyy-MM');
+      if (!groups[monthKey]) {
+        groups[monthKey] = [];
+      }
+      groups[monthKey].push(event);
+    });
+    return groups;
+  };
+
+  const eventGroups = useMemo(() => groupEventsByMonth(), [filteredEvents]);
+
+  if (!patient) {
+    return (
+      <Alert>
+        <AlertCircle className="w-4 h-4" />
+        <AlertDescription>Select a patient to view their timeline</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header with AI Summary */}
+      <Card className="border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-bold flex items-center gap-2 text-indigo-900">
+              <Clock className="w-5 h-5 text-indigo-700" />
+              Patient Timeline
+            </CardTitle>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={generateAISummary}
+              disabled={isGeneratingSummary || timelineEvents.length === 0}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold min-h-[36px]"
+            >
+              {isGeneratingSummary ? (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Summary
+                </>
+              )}
+            </Button>
+          </div>
+        </CardHeader>
+        {aiSummary && (
+          <CardContent className="pt-0 space-y-3">
+            <div className="bg-white border-l-4 border-indigo-500 p-3 rounded">
+              <h4 className="font-bold text-indigo-900 mb-1">Clinical Trajectory</h4>
+              <p className="text-sm text-gray-700">{aiSummary.overall_trajectory}</p>
+            </div>
+
+            {aiSummary.key_milestones?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-indigo-600" />
+                  Key Milestones
+                </h4>
+                <div className="space-y-1">
+                  {aiSummary.key_milestones.map((milestone, idx) => (
+                    <div key={idx} className="text-sm bg-indigo-50 p-2 rounded border border-indigo-200 text-indigo-900">
+                      • {milestone}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {aiSummary.concerns?.length > 0 && (
+                <Alert className="bg-red-50 border-red-300">
+                  <AlertDescription>
+                    <strong className="text-red-950">Concerns:</strong>
+                    <ul className="mt-1 space-y-1">
+                      {aiSummary.concerns.map((concern, idx) => (
+                        <li key={idx} className="text-sm text-red-900">• {concern}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {aiSummary.positive_developments?.length > 0 && (
+                <Alert className="bg-green-50 border-green-300">
+                  <AlertDescription>
+                    <strong className="text-green-950">Positive Progress:</strong>
+                    <ul className="mt-1 space-y-1">
+                      {aiSummary.positive_developments.map((dev, idx) => (
+                        <li key={idx} className="text-sm text-green-900">• {dev}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            Filter Events
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(EVENT_TYPES).map(([type, config]) => {
+              const Icon = config.icon;
+              const isActive = activeFilters.includes(type);
+              const count = timelineEvents.filter(e => e.type === type).length;
+
+              return (
+                <Button
+                  key={type}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleFilter(type)}
+                  className={`min-h-[36px] font-semibold ${isActive ? `bg-${config.color}-600 hover:bg-${config.color}-700` : ''}`}
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {config.label} ({count})
+                </Button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Timeline */}
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Sparkles className="w-6 h-6 animate-spin mx-auto text-indigo-600 mb-2" />
+            <p className="text-gray-600">Loading timeline...</p>
+          </CardContent>
+        </Card>
+      ) : filteredEvents.length === 0 ? (
+        <Alert>
+          <AlertCircle className="w-4 h-4" />
+          <AlertDescription>
+            No events found. Try adjusting your filters.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(eventGroups).map(([monthKey, events]) => {
+            const monthDate = parseISO(`${monthKey}-01`);
+            const monthLabel = format(monthDate, 'MMMM yyyy');
+            const periodKey = `${monthKey}-01-${monthKey}-31`;
+
+            return (
+              <Card key={monthKey} className="border-l-4 border-indigo-400">
+                <CardHeader className="bg-indigo-50 pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base font-bold text-indigo-900">
+                      <Calendar className="w-4 h-4 inline mr-2" />
+                      {monthLabel}
+                    </CardTitle>
+                    <Badge className="bg-indigo-600 text-white">{events.length} events</Badge>
+                  </div>
+                  {periodSummaries[periodKey] && (
+                    <div className="mt-2 bg-white border border-indigo-200 rounded p-2 text-sm text-gray-700">
+                      <strong className="text-indigo-900">Period Summary:</strong> {periodSummaries[periodKey]}
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {events.map(event => {
+                      const Icon = event.icon;
+                      const isExpanded = expandedEvents.includes(event.id);
+                      const eventConfig = EVENT_TYPES[event.type];
+
+                      return (
+                        <div
+                          key={event.id}
+                          className={`border-l-4 border-${eventConfig.color}-400 bg-${eventConfig.color}-50 rounded-r p-3 hover:shadow-md transition-shadow cursor-pointer`}
+                          onClick={() => toggleEventExpand(event.id)}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <div className={`p-2 rounded-full bg-${eventConfig.color}-100 flex-shrink-0`}>
+                                <Icon className={`w-4 h-4 text-${eventConfig.color}-700`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-semibold text-gray-900">{event.title}</h4>
+                                  {event.status && (
+                                    <Badge className={`text-xs ${
+                                      event.status === 'active' ? 'bg-green-600' :
+                                      event.status === 'met' ? 'bg-blue-600' :
+                                      'bg-gray-500'
+                                    } text-white`}>
+                                      {event.status}
+                                    </Badge>
+                                  )}
+                                  {event.severity && (
+                                    <Badge className={`text-xs ${
+                                      event.severity === 'high' ? 'bg-red-600' :
+                                      event.severity === 'medium' ? 'bg-yellow-600' :
+                                      'bg-blue-600'
+                                    } text-white`}>
+                                      {event.severity}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-600 mb-1">
+                                  {format(new Date(event.date), 'MMM d, yyyy')}
+                                </p>
+                                {event.description && (
+                                  <p className="text-sm text-gray-700">
+                                    {isExpanded ? event.description : `${event.description.substring(0, 100)}...`}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" className="flex-shrink-0">
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </Button>
+                          </div>
+
+                          {isExpanded && event.fullData && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 text-sm space-y-2">
+                              {event.type === 'visit' && event.fullData.vital_signs && (
+                                <div className="bg-white p-2 rounded">
+                                  <strong className="text-gray-900">Vitals:</strong>
+                                  <div className="flex flex-wrap gap-3 mt-1 text-xs">
+                                    {event.fullData.vital_signs.blood_pressure_systolic && (
+                                      <span>BP: {event.fullData.vital_signs.blood_pressure_systolic}/{event.fullData.vital_signs.blood_pressure_diastolic}</span>
+                                    )}
+                                    {event.fullData.vital_signs.heart_rate && (
+                                      <span>HR: {event.fullData.vital_signs.heart_rate}</span>
+                                    )}
+                                    {event.fullData.vital_signs.temperature && (
+                                      <span>Temp: {event.fullData.vital_signs.temperature}°F</span>
+                                    )}
+                                    {event.fullData.vital_signs.oxygen_saturation && (
+                                      <span>O2: {event.fullData.vital_signs.oxygen_saturation}%</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              {event.type === 'care_plan' && event.fullData.interventions && (
+                                <div className="bg-white p-2 rounded">
+                                  <strong className="text-gray-900">Interventions:</strong>
+                                  <ul className="mt-1 space-y-1">
+                                    {event.fullData.interventions.map((intervention, idx) => (
+                                      <li key={idx} className="text-xs">• {intervention}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Summary Stats */}
+      <Card className="bg-gradient-to-r from-gray-50 to-gray-100">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold text-indigo-600">{timelineEvents.filter(e => e.type === 'visit').length}</p>
+              <p className="text-xs text-gray-600">Total Visits</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-green-600">{timelineEvents.filter(e => e.type === 'care_plan').length}</p>
+              <p className="text-xs text-gray-600">Care Plans</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-600">{timelineEvents.filter(e => e.type === 'incident').length}</p>
+              <p className="text-xs text-gray-600">Incidents</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-purple-600">{timelineEvents.filter(e => e.type === 'hospitalization').length}</p>
+              <p className="text-xs text-gray-600">Hospitalizations</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
