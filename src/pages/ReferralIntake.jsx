@@ -62,6 +62,8 @@ export default function ReferralIntake() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [matchReviewReferral, setMatchReviewReferral] = useState(null);
+  const [aiGeneratedTasks, setAiGeneratedTasks] = useState([]);
+  const [showTasksDialog, setShowTasksDialog] = useState(false);
 
   // New referral form state
   const [newReferral, setNewReferral] = useState({
@@ -229,6 +231,14 @@ Actions available:
 
       const priorityAnalysis = priorityResponse.data?.priorityAnalysis || {};
 
+      // AI-powered task generation
+      const taskResponse = await base44.functions.invoke('generateReferralTasks', {
+        referralData: extractedData,
+        priorityAnalysis: priorityAnalysis
+      });
+
+      const generatedTasks = taskResponse.data?.tasks || [];
+
       // Extract and update referral fields from AI-processed data
       const updates = {
         status: 'ready_for_admission',
@@ -246,7 +256,8 @@ Actions available:
                        extractedData.admission_details?.admission_date || 
                        null,
         diagnosis: extractedData.diagnoses?.primary_diagnosis || null,
-        priority: priorityAnalysis.priority || 'normal'
+        priority: priorityAnalysis.priority || 'normal',
+        ai_generated_tasks: generatedTasks
       };
 
       // Check for missing critical information
@@ -490,6 +501,12 @@ Actions available:
 
       await base44.entities.Referral.update(referralId, updates);
       setProcessingReferralId(null);
+
+      // If tasks were generated, show them to the user
+      if (generatedTasks.length > 0) {
+        setAiGeneratedTasks(generatedTasks);
+        setShowTasksDialog(true);
+      }
       
       // If requires manual review, show the match review dialog
       if (updates.requires_manual_review) {
@@ -780,7 +797,7 @@ Actions available:
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2">
                           {referral.requires_manual_review ? (
                             <Button
                               size="sm"
@@ -799,6 +816,20 @@ Actions available:
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               Process
+                            </Button>
+                          )}
+                          {referral.ai_generated_tasks && referral.ai_generated_tasks.length > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-blue-500 text-blue-700 hover:bg-blue-50"
+                              onClick={() => {
+                                setAiGeneratedTasks(referral.ai_generated_tasks);
+                                setShowTasksDialog(true);
+                              }}
+                            >
+                              <Sparkles className="w-4 h-4 mr-1" />
+                              {referral.ai_generated_tasks.length} AI Tasks
                             </Button>
                           )}
                         </div>
@@ -979,6 +1010,77 @@ Actions available:
               onCreateNew={handleCreateNewFromReview}
               onClose={() => setMatchReviewReferral(null)}
             />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* AI Generated Tasks Dialog */}
+      {showTasksDialog && (
+        <Dialog open={showTasksDialog} onOpenChange={setShowTasksDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-blue-600" />
+                AI-Generated Referral Tasks ({aiGeneratedTasks.length})
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Alert className="bg-blue-50 border-blue-200">
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                <AlertDescription className="text-blue-900">
+                  AI has analyzed the referral data and generated prioritized tasks based on clinical needs, urgency factors, and workflow requirements.
+                </AlertDescription>
+              </Alert>
+              <div className="space-y-3">
+                {aiGeneratedTasks.map((task, index) => (
+                  <Card key={index} className={`border-l-4 ${
+                    task.priority === 'urgent' ? 'border-l-red-500 bg-red-50' :
+                    task.priority === 'high' ? 'border-l-orange-500 bg-orange-50' :
+                    task.priority === 'normal' ? 'border-l-blue-500 bg-blue-50' :
+                    'border-l-gray-500 bg-gray-50'
+                  }`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 mb-1">{task.title}</h4>
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            <Badge className={
+                              task.priority === 'urgent' ? 'bg-red-600' :
+                              task.priority === 'high' ? 'bg-orange-600' :
+                              task.priority === 'normal' ? 'bg-blue-600' :
+                              'bg-gray-600'
+                            }>
+                              {task.priority}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {task.type}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700">
+                              {task.assigned_role.replace(/_/g, ' ')}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="text-right text-xs text-gray-600">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          Due: {task.due_date}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2">{task.description}</p>
+                      <div className="bg-white rounded p-2 border border-blue-200">
+                        <p className="text-xs text-blue-700">
+                          <strong>AI Insight:</strong> {task.ai_reason}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowTasksDialog(false)}>
+                Close
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

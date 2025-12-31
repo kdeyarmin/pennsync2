@@ -13,27 +13,28 @@ Deno.serve(async (req) => {
 
         // Analyze referral and determine priority using AI
         const priorityAnalysis = await base44.integrations.Core.InvokeLLM({
-            prompt: `You are a clinical triage AI specializing in home health referral prioritization.
+            prompt: `You are a clinical triage AI specializing in home health referral prioritization with advanced Natural Language Processing (NLP) capabilities to extract crucial details from unstructured clinical notes.
 
 Analyze this referral and determine the urgency/priority level based on:
-- Medical condition severity and complexity
-- Recent hospitalizations or ER visits
-- Clinical stability indicators
-- Wound severity or infection risks
-- Medication complexity and safety concerns
-- Fall risk or safety issues
-- Cognitive/mental health concerns
-- Social determinants and support system
-- Discharge planning urgency
-- Insurance/authorization timeline pressures
+- **Medical condition severity and complexity**: Prioritize acute conditions, rapid deterioration, or complex care needs
+- **Recent hospitalizations or ER visits**: Flag recent admissions as higher risk requiring prompt follow-up
+- **Clinical stability indicators**: Assess vital signs, lab results, and reported symptoms for instability
+- **Wound severity or infection risks**: Evaluate wound characteristics and infection signs for urgency
+- **Medication complexity and safety concerns**: Identify polypharmacy, new high-risk medications, or potential adverse drug events
+- **Fall risk or safety issues**: Prioritize patients with high fall risk, environmental hazards, or cognitive impairment
+- **Cognitive/mental health concerns**: Assess for acute changes in mental status, severe depression, or unmanaged behavioral issues
+- **Social determinants and support system**: Consider lack of caregiver support, unstable housing, or food insecurity
+- **Discharge planning urgency**: Referrals from acute care settings require quicker response times
+- **Insurance/authorization timeline pressures**: Note any deadlines for pre-authorization or benefit expiration
+- **Unstructured Clinical Notes (NLP)**: Use advanced text analysis to find hidden risks, critical events, or unaddressed needs in free-text fields, physician notes, discharge summaries, or handwritten comments
 
-REFERRAL DATA:
+REFERRAL DATA (including all extracted information, structured and unstructured):
 ${JSON.stringify(extractedData, null, 2)}
 
-ANALYSIS RESULTS:
+AI-ASSISTED INITIAL ANALYSIS:
 ${JSON.stringify(analysisResults, null, 2)}
 
-Provide a priority assessment with clear reasoning.`,
+Provide a detailed priority assessment with clear reasoning and identify specific phrases or keywords from unstructured data that influenced your decision.`,
             response_json_schema: {
                 type: "object",
                 properties: {
