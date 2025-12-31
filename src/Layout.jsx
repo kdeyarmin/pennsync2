@@ -25,7 +25,8 @@ import {
   Sparkles,
   Clock,
   BookOpen,
-  WifiOff
+  WifiOff,
+  Mail
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
@@ -82,6 +83,18 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [currentUser?.email]);
 
+  // Fetch unread message count
+  const { data: messages = [] } = useQuery({
+    queryKey: ['messages'],
+    queryFn: () => base44.entities.Message.list('-created_date', 200),
+    initialData: [],
+    refetchInterval: 60000, // Refetch every minute
+  });
+
+  const unreadMessageCount = messages.filter(m => 
+    m.recipients?.includes(currentUser?.email) && !m.read_by?.includes(currentUser?.email)
+  ).length;
+
   const navCategories = [
     {
       category: "Overview",
@@ -97,6 +110,12 @@ export default function Layout({ children, currentPageName }) {
         { name: "Patient 360", icon: Brain, page: "Patient360" },
         { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
         { name: "Alerts", icon: Bell, page: "PatientAlerts" }
+      ]
+    },
+    {
+      category: "Communication",
+      items: [
+        { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount }
       ]
     },
     {
@@ -280,7 +299,17 @@ export default function Layout({ children, currentPageName }) {
                   title={sidebarCollapsed ? item.name : undefined}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!sidebarCollapsed && <span>{item.name}</span>}
+                  {!sidebarCollapsed && (
+                    <span className="flex items-center gap-2 flex-1">
+                      {item.name}
+                      {item.badge > 0 && (
+                        <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>
+                      )}
+                    </span>
+                  )}
+                  {sidebarCollapsed && item.badge > 0 && (
+                    <div className="absolute right-1 top-1 w-2 h-2 bg-red-600 rounded-full" />
+                  )}
                 </Link>
               ))}
               {catIndex === 0 && <div className="border-t border-gray-200 my-3" />}
@@ -397,7 +426,12 @@ export default function Layout({ children, currentPageName }) {
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
-                      {item.name}
+                      <span className="flex items-center gap-2 flex-1">
+                        {item.name}
+                        {item.badge > 0 && (
+                          <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>
+                        )}
+                      </span>
                     </Link>
                   ))}
                   {catIndex === 0 && <div className="border-t border-gray-200 my-2" />}

@@ -2,6 +2,7 @@ import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminKPIDashboard from './pages/AdminKPIDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
+import AdvancedReports from './pages/AdvancedReports';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
@@ -64,7 +65,7 @@ import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import AdvancedReports from './pages/AdvancedReports';
+import Messages from './pages/Messages';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +74,7 @@ export const PAGES = {
     "AdminDashboard": AdminDashboard,
     "AdminKPIDashboard": AdminKPIDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
+    "AdvancedReports": AdvancedReports,
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
@@ -135,7 +137,7 @@ export const PAGES = {
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "AdvancedReports": AdvancedReports,
+    "Messages": Messages,
 }
 
 export const pagesConfig = {
