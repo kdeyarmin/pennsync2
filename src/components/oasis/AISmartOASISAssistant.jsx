@@ -260,19 +260,19 @@ Patient Data: ${JSON.stringify(contextData)}`,
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white p-3 rounded-lg border-2 border-purple-200">
                   <p className="text-xs text-gray-600">Items Analyzed</p>
-                  <p className="text-2xl font-bold text-purple-600">{suggestions.summary.total_items_analyzed}</p>
+                  <p className="text-2xl font-bold text-purple-600">{suggestions.summary?.total_items_analyzed || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-green-200">
                   <p className="text-xs text-gray-600">High Confidence</p>
-                  <p className="text-2xl font-bold text-green-600">{suggestions.summary.high_confidence_items}</p>
+                  <p className="text-2xl font-bold text-green-600">{suggestions.summary?.high_confidence_items || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-yellow-200">
                   <p className="text-xs text-gray-600">Needs Verification</p>
-                  <p className="text-2xl font-bold text-yellow-600">{suggestions.summary.needs_verification}</p>
+                  <p className="text-2xl font-bold text-yellow-600">{suggestions.summary?.needs_verification || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-blue-200">
                   <p className="text-xs text-gray-600">Data Quality</p>
-                  <p className="text-2xl font-bold text-blue-600">{suggestions.summary.data_completeness_score}%</p>
+                  <p className="text-2xl font-bold text-blue-600">{suggestions.summary?.data_completeness_score || 0}%</p>
                 </div>
               </div>
 
