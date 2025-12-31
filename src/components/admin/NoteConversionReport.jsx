@@ -48,7 +48,7 @@ export default function NoteConversionReport() {
 
   const { data: conversions = [], isLoading } = useQuery({
     queryKey: ['noteConversions'],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date', 500),
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
   });
 
   // Filter by time range - no filtering, show ALL conversions
