@@ -714,7 +714,7 @@ export default function SmartNoteAssistant() {
           )}
 
           {!useGuidedWorkflow && (
-            <>
+            <React.Fragment>
 
           {/* Step 1: Patient Selection - Collapsible */}
           <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
@@ -1034,6 +1034,7 @@ export default function SmartNoteAssistant() {
           )}
 
         </div>
+          </React.Fragment>
           )}
         </div>
       </div>
