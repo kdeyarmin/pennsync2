@@ -15,6 +15,7 @@ import EnhancedVoiceCommands from "../components/voice/EnhancedVoiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
 
 import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
+import PendingReferralsWidget from "../components/referral/PendingReferralsWidget";
 
 import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
@@ -296,6 +297,11 @@ export default function Dashboard() {
       )}
 
 
+
+      {/* Pending Referrals */}
+      <div className="mb-6">
+        <PendingReferralsWidget />
+      </div>
 
       {/* Real-time Patient Alerts */}
       <div className="mb-6">
