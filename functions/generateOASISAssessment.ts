@@ -42,17 +42,27 @@ ${JSON.stringify(contextData, null, 2)}
 ACTIVE CARE PLANS:
 ${JSON.stringify(carePlans, null, 2)}
 
+CRITICAL INSTRUCTIONS:
+- Provide clear, complete responses without abbreviations or truncated text
+- Write full words and sentences - do NOT use shortened text like "- & A s s e s s"
+- Always write complete OASIS item names
+- Use proper spacing between words
+- Do NOT include administrative items M1000-M1060 (Medicare Number, Medicaid Number, Physician Name, Physician Phone)
+- These administrative items are auto-generated in the EHR system
+
 Generate:
 
 1. KEY OASIS ITEMS: Identify the most relevant OASIS items based on diagnoses and clinical presentation (15-20 items)
+   - Exclude M1000-M1060 administrative section
+   - Focus on clinical assessment items only
 
 2. PRE-FILLED RESPONSES: For each item, provide:
-   - Item number and description
-   - Suggested response/score based on available data
+   - Item number and full description (not truncated)
+   - Complete suggested response/score based on available data
    - Confidence level (High/Medium/Low)
-   - Rationale for the suggestion
-   - Questions to ask patient/caregiver to confirm
-   - Documentation tips
+   - Clear rationale for the suggestion
+   - Specific questions to ask patient/caregiver to confirm
+   - Documentation tips with complete sentences
 
 3. ASSESSMENT PRIORITIES: What to assess first based on clinical urgency
 
@@ -60,7 +70,8 @@ Generate:
 
 5. MISSING DATA: What critical information is needed but not available
 
-Focus on functional status, cognitive status, medications, wounds, and clinical factors affecting care.`,
+Focus on functional status, cognitive status, medications, wounds, and clinical factors affecting care.
+Write everything clearly and completely - no truncated text.`,
       response_json_schema: {
         type: "object",
         properties: {
