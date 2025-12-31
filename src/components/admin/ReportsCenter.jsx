@@ -127,17 +127,21 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
               { type: 'heading', text: 'Daily Enhancement Trend', size: 14 },
               { type: 'spacer', height: 5 },
               {
-                type: 'table',
-                headers: ['Date', 'Enhancements'],
-                rows: prodData.dailyEnhancements.map(d => [d.date, d.count])
+                type: 'barChart',
+                data: prodData.dailyEnhancements,
+                xKey: 'date',
+                yKey: 'count',
+                height: 100
               },
               { type: 'pageBreak' },
               { type: 'heading', text: 'Visit Type Distribution', size: 14 },
               { type: 'spacer', height: 5 },
               {
-                type: 'table',
-                headers: ['Visit Type', 'Count'],
-                rows: prodData.visitTypeChart.map(d => [d.type, d.count])
+                type: 'pieChart',
+                data: prodData.visitTypeChart,
+                nameKey: 'type',
+                valueKey: 'count',
+                radius: 50
               }
             ];
             break;
