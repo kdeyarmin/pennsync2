@@ -622,15 +622,15 @@ Actions available:
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Referral Intake</h1>
-          <p className="text-gray-600 mt-1">Streamlined workflow for processing incoming referrals</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Referral Intake</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Streamlined workflow for processing incoming referrals</p>
         </div>
         <Button
           onClick={() => setUploadDialogOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
         >
           <Upload className="w-4 h-4 mr-2" />
           New Referral
@@ -638,38 +638,38 @@ Actions available:
       </div>
 
       {/* Status Overview Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-4">
-            <p className="text-blue-100 text-sm mb-1">New</p>
-            <p className="text-3xl font-bold">{statusCounts.new}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-blue-100 text-xs sm:text-sm mb-1">New</p>
+            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.new}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
-          <CardContent className="p-4">
-            <p className="text-yellow-100 text-sm mb-1">Processing</p>
-            <p className="text-3xl font-bold">{statusCounts.processing}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-yellow-100 text-xs sm:text-sm mb-1">Processing</p>
+            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.processing}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-4">
-            <p className="text-orange-100 text-sm mb-1">Awaiting Info</p>
-            <p className="text-3xl font-bold">{statusCounts.awaiting_info}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-orange-100 text-xs sm:text-sm mb-1">Awaiting Info</p>
+            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.awaiting_info}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className="p-4">
-            <p className="text-green-100 text-sm mb-1">Ready</p>
-            <p className="text-3xl font-bold">{statusCounts.ready_for_admission}</p>
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-green-100 text-xs sm:text-sm mb-1">Ready</p>
+            <p className="text-2xl sm:text-3xl font-bold">{statusCounts.ready_for_admission}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[200px]">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end">
+            <div className="flex-1 min-w-0">
               <Label>Status Filter</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
@@ -797,14 +797,14 @@ Actions available:
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col gap-2">
-                          {referral.requires_manual_review ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-yellow-500 text-yellow-700 hover:bg-yellow-50"
-                              onClick={() => setMatchReviewReferral(referral)}
-                            >
+                       <div className="flex flex-col gap-2 min-w-[120px]">
+                         {referral.requires_manual_review ? (
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             className="border-yellow-500 text-yellow-700 hover:bg-yellow-50 min-h-[36px] text-xs"
+                             onClick={() => setMatchReviewReferral(referral)}
+                           >
                               <AlertCircle className="w-4 h-4 mr-1" />
                               Review Match
                             </Button>
@@ -813,6 +813,7 @@ Actions available:
                               size="sm"
                               variant="outline"
                               onClick={() => setProcessingReferralId(referral.id)}
+                              className="min-h-[36px] text-xs"
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               Process
@@ -822,7 +823,7 @@ Actions available:
                             <Button
                               size="sm"
                               variant="outline"
-                              className="border-blue-500 text-blue-700 hover:bg-blue-50"
+                              className="border-blue-500 text-blue-700 hover:bg-blue-50 min-h-[36px] text-xs"
                               onClick={() => {
                                 setAiGeneratedTasks(referral.ai_generated_tasks);
                                 setShowTasksDialog(true);
@@ -845,7 +846,7 @@ Actions available:
 
       {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Upload New Referral</DialogTitle>
           </DialogHeader>
@@ -857,7 +858,7 @@ Actions available:
               </AlertDescription>
             </Alert>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Patient Name (if known)</Label>
                 <Input
@@ -876,7 +877,7 @@ Actions available:
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Referral Date</Label>
                 <Input
@@ -951,14 +952,14 @@ Actions available:
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setUploadDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto">
               Cancel
             </Button>
             <Button
               onClick={handleCreateReferral}
               disabled={isUploading || !uploadedFile}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
             >
               {isUploading ? (
                 <>
@@ -979,7 +980,7 @@ Actions available:
       {/* Processing Dialog */}
       {processingReferralId && (
         <Dialog open={!!processingReferralId} onOpenChange={(open) => !open && setProcessingReferralId(null)}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogContent className="max-w-[98vw] sm:max-w-6xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-purple-600" />
@@ -997,7 +998,7 @@ Actions available:
       {/* Patient Match Review Dialog */}
       {matchReviewReferral && (
         <Dialog open={!!matchReviewReferral} onOpenChange={(open) => !open && setMatchReviewReferral(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <User className="w-5 h-5 text-yellow-600" />
@@ -1017,7 +1018,7 @@ Actions available:
       {/* AI Generated Tasks Dialog */}
       {showTasksDialog && (
         <Dialog open={showTasksDialog} onOpenChange={setShowTasksDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-blue-600" />
@@ -1039,8 +1040,8 @@ Actions available:
                     task.priority === 'normal' ? 'border-l-blue-500 bg-blue-50' :
                     'border-l-gray-500 bg-gray-50'
                   }`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-2">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-900 mb-1">{task.title}</h4>
                           <div className="flex flex-wrap gap-2 mb-2">
@@ -1077,7 +1078,7 @@ Actions available:
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowTasksDialog(false)}>
+              <Button variant="outline" onClick={() => setShowTasksDialog(false)} className="min-h-[44px] w-full sm:w-auto">
                 Close
               </Button>
             </DialogFooter>
