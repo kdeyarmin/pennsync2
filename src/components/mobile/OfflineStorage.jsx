@@ -6,22 +6,43 @@
 const STORAGE_PREFIX = 'penn_sync_offline_';
 const PENDING_VISITS_KEY = `${STORAGE_PREFIX}pending_visits`;
 const PENDING_UPDATES_KEY = `${STORAGE_PREFIX}pending_updates`;
+const SYNC_ERRORS_KEY = `${STORAGE_PREFIX}sync_errors`;
+const SYNC_STATUS_KEY = `${STORAGE_PREFIX}sync_status`;
 
 class OfflineStorage {
   constructor() {
     this.isOnline = navigator.onLine;
+    this.isSyncing = false;
+    this.syncInterval = null;
     this.setupListeners();
+    this.startBackgroundSync();
   }
 
   setupListeners() {
     window.addEventListener('online', () => {
       this.isOnline = true;
-      this.syncPendingData();
+      setTimeout(() => this.syncPendingData(), 2000);
     });
 
     window.addEventListener('offline', () => {
       this.isOnline = false;
     });
+  }
+
+  // Start background sync every 30 seconds when online
+  startBackgroundSync() {
+    this.syncInterval = setInterval(() => {
+      if (this.isOnline && !this.isSyncing && this.getPendingCount() > 0) {
+        this.syncPendingData();
+      }
+    }, 30000);
+  }
+
+  stopBackgroundSync() {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = null;
+    }
   }
 
   // Save visit data locally
@@ -34,10 +55,14 @@ class OfflineStorage {
         id: visitId,
         data: visitData,
         timestamp: new Date().toISOString(),
-        synced: false
+        synced: false,
+        syncAttempts: 0,
+        lastSyncAttempt: null,
+        conflictResolution: 'server_wins' // default strategy
       });
 
       localStorage.setItem(PENDING_VISITS_KEY, JSON.stringify(pending));
+      this.updateSyncStatus();
       return visitId;
     } catch (error) {
       console.error('Error saving offline visit:', error);
@@ -175,36 +200,238 @@ class OfflineStorage {
     }
   }
 
-  // Sync pending data when back online
+  // Log sync error
+  logSyncError(item, error, type = 'visit') {
+    try {
+      const errors = this.getSyncErrors();
+      errors.push({
+        id: Date.now().toString(),
+        itemId: item.id,
+        type,
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+        itemData: item,
+        resolved: false
+      });
+      
+      // Keep only last 50 errors
+      if (errors.length > 50) {
+        errors.splice(0, errors.length - 50);
+      }
+      
+      localStorage.setItem(SYNC_ERRORS_KEY, JSON.stringify(errors));
+      window.dispatchEvent(new CustomEvent('sync-error', { detail: { item, error } }));
+    } catch (err) {
+      console.error('Error logging sync error:', err);
+    }
+  }
+
+  getSyncErrors() {
+    try {
+      return JSON.parse(localStorage.getItem(SYNC_ERRORS_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  clearSyncErrors() {
+    localStorage.setItem(SYNC_ERRORS_KEY, '[]');
+  }
+
+  // Update sync status
+  updateSyncStatus(status = {}) {
+    try {
+      const currentStatus = {
+        lastSyncAttempt: new Date().toISOString(),
+        isSyncing: this.isSyncing,
+        ...status
+      };
+      localStorage.setItem(SYNC_STATUS_KEY, JSON.stringify(currentStatus));
+      window.dispatchEvent(new CustomEvent('sync-status-changed', { detail: currentStatus }));
+    } catch (err) {
+      console.error('Error updating sync status:', err);
+    }
+  }
+
+  // Conflict resolution strategies
+  async resolveConflict(localData, serverData, strategy = 'server_wins') {
+    switch (strategy) {
+      case 'server_wins':
+        return serverData;
+      case 'client_wins':
+        return localData;
+      case 'merge':
+        // Merge by taking newer fields
+        return {
+          ...serverData,
+          ...Object.keys(localData).reduce((acc, key) => {
+            const localDate = new Date(localData.updated_date || localData.timestamp);
+            const serverDate = new Date(serverData.updated_date || serverData.timestamp);
+            if (localDate > serverDate) {
+              acc[key] = localData[key];
+            }
+            return acc;
+          }, {})
+        };
+      case 'manual':
+        // Store for manual resolution
+        this.storeConflict(localData, serverData);
+        return null;
+      default:
+        return serverData;
+    }
+  }
+
+  storeConflict(localData, serverData) {
+    const conflicts = JSON.parse(localStorage.getItem('offline_conflicts') || '[]');
+    conflicts.push({
+      id: Date.now().toString(),
+      localData,
+      serverData,
+      timestamp: new Date().toISOString(),
+      resolved: false
+    });
+    localStorage.setItem('offline_conflicts', JSON.stringify(conflicts));
+  }
+
+  getConflicts() {
+    try {
+      return JSON.parse(localStorage.getItem('offline_conflicts') || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  // Enhanced sync with conflict resolution and detailed status
   async syncPendingData() {
-    if (!this.isOnline) return;
+    if (!this.isOnline || this.isSyncing) return;
+
+    this.isSyncing = true;
+    this.updateSyncStatus({ isSyncing: true, startTime: new Date().toISOString() });
 
     const { base44 } = await import('@/api/base44Client');
     
-    // Sync pending visits
-    const pendingVisits = this.getPendingVisits().filter(v => !v.synced);
-    for (const visit of pendingVisits) {
-      try {
-        await base44.entities.Visit.create(visit.data);
-        this.markVisitSynced(visit.id);
-      } catch (error) {
-        console.error('Error syncing visit:', error);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+
+    try {
+      // Sync pending visits
+      const pendingVisits = this.getPendingVisits().filter(v => !v.synced);
+      
+      for (const visit of pendingVisits) {
+        try {
+          // Check if visit was modified on server (conflict detection)
+          let existingVisit = null;
+          if (visit.data.id && !visit.id.startsWith('offline_')) {
+            try {
+              existingVisit = await base44.entities.Visit.filter({ id: visit.data.id });
+              existingVisit = existingVisit[0];
+            } catch (e) {
+              // Visit doesn't exist on server
+            }
+          }
+
+          let dataToSync = visit.data;
+          
+          // Handle conflicts if server version exists
+          if (existingVisit) {
+            const localTimestamp = new Date(visit.timestamp);
+            const serverTimestamp = new Date(existingVisit.updated_date);
+            
+            if (serverTimestamp > localTimestamp) {
+              // Conflict detected
+              dataToSync = await this.resolveConflict(
+                visit.data, 
+                existingVisit, 
+                visit.conflictResolution || 'server_wins'
+              );
+              
+              if (!dataToSync) {
+                // Manual resolution needed - skip this item
+                continue;
+              }
+            }
+          }
+
+          // Sync the visit
+          if (visit.id.startsWith('offline_')) {
+            await base44.entities.Visit.create(dataToSync);
+          } else {
+            await base44.entities.Visit.update(visit.data.id, dataToSync);
+          }
+          
+          this.markVisitSynced(visit.id);
+          successCount++;
+          
+        } catch (error) {
+          console.error('Error syncing visit:', error);
+          this.logSyncError(visit, error, 'visit');
+          this.incrementSyncAttempts(visit.id, 'visit');
+          errorCount++;
+          errors.push({ id: visit.id, error: error.message });
+        }
       }
+
+      // Sync pending updates
+      const pendingUpdates = this.getPendingUpdates().filter(u => !u.synced);
+      
+      for (const update of pendingUpdates) {
+        try {
+          await base44.entities.Visit.update(update.visitId, update.data);
+          this.markUpdateSynced(update.visitId, update.timestamp);
+          successCount++;
+        } catch (error) {
+          console.error('Error syncing update:', error);
+          this.logSyncError(update, error, 'update');
+          errorCount++;
+          errors.push({ id: update.visitId, error: error.message });
+        }
+      }
+
+      this.updateSyncStatus({
+        isSyncing: false,
+        lastSyncSuccess: new Date().toISOString(),
+        successCount,
+        errorCount,
+        errors
+      });
+
+      window.dispatchEvent(new CustomEvent('sync-complete', {
+        detail: { success: successCount, failed: errorCount, errors }
+      }));
+
+      // Clean up old synced items
+      this.cleanupSyncedItems();
+      
+    } catch (error) {
+      console.error('Sync error:', error);
+      this.updateSyncStatus({
+        isSyncing: false,
+        lastSyncError: error.message,
+        errorCount: pendingVisits.length + pendingUpdates.length
+      });
     }
 
-    // Sync pending updates
-    const pendingUpdates = this.getPendingUpdates().filter(u => !u.synced);
-    for (const update of pendingUpdates) {
-      try {
-        await base44.entities.Visit.update(update.visitId, update.data);
-        this.markUpdateSynced(update.visitId, update.timestamp);
-      } catch (error) {
-        console.error('Error syncing update:', error);
-      }
-    }
+    this.isSyncing = false;
+  }
 
-    // Clean up old synced items
-    this.cleanupSyncedItems();
+  incrementSyncAttempts(itemId, type = 'visit') {
+    if (type === 'visit') {
+      const pending = this.getPendingVisits();
+      const updated = pending.map(v => {
+        if (v.id === itemId) {
+          return {
+            ...v,
+            syncAttempts: (v.syncAttempts || 0) + 1,
+            lastSyncAttempt: new Date().toISOString()
+          };
+        }
+        return v;
+      });
+      localStorage.setItem(PENDING_VISITS_KEY, JSON.stringify(updated));
+    }
   }
 
   markVisitSynced(visitId) {

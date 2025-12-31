@@ -4,8 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Upload, 
   CheckCircle2, 
@@ -15,8 +16,12 @@ import {
   Wifi,
   WifiOff,
   Clock,
-  FileText
+  FileText,
+  XCircle,
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
+import offlineStorage from "./OfflineStorage";
 
 export default function OfflineSyncManager() {
   const queryClient = useQueryClient();
@@ -25,26 +30,83 @@ export default function OfflineSyncManager() {
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncResult, setSyncResult] = useState(null);
   const [pendingDrafts, setPendingDrafts] = useState([]);
+  const [syncErrors, setSyncErrors] = useState([]);
+  const [conflicts, setConflicts] = useState([]);
+  const [backgroundSyncEnabled, setBackgroundSyncEnabled] = useState(true);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
+    const handleSyncComplete = (e) => {
+      setSyncResult({
+        success: e.detail.success,
+        failed: e.detail.failed,
+        errors: e.detail.errors
+      });
+      loadPendingDrafts();
+      loadSyncErrors();
+    };
+    const handleSyncError = () => {
+      loadSyncErrors();
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('sync-complete', handleSyncComplete);
+    window.addEventListener('sync-error', handleSyncError);
 
-    // Load pending drafts
+    // Load pending drafts and errors
     loadPendingDrafts();
+    loadSyncErrors();
+    loadConflicts();
+
+    // Refresh every 5 seconds
+    const interval = setInterval(() => {
+      loadPendingDrafts();
+      loadSyncErrors();
+      loadConflicts();
+    }, 5000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('sync-complete', handleSyncComplete);
+      window.removeEventListener('sync-error', handleSyncError);
+      clearInterval(interval);
     };
   }, []);
 
   const loadPendingDrafts = () => {
     const drafts = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]');
     setPendingDrafts(drafts);
+  };
+
+  const loadSyncErrors = () => {
+    const errors = offlineStorage.getSyncErrors();
+    setSyncErrors(errors.filter(e => !e.resolved));
+  };
+
+  const loadConflicts = () => {
+    const conflicts = offlineStorage.getConflicts();
+    setConflicts(conflicts.filter(c => !c.resolved));
+  };
+
+  const clearErrors = () => {
+    offlineStorage.clearSyncErrors();
+    loadSyncErrors();
+  };
+
+  const retryFailedSync = async (errorId) => {
+    const error = syncErrors.find(e => e.id === errorId);
+    if (!error) return;
+
+    try {
+      // Retry the sync for this specific item
+      await offlineStorage.syncPendingData();
+      loadSyncErrors();
+    } catch (err) {
+      console.error('Retry failed:', err);
+    }
   };
 
   // Auto-sync when coming online
@@ -133,13 +195,27 @@ export default function OfflineSyncManager() {
       <CardHeader className={isOnline ? 'bg-green-50' : 'bg-orange-50'}>
         <CardTitle className="text-base flex items-center gap-2">
           {isOnline ? <Wifi className="w-5 h-5 text-green-600" /> : <WifiOff className="w-5 h-5 text-orange-600" />}
-          Sync Status
+          Sync Manager
           <Badge className={`ml-auto ${isOnline ? 'bg-green-600' : 'bg-orange-600'}`}>
             {isOnline ? 'Online' : 'Offline'}
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-4">
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="pending">
+              Pending {pendingDrafts.length > 0 && `(${pendingDrafts.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="errors">
+              Errors {syncErrors.length > 0 && `(${syncErrors.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="conflicts">
+              Conflicts {conflicts.length > 0 && `(${conflicts.length})`}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pending" className="space-y-4 mt-4">
         {!isOnline && (
           <Alert className="bg-orange-50 border-orange-300">
             <WifiOff className="w-4 h-4 text-orange-600" />
@@ -232,21 +308,118 @@ export default function OfflineSyncManager() {
           </Alert>
         )}
 
-        {/* Cached Data Info */}
-        <div className="p-3 bg-gray-50 rounded-lg border">
-          <div className="flex items-center gap-2 mb-2">
-            <Database className="w-4 h-4 text-gray-600" />
-            <p className="text-sm font-semibold">Cached Patient Data</p>
+          </TabsContent>
+
+          <TabsContent value="errors" className="space-y-4 mt-4">
+            {syncErrors.length === 0 ? (
+              <Alert className="bg-green-50 border-green-300">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <AlertDescription className="text-sm">
+                  No sync errors! All data synced successfully.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <Alert className="bg-red-50 border-red-300">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <AlertTitle className="text-sm font-semibold">Sync Errors ({syncErrors.length})</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Some items failed to sync. Review and retry below.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {syncErrors.map((error) => (
+                    <div key={error.id} className="p-3 bg-white border border-red-200 rounded-lg">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-red-900">
+                            {error.type === 'visit' ? 'Visit' : 'Update'} #{error.itemId.substring(0, 12)}...
+                          </p>
+                          <p className="text-xs text-red-700 mt-1">{error.error}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(error.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => retryFailedSync(error.id)}
+                          disabled={!isOnline}
+                          className="flex-shrink-0"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearErrors}
+                  className="w-full text-red-600"
+                >
+                  <XCircle className="w-3 h-3 mr-2" />
+                  Clear Error Log
+                </Button>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="conflicts" className="space-y-4 mt-4">
+            {conflicts.length === 0 ? (
+              <Alert className="bg-blue-50 border-blue-300">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                <AlertDescription className="text-sm">
+                  No conflicts detected. All changes merged successfully.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <Alert className="bg-yellow-50 border-yellow-300">
+                  <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                  <AlertTitle className="text-sm font-semibold">Data Conflicts ({conflicts.length})</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Local and server data differ. Manual resolution may be needed.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {conflicts.map((conflict) => (
+                    <div key={conflict.id} className="p-3 bg-white border border-yellow-200 rounded-lg">
+                      <p className="text-xs font-semibold text-yellow-900">Conflict Detected</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {new Date(conflict.timestamp).toLocaleString()}
+                      </p>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                        <div className="p-2 bg-blue-50 rounded">
+                          <p className="font-semibold text-blue-900">Local</p>
+                          <p className="text-blue-700 truncate">{JSON.stringify(conflict.localData).substring(0, 50)}...</p>
+                        </div>
+                        <div className="p-2 bg-green-50 rounded">
+                          <p className="font-semibold text-green-900">Server</p>
+                          <p className="text-green-700 truncate">{JSON.stringify(conflict.serverData).substring(0, 50)}...</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Background Sync Toggle */}
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg border flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold">Background Sync</p>
+            <p className="text-xs text-gray-600">Auto-sync every 30 seconds when online</p>
           </div>
-          <p className="text-xs text-gray-600">
-            {JSON.parse(localStorage.getItem('offline_patient_data') || '[]').length} patients available offline
-          </p>
-          {localStorage.getItem('offline_cache_timestamp') && (
-            <p className="text-xs text-gray-500 mt-1">
-              <Clock className="w-3 h-3 inline mr-1" />
-              Last cached: {new Date(localStorage.getItem('offline_cache_timestamp')).toLocaleString()}
-            </p>
-          )}
+          <Badge className={backgroundSyncEnabled ? 'bg-green-600' : 'bg-gray-400'}>
+            {backgroundSyncEnabled ? 'Enabled' : 'Disabled'}
+          </Badge>
         </div>
       </CardContent>
     </Card>
