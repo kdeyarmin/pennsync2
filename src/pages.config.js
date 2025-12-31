@@ -1,5 +1,6 @@
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminKPIDashboard from './pages/AdminKPIDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
@@ -36,6 +37,7 @@ import OASISDocumentationReview from './pages/OASISDocumentationReview';
 import OASISRevenueAnalysis from './pages/OASISRevenueAnalysis';
 import OASISReview from './pages/OASISReview';
 import OfflineMode from './pages/OfflineMode';
+import Patient360 from './pages/Patient360';
 import PatientAlerts from './pages/PatientAlerts';
 import PatientDashboard from './pages/PatientDashboard';
 import PatientDataManagement from './pages/PatientDataManagement';
@@ -60,14 +62,13 @@ import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
-import AdminKPIDashboard from './pages/AdminKPIDashboard';
-import Patient360 from './pages/Patient360';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
+    "AdminKPIDashboard": AdminKPIDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
@@ -104,6 +105,7 @@ export const PAGES = {
     "OASISRevenueAnalysis": OASISRevenueAnalysis,
     "OASISReview": OASISReview,
     "OfflineMode": OfflineMode,
+    "Patient360": Patient360,
     "PatientAlerts": PatientAlerts,
     "PatientDashboard": PatientDashboard,
     "PatientDataManagement": PatientDataManagement,
@@ -128,8 +130,6 @@ export const PAGES = {
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
-    "AdminKPIDashboard": AdminKPIDashboard,
-    "Patient360": Patient360,
 }
 
 export const pagesConfig = {

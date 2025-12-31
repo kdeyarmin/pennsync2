@@ -100,6 +100,7 @@ import AIScenarioTemplates from "../components/smartNote/AIScenarioTemplates";
 import ProactiveEducationSuggester from "../components/smartNote/ProactiveEducationSuggester";
 import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
 import AISmartOASISAssistant from "../components/oasis/AISmartOASISAssistant";
+import GuidedVisitWorkflow from "../components/visit/GuidedVisitWorkflow";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -240,6 +241,7 @@ export default function SmartNoteAssistant() {
   const recognitionRef = React.useRef(null);
   const [oasisSuggestions, setOasisSuggestions] = useState(null);
   const [admissionDocumentation, setAdmissionDocumentation] = useState({});
+  const [useGuidedWorkflow, setUseGuidedWorkflow] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -646,12 +648,23 @@ export default function SmartNoteAssistant() {
         </div>
       </div>
 
-      {/* Simplified Progress */}
-      {!enhancedNote && (
-        <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
-          <span className="font-medium">{currentStep === 'patient' ? '1/2' : '2/2'}</span>
-          <ChevronRight className="w-4 h-4" />
-          <span>{currentStep === 'patient' ? 'Select Patient' : currentStep === 'notes' ? 'Write Notes' : 'Reviewing...'}</span>
+      {/* Workflow Mode Toggle */}
+      {selectedPatientId && !enhancedNote && (
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span className="font-medium">{currentStep === 'patient' ? '1/2' : '2/2'}</span>
+            <ChevronRight className="w-4 h-4" />
+            <span>{currentStep === 'patient' ? 'Select Patient' : currentStep === 'notes' ? 'Write Notes' : 'Reviewing...'}</span>
+          </div>
+          <Button
+            variant={useGuidedWorkflow ? "default" : "outline"}
+            size="sm"
+            onClick={() => setUseGuidedWorkflow(!useGuidedWorkflow)}
+            className="gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            {useGuidedWorkflow ? 'Guided Mode' : 'Switch to Guided'}
+          </Button>
         </div>
       )}
 
@@ -675,6 +688,33 @@ export default function SmartNoteAssistant() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="lg:col-span-2 space-y-4 md:space-y-6">
+
+          {/* Guided Workflow Mode */}
+          {useGuidedWorkflow && selectedPatientId && !enhancedNote && (
+            <GuidedVisitWorkflow
+              patientData={selectedPatient}
+              visitType={visitType}
+              carePlans={carePlans}
+              recentVisits={recentVisits}
+              onComplete={(workflowData) => {
+                // Compile all workflow data into rough notes
+                let compiledNotes = '';
+                Object.entries(workflowData).forEach(([stepId, stepData]) => {
+                  compiledNotes += `\n\n=== ${stepId.toUpperCase()} ===\n`;
+                  Object.entries(stepData).forEach(([field, value]) => {
+                    if (value && !field.startsWith('previous_') && !field.startsWith('last_')) {
+                      compiledNotes += `${field}: ${value}\n`;
+                    }
+                  });
+                });
+                setRoughNote(compiledNotes.trim());
+                setUseGuidedWorkflow(false);
+              }}
+            />
+          )}
+
+          {!useGuidedWorkflow && (
+            <>
 
           {/* Step 1: Patient Selection - Collapsible */}
           <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
@@ -993,6 +1033,8 @@ export default function SmartNoteAssistant() {
             </Card>
           )}
 
+        </div>
+          )}
         </div>
       </div>
     </div>
