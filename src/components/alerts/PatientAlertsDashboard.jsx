@@ -45,7 +45,9 @@ import {
   Send,
   X,
   Filter,
-  Search
+  Search,
+  FileText,
+  Calendar
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
@@ -82,6 +84,13 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
+  });
+
+  // Fetch clinical events for linking
+  const { data: clinicalEvents = [] } = useQuery({
+    queryKey: ['clinicalEvents'],
+    queryFn: () => base44.entities.ClinicalEvent.list('-created_date', 200),
+    initialData: []
   });
 
   const patientMap = patients.reduce((acc, p) => {
@@ -381,7 +390,28 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                             )}
                             
                             <p className="text-sm text-gray-600 mt-1 line-clamp-2">{alert.message}</p>
-                            
+
+                            {alert.data_sources?.clinical_event_id && (
+                              <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Activity className="w-3 h-3 text-purple-600" />
+                                  <span className="font-medium text-purple-900">Linked Clinical Event</span>
+                                </div>
+                                <div className="text-purple-700">
+                                  <span className="font-medium">Type:</span> {alert.data_sources.event_type?.replace(/_/g, ' ')}
+                                </div>
+                                {alert.data_sources.structured_data && (
+                                  <div className="text-purple-700 mt-1">
+                                    {Object.entries(alert.data_sources.structured_data).slice(0, 2).map(([key, value]) => (
+                                      <div key={key}>
+                                        <span className="font-medium">{key}:</span> {String(value)}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
                             {alert.risk_score && (
                               <div className="flex items-center gap-2 mt-2">
                                 <span className="text-xs text-gray-500">Risk Score:</span>
@@ -394,9 +424,9 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
                                 <span className="text-xs font-medium">{alert.risk_score}%</span>
                               </div>
                             )}
-                            
+
                             <p className="text-xs text-gray-400 mt-2">
-                              {formatDistanceToNow(new Date(alert.created_date), { addSuffix: true })}
+                              Created {formatDistanceToNow(new Date(alert.created_date), { addSuffix: true })}
                             </p>
                           </div>
                         </div>
@@ -469,6 +499,74 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
 
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-700">{selectedAlert.message}</p>
+                </div>
+
+                {/* Clinical Event Details */}
+                {selectedAlert.data_sources?.clinical_event_id && (
+                  <Card className="border-purple-300 bg-purple-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-purple-600" />
+                        Clinical Event Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="font-semibold text-gray-700">Event Type:</span>
+                          <p className="text-gray-600">{selectedAlert.data_sources.event_type?.replace(/_/g, ' ')}</p>
+                        </div>
+                        {selectedAlert.data_sources.visit_id && (
+                          <div>
+                            <span className="font-semibold text-gray-700">Visit ID:</span>
+                            <p className="text-gray-600 font-mono text-xs">{selectedAlert.data_sources.visit_id.slice(0, 8)}...</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {selectedAlert.data_sources.structured_data && (
+                        <div>
+                          <span className="font-semibold text-gray-700 text-sm">Event Data:</span>
+                          <div className="mt-1 p-2 bg-white rounded border text-xs space-y-1">
+                            {Object.entries(selectedAlert.data_sources.structured_data).map(([key, value]) => (
+                              <div key={key} className="flex gap-2">
+                                <span className="font-medium text-purple-700">{key}:</span>
+                                <span className="text-gray-600">{String(value)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => {
+                          const patient = patientMap[selectedAlert.patient_id];
+                          if (patient) {
+                            window.open(createPageUrl(`PatientDetails?id=${patient.id}`), '_blank');
+                          }
+                        }}
+                      >
+                        <FileText className="w-3 h-3 mr-1" />
+                        View in Patient Chart
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Created:</span>
+                    <p className="text-gray-600">{format(new Date(selectedAlert.created_date), 'PPpp')}</p>
+                  </div>
+                  {selectedAlert.expires_at && (
+                    <div>
+                      <span className="font-semibold text-gray-700">Expires:</span>
+                      <p className="text-gray-600">{format(new Date(selectedAlert.expires_at), 'PPp')}</p>
+                    </div>
+                  )}
                 </div>
 
                 {selectedAlert.contributing_factors?.length > 0 && (
