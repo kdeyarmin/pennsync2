@@ -53,6 +53,7 @@ import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
+import PatientMatchReview from "../components/referral/PatientMatchReview";
 
 export default function ReferralIntake() {
   const queryClient = useQueryClient();
@@ -60,6 +61,7 @@ export default function ReferralIntake() {
   const [processingReferralId, setProcessingReferralId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [matchReviewReferral, setMatchReviewReferral] = useState(null);
 
   // New referral form state
   const [newReferral, setNewReferral] = useState({
@@ -191,7 +193,7 @@ ${referral.extracted_data ? 'Referral has been processed with AI analysis.' : 'P
 
 Actions available:
 • View analyzed referral data
-• Create admission note in Smart Note: ${window.location.origin}${createPageUrl(`SmartNoteAssistant?referral_id=${referralId}`)}
+• Create admission note in Smart Note (prepopulated with referral info)
 • Review patient information
 
 Referral ID: ${referralId}
@@ -371,6 +373,29 @@ Document URL: ${referral.document_url || 'N/A'}`,
         }
       }
 
+      // AI-powered patient matching with confidence scoring
+      if (!existingPatient && extractedData.demographics && allPatients.length > 0) {
+        const aiMatchResponse = await base44.functions.invoke('matchPatientWithAI', {
+          extractedData,
+          existingPatients: allPatients.slice(0, 50) // Top 50 most recent for AI analysis
+        });
+
+        const matchAnalysis = aiMatchResponse.data?.matchAnalysis;
+        
+        if (matchAnalysis && matchAnalysis.confidence_level === 'high' && matchAnalysis.best_match_id) {
+          existingPatient = allPatients.find(p => p.id === matchAnalysis.best_match_id);
+          updates.match_confidence = matchAnalysis.confidence_score;
+          updates.match_factors = matchAnalysis.match_factors;
+          console.log(`AI matched patient: ${existingPatient.first_name} ${existingPatient.last_name} (${matchAnalysis.confidence_score}% confidence)`);
+        } else if (matchAnalysis && matchAnalysis.confidence_level === 'medium') {
+          // Flag for manual review
+          updates.requires_manual_review = true;
+          updates.match_suggestions = matchAnalysis.alternative_matches;
+          updates.match_analysis = matchAnalysis;
+          console.log('Medium confidence match - flagged for manual review');
+        }
+      }
+
       if (!existingPatient && extractedData.demographics) {
         // Create new patient from referral data
         const nameParts = (extractedData.demographics.full_name || '').split(' ');
@@ -418,11 +443,67 @@ Document URL: ${referral.document_url || 'N/A'}`,
 
       await base44.entities.Referral.update(referralId, updates);
       setProcessingReferralId(null);
+      
+      // If requires manual review, show the match review dialog
+      if (updates.requires_manual_review) {
+        const updatedReferral = await base44.entities.Referral.filter({ id: referralId });
+        setMatchReviewReferral(updatedReferral[0]);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error updating referral:', error);
       alert('Failed to process referral. Please try again.');
+    }
+  };
+
+  const handleConfirmMatch = async (patientId) => {
+    try {
+      await base44.entities.Referral.update(matchReviewReferral.id, {
+        patient_id: patientId,
+        requires_manual_review: false,
+        manually_confirmed: true
+      });
+      setMatchReviewReferral(null);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+    } catch (error) {
+      console.error('Error confirming match:', error);
+      alert('Failed to confirm match');
+    }
+  };
+
+  const handleCreateNewFromReview = async () => {
+    try {
+      const data = matchReviewReferral.extracted_data;
+      const nameParts = (data.demographics.full_name || '').split(' ');
+      
+      const newPatient = await base44.entities.Patient.create({
+        first_name: nameParts[0] || '',
+        middle_name: nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '',
+        last_name: nameParts.length > 1 ? nameParts[nameParts.length - 1] : '',
+        date_of_birth: data.demographics.date_of_birth,
+        address: data.demographics.address,
+        phone: data.demographics.phone,
+        email: data.demographics.email || null,
+        payor: data.demographics.insurance_primary || 'Unknown',
+        emergency_contact_name: data.demographics.emergency_contact,
+        primary_diagnosis: data.diagnoses?.primary_diagnosis,
+        status: 'active'
+      });
+
+      await base44.entities.Referral.update(matchReviewReferral.id, {
+        patient_id: newPatient.id,
+        requires_manual_review: false,
+        manually_confirmed: true
+      });
+
+      setMatchReviewReferral(null);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+    } catch (error) {
+      console.error('Error creating new patient:', error);
+      alert('Failed to create new patient');
     }
   };
 
@@ -594,8 +675,14 @@ Document URL: ${referral.document_url || 'N/A'}`,
                             DOB: {format(new Date(referral.patient_dob), 'MM/dd/yyyy')}
                           </p>
                         )}
-                        {referral.patient_id && (
-                          <Badge className="bg-green-600 text-xs mt-1">In System</Badge>
+                        {referral.patient_id && !referral.requires_manual_review && (
+                          <Badge className="bg-green-600 text-xs mt-1">
+                            In System
+                            {referral.match_confidence && ` (${Math.round(referral.match_confidence)}%)`}
+                          </Badge>
+                        )}
+                        {referral.requires_manual_review && (
+                          <Badge className="bg-yellow-600 text-xs mt-1">Review Match</Badge>
                         )}
                       </TableCell>
                       <TableCell>
@@ -632,14 +719,26 @@ Document URL: ${referral.document_url || 'N/A'}`,
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setProcessingReferralId(referral.id)}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Process
-                          </Button>
+                          {referral.requires_manual_review ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+                              onClick={() => setMatchReviewReferral(referral)}
+                            >
+                              <AlertCircle className="w-4 h-4 mr-1" />
+                              Review Match
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setProcessingReferralId(referral.id)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Process
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -797,6 +896,26 @@ Document URL: ${referral.document_url || 'N/A'}`,
             <ReferralPDFSummarizer
               fileUrl={referrals.find(r => r.id === processingReferralId)?.document_url}
               onExtractionComplete={(data, analysis) => handleProcessingComplete(processingReferralId, data, analysis)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Patient Match Review Dialog */}
+      {matchReviewReferral && (
+        <Dialog open={!!matchReviewReferral} onOpenChange={(open) => !open && setMatchReviewReferral(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="w-5 h-5 text-yellow-600" />
+                Patient Match Review
+              </DialogTitle>
+            </DialogHeader>
+            <PatientMatchReview
+              referral={matchReviewReferral}
+              onConfirmMatch={handleConfirmMatch}
+              onCreateNew={handleCreateNewFromReview}
+              onClose={() => setMatchReviewReferral(null)}
             />
           </DialogContent>
         </Dialog>

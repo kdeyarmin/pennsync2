@@ -25,13 +25,32 @@ export default function ReferralAdmissionNote() {
 
   useEffect(() => {
     if (referral?.extracted_data) {
-      // Format extracted data for Smart Note prepopulation
+      // Format extracted data for Smart Note prepopulation with granular sections
       const data = referral.extracted_data;
       const prepopulated = {
         patientId: referral.patient_id,
         patientName: data.demographics?.full_name,
         visitType: 'admission',
         diagnosis: data.diagnoses?.primary_diagnosis,
+        
+        // Granular structured data for specific sections
+        medications: data.medications || [],
+        allergies: data.diagnoses?.allergies,
+        diagnoses: {
+          primary: data.diagnoses?.primary_diagnosis,
+          secondary: data.diagnoses?.secondary_diagnoses || [],
+          pdgm_group: data.diagnoses?.pdgm_clinical_group
+        },
+        vitalSigns: data.clinical_info?.vital_signs,
+        functionalStatus: data.functional_status,
+        safetyRisks: data.safety_concerns?.high_risk_conditions || [],
+        skilledNeeds: data.skilled_needs,
+        referralContext: {
+          source: data.admission_details?.admission_source,
+          physician: data.demographics?.referring_physician,
+          reason: data.admission_details?.referral_reason,
+          priority: referral.analysis_results?.priority_analysis?.priority
+        },
         
         // Build comprehensive note from referral data
         roughNote: `ADMISSION NOTE - From Referral
