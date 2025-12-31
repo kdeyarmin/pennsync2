@@ -168,7 +168,7 @@ export default function ReferralIntake() {
 
       // Check for missing critical information
       const missingInfo = [];
-      if (!extractedData.demographics?.insurance) missingInfo.push('Insurance information');
+      if (!extractedData.demographics?.insurance_primary) missingInfo.push('Insurance information');
       if (!extractedData.demographics?.emergency_contact) missingInfo.push('Emergency contact');
       if (!extractedData.medications?.length) missingInfo.push('Current medications');
 
@@ -177,11 +177,77 @@ export default function ReferralIntake() {
         updates.missing_information = missingInfo;
       }
 
+      // Check if patient exists in system, create if not
+      const fullName = extractedData.demographics?.full_name || '';
+      const dob = extractedData.demographics?.date_of_birth;
+      
+      let existingPatient = null;
+      if (fullName && dob) {
+        const nameParts = fullName.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+        
+        // Search for existing patient by name and DOB
+        const allPatients = await base44.entities.Patient.list('-created_date', 500);
+        existingPatient = allPatients.find(p => 
+          p.first_name?.toLowerCase() === firstName?.toLowerCase() &&
+          p.last_name?.toLowerCase() === lastName?.toLowerCase() &&
+          p.date_of_birth === dob
+        );
+      }
+
+      if (!existingPatient && extractedData.demographics) {
+        // Create new patient from referral data
+        const nameParts = (extractedData.demographics.full_name || '').split(' ');
+        const firstName = nameParts[0] || '';
+        const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
+        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+
+        const newPatient = await base44.entities.Patient.create({
+          first_name: firstName,
+          middle_name: middleName,
+          last_name: lastName,
+          date_of_birth: extractedData.demographics.date_of_birth,
+          address: extractedData.demographics.address,
+          phone: extractedData.demographics.phone,
+          email: extractedData.demographics.email || null,
+          payor: extractedData.demographics.insurance_primary || 'Unknown',
+          emergency_contact_name: extractedData.demographics.emergency_contact,
+          emergency_contact_phone: extractedData.demographics.emergency_phone,
+          emergency_contact_relationship: extractedData.demographics.emergency_relationship,
+          physician_name: extractedData.demographics.referring_physician || extractedData.demographics.primary_care_physician,
+          physician_phone: extractedData.demographics.referring_physician_contact || extractedData.demographics.pcp_contact,
+          primary_diagnosis: extractedData.diagnoses?.primary_diagnosis,
+          secondary_diagnoses: extractedData.diagnoses?.secondary_diagnoses || [],
+          allergies: extractedData.diagnoses?.allergies,
+          current_medications: extractedData.medications?.map(med => ({
+            name: med.name,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            prescriber: med.prescriber
+          })) || [],
+          past_medical_history: extractedData.diagnoses?.past_medical_history || [],
+          admission_date: extractedData.admission_details?.admission_date,
+          admission_source: extractedData.admission_details?.admission_source,
+          status: 'active',
+          care_type: 'home_health',
+          clinical_notes: `Referral received from ${extractedData.demographics.referring_physician || 'physician'} on ${extractedData.admission_details?.referral_date || 'unknown date'}.\n\nReason: ${extractedData.admission_details?.referral_reason || 'Not specified'}`,
+          goals_of_care: extractedData.skilled_needs?.goals_of_care ? [extractedData.skilled_needs.goals_of_care] : []
+        });
+
+        updates.patient_id = newPatient.id;
+        existingPatient = newPatient;
+      } else if (existingPatient) {
+        updates.patient_id = existingPatient.id;
+      }
+
       await base44.entities.Referral.update(referralId, updates);
       setProcessingReferralId(null);
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error updating referral:', error);
+      alert('Failed to process referral. Please try again.');
     }
   };
 
@@ -341,11 +407,20 @@ export default function ReferralIntake() {
                   {filteredReferrals.map((referral) => (
                     <TableRow key={referral.id}>
                       <TableCell className="font-medium">
-                        {referral.patient_name || 'Unknown'}
+                        {referral.patient_id ? (
+                          <Link to={createPageUrl(`PatientDetails?id=${referral.patient_id}`)} className="text-blue-600 hover:underline">
+                            {referral.patient_name || 'Unknown'}
+                          </Link>
+                        ) : (
+                          <span>{referral.patient_name || 'Unknown'}</span>
+                        )}
                         {referral.patient_dob && (
                           <p className="text-xs text-gray-500">
                             DOB: {format(new Date(referral.patient_dob), 'MM/dd/yyyy')}
                           </p>
+                        )}
+                        {referral.patient_id && (
+                          <Badge className="bg-green-600 text-xs mt-1">In System</Badge>
                         )}
                       </TableCell>
                       <TableCell>
