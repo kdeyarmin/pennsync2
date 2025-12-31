@@ -118,41 +118,87 @@ export default function AIDraftSOAPNote({ patientId, visitType = "routine_visit"
         }))
       };
 
-      const prompt = `You are an expert home health nurse writing clinical documentation. Generate a comprehensive Medicare-compliant SOAP note for today's ${visitType} visit.
+      const prompt = `You are an expert home health nurse writing clinical documentation. Generate a comprehensive Medicare-compliant SOAP note for today's ${visitType} visit that meets ALL CMS home health regulations.
 
 PATIENT CONTEXT:
 ${JSON.stringify(context, null, 2)}
 
-Generate a detailed SOAP note with the following sections:
+CRITICAL MEDICARE COMPLIANCE REQUIREMENTS - MUST INCLUDE ALL:
+
+1. HOMEBOUND STATUS (REQUIRED):
+   - Document specific reason patient is confined to home
+   - Describe taxing effort required to leave home (e.g., "requires wheelchair, considerable assistance, and taxing effort")
+   - Note if patient leaves home only for medical appointments or religious services
+   - Document any medical contraindications to leaving home
+
+2. SKILLED NEED JUSTIFICATION (REQUIRED):
+   - Explain WHY skilled nursing is required (complexity, teaching, assessment, management)
+   - Demonstrate skilled nursing judgment used during visit
+   - Show services cannot be safely/effectively performed by non-skilled persons
+   - Document clinical decision-making process
+
+3. MEDICAL NECESSITY (REQUIRED):
+   - Link all interventions to physician orders and care plan goals
+   - Show reasonable expectation of improvement or management of condition
+   - Document complexity requiring professional skilled services
+   - Explain relationship between diagnosis and need for services
+
+4. SAFETY ASSESSMENT (REQUIRED):
+   - Fall risk evaluation and interventions
+   - Home safety hazards identified and addressed
+   - Emergency preparedness discussed
+   - Caregiver support and capabilities
+
+Generate a detailed SOAP note with these sections:
 
 SUBJECTIVE:
-- Include patient/caregiver report on current status
-- Reference any complaints, symptoms, or concerns
-- Include relevant quotes if applicable
-- Address any active alerts or recent events
+- Patient/caregiver report with direct quotes when significant
+- Complaints, symptoms, concerns related to skilled need
+- Pain assessment (location, quality, intensity, interventions)
+- Homebound status verification ("Patient confirms remains homebound due to...")
+- Active alerts or changes since last visit
 
 OBJECTIVE:
-- Vital signs (use baseline if no new data, indicate "to be obtained")
-- Physical assessment findings for all relevant systems
-- Functional status assessment
-- Medication review findings
-- Safety assessment
+- Complete vital signs with comparison to baseline/previous visit
+- Systems review relevant to diagnosis and care plan
+- Medication reconciliation (name, dose, frequency, compliance, side effects)
+- Functional assessment (ADLs, mobility, transfers, gait, assistive devices)
+- Wound assessment if applicable (size, drainage, appearance, treatment)
+- Safety assessment findings
+- Caregiver observation and competency
 
 ASSESSMENT:
-- Clinical interpretation of findings
-- Progress toward care plan goals
-- Response to treatments
-- Risk factors identified
-- Changes from previous visit
+- Clinical interpretation demonstrating skilled nursing judgment
+- Progress toward EACH care plan goal with specific measurements
+- Response to treatments/interventions with clinical reasoning
+- Changes from previous visit with analysis of significance
+- Risk factors and clinical concerns requiring monitoring
+- Medicare medical necessity clearly stated
+- Continued need for skilled services justified
 
 PLAN:
-- Interventions performed this visit
-- Patient/caregiver education provided
-- Coordination with MD or other disciplines
-- Plan for next visit
-- Any new orders or changes needed
+- Skilled interventions performed THIS visit with rationale
+- Patient/caregiver education provided (topics, teaching methods, comprehension verified)
+- Medication teaching and management
+- Disease-specific education relevant to diagnoses
+- Care coordination (MD communication, referrals, DME orders)
+- Next visit plan with specific skilled nursing tasks
+- Frequency and duration justification
+- Any changes to plan of care or orders needed
 
-Make the note detailed, professional, and Medicare-compliant. Use complete sentences and proper medical terminology. Ensure it demonstrates skilled nursing judgment and medical necessity for continued home health services.`;
+COMPLIANCE CHECKLIST - ENSURE NOTE INCLUDES:
+✓ Homebound status documented with specific details
+✓ Skilled nursing need clearly justified
+✓ Medical necessity evident throughout
+✓ Progress toward care plan goals measured
+✓ Patient/caregiver education documented with comprehension
+✓ Safety assessment completed
+✓ Medication reconciliation performed
+✓ Coordination of care documented
+✓ Clinical judgment demonstrated
+✓ Complete sentences, proper grammar, no abbreviations except standard medical terms
+
+Use professional medical terminology. Write in complete sentences. Avoid vague statements. Be specific with measurements and observations. Demonstrate complexity requiring skilled nursing. Make medical necessity crystal clear to Medicare reviewers.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
