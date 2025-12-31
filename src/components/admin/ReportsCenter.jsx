@@ -301,16 +301,26 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
   // Helper functions for PDF data
   const generateProductivityReportData = (visits, users) => {
+    const endDate = todayEastern();
+    const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
+    
     const nursesData = users.filter(u => u.role === 'user').map(nurse => {
-      const stats = calculateNurseStats(nurse.email, {
-        visits,
-        noteConversions: allNoteConversions,
-        dateRange: parseInt(dateRange)
+      // Filter note conversions by date range for this nurse
+      const nurseConversions = allNoteConversions.filter(nc => {
+        const createdDate = nc.created_date ? nc.created_date.split('T')[0] : null;
+        return nc.nurse_email === nurse.email && 
+               createdDate >= startDate && 
+               createdDate <= endDate;
       });
+      
+      const noteConversions = nurseConversions.length;
+      const timeSavedMinutes = noteConversions * 95; // 95 minutes saved per note enhancement
+      const timeSavedHours = parseFloat((timeSavedMinutes / 60).toFixed(1));
       
       return {
         name: nurse.full_name || nurse.email,
-        ...stats
+        noteConversions,
+        timeSavedHours
       };
     }).sort((a, b) => (b.noteConversions || 0) - (a.noteConversions || 0)); // Sort by highest enhancements first
 
@@ -319,7 +329,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     return {
       nurses: nursesData,
-      totalTimeSaved,
+      totalTimeSaved: parseFloat(totalTimeSaved.toFixed(1)),
       totalEnhancements
     };
   };
