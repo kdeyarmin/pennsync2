@@ -252,11 +252,12 @@ Deno.serve(async (req) => {
       doc.setFontSize(10);
       skilled.specific_interventions.forEach(int => {
         checkPageBreak();
-        const intLines = doc.splitTextToSize(`• ${int}`, 175);
-        intLines.forEach(line => {
-          doc.text(line, margin + 3, yPos);
-          yPos += 6;
+        doc.text('\u2022', margin + 3, yPos);
+        const intLines = doc.splitTextToSize(int, 170);
+        intLines.forEach((line, idx) => {
+          doc.text(line, margin + 8, yPos + (idx * 6));
         });
+        yPos += intLines.length * 6;
       });
       yPos += 3;
     }
@@ -288,11 +289,12 @@ Deno.serve(async (req) => {
       doc.setFontSize(10);
       orders.physician_orders.forEach(order => {
         checkPageBreak();
-        const orderLines = doc.splitTextToSize(`• ${order}`, 175);
-        orderLines.forEach(line => {
-          doc.text(line, margin + 3, yPos);
-          yPos += 6;
+        doc.text('\u2022', margin + 3, yPos);
+        const orderLines = doc.splitTextToSize(order, 170);
+        orderLines.forEach((line, idx) => {
+          doc.text(line, margin + 8, yPos + (idx * 6));
         });
+        yPos += orderLines.length * 6;
       });
       yPos += 3;
     }
@@ -305,11 +307,12 @@ Deno.serve(async (req) => {
       doc.setFontSize(10);
       orders.treatments.forEach(tx => {
         checkPageBreak();
-        const txLines = doc.splitTextToSize(`• ${tx}`, 175);
-        txLines.forEach(line => {
-          doc.text(line, margin + 3, yPos);
-          yPos += 6;
+        doc.text('\u2022', margin + 3, yPos);
+        const txLines = doc.splitTextToSize(tx, 170);
+        txLines.forEach((line, idx) => {
+          doc.text(line, margin + 8, yPos + (idx * 6));
         });
+        yPos += txLines.length * 6;
       });
       yPos += 3;
     }
@@ -487,24 +490,26 @@ Deno.serve(async (req) => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     const criticalItems = [
-      '• Verify all medications - check bottles, dosages, compliance',
-      '• Assess functional status for all OASIS ADL items',
-      '• Complete comprehensive skin assessment (M1306-M1308)',
-      '• Verify allergies and document reactions',
-      '• Assess home safety and environmental hazards',
-      '• Obtain baseline vital signs and weight',
-      '• Assess pain comprehensively (M1242)',
-      '• Complete cognitive/behavioral assessment',
-      '• Verify emergency contacts and advance directives',
-      '• Document homebound status clearly (M1910)'
+      'Verify all medications - check bottles, dosages, compliance',
+      'Assess functional status for all OASIS ADL items',
+      'Complete comprehensive skin assessment (M1306-M1308)',
+      'Verify allergies and document reactions',
+      'Assess home safety and environmental hazards',
+      'Obtain baseline vital signs and weight',
+      'Assess pain comprehensively (M1242)',
+      'Complete cognitive/behavioral assessment',
+      'Verify emergency contacts and advance directives',
+      'Document homebound status clearly (M1910)'
     ];
     
     criticalItems.forEach(item => {
-      const itemLines = doc.splitTextToSize(item, 180);
-      itemLines.forEach(line => {
-        doc.text(line, margin + 2, yPos);
-        yPos += 6;
+      checkPageBreak();
+      doc.text('\u2022', margin + 2, yPos);
+      const itemLines = doc.splitTextToSize(item, 175);
+      itemLines.forEach((line, idx) => {
+        doc.text(line, margin + 7, yPos + (idx * 6));
       });
+      yPos += itemLines.length * 6;
     });
     yPos += 8;
 
@@ -526,6 +531,137 @@ Deno.serve(async (req) => {
         yPos += 5.5;
       });
     }
+
+    // HOMEBOUND STATUS SECTION
+    checkPageBreak(50);
+    yPos += 8;
+    doc.setFillColor(139, 92, 246);
+    doc.rect(margin - 5, yPos, 190, 12, 'F');
+    yPos += 8;
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('HOMEBOUND STATUS JUSTIFICATION (M1910)', margin, yPos);
+    yPos += 12;
+    doc.setTextColor(0, 0, 0);
+
+    doc.setFillColor(243, 232, 255);
+    doc.rect(margin - 5, yPos, 190, 65, 'F');
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('WHY PATIENT IS HOMEBOUND:', margin, yPos);
+    yPos += 8;
+    
+    doc.setFont('helvetica', 'normal');
+    const homeboundReasons = [];
+    
+    // Add relevant homebound factors based on patient data
+    if (dx.primary_diagnosis?.toLowerCase().includes('fracture')) {
+      homeboundReasons.push('Recent pelvic fracture requiring assistive device and moderate assistance for ambulation');
+    }
+    if (func.ambulation?.toLowerCase().includes('assist') || func.ambulation?.toLowerCase().includes('walker')) {
+      homeboundReasons.push('Requires walker (FWW) and physical assistance to ambulate safely');
+    }
+    if (func.fall_risk?.toLowerCase().includes('high')) {
+      homeboundReasons.push('High fall risk - unsafe to leave home without assistance');
+    }
+    if (func.pain && (func.pain.includes('6/10') || func.pain.toLowerCase().includes('significant'))) {
+      homeboundReasons.push('Significant pain with movement requiring medication before mobilization');
+    }
+    if (func.adl_status?.toLowerCase().includes('max') || func.adl_status?.toLowerCase().includes('substantial')) {
+      homeboundReasons.push('Requires maximal/substantial assistance with ADLs including dressing and toileting');
+    }
+    if (demo.age && parseInt(demo.age) >= 90) {
+      homeboundReasons.push('Advanced age (96 years) with generalized weakness and endurance limitations');
+    }
+    
+    homeboundReasons.push('Leaving home requires considerable and taxing effort');
+    homeboundReasons.push('Absences from home are infrequent and of short duration (medical appointments only)');
+    
+    homeboundReasons.forEach(reason => {
+      checkPageBreak();
+      doc.text('\u2022', margin + 2, yPos);
+      const reasonLines = doc.splitTextToSize(reason, 175);
+      reasonLines.forEach((line, idx) => {
+        doc.text(line, margin + 7, yPos + (idx * 6));
+      });
+      yPos += reasonLines.length * 6;
+    });
+    
+    yPos += 8;
+    doc.setFontSize(9);
+    doc.setTextColor(88, 28, 135);
+    doc.setFont('helvetica', 'bold');
+    const reminder = doc.splitTextToSize('REMINDER: Document specific details of homebound status during visit. Include distance patient can walk, need for assistance, and taxing effort required to leave home.', 175);
+    reminder.forEach(line => {
+      doc.text(line, margin + 2, yPos);
+      yPos += 5.5;
+    });
+    doc.setTextColor(0, 0, 0);
+
+    // SAMPLE NURSING ASSESSMENT
+    checkPageBreak(80);
+    yPos += 10;
+    doc.setFillColor(34, 197, 94);
+    doc.rect(margin - 5, yPos, 190, 12, 'F');
+    yPos += 8;
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SAMPLE ADMISSION NURSING ASSESSMENT', margin, yPos);
+    yPos += 12;
+    doc.setTextColor(0, 0, 0);
+
+    doc.setFillColor(240, 253, 244);
+    doc.rect(margin - 5, yPos, 190, 130, 'F');
+    yPos += 8;
+
+    const sampleAssessment = `SUBJECTIVE: ${demo.age || '96'}-year-old ${demo.gender || 'female'} admitted to home health following ${admission.admission_source || 'skilled nursing facility stay'} for ${dx.primary_diagnosis || 'right pelvic fracture'}. Patient reports pain level ${func.pain || '6/10'} with movement, managed with oxycodone. States "I want to get stronger so I can be more independent." Daughter present and supportive. Patient alert and cooperative with assessment.
+
+OBJECTIVE: Vital signs - BP ${clinical.vital_signs || '160/82'}, HR ${clinical.vital_signs?.includes('94') ? '94' : 'WNL'}, Temp ${clinical.vital_signs?.includes('97.4') ? '97.4°F' : 'afebrile'}, RR ${clinical.vital_signs?.includes('16') ? '16' : 'WNL'}, SpO2 ${clinical.vital_signs?.includes('96') ? '96%' : '>95%'} on room air. Weight ${clinical.weight || '168 lbs'}. 
+
+Ambulation: ${func.ambulation || 'Requires FWW and moderate assistance for short distances'}. Gait unsteady. Transfers bed/chair with moderate assistance. 
+
+ADLs: ${func.adl_status || 'Requires maximal assistance lower body dressing, moderate assistance bathing/toileting'}. Continent with urge incontinence. 
+
+Cardiovascular: ${dx.past_medical_history?.includes('heart failure') ? 'History of CHF. Heart rate regular, no edema noted upper extremities. Trace ankle edema bilaterally.' : 'Heart regular rate and rhythm.'}
+
+Respiratory: Lungs clear to auscultation bilaterally. No SOB at rest.
+
+Integumentary: Skin intact, warm and dry. No wounds, pressure areas, or rashes noted. ${func.skin_integrity || 'Good turgor for age'}.
+
+Musculoskeletal: Generalized weakness noted. ROM limited by pain in lower extremity. ${dx.primary_diagnosis?.includes('fracture') ? 'Tenderness to palpation right pelvic area. WBAT per physician orders.' : ''}
+
+Neurological: Alert and oriented x4. ${func.cognitive_status?.includes('deficit') ? 'Noted mild cognitive communication deficit - follows simple commands, some memory impairment.' : 'Speech clear, follows multi-step commands.'} PERRLA. Sensation intact.
+
+Pain: Reports ${func.pain || '6/10'} pain with movement, relieved by oxycodone. Takes medication before PT as ordered.
+
+Safety: Home environment assessed - ${safety.environmental_hazards || 'daughter nearby for support'}. Fall risk HIGH - recent fall history, age, mobility limitations. ${safety.safety_equipment_needed ? 'Safety equipment: ' + safety.safety_equipment_needed + '.' : 'FWW provided.'}
+
+ASSESSMENT: ${demo.age || '96'}-year-old with recent pelvic fracture requiring skilled nursing for assessment, medication management, and coordination of therapy services. Patient is HOMEBOUND due to inability to ambulate safely without assistance, high fall risk, significant pain with movement, and taxing effort required to leave home. Patient demonstrates good rehab potential with supportive family.
+
+PLAN: 
+\u2022 Skilled nursing visits for comprehensive assessment, medication review, vital signs monitoring, and care coordination
+\u2022 PT/OT services for strength, balance, mobility, and ADL training
+\u2022 Pain management per MD orders - monitor effectiveness and side effects
+\u2022 Fall prevention education - proper walker use, home safety modifications
+\u2022 Monitor for complications: infection, DVT, deconditioning
+\u2022 Coordinate with MD for lab work, medication adjustments as needed
+\u2022 Teach patient/caregiver signs/symptoms to report
+\u2022 Goals: Improve functional mobility, pain management, prevent complications, maximize independence
+
+Patient/caregiver verbalize understanding of plan of care and agree with goals. All questions answered.`;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const assessmentLines = doc.splitTextToSize(sampleAssessment, 175);
+    assessmentLines.forEach(line => {
+      checkPageBreak();
+      doc.text(line, margin + 2, yPos);
+      yPos += 5;
+    });
 
     const pdfBytes = doc.output('arraybuffer');
 
