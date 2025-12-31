@@ -16,8 +16,15 @@ export default function OfflineIndicator() {
 
   useEffect(() => {
     const updateStatus = () => {
-      const status = offlineStorage.getSyncStatus();
-      setSyncStatus(status);
+      // Fallback for backwards compatibility
+      if (typeof offlineStorage.getSyncStatus === 'function') {
+        const status = offlineStorage.getSyncStatus();
+        setSyncStatus(status);
+      } else {
+        // Fallback when method doesn't exist (cache issue)
+        const pending = offlineStorage.getPendingCount();
+        setSyncStatus({ total: pending, pending, syncing: 0, failed: 0, synced: 0 });
+      }
     };
 
     const handleOnline = async () => {
