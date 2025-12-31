@@ -663,6 +663,148 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
       yPos += 5;
     });
 
+    // SUGGESTED CARE PLANS
+    checkPageBreak(80);
+    yPos += 10;
+    doc.setFillColor(16, 185, 129);
+    doc.rect(margin - 5, yPos, 190, 12, 'F');
+    yPos += 8;
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SUGGESTED CARE PLANS', margin, yPos);
+    yPos += 12;
+    doc.setTextColor(0, 0, 0);
+
+    // Generate care plan suggestions based on diagnoses and functional status
+    const carePlans = [];
+
+    // Fracture-related care plan
+    if (dx.primary_diagnosis?.toLowerCase().includes('fracture')) {
+      carePlans.push({
+        problem: 'Impaired Physical Mobility related to pelvic fracture',
+        goal: 'Patient will ambulate 50 feet with walker and minimal assistance within 60 days',
+        interventions: [
+          'Assess mobility status and fall risk each visit',
+          'Coordinate PT/OT services for strength, balance, and gait training',
+          'Educate on proper walker use and safe transfer techniques',
+          'Monitor pain level and effectiveness of pain management',
+          'Assess home environment for safety modifications'
+        ]
+      });
+    }
+
+    // CHF care plan
+    if (dx.past_medical_history?.includes('heart failure') || dx.secondary_diagnoses?.some(d => d.toLowerCase().includes('heart failure'))) {
+      carePlans.push({
+        problem: 'Risk for Fluid Volume Excess related to CHF',
+        goal: 'Patient will maintain stable weight and absence of edema within 30 days',
+        interventions: [
+          'Monitor vital signs including blood pressure and heart rate',
+          'Assess for peripheral edema, weight gain, shortness of breath',
+          'Educate on sodium restriction and fluid monitoring',
+          'Teach signs/symptoms of CHF exacerbation to report',
+          'Coordinate with MD for medication adjustments as needed'
+        ]
+      });
+    }
+
+    // Fall risk care plan
+    if (func.fall_risk?.toLowerCase().includes('high')) {
+      carePlans.push({
+        problem: 'Risk for Falls related to recent fall history, mobility impairment, and advanced age',
+        goal: 'Patient will remain free from falls during home health episode',
+        interventions: [
+          'Complete comprehensive fall risk assessment',
+          'Implement fall prevention strategies and environmental modifications',
+          'Educate patient/caregiver on fall prevention measures',
+          'Ensure proper use of assistive devices',
+          'Review medications for fall risk (orthostatic hypotension)'
+        ]
+      });
+    }
+
+    // Depression care plan
+    if (dx.secondary_diagnoses?.some(d => d.toLowerCase().includes('depression'))) {
+      carePlans.push({
+        problem: 'Depression related to recent hospitalization and functional limitations',
+        goal: 'Patient will report improved mood and engagement in activities within 60 days',
+        interventions: [
+          'Screen for depression using standardized tool (PHQ-2/PHQ-9)',
+          'Monitor medication compliance with Sertraline',
+          'Assess social isolation and encourage family engagement',
+          'Provide emotional support and active listening',
+          'Collaborate with MD if symptoms worsen'
+        ]
+      });
+    }
+
+    // Pain management care plan
+    if (func.pain) {
+      carePlans.push({
+        problem: 'Acute Pain related to pelvic fracture',
+        goal: 'Patient will report pain level 3/10 or less with improved function within 30 days',
+        interventions: [
+          'Assess pain level using 0-10 scale each visit',
+          'Monitor effectiveness of oxycodone and side effects',
+          'Educate on non-pharmacological pain management techniques',
+          'Assess for signs of medication misuse or adverse effects',
+          'Coordinate with MD if pain management inadequate'
+        ]
+      });
+    }
+
+    carePlans.forEach((cp, idx) => {
+      checkPageBreak(50);
+      
+      doc.setFillColor(209, 250, 229);
+      doc.rect(margin - 5, yPos, 190, 8, 'F');
+      yPos += 6;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(5, 150, 105);
+      doc.text(`CARE PLAN ${idx + 1}`, margin, yPos);
+      yPos += 8;
+      doc.setTextColor(0, 0, 0);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Problem:', margin, yPos);
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      const problemLines = doc.splitTextToSize(cp.problem, 175);
+      problemLines.forEach(line => {
+        doc.text(line, margin + 3, yPos);
+        yPos += 5;
+      });
+      yPos += 3;
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Goal:', margin, yPos);
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      const goalLines = doc.splitTextToSize(cp.goal, 175);
+      goalLines.forEach(line => {
+        doc.text(line, margin + 3, yPos);
+        yPos += 5;
+      });
+      yPos += 3;
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Interventions:', margin, yPos);
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      cp.interventions.forEach(intervention => {
+        checkPageBreak();
+        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
+        const intLines = doc.splitTextToSize(intervention, 170);
+        intLines.forEach((line, lineIdx) => {
+          doc.text(line, margin + 8, yPos + (lineIdx * 5));
+        });
+        yPos += intLines.length * 5;
+      });
+      yPos += 6;
+    });
+
     const pdfBytes = doc.output('arraybuffer');
 
     return new Response(pdfBytes, {
