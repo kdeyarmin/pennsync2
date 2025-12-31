@@ -101,6 +101,7 @@ import ProactiveEducationSuggester from "../components/smartNote/ProactiveEducat
 import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
 import AISmartOASISAssistant from "../components/oasis/AISmartOASISAssistant";
 import GuidedVisitWorkflow from "../components/visit/GuidedVisitWorkflow";
+import EnhancedPatientContextPanel from "../components/smartNote/EnhancedPatientContextPanel";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -709,6 +710,17 @@ export default function SmartNoteAssistant() {
                 });
                 setRoughNote(compiledNotes.trim());
                 setUseGuidedWorkflow(false);
+              }}
+            />
+          )}
+
+          {/* Enhanced Patient Context Panel */}
+          {selectedPatientId && (
+            <EnhancedPatientContextPanel
+              patient={selectedPatient}
+              onContextUpdate={(context) => {
+                // Context is available for use in other components
+                console.log('Patient context updated:', context);
               }}
             />
           )}
