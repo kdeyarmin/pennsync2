@@ -60,9 +60,15 @@ export default function ReferralProcessor() {
 
     setIsCreatingPatient(true);
     try {
+      // Parse patient name intelligently from extracted data
+      const fullName = extractedData.demographics?.full_name || '';
+      const nameParts = fullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || 'Unknown';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Unknown';
+
       const patientData = {
-        first_name: extractedData.demographics?.full_name?.split(' ')[0] || 'Unknown',
-        last_name: extractedData.demographics?.full_name?.split(' ').slice(1).join(' ') || 'Unknown',
+        first_name: firstName,
+        last_name: lastName,
         date_of_birth: extractedData.demographics?.date_of_birth || null,
         address: extractedData.demographics?.address || null,
         phone: extractedData.demographics?.phone || null,
