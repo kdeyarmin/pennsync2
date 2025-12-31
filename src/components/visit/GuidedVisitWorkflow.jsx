@@ -307,15 +307,15 @@ Provide specific suggestions that would help the nurse complete this step effici
             <Button
               key={step.id}
               variant={isCurrent ? 'default' : 'outline'}
-              size="sm"
+              size="default"
               onClick={() => setCurrentStepIndex(idx)}
-              className={`flex-shrink-0 ${
-                isCompleted ? 'border-green-500' : ''
-              } ${isCurrent ? 'bg-blue-600' : ''}`}
+              className={`flex-shrink-0 min-h-[44px] font-semibold ${
+                isCompleted ? 'border-2 border-green-500 bg-green-50' : ''
+              } ${isCurrent ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'hover:bg-gray-100'}`}
             >
-              <StepIcon className="w-4 h-4 mr-2" />
+              <StepIcon className="w-5 h-5 mr-2" />
               {step.title}
-              {isCompleted && <CheckCircle2 className="w-4 h-4 ml-2 text-green-600" />}
+              {isCompleted && <CheckCircle2 className="w-5 h-5 ml-2 text-green-600" />}
             </Button>
           );
         })}
