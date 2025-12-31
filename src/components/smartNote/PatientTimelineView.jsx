@@ -22,11 +22,13 @@ import {
   FlaskConical,
   MessageSquare,
   Link as LinkIcon,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import ClinicalEventValidator from "./ClinicalEventValidator";
 
 const EVENT_TYPES = {
   visit: { label: 'Visits', icon: Activity, color: 'blue' },
@@ -402,6 +404,14 @@ Be specific and reference actual events by date and type.`,
 
   return (
     <div className="space-y-4">
+      {/* Clinical Event Validator */}
+      <ClinicalEventValidator 
+        patientId={patient?.id}
+        onValidationComplete={() => {
+          loadTimelineData();
+        }}
+      />
+
       {/* Header with AI Summary */}
       <Card className="border-2 border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
         <CardHeader className="pb-3">
