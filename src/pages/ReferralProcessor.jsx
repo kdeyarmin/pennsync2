@@ -64,10 +64,17 @@ export default function ReferralProcessor() {
       </div>
 
       <div className="space-y-4 sm:space-y-6">
-        <Alert className="bg-blue-50 border-blue-200">
+        <Alert className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-300">
           <FileText className="w-4 h-4 text-blue-600" />
           <AlertDescription className="text-blue-900">
-            <strong>How it works:</strong> Upload a patient referral PDF, and AI will extract all relevant information for admission documentation and OASIS completion. You can then create the patient record or use the data in Smart Note Assistant.
+            <p className="font-semibold mb-2">🚀 AI-Powered Referral Processing</p>
+            <p className="text-sm mb-1">Upload referrals from any source (PDFs, faxes, scanned documents) to automatically:</p>
+            <ul className="text-sm ml-4 space-y-0.5 list-disc">
+              <li><strong>Extract & categorize</strong> all patient data with intelligent field mapping</li>
+              <li><strong>Flag incomplete information</strong> with actionable prompts for missing data</li>
+              <li><strong>Prioritize by urgency</strong> using clinical factors and requested start dates</li>
+              <li><strong>Recommend scheduling</strong> and optimal nurse assignments based on skills</li>
+            </ul>
           </AlertDescription>
         </Alert>
 
