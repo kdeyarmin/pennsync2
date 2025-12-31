@@ -201,7 +201,16 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
           </TabsList>
 
           <TabsContent value="all" className="space-y-2 mt-3">
-            {assessment.oasis_items?.map((item, idx) => {
+            {assessment.oasis_items?.filter(item => {
+              // Filter out administrative items M1000-M1060
+              const itemNum = item.item_number?.toUpperCase() || '';
+              const numMatch = itemNum.match(/M(\d+)/);
+              if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 1000 && num <= 1060) return false;
+              }
+              return true;
+            }).map((item, idx) => {
               const isExpanded = expandedItems.includes(idx);
               const isCopied = copiedItems.includes(item.item_number);
 
@@ -301,7 +310,15 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
           </TabsContent>
 
           <TabsContent value="functional" className="space-y-2 mt-3">
-            {assessment.oasis_items?.filter(i => i.category?.toLowerCase().includes('functional')).map((item, idx) => (
+            {assessment.oasis_items?.filter(i => {
+              const itemNum = i.item_number?.toUpperCase() || '';
+              const numMatch = itemNum.match(/M(\d+)/);
+              if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 1000 && num <= 1060) return false;
+              }
+              return i.category?.toLowerCase().includes('functional');
+            }).map((item, idx) => (
               <div key={idx} className="text-xs bg-white border border-indigo-200 rounded p-2">
                 <strong>{item.item_number}:</strong> {item.item_name} - {item.suggested_response}
               </div>
@@ -309,7 +326,15 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
           </TabsContent>
 
           <TabsContent value="clinical" className="space-y-2 mt-3">
-            {assessment.oasis_items?.filter(i => i.category?.toLowerCase().includes('clinical')).map((item, idx) => (
+            {assessment.oasis_items?.filter(i => {
+              const itemNum = i.item_number?.toUpperCase() || '';
+              const numMatch = itemNum.match(/M(\d+)/);
+              if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 1000 && num <= 1060) return false;
+              }
+              return i.category?.toLowerCase().includes('clinical');
+            }).map((item, idx) => (
               <div key={idx} className="text-xs bg-white border border-indigo-200 rounded p-2">
                 <strong>{item.item_number}:</strong> {item.item_name} - {item.suggested_response}
               </div>
@@ -317,7 +342,15 @@ ${item.documentation_tips?.map(t => `• ${t}`).join('\n')}`;
           </TabsContent>
 
           <TabsContent value="cognitive" className="space-y-2 mt-3">
-            {assessment.oasis_items?.filter(i => i.category?.toLowerCase().includes('cognitive')).map((item, idx) => (
+            {assessment.oasis_items?.filter(i => {
+              const itemNum = i.item_number?.toUpperCase() || '';
+              const numMatch = itemNum.match(/M(\d+)/);
+              if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 1000 && num <= 1060) return false;
+              }
+              return i.category?.toLowerCase().includes('cognitive');
+            }).map((item, idx) => (
               <div key={idx} className="text-xs bg-white border border-indigo-200 rounded p-2">
                 <strong>{item.item_number}:</strong> {item.item_name} - {item.suggested_response}
               </div>
