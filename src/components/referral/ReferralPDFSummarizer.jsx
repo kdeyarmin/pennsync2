@@ -31,12 +31,22 @@ import {
 export default function ReferralPDFSummarizer({ 
   onDataExtracted,
   onUseForAdmission,
-  patientId = null
+  patientId = null,
+  fileUrl: externalFileUrl = null,
+  onExtractionComplete = null
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [fileUrl, setFileUrl] = useState(null);
+  const [fileUrl, setFileUrl] = useState(externalFileUrl);
   const [extractedData, setExtractedData] = useState(null);
+
+  // Auto-process if fileUrl is provided externally
+  React.useEffect(() => {
+    if (externalFileUrl && !extractedData && !isProcessing) {
+      setFileUrl(externalFileUrl);
+      processReferral(externalFileUrl);
+    }
+  }, [externalFileUrl]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -61,7 +71,7 @@ export default function ReferralPDFSummarizer({
     setIsUploading(false);
   };
 
-  const processReferral = async (url, fileType) => {
+  const processReferral = async (url, fileType = 'application/pdf') => {
     setIsProcessing(true);
     try {
       // Add context about file type for better extraction
@@ -385,6 +395,11 @@ HANDWRITTEN NOTES HANDLING:
 
       setExtractedData(result);
       onDataExtracted?.(result);
+      
+      // Callback for external workflows (referral intake)
+      if (onExtractionComplete) {
+        onExtractionComplete(result, result);
+      }
     } catch (error) {
       console.error('Error processing referral:', error);
       alert('Failed to process referral. Please try again.');
