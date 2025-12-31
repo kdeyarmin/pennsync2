@@ -282,17 +282,17 @@ Provide specific suggestions that would help the nurse complete this step effici
   return (
     <div className="space-y-4">
       {/* Progress Header */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between mb-2">
-            <CardTitle className="text-lg">
+            <CardTitle className="text-xl font-bold text-blue-900">
               Step {currentStepIndex + 1} of {workflow.length}: {currentStep.title}
             </CardTitle>
-            <Badge className={isStepComplete() ? 'bg-green-600' : 'bg-gray-400'}>
+            <Badge className={isStepComplete() ? 'bg-green-600 text-white text-sm px-3 py-1' : 'bg-gray-500 text-white text-sm px-3 py-1'}>
               {completedSteps.length}/{workflow.length} Complete
             </Badge>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-3" />
         </CardHeader>
       </Card>
 
@@ -348,17 +348,20 @@ Provide specific suggestions that would help the nurse complete this step effici
                   variant="outline"
                   onClick={handleBack}
                   disabled={currentStepIndex === 0}
+                  size="lg"
+                  className="min-h-[48px] font-semibold text-base"
                 >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  <ChevronLeft className="w-5 h-5 mr-2" />
                   Back
                 </Button>
                 <Button
                   onClick={handleNext}
                   disabled={!isStepComplete()}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white min-h-[48px] font-semibold text-base px-6"
                 >
                   {currentStepIndex === workflow.length - 1 ? 'Complete Visit' : 'Next Step'}
-                  <ChevronRight className="w-4 h-4 ml-2" />
+                  <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
             </CardContent>
@@ -367,10 +370,10 @@ Provide specific suggestions that would help the nurse complete this step effici
 
         {/* Smart Suggestions Sidebar */}
         <div className="space-y-4">
-          <Card className="border-2 border-indigo-300">
-            <CardHeader className="bg-indigo-50">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
+          <Card className="border-2 border-indigo-400 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-indigo-100 to-purple-100 border-b-2 border-indigo-200">
+              <CardTitle className="text-lg font-bold flex items-center gap-2 text-indigo-900">
+                <Sparkles className="w-5 h-5 text-indigo-700" />
                 Smart Suggestions
               </CardTitle>
             </CardHeader>
@@ -382,11 +385,11 @@ Provide specific suggestions that would help the nurse complete this step effici
                 </div>
               ) : smartSuggestions.length > 0 ? (
                 smartSuggestions.map((suggestion, idx) => (
-                  <Alert key={idx} className="cursor-pointer hover:bg-indigo-50" onClick={() => applySuggestion(suggestion)}>
-                    <Lightbulb className="w-4 h-4 text-indigo-600" />
-                    <AlertDescription className="text-sm">
+                  <Alert key={idx} className="cursor-pointer hover:bg-indigo-100 border-2 border-indigo-300 bg-indigo-50" onClick={() => applySuggestion(suggestion)}>
+                    <Lightbulb className="w-5 h-5 text-indigo-700" />
+                    <AlertDescription className="text-sm text-indigo-900 font-medium">
                       {suggestion}
-                      <Button variant="ghost" size="sm" className="ml-2 h-6">Add</Button>
+                      <Button variant="default" size="sm" className="ml-2 h-7 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Add</Button>
                     </AlertDescription>
                   </Alert>
                 ))
@@ -400,9 +403,9 @@ Provide specific suggestions that would help the nurse complete this step effici
           {Object.keys(formData[currentStep.id] || {}).filter(k => 
             formData[currentStep.id][k] && k.startsWith('previous_')
           ).length > 0 && (
-            <Alert className="bg-blue-50 border-blue-300">
-              <AlertCircle className="w-4 h-4 text-blue-600" />
-              <AlertDescription className="text-sm text-blue-900">
+            <Alert className="bg-blue-100 border-2 border-blue-400">
+              <AlertCircle className="w-5 h-5 text-blue-700" />
+              <AlertDescription className="text-sm text-blue-900 font-semibold">
                 Previous data has been pre-filled for reference
               </AlertDescription>
             </Alert>
@@ -470,9 +473,9 @@ function renderStepContent(stepId, { formData, updateField, getValue, patientDat
       return (
         <div className="space-y-4">
           {getValue('last_visit_summary') && (
-            <Alert className="bg-blue-50 border-blue-300">
-              <AlertDescription className="text-sm">
-                <strong>Last Visit ({getValue('last_visit_date')}):</strong><br />
+            <Alert className="bg-blue-100 border-2 border-blue-400">
+              <AlertDescription className="text-sm text-blue-900 font-medium">
+                <strong className="text-blue-950">Last Visit ({getValue('last_visit_date')}):</strong><br />
                 {getValue('last_visit_summary')}...
               </AlertDescription>
             </Alert>
@@ -525,12 +528,12 @@ function renderStepContent(stepId, { formData, updateField, getValue, patientDat
       return (
         <div className="space-y-4">
           {getValue('active_care_plans')?.length > 0 && (
-            <Alert className="bg-green-50 border-green-300">
+            <Alert className="bg-green-100 border-2 border-green-400">
               <AlertDescription>
-                <strong>Active Care Plans:</strong>
+                <strong className="text-green-950 font-bold">Active Care Plans:</strong>
                 <ul className="mt-2 space-y-1">
                   {getValue('active_care_plans').map((cp, idx) => (
-                    <li key={idx} className="text-sm">• {cp.goal}</li>
+                    <li key={idx} className="text-sm text-green-900 font-medium">• {cp.goal}</li>
                   ))}
                 </ul>
               </AlertDescription>
