@@ -30,6 +30,7 @@ import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import ClinicalEventValidator from "./ClinicalEventValidator";
 import LinkedNoteViewer from "./LinkedNoteViewer";
+import AICarePlanSuggester from "../carePlan/AICarePlanSuggester";
 
 const EVENT_TYPES = {
   visit: { label: 'Visits', icon: Activity, color: 'blue' },
@@ -420,6 +421,14 @@ Be specific and reference actual events by date and type.`,
       )}
 
     <div className="space-y-4">
+      {/* AI Care Plan Suggester */}
+      <AICarePlanSuggester 
+        patientId={patient?.id}
+        onCarePlanCreated={() => {
+          loadTimelineData();
+        }}
+      />
+
       {/* Clinical Event Validator */}
       <ClinicalEventValidator 
         patientId={patient?.id}
