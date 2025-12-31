@@ -218,13 +218,20 @@ Document URL: ${referral.document_url || 'N/A'}`,
 
   const handleProcessingComplete = async (referralId, extractedData, analysisResults) => {
     try {
+      // Extract and update referral fields from AI-processed data
       const updates = {
         status: 'ready_for_admission',
         extracted_data: extractedData,
         analysis_results: analysisResults,
         patient_name: extractedData.demographics?.full_name || null,
         patient_dob: extractedData.demographics?.date_of_birth || null,
-        referral_source: extractedData.demographics?.referring_physician || extractedData.admission_details?.admission_source || null
+        referral_source: extractedData.admission_details?.admission_source || 
+                         extractedData.demographics?.referring_physician || 
+                         null,
+        referral_date: extractedData.admission_details?.referral_date || 
+                       extractedData.admission_details?.admission_date || 
+                       null,
+        diagnosis: extractedData.diagnoses?.primary_diagnosis || null
       };
 
       // Check for missing critical information
