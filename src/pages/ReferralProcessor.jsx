@@ -6,6 +6,7 @@ import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import ReferralAnalyzer from "../components/referral/ReferralAnalyzer";
 import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
+import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAssessment";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -283,6 +284,11 @@ export default function ReferralProcessor() {
 
         {extractedData && (
           <>
+            <AIGeneratedOASISAssessment
+              referralData={extractedData}
+              visitType="Start of Care"
+            />
+
             <AIAdmissionDocumentationAssistant
               referralData={extractedData}
               oasisSuggestions={null}
