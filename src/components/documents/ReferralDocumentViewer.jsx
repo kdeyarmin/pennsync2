@@ -171,9 +171,8 @@ export default function ReferralDocumentViewer({ patientId }) {
             )}
           </CardContent>
         </Card>
-      )})}
-    </div>
-  );
+        );
+      })}
 
       {/* Send Document Dialog */}
       <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
