@@ -199,21 +199,21 @@ export default function Messages() {
   const unreadCount = threads.filter(t => t.unreadCount > 0).length;
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Mail className="w-8 h-8" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Mail className="w-6 h-6 sm:w-8 sm:h-8" />
             Messages
             {unreadCount > 0 && (
-              <Badge className="bg-red-600">{unreadCount} Unread</Badge>
+              <Badge className="bg-red-600 text-xs sm:text-sm">{unreadCount} Unread</Badge>
             )}
           </h1>
-          <p className="text-gray-600 mt-1">Secure internal messaging for patient care coordination</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Secure internal messaging for patient care coordination</p>
         </div>
         <Button
           onClick={() => setShowNewMessage(true)}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
         >
           <Send className="w-4 h-4 mr-2" />
           New Message
@@ -221,10 +221,10 @@ export default function Messages() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-[150px]">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+            <div className="flex-1 min-w-0">
               <Select value={filterPriority} onValueChange={setFilterPriority}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Priorities" />
@@ -253,9 +253,9 @@ export default function Messages() {
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Thread List */}
-        <div className="md:col-span-1 space-y-2">
+        <div className="lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto">
           {isLoading ? (
             <div className="text-center py-8 text-gray-500">Loading messages...</div>
           ) : filteredThreads.length === 0 ? (
@@ -309,44 +309,44 @@ export default function Messages() {
         </div>
 
         {/* Message Detail */}
-        <div className="md:col-span-2">
+        <div className="lg:col-span-2">
           {selectedThread ? (
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    {selectedThread.subject}
-                    <Badge className={getPriorityColor(selectedThread.priority)}>
-                      {selectedThread.priority}
-                    </Badge>
-                  </CardTitle>
-                  <Button size="sm" onClick={handleReply}>
-                    <Reply className="w-4 h-4 mr-1" />
-                    Reply
-                  </Button>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <CardTitle className="flex flex-wrap items-center gap-2 text-base sm:text-lg">
+                  <span className="break-words">{selectedThread.subject}</span>
+                  <Badge className={getPriorityColor(selectedThread.priority)}>
+                    {selectedThread.priority}
+                  </Badge>
+                </CardTitle>
+                <Button size="sm" onClick={handleReply} className="min-h-[40px] w-full sm:w-auto">
+                  <Reply className="w-4 h-4 mr-1" />
+                  Reply
+                </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {selectedThread.messages.map((msg, idx) => (
                   <Card key={msg.id} className={msg.sender_email === currentUser?.email ? 'bg-blue-50' : 'bg-gray-50'}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
                             {msg.sender_name?.charAt(0) || 'U'}
                           </div>
-                          <div>
-                            <p className="font-semibold text-sm">{msg.sender_name}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm truncate">{msg.sender_name}</p>
                             <p className="text-xs text-gray-500">
                               {format(new Date(msg.created_date), 'MMM d, yyyy h:mm a')}
                             </p>
                           </div>
                         </div>
                         {msg.read_by?.includes(currentUser?.email) && (
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap">{msg.message_text}</p>
+                      <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">{msg.message_text}</p>
                       {msg.patient_id && (
                         <Link
                           to={createPageUrl(`PatientDetails?id=${msg.patient_id}`)}
@@ -390,7 +390,7 @@ export default function Messages() {
 
       {/* New Message Dialog */}
       <Dialog open={showNewMessage} onOpenChange={setShowNewMessage}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>New Message</DialogTitle>
           </DialogHeader>
@@ -470,14 +470,14 @@ export default function Messages() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewMessage(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowNewMessage(false)} className="min-h-[44px] w-full sm:w-auto">
               Cancel
             </Button>
             <Button
               onClick={handleSendMessage}
               disabled={sendMessageMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
             >
               <Send className="w-4 h-4 mr-2" />
               Send Message
