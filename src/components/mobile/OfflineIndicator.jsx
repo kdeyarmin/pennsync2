@@ -16,14 +16,22 @@ export default function OfflineIndicator() {
 
   useEffect(() => {
     const updateStatus = () => {
-      // Fallback for backwards compatibility
-      if (typeof offlineStorage.getSyncStatus === 'function') {
-        const status = offlineStorage.getSyncStatus();
-        setSyncStatus(status);
-      } else {
-        // Fallback when method doesn't exist (cache issue)
-        const pending = offlineStorage.getPendingCount();
-        setSyncStatus({ total: pending, pending, syncing: 0, failed: 0, synced: 0 });
+      try {
+        // Check if method exists
+        if (offlineStorage && typeof offlineStorage.getSyncStatus === 'function') {
+          const status = offlineStorage.getSyncStatus();
+          setSyncStatus(status);
+        } else if (offlineStorage && typeof offlineStorage.getPendingCount === 'function') {
+          // Fallback to pending count
+          const pending = offlineStorage.getPendingCount();
+          setSyncStatus({ total: pending, pending, syncing: 0, failed: 0, synced: 0 });
+        } else {
+          // No methods available - use default
+          setSyncStatus({ total: 0, pending: 0, syncing: 0, failed: 0, synced: 0 });
+        }
+      } catch (error) {
+        console.error('Error updating offline status:', error);
+        setSyncStatus({ total: 0, pending: 0, syncing: 0, failed: 0, synced: 0 });
       }
     };
 
