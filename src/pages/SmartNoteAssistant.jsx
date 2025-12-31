@@ -49,7 +49,8 @@ import {
   BookOpen,
   DollarSign,
   AlertCircle,
-  FileText
+  FileText,
+  Clock
 } from "lucide-react";
 import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
 import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
