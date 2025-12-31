@@ -71,7 +71,9 @@ export default function AISmartOASISAssistant({
       };
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert home health OASIS-E assessment specialist. Analyze the provided patient data and generate smart OASIS item suggestions.
+        prompt: `You are an expert home health OASIS-E assessment specialist with deep knowledge of PDGM reimbursement optimization and CMS compliance requirements.
+
+**PRIMARY OBJECTIVE: Maximize PDGM reimbursement while ensuring full Medicare compliance**
 
 For each OASIS item, provide:
 1. Item code and name (e.g., M1021 - Primary Diagnosis)
@@ -79,18 +81,73 @@ For each OASIS item, provide:
 3. Confidence level: HIGH (>90%), MEDIUM (70-90%), LOW (<70%)
 4. Data source: What data supports this suggestion
 5. Verification flags: What the nurse should verify during visit
-6. Clinical notes: Additional context or considerations
+6. PDGM impact: How this item affects reimbursement/case-mix
+7. Clinical notes: Additional context or considerations
+8. Compliance risk: Any red flags or documentation gaps
 
-Focus on these key OASIS sections:
-- M1000-M1060: Demographics & administrative
-- M1021-M1029: Diagnoses
-- M1033: Risk factors for hospitalization
-- M1400-M1410: Living arrangements & support
-- M1600-M1620: Sensory status
-- M1800-M1910: ADLs and functional status
-- M2102-M2250: Medications & care management
+**CRITICAL OASIS SECTIONS FOR MAXIMUM REIMBURSEMENT:**
 
-CRITICAL: Only suggest items where you have reliable data. Mark items as NEEDS_MANUAL_ASSESSMENT when data is insufficient.
+**DIAGNOSES (Highest Impact on Payment):**
+- M1021: Primary Diagnosis - MUST align with highest-paying PDGM clinical group
+- M1023: Other Diagnoses - Capture ALL comorbidities that increase case-mix adjustment
+- Focus on diagnoses in these high-paying groups: MS-Rehab, Neuro/Rehab, Wounds, MMTA-Surgical
+
+**FUNCTIONAL STATUS (Major Payment Impact):**
+- M1800-M1870: Grooming through Toileting - Lower scores = higher payment
+- M1845: Toilet Transferring - Critical for case-mix
+- M1850: Transferring - Critical for case-mix
+- M1860: Ambulation - Critical for case-mix
+- Document functional LIMITATIONS accurately - understating = lost revenue
+
+**CLINICAL FACTORS (Case-Mix Adjusters):**
+- M1033: Risk for Hospitalization (≥2 factors increases payment)
+- M1600: Vision - Impairment increases case-mix
+- M1610: Hearing - Impairment increases case-mix
+- M1620: Speech - Impairment increases case-mix
+- M1730: Urinary incontinence - Affects case-mix
+- M1740/M1745: Bowel issues - Affects case-mix
+
+**WOUND CARE (High-Paying Group):**
+- M1306-M1322: Pressure ulcers (Stage 2+ = high payment)
+- M1324-M1334: Stasis ulcers
+- M1340-M1342: Surgical wounds
+- Document ALL wounds with stage, location, size
+
+**THERAPY THRESHOLD:**
+- Ensure functional scores support therapy need if applicable
+- 10+ therapy visits = higher payment tier
+
+**COMPLIANCE REQUIREMENTS:**
+- M1510: Symptom control - Must be assessed
+- M2200: Therapy need - Required for skilled services
+- M2250: Plan of Care - Must align with diagnoses and functional needs
+- M2301: Emergent care - Recent ER visits affect payment
+- M2410: High-risk drug classes - Required for medication review
+
+**RED FLAGS TO AVOID:**
+- Missing comorbidities that should increase payment
+- Functional scores too high (missing functional limitations)
+- Primary diagnosis in low-paying group when higher group applies
+- Missing wound documentation
+- Incomplete risk factors for hospitalization
+
+**OPTIMIZATION CHECKLIST:**
+1. Verify primary diagnosis is in highest applicable PDGM group
+2. Capture ALL comorbidities (diabetes, COPD, CHF, etc.)
+3. Document functional limitations accurately (don't overstate independence)
+4. Identify ALL wounds and skin issues
+5. Count hospitalization risk factors (aim for 2+ when applicable)
+6. Document sensory impairments (vision, hearing, speech)
+7. Capture continence issues
+8. Note all high-risk medications
+
+For each suggested OASIS item, explicitly state:
+- **PDGM Impact**: "Increases case-mix by X%" or "Qualifies for [Clinical Group]"
+- **Revenue Impact**: Estimate payment difference if documented vs. missed
+- **Documentation Needed**: Specific evidence nurse must observe/document
+- **Compliance Risk**: "HIGH" if missing this creates audit risk
+
+CRITICAL: Only suggest items where you have reliable data. Mark items as NEEDS_MANUAL_ASSESSMENT when data is insufficient, but ALWAYS explain what to look for to capture maximum reimbursement.
 
 Patient Data: ${JSON.stringify(contextData)}`,
         response_json_schema: {
@@ -102,7 +159,11 @@ Patient Data: ${JSON.stringify(contextData)}`,
                 total_items_analyzed: { type: "number" },
                 high_confidence_items: { type: "number" },
                 needs_verification: { type: "number" },
-                data_completeness_score: { type: "number" }
+                data_completeness_score: { type: "number" },
+                estimated_case_mix_weight: { type: "number" },
+                pdgm_clinical_group: { type: "string" },
+                potential_revenue_opportunities: { type: "string" },
+                compliance_score: { type: "number" }
               }
             },
             oasis_suggestions: {
@@ -118,7 +179,24 @@ Patient Data: ${JSON.stringify(contextData)}`,
                   data_source: { type: "string" },
                   verification_notes: { type: "string" },
                   clinical_considerations: { type: "string" },
-                  reasoning: { type: "string" }
+                  reasoning: { type: "string" },
+                  pdgm_impact: { 
+                    type: "string",
+                    description: "How this OASIS item affects PDGM payment/case-mix"
+                  },
+                  revenue_impact: { 
+                    type: "string",
+                    description: "Estimated payment difference if captured vs missed"
+                  },
+                  compliance_risk: { 
+                    type: "string",
+                    enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+                    description: "Audit/compliance risk level"
+                  },
+                  documentation_needed: { 
+                    type: "string",
+                    description: "Specific clinical observations/documentation required"
+                  }
                 }
               }
             },
@@ -257,7 +335,7 @@ Patient Data: ${JSON.stringify(contextData)}`,
           ) : (
             <>
               {/* Summary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <div className="bg-white p-3 rounded-lg border-2 border-purple-200">
                   <p className="text-xs text-gray-600">Items Analyzed</p>
                   <p className="text-2xl font-bold text-purple-600">{suggestions.summary?.total_items_analyzed || 0}</p>
@@ -271,10 +349,26 @@ Patient Data: ${JSON.stringify(contextData)}`,
                   <p className="text-2xl font-bold text-yellow-600">{suggestions.summary?.needs_verification || 0}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border-2 border-blue-200">
-                  <p className="text-xs text-gray-600">Data Quality</p>
-                  <p className="text-2xl font-bold text-blue-600">{suggestions.summary?.data_completeness_score || 0}%</p>
+                  <p className="text-xs text-gray-600">Compliance Score</p>
+                  <p className="text-2xl font-bold text-blue-600">{suggestions.summary?.compliance_score || 0}%</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border-2 border-green-200">
+                  <p className="text-xs text-gray-600">Est. Case-Mix</p>
+                  <p className="text-2xl font-bold text-green-600">{suggestions.summary?.estimated_case_mix_weight?.toFixed(2) || 'N/A'}</p>
                 </div>
               </div>
+              
+              {suggestions.summary?.pdgm_clinical_group && (
+                <Alert className="bg-green-50 border-green-300">
+                  <AlertCircle className="w-4 h-4 text-green-600" />
+                  <AlertDescription>
+                    <p className="font-semibold text-green-900">💰 PDGM Clinical Group: {suggestions.summary.pdgm_clinical_group}</p>
+                    {suggestions.summary.potential_revenue_opportunities && (
+                      <p className="text-sm text-green-800 mt-1">{suggestions.summary.potential_revenue_opportunities}</p>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <div className="flex gap-2">
                 <Button
@@ -397,6 +491,16 @@ Patient Data: ${JSON.stringify(contextData)}`,
                               <p className="text-sm text-gray-900">{item.suggested_value}</p>
                             </div>
 
+                            {item.pdgm_impact && (
+                              <div className="bg-green-50 p-3 rounded-lg mb-2 border-l-4 border-green-500">
+                                <p className="text-sm font-semibold text-green-900 mb-1">💰 PDGM Impact:</p>
+                                <p className="text-sm text-gray-900">{item.pdgm_impact}</p>
+                                {item.revenue_impact && (
+                                  <p className="text-xs text-green-700 mt-1 font-semibold">Revenue: {item.revenue_impact}</p>
+                                )}
+                              </div>
+                            )}
+
                             <div className="grid md:grid-cols-2 gap-3 text-xs">
                               <div className="bg-gray-50 p-2 rounded">
                                 <p className="font-semibold text-gray-700 mb-1">Data Source:</p>
@@ -407,6 +511,25 @@ Patient Data: ${JSON.stringify(contextData)}`,
                                 <p className="text-gray-700">{item.verification_notes}</p>
                               </div>
                             </div>
+
+                            {item.documentation_needed && (
+                              <div className="bg-purple-50 p-2 rounded text-xs mt-2 border border-purple-200">
+                                <p className="font-semibold text-purple-900 mb-1">📋 Documentation Required:</p>
+                                <p className="text-gray-700">{item.documentation_needed}</p>
+                              </div>
+                            )}
+
+                            {item.compliance_risk && item.compliance_risk !== 'LOW' && (
+                              <div className={`p-2 rounded text-xs mt-2 border ${
+                                item.compliance_risk === 'CRITICAL' ? 'bg-red-50 border-red-300' :
+                                item.compliance_risk === 'HIGH' ? 'bg-orange-50 border-orange-300' :
+                                'bg-yellow-50 border-yellow-300'
+                              }`}>
+                                <p className="font-semibold mb-1">
+                                  {item.compliance_risk === 'CRITICAL' ? '🚨 CRITICAL' : '⚠️'} Compliance Risk: {item.compliance_risk}
+                                </p>
+                              </div>
+                            )}
 
                             {item.clinical_considerations && (
                               <div className="mt-2 bg-purple-50 p-2 rounded text-xs border border-purple-200">
