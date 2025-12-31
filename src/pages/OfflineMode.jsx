@@ -9,10 +9,13 @@ import { WifiOff, Wifi, Users, FileText, Database } from "lucide-react";
 import OfflinePatientSelector from "../components/mobile/OfflinePatientSelector";
 import OfflineSyncManager from "../components/mobile/OfflineSyncManager";
 import OfflineNoteEditor from "../components/mobile/OfflineNoteEditor";
+import OfflineTaskManager from "../components/mobile/OfflineTaskManager";
+import offlineStorage from "../components/mobile/OfflineStorage";
 
 export default function OfflineMode() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -129,13 +132,16 @@ export default function OfflineMode() {
                 <div className="space-y-2 max-h-64 sm:max-h-96 overflow-y-auto">
                   {cachedPatients.map((cache, idx) => (
                     <div
-                      key={idx}
-                      className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors min-h-[60px] touch-target ${
-                        selectedPatientId === cache.patient.id 
-                          ? 'bg-blue-50 border-blue-300' 
-                          : 'bg-white hover:bg-gray-50'
-                      }`}
-                      onClick={() => setSelectedPatientId(cache.patient.id)}
+                     key={idx}
+                     className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors min-h-[60px] touch-target ${
+                       selectedPatientId === cache.patient.id 
+                         ? 'bg-blue-50 border-blue-300' 
+                         : 'bg-white hover:bg-gray-50'
+                     }`}
+                     onClick={() => {
+                       setSelectedPatientId(cache.patient.id);
+                       setSelectedPatient(cache.patient);
+                     }}
                     >
                       <p className="font-medium text-sm sm:text-base">
                         {cache.patient.first_name} {cache.patient.last_name}
@@ -156,11 +162,11 @@ export default function OfflineMode() {
             </CardContent>
           </Card>
 
-          {/* Offline Note Editor */}
-          {selectedPatientId && (
-            <OfflineNoteEditor
+          {/* Offline Task Manager */}
+          {selectedPatientId && selectedPatient && (
+            <OfflineTaskManager
               patientId={selectedPatientId}
-              onSaveOffline={() => setSelectedPatientId("")}
+              patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
             />
           )}
         </div>
