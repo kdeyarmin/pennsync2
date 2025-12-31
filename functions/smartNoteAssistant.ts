@@ -109,13 +109,85 @@ Return JSON with compliance_score (0-100), missing_elements array, and specific_
       }
     }),
     base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `Transform rough notes into MEDICARE HOME HEALTH COMPLIANT clinical narrative per 42 CFR 484.
+      prompt: `Transform rough notes into MEDICARE HOME HEALTH COMPLIANT clinical narrative per 42 CFR 484 and CMS Conditions of Participation.
 
 ${contextPrompt}
 
 ${getComplianceRequirements(visitType, diagnosis, nurseType)}
 
-Return JSON with enhanced_note and quality_score (0-100).`,
+MANDATORY ELEMENTS - MUST INCLUDE ALL:
+
+1. HOMEBOUND STATUS DOCUMENTATION:
+   - Specific reason patient confined to home (medical contraindication or taxing effort)
+   - Use exact language: "Patient remains homebound due to [specific reason]"
+   - Note: "Leaving home requires taxing effort due to [assistive devices/assistance needed]"
+   - Document if patient leaves only for medical/religious purposes
+
+2. SKILLED NEED JUSTIFICATION:
+   - WHY skilled nursing is necessary (complexity, teaching, assessment, management)
+   - Explain clinical judgment used during visit
+   - Show services require professional nursing skills
+   - Link to physician orders and care plan
+
+3. MEDICAL NECESSITY:
+   - Demonstrate reasonable expectation of improvement
+   - Show complexity requiring skilled services
+   - Link interventions directly to diagnoses
+   - Justify frequency and duration
+
+4. PROGRESS MEASUREMENT:
+   - Compare findings to baseline/previous visit with specific data
+   - Document progress toward EACH active care plan goal
+   - Include measurable outcomes (vital signs, functional status, pain scores)
+
+5. PATIENT/CAREGIVER EDUCATION:
+   - Specific topics taught (medication names, disease management, safety)
+   - Teaching methods used
+   - Patient/caregiver response and comprehension
+   - Need for continued teaching if applicable
+
+6. SAFETY ASSESSMENT:
+   - Fall risk evaluation and interventions
+   - Home safety hazards identified and addressed
+   - Emergency plan discussed
+   - Medication safety addressed
+
+7. COORDINATION OF CARE:
+   - Communication with MD (reason, method, outcome)
+   - Referrals to other disciplines with rationale
+   - DME/supply orders with justification
+   - Follow-up plan specific to patient needs
+
+8. MEDICATION RECONCILIATION:
+   - All medications verified (name, dose, frequency)
+   - Compliance and understanding assessed
+   - Side effects monitored
+   - Changes documented with MD order reference
+
+FORMATTING REQUIREMENTS:
+- Complete sentences with proper grammar
+- Professional medical terminology (spell out first use)
+- Specific measurements, not vague terms ("4cm wound" not "small wound")
+- Avoid abbreviations except standard medical terms
+- Include exact vital sign values with comparison to baseline
+- Use objective, measurable language
+- Demonstrate skilled nursing judgment throughout
+
+STRUCTURE - Use clear section headings:
+- HOMEBOUND STATUS
+- SKILLED NURSING ASSESSMENT  
+- VITAL SIGNS
+- PHYSICAL ASSESSMENT (by system)
+- MEDICATION REVIEW
+- FUNCTIONAL STATUS
+- SAFETY ASSESSMENT
+- CARE PLAN PROGRESS (for each goal)
+- PATIENT/CAREGIVER EDUCATION
+- SKILLED INTERVENTIONS
+- COORDINATION OF CARE
+- PLAN FOR NEXT VISIT
+
+Return comprehensive Medicare-compliant note that would pass CMS audit. Make medical necessity crystal clear.`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -514,12 +586,52 @@ function getComplianceRequirements(visitType, diagnosis, nurseType) {
 CRITICAL MEDICARE CoP REQUIREMENTS (42 CFR 484):
 
 1. HOMEBOUND STATUS (484.55(a)) - MANDATORY
+   - Document specific medical reason patient confined to home
+   - Note taxing effort required to leave (wheelchair, walker, assistance)
+   - State patient leaves home only for medical appointments/religious services
+   - Must be evident in EVERY visit note
+
 2. SKILLED NURSING NEED (484.20) - MANDATORY
-3. PATIENT RESPONSE TO TREATMENT (484.60) - MANDATORY
-4. COORDINATION OF CARE (484.60)
-5. SAFETY ASSESSMENT (484.80)
-6. FUNCTIONAL STATUS & PROGRESS (484.55)
-7. PATIENT/CAREGIVER EDUCATION (484.60)
+   - Explain complexity requiring professional nursing judgment
+   - Show assessment and management skills used
+   - Document teaching requiring nursing knowledge
+   - Justify why non-skilled person cannot safely provide care
+
+3. MEDICAL NECESSITY (484.60) - MANDATORY
+   - Link all interventions to physician orders
+   - Show reasonable expectation of improvement or stabilization
+   - Demonstrate services are reasonable and necessary
+   - Document frequency/duration justification
+
+4. PATIENT RESPONSE TO TREATMENT (484.60) - MANDATORY
+   - Compare current status to baseline/previous visit with data
+   - Document objective measurements (vitals, pain scores, wound size)
+   - Note patient/caregiver reported changes
+   - Show clinical response to interventions
+
+5. COORDINATION OF CARE (484.60) - REQUIRED
+   - MD communication documented with reason and outcome
+   - Referrals to PT/OT/ST/MSW with clinical justification
+   - Equipment/supply orders with medical necessity
+   - Follow-up plans specific to patient condition
+
+6. SAFETY ASSESSMENT (484.80) - REQUIRED
+   - Fall risk assessment and prevention strategies
+   - Home environment hazards identified and addressed
+   - Emergency procedures reviewed with patient/caregiver
+   - Medication safety (storage, administration, interactions)
+
+7. FUNCTIONAL STATUS & PROGRESS (484.55) - REQUIRED
+   - Baseline functional level established (ADLs, mobility)
+   - Progress toward goals measured objectively
+   - Changes from previous visit documented
+   - Barriers to progress identified and addressed
+
+8. PATIENT/CAREGIVER EDUCATION (484.60) - REQUIRED
+   - Specific topics taught (disease process, medications, self-care)
+   - Teaching methods and materials used
+   - Patient/caregiver comprehension verified
+   - Need for continued teaching documented
 `;
 
   // Add condition-specific requirements
