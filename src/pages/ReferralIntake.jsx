@@ -218,11 +218,22 @@ Document URL: ${referral.document_url || 'N/A'}`,
 
   const handleProcessingComplete = async (referralId, extractedData, analysisResults) => {
     try {
+      // AI-powered priority analysis
+      const priorityResponse = await base44.functions.invoke('analyzeReferralPriority', {
+        extractedData,
+        analysisResults
+      });
+
+      const priorityAnalysis = priorityResponse.data?.priorityAnalysis || {};
+
       // Extract and update referral fields from AI-processed data
       const updates = {
         status: 'ready_for_admission',
         extracted_data: extractedData,
-        analysis_results: analysisResults,
+        analysis_results: {
+          ...analysisResults,
+          priority_analysis: priorityAnalysis
+        },
         patient_name: extractedData.demographics?.full_name || null,
         patient_dob: extractedData.demographics?.date_of_birth || null,
         referral_source: extractedData.admission_details?.admission_source || 
@@ -231,7 +242,8 @@ Document URL: ${referral.document_url || 'N/A'}`,
         referral_date: extractedData.admission_details?.referral_date || 
                        extractedData.admission_details?.admission_date || 
                        null,
-        diagnosis: extractedData.diagnoses?.primary_diagnosis || null
+        diagnosis: extractedData.diagnoses?.primary_diagnosis || null,
+        priority: priorityAnalysis.priority || 'normal'
       };
 
       // Check for missing critical information
