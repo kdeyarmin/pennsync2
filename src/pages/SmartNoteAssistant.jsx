@@ -106,6 +106,7 @@ import EnhancedPatientContextPanel from "../components/smartNote/EnhancedPatient
 import PatientTimelineView from "../components/smartNote/PatientTimelineView";
 import IntegratedOASISAnalyzer from "../components/smartNote/IntegratedOASISAnalyzer";
 import AutoEventExtractor from "../components/smartNote/AutoEventExtractor";
+import ReferralBasedDocumentationAssistant from "../components/smartNote/ReferralBasedDocumentationAssistant";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -248,11 +249,45 @@ export default function SmartNoteAssistant() {
   const [admissionDocumentation, setAdmissionDocumentation] = useState({});
   const [useGuidedWorkflow, setUseGuidedWorkflow] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
+  const [referralData, setReferralData] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  // Check for referral data in URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const referralId = urlParams.get('referral_id');
+    
+    if (referralId) {
+      base44.entities.Referral.filter({ id: referralId }).then(referrals => {
+        if (referrals.length > 0 && referrals[0].extracted_data) {
+          const referral = referrals[0];
+          setReferralData(referral.extracted_data);
+          setVisitType('admission');
+          
+          // Prepopulate from referral data
+          if (referral.patient_id) {
+            setSelectedPatientId(referral.patient_id);
+          }
+          
+          // Prepopulate vitals if available
+          const vitals = referral.extracted_data.vital_signs || {};
+          if (vitals.blood_pressure) {
+            setVitalSigns(prev => ({
+              ...prev,
+              bp: vitals.blood_pressure,
+              hr: vitals.heart_rate || '',
+              temp: vitals.temperature || '',
+              o2: vitals.oxygen_saturation || ''
+            }));
+          }
+        }
+      });
+    }
+  }, []);
 
   // Log page visit
   useEffect(() => {
@@ -946,6 +981,16 @@ export default function SmartNoteAssistant() {
             </Card>
           )}
 
+          {/* Referral-Based Documentation Assistant */}
+          {referralData && selectedPatientId && visitType === 'admission' && !enhancedNote && (
+            <ReferralBasedDocumentationAssistant
+              referralData={referralData}
+              onInsertText={(text) => {
+                setRoughNote(prev => prev ? prev + '\n\n' + text : text);
+              }}
+            />
+          )}
+
           {/* Step 2.5: Admission Documentation Tools (Admission Visits Only) */}
           {showAdmissionTools && !enhancedNote && (
             <Card className="border-2 border-indigo-500 bg-gradient-to-r from-indigo-50 to-blue-50">
@@ -968,7 +1013,7 @@ export default function SmartNoteAssistant() {
                   <TabsContent value="oasis" className="space-y-4 mt-4">
                     <AISmartOASISAssistant
                       patientData={selectedPatient}
-                      referralData={null}
+                      referralData={referralData}
                       visitData={{
                         visitType,
                         vitalSigns,
@@ -983,7 +1028,7 @@ export default function SmartNoteAssistant() {
                   
                   <TabsContent value="documentation" className="space-y-4 mt-4">
                     <AIAdmissionDocumentationAssistant
-                      referralData={null}
+                      referralData={referralData}
                       oasisSuggestions={oasisSuggestions}
                       patientData={selectedPatient}
                       onSaveSection={handleSaveAdmissionSection}

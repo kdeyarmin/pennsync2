@@ -48,6 +48,7 @@ import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
+import ReferralAdmissionNote from './pages/ReferralAdmissionNote';
 import ReferralIntake from './pages/ReferralIntake';
 import ReferralProcessor from './pages/ReferralProcessor';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
@@ -63,7 +64,6 @@ import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import ReferralAdmissionNote from './pages/ReferralAdmissionNote';
 import __Layout from './Layout.jsx';
 
 
@@ -118,6 +118,7 @@ export const PAGES = {
     "Patients": Patients,
     "PredictiveAnalytics": PredictiveAnalytics,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
+    "ReferralAdmissionNote": ReferralAdmissionNote,
     "ReferralIntake": ReferralIntake,
     "ReferralProcessor": ReferralProcessor,
     "RegulatoryCompliance": RegulatoryCompliance,
@@ -133,7 +134,6 @@ export const PAGES = {
     "UserActivityReport": UserActivityReport,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "ReferralAdmissionNote": ReferralAdmissionNote,
 }
 
 export const pagesConfig = {

@@ -191,7 +191,7 @@ ${referral.extracted_data ? 'Referral has been processed with AI analysis.' : 'P
 
 Actions available:
 • View analyzed referral data
-• Create admission note in Smart Note (prepopulated with referral info)
+• Create admission note in Smart Note: ${window.location.origin}${createPageUrl(`SmartNoteAssistant?referral_id=${referralId}`)}
 • Review patient information
 
 Referral ID: ${referralId}
