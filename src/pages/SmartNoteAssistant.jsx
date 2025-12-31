@@ -1033,7 +1033,6 @@ export default function SmartNoteAssistant() {
             </Card>
           )}
 
-        </div>
           </React.Fragment>
           )}
         </div>
