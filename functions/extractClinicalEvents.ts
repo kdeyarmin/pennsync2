@@ -47,8 +47,11 @@ For each event, provide:
 - severity (low, medium, high, critical)
 - requires_followup (boolean)
 - followup_notes (if follow-up is needed)
-- source_text (exact quote from note)
-- extraction_confidence (0-100)`,
+- source_text (exact quote from note - the specific sentence or paragraph)
+- source_section (identify the section: assessment, medications, vital_signs, subjective, objective, plan, intervention, etc.)
+- extraction_confidence (0-100)
+
+IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a paraphrase. This will be used to locate the text in the document.`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -65,6 +68,7 @@ For each event, provide:
                 requires_followup: { type: "boolean" },
                 followup_notes: { type: "string" },
                 source_text: { type: "string" },
+                source_section: { type: "string" },
                 extraction_confidence: { type: "number" }
               }
             }
@@ -73,14 +77,38 @@ For each event, provide:
       }
     });
 
-    // Save extracted events to database
+    // Save extracted events to database with text anchors
     const savedEvents = [];
     for (const event of result.events || []) {
+      // Find text position in source document
+      let text_anchor_start = null;
+      let text_anchor_end = null;
+      
+      if (event.source_text && nurse_notes) {
+        const sourceText = event.source_text.trim();
+        const index = nurse_notes.indexOf(sourceText);
+        if (index !== -1) {
+          text_anchor_start = index;
+          text_anchor_end = index + sourceText.length;
+        } else {
+          // Try fuzzy matching if exact match fails
+          const lowerNotes = nurse_notes.toLowerCase();
+          const lowerSource = sourceText.toLowerCase();
+          const fuzzyIndex = lowerNotes.indexOf(lowerSource);
+          if (fuzzyIndex !== -1) {
+            text_anchor_start = fuzzyIndex;
+            text_anchor_end = fuzzyIndex + sourceText.length;
+          }
+        }
+      }
+
       const eventData = {
         patient_id,
         visit_id,
         event_date: visit_date,
         ...event,
+        text_anchor_start,
+        text_anchor_end,
         verified: false
       };
 

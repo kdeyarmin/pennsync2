@@ -29,6 +29,7 @@ import { format, parseISO, differenceInDays } from "date-fns";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import ClinicalEventValidator from "./ClinicalEventValidator";
+import LinkedNoteViewer from "./LinkedNoteViewer";
 
 const EVENT_TYPES = {
   visit: { label: 'Visits', icon: Activity, color: 'blue' },
@@ -51,6 +52,8 @@ export default function PatientTimelineView({ patient }) {
   const [periodSummaries, setPeriodSummaries] = useState({});
   const [correlations, setCorrelations] = useState(null);
   const [isAnalyzingCorrelations, setIsAnalyzingCorrelations] = useState(false);
+  const [linkedNoteView, setLinkedNoteView] = useState(null);
+  const [visits, setVisits] = useState([]);
 
   useEffect(() => {
     if (patient?.id) {
@@ -64,18 +67,20 @@ export default function PatientTimelineView({ patient }) {
     setIsLoading(true);
     try {
       // Fetch all relevant data
-      const [visits, carePlans, incidents, clinicalEvents] = await Promise.all([
+      const [visitsData, carePlans, incidents, clinicalEvents] = await Promise.all([
         base44.entities.Visit.filter({ patient_id: patient.id }, '-visit_date'),
         base44.entities.CarePlan.filter({ patient_id: patient.id }),
         base44.entities.Incident.filter({ patient_id: patient.id }, '-incident_date'),
         base44.entities.ClinicalEvent.filter({ patient_id: patient.id }, '-event_date')
       ]);
 
+      setVisits(visitsData);
+
       // Compile timeline events
       const events = [];
 
       // Add visits
-      visits.forEach(visit => {
+      visitsData.forEach(visit => {
         events.push({
           id: `visit-${visit.id}`,
           type: 'visit',
@@ -190,6 +195,8 @@ export default function PatientTimelineView({ patient }) {
           linkedRecordType: 'visit',
           extractedEvent: true,
           verified: event.verified,
+          hasTextAnchor: event.text_anchor_start !== null && event.text_anchor_end !== null,
+          hasSourceLink: event.visit_id && (event.text_anchor_start !== null || event.source_text),
           icon: eventIcon,
           color: eventColor
         });
@@ -403,6 +410,15 @@ Be specific and reference actual events by date and type.`,
   }
 
   return (
+    <>
+      {linkedNoteView && (
+        <LinkedNoteViewer
+          event={linkedNoteView.event}
+          visit={linkedNoteView.visit}
+          onClose={() => setLinkedNoteView(null)}
+        />
+      )}
+
     <div className="space-y-4">
       {/* Clinical Event Validator */}
       <ClinicalEventValidator 
@@ -710,15 +726,23 @@ Be specific and reference actual events by date and type.`,
                                     {isExpanded ? event.description : `${event.description.substring(0, 100)}...`}
                                   </p>
                                 )}
-                                {event.linkedRecordId && (
+                                {event.hasSourceLink && (
                                   <div className="mt-2">
-                                    <Link 
-                                      to={createPageUrl("SmartNoteAssistant")}
-                                      className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const sourceVisit = visits.find(v => v.id === event.linkedRecordId);
+                                        if (sourceVisit) {
+                                          setLinkedNoteView({ event: event.fullData, visit: sourceVisit });
+                                        }
+                                      }}
+                                      className="text-xs text-indigo-600 hover:text-indigo-800 font-medium h-auto p-1 -ml-1"
                                     >
-                                      <ExternalLink className="w-3 h-3" />
-                                      View full {event.linkedRecordType} record
-                                    </Link>
+                                      <ExternalLink className="w-3 h-3 mr-1" />
+                                      View source in note {event.hasTextAnchor && '(jump to section)'}
+                                    </Button>
                                   </div>
                                 )}
                               </div>
@@ -824,5 +848,6 @@ Be specific and reference actual events by date and type.`,
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
