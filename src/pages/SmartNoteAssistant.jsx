@@ -65,7 +65,7 @@ import EnhancedStepIndicator from "../components/smartNote/EnhancedStepIndicator
 import UnifiedAIPanel from "../components/smartNote/UnifiedAIPanel";
 import QuickActionsBar from "../components/smartNote/QuickActionsBar";
 import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
-import SmartVitalsInput from "../components/smartNote/SmartVitalsInput";
+
 import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
 import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
 import AIPatientHistorySummarizer from "../components/smartNote/AIPatientHistorySummarizer";
@@ -863,10 +863,81 @@ export default function SmartNoteAssistant() {
               </CardHeader>
               {!collapsedSteps.includes('vitals') && (
                 <CardContent className="p-4 md:p-6">
-                  <SmartVitalsInput 
-                    vitalSigns={vitalSigns} 
-                    onChange={setVitalSigns} 
-                  />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <Label className="text-xs mb-1 block">Blood Pressure</Label>
+                      <Input
+                        placeholder="120/80"
+                        value={vitalSigns.bp || ''}
+                        onChange={(e) => setVitalSigns({...vitalSigns, bp: e.target.value})}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1 block">Heart Rate</Label>
+                      <Input
+                        placeholder="72"
+                        value={vitalSigns.hr || ''}
+                        onChange={(e) => setVitalSigns({...vitalSigns, hr: e.target.value})}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1 block">Temperature</Label>
+                      <Input
+                        placeholder="98.6"
+                        value={vitalSigns.temp || ''}
+                        onChange={(e) => setVitalSigns({...vitalSigns, temp: e.target.value})}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1 block">Pain (0-10)</Label>
+                      <Input
+                        placeholder="0"
+                        value={vitalSigns.pain || ''}
+                        onChange={(e) => setVitalSigns({...vitalSigns, pain: e.target.value})}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mt-3">
+                    <div>
+                      <Label className="text-xs mb-1 block">O2 Saturation</Label>
+                      <Input
+                        placeholder="98"
+                        value={vitalSigns.o2 || ''}
+                        onChange={(e) => setVitalSigns({...vitalSigns, o2: e.target.value})}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1 block">O2 Source</Label>
+                      <Select 
+                        value={vitalSigns.o2Source || 'room_air'} 
+                        onValueChange={(value) => setVitalSigns({...vitalSigns, o2Source: value})}
+                      >
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="room_air">Room Air</SelectItem>
+                          <SelectItem value="on_oxygen">On Oxygen</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {vitalSigns.o2Source === 'on_oxygen' && (
+                      <div>
+                        <Label className="text-xs mb-1 block">O2 Flow Rate</Label>
+                        <Input
+                          placeholder="L/min"
+                          value={vitalSigns.o2Flow || ''}
+                          onChange={(e) => setVitalSigns({...vitalSigns, o2Flow: e.target.value})}
+                          className="text-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               )}
             </Card>
