@@ -16,6 +16,7 @@ import ComplianceDashboardWidget from "../components/compliance/ComplianceDashbo
 
 import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
 import PendingReferralsWidget from "../components/referral/PendingReferralsWidget";
+import HighRiskPatientsWidget from "../components/dashboard/HighRiskPatientsWidget";
 
 import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
@@ -297,6 +298,11 @@ export default function Dashboard() {
       )}
 
 
+
+      {/* High-Risk Patients Alert */}
+      <div className="mb-6">
+        <HighRiskPatientsWidget />
+      </div>
 
       {/* Pending Referrals */}
       <div className="mb-6">
