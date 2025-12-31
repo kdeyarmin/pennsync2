@@ -69,8 +69,27 @@ export default function ReferralPDFSummarizer({
         : 'This is a PDF document.';
       
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert home health intake coordinator. ${fileTypeContext}
-        
+        prompt: `You are an expert home health intake coordinator with advanced document reading capabilities. ${fileTypeContext}
+
+CRITICAL DOCUMENT READING INSTRUCTIONS:
+- This document may contain BOTH typed text and HANDWRITTEN notes
+- Read ALL text carefully, including handwritten annotations, checkboxes, signatures, and margin notes
+- For handwritten content: interpret cursive, print, or mixed writing styles
+- If handwriting is unclear, provide your best interpretation and flag with "[unclear handwriting]"
+- Extract information from checkboxes, form fields, AND any written notes in margins or blank spaces
+- Look for physician signatures, date stamps, and hand-marked priority indicators
+- Pay special attention to:
+  * Handwritten vital signs or assessment notes
+  * Physician's handwritten orders or special instructions
+  * Care notes written by hospital staff or case managers
+  * Date/time stamps that may be handwritten
+  * Contact information that may be partially handwritten
+
+When you encounter handwritten text:
+1. Transcribe it as accurately as possible
+2. Include context about WHERE it appeared (e.g., "handwritten in margins", "noted in physician section")
+3. If uncertain about legibility, include "[possibly X or Y]" notation
+
 Analyze this patient referral document and extract ALL relevant information needed for:
 1. Admission nursing assessment
 2. OASIS-E completion
@@ -157,7 +176,13 @@ SAFETY CONCERNS:
 - Safety equipment needed
 - High-risk conditions requiring monitoring
 
-Extract everything mentioned, even if partial. If information is missing, note it as "Not documented in referral."`,
+Extract everything mentioned, even if partial. If information is missing, note it as "Not documented in referral."
+
+HANDWRITTEN NOTES HANDLING:
+- If you find handwritten notes, include them in the appropriate section with context
+- Create a special "handwritten_notes" field to capture any additional handwritten information that doesn't fit standard categories
+- For illegible handwriting, note "[illegible handwriting - appears to be about X]"
+- Cross-reference handwritten information with typed data to resolve conflicts or fill gaps`,
         file_urls: [url],
         response_json_schema: {
           type: "object",
@@ -289,6 +314,24 @@ Extract everything mentioned, even if partial. If information is missing, note i
             },
             admission_note_template: {
               type: "string"
+            },
+            handwritten_notes: {
+              type: "object",
+              properties: {
+                clinical_notes: { type: "string" },
+                physician_instructions: { type: "string" },
+                margin_annotations: { type: "string" },
+                priority_indicators: { type: "string" },
+                other_handwritten: { type: "string" }
+              }
+            },
+            document_quality_notes: {
+              type: "object",
+              properties: {
+                legibility_assessment: { type: "string" },
+                unclear_sections: { type: "array", items: { type: "string" } },
+                mixed_content_noted: { type: "boolean" }
+              }
             }
           }
         }
@@ -612,6 +655,89 @@ Extract everything mentioned, even if partial. If information is missing, note i
                 </Button>
               </AccordionContent>
             </AccordionItem>
+
+            {/* Handwritten Notes */}
+            {extractedData.handwritten_notes && Object.values(extractedData.handwritten_notes).some(v => v) && (
+              <AccordionItem value="handwritten">
+                <AccordionTrigger className="bg-amber-50 px-4 py-3 rounded-t-lg">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-amber-600" />
+                    <span className="font-semibold">Handwritten Notes & Annotations</span>
+                    <Badge className="bg-amber-500 text-white">Extracted</Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
+                  <div className="space-y-3">
+                    {extractedData.handwritten_notes.clinical_notes && (
+                      <div className="bg-amber-50 p-3 rounded border-l-4 border-amber-500">
+                        <p className="text-xs font-semibold text-amber-900 mb-1">Clinical Notes (Handwritten)</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.clinical_notes}</p>
+                      </div>
+                    )}
+                    {extractedData.handwritten_notes.physician_instructions && (
+                      <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Physician Instructions (Handwritten)</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.physician_instructions}</p>
+                      </div>
+                    )}
+                    {extractedData.handwritten_notes.margin_annotations && (
+                      <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-500">
+                        <p className="text-xs font-semibold text-purple-900 mb-1">Margin Annotations</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.margin_annotations}</p>
+                      </div>
+                    )}
+                    {extractedData.handwritten_notes.priority_indicators && (
+                      <div className="bg-red-50 p-3 rounded border-l-4 border-red-500">
+                        <p className="text-xs font-semibold text-red-900 mb-1">Priority Indicators</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.priority_indicators}</p>
+                      </div>
+                    )}
+                    {extractedData.handwritten_notes.other_handwritten && (
+                      <div className="bg-gray-50 p-3 rounded border-l-4 border-gray-500">
+                        <p className="text-xs font-semibold text-gray-900 mb-1">Other Handwritten Content</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{extractedData.handwritten_notes.other_handwritten}</p>
+                      </div>
+                    )}
+                  </div>
+                  <Button size="sm" variant="ghost" className="mt-2" onClick={() => copySection(JSON.stringify(extractedData.handwritten_notes, null, 2))}>
+                    <Copy className="w-3 h-3 mr-1" />
+                    Copy Handwritten Notes
+                  </Button>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+
+            {/* Document Quality Notes */}
+            {extractedData.document_quality_notes && (
+              <AccordionItem value="quality">
+                <AccordionTrigger className="bg-gray-50 px-4 py-3 rounded-t-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-gray-600" />
+                    <span className="font-semibold">Document Quality Assessment</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
+                  <div className="space-y-2">
+                    {extractedData.document_quality_notes.legibility_assessment && (
+                      <div className="bg-blue-50 p-2 rounded">
+                        <p className="text-xs font-semibold text-blue-900">Legibility Assessment</p>
+                        <p className="text-sm text-gray-900">{extractedData.document_quality_notes.legibility_assessment}</p>
+                      </div>
+                    )}
+                    {extractedData.document_quality_notes.unclear_sections?.length > 0 && (
+                      <div className="bg-yellow-50 p-2 rounded">
+                        <p className="text-xs font-semibold text-yellow-900 mb-1">Unclear Sections</p>
+                        <ul className="text-sm text-gray-900 list-disc list-inside">
+                          {extractedData.document_quality_notes.unclear_sections.map((section, i) => (
+                            <li key={i}>{section}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Admission Note Template */}
             {extractedData.admission_note_template && (
