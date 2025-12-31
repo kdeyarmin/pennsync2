@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import OfflinePatientSelector from "./OfflinePatientSelector";
 import OfflineSyncManager from "./OfflineSyncManager";
+import OfflineCacheSettings from "./OfflineCacheSettings";
 
 export default function OfflineDataManager() {
   const queryClient = useQueryClient();
@@ -192,28 +193,24 @@ export default function OfflineDataManager() {
         <Tabs defaultValue="sync" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="sync">Sync</TabsTrigger>
-            <TabsTrigger value="download">Download</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="patients">Patients</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sync" className="space-y-4 mt-4">
             <OfflineSyncManager />
           </TabsContent>
 
-          <TabsContent value="download" className="space-y-4 mt-4">
+          <TabsContent value="settings" className="space-y-4 mt-4">
+            <OfflineCacheSettings />
+          </TabsContent>
+
+          <TabsContent value="patients" className="space-y-4 mt-4">
             <OfflinePatientSelector 
               onCacheComplete={(count) => {
                 queryClient.invalidateQueries();
               }}
             />
-          </TabsContent>
-
-          <TabsContent value="tasks" className="space-y-4 mt-4">
-            <Alert className="bg-blue-50 border-blue-300">
-              <AlertDescription className="text-sm">
-                Use the Offline Mode page to document visits and incidents offline. Changes will sync automatically.
-              </AlertDescription>
-            </Alert>
           </TabsContent>
         </Tabs>
 
