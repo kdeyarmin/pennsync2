@@ -221,7 +221,10 @@ Document URL: ${referral.document_url || 'N/A'}`,
       const updates = {
         status: 'ready_for_admission',
         extracted_data: extractedData,
-        analysis_results: analysisResults
+        analysis_results: analysisResults,
+        patient_name: extractedData.demographics?.full_name || null,
+        patient_dob: extractedData.demographics?.date_of_birth || null,
+        referral_source: extractedData.demographics?.referring_physician || extractedData.admission_details?.admission_source || null
       };
 
       // Check for missing critical information
