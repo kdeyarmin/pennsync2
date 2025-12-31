@@ -136,6 +136,7 @@ export default function ClinicalEventsSummary({ patientId, limit = 5 }) {
                       Alert
                     </Badge>
                   )}
+                </div>
               </div>
             </div>
           ))}
