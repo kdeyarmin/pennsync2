@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import ConfidenceBadge, { ConfidenceProgressBar } from "@/components/ui/confidence-badge";
 import { AlertCircle, CheckCircle2, User, XCircle } from "lucide-react";
 
 export default function PatientMatchReview({ referral, onConfirmMatch, onCreateNew, onClose }) {
