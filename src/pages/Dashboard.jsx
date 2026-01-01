@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ActionableInsightsWidget from "../components/dashboard/ActionableInsightsWidget";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText, Clock as ClockIcon } from "lucide-react";
@@ -186,6 +187,11 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Actionable AI Insights */}
+      <div className="mb-6">
+        <ActionableInsightsWidget />
+      </div>
 
       {/* New Features Banner */}
       <NewFeaturesBanner />

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import AIFieldIndicator from "@/components/ui/ai-field-indicator";
+import ProgressFeedback from "@/components/ui/progress-feedback";
 import {
   FileText,
   Upload,
@@ -38,8 +40,18 @@ export default function ReferralPDFSummarizer({
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStage, setProcessingStage] = useState(0);
   const [fileUrl, setFileUrl] = useState(externalFileUrl);
   const [extractedData, setExtractedData] = useState(null);
+
+  const processingStages = [
+    "Analyzing document structure...",
+    "Extracting patient demographics...",
+    "Identifying diagnoses and medications...",
+    "Analyzing functional status...",
+    "Generating OASIS assessment...",
+    "Finalizing extraction..."
+  ];
 
   // Check if current user is admin
   const { data: currentUser } = useQuery({
@@ -82,6 +94,12 @@ export default function ReferralPDFSummarizer({
 
   const processReferral = async (url, fileType = 'application/pdf') => {
     setIsProcessing(true);
+    setProcessingStage(0);
+    
+    const progressInterval = setInterval(() => {
+      setProcessingStage(prev => Math.min(prev + 1, processingStages.length - 1));
+    }, 3000);
+
     try {
       // Add context about file type for better extraction
       const fileTypeContext = fileType && fileType.includes('image') 
@@ -484,6 +502,9 @@ HANDWRITTEN NOTES HANDLING:
         }
       });
 
+      clearInterval(progressInterval);
+      setProcessingStage(processingStages.length - 1);
+      
       setExtractedData(result);
       onDataExtracted?.(result);
       
@@ -495,10 +516,13 @@ HANDWRITTEN NOTES HANDLING:
         onExtractionComplete(result, result, pdfUrl);
       }
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('Error processing referral:', error);
       alert('Failed to process referral. Please try again.');
+    } finally {
+      setIsProcessing(false);
+      setProcessingStage(0);
     }
-    setIsProcessing(false);
   };
 
   const copySection = (text) => {
@@ -586,12 +610,11 @@ HANDWRITTEN NOTES HANDLING:
           </p>
 
           {isProcessing && (
-            <Alert className="bg-blue-50 border-blue-200">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
-              <AlertDescription className="ml-2">
-                Processing referral document... This may take 30-60 seconds.
-              </AlertDescription>
-            </Alert>
+            <ProgressFeedback
+              stages={processingStages}
+              currentStage={processingStage}
+              message="Analyzing referral with AI"
+            />
           )}
         </CardContent>
       </Card>
@@ -641,6 +664,7 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-blue-600" />
                   <span className="font-semibold">Demographics & Contact Information</span>
+                  <AIFieldIndicator confidence={95} source="AI" />
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
@@ -693,6 +717,7 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <Stethoscope className="w-4 h-4 text-red-600" />
                   <span className="font-semibold">Diagnoses & Medical History</span>
+                  <AIFieldIndicator confidence={92} source="AI" />
                   {isAdmin && extractedData.diagnoses?.pdgm_clinical_group && (
                     <Badge className="bg-green-600 text-white">PDGM: {extractedData.diagnoses.pdgm_clinical_group}</Badge>
                   )}
@@ -762,6 +787,7 @@ HANDWRITTEN NOTES HANDLING:
                 <div className="flex items-center gap-2">
                   <Pill className="w-4 h-4 text-green-600" />
                   <span className="font-semibold">Medications ({extractedData.medications?.length || 0})</span>
+                  <AIFieldIndicator confidence={88} source="AI" needsVerification={true} tooltip="Verify all medications with patient/caregiver" />
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 py-3 bg-white border-x border-b rounded-b-lg">
