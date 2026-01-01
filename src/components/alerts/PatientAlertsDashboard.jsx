@@ -64,7 +64,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const queryClient = useQueryClient();
 
   // Fetch alerts
-  const { data: alerts = [], isLoading } = useQuery({
+  const { data: allAlerts = [], isLoading } = useQuery({
     queryKey: ['patientAlerts', patientId, showAllPatients],
     queryFn: async () => {
       if (patientId) {
@@ -73,6 +73,11 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
       return base44.entities.PatientAlert.list('-created_date', 100);
     }
   });
+
+  // Filter alerts to only favorited patients (unless viewing specific patient)
+  const alerts = patientId ? allAlerts : allAlerts.filter(alert => 
+    currentUser?.favorited_patients?.some(fav => fav.id === alert.patient_id)
+  );
 
   // Fetch patients for lookup
   const { data: patients = [] } = useQuery({
