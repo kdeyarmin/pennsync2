@@ -46,14 +46,23 @@ export default function NurseWorkflow() {
     initialData: [],
   });
 
-  const { data: alerts = [] } = useQuery({
+  const { data: allAlerts = [] } = useQuery({
     queryKey: ['myAlerts'],
     queryFn: () => base44.entities.PatientAlert.filter({ 
       status: 'active',
       severity: { $in: ['critical', 'high'] }
     }),
     initialData: [],
+    enabled: !!currentUser,
   });
+
+  // Filter alerts to only favorited patients
+  const alerts = React.useMemo(() => {
+    if (!currentUser?.favorited_patients) return [];
+    return allAlerts.filter(alert => 
+      currentUser.favorited_patients.some(fav => fav.id === alert.patient_id)
+    );
+  }, [allAlerts, currentUser]);
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients'],

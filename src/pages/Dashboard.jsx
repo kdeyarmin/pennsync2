@@ -92,6 +92,7 @@ export default function Dashboard() {
     queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser?.email }),
     enabled: !!currentUser?.email,
     initialData: [],
+    staleTime: 300000,
   });
 
   // Handle errors gracefully
@@ -150,7 +151,10 @@ export default function Dashboard() {
   };
 
   const stats = useMemo(() => {
-    return calculateNurseStats(currentUser?.email, {
+    if (!currentUser?.email) {
+      return { noteConversions: 0, timeSavedDisplay: '0 hrs' };
+    }
+    return calculateNurseStats(currentUser.email, {
       visits,
       noteConversions,
       dateRange: 30
