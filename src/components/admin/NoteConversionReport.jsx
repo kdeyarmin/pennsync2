@@ -47,12 +47,15 @@ export default function NoteEnhancementReport() {
   const [timeRange, setTimeRange] = useState("7");
 
   const { data: enhancements = [], isLoading } = useQuery({
-    queryKey: ['noteConversions'],
+    queryKey: ['noteConversions', timeRange],
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
   });
 
-  // Filter by time range - no filtering, show ALL enhancements
-  const filteredEnhancements = enhancements;
+  // Filter by time range
+  const cutoffDate = subDays(new Date(), parseInt(timeRange));
+  const filteredEnhancements = enhancements.filter(c => 
+    new Date(c.created_date) >= cutoffDate
+  );
 
   // Calculate stats
   const totalEnhancements = filteredEnhancements.length;
@@ -64,20 +67,33 @@ export default function NoteEnhancementReport() {
     : 0;
   const uniqueNurses = new Set(filteredEnhancements.map(c => c.nurse_email)).size;
 
-  // Group by date for trend chart
-  const dailyData = {};
-  filteredEnhancements.forEach(c => {
-    const date = format(new Date(c.created_date), 'MM/dd');
-    if (!dailyData[date]) {
-      dailyData[date] = { date, count: 0, totalQuality: 0 };
-    }
-    dailyData[date].count++;
-    dailyData[date].totalQuality += c.quality_score || 0;
-  });
-  const trendData = Object.values(dailyData).map(d => ({
-    ...d,
-    avgQuality: d.count > 0 ? Math.round(d.totalQuality / d.count) : 0
-  })).sort((a, b) => a.date.localeCompare(b.date));
+  // Group by date for trend chart - create complete date range
+  const dailyData = [];
+  const currentDate = new Date(cutoffDate);
+  const endDate = new Date();
+  
+  while (currentDate <= endDate) {
+    const dateKey = format(currentDate, 'yyyy-MM-dd');
+    const displayDate = format(currentDate, 'M/d');
+    
+    const dayEnhancements = filteredEnhancements.filter(c => {
+      const enhancementDate = format(new Date(c.created_date), 'yyyy-MM-dd');
+      return enhancementDate === dateKey;
+    });
+    
+    const totalQuality = dayEnhancements.reduce((sum, c) => sum + (c.quality_score || 0), 0);
+    
+    dailyData.push({
+      date: displayDate,
+      fullDate: dateKey,
+      count: dayEnhancements.length,
+      avgQuality: dayEnhancements.length > 0 ? Math.round(totalQuality / dayEnhancements.length) : 0
+    });
+    
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  const trendData = dailyData;
 
   // Group by nurse
   const nurseData = {};
