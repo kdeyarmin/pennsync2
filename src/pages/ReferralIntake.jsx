@@ -435,26 +435,50 @@ Actions available:
         }
       }
 
-      // AI-powered patient matching with confidence scoring
-      if (!existingPatient && extractedData.demographics && allPatients.length > 0) {
+      // Enhanced AI-powered patient matching with detailed analysis
+      if (extractedData.demographics && allPatients.length > 0) {
+        // Always run AI matching for comprehensive analysis
         const aiMatchResponse = await base44.functions.invoke('matchPatientWithAI', {
           extractedData,
-          existingPatients: allPatients.slice(0, 50) // Top 50 most recent for AI analysis
+          existingPatients: allPatients.slice(0, 100) // Analyze top 100 patients
         });
 
         const matchAnalysis = aiMatchResponse.data?.matchAnalysis;
         
-        if (matchAnalysis && matchAnalysis.confidence_level === 'high' && matchAnalysis.best_match_id) {
-          existingPatient = allPatients.find(p => p.id === matchAnalysis.best_match_id);
+        if (matchAnalysis) {
+          // Store full match analysis
+          updates.match_analysis = matchAnalysis;
           updates.match_confidence = matchAnalysis.confidence_score;
           updates.match_factors = matchAnalysis.match_factors;
-          console.log(`AI matched patient: ${existingPatient.first_name} ${existingPatient.last_name} (${matchAnalysis.confidence_score}% confidence)`);
-        } else if (matchAnalysis && matchAnalysis.confidence_level === 'medium') {
-          // Flag for manual review
-          updates.requires_manual_review = true;
-          updates.match_suggestions = matchAnalysis.alternative_matches;
-          updates.match_analysis = matchAnalysis;
-          console.log('Medium confidence match - flagged for manual review');
+          updates.discrepancies = matchAnalysis.discrepancies;
+          
+          if (matchAnalysis.confidence_level === 'high' && matchAnalysis.confidence_score >= 90 && matchAnalysis.best_match_id) {
+            // High confidence (90%+) - auto-match but allow review
+            if (!existingPatient) {
+              existingPatient = allPatients.find(p => p.id === matchAnalysis.best_match_id);
+              console.log(`🎯 High-confidence AI match: ${existingPatient.first_name} ${existingPatient.last_name} (${matchAnalysis.confidence_score}% confidence)`);
+            }
+          } else if (matchAnalysis.confidence_level === 'high' && matchAnalysis.best_match_id) {
+            // Medium-high confidence (70-89%) - flag for quick review
+            updates.requires_manual_review = true;
+            updates.match_suggestions = [
+              { 
+                patient_id: matchAnalysis.best_match_id, 
+                confidence_score: matchAnalysis.confidence_score,
+                reasons: matchAnalysis.match_factors 
+              },
+              ...(matchAnalysis.alternative_matches || [])
+            ];
+            console.log(`⚠️ Medium-high confidence match - requires quick review (${matchAnalysis.confidence_score}%)`);
+          } else if (matchAnalysis.confidence_level === 'medium' && matchAnalysis.alternative_matches?.length > 0) {
+            // Medium confidence (50-69%) - show multiple options
+            updates.requires_manual_review = true;
+            updates.match_suggestions = matchAnalysis.alternative_matches;
+            console.log(`🔍 Multiple possible matches found - manual review needed`);
+          } else if (matchAnalysis.confidence_level === 'low' || matchAnalysis.recommendation === 'create_new') {
+            // Low confidence - likely new patient
+            console.log(`✨ No strong matches found - likely new patient`);
+          }
         }
       }
 
@@ -826,14 +850,30 @@ Actions available:
                             Dr. {referral.extracted_data.demographics.referring_physician}
                           </p>
                         )}
-                        {referral.patient_id && !referral.requires_manual_review && (
-                          <Badge className="bg-green-600 text-xs mt-1">
-                            In System
-                            {referral.match_confidence && ` (${Math.round(referral.match_confidence)}%)`}
+                        {referral.patient_id && !referral.requires_manual_review && referral.match_confidence && (
+                          <Badge className={
+                            referral.match_confidence >= 90 ? "bg-green-600 text-xs mt-1" :
+                            referral.match_confidence >= 75 ? "bg-blue-600 text-xs mt-1" :
+                            "bg-gray-600 text-xs mt-1"
+                          }>
+                            {referral.match_confidence >= 90 ? "✓ " : ""}
+                            Matched ({Math.round(referral.match_confidence)}%)
                           </Badge>
                         )}
+                        {referral.patient_id && !referral.requires_manual_review && !referral.match_confidence && (
+                          <Badge className="bg-green-600 text-xs mt-1">In System</Badge>
+                        )}
                         {referral.requires_manual_review && (
-                          <Badge className="bg-yellow-600 text-xs mt-1">Review Match</Badge>
+                          <div className="flex flex-col gap-1 mt-1">
+                            <Badge className="bg-yellow-600 text-xs">
+                              ⚠️ Review Match
+                            </Badge>
+                            {referral.match_confidence && (
+                              <span className="text-xs text-yellow-700">
+                                {Math.round(referral.match_confidence)}% confidence
+                              </span>
+                            )}
+                          </div>
                         )}
                         {referral.extracted_data?.diagnoses?.primary_diagnosis && (
                           <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs mt-1">

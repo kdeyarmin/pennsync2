@@ -166,14 +166,14 @@ async function matchPatient(base44, params) {
     const { extractedData, existingPatients } = params;
 
     const matchAnalysis = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an expert patient matching system for healthcare records.
+        prompt: `You are an expert patient matching system for healthcare records with advanced fuzzy matching capabilities.
 
 Analyze the referral data and compare it against existing patients to find the best match.
 
 REFERRAL PATIENT DATA:
 ${JSON.stringify(extractedData.demographics, null, 2)}
 
-EXISTING PATIENTS IN SYSTEM:
+EXISTING PATIENTS IN SYSTEM (Top Candidates):
 ${JSON.stringify(existingPatients.map(p => ({
     id: p.id,
     name: \`\${p.first_name} \${p.middle_name || ''} \${p.last_name}\`.trim(),
@@ -182,34 +182,67 @@ ${JSON.stringify(existingPatients.map(p => ({
     phone: p.phone,
     address: p.address,
     insurance: p.payor,
-    physician: p.physician_name
+    physician: p.physician_name,
+    status: p.status
 })), null, 2)}
 
-Consider:
-- Name similarity (nicknames, abbreviations, spelling variations)
-- Date of birth exact and partial matches
-- Contact information (phone, address)
-- Insurance provider matches
-- Physician associations
-- Medical history overlap
+**CONFIDENCE SCORING GUIDELINES:**
+- 90-100%: High confidence - Strong match on name + DOB + additional identifiers
+- 70-89%: Medium-high confidence - Good match but has minor discrepancies (quick review recommended)
+- 50-69%: Medium confidence - Possible match with notable differences (manual review required)
+- Below 50%: Low confidence - Likely different patient (create new record)
 
-Provide detailed match analysis with confidence scoring.`,
+**MATCHING CRITERIA (weighted by importance):**
+1. **Date of Birth** (30 points): Exact match is critical
+2. **Name Matching** (25 points): 
+   - Account for nicknames (Bob/Robert, Beth/Elizabeth)
+   - Spelling variations (Jon/John, Katherine/Catherine)
+   - Married name changes
+   - Middle name/initial differences
+3. **Phone Number** (15 points): Recent matches weighted higher
+4. **Address** (10 points): Consider moves, partial matches
+5. **Medical Record Number** (15 points): If available, strong identifier
+6. **Insurance Provider** (5 points): Supporting evidence
+
+**DISCREPANCY ANALYSIS:**
+For each potential match, identify and list ALL discrepancies:
+- Different addresses (person may have moved)
+- Phone number mismatches (changed numbers)
+- Name variations (nicknames, spelling)
+- Insurance changes
+- Any data conflicts
+
+**OUTPUT REQUIREMENTS:**
+- Best match with confidence score
+- List TOP 3 alternative matches if confidence < 90%
+- Clear reasoning for each match
+- Specific discrepancies that need review
+- Actionable recommendation`,
         response_json_schema: {
             type: "object",
             properties: {
-                best_match_id: { type: "string" },
-                confidence_score: { type: "number" },
+                best_match_id: { 
+                    type: "string",
+                    description: "ID of the most likely matching patient, or null if no good match"
+                },
+                confidence_score: { 
+                    type: "number",
+                    description: "0-100 confidence score for the best match"
+                },
                 confidence_level: {
                     type: "string",
-                    enum: ["high", "medium", "low", "no_match"]
+                    enum: ["high", "medium", "low", "no_match"],
+                    description: "Categorical confidence level"
                 },
                 match_factors: {
                     type: "array",
-                    items: { type: "string" }
+                    items: { type: "string" },
+                    description: "Specific factors that support the match (e.g., 'Exact DOB match', 'Name similarity 95%')"
                 },
                 discrepancies: {
                     type: "array",
-                    items: { type: "string" }
+                    items: { type: "string" },
+                    description: "Specific discrepancies found (e.g., 'Address differs: 123 Oak St vs 456 Elm Ave', 'Phone changed')"
                 },
                 alternative_matches: {
                     type: "array",
@@ -217,19 +250,29 @@ Provide detailed match analysis with confidence scoring.`,
                         type: "object",
                         properties: {
                             patient_id: { type: "string" },
+                            patient_name: { type: "string" },
                             confidence_score: { type: "number" },
                             reasons: {
                                 type: "array",
                                 items: { type: "string" }
+                            },
+                            discrepancies: {
+                                type: "array",
+                                items: { type: "string" }
                             }
                         }
-                    }
+                    },
+                    description: "Top 3 alternative matches with their confidence scores"
                 },
                 recommendation: {
                     type: "string",
-                    enum: ["use_match", "manual_review", "create_new"]
+                    enum: ["use_match", "manual_review", "create_new"],
+                    description: "Recommended action based on confidence level"
                 },
-                reasoning: { type: "string" }
+                reasoning: { 
+                    type: "string",
+                    description: "Detailed explanation of the matching decision and why this confidence level was assigned"
+                }
             }
         }
     });
