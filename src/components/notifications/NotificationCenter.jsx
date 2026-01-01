@@ -24,7 +24,7 @@ import {
   GraduationCap,
   X
 } from "lucide-react";
-import { formatEastern, formatRelativeTime } from "@/components/utils/timezone";
+import { formatEastern, formatRelativeEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 
 export default function NotificationCenter({ currentUser, onClose }) {
@@ -143,7 +143,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-gray-500">
-              {formatRelativeTime(notification.created_date)}
+              {formatRelativeEastern(notification.created_date)}
             </span>
             {notification.priority !== 'low' && notification.priority !== 'medium' && (
               <Badge className={getPriorityColor(notification.priority)}>
