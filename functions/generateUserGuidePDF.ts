@@ -12,11 +12,9 @@ Deno.serve(async (req) => {
 
     const { guide_type } = await req.json();
 
-    // Generate guide content using AI
-    const guideContent = await base44.integrations.Core.InvokeLLM({
-      prompt: `Generate a comprehensive, step-by-step user guide for: ${guide_type}
-
-${guide_type === 'referral_intake' ? `
+    // Define guide prompts
+    const guidePrompts = {
+      referral_intake: `
 REFERRAL INTAKE PROCESS GUIDE
 
 Create detailed instructions for staff entering and uploading referrals:
@@ -97,7 +95,9 @@ Create detailed instructions for staff entering and uploading referrals:
 - Use clear, high-resolution scans
 - Review all yellow-flagged fields
 - Double-check patient matching
-- Assign to appropriate nurse based on territory` : `
+- Assign to appropriate nurse based on territory`,
+      
+      admission_documentation: `
 
 ADMISSION VISIT DOCUMENTATION GUIDE
 
@@ -214,7 +214,278 @@ Create detailed instructions for nurses completing admission visits:
 - Document what YOU observed
 - Include patient/caregiver quotes
 - Specify assistance levels for ADLs
-- Compare to baseline when possible`}
+- Compare to baseline when possible`,
+
+      smart_notes: `SMART NOTES & QUICK NOTE GUIDE
+
+Comprehensive guide for using AI-powered documentation tools:
+
+**SECTIONS:**
+1. Introduction to Smart Notes
+2. Quick Note for rapid documentation
+3. Voice dictation features
+4. AI enhancement capabilities
+5. Real-time compliance checking
+6. SOAP format documentation
+7. Clinical event extraction
+8. Saving and syncing notes
+9. Offline mode capabilities
+10. Best practices and tips`,
+
+      oasis_assessment: `OASIS ASSESSMENT GUIDE
+
+Complete guide for OASIS documentation with AI assistance:
+
+**SECTIONS:**
+1. OASIS overview and requirements
+2. Starting a new OASIS assessment
+3. Using AI pre-assessment features
+4. Completing OASIS items
+5. Confidence scores and validation
+6. PDGM case mix optimization
+7. Documentation alignment
+8. Quality review process
+9. Submitting assessments
+10. Common errors and solutions`,
+
+      care_plans: `CARE PLAN MANAGEMENT GUIDE
+
+Guide for creating and managing patient care plans:
+
+**SECTIONS:**
+1. Creating new care plans
+2. AI-generated suggestions
+3. Setting SMART goals
+4. Documenting interventions
+5. Tracking progress
+6. Updating care plans
+7. Care plan gaps analysis
+8. Automatic care plan triggers
+9. Interdisciplinary coordination
+10. Best practices`,
+
+      patient_management: `PATIENT MANAGEMENT GUIDE
+
+Complete guide for managing patient records:
+
+**SECTIONS:**
+1. Adding new patients
+2. Searching and filtering patients
+3. Patient 360 view
+4. Updating demographics
+5. Medical history tracking
+6. Medication reconciliation
+7. Document management
+8. Communication with team
+9. Patient education materials
+10. Discharge planning`,
+
+      training_hub: `TRAINING HUB GUIDE
+
+Guide for completing training and professional development:
+
+**SECTIONS:**
+1. Accessing training modules
+2. Required vs optional training
+3. Interactive quizzes and scenarios
+4. Tracking completion
+5. Earning certificates
+6. Personalized recommendations
+7. Skill gap analysis
+8. Micro-learning opportunities
+9. Practice scenarios
+10. Continuing education credits`,
+
+      compliance_quality: `COMPLIANCE & QUALITY GUIDE
+
+Guide for maintaining Medicare compliance and quality standards:
+
+**SECTIONS:**
+1. Compliance dashboard overview
+2. Real-time compliance alerts
+3. Documentation quality scoring
+4. Medicare guidelines library
+5. Regulatory updates
+6. Audit preparation
+7. Quality improvement initiatives
+8. Performance metrics
+9. Best practice alerts
+10. Reporting and analytics`,
+
+      messages: `MESSAGING & COMMUNICATION GUIDE
+
+Guide for team communication and coordination:
+
+**SECTIONS:**
+1. Accessing messages
+2. Creating new messages
+3. Threading and replies
+4. Patient-specific messages
+5. Priority and urgent messages
+6. Attaching files
+7. Message notifications
+8. Team coordination
+9. Care handoffs
+10. Message organization`,
+
+      patient_alerts: `PATIENT ALERTS & MONITORING GUIDE
+
+Guide for managing patient risk alerts:
+
+**SECTIONS:**
+1. Alert dashboard overview
+2. Types of alerts
+3. Severity levels
+4. Reviewing alert details
+5. Acknowledging alerts
+6. Creating action plans
+7. Assigning follow-up
+8. Alert resolution
+9. Predictive analytics
+10. Alert history and trends`,
+
+      all_features: `PENN SYNC - COMPLETE USER GUIDE
+
+Comprehensive guide covering all features of the Penn Sync Healthcare platform:
+
+**CORE MODULES:**
+
+1. DASHBOARD & NAVIGATION
+- Home dashboard overview
+- Navigation menu
+- Quick actions
+- Notifications
+- Favorites
+- User settings
+
+2. REFERRAL INTAKE
+- Uploading referrals
+- AI data extraction
+- Patient matching
+- Admission packets
+- Task assignment
+
+3. PATIENT MANAGEMENT
+- Patient records
+- Patient 360 view
+- Demographics
+- Medical history
+- Documents
+- Communication
+
+4. DOCUMENTATION
+- Smart Notes
+- Quick Note
+- Voice dictation
+- SOAP format
+- AI enhancement
+- Quality review
+- Offline mode
+
+5. OASIS ASSESSMENT
+- Creating assessments
+- AI pre-assessment
+- Item-by-item completion
+- Validation
+- PDGM optimization
+- Submission
+
+6. CARE PLANS
+- Creating care plans
+- AI suggestions
+- SMART goals
+- Progress tracking
+- Gap analysis
+- Updates
+
+7. VISITS & SCHEDULING
+- Scheduling visits
+- Visit documentation
+- Vital signs
+- Incident reporting
+- Family updates
+- Visit history
+
+8. CLINICAL TOOLS
+- Patient alerts
+- Risk assessment
+- Clinical events
+- Medication tracking
+- Wound management
+- Care coordination
+
+9. QUALITY & COMPLIANCE
+- Compliance dashboard
+- Documentation quality
+- Medicare guidelines
+- Regulatory updates
+- Audit tools
+- Performance metrics
+
+10. COMMUNICATION
+- Team messaging
+- Patient education
+- Care team coordination
+- Physician communication
+- Family updates
+
+11. TRAINING & DEVELOPMENT
+- Training modules
+- Skill assessments
+- Certifications
+- Personalized learning
+- Practice scenarios
+- Performance feedback
+
+12. REPORTING & ANALYTICS
+- Dashboard metrics
+- Custom reports
+- Performance analytics
+- Compliance reports
+- PDGM analysis
+- Quality indicators
+
+13. ADMIN FEATURES (Admin Only)
+- User management
+- Agency settings
+- Training management
+- System monitoring
+- Audit trail
+- Configuration
+
+**GETTING STARTED:**
+- Initial login
+- Profile setup
+- Navigation basics
+- Common workflows
+
+**ADVANCED FEATURES:**
+- AI capabilities overview
+- Workflow optimization
+- Integration tips
+- Troubleshooting
+
+**BEST PRACTICES:**
+- Documentation excellence
+- Compliance maintenance
+- Time management
+- Quality improvement
+
+**SUPPORT & RESOURCES:**
+- Help and support
+- Training resources
+- Contact information
+- Feedback submission`
+    };
+
+    // Get the appropriate prompt
+    const promptText = guidePrompts[guide_type] || guidePrompts.all_features;
+
+    // Generate guide content using AI
+    const guideContent = await base44.integrations.Core.InvokeLLM({
+      prompt: `Generate a comprehensive, step-by-step user guide for healthcare staff.
+
+${promptText}
 
 Format this as a clear, professional user guide with:
 - Section headers
@@ -393,6 +664,15 @@ Keep language simple and non-technical. Include specific button names and field 
         pageWidth - margin,
         pageHeight - 10,
         { align: 'right' }
+      );
+      
+      // Copyright notice
+      doc.setFontSize(7);
+      doc.text(
+        '© Copyright Kevin Deyarmin 2025. All rights reserved.',
+        pageWidth / 2,
+        pageHeight - 5,
+        { align: 'center' }
       );
     }
 
