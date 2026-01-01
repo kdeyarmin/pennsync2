@@ -46,7 +46,8 @@ import {
   Download,
   RefreshCw,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  ClipboardCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
@@ -221,13 +222,20 @@ Actions available:
 
   const handleProcessingComplete = async (referralId, extractedData, analysisResults, generatedPdfUrl = null) => {
     try {
-      // AI-powered priority analysis
-      const priorityResponse = await base44.functions.invoke('analyzeReferralPriority', {
-        extractedData,
-        analysisResults
-      });
+      // Comprehensive AI-powered referral analysis
+      const [priorityResponse, intakeAnalysisResponse] = await Promise.all([
+        base44.functions.invoke('analyzeReferralPriority', {
+          extractedData,
+          analysisResults
+        }),
+        base44.functions.invoke('analyzeReferralIntake', {
+          extractedData,
+          analysisResults
+        })
+      ]);
 
       const priorityAnalysis = priorityResponse.data?.priorityAnalysis || {};
+      const intakeAnalysis = intakeAnalysisResponse.data?.analysis || {};
 
       // Extract and update referral fields from AI-processed data
       const updates = {
@@ -235,7 +243,8 @@ Actions available:
         extracted_data: extractedData,
         analysis_results: {
           ...analysisResults,
-          priority_analysis: priorityAnalysis
+          priority_analysis: priorityAnalysis,
+          intake_analysis: intakeAnalysis
         },
         patient_name: extractedData.demographics?.full_name || null,
         patient_dob: extractedData.demographics?.date_of_birth || null,
@@ -249,15 +258,16 @@ Actions available:
         priority: priorityAnalysis.priority || 'normal'
       };
 
-      // Check for missing critical information
-      const missingInfo = [];
-      if (!extractedData.demographics?.insurance_primary) missingInfo.push('Insurance information');
-      if (!extractedData.demographics?.emergency_contact) missingInfo.push('Emergency contact');
-      if (!extractedData.medications?.length) missingInfo.push('Current medications');
+      // Check for missing critical information using AI analysis
+      const allMissingInfo = [
+        ...(intakeAnalysis.missing_critical_info?.high_priority || []),
+        ...(intakeAnalysis.missing_critical_info?.medium_priority || []),
+        ...(intakeAnalysis.missing_critical_info?.low_priority || [])
+      ];
 
-      if (missingInfo.length > 0) {
+      if (intakeAnalysis.missing_critical_info?.high_priority?.length > 0) {
         updates.status = 'awaiting_info';
-        updates.missing_information = missingInfo;
+        updates.missing_information = allMissingInfo;
       }
 
       // Enhanced patient matching logic
@@ -489,6 +499,29 @@ Actions available:
       }
 
       await base44.entities.Referral.update(referralId, updates);
+
+      // Create AI-generated tasks based on suggested next steps
+      if (intakeAnalysis.suggested_next_steps?.length > 0) {
+        const tasksToCreate = intakeAnalysis.suggested_next_steps
+          .filter(step => step.priority === 'immediate' || step.priority === 'urgent' || step.priority === 'high')
+          .map(step => ({
+            patient_id: updates.patient_id || null,
+            title: step.action,
+            description: `AI-suggested action based on referral analysis. Timeframe: ${step.timeframe}`,
+            type: 'followup',
+            priority: step.priority === 'immediate' || step.priority === 'urgent' ? 'high' : 'medium',
+            status: 'pending',
+            source: 'ai_generated',
+            ai_reason: `Referral intake analysis identified this as ${step.priority} priority action`,
+            related_visit_id: referralId
+          }));
+
+        if (tasksToCreate.length > 0) {
+          await Promise.all(tasksToCreate.map(task => 
+            base44.entities.Task.create(task).catch(err => console.error('Failed to create task:', err))
+          ));
+        }
+      }
       setProcessingReferralId(null);
       
       // If requires manual review, show the match review dialog
@@ -746,6 +779,11 @@ Actions available:
                         {referral.requires_manual_review && (
                           <Badge className="bg-yellow-600 text-xs mt-1">Review Match</Badge>
                         )}
+                        {referral.analysis_results?.intake_analysis?.category?.primary && (
+                          <Badge className="bg-purple-100 text-purple-700 text-xs mt-1">
+                            {referral.analysis_results.intake_analysis.category.primary.replace(/_/g, ' ')}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         {referral.referral_date ? format(new Date(referral.referral_date), 'MM/dd/yyyy') : 'N/A'}
@@ -757,9 +795,16 @@ Actions available:
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(referral.status)}>
-                          {referral.status.replace(/_/g, ' ')}
-                        </Badge>
+                        <div className="space-y-1">
+                          <Badge className={getStatusColor(referral.status)}>
+                            {referral.status.replace(/_/g, ' ')}
+                          </Badge>
+                          {referral.analysis_results?.intake_analysis?.risk_assessment?.clinical_complexity && (
+                            <div className="text-xs text-gray-600">
+                              Complexity: {referral.analysis_results.intake_analysis.risk_assessment.clinical_complexity}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm">
                         <Select
@@ -792,15 +837,33 @@ Actions available:
                               Review Match
                             </Button>
                           ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setProcessingReferralId(referral.id)}
-                              className="min-h-[36px] text-xs"
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              Process
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setProcessingReferralId(referral.id)}
+                                className="min-h-[36px] text-xs"
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                {referral.analysis_results?.intake_analysis ? 'View Analysis' : 'Process'}
+                              </Button>
+                              {referral.analysis_results?.intake_analysis && (
+                                <div className="text-xs text-gray-600 space-y-0.5">
+                                  {referral.analysis_results.intake_analysis.missing_critical_info?.high_priority?.length > 0 && (
+                                    <div className="flex items-center gap-1 text-red-600">
+                                      <AlertCircle className="w-3 h-3" />
+                                      {referral.analysis_results.intake_analysis.missing_critical_info.high_priority.length} critical items
+                                    </div>
+                                  )}
+                                  {referral.analysis_results.intake_analysis.suggested_next_steps?.filter(s => s.priority === 'immediate' || s.priority === 'urgent').length > 0 && (
+                                    <div className="flex items-center gap-1 text-orange-600">
+                                      <ClipboardCheck className="w-3 h-3" />
+                                      {referral.analysis_results.intake_analysis.suggested_next_steps.filter(s => s.priority === 'immediate' || s.priority === 'urgent').length} urgent actions
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       </TableCell>
