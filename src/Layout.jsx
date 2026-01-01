@@ -101,22 +101,27 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => base44.entities.PatientAlert.filter({ status: 'active' }, '-created_date', 50),
     initialData: [],
     refetchInterval: 60000,
+    enabled: !!currentUser,
   });
 
   // Filter alerts to only favorited patients
-  const activeAlerts = allActiveAlerts.filter(alert => 
-    currentUser?.favorited_patients?.some(fav => fav.id === alert.patient_id)
-  );
+  const activeAlerts = React.useMemo(() => {
+    if (!currentUser?.favorited_patients) return [];
+    return allActiveAlerts.filter(alert => 
+      currentUser.favorited_patients.some(fav => fav.id === alert.patient_id)
+    );
+  }, [allActiveAlerts, currentUser]);
 
   // Fetch pending tasks
   const { data: pendingTasks = [] } = useQuery({
-    queryKey: ['pending-tasks'],
+    queryKey: ['pending-tasks', currentUser?.email],
     queryFn: () => base44.entities.Task.filter({ 
       status: 'pending',
       assigned_to: currentUser?.email 
     }, '-created_date', 50),
     initialData: [],
     refetchInterval: 60000,
+    enabled: !!currentUser?.email,
   });
 
   const unreadMessageCount = messages.filter(m => 
