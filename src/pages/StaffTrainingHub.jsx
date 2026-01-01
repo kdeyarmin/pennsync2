@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   Star,
   TrendingUp,
-  Award
+  Award,
+  UserPlus
 } from "lucide-react";
 
 import AITrainingContentGenerator from "../components/training/AITrainingContentGenerator";
@@ -37,12 +38,16 @@ import TrainingProgressDashboard from "../components/training/TrainingProgressDa
 import StaffEducationComplianceReport from "../components/training/StaffEducationComplianceReport";
 import ModuleViewer from "../components/training/ModuleViewer";
 import AIQuizGenerator from "../components/training/AIQuizGenerator";
+import MyCompletedTraining from "../components/training/MyCompletedTraining";
+import AdminTrainingAssignment from "../components/training/AdminTrainingAssignment";
 
 export default function StaffTrainingHub() {
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
@@ -223,11 +228,21 @@ export default function StaffTrainingHub() {
 
       {/* Individual User Training Hub */}
       <Tabs defaultValue="aipath" className="w-full">
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-11 w-full mb-4 sm:mb-6 gap-1 h-auto">
+          <TabsList className={`grid ${isAdmin ? 'grid-cols-4 sm:grid-cols-8 lg:grid-cols-13' : 'grid-cols-3 sm:grid-cols-6 lg:grid-cols-12'} w-full mb-4 sm:mb-6 gap-1 h-auto`}>
             <TabsTrigger value="modules" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
               <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden lg:inline">Modules</span>
             </TabsTrigger>
+            <TabsTrigger value="certificates" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm bg-gradient-to-r from-yellow-50 to-orange-50 data-[state=active]:bg-yellow-100">
+              <Award className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden lg:inline">Certificates</span>
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="assign" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm bg-gradient-to-r from-blue-50 to-indigo-50 data-[state=active]:bg-blue-100">
+                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden lg:inline">Assign</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="aipath" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm bg-gradient-to-r from-purple-50 to-indigo-50 data-[state=active]:bg-purple-100">
               <Star className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden lg:inline">AI Path</span>
@@ -341,6 +356,18 @@ export default function StaffTrainingHub() {
           <TabsContent value="progress">
             {currentUser && <TrainingProgressDashboard nurseEmail={currentUser.email} />}
           </TabsContent>
+
+          {/* My Certificates */}
+          <TabsContent value="certificates">
+            {currentUser && <MyCompletedTraining nurseEmail={currentUser.email} />}
+          </TabsContent>
+
+          {/* Admin Training Assignment */}
+          {isAdmin && (
+            <TabsContent value="assign">
+              <AdminTrainingAssignment />
+            </TabsContent>
+          )}
 
           {/* State Survey Preparation Tab */}
         <TabsContent value="survey">
