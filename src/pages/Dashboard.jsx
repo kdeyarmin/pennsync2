@@ -10,6 +10,7 @@ import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileTex
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import { isValid } from "date-fns";
 import VoiceCommandListener from "../components/voice/VoiceCommandListener";
+import ProactiveClinicalTaskGenerator from "../components/tasks/ProactiveClinicalTaskGenerator";
 import { getCommandsForContext } from "../components/voice/voiceCommands";
 import EnhancedVoiceCommands from "../components/voice/EnhancedVoiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";

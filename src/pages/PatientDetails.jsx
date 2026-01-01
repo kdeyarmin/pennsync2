@@ -23,6 +23,7 @@ import { logActivity, ActivityActions } from "@/components/utils/activityLogger"
 import HospitalReadmissionRisk from "../components/patient/HospitalReadmissionRisk";
 import ClinicalBestPracticeAlerts from "../components/quality/ClinicalBestPracticeAlerts";
 import AIPatientSummary from "../components/patient/AIPatientSummary";
+import ProactiveClinicalTaskGenerator from "../components/tasks/ProactiveClinicalTaskGenerator";
 import AIPatientHistorySummary from "../components/patient/AIPatientHistorySummary";
 import AICarePlanSuggestions from "../components/carePlan/AICarePlanSuggestions";
 import CarePlanTimelinePredictor from "../components/carePlan/CarePlanTimelinePredictor";

@@ -1,0 +1,328 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Brain,
+  CheckCircle2,
+  X,
+  Loader2,
+  AlertTriangle,
+  TrendingUp,
+  Sparkles,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
+
+export default function ProactiveClinicalTaskGenerator({ 
+  patientId,
+  patientName,
+  onTasksCreated,
+  autoAnalyze = false
+}) {
+  const queryClient = useQueryClient();
+  const [analyzing, setAnalyzing] = useState(false);
+  const [suggestedTasks, setSuggestedTasks] = useState([]);
+  const [expandedTasks, setExpandedTasks] = useState({});
+  const [dismissedTasks, setDismissedTasks] = useState([]);
+  const [creatingTasks, setCreatingTasks] = useState(false);
+
+  React.useEffect(() => {
+    if (autoAnalyze && patientId && suggestedTasks.length === 0 && !analyzing) {
+      handleAnalyze();
+    }
+  }, [autoAnalyze, patientId]);
+
+  const handleAnalyze = async () => {
+    setAnalyzing(true);
+    try {
+      const response = await base44.functions.invoke('analyzeAndGenerateClinicalTasks', {
+        patientId
+      });
+
+      const tasks = response.data?.tasks || [];
+      setSuggestedTasks(tasks);
+      
+      // Auto-expand high priority tasks
+      const highPriorityExpanded = {};
+      tasks.forEach((task, index) => {
+        if (task.priority === 'high' || task.risk_level === 'critical') {
+          highPriorityExpanded[index] = true;
+        }
+      });
+      setExpandedTasks(highPriorityExpanded);
+    } catch (error) {
+      console.error('Failed to analyze patient:', error);
+      alert('Failed to analyze patient data. Please try again.');
+    }
+    setAnalyzing(false);
+  };
+
+  const handleApproveTask = async (task, index) => {
+    try {
+      await base44.entities.Task.create({
+        patient_id: patientId,
+        title: task.title,
+        description: task.description,
+        type: task.type,
+        priority: task.priority,
+        due_date: task.due_date,
+        due_timeframe: task.due_timeframe,
+        source: 'ai_generated',
+        ai_reason: task.clinical_rationale,
+        status: 'pending'
+      });
+
+      setSuggestedTasks(prev => prev.filter((_, i) => i !== index));
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      onTasksCreated?.();
+    } catch (error) {
+      console.error('Failed to create task:', error);
+      alert('Failed to create task. Please try again.');
+    }
+  };
+
+  const handleDismissTask = (index) => {
+    setDismissedTasks(prev => [...prev, index]);
+    setTimeout(() => {
+      setSuggestedTasks(prev => prev.filter((_, i) => i !== index));
+    }, 300);
+  };
+
+  const handleApproveAll = async () => {
+    setCreatingTasks(true);
+    try {
+      for (const task of suggestedTasks) {
+        await base44.entities.Task.create({
+          patient_id: patientId,
+          title: task.title,
+          description: task.description,
+          type: task.type,
+          priority: task.priority,
+          due_date: task.due_date,
+          due_timeframe: task.due_timeframe,
+          source: 'ai_generated',
+          ai_reason: task.clinical_rationale,
+          status: 'pending'
+        });
+      }
+
+      setSuggestedTasks([]);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      onTasksCreated?.();
+      alert(`Successfully created ${suggestedTasks.length} tasks!`);
+    } catch (error) {
+      console.error('Failed to create tasks:', error);
+      alert('Some tasks failed to create. Please try again.');
+    }
+    setCreatingTasks(false);
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-700 border-red-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+      case 'low': return 'bg-blue-100 text-blue-700 border-blue-300';
+      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+    }
+  };
+
+  const getRiskIcon = (riskLevel) => {
+    switch (riskLevel) {
+      case 'critical':
+      case 'high':
+        return <AlertTriangle className="w-4 h-4 text-red-600" />;
+      case 'moderate':
+        return <TrendingUp className="w-4 h-4 text-yellow-600" />;
+      default:
+        return <Brain className="w-4 h-4 text-blue-600" />;
+    }
+  };
+
+  const toggleExpand = (index) => {
+    setExpandedTasks(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const visibleTasks = suggestedTasks.filter((_, index) => !dismissedTasks.includes(index));
+
+  return (
+    <Card className="border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="w-5 h-5 text-indigo-600" />
+            AI Clinical Task Assistant
+            <Badge className="bg-indigo-600 text-white">Proactive</Badge>
+          </div>
+          {visibleTasks.length > 0 && (
+            <Badge variant="outline" className="text-indigo-700">
+              {visibleTasks.length} suggested
+            </Badge>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {visibleTasks.length === 0 && !analyzing && (
+          <div className="text-center py-6">
+            <Brain className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
+            <p className="text-gray-600 mb-4">
+              AI will analyze visit notes, care plans, and alerts to suggest follow-up tasks
+            </p>
+            <Button
+              onClick={handleAnalyze}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Analyze Patient
+            </Button>
+          </div>
+        )}
+
+        {analyzing && (
+          <div className="text-center py-6">
+            <Loader2 className="w-8 h-8 text-indigo-600 mx-auto mb-3 animate-spin" />
+            <p className="text-indigo-900 font-medium">Analyzing patient data...</p>
+            <p className="text-sm text-indigo-700 mt-1">Reviewing visits, care plans, and alerts</p>
+          </div>
+        )}
+
+        {visibleTasks.length > 0 && (
+          <>
+            <Alert className="bg-indigo-50 border-indigo-300">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <AlertDescription className="text-indigo-900 text-sm">
+                AI identified <strong>{visibleTasks.length} tasks</strong> based on clinical analysis. 
+                Review and approve to add to your task list.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-3">
+              {visibleTasks.map((task, index) => (
+                <Card 
+                  key={index} 
+                  className={`border-2 transition-all ${
+                    task.risk_level === 'critical' ? 'border-red-400 bg-red-50' :
+                    task.priority === 'high' ? 'border-orange-300 bg-orange-50' :
+                    'border-gray-300 bg-white'
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-start gap-2 flex-1">
+                        {getRiskIcon(task.risk_level)}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-sm">{task.title}</h4>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            <Badge className={getPriorityColor(task.priority)} size="sm">
+                              {task.priority}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {task.type}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              Due: {task.due_timeframe?.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleExpand(index)}
+                      >
+                        {expandedTasks[index] ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {expandedTasks[index] && (
+                      <div className="mt-3 space-y-2 text-sm">
+                        <div>
+                          <p className="text-gray-700">{task.description}</p>
+                        </div>
+                        
+                        {task.clinical_rationale && (
+                          <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                            <p className="text-xs font-semibold text-blue-700">Clinical Rationale:</p>
+                            <p className="text-xs text-blue-900 mt-1">{task.clinical_rationale}</p>
+                          </div>
+                        )}
+
+                        {task.suggested_actions?.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-700">Suggested Actions:</p>
+                            <ul className="list-disc list-inside text-xs text-gray-600 mt-1">
+                              {task.suggested_actions.map((action, i) => (
+                                <li key={i}>{action}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        onClick={() => handleApproveTask(task, index)}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDismissTask(index)}
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Dismiss
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-2 border-t">
+              <Button
+                onClick={handleApproveAll}
+                disabled={creatingTasks}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+              >
+                {creatingTasks ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Approve All ({visibleTasks.length})
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleAnalyze}
+                variant="outline"
+                disabled={analyzing}
+              >
+                <Sparkles className="w-4 h-4 mr-1" />
+                Re-analyze
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
