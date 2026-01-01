@@ -95,13 +95,18 @@ export default function Layout({ children, currentPageName }) {
     refetchInterval: 60000, // Refetch every minute
   });
 
-  // Fetch active patient alerts
-  const { data: activeAlerts = [] } = useQuery({
+  // Fetch active patient alerts (only for favorited patients)
+  const { data: allActiveAlerts = [] } = useQuery({
     queryKey: ['active-alerts'],
     queryFn: () => base44.entities.PatientAlert.filter({ status: 'active' }, '-created_date', 50),
     initialData: [],
     refetchInterval: 60000,
   });
+
+  // Filter alerts to only favorited patients
+  const activeAlerts = allActiveAlerts.filter(alert => 
+    currentUser?.favorited_patients?.some(fav => fav.id === alert.patient_id)
+  );
 
   // Fetch pending tasks
   const { data: pendingTasks = [] } = useQuery({
