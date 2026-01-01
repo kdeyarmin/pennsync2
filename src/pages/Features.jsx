@@ -73,10 +73,10 @@ export default function FeaturesPage() {
           howToUse: "Say 'blood pressure 120 over 80' or 'heart rate 72' and AI fills the fields automatically."
         },
         {
-          name: "AI Note Enhancement",
-          icon: Sparkles,
-          description: "One-click transformation of rough notes into polished, Medicare-compliant clinical documentation",
-          timeSaved: "10-15 min/visit",
+        name: "AI Note Enhancement",
+        icon: Sparkles,
+        description: "One-click transformation of rough notes into polished, Medicare-compliant clinical documentation",
+        timeSaved: "25 min/visit",
           impact: "critical",
           details: "Adds required sections, improves clarity, ensures compliance, maintains clinical accuracy",
           howToUse: "Type or dictate rough notes, click 'Enhance with AI', review the polished result."
@@ -455,11 +455,11 @@ export default function FeaturesPage() {
     <h2 style="color: white; margin-top: 0;">The Penn Sync Impact</h2>
     <p style="opacity: 0.95; font-size: 16px; margin-bottom: 20px;">Revolutionizing home health documentation with AI-powered efficiency</p>
     <div class="impact-stat">
-      <div class="impact-stat-value">125+</div>
+      <div class="impact-stat-value">75+</div>
       <div class="impact-stat-label">Minutes Saved Per Visit</div>
     </div>
     <div class="impact-stat">
-      <div class="impact-stat-value">40+</div>
+      <div class="impact-stat-value">6+</div>
       <div class="impact-stat-label">Hours Saved Per Week</div>
     </div>
     <div class="impact-stat">
@@ -1145,10 +1145,15 @@ export default function FeaturesPage() {
     setIsGeneratingManual(false);
   };
 
-  const totalTimeSavedPerVisit = 125;
-  const totalTimeSavedPerWeek = totalTimeSavedPerVisit * 5;
-  const totalTimeSavedPerMonth = totalTimeSavedPerWeek * 4;
-  const totalTimeSavedPerYear = totalTimeSavedPerMonth * 12;
+  // Realistic time savings calculation based on 25 min per note + other features
+  const totalTimeSavedPerVisit = 75; // AI note enhancement (25) + voice dictation (20) + other features (30)
+  const visitsPerWeek = 5;
+  const weeksPerMonth = 4;
+  const monthsPerYear = 12;
+  
+  const totalTimeSavedPerWeek = totalTimeSavedPerVisit * visitsPerWeek; // 375 min
+  const totalTimeSavedPerMonth = totalTimeSavedPerWeek * weeksPerMonth; // 1500 min = 25 hours
+  const totalTimeSavedPerYear = totalTimeSavedPerMonth * monthsPerYear; // 300 hours
 
   const filteredFeatures = selectedCategory === "all" 
     ? features 
