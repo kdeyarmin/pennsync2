@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
 import AIAdmissionDocumentationAssistant from "../clinical/AIAdmissionDocumentationAssistant";
+import AIAdmissionNoteGenerator from "./AIAdmissionNoteGenerator";
 import {
   Accordion,
   AccordionContent,
@@ -980,6 +981,15 @@ HANDWRITTEN NOTES HANDLING:
               </AccordionItem>
             )}
           </Accordion>
+
+          {/* AI Admission Note Generator */}
+          <AIAdmissionNoteGenerator
+            referralData={extractedData}
+            autoGenerate={true}
+            onNoteGenerated={(noteData) => {
+              console.log('Admission note generated:', noteData);
+            }}
+          />
 
           {/* AI OASIS Assistant */}
           <Card className="border-2 border-purple-300">
