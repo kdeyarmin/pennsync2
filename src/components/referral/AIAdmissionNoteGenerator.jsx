@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Copy, CheckCircle2, Edit3, Save, Loader2 } from "lucide-react";
+import { Sparkles, Copy, CheckCircle2, Edit3, Save, Loader2, Eye } from "lucide-react";
 import AIFieldIndicator from "@/components/ui/ai-field-indicator";
 import ProgressFeedback from "@/components/ui/progress-feedback";
+import RealTimeDocumentationReviewer from "../documentation/RealTimeDocumentationReviewer";
 
 export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated, autoGenerate = false }) {
   const [generating, setGenerating] = useState(false);
@@ -14,6 +15,7 @@ export default function AIAdmissionNoteGenerator({ referralData, onNoteGenerated
   const [isEditing, setIsEditing] = useState(false);
   const [editedNote, setEditedNote] = useState("");
   const [generationStage, setGenerationStage] = useState(0);
+  const [showReviewer, setShowReviewer] = useState(false);
 
   const generationStages = [
     "Analyzing patient demographics and history...",
@@ -332,6 +334,15 @@ Generate a complete, detailed admission note that a skilled nurse would write af
                 <Button 
                   size="sm" 
                   variant="outline"
+                  onClick={() => setShowReviewer(!showReviewer)}
+                  className="text-blue-600"
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  {showReviewer ? 'Hide' : 'Review'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
                   onClick={generateAdmissionNote}
                   className="text-purple-600"
                 >
@@ -370,6 +381,22 @@ Generate a complete, detailed admission note that a skilled nurse would write af
             </div>
           </div>
         </div>
+
+        {showReviewer && (
+          <div className="mt-4">
+            <RealTimeDocumentationReviewer
+              noteContent={isEditing ? editedNote : generatedNote}
+              noteType="admission"
+              patientData={referralData}
+              autoAnalyze={true}
+              onApplySuggestion={(suggestion) => {
+                if (isEditing) {
+                  setEditedNote(prev => prev + "\n\n" + suggestion);
+                }
+              }}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
