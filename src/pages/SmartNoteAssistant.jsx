@@ -110,6 +110,7 @@ import ReferralBasedDocumentationAssistant from "../components/smartNote/Referra
 import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
 import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
 import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
+import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -253,6 +254,8 @@ export default function SmartNoteAssistant() {
   const [useGuidedWorkflow, setUseGuidedWorkflow] = useState(false);
   const [savedVisitId, setSavedVisitId] = useState(null);
   const [referralData, setReferralData] = useState(null);
+  const [referralIntakeAnalysis, setReferralIntakeAnalysis] = useState(null);
+  const [referralId, setReferralId] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -262,13 +265,15 @@ export default function SmartNoteAssistant() {
   // Check for referral data in URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const referralId = urlParams.get('referral_id');
+    const refId = urlParams.get('referral_id');
     
-    if (referralId) {
-      base44.entities.Referral.filter({ id: referralId }).then(referrals => {
+    if (refId) {
+      setReferralId(refId);
+      base44.entities.Referral.filter({ id: refId }).then(referrals => {
         if (referrals.length > 0 && referrals[0].extracted_data) {
           const referral = referrals[0];
           setReferralData(referral.extracted_data);
+          setReferralIntakeAnalysis(referral.analysis_results?.intake_analysis);
           setVisitType('admission');
           
           // Prepopulate from referral data
@@ -989,12 +994,26 @@ export default function SmartNoteAssistant() {
 
           {/* Referral-Based Documentation Assistant */}
           {referralData && selectedPatientId && visitType === 'admission' && !enhancedNote && (
-            <ReferralBasedDocumentationAssistant
-              referralData={referralData}
-              onInsertText={(text) => {
-                setRoughNote(prev => prev ? prev + '\n\n' + text : text);
-              }}
-            />
+            <>
+              <ReferralBasedDocumentationAssistant
+                referralData={referralData}
+                onInsertText={(text) => {
+                  setRoughNote(prev => prev ? prev + '\n\n' + text : text);
+                }}
+              />
+              
+              {/* AI Care Plan Generator from Referral */}
+              <AIReferralCarePlanGenerator
+                referralData={referralData}
+                intakeAnalysis={referralIntakeAnalysis}
+                patientId={selectedPatientId}
+                existingCarePlans={carePlans}
+                onCarePlansSaved={() => {
+                  queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
+                  alert('Care plans saved successfully!');
+                }}
+              />
+            </>
           )}
 
           {/* Step 2.5: Admission Documentation Tools (Admission Visits Only) */}

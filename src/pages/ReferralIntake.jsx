@@ -55,6 +55,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import PatientMatchReview from "../components/referral/PatientMatchReview";
+import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 
 export default function ReferralIntake() {
   const queryClient = useQueryClient();
@@ -1030,10 +1031,26 @@ Actions available:
                 AI Referral Processor
               </DialogTitle>
             </DialogHeader>
-            <ReferralPDFSummarizer
-              fileUrl={referrals.find(r => r.id === processingReferralId)?.document_url}
-              onExtractionComplete={(data, analysis, pdfUrl) => handleProcessingComplete(processingReferralId, data, analysis, pdfUrl)}
-            />
+            <div className="space-y-6">
+              <ReferralPDFSummarizer
+                fileUrl={referrals.find(r => r.id === processingReferralId)?.document_url}
+                onExtractionComplete={(data, analysis, pdfUrl) => handleProcessingComplete(processingReferralId, data, analysis, pdfUrl)}
+              />
+              
+              {/* Show care plan generator after processing */}
+              {referrals.find(r => r.id === processingReferralId)?.extracted_data && 
+               referrals.find(r => r.id === processingReferralId)?.patient_id && (
+                <AIReferralCarePlanGenerator
+                  referralData={referrals.find(r => r.id === processingReferralId)?.extracted_data}
+                  intakeAnalysis={referrals.find(r => r.id === processingReferralId)?.analysis_results?.intake_analysis}
+                  patientId={referrals.find(r => r.id === processingReferralId)?.patient_id}
+                  onCarePlansSaved={() => {
+                    queryClient.invalidateQueries({ queryKey: ['referrals'] });
+                    alert('Care plans saved successfully!');
+                  }}
+                />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       )}
