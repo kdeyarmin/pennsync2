@@ -111,10 +111,12 @@ When you encounter handwritten text:
 3. If uncertain about legibility, include "[possibly X or Y]" notation
 
 Analyze this patient referral document and extract ALL relevant information needed for:
-1. Admission nursing assessment
-2. OASIS-E completion  
+1. **Complete OASIS-E assessment** (generate as many OASIS items as possible with confidence scores)
+2. Admission nursing assessment
 3. Care planning
 4. **PDGM reimbursement optimization**
+
+**YOUR PRIMARY GOAL: Generate a complete, Medicare-compliant OASIS assessment from the referral data. For each OASIS item, use the exact scoring scales and provide your confidence level (high/medium/low) and reasoning.**
 
 **CRITICAL - PDGM DIAGNOSIS SELECTION:**
 When determining primary and secondary diagnoses, you MUST optimize for maximum PDGM reimbursement by:
@@ -177,15 +179,57 @@ MEDICATIONS:
 - Recent medication changes
 - High-risk medications noted
 
-FUNCTIONAL STATUS & OASIS NEEDS:
-- Ambulation status (independent, walker, wheelchair, etc.)
-- ADL independence levels (bathing, dressing, toileting, etc.)
-- Fall risk factors
-- Cognitive status
-- Vision/hearing impairments
-- Skin integrity and wounds
-- Pain level and location
-- Bowel/bladder continence
+FUNCTIONAL STATUS & DETAILED OASIS ASSESSMENT:
+
+**CRITICAL: For each functional area, provide OASIS-compliant scoring (0-6 scale where applicable):**
+
+**Vision (M1200):**
+- 0 = Normal
+- 1 = Partially impaired
+- 2 = Severely impaired
+
+**ADL/IADL Assessment (M1800-M1870) - Use this scale:**
+- 0 = Able to perform independently
+- 1 = With use of assistive device
+- 2 = With minimal assistance from person
+- 3 = With moderate assistance from person
+- 4 = With substantial/maximal assistance from person
+- 5 = Dependent, does not participate
+- 6 = Unable to perform
+
+Assess each ADL:
+- M1800: Grooming (hair, nails, teeth)
+- M1810: Dressing upper body
+- M1820: Dressing lower body
+- M1830: Bathing
+- M1840: Toilet transferring
+- M1845: Toilet hygiene
+- M1850: Transferring (bed, chair, wheelchair)
+- M1860: Ambulation/locomotion
+- M1870: Feeding/eating
+
+**Cognitive Function (M1700):**
+- 0 = Alert/oriented, processes info
+- 1 = Memory deficit, decisions okay
+- 2 = Difficulty some decisions
+- 3 = Difficulty all decisions
+- 4 = Never/rarely makes decisions
+
+**Pain (M1242):**
+- 0 = No pain
+- 1 = Less often than daily
+- 2 = Daily, not constantly
+- 3 = All the time
+
+**Continence:**
+- Urinary (M1610): 0=continent to 5=catheter
+- Bowel (M1620): 0=continent to 5=incontinent
+
+**Wounds & Pressure Ulcers:**
+- Current pressure ulcers by stage
+- Stasis ulcers
+- Surgical wounds
+- Descriptions with measurements
 
 CLINICAL INFORMATION:
 - Recent vital signs
@@ -372,6 +416,44 @@ HANDWRITTEN NOTES HANDLING:
                 environmental_hazards: { type: "string" },
                 safety_equipment_needed: { type: "array", items: { type: "string" } },
                 high_risk_conditions: { type: "array", items: { type: "string" } }
+              }
+            },
+            oasis_assessment: {
+              type: "object",
+              properties: {
+                m1021_primary_diagnosis: { type: "string" },
+                m1023_other_diagnoses: { type: "array", items: { type: "string" } },
+                m1033_risk_hospitalization: { type: "string" },
+                m1200_vision: { type: "string" },
+                m1242_pain_frequency: { type: "string" },
+                m1306_pressure_ulcer_risk: { type: "string" },
+                m1307_oldest_stage2: { type: "string" },
+                m1311_current_pressure_ulcers: { type: "object" },
+                m1322_current_stasis_ulcers: { type: "string" },
+                m1324_surgical_wounds: { type: "string" },
+                m1610_urinary_incontinence: { type: "string" },
+                m1620_bowel_incontinence: { type: "string" },
+                m1700_cognitive_functioning: { type: "string" },
+                m1710_confusion_frequency: { type: "string" },
+                m1720_anxiety_frequency: { type: "string" },
+                m1730_depression_screening: { type: "string" },
+                m1740_cognitive_behavioral: { type: "string" },
+                m1800_grooming: { type: "string" },
+                m1810_dress_upper: { type: "string" },
+                m1820_dress_lower: { type: "string" },
+                m1830_bathing: { type: "string" },
+                m1840_toilet_transfer: { type: "string" },
+                m1845_toilet_hygiene: { type: "string" },
+                m1850_transferring: { type: "string" },
+                m1860_ambulation: { type: "string" },
+                m1870_feeding: { type: "string" },
+                m2001_drug_regimen_review: { type: "string" },
+                m2003_medication_followup: { type: "string" },
+                m2010_high_risk_drugs: { type: "array", items: { type: "string" } },
+                m2020_management_oral_meds: { type: "string" },
+                m2030_management_injectable_meds: { type: "string" },
+                confidence_notes: { type: "string" },
+                items_needing_verification: { type: "array", items: { type: "string" } }
               }
             },
             oasis_relevant_notes: {
