@@ -32,13 +32,19 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
 import FeedbackButton from "../components/feedback/FeedbackButton";
+import NotificationCenter from "../components/notifications/NotificationCenter";
 import { Toaster } from "sonner";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -124,11 +130,26 @@ export default function Layout({ children, currentPageName }) {
     enabled: !!currentUser?.email,
   });
 
+  // Fetch in-app notifications
+  const { data: inAppNotifications = [] } = useQuery({
+    queryKey: ['notifications', currentUser?.email],
+    queryFn: () => base44.entities.Notification.filter(
+      { user_email: currentUser?.email },
+      '-created_date',
+      50
+    ),
+    initialData: [],
+    refetchInterval: 30000,
+    enabled: !!currentUser?.email,
+  });
+
   const unreadMessageCount = messages.filter(m => 
     m.recipients?.includes(currentUser?.email) && !m.read_by?.includes(currentUser?.email)
   ).length;
 
-  const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length;
+  const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
+
+  const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
   const navCategories = [
     {
@@ -396,14 +417,29 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Desktop Notifications */}
             {!sidebarCollapsed && (
-            <Popover>
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="relative w-full justify-start mt-2"
+                onClick={() => setNotificationCenterOpen(true)}
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
+                {totalNotificationCount > 0 && (
+                  <span className="absolute right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                    {totalNotificationCount}
+                  </span>
+                )}
+              </Button>
+              <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative w-full justify-start mt-2">
-                  <Bell className="w-4 h-4 mr-2" />
-                  Notifications
-                  {totalNotificationCount > 0 && (
-                    <span className="absolute right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                      {totalNotificationCount}
+                <Button variant="ghost" size="sm" className="relative w-full justify-start">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Quick Links
+                  {(unreadMessageCount + activeAlerts.length + pendingTasks.length) > 0 && (
+                    <span className="absolute right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                      {unreadMessageCount + activeAlerts.length + pendingTasks.length}
                     </span>
                   )}
                 </Button>
@@ -457,8 +493,9 @@ export default function Layout({ children, currentPageName }) {
                   )}
                 </div>
               </PopoverContent>
-            </Popover>
-            )}
+              </Popover>
+              </>
+              )}
           {!sidebarCollapsed && (
             <div className="mt-2 space-y-1">
               <FeedbackButton />
@@ -497,13 +534,26 @@ export default function Layout({ children, currentPageName }) {
         </Link>
         <div className="flex items-center gap-2">
           {/* Mobile Notifications */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="relative text-white hover:bg-blue-700 h-12 w-12"
+            onClick={() => setNotificationCenterOpen(true)}
+          >
+            <Bell className="w-5 h-5" />
+            {totalNotificationCount > 0 && (
+              <span className="absolute top-2 right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                {totalNotificationCount}
+              </span>
+            )}
+          </Button>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="relative text-white hover:bg-blue-700 h-12 w-12">
-                <Bell className="w-5 h-5" />
-                {totalNotificationCount > 0 && (
-                  <span className="absolute top-2 right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                    {totalNotificationCount}
+                <Mail className="w-5 h-5" />
+                {(unreadMessageCount + activeAlerts.length + pendingTasks.length) > 0 && (
+                  <span className="absolute top-2 right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                    {unreadMessageCount + activeAlerts.length + pendingTasks.length}
                   </span>
                 )}
               </Button>
@@ -653,6 +703,16 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Offline Indicator */}
       <OfflineIndicator />
-    </div>
-  );
-}
+
+      {/* Notification Center Dialog */}
+      <Dialog open={notificationCenterOpen} onOpenChange={setNotificationCenterOpen}>
+        <DialogContent className="max-w-2xl p-0">
+          <NotificationCenter 
+            currentUser={currentUser} 
+            onClose={() => setNotificationCenterOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+      </div>
+      );
+      }

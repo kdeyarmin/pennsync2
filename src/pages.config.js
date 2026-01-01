@@ -67,9 +67,10 @@ import TemplateLibrary from './pages/TemplateLibrary';
 import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
+import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import UserGuides from './pages/UserGuides';
+import NotificationSettings from './pages/NotificationSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -143,9 +144,10 @@ export const PAGES = {
     "TrainingManagement": TrainingManagement,
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
+    "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "UserGuides": UserGuides,
+    "NotificationSettings": NotificationSettings,
 }
 
 export const pagesConfig = {
