@@ -847,6 +847,17 @@ Actions available:
                                 <Eye className="w-4 h-4 mr-1" />
                                 {referral.analysis_results?.intake_analysis ? 'View Analysis' : 'Process'}
                               </Button>
+                              {referral.patient_id && referral.extracted_data && (
+                                <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
+                                  <Button
+                                    size="sm"
+                                    className="bg-purple-600 hover:bg-purple-700 text-white min-h-[36px] text-xs w-full"
+                                  >
+                                    <Sparkles className="w-4 h-4 mr-1" />
+                                    Create Note
+                                  </Button>
+                                </Link>
+                              )}
                               {referral.analysis_results?.intake_analysis && (
                                 <div className="text-xs text-gray-600 space-y-0.5">
                                   {referral.analysis_results.intake_analysis.missing_critical_info?.high_priority?.length > 0 && (
