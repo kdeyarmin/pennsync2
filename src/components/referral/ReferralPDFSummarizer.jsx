@@ -25,6 +25,7 @@ import {
 import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
 import AIAdmissionDocumentationAssistant from "../clinical/AIAdmissionDocumentationAssistant";
 import AIAdmissionNoteGenerator from "./AIAdmissionNoteGenerator";
+import AICarePlanSuggestionEngine from "./AICarePlanSuggestionEngine";
 import {
   Accordion,
   AccordionContent,
@@ -537,6 +538,7 @@ HANDWRITTEN NOTES HANDLING:
 
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
+  const [oasisResults, setOasisResults] = useState(null);
 
   const generateAdmissionPacket = async () => {
     if (!extractedData) return;
@@ -1009,11 +1011,22 @@ HANDWRITTEN NOTES HANDLING:
                 autoAnalyze={true}
                 onApplySuggestion={(item) => {
                   console.log('Applied OASIS suggestion:', item);
-                  // You can add custom logic here to populate OASIS forms
+                  setOasisResults(item);
                 }}
               />
             </CardContent>
           </Card>
+
+          {/* AI Care Plan Suggestions */}
+          <AICarePlanSuggestionEngine
+            referralData={extractedData}
+            oasisData={oasisResults || extractedData.oasis_assessment}
+            patientId={patientId}
+            autoGenerate={true}
+            onCarePlansGenerated={(plans, summary) => {
+              console.log('Care plans generated:', plans, summary);
+            }}
+          />
         </div>
       )}
     </div>
