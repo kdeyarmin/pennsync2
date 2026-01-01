@@ -31,6 +31,7 @@ import {
   CheckSquare
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
 import FeedbackButton from "../components/feedback/FeedbackButton";
 import { Toaster } from "sonner";
