@@ -31,7 +31,8 @@ import {
   Layers,
   BookOpen,
   CheckCircle2,
-  Lightbulb
+  Lightbulb,
+  WifiOff
 } from "lucide-react";
 
 export default function FeaturesPage() {
@@ -53,6 +54,15 @@ export default function FeaturesPage() {
           impact: "critical",
           details: "Combines compliance checking and quality analysis into one streamlined interface. Identifies missing Medicare elements, vague language, weak flow, and generic descriptions all in one place",
           howToUse: "Type your rough note and watch AI suggestions appear automatically. Review compliance gaps and quality improvements in tabs, then click 'Fix All' to apply everything at once."
+        },
+        {
+          name: "Offline Documentation Mode",
+          icon: WifiOff,
+          description: "Document visits without internet connection and auto-sync when back online",
+          timeSaved: "Eliminates connectivity delays",
+          impact: "high",
+          details: "Works completely offline for patient visits, stores data locally, automatic sync when connection restored",
+          howToUse: "Navigate to Offline Mode, select patient, document visit offline. Data syncs automatically when you're back online."
         },
         {
           name: "AI-Powered Voice Dictation",
@@ -233,6 +243,40 @@ export default function FeaturesPage() {
       ]
     },
     {
+      category: "Workflow & Notifications",
+      icon: Sparkles,
+      color: "teal",
+      items: [
+        {
+          name: "Real-Time Notification Center",
+          icon: Bell,
+          description: "Centralized notification hub in header showing unread messages, active alerts, and pending tasks",
+          timeSaved: "5-10 min/day",
+          impact: "high",
+          details: "Live notifications with quick access to messages, patient alerts, and assigned tasks. Auto-refreshes every minute",
+          howToUse: "Click bell icon in header to view all notifications. Click any notification to navigate directly to relevant page."
+        },
+        {
+          name: "My Workflow Dashboard",
+          icon: Target,
+          description: "Personalized nurse workflow with today's visits, pending tasks, and priority alerts",
+          timeSaved: "10-15 min/day",
+          impact: "critical",
+          details: "Daily schedule, task list, patient alerts, training recommendations, all in one view",
+          howToUse: "Start your day at My Workflow page to see priorities. Check off tasks as you complete them."
+        },
+        {
+          name: "Smart Task Assignment",
+          icon: ClipboardList,
+          description: "AI automatically generates and assigns tasks based on documentation and patient needs",
+          timeSaved: "10-15 min/visit",
+          impact: "high",
+          details: "Extracts action items from notes, assigns due dates, routes to appropriate team members",
+          howToUse: "Tasks auto-generate after note enhancement. Review and assign in task management panel."
+        }
+      ]
+    },
+    {
       category: "Patient Alerts & Monitoring",
       icon: Bell,
       color: "orange",
@@ -271,6 +315,15 @@ export default function FeaturesPage() {
       icon: GraduationCap,
       color: "green",
       items: [
+        {
+          name: "AI Personalized Training Engine",
+          icon: Brain,
+          description: "Advanced AI analyzes your documentation patterns and recommends specific training to improve quality and compliance",
+          timeSaved: "Targeted improvement",
+          impact: "critical",
+          details: "Real-time deficit detection, personalized micro-lessons, scenario-based learning, competency tracking",
+          howToUse: "System automatically analyzes your notes and recommends training. Complete micro-lessons in My Workflow."
+        },
         {
           name: "Personalized Training Plans",
           icon: Target,

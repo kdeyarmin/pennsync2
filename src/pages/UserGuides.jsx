@@ -41,13 +41,17 @@ export default function UserGuides() {
       audience: 'All Users',
       topics: [
         'Dashboard & navigation',
+        'Notification center',
+        'My Workflow dashboard',
         'Patient management',
         'Documentation tools',
         'OASIS & care plans',
+        'Patient alerts & monitoring',
         'Quality & compliance',
-        'Communication',
-        'Training & analytics',
-        'Admin features'
+        'Communication & messaging',
+        'Training & personalized learning',
+        'Offline documentation mode',
+        'Admin features & analytics'
       ],
       featured: true
     },
@@ -208,6 +212,54 @@ export default function UserGuides() {
         'Action plans',
         'Predictive analytics',
         'Alert resolution'
+      ]
+    },
+    {
+      type: 'workflow_notifications',
+      title: 'Workflow & Notifications Guide',
+      description: 'Master your daily workflow with notifications, tasks, and priority management',
+      icon: FileText,
+      color: 'blue',
+      audience: 'Clinical Nurses',
+      topics: [
+        'My Workflow dashboard',
+        'Notification center',
+        'Task management',
+        'Priority alerts',
+        'Daily schedule',
+        'Quick actions'
+      ]
+    },
+    {
+      type: 'offline_mode',
+      title: 'Offline Documentation Guide',
+      description: 'Document patient visits without internet and sync when back online',
+      icon: FileText,
+      color: 'purple',
+      audience: 'Clinical Nurses',
+      topics: [
+        'Enabling offline mode',
+        'Patient data caching',
+        'Offline documentation',
+        'Auto-sync process',
+        'Conflict resolution',
+        'Troubleshooting'
+      ]
+    },
+    {
+      type: 'personalized_training',
+      title: 'AI Personalized Training Guide',
+      description: 'Improve documentation quality with AI-driven personalized learning',
+      icon: FileText,
+      color: 'green',
+      audience: 'Clinical Nurses',
+      topics: [
+        'Training recommendations',
+        'Skill gap analysis',
+        'Micro-learning modules',
+        'Practice scenarios',
+        'Performance tracking',
+        'Certification progress'
       ]
     }
   ];
