@@ -667,6 +667,14 @@ export default function PatientDetails() {
             </TabsList>
 
             <TabsContent value="analysis" className="space-y-6">
+              <ProactiveClinicalTaskGenerator
+                patientId={patient.id}
+                patientName={`${patient.first_name} ${patient.last_name}`}
+                onTasksCreated={() => {
+                  queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                }}
+                autoAnalyze={false}
+              />
               <AIPatientHistorySummary
                 patient={patient}
                 visits={visits}
