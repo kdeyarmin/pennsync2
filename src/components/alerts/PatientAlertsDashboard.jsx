@@ -74,10 +74,14 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
     }
   });
 
-  // Filter alerts to only favorited patients (unless viewing specific patient)
-  const alerts = patientId ? allAlerts : allAlerts.filter(alert => 
-    currentUser?.favorited_patients?.some(fav => fav.id === alert.patient_id)
-  );
+  // Filter alerts to only favorited patients (unless viewing specific patient or admin)
+  const alerts = React.useMemo(() => {
+    if (patientId || isAdmin) return allAlerts;
+    if (!currentUser?.favorited_patients) return [];
+    return allAlerts.filter(alert => 
+      currentUser.favorited_patients.some(fav => fav.id === alert.patient_id)
+    );
+  }, [allAlerts, patientId, currentUser, isAdmin]);
 
   // Fetch patients for lookup
   const { data: patients = [] } = useQuery({
@@ -90,6 +94,8 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   // Fetch clinical events for linking
   const { data: clinicalEvents = [] } = useQuery({
