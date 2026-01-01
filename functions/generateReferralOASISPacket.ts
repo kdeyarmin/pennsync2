@@ -331,15 +331,15 @@ Deno.serve(async (req) => {
       addKeyValue('High Risk Conditions', safety.high_risk_conditions.join(', '));
     }
 
-    // OASIS PRE-FILLED ITEMS
+    // COMPREHENSIVE OASIS ASSESSMENT
     doc.addPage();
     yPos = 20;
-    addSectionHeader('OASIS-E PRE-ASSESSMENT GUIDE', [5, 150, 105]);
+    addSectionHeader('COMPLETE OASIS-E ASSESSMENT', [5, 150, 105]);
     
     doc.setFontSize(10);
     doc.setTextColor(75, 85, 99);
     doc.setFont('helvetica', 'normal');
-    const oasisIntro = doc.splitTextToSize('Based on referral information, the following OASIS items can be pre-populated or verified during visit:', 175);
+    const oasisIntro = doc.splitTextToSize('AI-Generated OASIS assessment based on referral data. VERIFY ALL ITEMS during admission visit.', 175);
     oasisIntro.forEach(line => {
       doc.text(line, margin, yPos);
       yPos += 6;
@@ -347,7 +347,9 @@ Deno.serve(async (req) => {
     yPos += 6;
     doc.setTextColor(0, 0, 0);
 
-    // M1021 - Primary Diagnosis
+    const oasis = referralData.oasis_assessment || {};
+
+    // M1021-M1029 - DIAGNOSES
     checkPageBreak(24);
     doc.setFillColor(254, 226, 226);
     doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
@@ -357,15 +359,15 @@ Deno.serve(async (req) => {
     yPos += 10;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    addKeyValue('M1021 - Primary Diagnosis', dx.primary_diagnosis);
+    addKeyValue('M1021 - Primary Diagnosis', oasis.m1021_primary_diagnosis || dx.primary_diagnosis);
     addKeyValue('M1023 - Primary Diagnosis ICD-10', dx.primary_icd10 || 'Verify code');
-    if (dx.secondary_diagnoses?.length > 0) {
+    if ((oasis.m1023_other_diagnoses || dx.secondary_diagnoses)?.length > 0) {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('M1024-M1029 - Other Diagnoses:', margin, yPos);
       yPos += 6;
       doc.setFont('helvetica', 'normal');
-      dx.secondary_diagnoses.slice(0, 5).forEach((d, i) => {
+      (oasis.m1023_other_diagnoses || dx.secondary_diagnoses).slice(0, 5).forEach((d, i) => {
         checkPageBreak();
         const dxLines = doc.splitTextToSize(`${i + 2}. ${d}`, 172);
         dxLines.forEach(line => {
@@ -377,7 +379,7 @@ Deno.serve(async (req) => {
     }
     yPos += 5;
 
-    // M1030 - Therapies
+    // M1030-M1032 - THERAPIES
     checkPageBreak(20);
     doc.setFillColor(254, 249, 195);
     doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
@@ -387,16 +389,12 @@ Deno.serve(async (req) => {
     yPos += 10;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text('M1030 - Therapies Received at Home:', margin, yPos);
+    doc.text('M1030 - Therapies Received at Home: [ ] Assess during visit', margin, yPos);
     yPos += 6;
     doc.text('[ ] IV/Infusion  [ ] Parenteral nutrition  [ ] Enteral nutrition  [ ] None', margin + 3, yPos);
-    yPos += 6;
-    doc.setTextColor(185, 28, 28);
-    doc.text('NOTE: Assess at visit based on current treatments', margin + 3, yPos);
     yPos += 8;
-    doc.setTextColor(0, 0, 0);
 
-    // M1033 - Risk Factors
+    // M1033 - RISK FOR HOSPITALIZATION
     checkPageBreak(30);
     doc.setFillColor(254, 243, 199);
     doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
@@ -406,67 +404,175 @@ Deno.serve(async (req) => {
     yPos += 10;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text('[ ] History of falls: ' + (func.fall_risk ? `Yes - ${func.fall_risk}` : 'Assess at visit'), margin, yPos);
-    yPos += 6;
-    doc.text('[ ] Unintentional weight loss: Assess at visit', margin, yPos);
-    yPos += 6;
-    doc.text('[ ] Multiple hospitalizations: ' + (dx.recent_hospitalizations ? 'Yes - see history' : 'Assess'), margin, yPos);
-    yPos += 6;
-    doc.text('[ ] Multiple ED visits: Assess at visit', margin, yPos);
-    yPos += 6;
-    doc.text('[ ] Decline in mental/emotional/behavioral status: Assess', margin, yPos);
-    yPos += 6;
-    doc.text('[ ] 5+ medications: ' + (meds.length >= 5 ? `Yes (${meds.length} meds)` : `No (${meds.length} meds)`), margin, yPos);
+    const riskText = oasis.m1033_risk_hospitalization || 'Assess during visit';
+    const riskLines = doc.splitTextToSize(riskText, 175);
+    riskLines.forEach(line => {
+      checkPageBreak();
+      doc.text(line, margin, yPos);
+      yPos += 5.5;
+    });
     yPos += 8;
 
-    // M1400 - Living Arrangements
-    checkPageBreak(22);
+    // COMPREHENSIVE ADL ASSESSMENT - M1800-M1870
+    checkPageBreak(100);
     doc.setFillColor(219, 234, 254);
     doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('M1400-M1870: LIVING ARRANGEMENTS & ADLs', margin, yPos);
+    doc.text('M1800-M1870: ADL/IADL ASSESSMENT', margin, yPos);
     yPos += 10;
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(75, 85, 99);
+    doc.text('0=Independent | 1=Device | 2=Min Assist | 3=Mod Assist | 4=Max Assist | 5=Dependent | 6=Unable', margin, yPos);
+    yPos += 8;
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
-    addKeyValue('M1400 - Lives With', admission.current_living_situation || '[ ] Assess at visit');
-    addKeyValue('M1810 - Dress Upper Body', func.adl_status || '[ ] Assess');
-    addKeyValue('M1820 - Dress Lower Body', func.adl_status || '[ ] Assess');
-    addKeyValue('M1830 - Bathing', '[ ] Assess');
-    addKeyValue('M1840 - Toilet Transfer', '[ ] Assess');
-    addKeyValue('M1845 - Toileting Hygiene', '[ ] Assess');
+    
+    addKeyValue('M1800 - Grooming', oasis.m1800_grooming || '[ ] Assess during visit');
+    addKeyValue('M1810 - Dress Upper Body', oasis.m1810_dress_upper || '[ ] Assess');
+    addKeyValue('M1820 - Dress Lower Body', oasis.m1820_dress_lower || '[ ] Assess');
+    addKeyValue('M1830 - Bathing', oasis.m1830_bathing || '[ ] Assess');
+    addKeyValue('M1840 - Toilet Transfer', oasis.m1840_toilet_transfer || '[ ] Assess');
+    addKeyValue('M1845 - Toilet Hygiene', oasis.m1845_toilet_hygiene || '[ ] Assess');
+    addKeyValue('M1850 - Transferring', oasis.m1850_transferring || '[ ] Assess');
+    addKeyValue('M1860 - Ambulation', oasis.m1860_ambulation || func.ambulation || '[ ] Assess');
+    addKeyValue('M1870 - Feeding/Eating', oasis.m1870_feeding || '[ ] Assess');
     yPos += 5;
 
-    // M1850 - Ambulation
-    checkPageBreak(18);
-    doc.setFillColor(254, 226, 226);
+    // COGNITIVE & BEHAVIORAL
+    checkPageBreak(35);
+    doc.setFillColor(254, 243, 199);
     doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('M1850-M1860: TRANSFERRING & AMBULATION', margin, yPos);
+    doc.text('M1700-M1740: COGNITIVE/BEHAVIORAL/PSYCHIATRIC', margin, yPos);
     yPos += 10;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    addKeyValue('M1850 - Transferring', '[ ] Assess');
-    addKeyValue('M1860 - Ambulation', func.ambulation || '[ ] Assess');
+    addKeyValue('M1700 - Cognitive Functioning', oasis.m1700_cognitive_functioning || '[ ] Assess');
+    addKeyValue('M1710 - Confusion Frequency', oasis.m1710_confusion_frequency || '[ ] Assess');
+    addKeyValue('M1720 - Anxiety Frequency', oasis.m1720_anxiety_frequency || '[ ] Assess');
+    addKeyValue('M1730 - Depression Screening', oasis.m1730_depression_screening || '[ ] PHQ-2 required');
+    addKeyValue('M1740 - Cognitive/Behavioral Issues', oasis.m1740_cognitive_behavioral || '[ ] Assess');
     yPos += 5;
 
-    // M1870 - Feeding
-    checkPageBreak(16);
+    // SENSORY STATUS
+    checkPageBreak(20);
     doc.setFillColor(240, 253, 244);
     doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('M1870: FEEDING OR EATING', margin, yPos);
+    doc.text('M1200: VISION', margin, yPos);
     yPos += 10;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text('[ ] 0 - Able to independently feed self', margin, yPos);
+    addKeyValue('M1200 - Vision Status', oasis.m1200_vision || func.vision || '[ ] Assess');
     yPos += 5;
-    doc.text('[ ] 1 - Requires setup', margin, yPos);
+
+    // PAIN
+    checkPageBreak(20);
+    doc.setFillColor(254, 226, 226);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('M1242: PAIN FREQUENCY', margin, yPos);
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    addKeyValue('M1242 - Frequency of Pain', oasis.m1242_pain_frequency || func.pain || '[ ] Assess');
     yPos += 5;
-    doc.text('[ ] Assess level during visit', margin, yPos);
-    yPos += 8;
+
+    // PRESSURE ULCERS & WOUNDS
+    checkPageBreak(40);
+    doc.setFillColor(254, 215, 215);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('M1306-M1324: SKIN & WOUNDS', margin, yPos);
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    addKeyValue('M1306 - Pressure Ulcer Risk', oasis.m1306_pressure_ulcer_risk || '[ ] Assess');
+    addKeyValue('M1307 - Oldest Stage 2 Pressure Ulcer', oasis.m1307_oldest_stage2 || '[ ] No stage 2');
+    addKeyValue('M1311 - Current Pressure Ulcers', oasis.m1311_current_pressure_ulcers ? JSON.stringify(oasis.m1311_current_pressure_ulcers) : '[ ] Assess');
+    addKeyValue('M1322 - Stasis Ulcers', oasis.m1322_current_stasis_ulcers || '[ ] Assess');
+    addKeyValue('M1324 - Surgical Wounds', oasis.m1324_surgical_wounds || '[ ] Assess');
+    yPos += 5;
+
+    // ELIMINATION
+    checkPageBreak(25);
+    doc.setFillColor(240, 249, 255);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('M1610-M1620: ELIMINATION STATUS', margin, yPos);
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    addKeyValue('M1610 - Urinary Incontinence', oasis.m1610_urinary_incontinence || '[ ] Assess');
+    addKeyValue('M1620 - Bowel Incontinence', oasis.m1620_bowel_incontinence || '[ ] Assess');
+    yPos += 5;
+
+    // MEDICATIONS - M2001-M2030
+    checkPageBreak(40);
+    doc.setFillColor(220, 252, 231);
+    doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('M2001-M2030: MEDICATION MANAGEMENT', margin, yPos);
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    addKeyValue('M2001 - Drug Regimen Review', oasis.m2001_drug_regimen_review || '[ ] Complete at visit');
+    addKeyValue('M2003 - Medication Follow-up', oasis.m2003_medication_followup || '[ ] Assess');
+    if (oasis.m2010_high_risk_drugs?.length > 0) {
+      addKeyValue('M2010 - High-Risk Drugs', oasis.m2010_high_risk_drugs.join(', '));
+    }
+    addKeyValue('M2020 - Oral Medication Mgmt', oasis.m2020_management_oral_meds || '[ ] Assess');
+    addKeyValue('M2030 - Injectable Medication Mgmt', oasis.m2030_management_injectable_meds || '[ ] Assess');
+    yPos += 5;
+
+    // AI CONFIDENCE & VERIFICATION NOTES
+    if (oasis.confidence_notes || oasis.items_needing_verification?.length > 0) {
+      checkPageBreak(30);
+      doc.setFillColor(255, 245, 230);
+      doc.rect(margin - 2, yPos - 3, 180, 9, 'F');
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(180, 83, 9);
+      doc.text('⚠️ AI CONFIDENCE & VERIFICATION NOTES', margin, yPos);
+      yPos += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      
+      if (oasis.confidence_notes) {
+        const confLines = doc.splitTextToSize(oasis.confidence_notes, 175);
+        confLines.forEach(line => {
+          checkPageBreak();
+          doc.text(line, margin, yPos);
+          yPos += 5.5;
+        });
+        yPos += 3;
+      }
+      
+      if (oasis.items_needing_verification?.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Items Requiring Clinical Verification:', margin, yPos);
+        yPos += 6;
+        doc.setFont('helvetica', 'normal');
+        oasis.items_needing_verification.forEach(item => {
+          checkPageBreak();
+          doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
+          const itemLines = doc.splitTextToSize(item, 172);
+          itemLines.forEach(line => {
+            doc.text(line, margin + 7, yPos);
+            yPos += 5.5;
+          });
+        });
+      }
+      yPos += 8;
+    }
 
     // IMPORTANT NOTES SECTION
     doc.addPage();
