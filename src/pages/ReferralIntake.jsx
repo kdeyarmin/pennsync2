@@ -76,6 +76,8 @@ export default function ReferralIntake() {
   });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [extractedFormData, setExtractedFormData] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -105,14 +107,61 @@ export default function ReferralIntake() {
     }
 
     setIsUploading(true);
+    setIsAnalyzing(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFile(file_url);
+      
+      // Immediately extract data from document to auto-populate form
+      const extracted = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this referral document and extract key information for form auto-population.
+        
+Extract:
+- Patient full name
+- Date of birth
+- Referral source (hospital, physician, facility name)
+- Referral date
+- Primary diagnosis
+- Urgency indicators (urgent, high priority, stat, emergency, etc.)
+
+Return structured data for form population.`,
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            patient_name: { type: "string" },
+            patient_dob: { type: "string" },
+            referral_source: { type: "string" },
+            referral_date: { type: "string" },
+            primary_diagnosis: { type: "string" },
+            urgency_level: { 
+              type: "string",
+              enum: ["urgent", "high", "normal", "low"]
+            },
+            confidence_score: { type: "number" }
+          }
+        }
+      });
+      
+      setExtractedFormData(extracted);
+      
+      // Auto-populate form with extracted data
+      if (extracted.patient_name) {
+        setNewReferral(prev => ({
+          ...prev,
+          patient_name: extracted.patient_name || prev.patient_name,
+          referral_source: extracted.referral_source || prev.referral_source,
+          referral_date: extracted.referral_date || prev.referral_date,
+          priority: extracted.urgency_level || prev.priority,
+          diagnosis: extracted.primary_diagnosis
+        }));
+      }
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload file. Please try again.');
     }
     setIsUploading(false);
+    setIsAnalyzing(false);
   };
 
   const handleCreateReferral = async () => {
@@ -143,6 +192,7 @@ export default function ReferralIntake() {
         estimated_start_date: ""
       });
       setUploadedFile(null);
+      setExtractedFormData(null);
 
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
@@ -768,7 +818,12 @@ Actions available:
                         )}
                         {referral.patient_dob && (
                           <p className="text-xs text-gray-500">
-                            DOB: {format(new Date(referral.patient_dob), 'MM/dd/yyyy')}
+                            DOB: {referral.patient_dob ? format(new Date(referral.patient_dob), 'MM/dd/yyyy') : 'N/A'}
+                          </p>
+                        )}
+                        {referral.extracted_data?.demographics?.referring_physician && (
+                          <p className="text-xs text-gray-500">
+                            Dr. {referral.extracted_data.demographics.referring_physician}
                           </p>
                         )}
                         {referral.patient_id && !referral.requires_manual_review && (
@@ -779,6 +834,11 @@ Actions available:
                         )}
                         {referral.requires_manual_review && (
                           <Badge className="bg-yellow-600 text-xs mt-1">Review Match</Badge>
+                        )}
+                        {referral.extracted_data?.diagnoses?.primary_diagnosis && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs mt-1">
+                            {referral.extracted_data.diagnoses.primary_diagnosis}
+                          </Badge>
                         )}
                         {referral.analysis_results?.intake_analysis?.category?.primary && (
                           <Badge className="bg-purple-100 text-purple-700 text-xs mt-1">
@@ -897,46 +957,82 @@ Actions available:
           <div className="space-y-4">
             <Alert className="bg-blue-50 border-blue-200">
               <AlertDescription className="text-blue-900 text-sm">
-                Upload a referral document (PDF, fax, or image) and provide basic information. 
-                The system will automatically process and extract data using AI.
+                Upload a referral document (PDF, fax, or image). AI will automatically extract patient information and populate the form fields below for your review.
               </AlertDescription>
             </Alert>
 
+            {extractedFormData && (
+              <Alert className="bg-green-50 border-green-300">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <AlertDescription className="text-green-900 text-sm">
+                  <strong>AI Extracted Data:</strong> Form fields have been auto-populated. Please review and edit if needed before submitting.
+                  {extractedFormData.confidence_score && (
+                    <span className="ml-2 text-xs">
+                      (Confidence: {Math.round(extractedFormData.confidence_score)}%)
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Patient Name (if known)</Label>
+                <Label className="flex items-center gap-2">
+                  Patient Name (if known)
+                  {extractedFormData?.patient_name && (
+                    <Badge className="bg-green-100 text-green-700 text-xs">AI Extracted</Badge>
+                  )}
+                </Label>
                 <Input
                   placeholder="First Last"
                   value={newReferral.patient_name}
                   onChange={(e) => setNewReferral({ ...newReferral, patient_name: e.target.value })}
+                  className={extractedFormData?.patient_name ? "border-green-300 bg-green-50" : ""}
                 />
               </div>
               <div>
-                <Label>Referral Source</Label>
+                <Label className="flex items-center gap-2">
+                  Referral Source
+                  {extractedFormData?.referral_source && (
+                    <Badge className="bg-green-100 text-green-700 text-xs">AI Extracted</Badge>
+                  )}
+                </Label>
                 <Input
                   placeholder="Hospital, physician, facility"
                   value={newReferral.referral_source}
                   onChange={(e) => setNewReferral({ ...newReferral, referral_source: e.target.value })}
+                  className={extractedFormData?.referral_source ? "border-green-300 bg-green-50" : ""}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Referral Date</Label>
+                <Label className="flex items-center gap-2">
+                  Referral Date
+                  {extractedFormData?.referral_date && (
+                    <Badge className="bg-green-100 text-green-700 text-xs">AI Extracted</Badge>
+                  )}
+                </Label>
                 <Input
                   type="date"
                   value={newReferral.referral_date}
                   onChange={(e) => setNewReferral({ ...newReferral, referral_date: e.target.value })}
+                  className={extractedFormData?.referral_date ? "border-green-300 bg-green-50" : ""}
                 />
               </div>
               <div>
-                <Label>Priority</Label>
+                <Label className="flex items-center gap-2">
+                  Priority
+                  {extractedFormData?.urgency_level && (
+                    <Badge className="bg-green-100 text-green-700 text-xs">AI Suggested</Badge>
+                  )}
+                </Label>
                 <Select
                   value={newReferral.priority}
                   onValueChange={(value) => setNewReferral({ ...newReferral, priority: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={extractedFormData?.urgency_level ? "border-green-300 bg-green-50" : ""}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -978,10 +1074,16 @@ Actions available:
                   disabled={isUploading}
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  {uploadedFile ? (
+                  {isAnalyzing ? (
+                    <div className="space-y-2">
+                      <Sparkles className="w-12 h-12 text-blue-500 mx-auto animate-pulse" />
+                      <p className="text-blue-600 font-medium">Analyzing document with AI...</p>
+                      <p className="text-xs text-gray-500">Extracting patient information</p>
+                    </div>
+                  ) : uploadedFile ? (
                     <div className="flex items-center justify-center gap-2 text-green-600">
                       <CheckCircle2 className="w-6 h-6" />
-                      <span>File uploaded successfully</span>
+                      <span>File uploaded & analyzed successfully</span>
                     </div>
                   ) : (
                     <div className="space-y-2">
