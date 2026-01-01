@@ -11,13 +11,13 @@ import { format } from "date-fns";
 
 export default function NursePerformanceReport({ dateRange }) {
   const { data: visits = [] } = useQuery({
-    queryKey: ['allVisits'],
+    queryKey: ['allVisits', dateRange.start, dateRange.end],
     queryFn: () => base44.entities.Visit.list(),
     initialData: [],
   });
 
   const { data: complianceAudits = [] } = useQuery({
-    queryKey: ['allComplianceAudits'],
+    queryKey: ['allComplianceAudits', dateRange.start, dateRange.end],
     queryFn: () => base44.entities.ComplianceAudit.list(),
     initialData: [],
   });
