@@ -33,22 +33,59 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
         </AlertDescription>
       </Alert>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Analysis Summary</CardTitle>
+      <Card className="border-2 border-blue-300">
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-blue-600" />
+            AI Match Analysis
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Confidence Level:</span>
-              <Badge className={getConfidenceColor(matchAnalysis.confidence_level)}>
-                {matchAnalysis.confidence_level} ({Math.round(matchAnalysis.confidence_score)}%)
-              </Badge>
+        <CardContent className="pt-4">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs font-medium text-gray-600">Confidence Level</span>
+                <div className="mt-1">
+                  <Badge className={getConfidenceColor(matchAnalysis.confidence_level) + " text-sm"}>
+                    {matchAnalysis.confidence_level.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-gray-600">Confidence Score</span>
+                <div className="mt-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          matchAnalysis.confidence_score >= 80 ? "bg-green-500" :
+                          matchAnalysis.confidence_score >= 60 ? "bg-yellow-500" :
+                          "bg-orange-500"
+                        }`}
+                        style={{ width: `${matchAnalysis.confidence_score}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-bold">{Math.round(matchAnalysis.confidence_score)}%</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <span className="text-sm font-medium">Recommendation:</span>
-              <p className="text-sm text-gray-700 mt-1">{matchAnalysis.reasoning}</p>
+            
+            <div className="pt-3 border-t">
+              <span className="text-sm font-medium text-gray-900">AI Reasoning:</span>
+              <p className="text-sm text-gray-700 mt-1 bg-gray-50 p-3 rounded">{matchAnalysis.reasoning}</p>
             </div>
+
+            {matchAnalysis.match_factors && matchAnalysis.match_factors.length > 0 && (
+              <div>
+                <span className="text-sm font-medium text-green-700">Supporting Evidence:</span>
+                <ul className="list-disc list-inside mt-1 text-sm text-gray-700 space-y-1">
+                  {matchAnalysis.match_factors.map((factor, i) => (
+                    <li key={i} className="text-green-600">{factor}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -72,22 +109,41 @@ export default function PatientMatchReview({ referral, onConfirmMatch, onCreateN
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <User className="w-4 h-4 text-gray-500" />
-                      <span className="font-medium">Match Option {index + 1}</span>
-                      <Badge variant="outline">
-                        {Math.round(match.confidence_score)}% confidence
+                      <span className="font-medium">{match.patient_name || `Match Option ${index + 1}`}</span>
+                      <Badge 
+                        variant="outline"
+                        className={
+                          match.confidence_score >= 80 ? "bg-green-100 text-green-700 border-green-300" :
+                          match.confidence_score >= 60 ? "bg-yellow-100 text-yellow-700 border-yellow-300" :
+                          "bg-orange-100 text-orange-700 border-orange-300"
+                        }
+                      >
+                        {Math.round(match.confidence_score)}% match
                       </Badge>
                     </div>
                     
-                    <div className="text-sm text-gray-700 space-y-1">
-                      <p><strong>Patient ID:</strong> {match.patient_id}</p>
-                      <div className="mt-2">
-                        <strong>Supporting Factors:</strong>
-                        <ul className="list-disc list-inside mt-1 text-xs space-y-1">
+                    <div className="text-sm text-gray-700 space-y-2">
+                      <p className="text-xs text-gray-500"><strong>Patient ID:</strong> {match.patient_id}</p>
+                      
+                      <div>
+                        <strong className="text-green-700">✓ Matching Factors:</strong>
+                        <ul className="list-disc list-inside mt-1 text-xs space-y-1 text-gray-600">
                           {match.reasons?.map((reason, i) => (
-                            <li key={i}>{reason}</li>
+                            <li key={i} className="text-green-700">{reason}</li>
                           ))}
                         </ul>
                       </div>
+                      
+                      {match.discrepancies && match.discrepancies.length > 0 && (
+                        <div className="mt-2 p-2 bg-orange-50 rounded border border-orange-200">
+                          <strong className="text-orange-700 text-xs">⚠️ Discrepancies:</strong>
+                          <ul className="list-disc list-inside mt-1 text-xs space-y-1 text-orange-600">
+                            {match.discrepancies.map((disc, i) => (
+                              <li key={i}>{disc}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
