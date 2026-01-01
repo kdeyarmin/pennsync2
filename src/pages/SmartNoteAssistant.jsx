@@ -111,6 +111,7 @@ import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinic
 import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
 import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
+import AdmissionNotePrePopulator from "../components/smartNote/AdmissionNotePrePopulator";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -992,8 +993,21 @@ export default function SmartNoteAssistant() {
             </Card>
           )}
 
+          {/* AI Admission Note Pre-Populator */}
+          {referralData && selectedPatientId && visitType === 'admission' && !roughNote && !enhancedNote && (
+            <AdmissionNotePrePopulator
+              referralData={referralData}
+              intakeAnalysis={referralIntakeAnalysis}
+              patientData={selectedPatient}
+              onNoteGenerated={(note) => {
+                setRoughNote(note);
+              }}
+              autoGenerate={true}
+            />
+          )}
+
           {/* Referral-Based Documentation Assistant */}
-          {referralData && selectedPatientId && visitType === 'admission' && !enhancedNote && (
+          {referralData && selectedPatientId && visitType === 'admission' && !enhancedNote && roughNote && (
             <>
               <ReferralBasedDocumentationAssistant
                 referralData={referralData}
