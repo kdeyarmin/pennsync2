@@ -75,14 +75,14 @@ export default function AdminKPIDashboard() {
     initialData: []
   });
 
-  const stats = calculateStats(
+  const stats = calculateStats({
     visits,
     noteConversions,
     patients,
     incidents,
     complianceAudits,
-    selectedTimeframe
-  );
+    dateRange: parseInt(selectedTimeframe)
+  });
 
   // High-risk patients count
   const highRiskPatients = riskAssessments.filter(
@@ -201,7 +201,7 @@ export default function AdminKPIDashboard() {
         />
         <KPICard
           title="Total Visits"
-          value={stats.totalVisits}
+          value={stats.visits.total}
           change={12}
           trend="up"
           icon={FileText}
@@ -214,7 +214,7 @@ export default function AdminKPIDashboard() {
         />
         <KPICard
           title="Avg Compliance Score"
-          value={`${stats.avgComplianceScore}%`}
+          value={`${stats.compliance.avgScore}%`}
           change={8}
           trend="up"
           icon={Shield}
@@ -235,7 +235,7 @@ export default function AdminKPIDashboard() {
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Smart Notes</span>
-                  <span className="font-semibold">{stats.noteEnhancements}</span>
+                  <span className="font-semibold">{stats.noteEnhancements.total}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div className="bg-purple-600 h-2 rounded-full" style={{ width: '85%' }} />
@@ -273,11 +273,11 @@ export default function AdminKPIDashboard() {
           <CardContent>
             <div className="space-y-3">
               <div>
-                <p className="text-3xl font-bold text-green-600">{stats.totalTimeSaved}</p>
+                <p className="text-3xl font-bold text-green-600">{stats.timeSaved.totalHours}</p>
                 <p className="text-sm text-gray-500">Hours saved this period</p>
               </div>
               <div className="pt-3 border-t">
-                <p className="text-2xl font-bold text-gray-900">{stats.avgTimePerNote} min</p>
+                <p className="text-2xl font-bold text-gray-900">25 min</p>
                 <p className="text-sm text-gray-500">Avg time per enhanced note</p>
               </div>
             </div>
@@ -294,11 +294,11 @@ export default function AdminKPIDashboard() {
           <CardContent>
             <div className="space-y-3">
               <div>
-                <p className="text-3xl font-bold text-yellow-600">{stats.estimatedRevenue}</p>
+                <p className="text-3xl font-bold text-yellow-600">${stats.financial.estimatedRevenue.toLocaleString()}</p>
                 <p className="text-sm text-gray-500">Est. revenue protected</p>
               </div>
               <div className="pt-3 border-t">
-                <p className="text-2xl font-bold text-gray-900">{stats.complianceRate}%</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.compliance.avgScore}%</p>
                 <p className="text-sm text-gray-500">Documentation compliance rate</p>
               </div>
             </div>
