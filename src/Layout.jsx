@@ -530,7 +530,7 @@ export default function Layout({ children, currentPageName }) {
             alt="Penn Sync Logo" 
             className="w-8 h-8 rounded-lg"
           />
-          <span className="font-bold text-lg text-white">Penn Sync</span>
+          <span className="font-bold text-lg text-white drop-shadow-md">Penn Sync</span>
         </Link>
         <div className="flex items-center gap-2">
           {/* Mobile Notifications */}

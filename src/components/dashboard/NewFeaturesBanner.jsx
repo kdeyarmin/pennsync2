@@ -28,8 +28,8 @@ export default function NewFeaturesBanner() {
   return (
     <Card className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-none shadow-xl mb-6">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-white">
+          <Sparkles className="w-5 h-5 text-white" />
           New Features Available! 🎉
         </CardTitle>
       </CardHeader>
@@ -38,19 +38,19 @@ export default function NewFeaturesBanner() {
           {features.map((feature) => {
             const Icon = iconMap[feature.icon] || Sparkles;
             const content = (
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white/20 rounded-full p-2">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg mb-1">{feature.title}</h4>
-                    <p className="text-white/90 text-sm">{feature.description}</p>
-                  </div>
-                  {feature.link && (
-                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
-                  )}
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 hover:bg-white/30 transition-all">
+              <div className="flex items-start gap-3">
+                <div className="bg-white/30 rounded-full p-2">
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-lg mb-1 text-white">{feature.title}</h4>
+                  <p className="text-white text-sm">{feature.description}</p>
+                </div>
+                {feature.link && (
+                  <ChevronRight className="w-5 h-5 flex-shrink-0 text-white" />
+                )}
+              </div>
               </div>
             );
 

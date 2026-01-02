@@ -182,10 +182,10 @@ export default function Dashboard() {
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
           <div className="relative z-10">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
               {getGreeting()}, {fullName}! 👋
             </h1>
-            <p className="text-white/80 text-xs sm:text-sm md:text-base">
+            <p className="text-white text-xs sm:text-sm md:text-base drop-shadow-md">
               {isValid(new Date()) ? formatEastern(new Date(), 'EEEE, MMMM d, yyyy').replace(' ET', '') : new Date().toLocaleDateString()}
             </p>
           </div>
