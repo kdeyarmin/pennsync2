@@ -71,7 +71,7 @@ export default function AdminKPIDashboard() {
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['noteConversions'],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date', 500),
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
     initialData: []
   });
 

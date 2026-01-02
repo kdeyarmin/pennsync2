@@ -89,7 +89,7 @@ export default function Dashboard() {
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['nurseNoteConversions', currentUser?.email],
-    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser?.email }),
+    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser?.email }, '-created_date', 10000),
     enabled: !!currentUser?.email,
     initialData: [],
     staleTime: 300000,

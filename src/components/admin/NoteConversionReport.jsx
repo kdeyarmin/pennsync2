@@ -48,7 +48,7 @@ export default function NoteEnhancementReport() {
 
   const { data: enhancements = [], isLoading } = useQuery({
     queryKey: ['noteConversions', timeRange],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
   });
 
   // Filter by time range
