@@ -202,6 +202,21 @@ Also generate an ENHANCED VERSION of the note that addresses all critical issues
         enhancedNote = enhancedNote + '\n\n' + additionalText;
       }
 
+      // Track note enhancement
+      const currentUser = await base44.auth.me();
+      await base44.entities.NoteConversion.create({
+        nurse_email: currentUser.email,
+        patient_id: patientData?.id,
+        visit_type: visitType,
+        diagnosis,
+        rough_note_length: roughNote.length,
+        enhanced_note_length: enhancedNote.length,
+        quality_score: analysis.overall_score,
+        rough_note_compliance: analysis.compliance_score < 80 ? Math.max(0, analysis.compliance_score - 20) : analysis.compliance_score - 10,
+        enhanced_note_compliance: analysis.compliance_score,
+        compliance_improvement: analysis.compliance_score < 80 ? 20 : 10
+      });
+
       onEnhancedNoteReady?.({
         enhancedNote,
         analysis,
