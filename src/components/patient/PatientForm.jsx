@@ -11,6 +11,7 @@ import { X, Save, AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { isValidEmail, isValidPhone, sanitizeObject, handleSecureError, logSecurityEvent } from "../utils/security";
 import { validatePatient, formatPhoneNumber, SEVERITY } from "../utils/patientValidation";
 import ValidationOverrideDialog from "./ValidationOverrideDialog";
+import OCRDocumentExtractor from "./OCRDocumentExtractor";
 
 export default function PatientForm({ patient, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
@@ -33,6 +34,18 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   const [overriddenWarnings, setOverriddenWarnings] = useState({});
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [currentWarning, setCurrentWarning] = useState(null);
+
+  const handleOCRDataExtracted = (extractedData) => {
+    setFormData(prev => ({
+      ...prev,
+      ...extractedData,
+      secondary_diagnoses: extractedData.secondary_diagnoses || prev.secondary_diagnoses || []
+    }));
+    
+    // Trigger validation on extracted data
+    const errors = validatePatient({ ...formData, ...extractedData });
+    setValidationErrors(errors);
+  };
 
   useEffect(() => {
     if (patient) {
@@ -168,6 +181,11 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="p-6 space-y-4">
+            {/* OCR Document Extractor - Only show for new patients */}
+            {!patient && (
+              <OCRDocumentExtractor onDataExtracted={handleOCRDataExtracted} />
+            )}
+            
             {/* Validation Summary */}
             {errorMessages.length > 0 && (
               <Alert variant="destructive">
