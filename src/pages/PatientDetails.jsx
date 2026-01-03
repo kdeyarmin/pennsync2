@@ -376,6 +376,20 @@ export default function PatientDetails() {
           </TabsTrigger>
         </TabsList>
 
+        {/* Health History Tab */}
+        <TabsContent value="health-history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-gray-900">Health History & Medications</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <HealthHistorySection patient={patient} />
+              <div className="border-t border-gray-200 my-6" />
+              <MedicationManagementSection patient={patient} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
