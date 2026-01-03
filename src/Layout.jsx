@@ -268,10 +268,9 @@ export default function Layout({ children, currentPageName }) {
             </CardContent>
           </Card>
         </div>
-        </div>
-        </>
-        );
-        }
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-blue-100 flex">
@@ -589,6 +588,7 @@ export default function Layout({ children, currentPageName }) {
           />
         </DialogContent>
       </Dialog>
-      </div>
-      );
-      }
+    </div>
+    </>
+  );
+}
