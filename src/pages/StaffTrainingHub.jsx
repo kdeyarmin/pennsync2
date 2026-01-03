@@ -287,7 +287,7 @@ export default function StaffTrainingHub() {
 
           {/* Training Modules Tab */}
           <TabsContent value="modules">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {trainingModules.map((module) => {
                 const userCompletion = completions.find(c => c.training_module_id === module.id);
                 const isCompleted = userCompletion?.status === 'completed';
@@ -468,16 +468,16 @@ export default function StaffTrainingHub() {
 
         {/* Overview Tab */}
         <TabsContent value="overview">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Learning Progress */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Award className="w-4 h-4 text-yellow-500" />
-                  Your Learning Progress
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 flex-shrink-0" />
+                  <span className="truncate">Your Learning Progress</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
                 {['Documentation', 'Compliance', 'Communication', 'Safety'].map((area) => {
                   const areaProgress = trainingProgress.filter(p => 
                     p.skill_area?.toLowerCase().includes(area.toLowerCase())
@@ -500,13 +500,13 @@ export default function StaffTrainingHub() {
 
             {/* Recent Activity */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  Recent Activity
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
+                  <span className="truncate">Recent Activity</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 {trainingProgress.length === 0 ? (
                   <p className="text-sm text-gray-500 text-center py-4">
                     No training activity yet. Start with a quiz or simulation!

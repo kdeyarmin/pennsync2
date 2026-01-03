@@ -1050,18 +1050,18 @@ Generate the complete clinical narrative based on the audio and context:`;
         context="documentation"
       />
 
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Button
           variant="outline"
           onClick={() => navigate(createPageUrl("Dashboard"))}
-          className="mb-4"
+          className="mb-3 sm:mb-4 min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
 
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
                 <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -1093,13 +1093,15 @@ Generate the complete clinical narrative based on the audio and context:`;
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          <Tabs defaultValue="document" className="space-y-4 sm:space-y-6">
-            <TabsList className="grid w-full grid-cols-2 h-auto">
-              <TabsTrigger value="document" className="text-sm sm:text-base py-2">Documentation</TabsTrigger>
-              <TabsTrigger value="workflow" className="text-sm sm:text-base py-2">AI Workflow</TabsTrigger>
-            </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        <div className="lg:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
+          <Tabs defaultValue="document" className="space-y-3 sm:space-y-4 md:space-y-6">
+            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex md:grid md:w-full md:grid-cols-2 gap-1 min-w-max h-auto">
+                <TabsTrigger value="document" className="text-xs sm:text-sm md:text-base py-2 sm:py-3 whitespace-nowrap">Documentation</TabsTrigger>
+                <TabsTrigger value="workflow" className="text-xs sm:text-sm md:text-base py-2 sm:py-3 whitespace-nowrap">AI Workflow</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="document" className="space-y-4 sm:space-y-6">
               <VoiceDataEntry
@@ -1150,13 +1152,13 @@ Generate the complete clinical narrative based on the audio and context:`;
               />
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
-                    Visit Times
+                <CardHeader className="p-3 sm:p-4 md:p-6">
+                  <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                    <span className="truncate">Visit Times</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-3 sm:p-4 md:p-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="start_time">Start Time</Label>
@@ -1296,18 +1298,20 @@ Generate the complete clinical narrative based on the audio and context:`;
               />
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Clinical Narrative
+                <CardHeader className="p-3 sm:p-4 md:p-6">
+                  <CardTitle className="text-sm sm:text-base flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="truncate">Clinical Narrative</span>
+                    </div>
                     {recognizedCommand && (
-                      <Badge className="bg-green-500 text-white animate-pulse ml-auto">
+                      <Badge className="bg-green-500 text-white animate-pulse">
                         ✓ {recognizedCommand}
                       </Badge>
                     )}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
                   <TextExpander onExpand={handleTextExpand} />
 
                   {commandHistory.length > 0 && (
