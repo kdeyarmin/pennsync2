@@ -1396,32 +1396,32 @@ export default function FeaturesPage() {
       </div>
 
       {/* Impact Summary */}
-      <Card className="mt-12 bg-gradient-to-br from-blue-600 to-purple-600 text-white border-none">
-        <CardContent className="p-8">
+      <Card className="mt-6 sm:mt-8 md:mt-12 bg-gradient-to-br from-blue-600 to-purple-600 text-white border-none">
+        <CardContent className="p-4 sm:p-6 md:p-8">
           <div className="text-center">
-            <Sparkles className="w-16 h-16 mx-auto mb-4 text-white opacity-90" />
-            <h2 className="text-3xl font-bold mb-3">The Penn Sync Impact</h2>
-            <p className="text-xl text-blue-100 mb-6">
+            <Sparkles className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-white opacity-90" />
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3">The Penn Sync Impact</h2>
+            <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-4 sm:mb-6">
               Save over <strong>{Math.round(totalTimeSavedPerYear / 60)} hours per year</strong> per nurse
             </p>
             
-            <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <Heart className="w-8 h-8 mx-auto mb-2 text-pink-200" />
-                <p className="font-semibold text-lg">More Patient Time</p>
-                <p className="text-sm text-blue-100">Less paperwork, more care</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 max-w-3xl mx-auto">
+              <div className="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
+                <Heart className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-pink-200" />
+                <p className="font-semibold text-sm sm:text-base md:text-lg">More Patient Time</p>
+                <p className="text-xs sm:text-sm text-blue-100">Less paperwork, more care</p>
               </div>
               
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <Shield className="w-8 h-8 mx-auto mb-2 text-green-200" />
-                <p className="font-semibold text-lg">100% Compliant</p>
-                <p className="text-sm text-blue-100">Medicare requirements guaranteed</p>
+              <div className="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-green-200" />
+                <p className="font-semibold text-sm sm:text-base md:text-lg">100% Compliant</p>
+                <p className="text-xs sm:text-sm text-blue-100">Medicare requirements guaranteed</p>
               </div>
               
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <TrendingUp className="w-8 h-8 mx-auto mb-2 text-orange-200" />
-                <p className="font-semibold text-lg">Better Outcomes</p>
-                <p className="text-sm text-blue-100">Early detection & intervention</p>
+              <div className="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4">
+                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-orange-200" />
+                <p className="font-semibold text-sm sm:text-base md:text-lg">Better Outcomes</p>
+                <p className="text-xs sm:text-sm text-blue-100">Early detection & intervention</p>
               </div>
             </div>
           </div>

@@ -142,18 +142,18 @@ export default function NurseWorkflow() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">
             Welcome, {currentUser?.full_name?.split(' ')[0] || 'Nurse'}!
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">Your streamlined workflow dashboard</p>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600">Your streamlined workflow dashboard</p>
         </div>
 
         {/* Workflow Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
           {workflows.map((workflow) => {
             const Icon = workflow.icon;
             const colorClasses = {
@@ -165,11 +165,11 @@ export default function NurseWorkflow() {
 
             return (
               <Card key={workflow.title} className="hover:shadow-xl transition-all">
-                <CardHeader className={`bg-gradient-to-r ${colorClasses[workflow.color]} text-white`}>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-6 h-6" />
-                      {workflow.title}
+                <CardHeader className={`bg-gradient-to-r ${colorClasses[workflow.color]} text-white p-3 sm:p-4 md:p-6`}>
+                  <CardTitle className="flex items-center justify-between text-base sm:text-lg">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+                      <span className="truncate">{workflow.title}</span>
                     </div>
                     {workflow.count !== null && (
                       <Badge variant="secondary" className="bg-white/20 text-white">
@@ -213,14 +213,14 @@ export default function NurseWorkflow() {
 
         {/* Quick Actions */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-yellow-600" />
-              Quick Actions
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Sparkles className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+              <span className="truncate">Quick Actions</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               <Link to={createPageUrl("QuickNote")} className="block">
                 <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-purple-400 active:scale-95">
                   <CardContent className="p-4 text-center touch-target min-h-[100px] flex flex-col items-center justify-center">

@@ -905,17 +905,18 @@ Actions available:
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Referral Intake</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Streamlined workflow for processing incoming referrals</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Referral Intake</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Streamlined workflow for processing incoming referrals</p>
         </div>
         <Button
           onClick={() => setUploadDialogOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
         >
           <Upload className="w-4 h-4 mr-2" />
-          New Referral
+          <span className="hidden sm:inline">New Referral</span>
+          <span className="sm:hidden">New</span>
         </Button>
       </div>
 
@@ -988,10 +989,10 @@ Actions available:
 
       {/* Referrals Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Referrals ({filteredReferrals.length})</CardTitle>
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-base sm:text-lg">Referrals ({filteredReferrals.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="text-center py-12 text-gray-500">Loading referrals...</div>
           ) : filteredReferrals.length === 0 ? (
@@ -1007,23 +1008,23 @@ Actions available:
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Referral Date</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Patient</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Referral Date</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Source</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Priority</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden xl:table-cell">Assigned To</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredReferrals.map((referral) => (
                     <TableRow key={referral.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="text-xs sm:text-sm font-medium">
                         {referral.patient_id ? (
                           <Link to={createPageUrl(`PatientDetails?id=${referral.patient_id}`)} className="text-blue-600 hover:underline">
                             {referral.patient_name || 'Unknown'}
@@ -1077,10 +1078,10 @@ Actions available:
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden md:table-cell">
                         {referral.referral_date ? format(new Date(referral.referral_date), 'MM/dd/yyyy') : 'N/A'}
                       </TableCell>
-                      <TableCell className="text-sm">{referral.referral_source || 'N/A'}</TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden lg:table-cell">{referral.referral_source || 'N/A'}</TableCell>
                       <TableCell>
                         <Badge className={getPriorityColor(referral.priority)}>
                           {referral.priority}
@@ -1098,12 +1099,12 @@ Actions available:
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-xs sm:text-sm hidden xl:table-cell">
                         <Select
                           value={referral.assigned_to || "unassigned"}
                           onValueChange={(value) => handleNurseAssignment(referral.id, value)}
                         >
-                          <SelectTrigger className="w-[180px]">
+                          <SelectTrigger className="w-full min-w-[140px] h-11 touch-target">
                             <SelectValue placeholder="Assign nurse" />
                           </SelectTrigger>
                           <SelectContent>
