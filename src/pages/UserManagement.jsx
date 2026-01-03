@@ -293,45 +293,45 @@ export default function UserManagement() {
           </CardContent>
         </Card>
         <Card className="border-purple-200">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-purple-500" />
-              <div>
-                <p className="text-xs text-gray-500">Admins</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.admins}</p>
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Admins</p>
+                <p className="text-xl sm:text-2xl font-bold text-purple-600">{stats.admins}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-blue-200">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-500" />
-              <div>
-                <p className="text-xs text-gray-500">Nurses</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.nurses}</p>
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Nurses</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.nurses}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-green-200">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-green-500" />
-              <div>
-                <p className="text-xs text-gray-500">Active</p>
-                <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+              <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Active</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-red-200">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <UserX className="w-5 h-5 text-red-500" />
-              <div>
-                <p className="text-xs text-gray-500">Inactive</p>
-                <p className="text-2xl font-bold text-red-600">{stats.inactive}</p>
+              <UserX className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Inactive</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.inactive}</p>
               </div>
             </div>
           </CardContent>
