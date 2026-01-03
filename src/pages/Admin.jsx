@@ -215,14 +215,14 @@ If you have any questions, please contact your administrator.`,
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage users, monitor system, and view security logs</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Admin Dashboard</h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Manage users, monitor system, and view security logs</p>
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -278,13 +278,15 @@ If you have any questions, please contact your administrator.`,
 
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">User Management</TabsTrigger>
-          <TabsTrigger value="compliance">CMS Compliance</TabsTrigger>
-          <TabsTrigger value="security">Security Logs</TabsTrigger>
-          <TabsTrigger value="data">Data Browser</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
+            <TabsTrigger value="overview" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Overview</TabsTrigger>
+            <TabsTrigger value="users" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Users</TabsTrigger>
+            <TabsTrigger value="compliance" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Compliance</TabsTrigger>
+            <TabsTrigger value="security" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Security</TabsTrigger>
+            <TabsTrigger value="data" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Data</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">

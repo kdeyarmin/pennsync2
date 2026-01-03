@@ -392,18 +392,19 @@ export default function ComplianceDashboard() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Compliance Dashboard</h1>
-          <p className="text-gray-600 mt-1">Aggregated alerts and compliance tracking</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Compliance Dashboard</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Aggregated alerts and compliance tracking</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportComplianceReport}>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={exportComplianceReport} className="min-h-[44px] w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
-            Export Report
+            <span className="hidden sm:inline">Export Report</span>
+            <span className="sm:hidden">Export</span>
           </Button>
-          <Button onClick={() => window.location.reload()} variant="outline">
+          <Button onClick={() => window.location.reload()} variant="outline" className="min-h-[44px] w-full sm:w-auto">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
@@ -411,12 +412,12 @@ export default function ComplianceDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
         <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className="p-3 md:p-4 text-center">
-            <XCircle className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 md:mb-2 opacity-80" />
-            <p className="text-2xl md:text-3xl font-bold">{alertCounts.critical}</p>
-            <p className="text-xs md:text-sm opacity-90">Critical</p>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <XCircle className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 mx-auto mb-1 sm:mb-2 opacity-80" />
+            <p className="text-xl sm:text-2xl md:text-3xl font-bold">{alertCounts.critical}</p>
+            <p className="text-xs sm:text-sm opacity-90">Critical</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
@@ -454,15 +455,17 @@ export default function ComplianceDashboard() {
       )}
 
       {/* Tabs for Compliance Sections */}
-      <Tabs defaultValue="alerts" className="mb-6">
-        <TabsList className="mb-4 flex-wrap">
-          <TabsTrigger value="alerts">Alerts</TabsTrigger>
-          <TabsTrigger value="auditor">Audit</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="rules">Rules</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="alerts" className="mb-4 sm:mb-6">
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4">
+          <TabsList className="inline-flex gap-1 min-w-max h-auto">
+            <TabsTrigger value="alerts" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Alerts</TabsTrigger>
+            <TabsTrigger value="auditor" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Audit</TabsTrigger>
+            <TabsTrigger value="analytics" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Analytics</TabsTrigger>
+            <TabsTrigger value="trends" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Trends</TabsTrigger>
+            <TabsTrigger value="reports" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Reports</TabsTrigger>
+            <TabsTrigger value="rules" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Rules</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="auditor">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

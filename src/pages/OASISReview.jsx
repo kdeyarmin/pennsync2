@@ -96,14 +96,14 @@ export default function OASISReview() {
   const needsApproval = reviewItems.filter(i => i.approvedCount > 0 && !isAdmin);
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">OASIS Review Center</h1>
-        <p className="text-gray-600">Review and approve AI-generated OASIS suggestions</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">OASIS Review Center</h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Review and approve AI-generated OASIS suggestions</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card className="border-2 border-blue-200 bg-blue-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -160,20 +160,20 @@ export default function OASISReview() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder="Search patients..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-11 touch-target"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="h-11 touch-target">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
