@@ -1,4 +1,5 @@
 import { jsPDF } from 'npm:jspdf@2.5.2';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
@@ -6,6 +7,68 @@ Deno.serve(async (req) => {
 
     if (!referralData) {
       return Response.json({ error: 'Referral data required' }, { status: 400 });
+    }
+
+    // Initialize base44 client for AI analysis
+    const base44 = createClientFromRequest(req);
+
+    // AI-powered risk analysis
+    let riskAnalysis = null;
+    try {
+      const riskPrompt = `Analyze this referral for comprehensive risk factors:
+
+Patient Data:
+${JSON.stringify(referralData, null, 2)}
+
+Analyze and score (0-100) the following risks:
+1. Hospital Readmission Risk - based on diagnosis, recent hospitalizations, comorbidities, medications
+2. Fall Risk - based on mobility, cognitive status, medications, age, history
+3. Wound Development Risk - based on mobility, nutrition, existing wounds, diabetes, vascular disease
+4. Clinical Deterioration Risk - based on diagnosis, vital signs, functional decline, symptoms
+5. Medication Non-Adherence Risk - based on number of meds, cognitive status, caregiver support
+6. Infection Risk - based on wounds, catheters, immune status, recent surgery
+
+For each risk:
+- Provide risk score (0-100)
+- Risk level (low/moderate/high/critical)
+- Contributing factors (specific patient characteristics)
+- Recommended interventions
+- Priority level
+
+Also provide:
+- Overall composite risk score
+- Top 3 priority risks requiring immediate attention
+- Specific monitoring recommendations`;
+
+      riskAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: riskPrompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            overall_risk_score: { type: "number" },
+            overall_risk_level: { type: "string" },
+            risk_categories: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  risk_name: { type: "string" },
+                  score: { type: "number" },
+                  level: { type: "string" },
+                  contributing_factors: { type: "array", items: { type: "string" } },
+                  interventions: { type: "array", items: { type: "string" } },
+                  priority: { type: "string" }
+                }
+              }
+            },
+            top_priority_risks: { type: "array", items: { type: "string" } },
+            monitoring_recommendations: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Risk analysis failed:', error);
+      // Continue with PDF generation even if AI fails
     }
 
     const doc = new jsPDF();
@@ -572,6 +635,149 @@ Deno.serve(async (req) => {
         });
       }
       yPos += 8;
+    }
+
+    // AI RISK ANALYSIS SECTION
+    if (riskAnalysis && riskAnalysis.risk_categories) {
+      doc.addPage();
+      yPos = 20;
+      doc.setFillColor(220, 38, 38);
+      doc.rect(0, yPos - 8, 210, 14, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('🤖 AI-POWERED RISK ANALYSIS', margin, yPos);
+      yPos += 14;
+      doc.setTextColor(0, 0, 0);
+
+      // Overall Risk Score Card
+      checkPageBreak(35);
+      doc.setFillColor(254, 242, 242);
+      doc.rect(margin - 5, yPos, 190, 28, 'F');
+      yPos += 8;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('OVERALL COMPOSITE RISK ASSESSMENT:', margin, yPos);
+      yPos += 8;
+      doc.setFontSize(14);
+      const riskColor = riskAnalysis.overall_risk_score >= 75 ? [220, 38, 38] :
+                        riskAnalysis.overall_risk_score >= 50 ? [251, 146, 60] :
+                        riskAnalysis.overall_risk_score >= 25 ? [234, 179, 8] : [34, 197, 94];
+      doc.setTextColor(...riskColor);
+      doc.text(`Risk Score: ${Math.round(riskAnalysis.overall_risk_score)}/100 - ${riskAnalysis.overall_risk_level.toUpperCase()}`, margin + 5, yPos);
+      yPos += 18;
+      doc.setTextColor(0, 0, 0);
+
+      // Top Priority Risks
+      if (riskAnalysis.top_priority_risks?.length > 0) {
+        checkPageBreak(30);
+        doc.setFillColor(255, 237, 213);
+        doc.rect(margin - 5, yPos, 190, 10 + (riskAnalysis.top_priority_risks.length * 6), 'F');
+        yPos += 6;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(194, 65, 12);
+        doc.text('⚠️ TOP PRIORITY RISKS REQUIRING IMMEDIATE ATTENTION:', margin, yPos);
+        yPos += 8;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+        riskAnalysis.top_priority_risks.forEach(risk => {
+          doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
+          const riskLines = doc.splitTextToSize(risk, 175);
+          riskLines.forEach(line => {
+            doc.text(line, margin + 7, yPos);
+            yPos += 5.5;
+          });
+        });
+        yPos += 8;
+      }
+
+      // Individual Risk Categories
+      riskAnalysis.risk_categories.forEach((risk, idx) => {
+        checkPageBreak(50);
+        
+        const riskBgColor = risk.level === 'critical' ? [254, 226, 226] :
+                            risk.level === 'high' ? [255, 237, 213] :
+                            risk.level === 'moderate' ? [254, 249, 195] : [220, 252, 231];
+        const riskTextColor = risk.level === 'critical' ? [153, 27, 27] :
+                              risk.level === 'high' ? [194, 65, 12] :
+                              risk.level === 'moderate' ? [161, 98, 7] : [21, 128, 61];
+        
+        doc.setFillColor(...riskBgColor);
+        doc.rect(margin - 5, yPos, 190, 10, 'F');
+        yPos += 7;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...riskTextColor);
+        doc.text(`${risk.risk_name.toUpperCase()} - ${risk.level.toUpperCase()} (${Math.round(risk.score)}/100)`, margin, yPos);
+        yPos += 10;
+        doc.setTextColor(0, 0, 0);
+
+        if (risk.contributing_factors?.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text('Contributing Factors:', margin, yPos);
+          yPos += 5;
+          doc.setFont('helvetica', 'normal');
+          risk.contributing_factors.forEach(factor => {
+            checkPageBreak();
+            doc.circle(margin + 3, yPos - 1.5, 0.6, 'F');
+            const factorLines = doc.splitTextToSize(factor, 172);
+            factorLines.forEach(line => {
+              doc.text(line, margin + 7, yPos);
+              yPos += 5;
+            });
+          });
+          yPos += 2;
+        }
+
+        if (risk.interventions?.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.setTextColor(21, 94, 117);
+          doc.text('Recommended Interventions:', margin, yPos);
+          yPos += 5;
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(0, 0, 0);
+          risk.interventions.forEach(intervention => {
+            checkPageBreak();
+            doc.text('▸', margin + 3, yPos);
+            const intLines = doc.splitTextToSize(intervention, 172);
+            intLines.forEach(line => {
+              doc.text(line, margin + 7, yPos);
+              yPos += 5;
+            });
+          });
+          yPos += 2;
+        }
+        
+        yPos += 6;
+      });
+
+      // Monitoring Recommendations
+      if (riskAnalysis.monitoring_recommendations?.length > 0) {
+        checkPageBreak(40);
+        doc.setFillColor(219, 234, 254);
+        doc.rect(margin - 5, yPos, 190, 10 + (riskAnalysis.monitoring_recommendations.length * 6), 'F');
+        yPos += 6;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(29, 78, 216);
+        doc.text('📊 ONGOING MONITORING RECOMMENDATIONS:', margin, yPos);
+        yPos += 8;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+        riskAnalysis.monitoring_recommendations.forEach(rec => {
+          checkPageBreak();
+          doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
+          const recLines = doc.splitTextToSize(rec, 175);
+          recLines.forEach(line => {
+            doc.text(line, margin + 7, yPos);
+            yPos += 5.5;
+          });
+        });
+        yPos += 8;
+      }
     }
 
     // IMPORTANT NOTES SECTION
