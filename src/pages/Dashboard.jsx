@@ -92,7 +92,7 @@ export default function Dashboard() {
     queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser?.email }, '-created_date', 10000),
     enabled: !!currentUser?.email,
     initialData: [],
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   // Handle errors gracefully

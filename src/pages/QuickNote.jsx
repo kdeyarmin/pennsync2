@@ -131,8 +131,8 @@ export default function QuickNote() {
       
       // Invalidate queries to refresh dashboard
       queryClient.invalidateQueries(['patients']);
-      queryClient.invalidateQueries(['nurseNoteConversions']);
-      queryClient.invalidateQueries(['visits']);
+      queryClient.invalidateQueries(['nurseNoteConversions', currentUser?.email]);
+      queryClient.invalidateQueries(['todayVisits']);
     } catch (error) {
       toast.error(`Enhancement failed: ${error.message}`);
     }

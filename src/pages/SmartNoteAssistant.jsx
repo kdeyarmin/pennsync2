@@ -513,7 +513,7 @@ export default function SmartNoteAssistant() {
 
       queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
       queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['nurseNoteConversions'] });
+      queryClient.invalidateQueries({ queryKey: ['nurseNoteConversions', currentUser?.email] });
     } catch (error) {
       console.error('Error saving note:', error);
     }
