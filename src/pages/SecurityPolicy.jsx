@@ -1,72 +1,96 @@
-import React, { useState } from "react";
-import SecurityDocumentation from "../components/security/SecurityDocumentation";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Shield, FileText, Activity } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { Shield, FileText, Activity, AlertTriangle } from "lucide-react";
+import SecurityDocumentation from "../components/security/SecurityDocumentation";
 import AuditTrailViewer from "../components/security/AuditTrailViewer";
+import SecurityAnomalyDetector from "../components/security/SecurityAnomalyDetector";
 
 export default function SecurityPolicy() {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("policy");
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="min-h-screen">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
-            <div className="py-3 sm:py-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate(createPageUrl("AdminDashboard"))}
-                className="mb-3 sm:mb-4 min-h-[44px] w-full sm:w-auto"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Admin
-              </Button>
-              
-              <div className="mb-3 sm:mb-4">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">
-                  Security & Compliance Center
-                </h1>
-                <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">
-                  Comprehensive security documentation and audit trail monitoring
-                </p>
-              </div>
-            </div>
-            
-            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-              <TabsList className="inline-flex md:grid md:w-full md:max-w-2xl md:grid-cols-3 gap-1 min-w-max h-auto md:h-14">
-                <TabsTrigger value="policy" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
-                  <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>Security Policy</span>
-                </TabsTrigger>
-                <TabsTrigger value="audit" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
-                  <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>Audit Trail</span>
-                </TabsTrigger>
-                <TabsTrigger value="security-events" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
-                  <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>Security Events</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+          <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+          <span className="truncate">Security & Compliance</span>
+        </h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">
+          HIPAA security measures, audit trails, and compliance documentation
+        </p>
+      </div>
+
+      <Tabs defaultValue="documentation" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:max-w-2xl md:grid-cols-4 gap-1 min-w-max h-auto">
+            <TabsTrigger value="documentation" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Documentation</span>
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap" disabled={!isAdmin}>
+              <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Audit Trail</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap" disabled={!isAdmin}>
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Security Log</span>
+            </TabsTrigger>
+            <TabsTrigger value="anomalies" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap" disabled={!isAdmin}>
+              <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Anomalies</span>
+            </TabsTrigger>
+          </TabsList>
         </div>
 
-        <TabsContent value="policy" className="m-0">
-          <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-5xl mx-auto">
-            <SecurityDocumentation />
-          </div>
+        <TabsContent value="documentation">
+          <SecurityDocumentation />
         </TabsContent>
 
-        <TabsContent value="audit" className="m-0">
-          <AuditTrailViewer filterType="all" />
+        <TabsContent value="audit">
+          {isAdmin ? (
+            <AuditTrailViewer filterType="all" />
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600">Admin access required</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="security-events" className="m-0">
-          <AuditTrailViewer filterType="security" />
+        <TabsContent value="security">
+          {isAdmin ? (
+            <AuditTrailViewer filterType="security" />
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600">Admin access required</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="anomalies">
+          {isAdmin ? (
+            <SecurityAnomalyDetector />
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600">Admin access required</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

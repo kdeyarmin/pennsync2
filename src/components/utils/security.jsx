@@ -147,12 +147,13 @@ export function isValidPhone(phone) {
 }
 
 /**
- * Log security event (audit trail)
+ * Log security event (audit trail) - ENHANCED
  * @param {string} action - Action performed
  * @param {Object} details - Additional details
+ * @param {string} severity - Severity level: critical, warning, info
  * @returns {Promise<void>}
  */
-export async function logSecurityEvent(action, details = {}) {
+export async function logSecurityEvent(action, details = {}, severity = 'info') {
   try {
     const user = await base44.auth.me();
     if (!user) return;
@@ -162,25 +163,94 @@ export async function logSecurityEvent(action, details = {}) {
       user_email: user.email,
       user_role: user.role,
       action,
-      details,
+      details: {
+        ...details,
+        page: window.location.pathname,
+        timestamp_local: new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })
+      },
       ip_address: 'client-side',
       user_agent: navigator.userAgent
     };
     
-    // Log to console for debugging
-    console.log('[SECURITY AUDIT]', logEntry);
+    // Enhanced console logging with severity-based formatting
+    const logStyle = severity === 'critical' ? 'background: red; color: white; padding: 2px 4px; border-radius: 2px;' :
+                     severity === 'warning' ? 'background: orange; color: white; padding: 2px 4px; border-radius: 2px;' :
+                     'background: blue; color: white; padding: 2px 4px; border-radius: 2px;';
+    console.log(`%c[SECURITY ${severity.toUpperCase()}]`, logStyle, action, logEntry);
     
     // Store in SecurityLog entity - don't await to avoid blocking
     base44.entities.SecurityLog.create(logEntry).catch(err => {
       console.error('Failed to store security log:', err);
     });
+    
+    // Detect anomalies and create alerts for critical events
+    if (severity === 'critical') {
+      detectAndAlertAnomalies(action, user, details);
+    }
   } catch (error) {
     console.error('Failed to log security event:', error);
   }
 }
 
 /**
- * Secure entity update with audit logging
+ * Detect security anomalies and create alerts
+ */
+async function detectAndAlertAnomalies(action, user, details) {
+  try {
+    const anomalies = [];
+    
+    // Check for rapid repeated failed attempts
+    if (action.includes('FAILED') || action.includes('DENIED')) {
+      anomalies.push({
+        type: 'failed_action',
+        message: `Failed action detected: ${action}`,
+        severity: 'high'
+      });
+    }
+    
+    // Check for bulk deletions
+    if (action.includes('DELETE') && details.bulk_count > 5) {
+      anomalies.push({
+        type: 'bulk_deletion',
+        message: `Bulk deletion of ${details.bulk_count} records`,
+        severity: 'critical'
+      });
+    }
+    
+    // Check for after-hours access (outside 6am-10pm ET)
+    const hour = new Date().getHours();
+    if (hour < 6 || hour > 22) {
+      anomalies.push({
+        type: 'after_hours_access',
+        message: `After-hours system access at ${new Date().toLocaleTimeString()}`,
+        severity: 'warning'
+      });
+    }
+    
+    // Log anomalies
+    for (const anomaly of anomalies) {
+      await base44.entities.SecurityLog.create({
+        timestamp: new Date().toISOString(),
+        user_email: user.email,
+        user_role: user.role,
+        action: 'SECURITY_ANOMALY_DETECTED',
+        details: {
+          original_action: action,
+          anomaly_type: anomaly.type,
+          anomaly_message: anomaly.message,
+          anomaly_severity: anomaly.severity
+        },
+        ip_address: 'client-side',
+        user_agent: navigator.userAgent
+      });
+    }
+  } catch (error) {
+    console.error('Failed to detect anomalies:', error);
+  }
+}
+
+/**
+ * Secure entity update with audit logging - ENHANCED
  * @param {Object} entity - Entity object (e.g., base44.entities.Patient)
  * @param {string} id - Record ID
  * @param {Object} data - Data to update
@@ -195,25 +265,30 @@ export async function secureUpdate(entity, id, data, entityName) {
     // Perform update
     const result = await entity.update(id, sanitizedData);
     
-    // Log the update
+    // Enhanced logging with change tracking
+    const isPHI = ['Patient', 'Visit', 'CarePlan'].includes(entityName);
     await logSecurityEvent(`${entityName.toUpperCase()}_UPDATED`, {
       record_id: id,
       fields_changed: Object.keys(data),
-      // Don't log actual PHI values, just metadata
-    });
+      field_count: Object.keys(data).length,
+      contains_phi: isPHI,
+      entity_type: entityName
+    }, isPHI ? 'warning' : 'info');
     
     return result;
   } catch (error) {
     await logSecurityEvent(`${entityName.toUpperCase()}_UPDATE_FAILED`, {
       record_id: id,
-      error: error.message
-    });
+      entity_type: entityName,
+      error: error.message,
+      attempted_fields: Object.keys(data)
+    }, 'critical');
     throw error;
   }
 }
 
 /**
- * Secure entity create with audit logging
+ * Secure entity create with audit logging - ENHANCED
  * @param {Object} entity - Entity object
  * @param {Object} data - Data to create
  * @param {string} entityName - Name of entity for logging
@@ -227,23 +302,28 @@ export async function secureCreate(entity, data, entityName) {
     // Perform create
     const result = await entity.create(sanitizedData);
     
-    // Log the creation
+    // Enhanced logging with metadata
+    const isPHI = ['Patient', 'Visit', 'CarePlan'].includes(entityName);
     await logSecurityEvent(`${entityName.toUpperCase()}_CREATED`, {
       record_id: result.id,
-      // Don't log actual PHI values
-    });
+      entity_type: entityName,
+      contains_phi: isPHI,
+      field_count: Object.keys(data).length
+    }, isPHI ? 'warning' : 'info');
     
     return result;
   } catch (error) {
     await logSecurityEvent(`${entityName.toUpperCase()}_CREATE_FAILED`, {
-      error: error.message
-    });
+      entity_type: entityName,
+      error: error.message,
+      attempted_fields: Object.keys(data)
+    }, 'critical');
     throw error;
   }
 }
 
 /**
- * Secure entity delete with audit logging
+ * Secure entity delete with audit logging - ENHANCED
  * @param {Object} entity - Entity object
  * @param {string} id - Record ID
  * @param {string} entityName - Name of entity for logging
@@ -258,18 +338,23 @@ export async function secureDelete(entity, id, entityName) {
     // Perform delete
     const result = await entity.delete(id);
     
-    // Log the deletion
+    // Enhanced logging - deletions are always critical
+    const isPHI = ['Patient', 'Visit', 'CarePlan'].includes(entityName);
     await logSecurityEvent(`${entityName.toUpperCase()}_DELETED`, {
       record_id: id,
-      // Log minimal metadata, not PHI
-    });
+      entity_type: entityName,
+      contains_phi: isPHI,
+      record_created_by: record?.created_by,
+      record_age_days: record?.created_date ? Math.floor((Date.now() - new Date(record.created_date)) / (1000 * 60 * 60 * 24)) : null
+    }, 'critical');
     
     return result;
   } catch (error) {
     await logSecurityEvent(`${entityName.toUpperCase()}_DELETE_FAILED`, {
       record_id: id,
+      entity_type: entityName,
       error: error.message
-    });
+    }, 'critical');
     throw error;
   }
 }
@@ -490,17 +575,51 @@ export class SessionManager {
 }
 
 /**
- * Export data with audit logging
+ * Export data with audit logging - ENHANCED
  * @param {Object} data - Data to export
  * @param {string} exportType - Type of export (PDF, CSV, etc.)
  * @param {string} context - Context (patient_id, visit_id, etc.)
  */
 export async function secureExport(data, exportType, context = {}) {
+  const recordCount = Array.isArray(data) ? data.length : 1;
+  
   await logSecurityEvent('PHI_EXPORTED', {
     export_type: exportType,
-    record_count: Array.isArray(data) ? data.length : 1,
+    record_count: recordCount,
+    is_bulk_export: recordCount > 10,
     ...context
-  });
+  }, recordCount > 10 ? 'warning' : 'info');
   
   return data;
+}
+
+/**
+ * Track PHI access for compliance
+ * @param {string} entityType - Type of entity accessed
+ * @param {string} entityId - ID of record accessed
+ * @param {string} accessReason - Reason for access (view, edit, etc.)
+ */
+export async function trackPHIAccess(entityType, entityId, accessReason = 'view') {
+  await logSecurityEvent('PHI_ACCESSED', {
+    entity_type: entityType,
+    entity_id: entityId,
+    access_reason: accessReason,
+    access_time: new Date().toISOString()
+  }, 'info');
+}
+
+/**
+ * Log bulk operations with enhanced tracking
+ * @param {string} operation - Operation type (delete, update, export)
+ * @param {string} entityType - Entity type affected
+ * @param {number} count - Number of records affected
+ * @param {Object} criteria - Filter criteria used
+ */
+export async function logBulkOperation(operation, entityType, count, criteria = {}) {
+  await logSecurityEvent(`BULK_${operation.toUpperCase()}`, {
+    entity_type: entityType,
+    record_count: count,
+    criteria: JSON.stringify(criteria),
+    requires_review: count > 50
+  }, count > 50 ? 'critical' : 'warning');
 }
