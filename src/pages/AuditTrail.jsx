@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ import {
   Info,
 } from "lucide-react";
 import { formatEastern } from "../components/utils/timezone";
+import AIAuditAnalyzer from "../components/security/AIAuditAnalyzer";
 
 export default function AuditTrail() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -161,6 +163,14 @@ export default function AuditTrail() {
           <span className="sm:hidden">Export</span>
         </Button>
       </div>
+
+      <Tabs defaultValue="logs" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="logs">Audit Logs</TabsTrigger>
+          <TabsTrigger value="ai-analysis">AI Analysis</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="logs" className="space-y-4 sm:space-y-6">
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -360,6 +370,12 @@ export default function AuditTrail() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="ai-analysis">
+          <AIAuditAnalyzer />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
