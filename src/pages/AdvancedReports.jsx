@@ -93,36 +93,36 @@ export default function AdvancedReports() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Advanced Reports</h1>
-            <p className="text-gray-600">Comprehensive analytics and performance metrics</p>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">Advanced Reports</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600">Comprehensive analytics and performance metrics</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-white rounded-lg p-2 shadow-sm">
-              <Calendar className="w-4 h-4 text-gray-500" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white rounded-lg p-2 shadow-sm">
+              <Calendar className="w-4 h-4 text-gray-500 hidden sm:block flex-shrink-0" />
               <input
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                className="text-sm border-0 focus:ring-0"
+                className="text-sm border-0 focus:ring-0 min-h-[44px]"
               />
-              <span className="text-gray-400">to</span>
+              <span className="text-gray-400 text-center sm:inline hidden">to</span>
               <input
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                className="text-sm border-0 focus:ring-0"
+                className="text-sm border-0 focus:ring-0 min-h-[44px]"
               />
             </div>
           </div>
         </div>
 
         {/* Quick Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           {reportSections.map((section) => (
             <Card key={section.id} className={`border-l-4 border-l-${section.color}-500 hover:shadow-lg transition-shadow cursor-pointer`}>
               <CardContent className="p-4">
@@ -135,23 +135,25 @@ export default function AdvancedReports() {
 
         {/* Main Reports Tabs */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-6 h-6 text-blue-600" />
-              Detailed Reports
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+              <span className="truncate">Detailed Reports</span>
             </CardTitle>
-            <CardDescription>Select a report type to view detailed analytics</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Select a report type to view detailed analytics</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <Tabs defaultValue="kpi" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
-                <TabsTrigger value="kpi">KPI</TabsTrigger>
-                <TabsTrigger value="referrals">Referrals</TabsTrigger>
-                <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
-                <TabsTrigger value="performance">Performance</TabsTrigger>
-                <TabsTrigger value="oasis">OASIS</TabsTrigger>
-                <TabsTrigger value="pdgm">PDGM</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
+                <TabsList className="inline-flex md:grid md:w-full md:grid-cols-6 gap-1 min-w-max h-auto">
+                  <TabsTrigger value="kpi" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">KPI</TabsTrigger>
+                  <TabsTrigger value="referrals" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Referrals</TabsTrigger>
+                  <TabsTrigger value="outcomes" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Outcomes</TabsTrigger>
+                  <TabsTrigger value="performance" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Performance</TabsTrigger>
+                  <TabsTrigger value="oasis" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">OASIS</TabsTrigger>
+                  <TabsTrigger value="pdgm" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">PDGM</TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="kpi" className="space-y-6 mt-6">
                 <KPIDashboard dateRange={dateRange} />

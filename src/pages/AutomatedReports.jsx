@@ -161,21 +161,21 @@ export default function AutomatedReports() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 sm:p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <BarChart3 className="w-8 h-8 text-blue-600" />
-              AI-Driven Automated Reports
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+              <span className="truncate">AI-Driven Automated Reports</span>
             </h1>
-            <p className="text-gray-600 mt-1">Generate and schedule intelligent reports with AI insights</p>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Generate and schedule intelligent reports with AI insights</p>
           </div>
         </div>
 
         {/* Quick Generate Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {reportTypes.slice(0, 3).map((type) => {
             const Icon = type.icon;
             return (
@@ -204,15 +204,15 @@ export default function AutomatedReports() {
 
         {/* Create Schedule */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Schedule Automated Report
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="truncate">Schedule Automated Report</span>
             </CardTitle>
-            <CardDescription>Set up recurring reports delivered via email</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Set up recurring reports delivered via email</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label>Report Name</Label>
                 <Input
@@ -312,13 +312,13 @@ export default function AutomatedReports() {
 
         {/* Scheduled Reports */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Scheduled Reports ({scheduledTasks.length})
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="truncate">Scheduled Reports ({scheduledTasks.length})</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             {isLoading ? (
               <p className="text-gray-500">Loading schedules...</p>
             ) : scheduledTasks.length === 0 ? (

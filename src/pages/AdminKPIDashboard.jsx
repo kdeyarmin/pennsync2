@@ -161,17 +161,18 @@ export default function AdminKPIDashboard() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">KPI Dashboard</h1>
-          <p className="text-gray-600">Real-time agency performance metrics</p>
+    <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">KPI Dashboard</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600">Real-time agency performance metrics</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button
             variant={selectedTimeframe === '7' ? 'default' : 'outline'}
             onClick={() => setSelectedTimeframe('7')}
             size="sm"
+            className="min-h-[44px] flex-1 sm:flex-none"
           >
             7 Days
           </Button>
@@ -179,6 +180,7 @@ export default function AdminKPIDashboard() {
             variant={selectedTimeframe === '30' ? 'default' : 'outline'}
             onClick={() => setSelectedTimeframe('30')}
             size="sm"
+            className="min-h-[44px] flex-1 sm:flex-none"
           >
             30 Days
           </Button>
@@ -186,6 +188,7 @@ export default function AdminKPIDashboard() {
             variant={selectedTimeframe === '90' ? 'default' : 'outline'}
             onClick={() => setSelectedTimeframe('90')}
             size="sm"
+            className="min-h-[44px] flex-1 sm:flex-none"
           >
             90 Days
           </Button>
@@ -193,7 +196,7 @@ export default function AdminKPIDashboard() {
       </div>
 
       {/* Key Performance Indicators */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <KPICard
           title="Active Patients"
           value={patients.filter(p => p.status === 'active').length}
@@ -222,15 +225,15 @@ export default function AdminKPIDashboard() {
       </div>
 
       {/* AI Adoption Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
-              AI Adoption
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
+              <span className="truncate">AI Adoption</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between text-sm mb-1">
@@ -264,13 +267,13 @@ export default function AdminKPIDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="w-5 h-5 text-green-600" />
-              Time Savings
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+              <span className="truncate">Time Savings</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="space-y-3">
               <div>
                 <p className="text-3xl font-bold text-green-600">{stats.timeSaved.totalHours}</p>
@@ -285,13 +288,13 @@ export default function AdminKPIDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-yellow-600" />
-              Financial Impact
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0" />
+              <span className="truncate">Financial Impact</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="space-y-3">
               <div>
                 <p className="text-3xl font-bold text-yellow-600">${stats.financial.estimatedRevenue.toLocaleString()}</p>
@@ -307,12 +310,12 @@ export default function AdminKPIDashboard() {
       </div>
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Visits Trend (Last 30 Days)</CardTitle>
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base">Visits Trend (Last 30 Days)</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={visitsTrendData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -326,10 +329,10 @@ export default function AdminKPIDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Compliance Score Trend (12 Months)</CardTitle>
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base">Compliance Score Trend (12 Months)</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={complianceTrendData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -345,12 +348,12 @@ export default function AdminKPIDashboard() {
       </div>
 
       {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Incident Distribution</CardTitle>
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base">Incident Distribution</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
@@ -374,10 +377,10 @@ export default function AdminKPIDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Patient Risk Distribution</CardTitle>
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base">Patient Risk Distribution</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={riskData}>
                 <CartesianGrid strokeDasharray="3 3" />
