@@ -234,7 +234,9 @@ export default function Layout({ children, currentPageName }) {
   // Show pending approval screen for unapproved users
   if (currentUser && !isApproved) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <>
+        <SessionTimeoutManager timeoutMinutes={15} warningMinutes={2} />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
           <Card className="border-yellow-300 shadow-xl">
             <CardContent className="p-8 text-center">
@@ -588,7 +590,6 @@ export default function Layout({ children, currentPageName }) {
           />
         </DialogContent>
       </Dialog>
-    </div>
     </>
   );
 }
