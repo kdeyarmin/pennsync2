@@ -201,12 +201,12 @@ export default function QuickNote() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
-      <div className="max-w-5xl mx-auto space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-5xl mx-auto space-y-3 sm:space-y-4">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Quick Note</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Quick Note</h1>
           <Button variant="outline" onClick={handleClear} className="min-h-[44px] w-full sm:w-auto">Start Over</Button>
         </div>
 
@@ -272,19 +272,19 @@ export default function QuickNote() {
             
             {/* Vitals - Inline Quick Entry */}
             <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
                 <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  Vitals (Optional)
+                  <Activity className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">Vitals (Optional)</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="p-3 sm:p-4 pt-0">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                  <Input placeholder="BP (120/80)" value={bp} onChange={(e) => setBp(e.target.value)} className="h-9 text-sm" />
-                  <Input placeholder="HR (72)" value={hr} onChange={(e) => setHr(e.target.value)} className="h-9 text-sm" />
-                  <Input placeholder="Temp (98.6)" value={temp} onChange={(e) => setTemp(e.target.value)} className="h-9 text-sm" />
-                  <Input placeholder="O2 (98)" value={o2} onChange={(e) => setO2(e.target.value)} className="h-9 text-sm" />
-                  <Input placeholder="Pain (0-10)" value={pain} onChange={(e) => setPain(e.target.value)} className="h-9 text-sm" />
+                  <Input placeholder="BP (120/80)" value={bp} onChange={(e) => setBp(e.target.value)} className="h-10 sm:h-9 text-sm touch-target" />
+                  <Input placeholder="HR (72)" value={hr} onChange={(e) => setHr(e.target.value)} className="h-10 sm:h-9 text-sm touch-target" />
+                  <Input placeholder="Temp (98.6)" value={temp} onChange={(e) => setTemp(e.target.value)} className="h-10 sm:h-9 text-sm touch-target" />
+                  <Input placeholder="O2 (98)" value={o2} onChange={(e) => setO2(e.target.value)} className="h-10 sm:h-9 text-sm touch-target" />
+                  <Input placeholder="Pain (0-10)" value={pain} onChange={(e) => setPain(e.target.value)} className="h-10 sm:h-9 text-sm touch-target" />
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -292,11 +292,12 @@ export default function QuickNote() {
                       const vitalsText = `Vitals: BP ${bp || '___'}, HR ${hr || '___'}, Temp ${temp || '___'}, O2 ${o2 || '___'}%, Pain ${pain || '___'}/10`;
                       setRoughNote(prev => prev ? prev + '\n\n' + vitalsText : vitalsText);
                     }}
-                    className="h-9 text-xs"
+                    className="h-10 sm:h-9 text-xs min-h-[44px]"
                     disabled={!bp && !hr}
                   >
                     <ArrowRight className="w-3 h-3 mr-1" />
-                    Add to Note
+                    <span className="hidden sm:inline">Add to Note</span>
+                    <span className="sm:hidden">Add</span>
                   </Button>
                 </div>
               </CardContent>
@@ -304,35 +305,35 @@ export default function QuickNote() {
 
             {/* Main Note Area */}
             <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
                 <CardTitle className="text-sm sm:text-base flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    Write Your Notes
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="truncate">Write Your Notes</span>
                     {roughNote.length > 0 && (
-                      <Badge variant="outline" className="text-xs">{roughNote.length} chars</Badge>
+                      <Badge variant="outline" className="text-xs flex-shrink-0">{roughNote.length} chars</Badge>
                     )}
                   </span>
                   <Button
                     size="sm"
                     variant={listening ? "destructive" : "outline"}
                     onClick={listening ? stopDictation : startDictation}
-                    className="gap-1"
+                    className="gap-1 min-h-[44px] w-full sm:w-auto"
                   >
                     {listening ? (
                       <>
                         <MicOff className="w-4 h-4" />
-                        Stop
+                        <span>Stop</span>
                       </>
                     ) : (
                       <>
                         <Mic className="w-4 h-4" />
-                        Dictate
+                        <span>Dictate</span>
                       </>
                     )}
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-3 sm:p-4 space-y-3">
                 <Textarea
                   value={roughNote}
                   onChange={(e) => setRoughNote(e.target.value)}
@@ -393,13 +394,13 @@ export default function QuickNote() {
             {/* Enhanced Note Output */}
             {enhancedNote && (
               <Card className="border-2 border-green-500">
-                <CardHeader className="bg-green-50 pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
-                    Medicare-Compliant Note Ready
+                <CardHeader className="p-3 sm:p-4 bg-green-50 pb-2 sm:pb-3">
+                  <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+                    <span className="truncate">Medicare-Compliant Note Ready</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="p-3 sm:p-4 space-y-3">
                   <Textarea
                     value={enhancedNote}
                     onChange={(e) => setEnhancedNote(e.target.value)}
@@ -449,10 +450,10 @@ export default function QuickNote() {
         {/* Help Card */}
         {!patientId && (
           <Card className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <CardContent className="p-6 text-center">
-              <Sparkles className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Quick Note Workflow</h3>
-              <div className="text-sm text-gray-700 space-y-2 text-left max-w-md mx-auto">
+            <CardContent className="p-4 sm:p-6 text-center">
+              <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 mx-auto mb-2 sm:mb-3" />
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Quick Note Workflow</h3>
+              <div className="text-xs sm:text-sm text-gray-700 space-y-2 text-left max-w-md mx-auto">
                 <div className="flex items-start gap-2">
                   <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">1</span>
                   <p>Select patient and visit details</p>
