@@ -234,9 +234,7 @@ export default function Layout({ children, currentPageName }) {
   // Show pending approval screen for unapproved users
   if (currentUser && !isApproved) {
     return (
-      <>
-        <SessionTimeoutManager timeoutMinutes={15} warningMinutes={2} />
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
           <Card className="border-yellow-300 shadow-xl">
             <CardContent className="p-8 text-center">
@@ -275,9 +273,9 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen bg-blue-100 flex">
-      {/* Toast Notifications */}
+    <>
       <Toaster position="top-right" richColors closeButton />
+      <div className="min-h-screen bg-blue-100 flex">
 
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 shadow-lg border-r border-blue-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden`}>
@@ -590,6 +588,7 @@ export default function Layout({ children, currentPageName }) {
           />
         </DialogContent>
       </Dialog>
+      </div>
     </>
   );
 }
