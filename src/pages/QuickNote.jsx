@@ -105,22 +105,7 @@ export default function QuickNote() {
         }
       });
 
-      // Track note enhancement - THIS IS CRUCIAL
-      const currentUser = await base44.auth.me();
-      const endTime = Date.now();
-      await base44.entities.NoteConversion.create({
-        nurse_email: currentUser.email,
-        patient_id: patientId,
-        visit_type: visitType,
-        diagnosis: patient?.primary_diagnosis,
-        rough_note_length: roughNote.length,
-        enhanced_note_length: response.data.enhanced_note.length,
-        quality_score: response.data.quality_score || 85,
-        rough_note_compliance: response.data.rough_compliance?.compliance_score || 50,
-        enhanced_note_compliance: response.data.enhanced_compliance?.compliance_score || 85,
-        compliance_improvement: (response.data.enhanced_compliance?.compliance_score || 85) - (response.data.rough_compliance?.compliance_score || 50),
-        conversion_time_ms: endTime - startTime
-      });
+
       
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -128,7 +113,7 @@ export default function QuickNote() {
       toast.success('Note enhanced and saved to patient chart');
       
       queryClient.invalidateQueries(['patients']);
-      queryClient.invalidateQueries(['noteConversions']);
+      queryClient.invalidateQueries(['nurseNoteConversions']);
     } catch (error) {
       toast.error(`Enhancement failed: ${error.message}`);
     }
