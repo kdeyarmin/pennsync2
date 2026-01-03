@@ -358,8 +358,13 @@ export default function PatientDetails() {
 
       {/* Main Patient Tabs */}
       <Tabs defaultValue="overview" className="mb-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 gap-1">
           <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="health-history" className="text-xs sm:text-sm">
+            <Heart className="w-3 h-3 mr-1" />
+            <span className="hidden sm:inline">Health History</span>
+            <span className="sm:hidden">History</span>
+          </TabsTrigger>
           <TabsTrigger value="clinical" className="text-xs sm:text-sm">Clinical</TabsTrigger>
           <TabsTrigger value="events" className="text-xs sm:text-sm">
             <Activity className="w-3 h-3 mr-1" />
@@ -377,7 +382,7 @@ export default function PatientDetails() {
         </TabsList>
 
         {/* Health History Tab */}
-        <TabsContent value="health-history" className="space-y-6">
+        <TabsContent value="health-history" className="space-y-6 mt-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-gray-900">Health History & Medications</CardTitle>
