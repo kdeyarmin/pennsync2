@@ -176,14 +176,14 @@ export default function OASISAuditDashboard() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">OASIS Audit Dashboard</h1>
-        <p className="text-sm text-gray-600">Review flagged OASIS documents and generate audit reports</p>
+    <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">OASIS Audit Dashboard</h1>
+        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Review flagged OASIS documents and generate audit reports</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
@@ -244,24 +244,24 @@ export default function OASISAuditDashboard() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium">Filters:</span>
+              <Filter className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">Filters:</span>
             </div>
-            <div className="relative">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search patient..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-48"
+                className="pl-9 h-11 touch-target w-full"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40 h-11 touch-target">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -274,7 +274,7 @@ export default function OASISAuditDashboard() {
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40 h-11 touch-target">
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>

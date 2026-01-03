@@ -87,15 +87,15 @@ export default function AgencySettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Building2 className="w-8 h-8 text-blue-600" />
-            Agency Settings
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+            <span className="truncate">Agency Settings</span>
           </h1>
-          <p className="text-gray-600 mt-2">Configure agency-wide settings, validation rules, and cost analysis</p>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2 hidden sm:block">Configure agency-wide settings, validation rules, and cost analysis</p>
         </div>
 
         {successMessage && (
@@ -114,10 +114,10 @@ export default function AgencySettings() {
           </Alert>
         )}
 
-        <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="general">General Settings</TabsTrigger>
-            <TabsTrigger value="validation">Validation Rules</TabsTrigger>
+        <Tabs defaultValue="general" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 h-auto">
+            <TabsTrigger value="general" className="py-2 sm:py-3 text-xs sm:text-sm">General Settings</TabsTrigger>
+            <TabsTrigger value="validation" className="py-2 sm:py-3 text-xs sm:text-sm">Validation Rules</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
@@ -285,7 +285,7 @@ export default function AgencySettings() {
             <Button 
               type="submit" 
               disabled={saveMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700 gap-2"
+              className="bg-blue-600 hover:bg-blue-700 gap-2 min-h-[44px] w-full sm:w-auto"
             >
               {saveMutation.isPending ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
