@@ -263,9 +263,13 @@ Be specific, actionable, and data-driven.`,
 function calculateDailyTrend(noteConversions, startDate, endDate) {
   const dailyData = {};
   
-  // Initialize all days in range
+  // Initialize all days in range (ensure we include the end date)
   const currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
+  currentDate.setHours(0, 0, 0, 0);
+  const endDateNormalized = new Date(endDate);
+  endDateNormalized.setHours(23, 59, 59, 999);
+  
+  while (currentDate <= endDateNormalized) {
     const dateKey = currentDate.toISOString().split('T')[0];
     dailyData[dateKey] = 0;
     currentDate.setDate(currentDate.getDate() + 1);
@@ -273,17 +277,21 @@ function calculateDailyTrend(noteConversions, startDate, endDate) {
   
   // Count notes per day
   noteConversions.forEach(note => {
-    const noteDate = new Date(note.created_date).toISOString().split('T')[0];
-    if (dailyData.hasOwnProperty(noteDate)) {
-      dailyData[noteDate]++;
+    const noteDate = new Date(note.created_date);
+    noteDate.setHours(0, 0, 0, 0);
+    const noteKey = noteDate.toISOString().split('T')[0];
+    if (dailyData.hasOwnProperty(noteKey)) {
+      dailyData[noteKey]++;
     }
   });
   
-  // Convert to array format for charting
+  // Convert to sorted array format for charting
   return Object.entries(dailyData)
+    .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
     .map(([date, count]) => ({
-      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      count
+      date: new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
+      count,
+      fullDate: date
     }));
 }
 
@@ -384,7 +392,13 @@ function generatePDFReport(config) {
   y += 5;
   addText('Daily Enhancement Trend:', 9, true);
   const maxEnhancements = Math.max(...metricsData.ai_documentation.daily_trend.map(d => d.count), 1);
-  metricsData.ai_documentation.daily_trend.forEach(day => {
+  
+  // Display all days with data (filter out zero values for cleaner display if there are many days)
+  const trendData = date_range_days > 30 
+    ? metricsData.ai_documentation.daily_trend.filter(d => d.count > 0)
+    : metricsData.ai_documentation.daily_trend;
+  
+  trendData.forEach(day => {
     const barWidth = (day.count / maxEnhancements) * 100;
     addText(`${day.date}: ${day.count} (${Math.round(barWidth)}%)`, 7);
   });
