@@ -506,7 +506,7 @@ export default function AnalyticsDashboard() {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <PerformanceMetricsCard
           title="Avg Doc Time"
           value={`${metrics.avgDocTime} min`}
@@ -527,16 +527,16 @@ export default function AnalyticsDashboard() {
       {/* Charts */}
       <Tabs defaultValue="time" className="mb-4 sm:mb-6">
         <TabsList className="grid w-full grid-cols-2 h-auto">
-          <TabsTrigger value="time">Documentation Time</TabsTrigger>
-          <TabsTrigger value="ai">AI Utilization</TabsTrigger>
+          <TabsTrigger value="time" className="py-2 sm:py-3 text-xs sm:text-sm">Documentation Time</TabsTrigger>
+          <TabsTrigger value="ai" className="py-2 sm:py-3 text-xs sm:text-sm">AI Utilization</TabsTrigger>
         </TabsList>
 
         <TabsContent value="time">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Average Documentation Time</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Average Documentation Time</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 md:p-6">
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -560,10 +560,10 @@ export default function AnalyticsDashboard() {
 
         <TabsContent value="ai">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">AI Feature Usage Rate</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">AI Feature Usage Rate</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 md:p-6">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -586,10 +586,10 @@ export default function AnalyticsDashboard() {
       {/* User Performance Table (Admin Only) */}
       {isAdmin && userPerformance.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">User Performance Summary</CardTitle>
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-base sm:text-lg">User Performance Summary</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <UserPerformanceTable users={userPerformance} />
           </CardContent>
         </Card>
