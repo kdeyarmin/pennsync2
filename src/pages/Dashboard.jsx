@@ -192,10 +192,7 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Actionable AI Insights */}
-      <div className="mb-6">
-        <ActionableInsightsWidget />
-      </div>
+
 
       {/* New Features Banner */}
       <NewFeaturesBanner />
@@ -283,11 +280,7 @@ export default function Dashboard() {
           patients={patients}
           onOptimizedSchedule={(order) => console.log('Optimized:', order)}
         />
-        <IntelligentTaskPrioritization
-          nurseEmail={currentUser?.email}
-          patients={patients}
-          onTaskCompleted={() => queryClient.invalidateQueries({ queryKey: ['nurseTasks'] })}
-        />
+
       </div>
 
       {/* Proactive Clinical Support - Show for first scheduled patient */}
