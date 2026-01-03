@@ -47,7 +47,8 @@ import {
   RefreshCw,
   ChevronRight,
   Sparkles,
-  ClipboardCheck
+  ClipboardCheck,
+  Target
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
@@ -112,31 +113,105 @@ export default function ReferralIntake() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFile(file_url);
       
-      // Immediately extract data from document to auto-populate form
+      // Immediately extract data from document with enhanced AI categorization
       const extracted = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this referral document and extract key information for form auto-population.
-        
-Extract:
+        prompt: `Analyze this referral document and extract key information with automatic categorization.
+
+Extract and categorize:
+
+1. PATIENT INFORMATION:
 - Patient full name
 - Date of birth
+- Contact information
+- Address
+
+2. REFERRAL DETAILS:
 - Referral source (hospital, physician, facility name)
 - Referral date
-- Primary diagnosis
-- Urgency indicators (urgent, high priority, stat, emergency, etc.)
+- Referring physician name and contact
 
-Return structured data for form population.`,
+3. CLINICAL CATEGORIZATION:
+- Primary diagnosis
+- Secondary diagnoses
+- Category classification (cardiac, respiratory, wound_care, orthopedic, neurological, diabetes, post_surgical, general_medical, hospice, palliative)
+- ICD-10 codes if mentioned
+- Medical history highlights
+
+4. URGENCY ASSESSMENT:
+- Urgency indicators (urgent, high priority, stat, emergency, routine)
+- Clinical urgency factors (recent hospitalization, unstable vitals, critical condition)
+- Administrative urgency (insurance requirements, requested start date)
+- Recommended priority level
+
+5. INITIAL CARE NEEDS:
+- Skilled nursing needs
+- Therapy requirements (PT, OT, ST)
+- Medical equipment needs (DME)
+- Medication management requirements
+- Wound care needs
+- IV therapy requirements
+
+6. SUGGESTED INITIAL TASKS:
+- Critical actions needed immediately (within 24 hours)
+- High priority actions (within 48-72 hours)
+- Important follow-ups (within first week)
+
+Return comprehensive structured data for intelligent form pre-population and care planning.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
           properties: {
             patient_name: { type: "string" },
             patient_dob: { type: "string" },
+            patient_phone: { type: "string" },
+            patient_address: { type: "string" },
             referral_source: { type: "string" },
             referral_date: { type: "string" },
+            referring_physician: { type: "string" },
+            physician_contact: { type: "string" },
             primary_diagnosis: { type: "string" },
+            secondary_diagnoses: { type: "array", items: { type: "string" } },
+            category: { 
+              type: "string",
+              enum: ["cardiac", "respiratory", "wound_care", "orthopedic", "neurological", "diabetes", "post_surgical", "general_medical", "hospice", "palliative"]
+            },
+            icd10_codes: { type: "array", items: { type: "string" } },
             urgency_level: { 
               type: "string",
               enum: ["urgent", "high", "normal", "low"]
+            },
+            urgency_factors: { type: "array", items: { type: "string" } },
+            clinical_urgency_score: { type: "number" },
+            administrative_urgency_score: { type: "number" },
+            skilled_nursing_needs: { type: "array", items: { type: "string" } },
+            therapy_requirements: { type: "array", items: { type: "string" } },
+            dme_needs: { type: "array", items: { type: "string" } },
+            medication_management: { type: "boolean" },
+            wound_care_needed: { type: "boolean" },
+            iv_therapy_needed: { type: "boolean" },
+            suggested_initial_tasks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  task: { type: "string" },
+                  priority: { type: "string" },
+                  timeframe: { type: "string" },
+                  reason: { type: "string" }
+                }
+              }
+            },
+            suggested_care_plans: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  problem: { type: "string" },
+                  goal: { type: "string" },
+                  interventions: { type: "array", items: { type: "string" } },
+                  rationale: { type: "string" }
+                }
+              }
             },
             confidence_score: { type: "number" }
           }
@@ -145,7 +220,7 @@ Return structured data for form population.`,
       
       setExtractedFormData(extracted);
       
-      // Auto-populate form with extracted data
+      // Auto-populate form with comprehensive extracted data
       if (extracted.patient_name) {
         setNewReferral(prev => ({
           ...prev,
@@ -153,7 +228,11 @@ Return structured data for form population.`,
           referral_source: extracted.referral_source || prev.referral_source,
           referral_date: extracted.referral_date || prev.referral_date,
           priority: extracted.urgency_level || prev.priority,
-          diagnosis: extracted.primary_diagnosis
+          diagnosis: extracted.primary_diagnosis,
+          category: extracted.category,
+          urgency_factors: extracted.urgency_factors,
+          suggested_tasks: extracted.suggested_initial_tasks,
+          suggested_care_plans: extracted.suggested_care_plans
         }));
       }
     } catch (error) {
@@ -172,10 +251,41 @@ Return structured data for form population.`,
 
     setIsUploading(true);
     try {
+      // Create referral with AI-enhanced categorization and suggestions
       const referral = await base44.entities.Referral.create({
         ...newReferral,
         document_url: uploadedFile,
-        status: 'new'
+        status: 'new',
+        ai_generated_tasks: extractedFormData?.suggested_initial_tasks || [],
+        extracted_data: extractedFormData ? {
+          demographics: {
+            full_name: extractedFormData.patient_name,
+            date_of_birth: extractedFormData.patient_dob,
+            phone: extractedFormData.patient_phone,
+            address: extractedFormData.patient_address
+          },
+          diagnoses: {
+            primary_diagnosis: extractedFormData.primary_diagnosis,
+            secondary_diagnoses: extractedFormData.secondary_diagnoses || [],
+            icd10_codes: extractedFormData.icd10_codes || []
+          },
+          clinical_category: extractedFormData.category,
+          urgency_assessment: {
+            urgency_level: extractedFormData.urgency_level,
+            urgency_factors: extractedFormData.urgency_factors || [],
+            clinical_urgency_score: extractedFormData.clinical_urgency_score || 0,
+            administrative_urgency_score: extractedFormData.administrative_urgency_score || 0
+          },
+          care_needs: {
+            skilled_nursing: extractedFormData.skilled_nursing_needs || [],
+            therapy_requirements: extractedFormData.therapy_requirements || [],
+            dme_needs: extractedFormData.dme_needs || [],
+            medication_management: extractedFormData.medication_management || false,
+            wound_care: extractedFormData.wound_care_needed || false,
+            iv_therapy: extractedFormData.iv_therapy_needed || false
+          },
+          suggested_care_plans: extractedFormData.suggested_care_plans || []
+        } : null
       });
 
       // Automatically start processing
@@ -575,9 +685,12 @@ Actions available:
 
       await base44.entities.Referral.update(referralId, updates);
 
-      // Create AI-generated tasks based on suggested next steps
+      // Create comprehensive AI-generated tasks from multiple sources
+      const allSuggestedTasks = [];
+      
+      // Tasks from intake analysis
       if (intakeAnalysis.suggested_next_steps?.length > 0) {
-        const tasksToCreate = intakeAnalysis.suggested_next_steps
+        const analysisTasksToCreate = intakeAnalysis.suggested_next_steps
           .filter(step => step.priority === 'immediate' || step.priority === 'urgent' || step.priority === 'high')
           .map(step => ({
             patient_id: updates.patient_id || null,
@@ -590,12 +703,90 @@ Actions available:
             ai_reason: `Referral intake analysis identified this as ${step.priority} priority action`,
             related_visit_id: referralId
           }));
-
-        if (tasksToCreate.length > 0) {
-          await Promise.all(tasksToCreate.map(task => 
-            base44.entities.Task.create(task).catch(err => console.error('Failed to create task:', err))
-          ));
+        allSuggestedTasks.push(...analysisTasksToCreate);
+      }
+      
+      // Tasks from initial OCR extraction
+      if (extractedData.care_needs) {
+        // Create tasks for critical care needs
+        if (extractedData.care_needs.wound_care) {
+          allSuggestedTasks.push({
+            patient_id: updates.patient_id || null,
+            title: "Coordinate wound care assessment and supplies",
+            description: "Patient requires wound care services. Schedule wound care assessment and order necessary supplies.",
+            type: "coordinate",
+            priority: "high",
+            status: "pending",
+            source: "ai_generated",
+            ai_reason: "Wound care identified in referral document",
+            related_visit_id: referralId
+          });
         }
+        
+        if (extractedData.care_needs.iv_therapy) {
+          allSuggestedTasks.push({
+            patient_id: updates.patient_id || null,
+            title: "Arrange IV therapy services and supplies",
+            description: "Patient requires IV therapy. Coordinate with pharmacy and schedule IV-certified nurse.",
+            type: "coordinate",
+            priority: "high",
+            status: "pending",
+            source: "ai_generated",
+            ai_reason: "IV therapy identified in referral document",
+            related_visit_id: referralId
+          });
+        }
+        
+        if (extractedData.care_needs.therapy_requirements?.length > 0) {
+          allSuggestedTasks.push({
+            patient_id: updates.patient_id || null,
+            title: `Coordinate ${extractedData.care_needs.therapy_requirements.join(', ')} therapy services`,
+            description: `Patient requires ${extractedData.care_needs.therapy_requirements.join(', ')}. Contact therapy team for evaluation and scheduling.`,
+            type: "coordinate",
+            priority: "high",
+            status: "pending",
+            source: "ai_generated",
+            ai_reason: `Therapy requirements identified: ${extractedData.care_needs.therapy_requirements.join(', ')}`,
+            related_visit_id: referralId
+          });
+        }
+        
+        if (extractedData.care_needs.dme_needs?.length > 0) {
+          allSuggestedTasks.push({
+            patient_id: updates.patient_id || null,
+            title: "Order DME equipment",
+            description: `Order the following DME: ${extractedData.care_needs.dme_needs.join(', ')}`,
+            type: "order",
+            priority: "high",
+            status: "pending",
+            source: "ai_generated",
+            ai_reason: `DME needs identified: ${extractedData.care_needs.dme_needs.join(', ')}`,
+            related_visit_id: referralId
+          });
+        }
+      }
+
+      if (allSuggestedTasks.length > 0) {
+        await Promise.all(allSuggestedTasks.map(task => 
+          base44.entities.Task.create(task).catch(err => console.error('Failed to create task:', err))
+        ));
+      }
+      
+      // Auto-generate suggested care plans
+      if (extractedData.suggested_care_plans?.length > 0 && updates.patient_id) {
+        const carePlansToCreate = extractedData.suggested_care_plans.map(cp => ({
+          patient_id: updates.patient_id,
+          problem: cp.problem,
+          goal: cp.goal,
+          interventions: cp.interventions,
+          status: 'active',
+          baseline_measurement: 'To be assessed on first visit',
+          target_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        }));
+        
+        await Promise.all(carePlansToCreate.map(cp => 
+          base44.entities.CarePlan.create(cp).catch(err => console.error('Failed to create care plan:', err))
+        ));
       }
       setProcessingReferralId(null);
       
@@ -1002,17 +1193,84 @@ Actions available:
             </Alert>
 
             {extractedFormData && (
-              <Alert className="bg-green-50 border-green-300">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <AlertDescription className="text-green-900 text-sm">
-                  <strong>AI Extracted Data:</strong> Form fields have been auto-populated. Please review and edit if needed before submitting.
-                  {extractedFormData.confidence_score && (
-                    <span className="ml-2 text-xs">
-                      (Confidence: {Math.round(extractedFormData.confidence_score)}%)
-                    </span>
-                  )}
-                </AlertDescription>
-              </Alert>
+              <div className="space-y-3">
+                <Alert className="bg-green-50 border-green-300">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <AlertDescription className="text-green-900 text-sm">
+                    <strong>AI Extracted Data:</strong> Form fields have been auto-populated with comprehensive analysis.
+                    {extractedFormData.confidence_score && (
+                      <span className="ml-2 text-xs">
+                        (Confidence: {Math.round(extractedFormData.confidence_score)}%)
+                      </span>
+                    )}
+                  </AlertDescription>
+                </Alert>
+                
+                {/* AI Categorization Results */}
+                {extractedFormData.category && (
+                  <Alert className="bg-blue-50 border-blue-300">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <AlertDescription className="text-blue-900 text-sm">
+                      <strong>Auto-Categorized:</strong> {extractedFormData.category.replace(/_/g, ' ').toUpperCase()}
+                      {extractedFormData.urgency_factors?.length > 0 && (
+                        <div className="mt-2 text-xs">
+                          <strong>Urgency Factors:</strong>
+                          <ul className="list-disc list-inside mt-1">
+                            {extractedFormData.urgency_factors.slice(0, 3).map((factor, idx) => (
+                              <li key={idx}>{factor}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {/* Suggested Tasks Preview */}
+                {extractedFormData.suggested_initial_tasks?.length > 0 && (
+                  <Alert className="bg-purple-50 border-purple-300">
+                    <ClipboardCheck className="w-4 h-4 text-purple-600" />
+                    <AlertDescription className="text-purple-900 text-sm">
+                      <strong>AI Suggested {extractedFormData.suggested_initial_tasks.length} Initial Tasks</strong>
+                      <div className="mt-2 text-xs space-y-1">
+                        {extractedFormData.suggested_initial_tasks.slice(0, 3).map((task, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <Badge className={
+                              task.priority === 'critical' || task.priority === 'immediate' ? 'bg-red-600' :
+                              task.priority === 'urgent' || task.priority === 'high' ? 'bg-orange-600' : 'bg-blue-600'
+                            }>{task.priority}</Badge>
+                            <span>{task.task}</span>
+                          </div>
+                        ))}
+                        {extractedFormData.suggested_initial_tasks.length > 3 && (
+                          <div className="text-xs text-gray-600">+ {extractedFormData.suggested_initial_tasks.length - 3} more tasks</div>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {/* Suggested Care Plans Preview */}
+                {extractedFormData.suggested_care_plans?.length > 0 && (
+                  <Alert className="bg-indigo-50 border-indigo-300">
+                    <Target className="w-4 h-4 text-indigo-600" />
+                    <AlertDescription className="text-indigo-900 text-sm">
+                      <strong>AI Suggested {extractedFormData.suggested_care_plans.length} Care Plans</strong>
+                      <div className="mt-2 text-xs space-y-2">
+                        {extractedFormData.suggested_care_plans.slice(0, 2).map((plan, idx) => (
+                          <div key={idx} className="bg-white p-2 rounded border border-indigo-200">
+                            <div className="font-semibold">{plan.problem}</div>
+                            <div className="text-gray-700">Goal: {plan.goal}</div>
+                          </div>
+                        ))}
+                        {extractedFormData.suggested_care_plans.length > 2 && (
+                          <div className="text-xs text-gray-600">+ {extractedFormData.suggested_care_plans.length - 2} more care plans</div>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
