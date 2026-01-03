@@ -1768,35 +1768,42 @@ Return scores (0-100) and top 3-5 issues in each category.`,
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto pb-20">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">OASIS Analyzer</h1>
-        <p className="text-sm text-gray-600">Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips</p>
+    <div className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto pb-12 sm:pb-20">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">OASIS Analyzer</h1>
+        <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Upload your OASIS assessment PDF for accuracy checking and revenue optimization tips</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full max-w-3xl grid-cols-5">
-          <TabsTrigger value="single" className="gap-2">
-            <FileText className="w-4 h-4" />
-            Single Document
-          </TabsTrigger>
-          <TabsTrigger value="batch" className="gap-2">
-            <FolderArchive className="w-4 h-4" />
-            Batch Analysis
-          </TabsTrigger>
-          <TabsTrigger value="saved" className="gap-2">
-            <History className="w-4 h-4" />
-            Saved ({savedOASISUploads.length})
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <BarChart3 className="w-4 h-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="automation" className="gap-2">
-            <Zap className="w-4 h-4" />
-            Automation
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 sm:mb-6">
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:max-w-3xl md:grid-cols-5 gap-1 min-w-max h-auto">
+            <TabsTrigger value="single" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Single Document</span>
+              <span className="sm:hidden">Single</span>
+            </TabsTrigger>
+            <TabsTrigger value="batch" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <FolderArchive className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Batch Analysis</span>
+              <span className="sm:hidden">Batch</span>
+            </TabsTrigger>
+            <TabsTrigger value="saved" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <History className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Saved ({savedOASISUploads.length})</span>
+              <span className="md:hidden">Saved</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Analytics</span>
+              <span className="sm:hidden">Stats</span>
+            </TabsTrigger>
+            <TabsTrigger value="automation" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Automation</span>
+              <span className="sm:hidden">Auto</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Saved OASIS Tab */}
         <TabsContent value="saved" className="mt-4">
@@ -1913,32 +1920,33 @@ Return scores (0-100) and top 3-5 issues in each category.`,
           ) : null}
 
           {/* Upload Section */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Upload className="w-5 h-5 text-blue-600" />
-                Upload OASIS Document
+          <Card className="mb-4 sm:mb-6">
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+                <span className="truncate">Upload OASIS Document</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 md:p-6">
               <div className="space-y-4">
-                <div className="flex gap-3 justify-center">
-                  <Button
-                    variant={useDataEntryAssistant ? "outline" : "default"}
-                    onClick={() => setUseDataEntryAssistant(false)}
-                    className={!useDataEntryAssistant ? "bg-blue-600 hover:bg-blue-700" : ""}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Quick Upload
-                  </Button>
-                  <Button
-                    variant={useDataEntryAssistant ? "default" : "outline"}
-                    onClick={() => setUseDataEntryAssistant(true)}
-                    className={useDataEntryAssistant ? "bg-purple-600 hover:bg-purple-700" : ""}
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    AI Data Entry Assistant
-                  </Button>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+                <Button
+                  variant={useDataEntryAssistant ? "outline" : "default"}
+                  onClick={() => setUseDataEntryAssistant(false)}
+                  className={`min-h-[44px] w-full sm:w-auto ${!useDataEntryAssistant ? "bg-blue-600 hover:bg-blue-700" : ""}`}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Quick Upload
+                </Button>
+                <Button
+                  variant={useDataEntryAssistant ? "default" : "outline"}
+                  onClick={() => setUseDataEntryAssistant(true)}
+                  className={`min-h-[44px] w-full sm:w-auto ${useDataEntryAssistant ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">AI Data Entry Assistant</span>
+                  <span className="sm:hidden">AI Assistant</span>
+                </Button>
                 </div>
 
                 {!useDataEntryAssistant && (

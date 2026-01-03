@@ -423,49 +423,51 @@ export default function AdminDashboard() {
 
 
       {/* Tabs */}
-      <Tabs defaultValue="users" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-1 p-1 h-auto w-full">
-          <TabsTrigger value="users" className="gap-1 px-2 py-2 text-xs touch-target">
-            <Users className="w-4 h-4" />
-            <span className="hidden md:inline">Users</span>
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-1 px-2 py-2 text-xs touch-target">
-            <Activity className="w-4 h-4" />
-            <span className="hidden md:inline">Activity</span>
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="gap-1 px-2 py-2 text-xs touch-target">
-            <BarChart3 className="w-4 h-4" />
-            <span className="hidden md:inline">Reports</span>
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="gap-1 px-2 py-2 text-xs touch-target">
-            <Target className="w-4 h-4" />
-            <span className="hidden md:inline">Staff</span>
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-1 px-2 py-2 text-xs touch-target">
-            <TrendingUp className="w-4 h-4" />
-            <span className="hidden md:inline">Analytics</span>
-          </TabsTrigger>
-          <TabsTrigger value="quality" className="gap-1 px-2 py-2 text-xs touch-target">
-            <Award className="w-4 h-4" />
-            <span className="hidden md:inline">Quality</span>
-          </TabsTrigger>
-          <TabsTrigger value="notereview" className="gap-1 px-2 py-2 text-xs touch-target">
-            <FileText className="w-4 h-4" />
-            <span className="hidden md:inline">Notes</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-1 px-2 py-2 text-xs touch-target">
-            <Shield className="w-4 h-4" />
-            <span className="hidden md:inline">Security</span>
-          </TabsTrigger>
-          <TabsTrigger value="encryption" className="gap-1 px-2 py-2 text-xs touch-target">
-            <Lock className="w-4 h-4" />
-            <span className="hidden md:inline">Encrypt</span>
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-1 px-2 py-2 text-xs touch-target">
-            <Settings className="w-4 h-4" />
-            <span className="hidden md:inline">Settings</span>
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="users" className="space-y-3 sm:space-y-4 md:space-y-6">
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:grid-cols-5 lg:grid-cols-10 gap-1 p-1 h-auto min-w-max w-full">
+            <TabsTrigger value="users" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Activity</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Reports</span>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <Target className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Staff</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="quality" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <Award className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Quality</span>
+            </TabsTrigger>
+            <TabsTrigger value="notereview" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Notes</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="encryption" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <Lock className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Encrypt</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1 px-2 py-2 text-xs whitespace-nowrap touch-target">
+              <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden md:inline">Settings</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-6">
@@ -568,21 +570,21 @@ export default function AdminDashboard() {
 
           {/* Security Logs */}
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Security Audit Logs</CardTitle>
-                <div className="relative w-64">
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                <CardTitle className="text-base sm:text-lg">Security Audit Logs</CardTitle>
+                <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     placeholder="Search logs..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-11 touch-target"
                   />
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <Table>
                   <TableHeader>

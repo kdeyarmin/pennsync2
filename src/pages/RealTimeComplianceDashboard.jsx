@@ -607,7 +607,7 @@ export default function RealTimeComplianceDashboard() {
       {/* Filters */}
       <Card className="mb-4 sm:mb-6">
         <CardContent className="p-3 sm:p-4">
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="w-full sm:w-[180px] h-11 touch-target">
                 <SelectValue />
@@ -650,12 +650,12 @@ export default function RealTimeComplianceDashboard() {
       </Card>
 
       {/* Overall Compliance Score */}
-      <Card className={`mb-6 bg-gradient-to-r ${getScoreBg(overallComplianceScore)} text-white`}>
+      <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${getScoreBg(overallComplianceScore)} text-white`}>
         <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
             <div className="text-center sm:text-left w-full sm:w-auto">
-              <p className="text-white/80 mb-1 text-sm sm:text-base">Overall Agency Compliance Score</p>
-              <p className="text-4xl sm:text-5xl font-bold">{overallComplianceScore}%</p>
+              <p className="text-white/80 mb-1 text-xs sm:text-sm md:text-base truncate">Overall Agency Compliance Score</p>
+              <p className="text-3xl sm:text-4xl md:text-5xl font-bold">{overallComplianceScore}%</p>
               <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                 {overallComplianceScore >= 85 ? (
                   <>
@@ -675,17 +675,17 @@ export default function RealTimeComplianceDashboard() {
                 )}
               </div>
             </div>
-            <Shield className="w-16 h-16 sm:w-24 sm:h-24 opacity-20" />
+            <Shield className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 opacity-20 flex-shrink-0" />
           </div>
         </CardContent>
       </Card>
 
       {/* Actionable Insights */}
       {actionableInsights.length > 0 && (
-        <div className="mb-6 space-y-3">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-500" />
-            Actionable Insights
+        <div className="mb-4 sm:mb-6 space-y-2 sm:space-y-3">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 flex-shrink-0" />
+            <span className="truncate">Actionable Insights</span>
           </h2>
           {actionableInsights.map((insight, idx) => (
             <Alert 
@@ -726,14 +726,14 @@ export default function RealTimeComplianceDashboard() {
       )}
 
       {/* Compliance Trend Chart */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-            Compliance Score Trends
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+            <span className="truncate">Compliance Score Trends</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-4 md:p-6">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={complianceTrendData}>
               <CartesianGrid strokeDasharray="3 3" />
