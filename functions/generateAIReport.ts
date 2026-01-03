@@ -388,19 +388,31 @@ function generatePDFReport(config) {
   addText(`Avg Compliance Improvement: ${metricsData.ai_documentation.avg_compliance_improvement}%`, 9);
   addText(`Time Saved: ${metricsData.ai_documentation.time_saved_hours} hours`, 9);
   
-  // Daily Enhancement Trend
-  y += 5;
-  addText('Daily Enhancement Trend:', 9, true);
+  // Daily Enhancement Trend - New Page for Chart
+  if (y > 200 || metricsData.ai_documentation.daily_trend.length > 20) {
+    doc.addPage();
+    y = 20;
+  }
+  
+  addSection('📈 Daily Enhancement Trend');
   const maxEnhancements = Math.max(...metricsData.ai_documentation.daily_trend.map(d => d.count), 1);
   
-  // Display all days with data (filter out zero values for cleaner display if there are many days)
-  const trendData = date_range_days > 30 
-    ? metricsData.ai_documentation.daily_trend.filter(d => d.count > 0)
-    : metricsData.ai_documentation.daily_trend;
-  
-  trendData.forEach(day => {
+  metricsData.ai_documentation.daily_trend.forEach((day, index) => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
     const barWidth = (day.count / maxEnhancements) * 100;
-    addText(`${day.date}: ${day.count} (${Math.round(barWidth)}%)`, 7);
+    doc.setFontSize(7);
+    doc.text(`${day.date}`, 25, y);
+    doc.text(`${day.count}`, 50, y);
+    
+    // Draw bar
+    if (day.count > 0) {
+      doc.setFillColor(59, 130, 246); // Blue
+      doc.rect(60, y - 3, barWidth * 1.2, 4, 'F');
+    }
+    y += 5;
   });
 
   // STAFF PERFORMANCE
