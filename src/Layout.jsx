@@ -417,7 +417,6 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Desktop Notifications */}
             {!sidebarCollapsed && (
-            <>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -432,71 +431,8 @@ export default function Layout({ children, currentPageName }) {
                   </span>
                 )}
               </Button>
-              <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative w-full justify-start">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Quick Links
-                  {(unreadMessageCount + activeAlerts.length + pendingTasks.length) > 0 && (
-                    <span className="absolute right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                      {unreadMessageCount + activeAlerts.length + pendingTasks.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
-                <div className="bg-gray-50 px-4 py-3 border-b">
-                  <h3 className="font-semibold text-gray-900">Notifications</h3>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {unreadMessageCount > 0 && (
-                    <Link to={createPageUrl("Messages")} className="block p-3 hover:bg-gray-50 border-b">
-                      <div className="flex items-start gap-3">
-                        <Mail className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">New Messages</p>
-                          <p className="text-xs text-gray-600">{unreadMessageCount} unread message{unreadMessageCount !== 1 ? 's' : ''}</p>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-
-                  {activeAlerts.length > 0 && (
-                    <Link to={createPageUrl("PatientAlerts")} className="block p-3 hover:bg-gray-50 border-b">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">Active Patient Alerts</p>
-                          <p className="text-xs text-gray-600">{activeAlerts.length} alert{activeAlerts.length !== 1 ? 's' : ''} requiring attention</p>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-
-                  {pendingTasks.length > 0 && (
-                    <Link to={createPageUrl("NurseWorkflow")} className="block p-3 hover:bg-gray-50">
-                      <div className="flex items-start gap-3">
-                        <CheckSquare className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">Pending Tasks</p>
-                          <p className="text-xs text-gray-600">{pendingTasks.length} task{pendingTasks.length !== 1 ? 's' : ''} assigned to you</p>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-
-                  {totalNotificationCount === 0 && (
-                    <div className="p-8 text-center">
-                      <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">No new notifications</p>
-                    </div>
-                  )}
-                </div>
-              </PopoverContent>
-              </Popover>
-              </>
-              )}
-          {!sidebarCollapsed && (
+            )}
+            {!sidebarCollapsed && (
             <div className="mt-2 space-y-1">
               <FeedbackButton />
               <Button
@@ -547,67 +483,6 @@ export default function Layout({ children, currentPageName }) {
               </span>
             )}
           </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative text-white hover:bg-blue-700 h-12 w-12">
-                <Mail className="w-5 h-5" />
-                {(unreadMessageCount + activeAlerts.length + pendingTasks.length) > 0 && (
-                  <span className="absolute top-2 right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                    {unreadMessageCount + activeAlerts.length + pendingTasks.length}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
-              <div className="bg-gray-50 px-4 py-3 border-b">
-                <h3 className="font-semibold text-gray-900">Notifications</h3>
-              </div>
-              <div className="max-h-96 overflow-y-auto">
-                {unreadMessageCount > 0 && (
-                  <Link to={createPageUrl("Messages")} onClick={() => setMobileMenuOpen(false)} className="block p-3 hover:bg-gray-50 border-b">
-                    <div className="flex items-start gap-3">
-                      <Mail className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">New Messages</p>
-                        <p className="text-xs text-gray-600">{unreadMessageCount} unread</p>
-                      </div>
-                    </div>
-                  </Link>
-                )}
-
-                {activeAlerts.length > 0 && (
-                  <Link to={createPageUrl("PatientAlerts")} onClick={() => setMobileMenuOpen(false)} className="block p-3 hover:bg-gray-50 border-b">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">Patient Alerts</p>
-                        <p className="text-xs text-gray-600">{activeAlerts.length} active</p>
-                      </div>
-                    </div>
-                  </Link>
-                )}
-
-                {pendingTasks.length > 0 && (
-                  <Link to={createPageUrl("NurseWorkflow")} onClick={() => setMobileMenuOpen(false)} className="block p-3 hover:bg-gray-50">
-                    <div className="flex items-start gap-3">
-                      <CheckSquare className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">Pending Tasks</p>
-                        <p className="text-xs text-gray-600">{pendingTasks.length} assigned</p>
-                      </div>
-                    </div>
-                  </Link>
-                )}
-
-                {totalNotificationCount === 0 && (
-                  <div className="p-8 text-center">
-                    <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">No new notifications</p>
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
 
           <FeedbackButton />
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700 h-12 w-12">
