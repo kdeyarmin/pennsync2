@@ -326,11 +326,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-        {/* Announcements Management */}
-        <div className="mb-4 sm:mb-6">
-          <AnnouncementManager />
-        </div>
-
         {/* Advanced Analytics Quick Access */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Link to={createPageUrl("AgencyAnalytics")}>
@@ -773,6 +768,11 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
         </Tabs>
+
+      {/* Announcements Management */}
+      <div className="mt-6 sm:mt-8">
+        <AnnouncementManager />
+      </div>
 
       {/* Voice Commands */}
       <VoiceCommandListener
