@@ -36,20 +36,21 @@ export default function OASISComplianceReview() {
   const accuracyScore = analysisResults.accuracy_score || 0;
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
           <Link to={createPageUrl("OASISAnalyzer")}>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="min-h-[44px]">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Analyzer
+              <span className="hidden sm:inline">Back to Analyzer</span>
+              <span className="sm:hidden">Back</span>
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mt-2">OASIS Compliance & Accuracy Review</h1>
-          {patientName && <p className="text-gray-600 mt-1">Patient: {patientName}</p>}
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-2 truncate">OASIS Compliance & Accuracy Review</h1>
+          {patientName && <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">Patient: {patientName}</p>}
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <div className="text-right">
             <p className="text-sm text-gray-600">Compliance Score</p>
             <div className="text-2xl font-bold text-blue-600">{complianceScore}%</div>
