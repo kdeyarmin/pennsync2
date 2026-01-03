@@ -135,13 +135,13 @@ export default function UserSettings() {
   };
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Settings className="w-8 h-8 text-blue-600" />
-          AI Settings & Preferences
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+          <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+          <span className="truncate">AI Settings & Preferences</span>
         </h1>
-        <p className="text-gray-600 mt-2">Customize how AI assists you in documentation</p>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2">Customize how AI assists you in documentation</p>
       </div>
 
       {saveSuccess && (
@@ -153,19 +153,22 @@ export default function UserSettings() {
         </Alert>
       )}
 
-      <Tabs defaultValue="ai-behavior" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="ai-behavior">
-            <Brain className="w-4 h-4 mr-2" />
-            AI Behavior
+      <Tabs defaultValue="ai-behavior" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-3 gap-1 h-auto">
+          <TabsTrigger value="ai-behavior" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">AI Behavior</span>
+            <span className="sm:hidden">AI</span>
           </TabsTrigger>
-          <TabsTrigger value="features">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Features
+          <TabsTrigger value="features" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Features</span>
+            <span className="sm:hidden">Features</span>
           </TabsTrigger>
-          <TabsTrigger value="documentation">
-            <FileText className="w-4 h-4 mr-2" />
-            Documentation
+          <TabsTrigger value="documentation" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Documentation</span>
+            <span className="sm:hidden">Docs</span>
           </TabsTrigger>
         </TabsList>
 
@@ -395,11 +398,11 @@ export default function UserSettings() {
       </Tabs>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 mt-6">
+      <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-6">
         <Button
           onClick={handleSave}
           disabled={isSaving}
-          className="bg-blue-600 hover:bg-blue-700 flex-1"
+          className="bg-blue-600 hover:bg-blue-700 flex-1 min-h-[44px]"
         >
           {isSaving ? (
             <>
@@ -416,10 +419,11 @@ export default function UserSettings() {
         <Button
           onClick={handleReset}
           variant="outline"
-          className="flex-1"
+          className="flex-1 min-h-[44px]"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
-          Reset to Defaults
+          <span className="hidden sm:inline">Reset to Defaults</span>
+          <span className="sm:hidden">Reset</span>
         </Button>
       </div>
 

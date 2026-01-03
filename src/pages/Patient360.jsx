@@ -137,13 +137,13 @@ export default function Patient360() {
 
   if (!selectedPatientId) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Patient 360° View</h1>
+      <div className="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Patient 360° View</h1>
         <Card>
-          <CardContent className="p-12 text-center">
-            <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Select a Patient</h2>
-            <p className="text-gray-600 mb-6">Choose a patient to view their comprehensive 360° profile</p>
+          <CardContent className="p-8 sm:p-12 text-center">
+            <User className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Select a Patient</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Choose a patient to view their comprehensive 360° profile</p>
             <div className="max-w-md mx-auto">
               <SearchablePatientSelect
                 patients={allPatients}
@@ -162,9 +162,9 @@ export default function Patient360() {
 
   if (!patient) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto">
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
+          <CardContent className="p-8 sm:p-12 text-center text-gray-500">
             Loading patient information...
           </CardContent>
         </Card>
@@ -176,10 +176,10 @@ export default function Patient360() {
   const highAlerts = alerts.filter(a => a.severity === 'high').length;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
@@ -187,25 +187,31 @@ export default function Patient360() {
               setSelectedPatientId(null);
               window.history.pushState({}, '', createPageUrl('Patient360'));
             }}
+            className="min-h-[44px] w-full sm:w-auto"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Change Patient
+            <span className="hidden sm:inline">Change Patient</span>
+            <span className="sm:hidden">Back</span>
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">
               {patient.first_name} {patient.last_name}
             </h1>
-            <p className="text-gray-600">360° Patient View</p>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600">360° Patient View</p>
           </div>
         </div>
-        <Button onClick={() => navigate(createPageUrl(`PatientDetails?id=${selectedPatientId}`))}>
+        <Button 
+          onClick={() => navigate(createPageUrl(`PatientDetails?id=${selectedPatientId}`))}
+          className="min-h-[44px] w-full sm:w-auto"
+        >
           <FileText className="w-4 h-4 mr-2" />
-          Full Chart
+          <span className="hidden sm:inline">Full Chart</span>
+          <span className="sm:hidden">Chart</span>
         </Button>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -291,17 +297,19 @@ export default function Patient360() {
 
       {/* Main Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="clinical">Clinical Data</TabsTrigger>
-          <TabsTrigger value="ai-insights">AI Insights</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Overview</TabsTrigger>
+            <TabsTrigger value="clinical" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Clinical Data</TabsTrigger>
+            <TabsTrigger value="ai-insights" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">AI Insights</TabsTrigger>
+            <TabsTrigger value="compliance" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Compliance</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Trends</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2">
               <AIPatientDashboardSummary
                 patient={patient}
@@ -311,12 +319,12 @@ export default function Patient360() {
                 incidents={incidents}
               />
             </div>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Demographics</CardTitle>
+                <CardHeader className="p-3 sm:p-4 md:p-6">
+                  <CardTitle className="text-sm sm:text-base">Demographics</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm">
+                <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 text-xs sm:text-sm">
                   <div>
                     <p className="text-gray-500">Date of Birth</p>
                     <p className="font-semibold">{patient.date_of_birth || 'N/A'}</p>
@@ -339,10 +347,10 @@ export default function Patient360() {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Contact Info</CardTitle>
+                <CardHeader className="p-3 sm:p-4 md:p-6">
+                  <CardTitle className="text-sm sm:text-base">Contact Info</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm">
+                <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 text-xs sm:text-sm">
                   <div>
                     <p className="text-gray-500">Phone</p>
                     <p className="font-semibold">{patient.phone || 'N/A'}</p>
@@ -358,13 +366,13 @@ export default function Patient360() {
         </TabsContent>
 
         {/* Clinical Data Tab */}
-        <TabsContent value="clinical" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="clinical" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Vital Signs Trends</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base">Vital Signs Trends</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 {vitalsData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={vitalsData}>
@@ -385,10 +393,10 @@ export default function Patient360() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Medications ({patient.current_medications?.length || 0})</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base">Medications ({patient.current_medications?.length || 0})</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {patient.current_medications?.map((med, i) => (
                     <div key={i} className="p-3 bg-gray-50 rounded-lg">
@@ -401,12 +409,12 @@ export default function Patient360() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Recent Visits ({visits.slice(0, 5).length})</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base">Recent Visits ({visits.slice(0, 5).length})</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 {visits.length > 0 ? (
                   <div className="space-y-3">
                     {visits.slice(0, 5).map((visit) => (
@@ -432,10 +440,10 @@ export default function Patient360() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Care Plans ({carePlans.length})</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base">Care Plans ({carePlans.length})</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 {carePlans.length > 0 ? (
                   <div className="space-y-3">
                     {carePlans.slice(0, 5).map((plan) => (
@@ -486,12 +494,12 @@ export default function Patient360() {
         </TabsContent>
 
         {/* Trends Tab */}
-        <TabsContent value="trends" className="space-y-6">
+        <TabsContent value="trends" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Visit Frequency (Last 12 Months)</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-sm sm:text-base md:text-lg">Visit Frequency (Last 12 Months)</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 md:p-6">
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={visitFrequencyData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -504,12 +512,12 @@ export default function Patient360() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Incident History</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base">Incident History</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 {incidents.length > 0 ? (
                   <div className="space-y-3">
                     {incidents.slice(0, 5).map((incident, i) => (
@@ -536,10 +544,10 @@ export default function Patient360() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Active Tasks ({tasks.filter(t => t.status === 'pending').length})</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base">Active Tasks ({tasks.filter(t => t.status === 'pending').length})</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6">
                 {tasks.filter(t => t.status === 'pending').length > 0 ? (
                   <div className="space-y-3">
                     {tasks.filter(t => t.status === 'pending').slice(0, 5).map((task, i) => (
