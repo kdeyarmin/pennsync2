@@ -280,7 +280,7 @@ export default function AdminKPIDashboard() {
                 <p className="text-sm text-gray-500">Hours saved this period</p>
               </div>
               <div className="pt-3 border-t">
-                <p className="text-2xl font-bold text-gray-900">25 min</p>
+                <p className="text-2xl font-bold text-gray-900">20 min</p>
                 <p className="text-sm text-gray-500">Avg time per enhanced note</p>
               </div>
             </div>

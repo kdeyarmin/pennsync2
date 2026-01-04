@@ -105,6 +105,19 @@ export default function QualityMetricsDashboard() {
     initialData: [],
   });
 
+  const { data: noteConversions = [] } = useQuery({
+    queryKey: ['noteConversionsMetrics', timeRange],
+    queryFn: async () => {
+      const conversions = await base44.entities.NoteConversion.list('-created_date', 10000);
+      return conversions.filter(nc => {
+        if (!nc.created_date) return false;
+        const conversionDate = format(new Date(nc.created_date), 'yyyy-MM-dd');
+        return conversionDate >= dateRange.start && conversionDate <= dateRange.end;
+      });
+    },
+    initialData: [],
+  });
+
   // Filter visits by selected nurse
   const filteredVisits = useMemo(() => {
     if (selectedNurse === "all") return allVisits;
@@ -202,19 +215,6 @@ export default function QualityMetricsDashboard() {
     });
 
     // Time saved by AI (using note enhancements)
-    const { data: noteConversions = [] } = useQuery({
-      queryKey: ['noteConversionsMetrics', timeRange],
-      queryFn: async () => {
-        const conversions = await base44.entities.NoteConversion.list('-created_date', 10000);
-        return conversions.filter(nc => {
-          if (!nc.created_date) return false;
-          const conversionDate = format(new Date(nc.created_date), 'yyyy-MM-dd');
-          return conversionDate >= dateRange.start && conversionDate <= dateRange.end;
-        });
-      },
-      initialData: [],
-    });
-    
     const totalTimeSavedMinutes = noteConversions.length * 20; // 20 minutes saved per enhanced note
     const totalTimeSavedHours = Math.round(totalTimeSavedMinutes / 60);
 
@@ -236,7 +236,7 @@ export default function QualityMetricsDashboard() {
       activePatients,
       totalTimeSavedHours
     };
-  }, [filteredVisits, allVisits, allIncidents, allPatients, allUsers, securityLogs]);
+  }, [filteredVisits, allVisits, allIncidents, allPatients, allUsers, securityLogs, noteConversions]);
 
   const getMetricStatus = (value, thresholds) => {
     if (value >= thresholds.excellent) return { color: 'text-green-600', bg: 'bg-green-50', label: 'Excellent' };
