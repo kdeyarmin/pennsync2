@@ -32,6 +32,7 @@ import StaffTrainingOverview from "../components/training/StaffTrainingOverview"
 import TrainingMaterialUploader from "../components/training/TrainingMaterialUploader";
 import AIQuizGenerator from "../components/training/AIQuizGenerator";
 import CompletionTracker from "../components/training/CompletionTracker";
+import NurseTrainingNeedsAnalyzer from "../components/training/NurseTrainingNeedsAnalyzer";
 
 export default function TrainingManagement() {
   const queryClient = useQueryClient();
@@ -389,8 +390,12 @@ export default function TrainingManagement() {
       {/* Training Modules List */}
       <Tabs defaultValue="overview" className="space-y-3 sm:space-y-4">
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-6 gap-1 min-w-max h-auto">
             <TabsTrigger value="overview" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Staff Overview</TabsTrigger>
+            <TabsTrigger value="needs" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              AI Training Needs
+            </TabsTrigger>
             <TabsTrigger value="all" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">All Modules ({trainingModules.length})</TabsTrigger>
             <TabsTrigger value="required" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Required ({trainingModules.filter(m => m.is_required).length})</TabsTrigger>
             <TabsTrigger value="clinical" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Clinical</TabsTrigger>
@@ -400,6 +405,10 @@ export default function TrainingManagement() {
 
         <TabsContent value="overview">
           <StaffTrainingOverview />
+        </TabsContent>
+
+        <TabsContent value="needs">
+          <NurseTrainingNeedsAnalyzer />
         </TabsContent>
 
         {/* Module Detail View */}
