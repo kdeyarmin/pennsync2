@@ -201,8 +201,21 @@ export default function QualityMetricsDashboard() {
       }
     });
 
-    // Time saved by AI
-    const totalTimeSavedMinutes = completedVisits * 95; // Average 95 min saved per visit
+    // Time saved by AI (using note enhancements)
+    const { data: noteConversions = [] } = useQuery({
+      queryKey: ['noteConversionsMetrics', timeRange],
+      queryFn: async () => {
+        const conversions = await base44.entities.NoteConversion.list('-created_date', 10000);
+        return conversions.filter(nc => {
+          if (!nc.created_date) return false;
+          const conversionDate = format(new Date(nc.created_date), 'yyyy-MM-dd');
+          return conversionDate >= dateRange.start && conversionDate <= dateRange.end;
+        });
+      },
+      initialData: [],
+    });
+    
+    const totalTimeSavedMinutes = noteConversions.length * 20; // 20 minutes saved per enhanced note
     const totalTimeSavedHours = Math.round(totalTimeSavedMinutes / 60);
 
     return {
