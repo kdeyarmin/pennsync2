@@ -48,7 +48,8 @@ import {
   ChevronRight,
   Sparkles,
   ClipboardCheck,
-  Target
+  Target,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
@@ -819,6 +820,40 @@ Actions available:
     }
   };
 
+  const handleDeleteReferral = async (referralId) => {
+    if (!confirm('Are you sure you want to delete this referral? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await base44.entities.Referral.delete(referralId);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      alert('Referral deleted successfully');
+    } catch (error) {
+      console.error('Error deleting referral:', error);
+      alert('Failed to delete referral');
+    }
+  };
+
+  const handleRejectReferral = async (referralId) => {
+    if (!confirm('Are you sure you want to reject this referral?')) {
+      return;
+    }
+    
+    try {
+      await base44.entities.Referral.update(referralId, { 
+        status: 'declined',
+        rejection_date: new Date().toISOString(),
+        rejected_by: currentUser?.email
+      });
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      alert('Referral rejected');
+    } catch (error) {
+      console.error('Error rejecting referral:', error);
+      alert('Failed to reject referral');
+    }
+  };
+
   const handleCreateNewFromReview = async () => {
     try {
       const data = matchReviewReferral.extracted_data;
@@ -1169,6 +1204,26 @@ Actions available:
                               )}
                             </>
                           )}
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRejectReferral(referral.id)}
+                              className="text-orange-600 hover:bg-orange-50 min-h-[36px] text-xs flex-1"
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteReferral(referral.id)}
+                              className="text-red-600 hover:bg-red-50 min-h-[36px] text-xs flex-1"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
