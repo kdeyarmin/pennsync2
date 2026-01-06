@@ -3,7 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
-    const { referralData } = await req.json();
+    const { referralData, selectedSections } = await req.json();
 
     if (!referralData) {
       return Response.json({ error: 'Referral data required' }, { status: 400 });
@@ -135,8 +135,15 @@ Also provide:
     doc.setTextColor(0, 0, 0);
     yPos = 32;
 
+    // Helper to check if section is selected
+    const shouldInclude = (section) => {
+      if (!selectedSections || selectedSections.length === 0) return true;
+      return selectedSections.includes(section);
+    };
+
     // PATIENT DEMOGRAPHICS
-    addSectionHeader('PATIENT DEMOGRAPHICS', [37, 99, 235]);
+    if (shouldInclude('demographics')) {
+      addSectionHeader('PATIENT DEMOGRAPHICS', [37, 99, 235]);
     const demo = referralData.demographics || {};
     addKeyValue('Full Name', demo.full_name);
     addKeyValue('Date of Birth', demo.date_of_birth);
@@ -148,9 +155,11 @@ Also provide:
     addKeyValue('Emergency Phone', demo.emergency_phone);
     addKeyValue('Relationship', demo.emergency_relationship);
     yPos += 5;
+    }
 
     // INSURANCE & PHYSICIANS
-    addSectionHeader('INSURANCE & PHYSICIANS', [99, 102, 241]);
+    if (shouldInclude('insurance')) {
+      addSectionHeader('INSURANCE & PHYSICIANS', [99, 102, 241]);
     addKeyValue('Primary Insurance', demo.insurance_primary);
     addKeyValue('Secondary Insurance', demo.insurance_secondary);
     addKeyValue('Policy Numbers', demo.policy_numbers);
@@ -159,9 +168,11 @@ Also provide:
     addKeyValue('Primary Care Physician', demo.primary_care_physician);
     addKeyValue('PCP Contact', demo.pcp_contact);
     yPos += 5;
+    }
 
     // ADMISSION DETAILS
-    addSectionHeader('ADMISSION INFORMATION', [139, 92, 246]);
+    if (shouldInclude('admission')) {
+      addSectionHeader('ADMISSION INFORMATION', [139, 92, 246]);
     const admission = referralData.admission_details || {};
     addKeyValue('Admission Source', admission.admission_source);
     addKeyValue('Admission Date', admission.referral_date);
@@ -171,9 +182,11 @@ Also provide:
     addKeyValue('Current Living Situation', admission.current_living_situation);
     addKeyValue('Support System', admission.support_system);
     yPos += 5;
+    }
 
     // DIAGNOSES - HIGHLIGHTED
-    addSectionHeader('DIAGNOSES & MEDICAL HISTORY', [220, 38, 38]);
+    if (shouldInclude('diagnoses')) {
+      addSectionHeader('DIAGNOSES & MEDICAL HISTORY', [220, 38, 38]);
     const dx = referralData.diagnoses || {};
     
     checkPageBreak(18);
@@ -233,9 +246,11 @@ Also provide:
     }
     addKeyValue('Recent Hospitalizations', dx.recent_hospitalizations);
     yPos += 5;
+    }
 
     // MEDICATIONS
-    addSectionHeader('CURRENT MEDICATIONS', [34, 197, 94]);
+    if (shouldInclude('medications')) {
+      addSectionHeader('CURRENT MEDICATIONS', [34, 197, 94]);
     const meds = referralData.medications || [];
     if (meds.length > 0) {
       meds.forEach((med, idx) => {
@@ -259,11 +274,13 @@ Also provide:
       addText('No medications documented in referral', 10);
     }
     yPos += 5;
+    }
 
     // FUNCTIONAL STATUS - OASIS RELEVANT
-    doc.addPage();
-    yPos = 20;
-    addSectionHeader('FUNCTIONAL STATUS (OASIS-E RELEVANT)', [168, 85, 247]);
+    if (shouldInclude('functional_status')) {
+      doc.addPage();
+      yPos = 20;
+      addSectionHeader('FUNCTIONAL STATUS (OASIS-E RELEVANT)', [168, 85, 247]);
     const func = referralData.functional_status || {};
     addKeyValue('Ambulation', func.ambulation);
     addKeyValue('ADL Status', func.adl_status);
@@ -276,9 +293,11 @@ Also provide:
     addKeyValue('Pain', func.pain);
     addKeyValue('Continence', func.continence);
     yPos += 5;
+    }
 
     // CLINICAL INFORMATION
-    addSectionHeader('CLINICAL INFORMATION', [236, 72, 153]);
+    if (shouldInclude('clinical_info')) {
+      addSectionHeader('CLINICAL INFORMATION', [236, 72, 153]);
     const clinical = referralData.clinical_info || {};
     addKeyValue('Vital Signs', clinical.vital_signs);
     addKeyValue('Weight', clinical.weight);
@@ -286,9 +305,11 @@ Also provide:
     addKeyValue('Diagnostic Results', clinical.diagnostic_results);
     addKeyValue('Procedures', clinical.procedures);
     yPos += 5;
+    }
 
     // SKILLED NEEDS
-    addSectionHeader('SKILLED NEEDS & SERVICES', [251, 146, 60]);
+    if (shouldInclude('skilled_needs')) {
+      addSectionHeader('SKILLED NEEDS & SERVICES', [251, 146, 60]);
     const skilled = referralData.skilled_needs || {};
     if (skilled.services_ordered?.length > 0) {
       doc.setFontSize(10);
@@ -330,9 +351,11 @@ Also provide:
     }
     addKeyValue('Goals of Care', skilled.goals_of_care);
     yPos += 5;
+    }
 
     // PSYCHOSOCIAL
-    addSectionHeader('PSYCHOSOCIAL ASSESSMENT', [236, 72, 153]);
+    if (shouldInclude('psychosocial')) {
+      addSectionHeader('PSYCHOSOCIAL ASSESSMENT', [236, 72, 153]);
     const psycho = referralData.psychosocial || {};
     addKeyValue('Mental Health', psycho.mental_health);
     addKeyValue('Caregiver Information', psycho.caregiver_info);
@@ -340,9 +363,11 @@ Also provide:
     addKeyValue('Cultural Needs', psycho.cultural_needs);
     addKeyValue('Advance Directives', psycho.advance_directives);
     yPos += 5;
+    }
 
     // ORDERS & TREATMENTS
-    addSectionHeader('PHYSICIAN ORDERS & TREATMENTS', [5, 150, 105]);
+    if (shouldInclude('orders_treatments')) {
+      addSectionHeader('PHYSICIAN ORDERS & TREATMENTS', [5, 150, 105]);
     const orders = referralData.orders_treatments || {};
     if (orders.physician_orders?.length > 0) {
       doc.setFontSize(10);
@@ -385,9 +410,11 @@ Also provide:
     addKeyValue('Diet', orders.diet);
     addKeyValue('Activity Restrictions', orders.activity_restrictions);
     yPos += 5;
+    }
 
     // SAFETY CONCERNS
-    addSectionHeader('SAFETY CONCERNS', [239, 68, 68]);
+    if (shouldInclude('safety_concerns')) {
+      addSectionHeader('SAFETY CONCERNS', [239, 68, 68]);
     const safety = referralData.safety_concerns || {};
     addKeyValue('Environmental Hazards', safety.environmental_hazards);
     if (safety.safety_equipment_needed?.length > 0) {
@@ -396,11 +423,13 @@ Also provide:
     if (safety.high_risk_conditions?.length > 0) {
       addKeyValue('High Risk Conditions', safety.high_risk_conditions.join(', '));
     }
+    }
 
     // COMPREHENSIVE OASIS ASSESSMENT
-    doc.addPage();
-    yPos = 20;
-    addSectionHeader('COMPLETE OASIS-E ASSESSMENT', [5, 150, 105]);
+    if (shouldInclude('oasis_assessment')) {
+      doc.addPage();
+      yPos = 20;
+      addSectionHeader('COMPLETE OASIS-E ASSESSMENT', [5, 150, 105]);
     
     doc.setFontSize(10);
     doc.setTextColor(75, 85, 99);
@@ -640,9 +669,10 @@ Also provide:
       }
       yPos += 8;
     }
+    }
 
     // AI RISK ANALYSIS SECTION
-    if (riskAnalysis && riskAnalysis.risk_categories) {
+    if (shouldInclude('ai_risk_analysis') && riskAnalysis && riskAnalysis.risk_categories) {
       doc.addPage();
       yPos = 20;
       doc.setFillColor(220, 38, 38);
@@ -790,9 +820,10 @@ Also provide:
     }
 
     // IMPORTANT NOTES SECTION
-    doc.addPage();
-    yPos = 20;
-    doc.setFillColor(239, 68, 68);
+    if (shouldInclude('nursing_notes')) {
+      doc.addPage();
+      yPos = 20;
+      doc.setFillColor(239, 68, 68);
     doc.rect(0, yPos - 8, 210, 14, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
@@ -853,9 +884,11 @@ Also provide:
         yPos += 5.5;
       });
     }
+    }
 
     // HOMEBOUND STATUS SECTION
-    checkPageBreak(50);
+    if (shouldInclude('homebound_status')) {
+      checkPageBreak(50);
     yPos += 8;
     doc.setFillColor(139, 92, 246);
     doc.rect(margin - 5, yPos, 190, 12, 'F');
@@ -923,9 +956,11 @@ Also provide:
       yPos += 5.5;
     });
     doc.setTextColor(0, 0, 0);
+    }
 
     // SAMPLE NURSING ASSESSMENT
-    checkPageBreak(80);
+    if (shouldInclude('sample_assessment')) {
+      checkPageBreak(80);
     yPos += 10;
     doc.setFillColor(34, 197, 94);
     doc.rect(margin - 5, yPos, 190, 12, 'F');
@@ -985,9 +1020,11 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
       doc.text(line, margin + 2, yPos);
       yPos += 5;
     });
+    }
 
     // SUGGESTED CARE PLANS
-    checkPageBreak(80);
+    if (shouldInclude('care_plans')) {
+      checkPageBreak(80);
     yPos += 10;
     doc.setFillColor(16, 185, 129);
     doc.rect(margin - 5, yPos, 190, 12, 'F');
@@ -1128,6 +1165,7 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
       });
       yPos += 6;
     });
+    }
 
     const pdfBytes = doc.output('arraybuffer');
 
