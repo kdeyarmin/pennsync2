@@ -767,13 +767,18 @@ Actions available:
         }
       }
 
+      // Create all tasks and track success
+      let createdTasksCount = 0;
       if (allSuggestedTasks.length > 0) {
-        await Promise.all(allSuggestedTasks.map(task => 
-          base44.entities.Task.create(task).catch(err => console.error('Failed to create task:', err))
+        const taskResults = await Promise.all(allSuggestedTasks.map(task => 
+          base44.entities.Task.create(task)
+            .then(() => { createdTasksCount++; return true; })
+            .catch(err => { console.error('Failed to create task:', err); return false; })
         ));
       }
       
       // Auto-generate suggested care plans
+      let createdCarePlansCount = 0;
       if (extractedData.suggested_care_plans?.length > 0 && updates.patient_id) {
         const carePlansToCreate = extractedData.suggested_care_plans.map(cp => ({
           patient_id: updates.patient_id,
@@ -786,9 +791,30 @@ Actions available:
         }));
         
         await Promise.all(carePlansToCreate.map(cp => 
-          base44.entities.CarePlan.create(cp).catch(err => console.error('Failed to create care plan:', err))
+          base44.entities.CarePlan.create(cp)
+            .then(() => { createdCarePlansCount++; return true; })
+            .catch(err => { console.error('Failed to create care plan:', err); return false; })
         ));
       }
+      
+      // Show automation summary
+      const automationSummary = [];
+      if (existingPatient && !updates.requires_manual_review) {
+        automationSummary.push(`✓ Patient matched: ${existingPatient.first_name} ${existingPatient.last_name}${updates.match_confidence ? ` (${Math.round(updates.match_confidence)}% confidence)` : ''}`);
+      } else if (!existingPatient && updates.patient_id) {
+        automationSummary.push(`✓ New patient created`);
+      }
+      if (createdTasksCount > 0) {
+        automationSummary.push(`✓ ${createdTasksCount} automated task${createdTasksCount > 1 ? 's' : ''} created`);
+      }
+      if (createdCarePlansCount > 0) {
+        automationSummary.push(`✓ ${createdCarePlansCount} care plan${createdCarePlansCount > 1 ? 's' : ''} created`);
+      }
+      
+      if (automationSummary.length > 0) {
+        alert(`Referral processed successfully!\n\nAI Automation Results:\n${automationSummary.join('\n')}`);
+      }
+      
       setProcessingReferralId(null);
       
       // If requires manual review, show the match review dialog
