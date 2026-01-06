@@ -393,7 +393,7 @@ export default function FeaturesPage() {
           impact: "high",
           details: "Automated scanning, compliance impact analysis, training recommendations",
           howToUse: "Review Regulatory Compliance page for pending updates and required actions."
-        }
+        },
         {
           name: "Performance Analytics",
           icon: BarChart3,
