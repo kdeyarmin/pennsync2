@@ -278,7 +278,7 @@ export default function Layout({ children, currentPageName }) {
       <div className="min-h-screen bg-gray-50 flex">
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden`}>
+      <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden min-h-screen`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
@@ -458,7 +458,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 shadow-sm border-b border-slate-700 h-16 flex items-center justify-between px-4 print:hidden">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 shadow-md border-b border-slate-700 h-16 flex items-center justify-between px-4 print:hidden">
         <div className="flex items-center gap-2">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
             <img 
