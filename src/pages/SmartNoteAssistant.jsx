@@ -501,6 +501,19 @@ export default function SmartNoteAssistant() {
         nurse_name: currentUser?.full_name || 'Unknown'
       });
 
+      // Create compliance audit record for Medicare Compliance Dashboard
+      await base44.entities.ComplianceAudit.create({
+        visit_id: savedVisit.id,
+        nurse_email: currentUser?.email,
+        patient_id: selectedPatientId,
+        audit_date: new Date().toISOString(),
+        compliance_score: analysis?.overall_score || 85,
+        status: (analysis?.overall_score || 85) >= 90 ? 'passed' : (analysis?.overall_score || 85) >= 80 ? 'flagged' : 'critical',
+        issues: analysis?.issues || [],
+        compliant_elements: analysis?.compliant_elements || [],
+        audit_type: 'automated'
+      });
+
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
         visit_type: visitType,
