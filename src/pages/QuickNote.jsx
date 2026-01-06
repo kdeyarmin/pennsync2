@@ -352,7 +352,7 @@ export default function QuickNote() {
                   </Alert>
                 )}
 
-                {patient.allergies && (
+                {patient?.allergies && (
                   <Alert className="bg-yellow-50 border-yellow-300">
                     <AlertTriangle className="w-4 h-4 text-yellow-600" />
                     <AlertDescription className="text-yellow-900">

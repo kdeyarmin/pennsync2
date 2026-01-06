@@ -2061,7 +2061,7 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       {/* Comprehensive OASIS Review - Full Document Analysis */}
       {analysisResults && pdgmData && (
         <ComprehensiveOASISReviewer
-          oasisData={oasisData}
+          oasisData={pdgmData}
           analysisResults={analysisResults}
           patientData={selectedPatient}
           autoReview={true}

@@ -9,16 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   FileText,
-  AlertTriangle,
   CheckCircle2,
   Edit,
   Save,
   Flag,
   Eye,
   EyeOff,
-  ArrowRight,
   XCircle,
-  RotateCcw
+  RotateCcw,
+  Info
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
