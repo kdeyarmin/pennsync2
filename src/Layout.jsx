@@ -275,7 +275,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <>
       <Toaster position="top-right" richColors closeButton />
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex">
 
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden min-h-screen`}>
