@@ -759,15 +759,17 @@ export default function PatientDetails() {
             </TabsContent>
 
             <TabsContent value="documentation" className="space-y-6">
-              <AIGeneratedOASISAssessment
-                patientId={patientId}
-                visitId={oasisTriggerVisit?.id}
-                visitType={oasisTriggerVisit?.visit_type === 'admission' ? 'Start of Care' : oasisTriggerVisit?.visit_type === 'recertification' ? 'Recertification' : 'Start of Care'}
-                onSaved={() => {
-                  queryClient.invalidateQueries({ queryKey: ['oasisAssessments', patientId] });
-                  setOasisTriggerVisit(null);
-                }}
-              />
+              {oasisTriggerVisit && (
+                <AIGeneratedOASISAssessment
+                  patientId={patientId}
+                  visitId={oasisTriggerVisit.id}
+                  visitType={oasisTriggerVisit.visit_type === 'admission' ? 'Start of Care' : oasisTriggerVisit.visit_type === 'recertification' ? 'Recertification' : 'Start of Care'}
+                  onSaved={() => {
+                    queryClient.invalidateQueries({ queryKey: ['oasisAssessments', patientId] });
+                    setOasisTriggerVisit(null);
+                  }}
+                />
+              )}
               <AIProactiveOASISAssistant patientId={patientId} autoAnalyze={false} />
               <AIComplianceAuditor
                 patientId={patientId}
