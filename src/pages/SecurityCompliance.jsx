@@ -263,11 +263,37 @@ export default function SecurityCompliance() {
               </Alert>
 
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    const report = {
+                      generatedDate: new Date().toISOString(),
+                      complianceScore: complianceScore,
+                      totalEvents: securityLogs.length,
+                      criticalEvents: criticalEvents,
+                      phiAccessEvents: phiAccess,
+                      checks: complianceChecks
+                    };
+                    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `security-report-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                  }}
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Download Security Report
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setSelectedTab("encryption")}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   View Full Documentation
                 </Button>
