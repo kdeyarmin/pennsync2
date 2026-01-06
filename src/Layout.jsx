@@ -275,10 +275,10 @@ export default function Layout({ children, currentPageName }) {
   return (
     <>
       <Toaster position="top-right" richColors closeButton />
-      <div className="min-h-screen bg-blue-100 flex">
+      <div className="min-h-screen bg-gray-50 flex">
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 shadow-lg border-r border-blue-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden`}>
+      <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
@@ -325,8 +325,8 @@ export default function Layout({ children, currentPageName }) {
                     to={createPageUrl(pageName)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive(pageName)
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-amber-500 text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                     title={sidebarCollapsed ? pageItem.name : undefined}
                   >
@@ -339,7 +339,7 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={`fav-patient-${patient.id}`}
                   to={createPageUrl(`PatientDetails?id=${patient.id}`)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   title={sidebarCollapsed ? patient.name : undefined}
                 >
                   <Users className="w-5 h-5 flex-shrink-0" />
@@ -363,8 +363,8 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.page)
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "bg-indigo-600 text-white"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                   title={sidebarCollapsed ? item.name : undefined}
                 >
@@ -417,8 +417,8 @@ export default function Layout({ children, currentPageName }) {
                     to={createPageUrl(item.page)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive(item.page)
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-indigo-600 text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                     title={sidebarCollapsed ? item.name : undefined}
                   >
@@ -458,7 +458,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-blue-600 shadow-sm border-b border-blue-700 h-16 flex items-center justify-between px-4 print:hidden">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 shadow-sm border-b border-slate-700 h-16 flex items-center justify-between px-4 print:hidden">
         <div className="flex items-center gap-2">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
             <img 
@@ -466,7 +466,7 @@ export default function Layout({ children, currentPageName }) {
               alt="Penn Sync Logo" 
               className="w-8 h-8 rounded-lg"
             />
-            <span className="font-bold text-lg text-white drop-shadow-md">Penn Sync</span>
+            <span className="font-bold text-lg text-white">Penn Sync</span>
           </Link>
           <div className="hidden sm:flex items-center gap-1 text-green-300 text-xs font-medium ml-2">
             <Shield className="w-3 h-3" />
@@ -478,7 +478,7 @@ export default function Layout({ children, currentPageName }) {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="relative text-white hover:bg-blue-700 h-12 w-12"
+            className="relative text-white hover:bg-slate-700 h-12 w-12"
             onClick={() => setNotificationCenterOpen(true)}
           >
             <Bell className="w-5 h-5" />
@@ -489,7 +489,7 @@ export default function Layout({ children, currentPageName }) {
             )}
           </Button>
 
-            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700 h-12 w-12">
+            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-slate-700 h-12 w-12">
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </Button>
         </div>
@@ -520,8 +520,8 @@ export default function Layout({ children, currentPageName }) {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${
                         isActive(item.page)
-                          ? "bg-blue-100 text-blue-700"
-                          : "text-gray-600 hover:bg-gray-100"
+                          ? "bg-indigo-600 text-white"
+                          : "text-gray-700 hover:bg-gray-100"
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
@@ -548,7 +548,7 @@ export default function Layout({ children, currentPageName }) {
                           item.action();
                           setMobileMenuOpen(false);
                         }}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 w-full relative"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 w-full relative"
                       >
                         <item.icon className="w-5 h-5" />
                         <span className="flex items-center gap-2 flex-1">
@@ -565,8 +565,8 @@ export default function Layout({ children, currentPageName }) {
                         onClick={() => setMobileMenuOpen(false)}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${
                           isActive(item.page)
-                            ? "bg-blue-100 text-blue-700"
-                            : "text-gray-600 hover:bg-gray-100"
+                            ? "bg-indigo-600 text-white"
+                            : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >
                         <item.icon className="w-5 h-5" />
@@ -603,7 +603,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 bg-blue-100 min-h-screen">{children}</main>
+      <main className="flex-1 lg:overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 bg-gray-50 min-h-screen">{children}</main>
 
       {/* Offline Indicator */}
       <OfflineIndicator />
