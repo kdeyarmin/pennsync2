@@ -58,6 +58,7 @@ import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
+import PatientVerificationStep from "../components/referral/PatientVerificationStep";
 
 export default function ReferralIntake() {
   const queryClient = useQueryClient();
@@ -66,6 +67,7 @@ export default function ReferralIntake() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [matchReviewReferral, setMatchReviewReferral] = useState(null);
+  const [verificationReferral, setVerificationReferral] = useState(null);
 
   // New referral form state
   const [newReferral, setNewReferral] = useState({
@@ -817,10 +819,10 @@ Actions available:
       
       setProcessingReferralId(null);
       
-      // If requires manual review, show the match review dialog
+      // If requires manual review, show the verification step
       if (updates.requires_manual_review) {
         const updatedReferral = await base44.entities.Referral.filter({ id: referralId });
-        setMatchReviewReferral(updatedReferral[0]);
+        setVerificationReferral(updatedReferral[0]);
       }
       
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
@@ -833,12 +835,15 @@ Actions available:
 
   const handleConfirmMatch = async (patientId) => {
     try {
-      await base44.entities.Referral.update(matchReviewReferral.id, {
+      const referralToUpdate = verificationReferral || matchReviewReferral;
+      await base44.entities.Referral.update(referralToUpdate.id, {
         patient_id: patientId,
         requires_manual_review: false,
-        manually_confirmed: true
+        manually_confirmed: true,
+        status: 'ready_for_admission'
       });
       setMatchReviewReferral(null);
+      setVerificationReferral(null);
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error confirming match:', error);
@@ -882,7 +887,8 @@ Actions available:
 
   const handleCreateNewFromReview = async () => {
     try {
-      const data = matchReviewReferral.extracted_data;
+      const referralToUpdate = verificationReferral || matchReviewReferral;
+      const data = referralToUpdate.extracted_data;
       const nameParts = (data.demographics.full_name || '').split(' ');
       
       const newPatient = await base44.entities.Patient.create({
@@ -914,13 +920,15 @@ Actions available:
         care_type: data.admission_details?.care_type || 'home_health'
       });
 
-      await base44.entities.Referral.update(matchReviewReferral.id, {
+      await base44.entities.Referral.update(referralToUpdate.id, {
         patient_id: newPatient.id,
         requires_manual_review: false,
-        manually_confirmed: true
+        manually_confirmed: true,
+        status: 'ready_for_admission'
       });
 
       setMatchReviewReferral(null);
+      setVerificationReferral(null);
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
@@ -1183,35 +1191,44 @@ Actions available:
                          {referral.requires_manual_review ? (
                            <Button
                              size="sm"
-                             variant="outline"
-                             className="border-yellow-500 text-yellow-700 hover:bg-yellow-50 min-h-[36px] text-xs"
-                             onClick={() => setMatchReviewReferral(referral)}
+                             className="bg-yellow-500 hover:bg-yellow-600 text-white min-h-[36px] text-xs"
+                             onClick={() => setVerificationReferral(referral)}
                            >
-                              <AlertCircle className="w-4 h-4 mr-1" />
-                              Review Match
+                              <UserCheck className="w-4 h-4 mr-1" />
+                              Verify Patient
                             </Button>
-                          ) : (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setProcessingReferralId(referral.id)}
-                                className="min-h-[36px] text-xs"
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                {referral.analysis_results?.intake_analysis ? 'View Analysis' : 'Process'}
-                              </Button>
-                              {referral.patient_id && referral.extracted_data && (
-                                <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
-                                  <Button
-                                    size="sm"
-                                    className="bg-purple-600 hover:bg-purple-700 text-white min-h-[36px] text-xs w-full"
-                                  >
-                                    <Sparkles className="w-4 h-4 mr-1" />
-                                    Create Note
-                                  </Button>
-                                </Link>
-                              )}
+                         ) : referral.status === 'ready_for_admission' && referral.patient_id && referral.extracted_data ? (
+                           <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
+                             <Button
+                               size="sm"
+                               className="bg-green-600 hover:bg-green-700 text-white min-h-[36px] text-xs w-full"
+                             >
+                               <Sparkles className="w-4 h-4 mr-1" />
+                               Start Admission Note
+                             </Button>
+                           </Link>
+                         ) : (
+                           <>
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               onClick={() => setProcessingReferralId(referral.id)}
+                               className="min-h-[36px] text-xs"
+                             >
+                               <Eye className="w-4 h-4 mr-1" />
+                               {referral.analysis_results?.intake_analysis ? 'View Analysis' : 'Process'}
+                             </Button>
+                             {referral.patient_id && referral.extracted_data && (
+                               <Link to={createPageUrl(`SmartNoteAssistant?referral_id=${referral.id}`)}>
+                                 <Button
+                                   size="sm"
+                                   className="bg-purple-600 hover:bg-purple-700 text-white min-h-[36px] text-xs w-full"
+                                 >
+                                   <Sparkles className="w-4 h-4 mr-1" />
+                                   Create Note
+                                 </Button>
+                               </Link>
+                             )}
                               {referral.analysis_results?.intake_analysis && (
                                 <div className="text-xs text-gray-600 space-y-0.5">
                                   {referral.analysis_results.intake_analysis.missing_critical_info?.high_priority?.length > 0 && (
@@ -1537,7 +1554,27 @@ Actions available:
         </Dialog>
       )}
 
-      {/* Patient Match Review Dialog */}
+      {/* Patient Verification Step Dialog */}
+      {verificationReferral && (
+        <Dialog open={!!verificationReferral} onOpenChange={(open) => !open && setVerificationReferral(null)}>
+          <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserCheck className="w-6 h-6 text-yellow-600" />
+                Patient Verification Required
+              </DialogTitle>
+            </DialogHeader>
+            <PatientVerificationStep
+              referral={verificationReferral}
+              onConfirmMatch={handleConfirmMatch}
+              onCreateNew={handleCreateNewFromReview}
+              onSkip={() => setVerificationReferral(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Legacy Patient Match Review Dialog (kept for backward compatibility) */}
       {matchReviewReferral && (
         <Dialog open={!!matchReviewReferral} onOpenChange={(open) => !open && setMatchReviewReferral(null)}>
           <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
