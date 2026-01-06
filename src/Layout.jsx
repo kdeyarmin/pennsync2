@@ -278,7 +278,7 @@ export default function Layout({ children, currentPageName }) {
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex">
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden min-h-screen`}>
+      <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
@@ -603,7 +603,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 bg-gradient-to-br from-sky-50 to-blue-100 min-h-screen">{children}</main>
+      <main className="flex-1 overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 min-h-screen">{children}</main>
 
       {/* Offline Indicator */}
       <OfflineIndicator />
