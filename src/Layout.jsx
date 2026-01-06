@@ -283,22 +283,14 @@ export default function Layout({ children, currentPageName }) {
       <aside className={`hidden lg:flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 shadow-lg border-r border-blue-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 min-w-0">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" 
-                alt="Penn Sync Logo" 
-                className="w-8 h-8 rounded-lg flex-shrink-0"
-              />
-              {!sidebarCollapsed && <span className="font-bold text-lg text-gray-900">Penn Sync</span>}
-            </Link>
-            {!sidebarCollapsed && (
-              <div className="flex items-center gap-1 text-green-600 text-xs font-medium ml-auto">
-                <Shield className="w-3 h-3" />
-                Secure
-              </div>
-            )}
-          </div>
+          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" 
+              alt="Penn Sync Logo" 
+              className="w-8 h-8 rounded-lg flex-shrink-0"
+            />
+            {!sidebarCollapsed && <span className="font-bold text-lg text-gray-900">Penn Sync</span>}
+          </Link>
           <Button
             variant="ghost"
             size="icon"
@@ -311,6 +303,14 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+          {/* Secure Session Indicator */}
+          {!sidebarCollapsed && (
+            <div className="flex items-center gap-2 px-3 py-2 mb-2 bg-green-50 border border-green-200 rounded-lg">
+              <Shield className="w-4 h-4 text-green-600" />
+              <span className="text-xs font-semibold text-green-700">Secure Session</span>
+            </div>
+          )}
+          
           {/* Favorites Section */}
           {(currentUser?.favorited_pages?.length > 0 || currentUser?.favorited_patients?.length > 0) && (
             <>
