@@ -1237,7 +1237,7 @@ export default function SmartNoteAssistant() {
                 <Textarea
                   value={enhancedNote}
                   onChange={(e) => setEnhancedNote(e.target.value)}
-                  className="min-h-[300px] font-mono text-sm touch-target"
+                  className="min-h-[500px] font-mono text-sm touch-target"
                 />
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
