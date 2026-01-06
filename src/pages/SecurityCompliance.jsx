@@ -6,6 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Shield,
   Lock,
@@ -19,29 +36,46 @@ import {
   Key,
   UserCheck,
   Clock,
-  Server
+  Server,
+  Search,
+  Filter,
+  Calendar,
+  User,
+  Info
 } from "lucide-react";
 import EncryptionStatusIndicator from "../components/security/EncryptionStatusIndicator";
+import AIAuditAnalyzer from "../components/security/AIAuditAnalyzer";
 import { logActivity } from "@/components/utils/activityLogger";
+import { formatEastern } from "../components/utils/timezone";
 
 export default function SecurityCompliance() {
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [actionFilter, setActionFilter] = useState("all");
+  const [entityFilter, setEntityFilter] = useState("all");
+  const [userFilter, setUserFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("7");
+  const [severityFilter, setSeverityFilter] = useState("all");
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
+  const isAdmin = currentUser?.role === 'admin';
+
   const { data: securityLogs = [] } = useQuery({
     queryKey: ['securityLogs'],
     queryFn: () => base44.entities.SecurityLog.list('-created_date', 100),
     initialData: [],
+    enabled: isAdmin,
   });
 
   const { data: userActivity = [] } = useQuery({
     queryKey: ['userActivity'],
-    queryFn: () => base44.entities.UserActivity.list('-created_date', 100),
+    queryFn: () => base44.entities.UserActivity.list('-created_date', 500),
     initialData: [],
+    enabled: isAdmin,
   });
 
   React.useEffect(() => {
@@ -53,8 +87,80 @@ export default function SecurityCompliance() {
     }
   }, [currentUser, selectedTab]);
 
+  // Get unique users, actions, and entities for filters
+  const uniqueUsers = [...new Set(userActivity.map(log => log.user_email))];
+  const uniqueActions = [...new Set(userActivity.map(log => log.action))];
+  const uniqueEntities = [...new Set(userActivity.map(log => log.entity_type).filter(Boolean))];
+
+  // Apply filters
+  const filteredLogs = userActivity.filter(log => {
+    const matchesSearch = !searchTerm || 
+      log.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.entity_type?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesAction = actionFilter === 'all' || log.action === actionFilter;
+    const matchesEntity = entityFilter === 'all' || log.entity_type === entityFilter;
+    const matchesUser = userFilter === 'all' || log.user_email === userFilter;
+    const matchesSeverity = severityFilter === 'all' || log.severity === severityFilter;
+    
+    const logDate = new Date(log.created_date);
+    const daysAgo = parseInt(dateFilter);
+    const matchesDate = daysAgo === 0 || 
+      (Date.now() - logDate.getTime()) <= (daysAgo * 24 * 60 * 60 * 1000);
+    
+    return matchesSearch && matchesAction && matchesEntity && matchesUser && matchesSeverity && matchesDate;
+  });
+
+  const exportAuditLog = () => {
+    const csv = [
+      ['Timestamp', 'User', 'Email', 'Action', 'Entity Type', 'Entity ID', 'Severity', 'Details'].join(','),
+      ...filteredLogs.map(log => [
+        log.created_date,
+        log.user_name,
+        log.user_email,
+        log.action,
+        log.entity_type || '',
+        log.entity_id || '',
+        log.severity || 'info',
+        JSON.stringify(log.details || {})
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit_log_${new Date().toISOString()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+  };
+
+  const getSeverityBadge = (severity) => {
+    const config = {
+      critical: { color: 'bg-red-600 text-white', icon: AlertTriangle },
+      warning: { color: 'bg-yellow-600 text-white', icon: AlertTriangle },
+      info: { color: 'bg-blue-600 text-white', icon: Info },
+    };
+    const { color, icon: Icon } = config[severity] || config.info;
+    return (
+      <Badge className={color}>
+        <Icon className="w-3 h-3 mr-1" />
+        {severity || 'info'}
+      </Badge>
+    );
+  };
+
+  const getActionColor = (action) => {
+    if (action?.includes('delete') || action?.includes('reject')) return 'text-red-600';
+    if (action?.includes('approved') || action?.includes('completed')) return 'text-green-600';
+    if (action?.includes('updated') || action?.includes('edited')) return 'text-blue-600';
+    return 'text-gray-600';
+  };
+
   // Security metrics
-  const recentLogs = securityLogs.slice(0, 20);
   const criticalEvents = securityLogs.filter(log => 
     log.action?.includes('FAILED') || 
     log.action?.includes('DENIED') ||
@@ -84,7 +190,7 @@ export default function SecurityCompliance() {
     {
       name: "Audit Trails",
       status: "compliant",
-      description: `${securityLogs.length} security events logged`,
+      description: `${securityLogs.length + userActivity.length} events logged`,
       icon: FileText,
       details: "All PHI access and modifications tracked"
     },
@@ -129,6 +235,20 @@ export default function SecurityCompliance() {
     (complianceChecks.filter(c => c.status === 'compliant').length / complianceChecks.length) * 100
   );
 
+  if (!isAdmin) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto">
+        <Card className="border-2 border-red-200">
+          <CardContent className="p-12 text-center">
+            <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+            <p className="text-gray-600">Only administrators can view security and compliance information.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -137,7 +257,7 @@ export default function SecurityCompliance() {
             <Shield className="w-8 h-8 text-blue-600" />
             Security & HIPAA Compliance
           </h1>
-          <p className="text-gray-600 mt-1">Monitor security status and compliance metrics</p>
+          <p className="text-gray-600 mt-1">Monitor security status, compliance metrics, and audit trail</p>
         </div>
         <Badge className="bg-green-600 text-lg px-4 py-2">
           <CheckCircle2 className="w-5 h-5 mr-2" />
@@ -146,16 +266,17 @@ export default function SecurityCompliance() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="encryption">Encryption</TabsTrigger>
           <TabsTrigger value="audit">Audit Logs</TabsTrigger>
           <TabsTrigger value="activity">User Activity</TabsTrigger>
+          <TabsTrigger value="ai-analysis">AI Analysis</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -172,8 +293,8 @@ export default function SecurityCompliance() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm mb-1">Security Events</p>
-                    <p className="text-4xl font-bold">{securityLogs.length}</p>
+                    <p className="text-blue-100 text-sm mb-1">Total Events</p>
+                    <p className="text-4xl font-bold">{securityLogs.length + userActivity.length}</p>
                   </div>
                   <Activity className="w-12 h-12 text-blue-200" />
                 </div>
@@ -184,10 +305,22 @@ export default function SecurityCompliance() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm mb-1">PHI Access Events</p>
+                    <p className="text-purple-100 text-sm mb-1">PHI Access</p>
                     <p className="text-4xl font-bold">{phiAccess}</p>
                   </div>
                   <Eye className="w-12 h-12 text-purple-200" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-red-100 text-sm mb-1">Critical Events</p>
+                    <p className="text-4xl font-bold">{criticalEvents}</p>
+                  </div>
+                  <AlertTriangle className="w-12 h-12 text-red-200" />
                 </div>
               </CardContent>
             </Card>
@@ -270,7 +403,7 @@ export default function SecurityCompliance() {
                     const report = {
                       generatedDate: new Date().toISOString(),
                       complianceScore: complianceScore,
-                      totalEvents: securityLogs.length,
+                      totalEvents: securityLogs.length + userActivity.length,
                       criticalEvents: criticalEvents,
                       phiAccessEvents: phiAccess,
                       checks: complianceChecks
@@ -363,17 +496,77 @@ export default function SecurityCompliance() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="audit">
+        <TabsContent value="audit" className="space-y-6">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">Security Events</p>
+                <p className="text-2xl font-bold">{securityLogs.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">User Actions</p>
+                <p className="text-2xl font-bold">{userActivity.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">Critical</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {userActivity.filter(l => l.severity === 'critical').length}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">Active Users</p>
+                <p className="text-2xl font-bold">{uniqueUsers.length}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Security Logs */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Security Events</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <span>Recent Security Events</span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const logs = securityLogs.slice(0, 50);
+                    const csv = [
+                      ['Timestamp', 'User', 'Action', 'Details'].join(','),
+                      ...logs.map(log => [
+                        log.timestamp || log.created_date,
+                        log.user_email,
+                        log.action,
+                        JSON.stringify(log.details || {})
+                      ].join(','))
+                    ].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `security_log_${new Date().toISOString()}.csv`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                  }}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {recentLogs.length === 0 ? (
+                {securityLogs.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">No security events logged yet</p>
                 ) : (
-                  recentLogs.map((log, idx) => (
+                  securityLogs.slice(0, 20).map((log, idx) => (
                     <div
                       key={idx}
                       className={`p-3 rounded-lg border ${
@@ -398,10 +591,10 @@ export default function SecurityCompliance() {
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-gray-500">
-                            {new Date(log.created_date).toLocaleDateString()}
+                            {new Date(log.timestamp || log.created_date).toLocaleDateString()}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {new Date(log.created_date).toLocaleTimeString()}
+                            {new Date(log.timestamp || log.created_date).toLocaleTimeString()}
                           </p>
                         </div>
                       </div>
@@ -413,48 +606,209 @@ export default function SecurityCompliance() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="activity">
+        <TabsContent value="activity" className="space-y-6">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">Total Events</p>
+                <p className="text-2xl font-bold">{userActivity.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">Filtered</p>
+                <p className="text-2xl font-bold">{filteredLogs.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">Critical Events</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {userActivity.filter(l => l.severity === 'critical').length}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-600">Active Users</p>
+                <p className="text-2xl font-bold">{uniqueUsers.length}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters */}
           <Card>
-            <CardHeader>
-              <CardTitle>Recent User Activity</CardTitle>
+            <CardHeader className="p-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </CardTitle>
+                <Button onClick={exportAuditLog} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {userActivity.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No user activity logged yet</p>
-                ) : (
-                  userActivity.slice(0, 50).map((activity, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-lg border bg-gray-50 border-gray-200"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-semibold text-sm text-gray-900">{activity.action}</p>
-                          <p className="text-xs text-gray-600">
-                            {activity.user_name || activity.user_email} • {activity.page}
-                          </p>
-                          {activity.details && activity.details.entity_type && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              {activity.details.entity_type}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-gray-500">
-                            {new Date(activity.created_date).toLocaleDateString()}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(activity.created_date).toLocaleTimeString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Search users, actions..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-11 touch-target"
+                  />
+                </div>
+                <Select value={actionFilter} onValueChange={setActionFilter}>
+                  <SelectTrigger className="h-11 touch-target">
+                    <SelectValue placeholder="Action Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Actions</SelectItem>
+                    {uniqueActions.map(action => (
+                      <SelectItem key={action} value={action}>{action}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={entityFilter} onValueChange={setEntityFilter}>
+                  <SelectTrigger className="h-11 touch-target">
+                    <SelectValue placeholder="Entity Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Entities</SelectItem>
+                    {uniqueEntities.map(entity => (
+                      <SelectItem key={entity} value={entity}>{entity}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={userFilter} onValueChange={setUserFilter}>
+                  <SelectTrigger className="h-11 touch-target">
+                    <SelectValue placeholder="User" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    {uniqueUsers.map(user => (
+                      <SelectItem key={user} value={user}>{user}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                  <SelectTrigger className="h-11 touch-target">
+                    <SelectValue placeholder="Severity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Severities</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                    <SelectItem value="warning">Warning</SelectItem>
+                    <SelectItem value="info">Info</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="h-11 touch-target">
+                    <SelectValue placeholder="Time Range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Time</SelectItem>
+                    <SelectItem value="1">Last 24 Hours</SelectItem>
+                    <SelectItem value="7">Last 7 Days</SelectItem>
+                    <SelectItem value="30">Last 30 Days</SelectItem>
+                    <SelectItem value="90">Last 90 Days</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
+
+          {/* Audit Log Table */}
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <ScrollArea className="h-[600px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-sm">Timestamp</TableHead>
+                        <TableHead className="text-sm">User</TableHead>
+                        <TableHead className="text-sm">Action</TableHead>
+                        <TableHead className="text-sm hidden md:table-cell">Entity</TableHead>
+                        <TableHead className="text-sm hidden lg:table-cell">Severity</TableHead>
+                        <TableHead className="text-sm hidden lg:table-cell">Details</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredLogs.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            No audit logs found matching filters
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredLogs.map((log, idx) => (
+                          <TableRow key={idx} className="hover:bg-gray-50">
+                            <TableCell className="text-xs whitespace-nowrap">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-gray-400 hidden sm:inline" />
+                                <span className="hidden sm:inline">{formatEastern(new Date(log.created_date), 'MMM d, yyyy HH:mm:ss')}</span>
+                                <span className="sm:hidden">{formatEastern(new Date(log.created_date), 'MMM d, HH:mm')}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              <div className="flex items-center gap-1">
+                                <User className="w-3 h-3 text-gray-400 hidden sm:inline flex-shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="text-xs font-medium truncate">{log.user_name}</p>
+                                  <p className="text-xs text-gray-500 truncate hidden sm:block">{log.user_email}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              <span className={`font-medium ${getActionColor(log.action)} truncate block`}>
+                                {log.action?.replace(/_/g, ' ')}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-xs hidden md:table-cell">
+                              {log.entity_type && (
+                                <div>
+                                  <Badge variant="outline" className="text-xs">
+                                    {log.entity_type}
+                                  </Badge>
+                                  {log.entity_id && (
+                                    <p className="text-gray-500 mt-1 truncate">ID: {log.entity_id.substring(0, 8)}...</p>
+                                  )}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {getSeverityBadge(log.severity)}
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs hidden lg:table-cell">
+                              {log.details && (
+                                <details className="cursor-pointer">
+                                  <summary className="text-blue-600 hover:text-blue-700">
+                                    View details
+                                  </summary>
+                                  <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-32">
+                                    {JSON.stringify(log.details, null, 2)}
+                                  </pre>
+                                </details>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai-analysis">
+          <AIAuditAnalyzer />
         </TabsContent>
       </Tabs>
     </div>

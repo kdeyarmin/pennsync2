@@ -6,7 +6,6 @@ import AdvancedReports from './pages/AdvancedReports';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
-import AuditTrail from './pages/AuditTrail';
 import AutomatedReports from './pages/AutomatedReports';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import CarePlanManagement from './pages/CarePlanManagement';
@@ -83,7 +82,6 @@ export const PAGES = {
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
-    "AuditTrail": AuditTrail,
     "AutomatedReports": AutomatedReports,
     "AutomaticCarePlans": AutomaticCarePlans,
     "CarePlanManagement": CarePlanManagement,

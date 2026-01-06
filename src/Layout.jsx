@@ -205,7 +205,6 @@ export default function Layout({ children, currentPageName }) {
     { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
-    { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
     { name: "Security & HIPAA", icon: Shield, page: "SecurityCompliance" },
     { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
     { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
