@@ -205,7 +205,8 @@ export default function Layout({ children, currentPageName }) {
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
     { name: "Security & HIPAA", icon: Shield, page: "SecurityCompliance" },
     { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
-    { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
+    { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" },
+    { name: "Notifications", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) }
     ];
 
   const handleLogout = async () => {
@@ -389,19 +390,41 @@ export default function Layout({ children, currentPageName }) {
               <div className="border-t border-gray-200 my-3" />
               {!sidebarCollapsed && <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</p>}
               {adminItems.map((item) => (
-                <Link
-                  key={item.page}
-                  to={createPageUrl(item.page)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.page)
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
-                  title={sidebarCollapsed ? item.name : undefined}
-                >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!sidebarCollapsed && <span>{item.name}</span>}
-                </Link>
+                item.action ? (
+                  <button
+                    key={item.name}
+                    onClick={item.action}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900 w-full relative"
+                    title={sidebarCollapsed ? item.name : undefined}
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {!sidebarCollapsed && (
+                      <span className="flex items-center gap-2 flex-1">
+                        {item.name}
+                        {item.badge > 0 && (
+                          <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>
+                        )}
+                      </span>
+                    )}
+                    {sidebarCollapsed && item.badge > 0 && (
+                      <div className="absolute right-1 top-1 w-2 h-2 bg-red-600 rounded-full" />
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    key={item.page}
+                    to={createPageUrl(item.page)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isActive(item.page)
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                    title={sidebarCollapsed ? item.name : undefined}
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {!sidebarCollapsed && <span>{item.name}</span>}
+                  </Link>
+                )
               ))}
             </>
           )}
@@ -409,58 +432,40 @@ export default function Layout({ children, currentPageName }) {
 
         {/* User Section */}
         <div className="border-t border-gray-200 p-3">
-          <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-              {currentUser?.full_name?.charAt(0) || 'U'}
-            </div>
-            {!sidebarCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{currentUser?.full_name || 'User'}</p>
-                <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
-              </div>
-            )}
-            </div>
-
-            {/* Desktop Notifications */}
-            {!sidebarCollapsed && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="relative w-full justify-start mt-2"
-                onClick={() => setNotificationCenterOpen(true)}
-              >
-                <Bell className="w-4 h-4 mr-2" />
-                Notifications
-                {totalNotificationCount > 0 && (
-                  <span className="absolute right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                    {totalNotificationCount}
-                  </span>
-                )}
-              </Button>
-            )}
-            {!sidebarCollapsed && (
-            <div className="mt-2 space-y-1">
-              <FeedbackButton />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = createPageUrl("UserSettings")}
-                className={`text-gray-600 hover:text-gray-900 hover:bg-gray-100 ${sidebarCollapsed ? 'w-full justify-center px-0' : 'w-full justify-start'}`}
-              >
-                <Settings className="w-4 h-4" />
-                {!sidebarCollapsed && <span className="ml-2">AI Settings</span>}
-              </Button>
-            </div>
-            )}
+          {!sidebarCollapsed && (
+          <div className="space-y-1">
             <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className={`mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${sidebarCollapsed ? 'w-full justify-center px-0' : 'w-full justify-start'}`}
+              variant="ghost"
+              size="sm"
+              onClick={() => window.location.href = createPageUrl("UserSettings")}
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-full justify-start"
             >
-            <LogOut className="w-4 h-4" />
-            {!sidebarCollapsed && <span className="ml-2">Logout</span>}
+              <Settings className="w-4 h-4" />
+              <span className="ml-2">AI Settings</span>
             </Button>
+            <FeedbackButton />
+          </div>
+          )}
+          <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className={`mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${sidebarCollapsed ? 'w-full justify-center px-0' : 'w-full justify-start'}`}
+          >
+          <LogOut className="w-4 h-4" />
+          {!sidebarCollapsed && <span className="ml-2">Logout</span>}
+          </Button>
+          <div className={`flex items-center gap-3 mt-2 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+            {currentUser?.full_name?.charAt(0) || 'U'}
+          </div>
+          {!sidebarCollapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{currentUser?.full_name || 'User'}</p>
+              <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
+            </div>
+          )}
+          </div>
         </div>
       </aside>
 
@@ -549,25 +554,63 @@ export default function Layout({ children, currentPageName }) {
                   <div className="border-t border-gray-200 my-3" />
                   <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</p>
                   {adminItems.map((item) => (
-                    <Link
-                      key={item.page}
-                      to={createPageUrl(item.page)}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${
-                        isActive(item.page)
-                          ? "bg-blue-100 text-blue-700"
-                          : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      {item.name}
-                    </Link>
+                    item.action ? (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          item.action();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 w-full relative"
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="flex items-center gap-2 flex-1">
+                          {item.name}
+                          {item.badge > 0 && (
+                            <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>
+                          )}
+                        </span>
+                      </button>
+                    ) : (
+                      <Link
+                        key={item.page}
+                        to={createPageUrl(item.page)}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${
+                          isActive(item.page)
+                            ? "bg-blue-100 text-blue-700"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        {item.name}
+                      </Link>
+                    )
                   ))}
                 </>
               )}
             </nav>
-            <div className="flex-shrink-0 border-t border-gray-200 p-3">
-              <div className="flex items-center gap-3 mb-2">
+            <div className="flex-shrink-0 border-t border-gray-200 p-3 space-y-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.href = createPageUrl("UserSettings")}
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-full justify-start"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                AI Settings
+              </Button>
+              <FeedbackButton />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout} 
+                className="w-full justify-start text-red-600"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+              <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                   {currentUser?.full_name?.charAt(0) || 'U'}
                 </div>
@@ -576,10 +619,6 @@ export default function Layout({ children, currentPageName }) {
                   <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="w-full justify-start text-red-600">
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
             </div>
           </div>
         </div>
