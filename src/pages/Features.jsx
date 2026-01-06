@@ -50,7 +50,7 @@ export default function FeaturesPage() {
           name: "Unified AI Suggestions (Compliance + Quality)",
           icon: Sparkles,
           description: "Single AI panel that analyzes notes for BOTH Medicare compliance gaps AND quality improvements with one 'Fix All' button",
-          timeSaved: "20-25 min/visit",
+          timeSaved: "10-15 min/visit",
           impact: "critical",
           details: "Combines compliance checking and quality analysis into one streamlined interface. Identifies missing Medicare elements, vague language, weak flow, and generic descriptions all in one place",
           howToUse: "Type your rough note and watch AI suggestions appear automatically. Review compliance gaps and quality improvements in tabs, then click 'Fix All' to apply everything at once."
@@ -68,7 +68,7 @@ export default function FeaturesPage() {
           name: "AI-Powered Voice Dictation",
           icon: Mic,
           description: "Record clinical observations and AI automatically transcribes, formats, and converts to Medicare-compliant narrative",
-          timeSaved: "15-20 min/visit",
+          timeSaved: "5-10 min/visit",
           impact: "critical",
           details: "Eliminates typing, auto-formats medical terminology, real-time transcription",
           howToUse: "Click the microphone icon, speak naturally, AI transcribes and formats automatically. Review and enhance with one click."
@@ -77,7 +77,7 @@ export default function FeaturesPage() {
           name: "Smart Vitals Recognition",
           icon: Activity,
           description: "Speak vital signs naturally and AI extracts and populates fields automatically",
-          timeSaved: "5-10 min/visit",
+          timeSaved: "2-3 min/visit",
           impact: "high",
           details: "Hands-free structured data entry, natural language processing, auto-converts spoken values",
           howToUse: "Say 'blood pressure 120 over 80' or 'heart rate 72' and AI fills the fields automatically."
@@ -86,7 +86,7 @@ export default function FeaturesPage() {
         name: "AI Note Enhancement",
         icon: Sparkles,
         description: "One-click transformation of rough notes into polished, Medicare-compliant clinical documentation",
-        timeSaved: "25 min/visit",
+        timeSaved: "10-15 min/visit",
           impact: "critical",
           details: "Adds required sections, improves clarity, ensures compliance, maintains clinical accuracy",
           howToUse: "Type or dictate rough notes, click 'Enhance with AI', review the polished result."
@@ -95,7 +95,7 @@ export default function FeaturesPage() {
           name: "Smart Auto-Complete",
           icon: Zap,
           description: "Type trigger words like 'lungs', 'heart', 'wound' and get instant phrase suggestions specific to diagnosis",
-          timeSaved: "5-10 min/visit",
+          timeSaved: "2-5 min/visit",
           impact: "high",
           details: "Diagnosis-aware suggestions, common medical phrases, context-based completions",
           howToUse: "Start typing clinical terms and select from auto-complete suggestions that appear."
@@ -104,7 +104,7 @@ export default function FeaturesPage() {
           name: "Clinical Decision Support",
           icon: Stethoscope,
           description: "Real-time clinical analysis with drug interactions, risk detection, and evidence-based recommendations",
-          timeSaved: "10-15 min/visit",
+          timeSaved: "5-10 min/visit",
           impact: "critical",
           details: "Drug safety alerts, vital sign analysis, diagnosis-specific guidance",
           howToUse: "System automatically analyzes patient data and displays alerts and recommendations as you document."
@@ -113,7 +113,7 @@ export default function FeaturesPage() {
           name: "Patient History AI Summary",
           icon: FileText,
           description: "AI automatically generates concise summary of patient's medical history, recent visits, and care plan status",
-          timeSaved: "5-10 min prep",
+          timeSaved: "3-5 min prep",
           impact: "high",
           details: "Clinical trajectory, vital patterns, alerts, narrative introduction ready to paste",
           howToUse: "Select patient and AI summary appears automatically. Click 'Copy Narrative' to use in documentation."
@@ -122,7 +122,7 @@ export default function FeaturesPage() {
           name: "Automated Task Generation",
           icon: ClipboardList,
           description: "AI identifies follow-up tasks from documentation and creates them automatically",
-          timeSaved: "5-10 min/visit",
+          timeSaved: "3-5 min/visit",
           impact: "high",
           details: "Extracts action items, assigns priorities, suggests due dates",
           howToUse: "After enhancing note, click 'Generate Tasks' to auto-create follow-up items."
@@ -131,7 +131,7 @@ export default function FeaturesPage() {
           name: "Medicare Guidelines Integration",
           icon: BookOpen,
           description: "AI retrieves relevant Medicare guidelines and integrates them into compliance suggestions",
-          timeSaved: "10-15 min/visit",
+          timeSaved: "5-8 min/visit",
           impact: "high",
           details: "Real-time guideline retrieval, context-aware suggestions, CMS manual references",
           howToUse: "Guidelines automatically inform AI suggestions. Click guideline links in compliance issues for full details."
@@ -147,7 +147,7 @@ export default function FeaturesPage() {
           name: "PDF Upload & Data Extraction",
           icon: FileCheck,
           description: "Upload OASIS PDFs and AI automatically extracts all data with intelligent patient matching",
-          timeSaved: "30-40 min/OASIS",
+          timeSaved: "20-30 min/OASIS",
           impact: "critical",
           details: "Fuzzy matching, confidence scoring, dispute resolution workflow",
           howToUse: "Upload OASIS PDF, AI extracts data and matches to patient, confirm or dispute match."
@@ -156,7 +156,7 @@ export default function FeaturesPage() {
           name: "PDGM Revenue Analysis",
           icon: DollarSign,
           description: "Complete PDGM grouping analysis with payment calculation and optimization opportunities",
-          timeSaved: "20-30 min/OASIS",
+          timeSaved: "15-20 min/OASIS",
           impact: "critical",
           details: "Clinical group, functional level, comorbidity analysis, case-mix calculation",
           howToUse: "After OASIS upload, view automated PDGM analysis with payment breakdown and optimization tips."
@@ -165,7 +165,7 @@ export default function FeaturesPage() {
           name: "Documentation Quality Scoring",
           icon: Target,
           description: "AI scores OASIS accuracy, completeness, and compliance with detailed issue identification",
-          timeSaved: "15-20 min/OASIS",
+          timeSaved: "10-15 min/OASIS",
           impact: "critical",
           details: "Accuracy score, completeness score, compliance flags, specific improvement suggestions",
           howToUse: "Review quality scores in analysis results, click issues for detailed explanations and fixes."
@@ -183,7 +183,7 @@ export default function FeaturesPage() {
           name: "Clinical Pathway Triggering",
           icon: Layers,
           description: "Automatically identifies relevant clinical pathways based on diagnosis and functional status",
-          timeSaved: "10-15 min/admission",
+          timeSaved: "5-10 min/admission",
           impact: "high",
           details: "Evidence-based documentation prompts, rescore opportunities, recommended tasks",
           howToUse: "System auto-identifies pathways, review documentation prompts and create recommended tasks."
@@ -208,7 +208,7 @@ export default function FeaturesPage() {
           name: "Diagnosis-Based Pathway Triggers",
           icon: Layers,
           description: "Automatic pathway activation based on diagnosis codes, keywords, and clinical conditions",
-          timeSaved: "15-20 min/admission",
+          timeSaved: "8-12 min/admission",
           impact: "critical",
           details: "Condition-specific assessments, documentation prompts, rescore opportunities",
           howToUse: "Pathways trigger automatically on patient admission based on diagnosis. Review and implement recommendations."
@@ -217,7 +217,7 @@ export default function FeaturesPage() {
           name: "Documentation Prompts",
           icon: FileText,
           description: "Condition-specific prompts ensure comprehensive documentation of all relevant clinical factors",
-          timeSaved: "10-15 min/visit",
+          timeSaved: "5-8 min/visit",
           impact: "high",
           details: "M-item-specific guidance, priority flagging, evidence-based assessments",
           howToUse: "Review pathway documentation prompts during visits to ensure complete clinical capture."
@@ -226,7 +226,7 @@ export default function FeaturesPage() {
           name: "Automated Task Creation",
           icon: CheckCircle2,
           description: "Generate pathway-specific tasks for care coordination, safety, and follow-up",
-          timeSaved: "5-10 min/pathway",
+          timeSaved: "3-5 min/pathway",
           impact: "high",
           details: "Priority-based task assignment, due date recommendations, care team coordination",
           howToUse: "Click 'Create Tasks' from triggered pathway to auto-generate all recommended follow-up items."
@@ -251,7 +251,7 @@ export default function FeaturesPage() {
           name: "Real-Time Notification Center",
           icon: Bell,
           description: "Centralized notification hub in header showing unread messages, active alerts, and pending tasks",
-          timeSaved: "5-10 min/day",
+          timeSaved: "3-5 min/day",
           impact: "high",
           details: "Live notifications with quick access to messages, patient alerts, and assigned tasks. Auto-refreshes every minute",
           howToUse: "Click bell icon in header to view all notifications. Click any notification to navigate directly to relevant page."
@@ -260,7 +260,7 @@ export default function FeaturesPage() {
           name: "My Workflow Dashboard",
           icon: Target,
           description: "Personalized nurse workflow with today's visits, pending tasks, and priority alerts",
-          timeSaved: "10-15 min/day",
+          timeSaved: "5-10 min/day",
           impact: "critical",
           details: "Daily schedule, task list, patient alerts, training recommendations, all in one view",
           howToUse: "Start your day at My Workflow page to see priorities. Check off tasks as you complete them."
@@ -269,7 +269,7 @@ export default function FeaturesPage() {
           name: "Smart Task Assignment",
           icon: ClipboardList,
           description: "AI automatically generates and assigns tasks based on documentation and patient needs",
-          timeSaved: "10-15 min/visit",
+          timeSaved: "3-5 min/visit",
           impact: "high",
           details: "Extracts action items from notes, assigns due dates, routes to appropriate team members",
           howToUse: "Tasks auto-generate after note enhancement. Review and assign in task management panel."
@@ -303,7 +303,7 @@ export default function FeaturesPage() {
           name: "Alert Workflow Management",
           icon: Target,
           description: "Assign, acknowledge, and track resolution of patient alerts with team coordination",
-          timeSaved: "5-10 min/alert",
+          timeSaved: "3-5 min/alert",
           impact: "high",
           details: "Assignment workflow, status tracking, resolution documentation, team notifications",
           howToUse: "Click alerts to assign to team members, document actions taken, mark as resolved."
@@ -371,7 +371,7 @@ export default function FeaturesPage() {
           name: "Automated Compliance Auditing",
           icon: ShieldCheck,
           description: "AI audits all documentation against Medicare CoPs, state regulations, and agency policies",
-          timeSaved: "30-40 min/audit",
+          timeSaved: "15-20 min/audit",
           impact: "critical",
           details: "Rule-based checking, severity scoring, corrective action suggestions",
           howToUse: "Navigate to Compliance Dashboard to review audit results and address flagged issues."
@@ -389,11 +389,11 @@ export default function FeaturesPage() {
           name: "Regulatory Updates",
           icon: BookOpen,
           description: "AI monitors and alerts on CMS, Medicare, and state regulatory changes",
-          timeSaved: "30 min/week",
+          timeSaved: "15-20 min/week",
           impact: "high",
           details: "Automated scanning, compliance impact analysis, training recommendations",
           howToUse: "Review Regulatory Compliance page for pending updates and required actions."
-        },
+        }
         {
           name: "Performance Analytics",
           icon: BarChart3,
@@ -414,7 +414,7 @@ export default function FeaturesPage() {
           name: "Care Plan Auto-Generation",
           icon: Target,
           description: "AI generates evidence-based care plans based on diagnosis and patient data",
-          timeSaved: "15-20 min/admission",
+          timeSaved: "8-12 min/admission",
           impact: "critical",
           details: "Problem, goal, intervention generation, measurable outcomes, evidence-based",
           howToUse: "Navigate to patient, click 'Generate Care Plan', review and create suggested plans."
@@ -423,7 +423,7 @@ export default function FeaturesPage() {
           name: "Automatic Care Plan Triggers",
           icon: Layers,
           description: "Admin-configured automatic care plan creation based on diagnosis or medication",
-          timeSaved: "15-20 min/admission",
+          timeSaved: "8-12 min/admission",
           impact: "critical",
           details: "Standardized evidence-based care, ensures consistency across agency",
           howToUse: "Admins: Configure triggers in Automatic Care Plans. Staff: Plans auto-generate on admission."
@@ -432,7 +432,7 @@ export default function FeaturesPage() {
           name: "Incident Reporting",
           icon: AlertTriangle,
           description: "Guided incident reporting with AI-generated comprehensive reports",
-          timeSaved: "15-20 min/incident",
+          timeSaved: "8-12 min/incident",
           impact: "critical",
           details: "Fall, hospitalization, med error templates, automatic notifications",
           howToUse: "Click incident type button, complete guided form, AI generates detailed report."
@@ -441,7 +441,7 @@ export default function FeaturesPage() {
           name: "Patient History Summarization",
           icon: FileText,
           description: "AI generates concise summaries of patient history and recent activity",
-          timeSaved: "5-10 min prep",
+          timeSaved: "3-5 min prep",
           impact: "high",
           details: "Recent visits, active problems, medications, care plan status",
           howToUse: "View patient context card in Smart Note Assistant for auto-generated summary."
@@ -508,11 +508,11 @@ export default function FeaturesPage() {
     <h2 style="color: white; margin-top: 0;">The Penn Sync Impact</h2>
     <p style="opacity: 0.95; font-size: 16px; margin-bottom: 20px;">Revolutionizing home health documentation with AI-powered efficiency</p>
     <div class="impact-stat">
-      <div class="impact-stat-value">75+</div>
+      <div class="impact-stat-value">20+</div>
       <div class="impact-stat-label">Minutes Saved Per Visit</div>
     </div>
     <div class="impact-stat">
-      <div class="impact-stat-value">6+</div>
+      <div class="impact-stat-value">8+</div>
       <div class="impact-stat-label">Hours Saved Per Week</div>
     </div>
     <div class="impact-stat">
@@ -1198,15 +1198,15 @@ export default function FeaturesPage() {
     setIsGeneratingManual(false);
   };
 
-  // Realistic time savings calculation based on 25 min per note + other features
-  const totalTimeSavedPerVisit = 75; // AI note enhancement (25) + voice dictation (20) + other features (30)
-  const visitsPerWeek = 5;
+  // Realistic time savings calculation based on 20 min per note + other features
+  const totalTimeSavedPerVisit = 20; // AI note enhancement + voice dictation + other features
+  const visitsPerWeek = 25; // Average for a full-time home health nurse
   const weeksPerMonth = 4;
   const monthsPerYear = 12;
   
-  const totalTimeSavedPerWeek = totalTimeSavedPerVisit * visitsPerWeek; // 375 min
-  const totalTimeSavedPerMonth = totalTimeSavedPerWeek * weeksPerMonth; // 1500 min = 25 hours
-  const totalTimeSavedPerYear = totalTimeSavedPerMonth * monthsPerYear; // 300 hours
+  const totalTimeSavedPerWeek = totalTimeSavedPerVisit * visitsPerWeek; // 500 min = ~8.3 hours
+  const totalTimeSavedPerMonth = totalTimeSavedPerWeek * weeksPerMonth; // 2000 min = ~33 hours
+  const totalTimeSavedPerYear = totalTimeSavedPerMonth * monthsPerYear; // 24000 min = 400 hours
 
   const filteredFeatures = selectedCategory === "all" 
     ? features 
