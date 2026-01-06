@@ -489,8 +489,7 @@ export default function Layout({ children, currentPageName }) {
             )}
           </Button>
 
-          <FeedbackButton />
-          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700 h-12 w-12">
+            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white hover:bg-blue-700 h-12 w-12">
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </Button>
         </div>
