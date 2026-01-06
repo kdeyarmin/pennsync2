@@ -275,7 +275,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <>
       <Toaster position="top-right" richColors closeButton />
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex">
+      <div className="min-h-screen flex">
 
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0`}>
@@ -603,7 +603,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 min-h-screen">{children}</main>
+      <main className="flex-1 overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">{children}</main>
 
       {/* Offline Indicator */}
       <OfflineIndicator />
