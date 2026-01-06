@@ -39,6 +39,7 @@ import {
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
 import FeedbackButton from "../components/feedback/FeedbackButton";
 import NotificationCenter from "../components/notifications/NotificationCenter";
+import SessionTimeoutManager from "../components/security/SessionTimeoutManager";
 import { Toaster } from "sonner";
 
 export default function Layout({ children, currentPageName }) {
@@ -206,6 +207,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
     { name: "Audit Trail", icon: Shield, page: "AuditTrail" },
+    { name: "Security & HIPAA", icon: Shield, page: "SecurityCompliance" },
     { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
     { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" }
     ];
@@ -411,6 +413,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{currentUser?.full_name || 'User'}</p>
                 <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
+                <p className="text-xs text-green-600 font-medium mt-0.5">🔒 Secure Session</p>
               </div>
             )}
             </div>
@@ -578,6 +581,9 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Offline Indicator */}
       <OfflineIndicator />
+      
+      {/* HIPAA Security - Session Timeout */}
+      <SessionTimeoutManager timeoutMinutes={15} warningMinutes={2} />
 
       {/* Notification Center Dialog */}
       <Dialog open={notificationCenterOpen} onOpenChange={setNotificationCenterOpen}>
