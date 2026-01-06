@@ -206,7 +206,8 @@ export default function Layout({ children, currentPageName }) {
     { name: "Security & HIPAA", icon: Shield, page: "SecurityCompliance" },
     { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
     { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" },
-    { name: "Notifications", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) }
+    { name: "Notifications", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
+    { name: "AI Settings", icon: Settings, page: "UserSettings" }
     ];
 
   const handleLogout = async () => {
@@ -432,17 +433,6 @@ export default function Layout({ children, currentPageName }) {
 
         {/* User Section */}
         <div className="border-t border-gray-200 p-3">
-          {!sidebarCollapsed && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.location.href = createPageUrl("UserSettings")}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-full justify-start mt-1"
-            >
-              <Settings className="w-4 h-4" />
-              <span className="ml-2">AI Settings</span>
-            </Button>
-          )}
           {!sidebarCollapsed && <FeedbackButton />}
           <Button
             variant="ghost"
@@ -589,15 +579,6 @@ export default function Layout({ children, currentPageName }) {
               )}
             </nav>
             <div className="flex-shrink-0 border-t border-gray-200 p-3 space-y-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = createPageUrl("UserSettings")}
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-full justify-start"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                AI Settings
-              </Button>
               <FeedbackButton />
               <Button 
                 variant="ghost" 
