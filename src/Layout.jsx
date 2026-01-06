@@ -278,7 +278,7 @@ export default function Layout({ children, currentPageName }) {
       <div className="min-h-screen flex">
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-white shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0`}>
+      <aside className={`hidden lg:flex flex-col bg-gradient-to-br from-sky-50 to-blue-100 shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
