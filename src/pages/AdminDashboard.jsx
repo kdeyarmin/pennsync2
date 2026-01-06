@@ -760,12 +760,7 @@ export default function AdminDashboard() {
         <AnnouncementManager />
       </div>
 
-      {/* Voice Commands */}
-      <VoiceCommandListener
-        onCommand={handleVoiceCommand}
-        commands={getCommandsForContext('admin')}
-        context="admin"
-      />
+
     </div>
   );
 }
