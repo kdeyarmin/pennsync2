@@ -313,10 +313,11 @@ Also provide:
       yPos += 6;
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
-      skilled.specific_interventions.forEach(int => {
+      skilled.specific_interventions.forEach((int, intIdx) => {
         checkPageBreak();
-        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
-        const intLines = doc.splitTextToSize(int, 170);
+        doc.setFontSize(10);
+        doc.text(`- `, margin + 4, yPos);
+        const intLines = doc.splitTextToSize(int, 168);
         intLines.forEach((line, idx) => {
           doc.text(line, margin + 8, yPos + (idx * 6));
         });
@@ -350,10 +351,11 @@ Also provide:
       yPos += 6;
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
-      orders.physician_orders.forEach(order => {
+      orders.physician_orders.forEach((order, orderIdx) => {
         checkPageBreak();
-        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
-        const orderLines = doc.splitTextToSize(order, 170);
+        doc.setFontSize(10);
+        doc.text(`- `, margin + 4, yPos);
+        const orderLines = doc.splitTextToSize(order, 168);
         orderLines.forEach((line, idx) => {
           doc.text(line, margin + 8, yPos + (idx * 6));
         });
@@ -368,10 +370,11 @@ Also provide:
       yPos += 6;
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
-      orders.treatments.forEach(tx => {
+      orders.treatments.forEach((tx, txIdx) => {
         checkPageBreak();
-        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
-        const txLines = doc.splitTextToSize(tx, 170);
+        doc.setFontSize(10);
+        doc.text(`- `, margin + 4, yPos);
+        const txLines = doc.splitTextToSize(tx, 168);
         txLines.forEach((line, idx) => {
           doc.text(line, margin + 8, yPos + (idx * 6));
         });
@@ -604,7 +607,7 @@ Also provide:
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(180, 83, 9);
-      doc.text('⚠️ AI CONFIDENCE & VERIFICATION NOTES', margin, yPos);
+      doc.text('AI CONFIDENCE & VERIFICATION NOTES', margin, yPos);
       yPos += 10;
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
@@ -620,19 +623,20 @@ Also provide:
       }
       
       if (oasis.items_needing_verification?.length > 0) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Items Requiring Clinical Verification:', margin, yPos);
-        yPos += 6;
-        doc.setFont('helvetica', 'normal');
-        oasis.items_needing_verification.forEach(item => {
-          checkPageBreak();
-          doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
-          const itemLines = doc.splitTextToSize(item, 172);
-          itemLines.forEach(line => {
-            doc.text(line, margin + 7, yPos);
-            yPos += 5.5;
-          });
+      doc.setFont('helvetica', 'bold');
+      doc.text('Items Requiring Clinical Verification:', margin, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      oasis.items_needing_verification.forEach((item, itemIdx) => {
+        checkPageBreak();
+        doc.setFontSize(9);
+        doc.text(`- `, margin + 3, yPos);
+        const itemLines = doc.splitTextToSize(item, 170);
+        itemLines.forEach(line => {
+          doc.text(line, margin + 7, yPos);
+          yPos += 5.5;
         });
+      });
       }
       yPos += 8;
     }
@@ -646,7 +650,7 @@ Also provide:
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('🤖 AI-POWERED RISK ANALYSIS', margin, yPos);
+      doc.text('AI-POWERED RISK ANALYSIS', margin, yPos);
       yPos += 14;
       doc.setTextColor(0, 0, 0);
 
@@ -677,13 +681,15 @@ Also provide:
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(194, 65, 12);
-        doc.text('⚠️ TOP PRIORITY RISKS REQUIRING IMMEDIATE ATTENTION:', margin, yPos);
+        doc.text('TOP PRIORITY RISKS REQUIRING IMMEDIATE ATTENTION:', margin, yPos);
         yPos += 8;
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
-        riskAnalysis.top_priority_risks.forEach(risk => {
-          doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
-          const riskLines = doc.splitTextToSize(risk, 175);
+        riskAnalysis.top_priority_risks.forEach((risk, riskIdx) => {
+          checkPageBreak();
+          doc.setFontSize(10);
+          doc.text(`${riskIdx + 1}.`, margin + 3, yPos);
+          const riskLines = doc.splitTextToSize(risk, 172);
           riskLines.forEach(line => {
             doc.text(line, margin + 7, yPos);
             yPos += 5.5;
@@ -719,10 +725,11 @@ Also provide:
           doc.text('Contributing Factors:', margin, yPos);
           yPos += 5;
           doc.setFont('helvetica', 'normal');
-          risk.contributing_factors.forEach(factor => {
+          risk.contributing_factors.forEach((factor, factorIdx) => {
             checkPageBreak();
-            doc.circle(margin + 3, yPos - 1.5, 0.6, 'F');
-            const factorLines = doc.splitTextToSize(factor, 172);
+            doc.setFontSize(9);
+            doc.text(`- `, margin + 3, yPos);
+            const factorLines = doc.splitTextToSize(factor, 170);
             factorLines.forEach(line => {
               doc.text(line, margin + 7, yPos);
               yPos += 5;
@@ -739,10 +746,11 @@ Also provide:
           yPos += 5;
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(0, 0, 0);
-          risk.interventions.forEach(intervention => {
+          risk.interventions.forEach((intervention, intIdx) => {
             checkPageBreak();
-            doc.text('▸', margin + 3, yPos);
-            const intLines = doc.splitTextToSize(intervention, 172);
+            doc.setFontSize(9);
+            doc.text(`- `, margin + 3, yPos);
+            const intLines = doc.splitTextToSize(intervention, 170);
             intLines.forEach(line => {
               doc.text(line, margin + 7, yPos);
               yPos += 5;
@@ -763,14 +771,15 @@ Also provide:
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(29, 78, 216);
-        doc.text('📊 ONGOING MONITORING RECOMMENDATIONS:', margin, yPos);
+        doc.text('ONGOING MONITORING RECOMMENDATIONS:', margin, yPos);
         yPos += 8;
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
-        riskAnalysis.monitoring_recommendations.forEach(rec => {
+        riskAnalysis.monitoring_recommendations.forEach((rec, recIdx) => {
           checkPageBreak();
-          doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
-          const recLines = doc.splitTextToSize(rec, 175);
+          doc.setFontSize(10);
+          doc.text(`- `, margin + 3, yPos);
+          const recLines = doc.splitTextToSize(rec, 172);
           recLines.forEach(line => {
             doc.text(line, margin + 7, yPos);
             yPos += 5.5;
@@ -814,10 +823,11 @@ Also provide:
       'Document homebound status clearly (M1910)'
     ];
     
-    criticalItems.forEach(item => {
+    criticalItems.forEach((item, itemIdx) => {
       checkPageBreak();
-      doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
-      const itemLines = doc.splitTextToSize(item, 175);
+      doc.setFontSize(10);
+      doc.text(`- `, margin + 3, yPos);
+      const itemLines = doc.splitTextToSize(item, 172);
       itemLines.forEach((line, idx) => {
         doc.text(line, margin + 7, yPos + (idx * 6));
       });
@@ -892,10 +902,11 @@ Also provide:
     homeboundReasons.push('Leaving home requires considerable and taxing effort');
     homeboundReasons.push('Absences from home are infrequent and of short duration (medical appointments only)');
     
-    homeboundReasons.forEach(reason => {
+    homeboundReasons.forEach((reason, reasonIdx) => {
       checkPageBreak();
-      doc.circle(margin + 3, yPos - 1.5, 0.8, 'F');
-      const reasonLines = doc.splitTextToSize(reason, 175);
+      doc.setFontSize(10);
+      doc.text(`- `, margin + 3, yPos);
+      const reasonLines = doc.splitTextToSize(reason, 172);
       reasonLines.forEach((line, idx) => {
         doc.text(line, margin + 7, yPos + (idx * 6));
       });
@@ -1105,10 +1116,11 @@ Patient/caregiver verbalize understanding of plan of care and agree with goals. 
       doc.text('Interventions:', margin, yPos);
       yPos += 5;
       doc.setFont('helvetica', 'normal');
-      cp.interventions.forEach(intervention => {
+      cp.interventions.forEach((intervention, intIdx) => {
         checkPageBreak();
-        doc.circle(margin + 4, yPos - 1.5, 0.8, 'F');
-        const intLines = doc.splitTextToSize(intervention, 170);
+        doc.setFontSize(10);
+        doc.text(`- `, margin + 4, yPos);
+        const intLines = doc.splitTextToSize(intervention, 168);
         intLines.forEach((line, lineIdx) => {
           doc.text(line, margin + 8, yPos + (lineIdx * 5));
         });
