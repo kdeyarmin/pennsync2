@@ -198,9 +198,7 @@ export default function Layout({ children, currentPageName }) {
 
   const adminItems = [
     { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
-    { name: "Advanced Reports", icon: BarChart3, page: "AdvancedReports" },
-    { name: "Automated Reports", icon: Sparkles, page: "AutomatedReports" },
-    { name: "KPI Dashboard", icon: BarChart3, page: "AdminKPIDashboard" },
+    { name: "Reports & Analytics", icon: BarChart3, page: "Reports" },
     { name: "Users & Settings", icon: Users, page: "UserManagement" },
     { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },

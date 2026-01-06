@@ -1,12 +1,9 @@
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminKPIDashboard from './pages/AdminKPIDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
-import AdvancedReports from './pages/AdvancedReports';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
-import AutomatedReports from './pages/AutomatedReports';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import CarePlanManagement from './pages/CarePlanManagement';
 import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
@@ -70,19 +67,17 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import SecurityCompliance from './pages/SecurityCompliance';
+import Reports from './pages/Reports';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
-    "AdminKPIDashboard": AdminKPIDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
-    "AdvancedReports": AdvancedReports,
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
-    "AutomatedReports": AutomatedReports,
     "AutomaticCarePlans": AutomaticCarePlans,
     "CarePlanManagement": CarePlanManagement,
     "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
@@ -146,6 +141,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "SecurityCompliance": SecurityCompliance,
+    "Reports": Reports,
 }
 
 export const pagesConfig = {
