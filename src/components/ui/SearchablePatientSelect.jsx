@@ -179,7 +179,7 @@ export default function SearchablePatientSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[--radix-popover-trigger-width] p-0" 
+        className="w-[500px] p-0" 
         align="start"
         sideOffset={4}
       >
