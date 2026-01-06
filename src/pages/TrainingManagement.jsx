@@ -408,6 +408,21 @@ export default function TrainingManagement() {
         </TabsContent>
 
         <TabsContent value="needs">
+          <Card className="mb-4 bg-purple-50 border-purple-200">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-purple-900 mb-1">AI-Powered Training Needs Analysis</p>
+                  <p className="text-xs text-purple-700">
+                    This dashboard automatically tracks all suggestions and recommendations from Smart Notes and other AI features. 
+                    Each time a nurse receives a compliance suggestion, quality improvement tip, or clinical decision support recommendation, 
+                    it's logged here to identify educational gaps and track improvement over time.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <NurseTrainingNeedsAnalyzer />
         </TabsContent>
 

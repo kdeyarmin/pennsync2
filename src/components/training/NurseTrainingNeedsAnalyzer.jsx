@@ -45,7 +45,13 @@ export default function NurseTrainingNeedsAnalyzer() {
 
   const { data: trainingRecommendations = [] } = useQuery({
     queryKey: ['trainingRecommendations'],
-    queryFn: () => base44.entities.TrainingRecommendation.list('-created_date', 1000),
+    queryFn: () => base44.entities.TrainingRecommendation.list('-created_date', 5000),
+    initialData: [],
+  });
+
+  const { data: trainingCompletions = [] } = useQuery({
+    queryKey: ['trainingCompletions'],
+    queryFn: () => base44.entities.TrainingCompletion.list('-completion_date', 1000),
     initialData: [],
   });
 
@@ -66,12 +72,13 @@ export default function NurseTrainingNeedsAnalyzer() {
     return filtered;
   }, [trainingRecommendations, selectedNurse, selectedSeverity]);
 
-  // Calculate nurse profiles
+  // Calculate nurse profiles with progress tracking
   const nurseProfiles = useMemo(() => {
     const profiles = {};
     
     nurses.forEach(nurse => {
       const nurseRecs = trainingRecommendations.filter(r => r.nurse_email === nurse.email);
+      const nurseCompletions = trainingCompletions.filter(c => c.nurse_email === nurse.email);
       
       // Count by type
       const byType = {};
@@ -85,11 +92,14 @@ export default function NurseTrainingNeedsAnalyzer() {
       const medium = nurseRecs.filter(r => r.severity === 'medium').length;
       const low = nurseRecs.filter(r => r.severity === 'low').length;
       
-      // Count by source
+      // Count by source (specifically from Smart Notes)
       const bySource = {};
       nurseRecs.forEach(rec => {
         bySource[rec.source] = (bySource[rec.source] || 0) + 1;
       });
+      
+      // Smart Note specific recommendations
+      const smartNoteRecs = nurseRecs.filter(r => r.source === 'smart_note' || r.source === 'compliance_checker' || r.source === 'ai_drafting_assistant');
       
       // Unaddressed recommendations
       const unaddressed = nurseRecs.filter(r => !r.addressed).length;
@@ -99,6 +109,25 @@ export default function NurseTrainingNeedsAnalyzer() {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([type, count]) => ({ type, count }));
+      
+      // Progress tracking - count completed training modules in categories that match recommendations
+      const completedTraining = nurseCompletions.filter(c => c.status === 'completed').length;
+      const totalAssignedTraining = nurseCompletions.length;
+      const progressRate = totalAssignedTraining > 0 ? Math.round((completedTraining / totalAssignedTraining) * 100) : 0;
+      
+      // Track improvement over time (last 30 days vs previous 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      
+      const recentRecs = nurseRecs.filter(r => new Date(r.created_date) >= thirtyDaysAgo).length;
+      const previousRecs = nurseRecs.filter(r => {
+        const date = new Date(r.created_date);
+        return date >= sixtyDaysAgo && date < thirtyDaysAgo;
+      }).length;
+      
+      const trend = previousRecs > 0 ? Math.round(((recentRecs - previousRecs) / previousRecs) * 100) : 0;
       
       profiles[nurse.email] = {
         nurse,
@@ -110,13 +139,20 @@ export default function NurseTrainingNeedsAnalyzer() {
         low,
         byType,
         bySource,
+        smartNoteRecs: smartNoteRecs.length,
         topNeeds,
-        riskScore: Math.min(100, (critical * 10) + (high * 5) + (medium * 2) + low)
+        riskScore: Math.min(100, (critical * 10) + (high * 5) + (medium * 2) + low),
+        completedTraining,
+        totalAssignedTraining,
+        progressRate,
+        recentRecs,
+        previousRecs,
+        trend
       };
     });
     
     return profiles;
-  }, [nurses, trainingRecommendations]);
+  }, [nurses, trainingRecommendations, trainingCompletions]);
 
   // Sort nurses by risk score (highest first)
   const sortedNurses = Object.values(nurseProfiles).sort((a, b) => b.riskScore - a.riskScore);
@@ -304,10 +340,14 @@ export default function NurseTrainingNeedsAnalyzer() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
                     <div className="text-center p-2 bg-gray-50 rounded">
                       <p className="text-xs text-gray-500">Total</p>
                       <p className="text-lg font-bold">{profile.total}</p>
+                    </div>
+                    <div className="text-center p-2 bg-purple-50 rounded">
+                      <p className="text-xs text-purple-600">Smart Notes</p>
+                      <p className="text-lg font-bold text-purple-600">{profile.smartNoteRecs}</p>
                     </div>
                     <div className="text-center p-2 bg-red-50 rounded">
                       <p className="text-xs text-red-600">Critical</p>
@@ -317,13 +357,13 @@ export default function NurseTrainingNeedsAnalyzer() {
                       <p className="text-xs text-orange-600">High</p>
                       <p className="text-lg font-bold text-orange-600">{profile.high}</p>
                     </div>
-                    <div className="text-center p-2 bg-yellow-50 rounded">
-                      <p className="text-xs text-yellow-600">Medium</p>
-                      <p className="text-lg font-bold text-yellow-600">{profile.medium}</p>
-                    </div>
                     <div className="text-center p-2 bg-blue-50 rounded">
                       <p className="text-xs text-blue-600">Unaddressed</p>
                       <p className="text-lg font-bold text-blue-600">{profile.unaddressed}</p>
+                    </div>
+                    <div className="text-center p-2 bg-green-50 rounded">
+                      <p className="text-xs text-green-600">Training Done</p>
+                      <p className="text-lg font-bold text-green-600">{profile.completedTraining}/{profile.totalAssignedTraining}</p>
                     </div>
                   </div>
 
@@ -348,6 +388,39 @@ export default function NurseTrainingNeedsAnalyzer() {
                           {getSourceLabel(source)}: {count}
                         </Badge>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Progress Over Time */}
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Progress Over Time:</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>Training Completion</span>
+                          <span className="font-semibold">{profile.progressRate}%</span>
+                        </div>
+                        <Progress value={profile.progressRate} className="h-2" />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">30-day trend</p>
+                        <p className={`text-sm font-bold ${
+                          profile.trend < 0 ? 'text-green-600' : profile.trend > 0 ? 'text-red-600' : 'text-gray-600'
+                        }`}>
+                          {profile.trend < 0 ? '↓' : profile.trend > 0 ? '↑' : '→'} 
+                          {Math.abs(profile.trend)}% issues
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <div className="p-2 bg-blue-50 rounded border border-blue-200">
+                        <p className="text-xs text-blue-600">Last 30 days</p>
+                        <p className="text-lg font-bold text-blue-900">{profile.recentRecs} issues</p>
+                      </div>
+                      <div className="p-2 bg-gray-50 rounded border border-gray-200">
+                        <p className="text-xs text-gray-600">Previous 30 days</p>
+                        <p className="text-lg font-bold text-gray-900">{profile.previousRecs} issues</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
