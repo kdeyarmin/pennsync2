@@ -18,9 +18,6 @@ import {
 } from "@/components/ui/dialog";
 
 import PatientForm from "../components/patient/PatientForm";
-import VoiceCommandListener from "../components/voice/VoiceCommandListener";
-import { getCommandsForContext } from "../components/voice/voiceCommands";
-import EnhancedVoiceCommands from "../components/voice/EnhancedVoiceCommands";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
@@ -31,6 +28,7 @@ import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUp
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
+import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -300,40 +298,7 @@ export default function Patients() {
     }
   };
 
-  // Voice command handler
-  const handleVoiceCommand = (action, spokenText) => {
-    switch (action) {
-      case 'add_patient':
-        setEditingPatient(null);
-        setShowForm(true);
-        break;
-      case 'schedule_visit':
-        // Open first patient's detail page or show message
-        if (patients.length > 0) {
-          alert('Please select a patient first to schedule a visit');
-        } else {
-          alert('No patients available. Please add a patient first.');
-        }
-        break;
-      case 'search_patients':
-        // Extract search term from spoken text
-        const searchKeywords = ['search for', 'find patient', 'look up', 'search patient', 'find'];
-        let extractedSearchTerm = spokenText;
-        for (const keyword of searchKeywords) {
-          if (extractedSearchTerm.toLowerCase().startsWith(keyword)) {
-            extractedSearchTerm = extractedSearchTerm.substring(keyword.length);
-            break;
-          }
-        }
-        extractedSearchTerm = extractedSearchTerm.trim();
-        if (extractedSearchTerm) {
-          setSearchTerm(extractedSearchTerm);
-        }
-        break;
-      default:
-        console.log('Unhandled voice command:', action);
-    }
-  };
+
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -403,7 +368,55 @@ export default function Patients() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+      {/* Mobile Optimized List */}
+      <div className="lg:hidden space-y-3 mb-20">
+        {isLoading ? (
+          <>
+            <PatientCardSkeleton />
+            <PatientCardSkeleton />
+            <PatientCardSkeleton />
+          </>
+        ) : filteredPatients.length === 0 ? (
+          <Card className="border-2 border-dashed">
+            <CardContent className="p-8 text-center">
+              <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
+              <p className="text-gray-500 mb-6">
+                {searchTerm ? 'No patients match your search.' : 'Start by adding your first patient.'}
+              </p>
+              {!searchTerm && (
+                <Button
+                  onClick={() => setShowForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700 min-h-[44px]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Patient
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          filteredPatients.map((patient) => (
+            <SwipeablePatientCard
+              key={patient.id}
+              patient={patient}
+              isSelected={selectedPatients.some(p => p.id === patient.id)}
+              onToggleSelect={togglePatientSelection}
+              onEdit={(p) => {
+                setEditingPatient(p);
+                setShowForm(true);
+              }}
+              onDelete={(p) => {
+                setPatientToDelete(p);
+                setDeleteDialogOpen(true);
+              }}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Desktop Grid View */}
+      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {isLoading ? (
           <>
             <PatientCardSkeleton />
@@ -590,16 +603,7 @@ export default function Patients() {
         patient2={patientsToMerge.patient2}
       />
 
-      {/* Enhanced Voice Commands */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <EnhancedVoiceCommands
-          onTranscription={(text) => setSearchTerm(text)}
-          onCommand={handleVoiceCommand}
-          commands={getCommandsForContext('patients')}
-          mode="command"
-          showSettings={true}
-        />
-      </div>
+
 
       {/* Patient Summary Dialog */}
                   <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>

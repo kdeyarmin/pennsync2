@@ -31,6 +31,7 @@ import { calculateNurseStats } from "@/components/utils/statsCalculator";
 import OfflineDataManager from "../components/mobile/OfflineDataManager";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import DashboardSkeleton from "../components/loading/DashboardSkeleton";
+import MobileQuickActions from "../components/mobile/MobileQuickActions";
 
 
 export default function Dashboard() {
@@ -305,6 +306,9 @@ export default function Dashboard() {
       <div className="mb-6">
         <OfflineDataManager />
       </div>
+
+      {/* Mobile Quick Actions */}
+      <MobileQuickActions />
 
     </div>
   );

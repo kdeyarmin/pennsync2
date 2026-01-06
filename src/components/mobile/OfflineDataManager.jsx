@@ -73,35 +73,54 @@ export default function OfflineDataManager() {
       const patients = await base44.entities.Patient.list();
       const todayPatients = patients.filter(p => patientIds.includes(p.id));
 
-      // Cache each patient's essential data
-      for (const patient of todayPatients.slice(0, 10)) { // Limit to 10 patients
+      // Get care plans and recent visits for each patient
+      const carePlans = await base44.entities.CarePlan.list();
+      const recentVisits = await base44.entities.Visit.list('-visit_date', 100);
+
+      // Cache each patient's essential data with care plans and visits
+      const cachedPatientsData = [];
+      for (const patient of todayPatients.slice(0, 20)) {
+        const patientCarePlans = carePlans.filter(cp => cp.patient_id === patient.id);
+        const patientVisits = recentVisits.filter(v => v.patient_id === patient.id).slice(0, 5);
+        
+        const cachedData = {
+          id: patient.id,
+          first_name: patient.first_name,
+          last_name: patient.last_name,
+          primary_diagnosis: patient.primary_diagnosis,
+          secondary_diagnoses: patient.secondary_diagnoses,
+          allergies: patient.allergies,
+          current_medications: patient.current_medications,
+          address: patient.address,
+          phone: patient.phone,
+          emergency_contact_name: patient.emergency_contact_name,
+          emergency_contact_phone: patient.emergency_contact_phone,
+          physician_name: patient.physician_name,
+          physician_phone: patient.physician_phone,
+          baseline_vitals: patient.baseline_vitals,
+          care_plans: patientCarePlans,
+          recent_visits: patientVisits
+        };
+
         await base44.entities.OfflineDataCache.create({
           user_email: currentUser.email,
           data_type: 'patient',
           entity_id: patient.id,
-          cached_data: {
-            id: patient.id,
-            first_name: patient.first_name,
-            last_name: patient.last_name,
-            primary_diagnosis: patient.primary_diagnosis,
-            allergies: patient.allergies,
-            current_medications: patient.current_medications,
-            address: patient.address,
-            phone: patient.phone,
-            emergency_contact_name: patient.emergency_contact_name,
-            emergency_contact_phone: patient.emergency_contact_phone
-          },
+          cached_data: cachedData,
           cached_at: new Date().toISOString(),
           is_synced: true
         });
+
+        cachedPatientsData.push(cachedData);
       }
 
-      // Store in localStorage as well
-      localStorage.setItem('offline_patients', JSON.stringify(todayPatients.slice(0, 10)));
+      // Store in localStorage as well for quick access
+      localStorage.setItem('offline_patients', JSON.stringify(cachedPatientsData));
+      localStorage.setItem('offline_cache_timestamp', new Date().toISOString());
       
       queryClient.invalidateQueries({ queryKey: ['offlineCache'] });
-      setSyncStatus({ type: 'success', message: `Cached ${todayPatients.length} patients for offline access` });
-      toast.success(`${todayPatients.length} patients cached for offline access`);
+      setSyncStatus({ type: 'success', message: `Cached ${cachedPatientsData.length} patients with care plans and visits` });
+      toast.success(`${cachedPatientsData.length} patients cached for offline access`);
     } catch (error) {
       console.error('Caching error:', error);
       setSyncStatus({ type: 'error', message: 'Failed to cache data' });

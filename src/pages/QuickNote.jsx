@@ -338,7 +338,8 @@ export default function QuickNote() {
                   value={roughNote}
                   onChange={(e) => setRoughNote(e.target.value)}
                   placeholder="Type or dictate your visit notes...&#10;&#10;Examples:&#10;• Patient reports improved mobility&#10;• Wound healing well, less drainage&#10;• Reviewed medications, patient understands&#10;• BP elevated today, will monitor"
-                  className="min-h-[250px] text-base"
+                  className="min-h-[200px] md:min-h-[250px] text-base touch-target resize-none"
+                  style={{ fontSize: '16px' }}
                 />
                 
                 {listening && (
@@ -404,7 +405,8 @@ export default function QuickNote() {
                   <Textarea
                     value={enhancedNote}
                     onChange={(e) => setEnhancedNote(e.target.value)}
-                    className="min-h-[300px] text-sm font-mono"
+                    className="min-h-[400px] md:min-h-[500px] text-sm font-mono resize-none"
+                    style={{ fontSize: '16px' }}
                   />
                   
                   <div className="flex flex-col sm:flex-row gap-2">
