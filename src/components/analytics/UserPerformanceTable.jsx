@@ -42,7 +42,7 @@ export default function UserPerformanceTable({ users }) {
                 onClick={() => handleSort('notesCount')}
                 className="h-auto p-0 hover:bg-transparent font-semibold"
               >
-                Notes <ArrowUpDown className="w-3 h-3 ml-1 inline" />
+                Enhancements <ArrowUpDown className="w-3 h-3 ml-1 inline" />
               </Button>
             </th>
             <th className="text-left p-3">

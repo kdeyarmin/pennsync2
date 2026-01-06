@@ -258,10 +258,10 @@ export default function NursePerformanceDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Completed Visits</p>
+                    <p className="text-sm text-gray-600 mb-1">Enhancements Completed</p>
                     <p className="text-3xl font-bold text-gray-900">{metrics?.completed_visits || 0}</p>
                   </div>
-                  <Users className="w-8 h-8 text-green-400" />
+                  <FileText className="w-8 h-8 text-green-400" />
                 </div>
               </CardContent>
             </Card>
@@ -874,11 +874,11 @@ export default function NursePerformanceDashboard() {
                     <p className="text-sm text-gray-600 mb-2">Template Usage Rate</p>
                     <div className="flex items-center gap-3">
                       <Progress 
-                        value={(metrics?.template_usage / metrics?.completed_visits * 100) || 0} 
+                        value={(metrics?.template_usage / (metrics?.completed_visits || 1) * 100) || 0} 
                         className="flex-1"
                       />
                       <span className="text-lg font-semibold">
-                        {Math.round((metrics?.template_usage / metrics?.completed_visits * 100) || 0)}%
+                        {Math.round((metrics?.template_usage / (metrics?.completed_visits || 1) * 100) || 0)}%
                       </span>
                     </div>
                   </CardContent>
@@ -889,11 +889,11 @@ export default function NursePerformanceDashboard() {
                     <p className="text-sm text-gray-600 mb-2">AI Scribe Adoption</p>
                     <div className="flex items-center gap-3">
                       <Progress 
-                        value={(metrics?.ai_scribe_usage / metrics?.completed_visits * 100) || 0} 
+                        value={(metrics?.ai_scribe_usage / (metrics?.completed_visits || 1) * 100) || 0} 
                         className="flex-1"
                       />
                       <span className="text-lg font-semibold">
-                        {Math.round((metrics?.ai_scribe_usage / metrics?.completed_visits * 100) || 0)}%
+                        {Math.round((metrics?.ai_scribe_usage / (metrics?.completed_visits || 1) * 100) || 0)}%
                       </span>
                     </div>
                   </CardContent>

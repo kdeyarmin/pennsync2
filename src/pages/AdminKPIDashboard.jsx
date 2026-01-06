@@ -203,8 +203,8 @@ export default function AdminKPIDashboard() {
           icon={Users}
         />
         <KPICard
-          title="Total Visits"
-          value={stats.visits.total}
+          title="Enhancements Completed"
+          value={stats.noteEnhancements.total}
           change={12}
           trend="up"
           icon={FileText}
