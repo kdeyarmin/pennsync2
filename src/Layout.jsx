@@ -603,7 +603,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">{children}</main>
+      <main className="flex-1 lg:overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 bg-gradient-to-br from-sky-50 to-blue-100 min-h-screen">{children}</main>
 
       {/* Offline Indicator */}
       <OfflineIndicator />

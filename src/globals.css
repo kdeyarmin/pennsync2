@@ -54,7 +54,7 @@ css
   }
 
   body {
-    @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-gray-900;
+    @apply bg-gradient-to-br from-sky-50 to-blue-100 text-gray-900;
   }
 
   * {
