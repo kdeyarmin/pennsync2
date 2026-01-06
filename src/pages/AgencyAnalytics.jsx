@@ -19,7 +19,6 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { calculateStats, calculateNurseStats, formatCurrency } from "../components/utils/statsCalculator";
-import { formatEasternTime, getTodayEasternDate } from "../components/utils/timezone";
 
 export default function AgencyAnalytics() {
   const [dateRange, setDateRange] = useState("30days");
