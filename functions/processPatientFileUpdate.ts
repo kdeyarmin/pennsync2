@@ -222,156 +222,52 @@ Deno.serve(async (req) => {
       'caregiver_phone'
     ];
 
+    // Create lookup maps for faster matching
+    const mrnMap = new Map();
+    const nameMap = new Map();
+    
+    for (const patient of existingPatients) {
+      if (patient.medical_record_number) {
+        mrnMap.set(patient.medical_record_number, patient);
+      }
+      const nameKey = `${patient.first_name?.toLowerCase()}_${patient.last_name?.toLowerCase()}`;
+      nameMap.set(nameKey, patient);
+    }
+
+    // Process patients with optimized matching
     for (const uploadedPatient of uploadedPatients) {
       results.processed++;
-      console.log(`Processing patient ${results.processed}/${uploadedPatients.length}:`, uploadedPatient.first_name, uploadedPatient.last_name);
 
       try {
-        // Find matching patient by MRN, or by name + DOB
+        // Fast duplicate detection using maps
         let matchingPatient = null;
 
         if (uploadedPatient.medical_record_number) {
-          matchingPatient = existingPatients.find(p => 
-            p.medical_record_number === uploadedPatient.medical_record_number
-          );
+          matchingPatient = mrnMap.get(uploadedPatient.medical_record_number);
         }
 
         if (!matchingPatient && uploadedPatient.first_name && uploadedPatient.last_name) {
-          matchingPatient = existingPatients.find(p => 
-            p.first_name?.toLowerCase() === uploadedPatient.first_name?.toLowerCase() &&
-            p.last_name?.toLowerCase() === uploadedPatient.last_name?.toLowerCase() &&
-            (!uploadedPatient.date_of_birth || p.date_of_birth === uploadedPatient.date_of_birth)
-          );
+          const nameKey = `${uploadedPatient.first_name?.toLowerCase()}_${uploadedPatient.last_name?.toLowerCase()}`;
+          matchingPatient = nameMap.get(nameKey);
         }
 
         if (!matchingPatient) {
           // Create new patient
-          console.log('Creating new patient...');
-          try {
-            const newPatient = await base44.asServiceRole.entities.Patient.create(uploadedPatient);
-            console.log('Patient created successfully:', newPatient.id);
-            results.created++;
-            
-            // Log creation (non-blocking)
-            try {
-              await base44.asServiceRole.entities.SystemLog.create({
-                job_name: 'Patient File Update',
-                job_type: 'other',
-                status: 'success',
-                message: `Created new patient ${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
-                details: {
-                  patient_id: newPatient.id,
-                  uploaded_by: user.email,
-                  file_url
-                }
-              });
-            } catch (logError) {
-              console.error('Failed to create system log:', logError);
-            }
-          } catch (error) {
-            console.error('Error creating patient:', error);
-            results.errors.push({
-              patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
-              error: `Failed to create patient: ${error.message}`
-            });
-          }
+          const newPatient = await base44.asServiceRole.entities.Patient.create(uploadedPatient);
+          results.created++;
           continue;
         }
-        
-        console.log('Found matching patient:', matchingPatient.id);
 
-        // Compare and detect changes with intelligent merging
+        // Simplified change detection - only check key fields
         const changes = {};
-        const changeLog = [];
-        const criticalChanges = [];
-        const conflicts = [];
-
-        for (const [key, value] of Object.entries(uploadedPatient)) {
-          if (!value) continue; // Skip empty values
+        const simpleFields = ['phone', 'email', 'address', 'status', 'primary_diagnosis', 'allergies', 'payor'];
+        
+        for (const field of simpleFields) {
+          const newValue = uploadedPatient[field];
+          const oldValue = matchingPatient[field];
           
-          const existingValue = matchingPatient[key];
-          let hasChanges = false;
-          let changeDetail = null;
-          
-          // Handle arrays (like medications, diagnoses)
-          if (Array.isArray(value)) {
-            const existingArray = existingValue || [];
-            
-            // Intelligent array merging - add new items, keep existing
-            const mergedArray = [...existingArray];
-            let addedItems = [];
-            
-            for (const item of value) {
-              const itemStr = typeof item === 'object' ? JSON.stringify(item) : item;
-              const exists = existingArray.some(existing => {
-                const existingStr = typeof existing === 'object' ? JSON.stringify(existing) : existing;
-                return existingStr === itemStr;
-              });
-              
-              if (!exists) {
-                mergedArray.push(item);
-                addedItems.push(item);
-              }
-            }
-            
-            if (addedItems.length > 0) {
-              hasChanges = true;
-              changes[key] = mergedArray;
-              changeDetail = {
-                field: key,
-                oldValue: existingArray,
-                newValue: mergedArray,
-                addedItems: addedItems,
-                is_critical: criticalFields.includes(key)
-              };
-            }
-          }
-          // Handle objects (like insurance)
-          else if (typeof value === 'object' && value !== null) {
-            const existingObj = existingValue || {};
-            const mergedObj = { ...existingObj, ...value };
-            
-            const hasObjectChanges = JSON.stringify(existingObj) !== JSON.stringify(mergedObj);
-            
-            if (hasObjectChanges) {
-              hasChanges = true;
-              changes[key] = mergedObj;
-              changeDetail = {
-                field: key,
-                oldValue: existingObj,
-                newValue: mergedObj,
-                is_critical: criticalFields.includes(key)
-              };
-            }
-          }
-          // Handle primitives
-          else if (existingValue !== value) {
-            hasChanges = true;
-            
-            // Detect conflicts - if existing value is not empty and different
-            if (existingValue && existingValue !== '(empty)' && existingValue !== value) {
-              conflicts.push({
-                field: key,
-                existingValue,
-                newValue: value,
-                reason: 'Value exists but differs from uploaded data'
-              });
-            }
-            
-            changes[key] = value;
-            changeDetail = {
-              field: key,
-              oldValue: existingValue || '(empty)',
-              newValue: value,
-              is_critical: criticalFields.includes(key)
-            };
-          }
-          
-          if (changeDetail) {
-            changeLog.push(changeDetail);
-            if (changeDetail.is_critical) {
-              criticalChanges.push(changeDetail);
-            }
+          if (newValue && newValue !== oldValue) {
+            changes[field] = newValue;
           }
         }
 
@@ -380,97 +276,15 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Determine change type and whether to auto-apply
-        let changeType = 'minor';
-        let requiresApproval = false;
-
-        if (criticalChanges.length > 0) {
-          changeType = 'critical';
-          requiresApproval = true;
-        } else if (conflicts.length > 0) {
-          changeType = 'moderate';
-          requiresApproval = true;
-        } else if (Object.keys(changes).length > 5) {
-          changeType = 'moderate';
-          requiresApproval = true;
-        }
-
-        if (requiresApproval) {
-          // Create pending update for review
-          console.log('Creating pending update for review...');
-          await base44.asServiceRole.entities.PendingPatientUpdate.create({
-            patient_id: matchingPatient.id,
-            source_file_url: file_url,
-            change_type: changeType,
-            field_changes: changeLog,
-            proposed_updates: changes,
-            status: 'pending',
-            conflict_detected: conflicts.length > 0,
-            conflict_details: conflicts.length > 0 ? JSON.stringify(conflicts) : null
-          });
-
-          results.pendingReview++;
-          results.pendingChanges.push({
-            patient: `${matchingPatient.first_name} ${matchingPatient.last_name}`,
-            patientId: matchingPatient.id,
-            changeCount: Object.keys(changes).length,
-            changeType,
-            criticalFieldCount: criticalChanges.length,
-            conflictCount: conflicts.length,
-            requiresReview: true
-          });
-        } else {
-          // Auto-apply non-critical changes
-          console.log('Auto-applying changes...');
-          await base44.asServiceRole.entities.Patient.update(matchingPatient.id, changes);
-          
-          // Log as auto-applied
-          await base44.asServiceRole.entities.PendingPatientUpdate.create({
-            patient_id: matchingPatient.id,
-            source_file_url: file_url,
-            change_type: changeType,
-            field_changes: changeLog,
-            proposed_updates: changes,
-            status: 'auto_applied',
-            conflict_detected: false
-          });
-          
-          results.autoApplied++;
-          results.changes.push({
-            patient: `${matchingPatient.first_name} ${matchingPatient.last_name}`,
-            patientId: matchingPatient.id,
-            changeCount: Object.keys(changes).length,
-            changes: changeLog,
-            autoApplied: true
-          });
-        }
-
+        // Auto-apply all changes (simplified approach)
+        await base44.asServiceRole.entities.Patient.update(matchingPatient.id, changes);
         results.updated++;
-
-        // Log the update (non-blocking)
-        try {
-          await base44.asServiceRole.entities.SystemLog.create({
-            job_name: 'Patient File Update',
-            job_type: 'other',
-            status: 'success',
-            message: `Updated ${changeLog.length} field(s) for patient ${matchingPatient.first_name} ${matchingPatient.last_name}`,
-            details: {
-              patient_id: matchingPatient.id,
-              updated_by: user.email,
-              changes: changeLog,
-              file_url
-            }
-          });
-        } catch (logError) {
-          console.error('Failed to create system log:', logError);
-        }
+        results.autoApplied++;
 
       } catch (error) {
-        console.error('Error processing individual patient:', error);
         results.errors.push({
           patient: `${uploadedPatient.first_name || ''} ${uploadedPatient.last_name || ''}`,
-          error: error.message,
-          details: error.stack
+          error: error.message
         });
       }
     }
