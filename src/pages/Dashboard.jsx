@@ -10,10 +10,7 @@ import { createPageUrl } from "@/utils";
 import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText, Clock as ClockIcon } from "lucide-react";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import { isValid } from "date-fns";
-import VoiceCommandListener from "../components/voice/VoiceCommandListener";
 import ProactiveClinicalTaskGenerator from "../components/tasks/ProactiveClinicalTaskGenerator";
-import { getCommandsForContext } from "../components/voice/voiceCommands";
-import EnhancedVoiceCommands from "../components/voice/EnhancedVoiceCommands";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
 
 import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
@@ -125,29 +122,7 @@ export default function Dashboard() {
     return labels[type] || type;
   };
 
-  // Voice command handler
-  const handleVoiceCommand = (action, spokenText) => {
-    switch (action) {
-      case 'navigate_patients':
-        navigate(createPageUrl("Patients"));
-        break;
-      case 'refresh_data':
-        queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
-        break;
-      case 'search':
-        // Extract search term from spoken text
-        const searchTerm = spokenText.replace(/search for|find patient|look for/gi, '').trim();
-        if (searchTerm) {
-          navigate(`${createPageUrl("Patients")}?search=${encodeURIComponent(searchTerm)}`);
-        }
-        break;
-      case 'navigate_dashboard':
-        window.location.reload();
-        break;
-      default:
-        console.log('Unhandled voice command:', action);
-    }
-  };
+
 
   const stats = useMemo(() => {
     if (!currentUser?.email) {
