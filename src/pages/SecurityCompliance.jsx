@@ -45,6 +45,8 @@ import {
 } from "lucide-react";
 import EncryptionStatusIndicator from "../components/security/EncryptionStatusIndicator";
 import AIAuditAnalyzer from "../components/security/AIAuditAnalyzer";
+import SecurityAuditScheduler from "../components/security/SecurityAuditScheduler";
+import VulnerabilityAssessment from "../components/security/VulnerabilityAssessment";
 import { logActivity } from "@/components/utils/activityLogger";
 import { formatEastern } from "../components/utils/timezone";
 
@@ -266,8 +268,10 @@ export default function SecurityCompliance() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-5 mb-6">
+        <TabsList className="grid w-full grid-cols-7 mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="security-audit">Security Audit</TabsTrigger>
+          <TabsTrigger value="vulnerabilities">Vulnerabilities</TabsTrigger>
           <TabsTrigger value="encryption">Encryption</TabsTrigger>
           <TabsTrigger value="audit">Audit Logs</TabsTrigger>
           <TabsTrigger value="activity">User Activity</TabsTrigger>
@@ -433,6 +437,14 @@ export default function SecurityCompliance() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="security-audit">
+          <SecurityAuditScheduler />
+        </TabsContent>
+
+        <TabsContent value="vulnerabilities">
+          <VulnerabilityAssessment />
         </TabsContent>
 
         <TabsContent value="encryption">
