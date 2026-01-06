@@ -1027,6 +1027,12 @@ HANDWRITTEN NOTES HANDLING:
               console.log('Care plans generated:', plans, summary);
             }}
           />
+
+          {/* Admission Packet Customizer */}
+          <AdmissionPacketCustomizer 
+            referralData={extractedData} 
+            referralId={null}
+          />
         </div>
       )}
     </div>
