@@ -433,38 +433,36 @@ export default function Layout({ children, currentPageName }) {
         {/* User Section */}
         <div className="border-t border-gray-200 p-3">
           {!sidebarCollapsed && (
-          <div className="space-y-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => window.location.href = createPageUrl("UserSettings")}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-full justify-start"
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-full justify-start mt-1"
             >
               <Settings className="w-4 h-4" />
               <span className="ml-2">AI Settings</span>
             </Button>
-            <FeedbackButton />
-          </div>
           )}
+          {!sidebarCollapsed && <FeedbackButton />}
           <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLogout}
-          className={`mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${sidebarCollapsed ? 'w-full justify-center px-0' : 'w-full justify-start'}`}
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className={`mt-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${sidebarCollapsed ? 'w-full justify-center px-0' : 'w-full justify-start'}`}
           >
-          <LogOut className="w-4 h-4" />
-          {!sidebarCollapsed && <span className="ml-2">Logout</span>}
+            <LogOut className="w-4 h-4" />
+            {!sidebarCollapsed && <span className="ml-2">Logout</span>}
           </Button>
           <div className={`flex items-center gap-3 mt-2 ${sidebarCollapsed ? 'justify-center' : ''}`}>
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-            {currentUser?.full_name?.charAt(0) || 'U'}
-          </div>
-          {!sidebarCollapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{currentUser?.full_name || 'User'}</p>
-              <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+              {currentUser?.full_name?.charAt(0) || 'U'}
             </div>
-          )}
+            {!sidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{currentUser?.full_name || 'User'}</p>
+                <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
