@@ -129,7 +129,8 @@ Deno.serve(async (req) => {
           }
         }
         
-        if (patient.first_name || patient.last_name) {
+        // Only include patients with required fields
+        if (patient.first_name && patient.last_name) {
           // Set default MRN if missing
           if (!patient.medical_record_number) {
             patient.medical_record_number = `TEMP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
