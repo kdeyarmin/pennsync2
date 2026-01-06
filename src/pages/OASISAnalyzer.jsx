@@ -101,6 +101,7 @@ import ProactiveRescoringEngine from "../components/oasis/ProactiveRescoringEngi
 import AutomatedQualityAssurance from "../components/oasis/AutomatedQualityAssurance";
 import ProactiveDocumentationAssistant from "../components/oasis/ProactiveDocumentationAssistant";
 import ComprehensiveOASISReviewer from "../components/oasis/ComprehensiveOASISReviewer";
+import OASISPDFComparison from "../components/oasis/OASISPDFComparison";
 
 // Analytics Dashboard Component
 function OASISAnalyticsDashboard({ savedOASISUploads }) {
@@ -2156,6 +2157,49 @@ Return scores (0-100) and top 3-5 issues in each category.`,
       {/* Analysis Results */}
       {analysisResults && (
         <div className="space-y-6">
+          {/* Side-by-Side PDF Comparison */}
+          <OASISPDFComparison
+            uploadedFileUrl={uploadedFileUrl}
+            extractedData={extractedData}
+            pdgmData={pdgmData}
+            oasisUploadId={analysisId}
+            onDataCorrected={(correctedData) => {
+              // Update pdgmData with corrected values
+              setPdgmData(prev => ({
+                ...prev,
+                patient_info: {
+                  ...prev?.patient_info,
+                  name: correctedData.patient_name || prev?.patient_info?.name,
+                  dob: correctedData.patient_dob || prev?.patient_info?.dob,
+                  gender: correctedData.patient_gender || prev?.patient_info?.gender,
+                  address: correctedData.patient_address || prev?.patient_info?.address,
+                  assessment_date: correctedData.assessment_date || prev?.patient_info?.assessment_date,
+                  assessment_type: correctedData.assessment_type || prev?.patient_info?.assessment_type,
+                },
+                primary_diagnosis_code: correctedData.primary_diagnosis_code || prev?.primary_diagnosis_code,
+                primary_diagnosis_description: correctedData.primary_diagnosis_description || prev?.primary_diagnosis_description,
+                functional_scores: {
+                  ...prev?.functional_scores,
+                  m1800_grooming: correctedData.m1800_grooming ?? prev?.functional_scores?.m1800_grooming,
+                  m1810_dress_upper: correctedData.m1810_dress_upper ?? prev?.functional_scores?.m1810_dress_upper,
+                  m1820_dress_lower: correctedData.m1820_dress_lower ?? prev?.functional_scores?.m1820_dress_lower,
+                  m1830_bathing: correctedData.m1830_bathing ?? prev?.functional_scores?.m1830_bathing,
+                  m1840_toilet_transfer: correctedData.m1840_toilet_transfer ?? prev?.functional_scores?.m1840_toilet_transfer,
+                  m1850_transferring: correctedData.m1850_transferring ?? prev?.functional_scores?.m1850_transferring,
+                  m1860_ambulation: correctedData.m1860_ambulation ?? prev?.functional_scores?.m1860_ambulation,
+                },
+                episode_timing: correctedData.episode_timing || prev?.episode_timing,
+                m0110_episode_timing: correctedData.m0110_episode_timing || prev?.m0110_episode_timing,
+                clinical_items: {
+                  ...prev?.clinical_items,
+                  dyspnea: correctedData.m1400_dyspnea ?? prev?.clinical_items?.dyspnea,
+                  pain_frequency: correctedData.m1242_pain_freq ?? prev?.clinical_items?.pain_frequency,
+                }
+              }));
+              console.log('Applied corrections to PDGM data');
+            }}
+          />
+
           {/* Patient Match Selector - Enhanced with Confidence Scoring */}
           <PatientMatchSelector
             extractedName={patientName}
