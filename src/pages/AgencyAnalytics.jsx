@@ -18,7 +18,7 @@ import {
   AlertCircle,
   CheckCircle2
 } from "lucide-react";
-import { calculateOverallStatistics, calculateNurseStatistics } from "../components/utils/statsCalculator";
+import { calculateStats, calculateNurseStats, formatCurrency } from "../components/utils/statsCalculator";
 import { formatEasternTime, getTodayEasternDate } from "../components/utils/timezone";
 
 export default function AgencyAnalytics() {
@@ -69,14 +69,14 @@ export default function AgencyAnalytics() {
 
   // Calculate overall statistics
   const overallStats = useMemo(() => {
-    return calculateOverallStatistics(
+    return calculateStats({
       visits,
       noteConversions,
       users,
       patients,
       incidents,
       complianceAudits
-    );
+    });
   }, [visits, noteConversions, users, patients, incidents, complianceAudits]);
 
   // Calculate nurse performance stats
@@ -84,7 +84,7 @@ export default function AgencyAnalytics() {
     const nurses = users.filter(u => u.role === 'user');
     return nurses.map(nurse => ({
       ...nurse,
-      stats: calculateNurseStatistics(nurse.email, visits, noteConversions)
+      stats: calculateNurseStats(nurse.email, { visits, noteConversions })
     }));
   }, [users, visits, noteConversions]);
 
@@ -151,29 +151,29 @@ export default function AgencyAnalytics() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Visits"
-            value={overallStats.totalVisits}
-            subtitle={`${overallStats.completedVisits} completed`}
+            value={overallStats.visits.total}
+            subtitle={`${overallStats.visits.completed} completed`}
             icon={Calendar}
-            trend={`${overallStats.completionRate}% completion rate`}
+            trend={`${overallStats.visits.completionRate}% completion rate`}
             color="indigo"
           />
           <StatCard
             title="Active Staff"
-            value={overallStats.totalUsers}
-            subtitle={`${overallStats.adminUsers} admins`}
+            value={overallStats.users.total}
+            subtitle={`${overallStats.users.admins} admins`}
             icon={Users}
             color="green"
           />
           <StatCard
             title="Active Patients"
-            value={overallStats.activePatients}
-            subtitle={`${overallStats.totalPatients} total`}
+            value={overallStats.patients.active}
+            subtitle={`${overallStats.patients.total} total`}
             icon={Activity}
             color="blue"
           />
           <StatCard
             title="Time Saved"
-            value={`${overallStats.timeSavedHours}h`}
+            value={`${overallStats.timeSaved.totalHours}h`}
             subtitle="Via AI documentation"
             icon={Clock}
             color="purple"
@@ -206,19 +206,19 @@ export default function AgencyAnalytics() {
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-sm text-gray-600">AI Enhancement Rate</span>
-                        <span className="text-sm font-semibold">{overallStats.aiEnhancementRate}%</span>
+                        <span className="text-sm font-semibold">{overallStats.visits.total > 0 ? Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100) : 0}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${overallStats.aiEnhancementRate}%` }}></div>
+                        <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${overallStats.visits.total > 0 ? Math.round((overallStats.noteEnhancements.total / overallStats.visits.total) * 100) : 0}%` }}></div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">{overallStats.averageQualityScore}</p>
+                        <p className="text-2xl font-bold text-gray-900">{overallStats.compliance.avgScore}</p>
                         <p className="text-sm text-gray-600">Avg Quality Score</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">{overallStats.totalNoteConversions}</p>
+                        <p className="text-2xl font-bold text-gray-900">{overallStats.noteEnhancements.total}</p>
                         <p className="text-sm text-gray-600">Notes Enhanced</p>
                       </div>
                     </div>
@@ -238,15 +238,15 @@ export default function AgencyAnalytics() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Active</span>
-                      <span className="text-sm font-semibold text-green-600">{overallStats.activePatients}</span>
+                      <span className="text-sm font-semibold text-green-600">{overallStats.patients.active}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Discharged</span>
-                      <span className="text-sm font-semibold text-gray-600">{overallStats.dischargedPatients}</span>
+                      <span className="text-sm font-semibold text-gray-600">{overallStats.patients.discharged}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Hospitalized</span>
-                      <span className="text-sm font-semibold text-amber-600">{overallStats.hospitalizedPatients}</span>
+                      <span className="text-sm text-gray-600">Total</span>
+                      <span className="text-sm font-semibold text-gray-600">{overallStats.patients.total}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -289,23 +289,23 @@ export default function AgencyAnalytics() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <StatCard
                 title="Avg Compliance Score"
-                value={`${overallStats.averageComplianceScore}%`}
+                value={`${overallStats.compliance.avgScore}%`}
                 icon={Shield}
                 color="green"
               />
               <StatCard
                 title="Total Audits"
-                value={overallStats.totalAudits}
-                subtitle={`${overallStats.passedAudits} passed`}
+                value={overallStats.compliance.auditsInRange}
+                subtitle={`${overallStats.compliance.passedAudits} passed`}
                 icon={CheckCircle2}
                 color="indigo"
               />
               <StatCard
-                title="Critical Issues"
-                value={overallStats.criticalAudits}
-                subtitle="Require attention"
+                title="Quality Score"
+                value={`${overallStats.compliance.qualityScore}%`}
+                subtitle="Overall quality"
                 icon={AlertCircle}
-                color="red"
+                color="indigo"
               />
             </div>
 
@@ -318,28 +318,28 @@ export default function AgencyAnalytics() {
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm font-medium text-green-700">Passed</span>
-                      <span className="text-sm font-semibold">{overallStats.passedAudits}</span>
+                      <span className="text-sm font-semibold">{overallStats.compliance.passedAudits}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{ width: `${(overallStats.passedAudits / overallStats.totalAudits * 100) || 0}%` }}></div>
+                      <div className="bg-green-600 h-2 rounded-full" style={{ width: `${overallStats.compliance.qualityScore}%` }}></div>
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-yellow-700">Flagged</span>
-                      <span className="text-sm font-semibold">{overallStats.flaggedAudits}</span>
+                      <span className="text-sm font-medium text-indigo-700">Total Audits</span>
+                      <span className="text-sm font-semibold">{overallStats.compliance.auditsInRange}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-yellow-500 h-2 rounded-full" style={{ width: `${(overallStats.flaggedAudits / overallStats.totalAudits * 100) || 0}%` }}></div>
+                      <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `100%` }}></div>
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-red-700">Critical</span>
-                      <span className="text-sm font-semibold">{overallStats.criticalAudits}</span>
+                      <span className="text-sm font-medium text-gray-700">Avg Score</span>
+                      <span className="text-sm font-semibold">{overallStats.compliance.avgScore}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-red-600 h-2 rounded-full" style={{ width: `${(overallStats.criticalAudits / overallStats.totalAudits * 100) || 0}%` }}></div>
+                      <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${overallStats.compliance.avgScore}%` }}></div>
                     </div>
                   </div>
                 </div>
@@ -438,22 +438,22 @@ export default function AgencyAnalytics() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <StatCard
                 title="Est. Time Saved Value"
-                value={overallStats.estimatedCostSavings}
+                value={formatCurrency(overallStats.financial.costSavings)}
                 subtitle="Based on documentation efficiency"
                 icon={DollarSign}
                 color="green"
               />
               <StatCard
                 title="Productivity Gain"
-                value={`${overallStats.timeSavedHours}h`}
+                value={overallStats.timeSaved.displayTotal}
                 subtitle="Through AI automation"
                 icon={TrendingUp}
                 color="indigo"
               />
               <StatCard
-                title="Avg per Visit"
-                value={overallStats.averageTimePerVisit}
-                subtitle="Time savings"
+                title="Est. Revenue"
+                value={formatCurrency(overallStats.financial.estimatedRevenue)}
+                subtitle="From completed visits"
                 icon={Clock}
                 color="purple"
               />
@@ -469,14 +469,14 @@ export default function AgencyAnalytics() {
                   <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
                     <div>
                       <p className="text-sm font-medium text-green-700">Total Time Saved</p>
-                      <p className="text-2xl font-bold text-green-900">{overallStats.timeSavedHours} hours</p>
+                      <p className="text-2xl font-bold text-green-900">{overallStats.timeSaved.displayTotal}</p>
                     </div>
                     <DollarSign className="w-8 h-8 text-green-600" />
                   </div>
                   <div className="flex justify-between items-center p-4 bg-indigo-50 rounded-lg">
                     <div>
                       <p className="text-sm font-medium text-indigo-700">Estimated Value</p>
-                      <p className="text-2xl font-bold text-indigo-900">{overallStats.estimatedCostSavings}</p>
+                      <p className="text-2xl font-bold text-indigo-900">{formatCurrency(overallStats.financial.costSavings)}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-indigo-600" />
                   </div>
