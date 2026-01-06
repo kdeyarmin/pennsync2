@@ -1,7 +1,6 @@
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
-import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
@@ -53,6 +52,8 @@ import ReferralAdmissionNote from './pages/ReferralAdmissionNote';
 import ReferralIntake from './pages/ReferralIntake';
 import ReferralProcessor from './pages/ReferralProcessor';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
+import Reports from './pages/Reports';
+import SecurityCompliance from './pages/SecurityCompliance';
 import SecurityPolicy from './pages/SecurityPolicy';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import StaffTraining from './pages/StaffTraining';
@@ -66,8 +67,6 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import SecurityCompliance from './pages/SecurityCompliance';
-import Reports from './pages/Reports';
 import __Layout from './Layout.jsx';
 
 
@@ -75,7 +74,6 @@ export const PAGES = {
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
-    "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
     "AutomaticCarePlans": AutomaticCarePlans,
@@ -127,6 +125,8 @@ export const PAGES = {
     "ReferralIntake": ReferralIntake,
     "ReferralProcessor": ReferralProcessor,
     "RegulatoryCompliance": RegulatoryCompliance,
+    "Reports": Reports,
+    "SecurityCompliance": SecurityCompliance,
     "SecurityPolicy": SecurityPolicy,
     "SmartNoteAssistant": SmartNoteAssistant,
     "StaffTraining": StaffTraining,
@@ -140,8 +140,6 @@ export const PAGES = {
     "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "SecurityCompliance": SecurityCompliance,
-    "Reports": Reports,
 }
 
 export const pagesConfig = {
