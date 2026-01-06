@@ -88,9 +88,8 @@ export default function Dashboard() {
   });
 
   const { data: noteConversions = [] } = useQuery({
-    queryKey: ['nurseNoteConversions', currentUser?.email],
-    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser?.email }, '-created_date', 10000),
-    enabled: !!currentUser?.email,
+    queryKey: ['allNoteConversions'],
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
     initialData: [],
     staleTime: 0,
   });
@@ -152,11 +151,15 @@ export default function Dashboard() {
 
   const stats = useMemo(() => {
     if (!currentUser?.email) {
-      return { noteConversions: 0, timeSavedDisplay: '0 hrs' };
+      return { noteConversions: 0, timeSavedDisplay: '0 hrs', noteEnhancements: { total: 0 } };
     }
+    
+    // Filter for current user's enhancements
+    const userEnhancements = noteConversions.filter(nc => nc.nurse_email === currentUser.email);
+    
     return calculateNurseStats(currentUser.email, {
       visits,
-      noteConversions,
+      noteConversions: userEnhancements,
       dateRange: 30
     });
   }, [visits, noteConversions, currentUser]);
@@ -207,7 +210,9 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm text-blue-600 font-medium mb-1">Note Enhancements</p>
-                <p className="text-2xl sm:text-3xl font-bold text-blue-900">{noteConversions.length}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-900">
+                  {noteConversions.filter(nc => nc.nurse_email === currentUser?.email).length}
+                </p>
               </div>
               <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-blue-400 flex-shrink-0" />
             </div>

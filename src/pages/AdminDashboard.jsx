@@ -135,7 +135,7 @@ export default function AdminDashboard() {
 
   const { data: allNoteConversions = [] } = useQuery({
     queryKey: ['allNoteConversions'],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date', 1000),
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
     initialData: [],
     enabled: isAdmin,
   });

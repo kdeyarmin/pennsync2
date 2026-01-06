@@ -110,7 +110,7 @@ export default function Reports() {
   });
 
   const { data: noteConversions = [] } = useQuery({
-    queryKey: ['noteConversions'],
+    queryKey: ['allNoteConversions'],
     queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
     initialData: []
   });
