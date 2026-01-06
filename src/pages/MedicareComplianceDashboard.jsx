@@ -612,7 +612,9 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {topIssues.map((issue, idx) => (
+                {topIssues.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">No issues found in the selected time period</p>
+                ) : topIssues.map((issue, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded border">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -719,6 +721,9 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                     </div>
                   ));
                 })()}
+                {Object.entries(byPatient).length === 0 && (
+                  <p className="text-gray-500 text-center py-4">No patient audit data available</p>
+                )}
               </div>
             </CardContent>
           </Card>

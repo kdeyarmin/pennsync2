@@ -320,6 +320,8 @@ export default function Reports() {
     }
   ];
 
+  const isAdminUser = currentUser?.role === 'admin';
+
   const KPICard = ({ title, value, change, icon: Icon, trend }) => (
     <Card>
       <CardContent className="p-6">
@@ -346,9 +348,7 @@ export default function Reports() {
     </Card>
   );
 
-  const isAdmin = currentUser?.role === 'admin';
-
-  if (!isAdmin) {
+  if (!isAdminUser) {
     return (
       <div className="p-8 text-center">
         <ClipboardCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
