@@ -17,7 +17,12 @@ import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 
 export default function PendingReferralsWidget() {
-  const { data: referrals = [] } = useQuery({
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: allReferrals = [] } = useQuery({
     queryKey: ['pendingReferrals'],
     queryFn: () => base44.entities.Referral.filter({
       status: { $in: ['new', 'awaiting_info'] }
@@ -25,6 +30,12 @@ export default function PendingReferralsWidget() {
     initialData: [],
     refetchInterval: 60000, // Refresh every minute
   });
+
+  // Filter to only show referrals assigned to current user
+  const referrals = React.useMemo(() => {
+    if (!currentUser?.email) return [];
+    return allReferrals.filter(r => r.assigned_to === currentUser.email);
+  }, [allReferrals, currentUser]);
 
   const urgentReferrals = referrals.filter(r => r.priority === 'urgent' || r.priority === 'high');
   const awaitingInfo = referrals.filter(r => r.status === 'awaiting_info');
