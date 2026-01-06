@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,18 +17,63 @@ import {
   AlertTriangle,
   Info
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SystemSettings({ currentUser }) {
+  const queryClient = useQueryClient();
+
+  const { data: agencySettings } = useQuery({
+    queryKey: ['agencySettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.AgencySettings.list();
+      return settings[0] || null;
+    }
+  });
+
   const [settings, setSettings] = useState({
-    agencyName: "Your Home Health Agency",
-    agencyPhone: "",
-    agencyEmail: "",
-    agencyAddress: "",
+    agencyName: agencySettings?.agency_name || "Your Home Health Agency",
+    agencyPhone: agencySettings?.agency_phone || "",
+    agencyEmail: agencySettings?.agency_email || "",
+    agencyAddress: agencySettings?.agency_address || "",
     domain: "pennsync.com"
   });
 
+  React.useEffect(() => {
+    if (agencySettings) {
+      setSettings({
+        agencyName: agencySettings.agency_name || "Your Home Health Agency",
+        agencyPhone: agencySettings.agency_phone || "",
+        agencyEmail: agencySettings.agency_email || "",
+        agencyAddress: agencySettings.agency_address || "",
+        domain: "pennsync.com"
+      });
+    }
+  }, [agencySettings]);
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (data) => {
+      if (agencySettings?.id) {
+        return await base44.entities.AgencySettings.update(agencySettings.id, data);
+      } else {
+        return await base44.entities.AgencySettings.create(data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['agencySettings']);
+      toast.success('Settings saved successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to save settings');
+    }
+  });
+
   const handleSave = () => {
-    alert('Settings saved successfully! (This would save to database in production)');
+    saveSettingsMutation.mutate({
+      agency_name: settings.agencyName,
+      agency_phone: settings.agencyPhone,
+      agency_email: settings.agencyEmail,
+      agency_address: settings.agencyAddress
+    });
   };
 
   return (
@@ -193,8 +240,12 @@ export default function SystemSettings({ currentUser }) {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-          Save Settings
+        <Button 
+          onClick={handleSave} 
+          disabled={saveSettingsMutation.isLoading}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {saveSettingsMutation.isLoading ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
     </div>
