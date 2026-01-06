@@ -164,8 +164,8 @@ Also provide:
     addSectionHeader('ADMISSION INFORMATION', [139, 92, 246]);
     const admission = referralData.admission_details || {};
     addKeyValue('Admission Source', admission.admission_source);
-    addKeyValue('Admission Date', admission.admission_date);
-    addKeyValue('Referral Date', admission.referral_date);
+    addKeyValue('Admission Date', admission.referral_date);
+    addKeyValue('Physician Order Date', admission.admission_date);
     addKeyValue('Referral Reason', admission.referral_reason);
     addKeyValue('Prior Living Situation', admission.prior_living_situation);
     addKeyValue('Current Living Situation', admission.current_living_situation);
