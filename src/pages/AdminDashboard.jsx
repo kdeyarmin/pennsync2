@@ -267,10 +267,6 @@ export default function AdminDashboard() {
     log.action?.includes('UNAUTHORIZED') || log.action?.includes('ACCESS_DENIED')
   ).length;
 
-  const aiApiCalls = securityLogs.filter(log =>
-    log.action === 'AI_API_CALL'
-  ).length;
-
   // Filter logs
   const filteredLogs = securityLogs.filter(log =>
     log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -530,7 +526,7 @@ export default function AdminDashboard() {
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-6">
           {/* Security Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -551,18 +547,6 @@ export default function AdminDashboard() {
                     <p className="text-3xl font-bold text-red-600">{unauthorizedAttempts}</p>
                   </div>
                   <AlertTriangle className="w-10 h-10 text-red-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">AI API Calls</p>
-                    <p className="text-3xl font-bold text-purple-600">{aiApiCalls}</p>
-                  </div>
-                  <Database className="w-10 h-10 text-purple-500" />
                 </div>
               </CardContent>
             </Card>

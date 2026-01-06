@@ -122,25 +122,6 @@ export const calculateStats = (data) => {
     : 0;
 
   // ====================
-  // AI ADOPTION METRICS
-  // ====================
-  const visitsWithAI = visits.filter(v => 
-    v.status === 'completed' && (v.audio_url || v.raw_transcription || v.ai_tags?.length > 0)
-  ).length;
-
-  const aiAdoptionRate = completedVisits > 0 
-    ? Math.round((visitsWithAI / completedVisits) * 100)
-    : 0;
-
-  // Count AI feature usage from user activities
-  const aiFeatureUsage = {
-    aiScriber: userActivities.filter(a => a.action === 'ai_scribe_used').length,
-    templateGenerated: userActivities.filter(a => a.action === 'template_generated').length,
-    voiceCommands: userActivities.filter(a => a.action === 'voice_command_used').length,
-    noteEnhanced: totalNoteConversions // This is the primary metric
-  };
-
-  // ====================
   // FINANCIAL ESTIMATES
   // ====================
   const estimatedRevenuePerVisit = 180; // Average Medicare reimbursement
@@ -213,13 +194,6 @@ export const calculateStats = (data) => {
       qualityScore,
       auditsInRange: auditsInRange.length,
       passedAudits
-    },
-
-    // AI adoption
-    aiAdoption: {
-      rate: aiAdoptionRate,
-      visitsWithAI,
-      featureUsage: aiFeatureUsage
     },
 
     // Financial

@@ -432,48 +432,8 @@ export default function Reports() {
               />
             </div>
 
-            {/* AI Adoption Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              <Card>
-                <CardHeader className="p-3 sm:p-4 md:p-6">
-                  <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                    <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
-                    <span className="truncate">AI Adoption</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4 md:p-6">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Smart Notes</span>
-                        <span className="font-semibold">{stats.noteEnhancements.total}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '85%' }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Risk Assessments</span>
-                        <span className="font-semibold">{riskAssessments.length}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '72%' }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Compliance Audits</span>
-                        <span className="font-semibold">{complianceAudits.length}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-green-600 h-2 rounded-full" style={{ width: '68%' }} />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
+            {/* Time & Financial Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="p-3 sm:p-4 md:p-6">
                   <CardTitle className="text-sm sm:text-base flex items-center gap-2">
