@@ -44,7 +44,6 @@ import OASISReview from './pages/OASISReview';
 import OfflineMode from './pages/OfflineMode';
 import Patient360 from './pages/Patient360';
 import PatientAlerts from './pages/PatientAlerts';
-import PatientDashboard from './pages/PatientDashboard';
 import PatientDataManagement from './pages/PatientDataManagement';
 import PatientDetails from './pages/PatientDetails';
 import PatientEducation from './pages/PatientEducation';
@@ -122,7 +121,6 @@ export const PAGES = {
     "OfflineMode": OfflineMode,
     "Patient360": Patient360,
     "PatientAlerts": PatientAlerts,
-    "PatientDashboard": PatientDashboard,
     "PatientDataManagement": PatientDataManagement,
     "PatientDetails": PatientDetails,
     "PatientEducation": PatientEducation,

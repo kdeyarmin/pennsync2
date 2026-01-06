@@ -157,8 +157,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Overview",
       items: [
         { name: "Dashboard", icon: Home, page: "Dashboard" },
-        { name: "My Workflow", icon: Sparkles, page: "NurseWorkflow" },
-        { name: "Patient Dashboard", icon: BarChart3, page: "PatientDashboard" }
+        { name: "My Workflow", icon: Sparkles, page: "NurseWorkflow" }
       ]
     },
     {

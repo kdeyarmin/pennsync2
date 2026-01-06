@@ -10,14 +10,16 @@ import {
   User,
   Activity,
   Brain,
-  Shield,
   FileText,
   TrendingUp,
   AlertTriangle,
   Calendar,
   Heart,
   Pill,
-  ArrowLeft
+  ArrowLeft,
+  Target,
+  Bell,
+  Clock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -27,9 +29,18 @@ import AIProactiveOASISAssistant from "@/components/oasis/AIProactiveOASISAssist
 import AIPatientInsights from "@/components/patient/AIPatientInsights";
 import AIPatientDashboardSummary from "@/components/patient/AIPatientDashboardSummary";
 import PatientRiskStratification from "@/components/patient/PatientRiskStratification";
+import HealthTrendsChart from "@/components/dashboard/HealthTrendsChart";
+import MedicalHistoryTimeline from "@/components/dashboard/MedicalHistoryTimeline";
+import UpcomingAppointments from "@/components/dashboard/UpcomingAppointments";
+import ActiveCarePlansWidget from "@/components/dashboard/ActiveCarePlansWidget";
+import PatientAlertsWidget from "@/components/dashboard/PatientAlertsWidget";
+import RecentVisitsSummary from "@/components/dashboard/RecentVisitsSummary";
+import AIHealthInsights from "@/components/dashboard/AIHealthInsights";
+import QuickStatsGrid from "@/components/dashboard/QuickStatsGrid";
+import PredictiveHealthAnalytics from "@/components/dashboard/PredictiveHealthAnalytics";
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   LineChart,
   Line,
   XAxis,
@@ -37,9 +48,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  Area,
-  AreaChart
+  ResponsiveContainer
 } from "recharts";
 
 export default function Patient360() {
@@ -105,7 +114,14 @@ export default function Patient360() {
 
   const { data: alerts = [] } = useQuery({
     queryKey: ['patientAlerts', selectedPatientId],
-    queryFn: () => base44.entities.PatientAlert.filter({ patient_id: selectedPatientId, status: 'active' }),
+    queryFn: () => base44.entities.PatientAlert.filter({ patient_id: selectedPatientId }),
+    enabled: !!selectedPatientId,
+    initialData: []
+  });
+
+  const { data: oasisData = [] } = useQuery({
+    queryKey: ['patientOASIS', selectedPatientId],
+    queryFn: () => base44.entities.OASISUpload.filter({ patient_id: selectedPatientId }, '-created_date'),
     enabled: !!selectedPatientId,
     initialData: []
   });
@@ -138,7 +154,7 @@ export default function Patient360() {
   if (!selectedPatientId) {
     return (
       <div className="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Patient 360° View</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Patient 360° Dashboard</h1>
         <Card>
           <CardContent className="p-8 sm:p-12 text-center">
             <User className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
@@ -172,8 +188,9 @@ export default function Patient360() {
     );
   }
 
-  const criticalAlerts = alerts.filter(a => a.severity === 'critical').length;
-  const highAlerts = alerts.filter(a => a.severity === 'high').length;
+  const activeAlerts = alerts.filter(a => a.status === 'active');
+  const criticalAlerts = activeAlerts.filter(a => a.severity === 'critical');
+  const highAlerts = activeAlerts.filter(a => a.severity === 'high');
 
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
@@ -193,11 +210,21 @@ export default function Patient360() {
             <span className="hidden sm:inline">Change Patient</span>
             <span className="sm:hidden">Back</span>
           </Button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">
-              {patient.first_name} {patient.last_name}
-            </h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600">360° Patient View</p>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-lg sm:text-xl font-bold flex-shrink-0">
+              {patient.first_name?.[0]}{patient.last_name?.[0]}
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                {patient.first_name} {patient.middle_name ? `${patient.middle_name} ` : ''}{patient.last_name}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">{patient.medical_record_number || 'No MRN'}</Badge>
+                <Badge className={`text-xs ${patient.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}`}>
+                  {patient.status || 'Unknown'}
+                </Badge>
+              </div>
+            </div>
           </div>
         </div>
         <Button 
@@ -211,114 +238,90 @@ export default function Patient360() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Visits</p>
-                <p className="text-2xl font-bold">{visits.length}</p>
-              </div>
-              <Calendar className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Active Care Plans</p>
-                <p className="text-2xl font-bold">{carePlans.filter(cp => cp.status === 'active').length}</p>
-              </div>
-              <Heart className="w-8 h-8 text-red-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Risk Level</p>
-                <Badge className={`${
-                  riskAssessment?.overall_risk_level === 'critical' ? 'bg-red-600' :
-                  riskAssessment?.overall_risk_level === 'high' ? 'bg-orange-600' :
-                  riskAssessment?.overall_risk_level === 'moderate' ? 'bg-yellow-600' :
-                  'bg-green-600'
-                }`}>
-                  {riskAssessment?.overall_risk_level?.toUpperCase() || 'N/A'}
-                </Badge>
-              </div>
-              <TrendingUp className="w-8 h-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Active Alerts</p>
-                <p className="text-2xl font-bold text-red-600">{alerts.length}</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-red-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Medications</p>
-                <p className="text-2xl font-bold">{patient.current_medications?.length || 0}</p>
-              </div>
-              <Pill className="w-8 h-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <QuickStatsGrid
+        visits={visits}
+        carePlans={carePlans}
+        alerts={activeAlerts}
+        incidents={incidents}
+        patient={patient}
+      />
 
       {/* Critical Alerts Banner */}
-      {(criticalAlerts > 0 || highAlerts > 0) && (
-        <Alert className={criticalAlerts > 0 ? 'bg-red-50 border-red-300' : 'bg-orange-50 border-orange-300'}>
-          <AlertTriangle className={`w-4 h-4 ${criticalAlerts > 0 ? 'text-red-600' : 'text-orange-600'}`} />
+      {(criticalAlerts.length > 0 || highAlerts.length > 0) && (
+        <Alert className={criticalAlerts.length > 0 ? 'bg-red-50 border-red-300' : 'bg-orange-50 border-orange-300'}>
+          <AlertTriangle className={`w-4 h-4 ${criticalAlerts.length > 0 ? 'text-red-600' : 'text-orange-600'}`} />
           <AlertDescription>
             <p className="font-semibold">
-              {criticalAlerts > 0 && `${criticalAlerts} Critical Alert${criticalAlerts > 1 ? 's' : ''}`}
-              {criticalAlerts > 0 && highAlerts > 0 && ' • '}
-              {highAlerts > 0 && `${highAlerts} High Priority Alert${highAlerts > 1 ? 's' : ''}`}
+              {criticalAlerts.length > 0 && `${criticalAlerts.length} Critical Alert${criticalAlerts.length > 1 ? 's' : ''}`}
+              {criticalAlerts.length > 0 && highAlerts.length > 0 && ' • '}
+              {highAlerts.length > 0 && `${highAlerts.length} High Priority Alert${highAlerts.length > 1 ? 's' : ''}`}
             </p>
             <p className="text-sm mt-1">{alerts.slice(0, 2).map(a => a.title).join(', ')}</p>
           </AlertDescription>
         </Alert>
       )}
 
+      {/* Predictive Health Analytics */}
+      <PredictiveHealthAnalytics
+        patientId={selectedPatientId}
+        patient={patient}
+        visits={visits}
+        carePlans={carePlans}
+        alerts={alerts}
+        incidents={incidents}
+      />
+
+      {/* AI Health Insights */}
+      <AIHealthInsights
+        patientId={selectedPatientId}
+        patient={patient}
+        visits={visits}
+        carePlans={carePlans}
+        alerts={alerts}
+        oasisData={oasisData}
+      />
+
       {/* Main Tabs */}
       <Tabs defaultValue="overview" className="w-full">
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Overview</TabsTrigger>
-            <TabsTrigger value="clinical" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Clinical Data</TabsTrigger>
-            <TabsTrigger value="ai-insights" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">AI Insights</TabsTrigger>
-            <TabsTrigger value="compliance" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Compliance</TabsTrigger>
-            <TabsTrigger value="trends" className="text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">Trends</TabsTrigger>
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-6 gap-1 min-w-max h-auto">
+            <TabsTrigger value="overview" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">
+              <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="visits" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              Visits
+            </TabsTrigger>
+            <TabsTrigger value="careplans" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">
+              <Target className="w-3 h-3 sm:w-4 sm:h-4" />
+              Care Plans
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
+              Alerts {activeAlerts.length > 0 && <Badge className="ml-1 bg-red-500">{activeAlerts.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="ai-insights" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">
+              <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
+              AI Insights
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3 whitespace-nowrap">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+              History
+            </TabsTrigger>
           </TabsList>
         </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="lg:col-span-2">
-              <AIPatientDashboardSummary
-                patient={patient}
-                visits={visits}
-                carePlans={carePlans}
-                tasks={tasks}
-                incidents={incidents}
-              />
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <AIPatientDashboardSummary
+              patient={patient}
+              visits={visits}
+              carePlans={carePlans}
+              tasks={tasks}
+              incidents={incidents}
+            />
             <div className="space-y-4 sm:space-y-6">
               <Card>
                 <CardHeader className="p-3 sm:p-4 md:p-6">
@@ -363,218 +366,51 @@ export default function Patient360() {
               </Card>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <HealthTrendsChart visits={visits} patient={patient} />
+            <UpcomingAppointments visits={visits} patientId={selectedPatientId} />
+          </div>
         </TabsContent>
 
-        {/* Clinical Data Tab */}
-        <TabsContent value="clinical" className="space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-sm sm:text-base">Vital Signs Trends</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                {vitalsData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={vitalsData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="bp_sys" stroke="#ef4444" name="BP Systolic" />
-                      <Line type="monotone" dataKey="bp_dia" stroke="#f97316" name="BP Diastolic" />
-                      <Line type="monotone" dataKey="hr" stroke="#3b82f6" name="Heart Rate" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">No vital signs data available</p>
-                )}
-              </CardContent>
-            </Card>
+        {/* Visits Tab */}
+        <TabsContent value="visits">
+          <RecentVisitsSummary visits={visits} patient={patient} showAll={true} />
+        </TabsContent>
 
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-sm sm:text-base">Medications ({patient.current_medications?.length || 0})</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {patient.current_medications?.map((med, i) => (
-                    <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                      <p className="font-semibold text-sm">{med.name}</p>
-                      <p className="text-xs text-gray-600">{med.dosage} • {med.frequency}</p>
-                    </div>
-                  )) || <p className="text-gray-500 text-sm">No medications recorded</p>}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Care Plans Tab */}
+        <TabsContent value="careplans">
+          <ActiveCarePlansWidget carePlans={carePlans} patientId={selectedPatientId} expanded={true} />
+        </TabsContent>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-sm sm:text-base">Recent Visits ({visits.slice(0, 5).length})</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                {visits.length > 0 ? (
-                  <div className="space-y-3">
-                    {visits.slice(0, 5).map((visit) => (
-                      <div key={visit.id} className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-sm">{visit.visit_date}</p>
-                            <Badge variant="outline" className="text-xs mt-1">
-                              {visit.visit_type.replace(/_/g, ' ')}
-                            </Badge>
-                          </div>
-                          <Badge className={visit.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'}>
-                            {visit.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">No visits recorded</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-sm sm:text-base">Care Plans ({carePlans.length})</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                {carePlans.length > 0 ? (
-                  <div className="space-y-3">
-                    {carePlans.slice(0, 5).map((plan) => (
-                      <div key={plan.id} className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-sm">{plan.problem}</p>
-                            <p className="text-xs text-gray-600 mt-1">{plan.goal}</p>
-                          </div>
-                          <Badge className={
-                            plan.status === 'met' ? 'bg-green-500' :
-                            plan.status === 'active' ? 'bg-blue-500' : 'bg-gray-500'
-                          }>
-                            {plan.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">No care plans recorded</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        {/* Alerts Tab */}
+        <TabsContent value="alerts">
+          <PatientAlertsWidget alerts={alerts} patientId={selectedPatientId} expanded={true} />
         </TabsContent>
 
         {/* AI Insights Tab */}
         <TabsContent value="ai-insights" className="space-y-6">
-          {patient && (
-            <>
-              <AIPatientRiskAssessor patientId={selectedPatientId} autoAnalyze={false} />
-              <AIPatientInsights patient={patient} visits={visits} carePlans={carePlans} incidents={incidents} />
-              <PatientRiskStratification
-                patient={patient}
-                visits={visits}
-                carePlans={carePlans}
-                incidents={incidents}
-                autoCalculate={false}
-              />
-            </>
-          )}
+          <AIPatientRiskAssessor patientId={selectedPatientId} autoAnalyze={false} />
+          <AIPatientInsights patient={patient} visits={visits} carePlans={carePlans} incidents={incidents} />
+          <PatientRiskStratification
+            patient={patient}
+            visits={visits}
+            carePlans={carePlans}
+            incidents={incidents}
+            autoCalculate={false}
+          />
+          <AIProactiveOASISAssistant patientId={selectedPatientId} autoAnalyze={false} />
         </TabsContent>
 
-        {/* Compliance Tab */}
-        <TabsContent value="compliance" className="space-y-6">
-          {patient && <AIProactiveOASISAssistant patientId={selectedPatientId} autoAnalyze={false} />}
-        </TabsContent>
-
-        {/* Trends Tab */}
-        <TabsContent value="trends" className="space-y-4 sm:space-y-6">
-          <Card>
-            <CardHeader className="p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-sm sm:text-base md:text-lg">Visit Frequency (Last 12 Months)</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={visitFrequencyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="visits" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-sm sm:text-base">Incident History</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                {incidents.length > 0 ? (
-                  <div className="space-y-3">
-                    {incidents.slice(0, 5).map((incident, i) => (
-                      <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-sm">{incident.incident_type.replace(/_/g, ' ')}</p>
-                            <p className="text-xs text-gray-600">{incident.incident_date}</p>
-                          </div>
-                          <Badge className={
-                            incident.severity === 'high' ? 'bg-red-500' :
-                            incident.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                          }>
-                            {incident.severity}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">No incidents recorded</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-sm sm:text-base">Active Tasks ({tasks.filter(t => t.status === 'pending').length})</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                {tasks.filter(t => t.status === 'pending').length > 0 ? (
-                  <div className="space-y-3">
-                    {tasks.filter(t => t.status === 'pending').slice(0, 5).map((task, i) => (
-                      <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="font-semibold text-sm">{task.title}</p>
-                        <div className="flex gap-2 mt-2">
-                          <Badge className={
-                            task.priority === 'high' ? 'bg-red-500' :
-                            task.priority === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
-                          }>
-                            {task.priority}
-                          </Badge>
-                          {task.due_date && (
-                            <Badge variant="outline" className="text-xs">
-                              Due: {task.due_date}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">No pending tasks</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        {/* History Tab */}
+        <TabsContent value="history">
+          <MedicalHistoryTimeline 
+            patient={patient}
+            visits={visits}
+            incidents={incidents}
+            carePlans={carePlans}
+            oasisData={oasisData}
+          />
         </TabsContent>
       </Tabs>
     </div>
