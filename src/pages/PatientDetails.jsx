@@ -60,6 +60,9 @@ import AIProactiveOASISAssistant from "../components/oasis/AIProactiveOASISAssis
 import AdvancedPredictiveAnalytics from "../components/predictive/AdvancedPredictiveAnalytics";
 import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAssessment";
 import ReferralDocumentViewer from "../components/documents/ReferralDocumentViewer";
+import HealthHistorySection from "../components/patient/HealthHistorySection";
+import MedicationManagementSection from "../components/patient/MedicationManagementSection";
+import ClinicalEventsTimeline from "../components/patient/ClinicalEventsTimeline";
 
 export default function PatientDetails() {
   const navigate = useNavigate();

@@ -439,13 +439,13 @@ Actions available:
       const address = extractedData.demographics?.address;
       
       let existingPatient = null;
+      const allPatients = await base44.entities.Patient.list('-created_date', 500);
+      
       if (fullName || dob || phone) {
         const nameParts = fullName.split(' ').filter(p => p.length > 0);
         const firstName = nameParts[0] || '';
         const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
         const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-        
-        const allPatients = await base44.entities.Patient.list('-created_date', 500);
         
         // Helper: normalize string for comparison
         const normalize = (str) => str?.toLowerCase().trim().replace(/[^a-z0-9]/g, '') || '';
