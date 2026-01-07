@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Bell, Mail, Clock, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Bell, Mail, Clock, Check, Smartphone, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function NotificationPreferences({ currentUser }) {
@@ -30,22 +31,29 @@ export default function NotificationPreferences({ currentUser }) {
       return prefs[0] || {
         user_email: currentUser?.email,
         email_notifications_enabled: true,
+        in_app_notifications_enabled: true,
+        push_notifications_enabled: false,
         preferences: {
-          report_ready: true,
-          compliance_alert: true,
-          critical_alert: true,
-          patient_alert: true,
-          task_assigned: true,
-          training_due: true,
-          system_update: false,
-          info: false
+          report_ready: { email: true, in_app: true, push: false },
+          compliance_alert: { email: true, in_app: true, push: true },
+          critical_alert: { email: true, in_app: true, push: true },
+          patient_alert: { email: true, in_app: true, push: true },
+          task_assigned: { email: true, in_app: true, push: false },
+          task_due_soon: { email: true, in_app: true, push: true },
+          new_referral: { email: true, in_app: true, push: true },
+          referral_urgent: { email: true, in_app: true, push: true },
+          training_due: { email: true, in_app: true, push: false },
+          system_update: { email: false, in_app: true, push: false },
+          message_received: { email: true, in_app: true, push: false },
+          info: { email: false, in_app: true, push: false }
         },
         quiet_hours: {
           enabled: false,
           start_time: "22:00",
           end_time: "08:00"
         },
-        digest_mode: "instant"
+        digest_mode: "instant",
+        sound_enabled: true
       };
     },
     enabled: !!currentUser?.email,
@@ -71,12 +79,16 @@ export default function NotificationPreferences({ currentUser }) {
     }
   });
 
-  const handleToggle = (key, value) => {
+  const handleToggle = (key, channel, value) => {
+    const currentPref = preferences.preferences?.[key] || { email: true, in_app: true, push: false };
     const updatedPrefs = {
       ...preferences,
       preferences: {
         ...preferences.preferences,
-        [key]: value
+        [key]: {
+          ...currentPref,
+          [channel]: value
+        }
       }
     };
     savePreferencesMutation.mutate(updatedPrefs);
@@ -131,14 +143,18 @@ export default function NotificationPreferences({ currentUser }) {
   }
 
   const notificationTypes = [
-    { key: 'report_ready', label: 'Report Generation', description: 'When AI-generated reports are ready' },
-    { key: 'compliance_alert', label: 'Compliance Alerts', description: 'Documentation or regulatory compliance issues' },
-    { key: 'critical_alert', label: 'Critical Alerts', description: 'Urgent patient or system alerts' },
-    { key: 'patient_alert', label: 'Patient Alerts', description: 'Patient risk and monitoring alerts' },
-    { key: 'task_assigned', label: 'Task Assignments', description: 'When tasks are assigned to you' },
-    { key: 'training_due', label: 'Training Due', description: 'Upcoming or overdue training modules' },
-    { key: 'system_update', label: 'System Updates', description: 'Platform updates and new features' },
-    { key: 'info', label: 'General Information', description: 'Non-critical informational messages' }
+    { key: 'critical_alert', label: 'Critical Alerts', description: 'Urgent patient or system alerts', priority: 'critical' },
+    { key: 'patient_alert', label: 'Patient Alerts', description: 'Patient risk and monitoring alerts', priority: 'high' },
+    { key: 'new_referral', label: 'New Referrals', description: 'When new patient referrals are received', priority: 'high' },
+    { key: 'referral_urgent', label: 'Urgent Referrals', description: 'High-priority referrals requiring immediate attention', priority: 'critical' },
+    { key: 'compliance_alert', label: 'Compliance Alerts', description: 'Documentation or regulatory compliance issues', priority: 'high' },
+    { key: 'task_assigned', label: 'Task Assignments', description: 'When tasks are assigned to you', priority: 'medium' },
+    { key: 'task_due_soon', label: 'Tasks Due Soon', description: 'Tasks approaching their due date', priority: 'medium' },
+    { key: 'message_received', label: 'Messages', description: 'New messages from team members', priority: 'medium' },
+    { key: 'report_ready', label: 'Report Generation', description: 'When AI-generated reports are ready', priority: 'low' },
+    { key: 'training_due', label: 'Training Due', description: 'Upcoming or overdue training modules', priority: 'low' },
+    { key: 'system_update', label: 'System Updates', description: 'Platform updates and new features', priority: 'low' },
+    { key: 'info', label: 'General Information', description: 'Non-critical informational messages', priority: 'low' }
   ];
 
   return (
@@ -150,31 +166,97 @@ export default function NotificationPreferences({ currentUser }) {
         </Alert>
       )}
 
-      {/* Master Toggle */}
+      {/* Master Toggles */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="w-5 h-5" />
-            Email Notifications
-          </CardTitle>
+          <CardTitle>Notification Channels</CardTitle>
           <CardDescription>
-            Control whether you receive email notifications
+            Control which channels you want to receive notifications through
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="master-toggle" className="text-base font-medium">
-                Enable Email Notifications
-              </Label>
-              <p className="text-sm text-gray-500">
-                Turn off to stop all email notifications
-              </p>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-blue-600" />
+              <div>
+                <Label htmlFor="in-app-toggle" className="text-base font-medium">
+                  In-App Notifications
+                </Label>
+                <p className="text-sm text-gray-500">
+                  Show notifications in the app
+                </p>
+              </div>
             </div>
             <Switch
-              id="master-toggle"
+              id="in-app-toggle"
+              checked={preferences?.in_app_notifications_enabled}
+              onCheckedChange={(value) => {
+                const updatedPrefs = { ...preferences, in_app_notifications_enabled: value };
+                savePreferencesMutation.mutate(updatedPrefs);
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-center gap-3">
+              <Mail className="w-5 h-5 text-green-600" />
+              <div>
+                <Label htmlFor="email-toggle" className="text-base font-medium">
+                  Email Notifications
+                </Label>
+                <p className="text-sm text-gray-500">
+                  Receive notifications via email
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="email-toggle"
               checked={preferences?.email_notifications_enabled}
               onCheckedChange={handleMasterToggle}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-5 h-5 text-purple-600" />
+              <div>
+                <Label htmlFor="push-toggle" className="text-base font-medium">
+                  Push Notifications
+                </Label>
+                <p className="text-sm text-gray-500">
+                  Browser push notifications (requires permission)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="push-toggle"
+              checked={preferences?.push_notifications_enabled}
+              onCheckedChange={(value) => {
+                const updatedPrefs = { ...preferences, push_notifications_enabled: value };
+                savePreferencesMutation.mutate(updatedPrefs);
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-3 border-t">
+            <div className="flex items-center gap-3">
+              <Volume2 className="w-5 h-5 text-orange-600" />
+              <div>
+                <Label htmlFor="sound-toggle" className="text-base font-medium">
+                  Notification Sounds
+                </Label>
+                <p className="text-sm text-gray-500">
+                  Play sound for in-app notifications
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="sound-toggle"
+              checked={preferences?.sound_enabled}
+              onCheckedChange={(value) => {
+                const updatedPrefs = { ...preferences, sound_enabled: value };
+                savePreferencesMutation.mutate(updatedPrefs);
+              }}
             />
           </div>
         </CardContent>
@@ -185,29 +267,84 @@ export default function NotificationPreferences({ currentUser }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            Notification Types
+            Notification Preferences by Type
           </CardTitle>
           <CardDescription>
-            Choose which types of notifications to receive via email
+            Configure how you want to receive each type of notification
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {notificationTypes.map((type) => (
-            <div key={type.key} className="flex items-center justify-between py-3 border-b last:border-0">
-              <div className="flex-1">
-                <Label htmlFor={type.key} className="text-sm font-medium cursor-pointer">
-                  {type.label}
-                </Label>
-                <p className="text-xs text-gray-500 mt-1">{type.description}</p>
-              </div>
-              <Switch
-                id={type.key}
-                checked={preferences?.preferences?.[type.key]}
-                onCheckedChange={(value) => handleToggle(type.key, value)}
-                disabled={!preferences?.email_notifications_enabled}
-              />
-            </div>
-          ))}
+        <CardContent className="space-y-2">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 pr-4 font-medium">Notification Type</th>
+                  <th className="text-center px-2 py-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
+                      <Bell className="w-4 h-4" />
+                      <span className="hidden sm:inline">In-App</span>
+                    </div>
+                  </th>
+                  <th className="text-center px-2 py-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
+                      <Mail className="w-4 h-4" />
+                      <span className="hidden sm:inline">Email</span>
+                    </div>
+                  </th>
+                  <th className="text-center px-2 py-2 font-medium">
+                    <div className="flex items-center justify-center gap-1">
+                      <Smartphone className="w-4 h-4" />
+                      <span className="hidden sm:inline">Push</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {notificationTypes.map((type) => {
+                  const pref = preferences?.preferences?.[type.key] || { email: true, in_app: true, push: false };
+                  return (
+                    <tr key={type.key} className="border-b last:border-0 hover:bg-gray-50">
+                      <td className="py-3 pr-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{type.label}</span>
+                            {type.priority === 'critical' && (
+                              <Badge variant="destructive" className="text-[10px] px-1 py-0">Critical</Badge>
+                            )}
+                            {type.priority === 'high' && (
+                              <Badge className="bg-orange-500 text-[10px] px-1 py-0">High</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{type.description}</p>
+                        </div>
+                      </td>
+                      <td className="text-center px-2">
+                        <Switch
+                          checked={pref.in_app !== false}
+                          onCheckedChange={(value) => handleToggle(type.key, 'in_app', value)}
+                          disabled={!preferences?.in_app_notifications_enabled}
+                        />
+                      </td>
+                      <td className="text-center px-2">
+                        <Switch
+                          checked={pref.email !== false}
+                          onCheckedChange={(value) => handleToggle(type.key, 'email', value)}
+                          disabled={!preferences?.email_notifications_enabled}
+                        />
+                      </td>
+                      <td className="text-center px-2">
+                        <Switch
+                          checked={pref.push === true}
+                          onCheckedChange={(value) => handleToggle(type.key, 'push', value)}
+                          disabled={!preferences?.push_notifications_enabled}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
