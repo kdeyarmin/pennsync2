@@ -322,59 +322,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-        {/* Advanced Analytics Quick Access */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Link to={createPageUrl("AgencyAnalytics")}>
-          <Card className="bg-gradient-to-br from-purple-500 to-blue-600 text-white border-none shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-            <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-sm font-medium mb-1">Advanced Analytics</p>
-                    <p className="text-lg font-bold">Population Trends & Predictions</p>
-                    <p className="text-purple-100 text-xs mt-1">AI-powered insights →</p>
-                  </div>
-                  <BarChart3 className="w-10 h-10 text-purple-200" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Card className="bg-gradient-to-br from-red-500 to-orange-600 text-white border-none shadow-lg">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-red-100 text-sm font-medium mb-1">High Risk Patients</p>
-                  <p className="text-2xl font-bold">
-                    {patients.filter(p => {
-                      const recentHosp = incidents.filter(i => 
-                        i.patient_id === p.id && 
-                        i.incident_type === "hospitalized"
-                      ).length;
-                      return recentHosp > 0 || (p.secondary_diagnoses?.length || 0) >= 3;
-                    }).length}
-                  </p>
-                  <p className="text-red-100 text-xs mt-1">Readmission risk monitoring</p>
-                </div>
-                <AlertTriangle className="w-10 h-10 text-red-200" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Key Metrics - Row 1 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1 mr-2">
-                <p className="text-blue-100 text-xs font-medium mb-0.5 truncate">Total Users</p>
-                <p className="text-xl sm:text-2xl font-bold">{stats.users.total}</p>
-                <p className="text-blue-100 text-[10px] mt-0.5">{stats.users.admins} admins</p>
-              </div>
-              <Users className="w-7 h-7 sm:w-8 sm:h-8 text-blue-200 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none shadow-lg">
           <CardContent className="p-3 sm:p-4">
