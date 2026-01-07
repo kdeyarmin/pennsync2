@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
+import { toast } from "sonner";
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,7 +116,11 @@ export default function UserManagement() {
     mutationFn: (invitationId) => base44.functions.invoke('resendInvitation', { invitation_id: invitationId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
+      toast.success('Invitation resent successfully!');
     },
+    onError: (error) => {
+      toast.error('Failed to resend invitation: ' + error.message);
+    }
   });
 
   const resetPasswordMutation = useMutation({
