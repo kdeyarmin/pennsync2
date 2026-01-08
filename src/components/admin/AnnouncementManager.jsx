@@ -223,14 +223,14 @@ export default function AnnouncementManager() {
                     New Announcement
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-lg sm:text-xl">
                   {editingId ? 'Edit Announcement' : 'Create Announcement'}
                 </DialogTitle>
               </DialogHeader>
-              <ScrollArea className="max-h-[70vh] pr-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
+              <ScrollArea className="max-h-[65vh] pr-4">
+                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <div>
                   <label className="text-sm font-medium">Title</label>
                   <Input
@@ -238,6 +238,7 @@ export default function AnnouncementManager() {
                     onChange={(e) => setFormData({...formData, title: e.target.value})}
                     required
                     placeholder="Enter announcement title..."
+                    className="text-base"
                   />
                 </div>
                 <div>
@@ -246,8 +247,9 @@ export default function AnnouncementManager() {
                     value={formData.content}
                     onChange={(e) => setFormData({...formData, content: e.target.value})}
                     required
-                    rows={4}
+                    rows={3}
                     placeholder="Enter announcement content..."
+                    className="text-base"
                   />
                 </div>
                 <div>
@@ -256,7 +258,7 @@ export default function AnnouncementManager() {
                     value={formData.is_active ? "active" : "inactive"} 
                     onValueChange={(v) => setFormData({...formData, is_active: v === "active"})}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-base">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -266,14 +268,14 @@ export default function AnnouncementManager() {
                   </Select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label className="text-sm font-medium">Schedule For (Optional)</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.scheduled_for ? format(formData.scheduled_for, 'PPp') : <span>Select date & time</span>}
+                        <Button variant="outline" className="w-full justify-start text-left font-normal text-sm sm:text-base">
+                          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{formData.scheduled_for ? format(formData.scheduled_for, 'PPp') : 'Select date & time'}</span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -324,9 +326,9 @@ export default function AnnouncementManager() {
                     <Label className="text-sm font-medium">Expires At (Optional)</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.expires_at ? format(formData.expires_at, 'PPp') : <span>Select date & time</span>}
+                        <Button variant="outline" className="w-full justify-start text-left font-normal text-sm sm:text-base">
+                          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{formData.expires_at ? format(formData.expires_at, 'PPp') : 'Select date & time'}</span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
