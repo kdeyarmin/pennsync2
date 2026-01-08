@@ -692,10 +692,10 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   ];
 
   // Data generation for new report types
-  const generateOutcomesByDiagnosisData = (filteredVisits, filteredIncidents, allPatients) => {
+  const generateOutcomesByDiagnosisData = (visitsData, incidentsData, patientsData) => {
     const diagnosisData = {};
     
-    allPatients.forEach(p => {
+    patientsData.forEach(p => {
       const diagnosis = p.primary_diagnosis || 'Unknown';
       if (!diagnosisData[diagnosis]) {
         diagnosisData[diagnosis] = {
@@ -711,8 +711,8 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       diagnosisData[diagnosis].patientCount++;
     });
 
-    filteredVisits.forEach(v => {
-      const patient = allPatients.find(p => p.id === v.patient_id);
+    visitsData.forEach(v => {
+      const patient = patientsData.find(p => p.id === v.patient_id);
       const diagnosis = patient?.primary_diagnosis || 'Unknown';
       if (diagnosisData[diagnosis]) {
         diagnosisData[diagnosis].visitCount++;
@@ -722,8 +722,8 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       }
     });
 
-    filteredIncidents.forEach(i => {
-      const patient = allPatients.find(p => p.id === i.patient_id);
+    incidentsData.forEach(i => {
+      const patient = patientsData.find(p => p.id === i.patient_id);
       const diagnosis = patient?.primary_diagnosis || 'Unknown';
       if (diagnosisData[diagnosis]) {
         diagnosisData[diagnosis].incidents++;
@@ -808,8 +808,8 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   // CSV generators for new report types
-  const generateOutcomesByDiagnosisCSV = (filteredVisits, filteredIncidents, allPatients, startDate, endDate) => {
-    const data = generateOutcomesByDiagnosisData(filteredVisits, filteredIncidents, allPatients);
+  const generateOutcomesByDiagnosisCSV = (visitsData, incidentsData, patientsData, startDate, endDate) => {
+    const data = generateOutcomesByDiagnosisData(visitsData, incidentsData, patientsData);
     
     let content = `Patient Outcomes by Diagnosis Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n\n`;
