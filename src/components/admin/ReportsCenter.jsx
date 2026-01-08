@@ -34,7 +34,7 @@ import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
 import { useQuery } from "@tanstack/react-query";
 
-export default function ReportsCenter({ users, patients, visits, incidents }) {
+export default function ReportsCenter({ users: allUsers, patients: allPatients, visits, incidents }) {
   const [reportType, setReportType] = useState("productivity");
   const [dateRange, setDateRange] = useState("30");
   const [selectedNurse, setSelectedNurse] = useState("all");
@@ -59,13 +59,13 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
 
     switch (reportType) {
       case 'outcomes_by_diagnosis':
-        previewData = generateOutcomesByDiagnosisData(filteredVisits, filteredIncidents, patients);
+        previewData = generateOutcomesByDiagnosisData(filteredVisits, filteredIncidents, allPatients);
         break;
       case 'staff_comparison':
-        previewData = generateStaffComparisonData(filteredVisits, users);
+        previewData = generateStaffComparisonData(filteredVisits, allUsers);
         break;
       case 'financial_detailed':
-        previewData = generateDetailedFinancialData(filteredVisits, patients);
+        previewData = generateDetailedFinancialData(filteredVisits, allPatients);
         break;
       case 'trend_analysis':
         previewData = generateTrendAnalysisData(visits, incidents, startDate, endDate);
@@ -277,13 +277,13 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
             ({ content: reportContent, fileName } = generateStaffPerformanceReport(filteredVisits, users, startDate, endDate));
             break;
           case 'outcomes_by_diagnosis':
-            ({ content: reportContent, fileName } = generateOutcomesByDiagnosisCSV(filteredVisits, filteredIncidents, patients, startDate, endDate));
+            ({ content: reportContent, fileName } = generateOutcomesByDiagnosisCSV(filteredVisits, filteredIncidents, allPatients, startDate, endDate));
             break;
           case 'staff_comparison':
-            ({ content: reportContent, fileName } = generateStaffComparisonCSV(filteredVisits, users, startDate, endDate));
+            ({ content: reportContent, fileName } = generateStaffComparisonCSV(filteredVisits, allUsers, startDate, endDate));
             break;
           case 'financial_detailed':
-            ({ content: reportContent, fileName } = generateDetailedFinancialCSV(filteredVisits, patients, startDate, endDate));
+            ({ content: reportContent, fileName } = generateDetailedFinancialCSV(filteredVisits, allPatients, startDate, endDate));
             break;
           case 'trend_analysis':
             ({ content: reportContent, fileName } = generateTrendAnalysisCSV(filteredVisits, filteredIncidents, startDate, endDate));
