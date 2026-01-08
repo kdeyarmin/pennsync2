@@ -208,7 +208,7 @@ export default function ClinicalLibraryManager() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full">
+        <DialogContent className="max-w-2xl max-h-[90vh] w-[95vw] sm:w-full overflow-y-auto sm:max-h-[85vh]">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">
               {editingTemplate ? 'Edit Template' : 'Create New Template'}
