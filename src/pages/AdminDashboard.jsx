@@ -425,8 +425,8 @@ export default function AdminDashboard() {
         </TabsContent>
 
         {/* Reports Tab */}
-        <TabsContent value="reports" className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
+        <TabsContent value="reports" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <AIKPIReportGenerator />
             <AIAutoTagger />
           </div>
@@ -562,17 +562,17 @@ export default function AdminDashboard() {
           {/* Event Type Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle>Event Type Breakdown</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Event Type Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {Object.entries(securityEventCounts)
                   .sort((a, b) => b[1] - a[1])
                   .slice(0, 9)
                   .map(([action, count]) => (
-                    <div key={action} className="p-4 bg-gray-50 rounded-lg border">
-                      <p className="text-sm font-medium text-gray-900 truncate">{action}</p>
-                      <p className="text-2xl font-bold text-blue-600">{count}</p>
+                    <div key={action} className="p-3 sm:p-4 bg-gray-50 rounded-lg border">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{action}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-blue-600">{count}</p>
                     </div>
                   ))}
               </div>
@@ -581,20 +581,20 @@ export default function AdminDashboard() {
         </TabsContent>
 
         {/* Encryption Tab */}
-        <TabsContent value="encryption" className="space-y-6">
+        <TabsContent value="encryption" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                 Encryption at Rest Verification
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               <Alert className="bg-blue-50 border-blue-200">
-                <Lock className="w-4 h-4 text-blue-600" />
+                <Lock className="w-4 h-4 text-blue-600 flex-shrink-0" />
                 <AlertDescription className="text-blue-900">
-                  <p className="font-semibold mb-2">About Penn Sync Encryption</p>
-                  <p>
+                  <p className="font-semibold mb-2 text-sm sm:text-base">About Penn Sync Encryption</p>
+                  <p className="text-xs sm:text-sm">
                     Penn Sync uses enterprise-grade encryption at rest for all PHI and sensitive data.
                     This verification test ensures data can be securely stored and retrieved.
                   </p>
@@ -604,7 +604,7 @@ export default function AdminDashboard() {
               <Button
                 onClick={verifyEncryption}
                 disabled={isCheckingEncryption}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
               >
                 {isCheckingEncryption ? (
                   <>
@@ -675,26 +675,26 @@ export default function AdminDashboard() {
         </TabsContent>
 
         {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-6">
+        <TabsContent value="settings" className="space-y-4 sm:space-y-6">
           <AIConfigurationManager />
           <SystemSettings currentUser={currentUser} />
         </TabsContent>
 
         {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
+        <TabsContent value="analytics" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-purple-600" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 Analytics Dashboard
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
+              <p className="text-sm sm:text-base text-gray-600 mb-4">
                 Access detailed analytics and reporting tools.
               </p>
               <Link to={createPageUrl("AgencyAnalytics")}>
-                <Button className="bg-purple-600 hover:bg-purple-700">
+                <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Open Analytics
                 </Button>
