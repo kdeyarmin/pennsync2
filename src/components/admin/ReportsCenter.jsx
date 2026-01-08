@@ -103,7 +103,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         switch (reportType) {
           case 'productivity':
             reportTitle = 'Productivity Report';
-            const prodData = generateProductivityReportData(filteredVisits, users);
+            const prodData = generateProductivityReportData(filteredVisits, allUsers);
             pdfContent = [
               { type: 'heading', text: 'Nurse Productivity Summary', size: 14 },
               { type: 'spacer', height: 5 },
@@ -148,7 +148,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
           case 'quality':
             reportTitle = 'Quality Metrics Report';
-            const qualityData = generateQualityReportData(filteredVisits, filteredIncidents, patients);
+            const qualityData = generateQualityReportData(filteredVisits, filteredIncidents, allPatients);
             pdfContent = [
               { type: 'heading', text: 'Overall Metrics', size: 14 },
               { type: 'spacer', height: 5 },
@@ -181,7 +181,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
           case 'financial':
             reportTitle = 'Financial Report';
-            const finData = generateDetailedFinancialData(filteredVisits, patients);
+            const finData = generateDetailedFinancialData(filteredVisits, allPatients);
             pdfContent = [
               { type: 'heading', text: 'Revenue Analysis', size: 14 },
               { type: 'spacer', height: 5 },
@@ -212,7 +212,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
           case 'staff_comparison':
             reportTitle = 'Staff Performance Comparison';
-            const staffData = generateStaffComparisonData(filteredVisits, users);
+            const staffData = generateStaffComparisonData(filteredVisits, allUsers);
             pdfContent = [
               { type: 'heading', text: 'Staff Rankings', size: 14 },
               { type: 'spacer', height: 5 },
@@ -259,22 +259,22 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
         switch (reportType) {
           case 'productivity':
-            ({ content: reportContent, fileName } = generateProductivityReport(filteredVisits, users, startDate, endDate));
+            ({ content: reportContent, fileName } = generateProductivityReport(filteredVisits, allUsers, startDate, endDate));
             break;
           case 'quality':
-            ({ content: reportContent, fileName } = generateQualityReport(filteredVisits, filteredIncidents, patients, startDate, endDate));
+            ({ content: reportContent, fileName } = generateQualityReport(filteredVisits, filteredIncidents, allPatients, startDate, endDate));
             break;
           case 'financial':
-            ({ content: reportContent, fileName } = generateFinancialReport(filteredVisits, patients, startDate, endDate));
+            ({ content: reportContent, fileName } = generateFinancialReport(filteredVisits, allPatients, startDate, endDate));
             break;
           case 'compliance':
-            ({ content: reportContent, fileName } = generateComplianceReport(filteredVisits, patients, startDate, endDate));
+            ({ content: reportContent, fileName } = generateComplianceReport(filteredVisits, allPatients, startDate, endDate));
             break;
           case 'clinical':
-            ({ content: reportContent, fileName } = generateClinicalReport(filteredVisits, patients, startDate, endDate));
+            ({ content: reportContent, fileName } = generateClinicalReport(filteredVisits, allPatients, startDate, endDate));
             break;
           case 'staff':
-            ({ content: reportContent, fileName } = generateStaffPerformanceReport(filteredVisits, users, startDate, endDate));
+            ({ content: reportContent, fileName } = generateStaffPerformanceReport(filteredVisits, allUsers, startDate, endDate));
             break;
           case 'outcomes_by_diagnosis':
             ({ content: reportContent, fileName } = generateOutcomesByDiagnosisCSV(filteredVisits, filteredIncidents, allPatients, startDate, endDate));
@@ -320,7 +320,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   });
 
   // Helper functions for PDF data
-  const generateProductivityReportData = (visits, users) => {
+  const generateProductivityReportData = (visits, allUsers) => {
     const endDate = todayEastern();
     const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
     
@@ -330,7 +330,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       return createdDate && createdDate >= startDate && createdDate <= endDate;
     });
     
-    const nursesData = users.filter(u => u.role === 'user').map(nurse => {
+    const nursesData = allUsers.filter(u => u.role === 'user').map(nurse => {
       // Filter note enhancements for this specific nurse
       const nurseEnhancements = filteredEnhancements.filter(nc => nc.nurse_email === nurse.email);
       
@@ -387,9 +387,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     };
   };
 
-  const generateQualityReportData = (visits, incidents, patients) => {
+  const generateQualityReportData = (visits, incidents, allPatients) => {
     const completedVisits = visits.filter(v => v.status === 'completed');
-    const activePatients = patients.filter(p => p.status === 'active').length;
+    const activePatients = allPatients.filter(p => p.status === 'active').length;
     const falls = incidents.filter(i => i.incident_type === 'fall').length;
     const hospitalizations = incidents.filter(i => i.incident_type === 'hospitalized').length;
     const medErrors = incidents.filter(i => i.incident_type === 'medication_error').length;
@@ -408,8 +408,8 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   // Productivity Report CSV
-  const generateProductivityReport = (visits, users, startDate, endDate) => {
-    const data = generateProductivityReportData(visits, users);
+  const generateProductivityReport = (visits, allUsers, startDate, endDate) => {
+    const data = generateProductivityReportData(visits, allUsers);
 
     let content = `Penn Sync Productivity Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
@@ -431,8 +431,8 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   // Quality Report CSV
-  const generateQualityReport = (visits, incidents, patients, startDate, endDate) => {
-    const data = generateQualityReportData(visits, incidents, patients);
+  const generateQualityReport = (visits, incidents, allPatients, startDate, endDate) => {
+    const data = generateQualityReportData(visits, incidents, allPatients);
 
     let content = `Penn Sync Quality Metrics Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n`;
@@ -456,7 +456,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   // Financial Report
-  const generateFinancialReport = (visits, patients, startDate, endDate) => {
+  const generateFinancialReport = (visits, allPatients, startDate, endDate) => {
     const visitTypes = {};
     visits.forEach(v => {
       const type = v.visit_type || 'unknown';
@@ -497,7 +497,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     content += `PENN SYNC ROI\n`;
     content += `Documentation Time Saved (hours),${Math.round(timeSavedHours)}\n`;
     content += `Cost Savings from Efficiency,$${Math.round(costSavings)}\n`;
-    content += `Active Patients,${patients.filter(p => p.status === 'active').length}\n`;
+    content += `Active Patients,${allPatients.filter(p => p.status === 'active').length}\n`;
 
     return {
       content,
@@ -506,7 +506,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   // Compliance Report
-  const generateComplianceReport = (visits, patients, startDate, endDate) => {
+  const generateComplianceReport = (visits, allPatients, startDate, endDate) => {
     const completedVisits = visits.filter(v => v.status === 'completed');
     const visitsWithNotes = completedVisits.filter(v => v.nurse_notes && v.nurse_notes.length > 100);
     const visitsWithVitals = completedVisits.filter(v => v.vital_signs && Object.keys(v.vital_signs).length > 0);
@@ -540,9 +540,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   // Clinical Report
-  const generateClinicalReport = (visits, patients, startDate, endDate) => {
+  const generateClinicalReport = (visits, allPatients, startDate, endDate) => {
     const diagnoses = {};
-    patients.forEach(p => {
+    allPatients.forEach(p => {
       if (p.primary_diagnosis) {
         diagnoses[p.primary_diagnosis] = (diagnoses[p.primary_diagnosis] || 0) + 1;
       }
@@ -588,10 +588,10 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   // Staff Performance Report
-  const generateStaffPerformanceReport = (visits, users, startDate, endDate) => {
+  const generateStaffPerformanceReport = (visits, allUsers, startDate, endDate) => {
     const nursePerformance = {};
     
-    users.filter(u => u.role === 'user').forEach(nurse => {
+    allUsers.filter(u => u.role === 'user').forEach(nurse => {
       const nurseVisits = visits.filter(v => v.created_by === nurse.email);
       const completed = nurseVisits.filter(v => v.status === 'completed');
       
