@@ -159,7 +159,7 @@ Format as a bulleted list of improvements.`
     setIsProcessing(true);
     try {
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `Improve these AI instructions for generating patient-specific clinical documentation:
+        prompt: `You are an expert in clinical documentation best practices for Medicare home health and hospice. Analyze and improve these AI instructions for generating patient-specific clinical documentation.
 
 **Current Instructions:**
 ${currentTemplate.ai_prompt_instructions}
@@ -167,19 +167,54 @@ ${currentTemplate.ai_prompt_instructions}
 **Patient Data Fields Available:**
 ${currentTemplate.patient_data_fields?.join(', ') || 'None specified'}
 
-Rewrite the instructions to be:
-1. More specific and detailed
-2. Clear about what patient data to incorporate and how
-3. Structured to produce Medicare-compliant documentation
-4. Include format guidelines for the output
+**Context:**
+- Quick Phrase: "${currentTemplate.phrase}"
+- Category: ${currentTemplate.category}
+- This template will be used by nurses to quickly document ${currentTemplate.category} activities in patient charts.
 
-Provide the refined instructions in a clear, copy-paste ready format.`
+Provide your analysis in this structure:
+
+**ANALYSIS:**
+- Identify strengths in the current instructions
+- Point out gaps or ambiguities
+- Note any Medicare compliance issues
+- Assess clarity and specificity
+
+**REFINED INSTRUCTIONS (READY TO USE):**
+[Provide improved instructions that are:]
+1. Specific and actionable - tell the AI exactly what to generate
+2. Clear about which patient data fields to use and how to integrate them naturally
+3. Structured to produce Medicare-compliant documentation with proper medical terminology
+4. Include format guidelines (e.g., use complete sentences, include measurements, specify tense)
+5. Emphasize skilled nursing observations and interventions
+6. Include any required documentation elements for the category (e.g., for education: teaching method, patient/caregiver response, comprehension)
+
+**ALTERNATIVE APPROACHES:**
+[Suggest 2-3 alternative phrasings or structures that could work well, explaining when each would be most appropriate]
+
+**BEST PRACTICES TIPS:**
+- Key Medicare documentation requirements for this category
+- Common pitfalls to avoid
+- Ways to make the output more specific and measurable`
       });
 
       setConversation([{
         role: 'assistant',
         content: response
       }]);
+
+      // Also provide a button to directly apply the refined instructions
+      const refinedResponse = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract ONLY the "REFINED INSTRUCTIONS (READY TO USE)" section from this response and return it as clean, formatted text without any markdown headers or labels:
+
+${response}`,
+      });
+
+      setGeneratedTemplate({
+        ...currentTemplate,
+        ai_prompt_instructions: refinedResponse.trim()
+      });
+
     } catch (error) {
       toast.error('Failed to refine instructions');
     }
