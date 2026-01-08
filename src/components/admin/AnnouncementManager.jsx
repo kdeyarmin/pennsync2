@@ -223,7 +223,7 @@ export default function AnnouncementManager() {
                     New Announcement
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full">
+              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
                   {editingId ? 'Edit Announcement' : 'Create Announcement'}
