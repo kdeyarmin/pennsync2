@@ -223,13 +223,13 @@ export default function AnnouncementManager() {
                     New Announcement
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden w-[95vw] sm:w-full p-4 sm:p-6">
+              <DialogContent className="max-w-2xl max-h-[70vh] overflow-hidden w-[95vw] sm:w-full p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
                   {editingId ? 'Edit Announcement' : 'Create Announcement'}
                 </DialogTitle>
               </DialogHeader>
-              <ScrollArea className="max-h-[60vh] pr-4">
+              <ScrollArea className="max-h-[50vh] pr-4">
                 <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <div>
                   <label className="text-sm font-medium">Title</label>
