@@ -9,12 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, BookOpen, TrendingUp, Globe, User } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, TrendingUp, Globe, User, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import ClinicalLibraryAIAssistant from "./ClinicalLibraryAIAssistant";
 
 export default function ClinicalLibraryManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [aiMode, setAIMode] = useState('generate'); // 'generate', 'improve', 'refine'
   const [formData, setFormData] = useState({
     phrase: '',
     category: 'education',
@@ -78,6 +81,22 @@ export default function ClinicalLibraryManager() {
     });
     setEditingTemplate(null);
     setIsDialogOpen(false);
+    setShowAIAssistant(false);
+    setAIMode('generate');
+  };
+
+  const handleAISuggestion = (suggestion) => {
+    setFormData({
+      ...formData,
+      phrase: suggestion.phrase || formData.phrase,
+      category: suggestion.category || formData.category,
+      template_type: suggestion.template_type || formData.template_type,
+      expanded_text: suggestion.expanded_text || formData.expanded_text,
+      ai_prompt_instructions: suggestion.ai_prompt_instructions || formData.ai_prompt_instructions,
+      patient_data_fields: suggestion.patient_data_fields || formData.patient_data_fields,
+      requires_patient_data: suggestion.template_type === 'patient_specific'
+    });
+    setShowAIAssistant(false);
   };
 
   const handleSubmit = (e) => {
@@ -216,6 +235,63 @@ export default function ClinicalLibraryManager() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            {/* AI Assistant Section */}
+            <div className="border-b pb-3">
+              {!showAIAssistant ? (
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setAIMode('generate');
+                      setShowAIAssistant(true);
+                    }}
+                    className="border-purple-300 text-purple-700"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    AI Generate
+                  </Button>
+                  {(formData.phrase || editingTemplate) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setAIMode('improve');
+                        setShowAIAssistant(true);
+                      }}
+                      className="border-purple-300 text-purple-700"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      AI Suggestions
+                    </Button>
+                  )}
+                  {formData.template_type === 'patient_specific' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setAIMode('refine');
+                        setShowAIAssistant(true);
+                      }}
+                      className="border-purple-300 text-purple-700"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Refine Instructions
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <ClinicalLibraryAIAssistant
+                  mode={aiMode}
+                  currentTemplate={editingTemplate || formData}
+                  onApplySuggestion={handleAISuggestion}
+                />
+              )}
+            </div>
+
             <div>
               <Label className="text-sm">Quick Phrase</Label>
               <Input
