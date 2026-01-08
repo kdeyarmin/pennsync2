@@ -41,7 +41,7 @@ const DialogContent = React.forwardRef((props, ref) => (
         opacity: 1
       }}
       className={cn(
-        "w-[95vw] max-w-4xl gap-4 border border-gray-200 p-8 shadow-2xl rounded-lg max-h-[90vh] overflow-y-auto",
+        "w-[98vw] max-w-6xl gap-4 border border-gray-200 p-8 shadow-2xl rounded-lg max-h-[90vh] overflow-y-auto",
         props.className
       )}
       {...props}
