@@ -7,6 +7,7 @@ import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import CarePlanManagement from './pages/CarePlanManagement';
 import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
+import ClinicalLibrary from './pages/ClinicalLibrary';
 import ClinicalPathwayManager from './pages/ClinicalPathwayManager';
 import ComplianceCenter from './pages/ComplianceCenter';
 import ComplianceDashboard from './pages/ComplianceDashboard';
@@ -69,7 +70,6 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import ClinicalLibrary from './pages/ClinicalLibrary';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +83,7 @@ export const PAGES = {
     "AutomaticCarePlans": AutomaticCarePlans,
     "CarePlanManagement": CarePlanManagement,
     "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
+    "ClinicalLibrary": ClinicalLibrary,
     "ClinicalPathwayManager": ClinicalPathwayManager,
     "ComplianceCenter": ComplianceCenter,
     "ComplianceDashboard": ComplianceDashboard,
@@ -145,7 +146,6 @@ export const PAGES = {
     "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "ClinicalLibrary": ClinicalLibrary,
 }
 
 export const pagesConfig = {

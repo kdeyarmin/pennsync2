@@ -729,23 +729,12 @@ export default function SmartNoteAssistant() {
         </div>
       </div>
 
-      {/* Workflow Mode Toggle */}
+      {/* Progress Indicator */}
       {selectedPatientId && !enhancedNote && (
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span className="font-medium">{currentStep === 'patient' ? '1/2' : '2/2'}</span>
-            <ChevronRight className="w-4 h-4" />
-            <span>{currentStep === 'patient' ? 'Select Patient' : currentStep === 'notes' ? 'Write Notes' : 'Reviewing...'}</span>
-          </div>
-          <Button
-            variant={useGuidedWorkflow ? "default" : "outline"}
-            size="sm"
-            onClick={() => setUseGuidedWorkflow(!useGuidedWorkflow)}
-            className="gap-2"
-          >
-            <Sparkles className="w-4 h-4" />
-            {useGuidedWorkflow ? 'Guided Mode' : 'Switch to Guided'}
-          </Button>
+        <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+          <span className="font-medium">Step {currentStep === 'patient' ? '1' : currentStep === 'notes' ? '2' : '3'} of 3</span>
+          <ChevronRight className="w-4 h-4" />
+          <span>{currentStep === 'patient' ? 'Select Patient' : currentStep === 'notes' ? 'Write Notes' : 'AI Enhancing...'}</span>
         </div>
       )}
 
@@ -794,37 +783,14 @@ export default function SmartNoteAssistant() {
             />
           )}
 
-          {/* Enhanced Patient Context Panel with Timeline */}
-          {selectedPatientId && (recentVisits.length > 0 || carePlans.length > 0 || selectedPatient?.primary_diagnosis || selectedPatient?.current_medications?.length > 0) && (
-            <Tabs defaultValue="context" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="context" className="font-semibold">
-                  <Brain className="w-4 h-4 mr-2" />
-                  Patient Context
-                </TabsTrigger>
-                <TabsTrigger value="timeline" className="font-semibold">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Timeline
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="context">
-                <div className="space-y-4">
-                  <ClinicalEventsSummary patientId={selectedPatientId} />
-                  <EnhancedPatientContextPanel
-                    patient={selectedPatient}
-                    onContextUpdate={(context) => {
-                      // Context is available for use in other components
-                      console.log('Patient context updated:', context);
-                    }}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="timeline">
-                <PatientTimelineView patient={selectedPatient} />
-              </TabsContent>
-            </Tabs>
+          {/* Patient Context - Simplified */}
+          {selectedPatientId && (recentVisits.length > 0 || selectedPatient?.primary_diagnosis) && (
+            <EnhancedPatientContextPanel
+              patient={selectedPatient}
+              onContextUpdate={(context) => {
+                console.log('Patient context updated:', context);
+              }}
+            />
           )}
 
           {!useGuidedWorkflow && (
@@ -1023,111 +989,35 @@ export default function SmartNoteAssistant() {
             </Card>
           )}
 
-          {/* AI Admission Note Pre-Populator */}
-          {referralData && selectedPatientId && visitType === 'admission' && !roughNote && !enhancedNote && (
-            <AdmissionNotePrePopulator
-              referralData={referralData}
-              intakeAnalysis={referralIntakeAnalysis}
-              patientData={selectedPatient}
-              onNoteGenerated={(note) => {
-                setRoughNote(note);
-              }}
-              autoGenerate={true}
-            />
-          )}
-
-          {/* Referral-Based Documentation Assistant */}
-          {referralData && selectedPatientId && visitType === 'admission' && !enhancedNote && roughNote && (
-            <>
-              <ReferralBasedDocumentationAssistant
-                referralData={referralData}
-                onInsertText={(text) => {
-                  setRoughNote(prev => prev ? prev + '\n\n' + text : text);
-                }}
-              />
-              
-              {/* AI Care Plan Generator from Referral */}
-              <AIReferralCarePlanGenerator
-                referralData={referralData}
-                intakeAnalysis={referralIntakeAnalysis}
-                patientId={selectedPatientId}
-                existingCarePlans={carePlans}
-                onCarePlansSaved={() => {
-                  queryClient.invalidateQueries({ queryKey: ['patientCarePlans', selectedPatientId] });
-                  alert('Care plans saved successfully!');
-                }}
-              />
-            </>
-          )}
-
-          {/* Step 2.5: Admission Documentation Tools (Admission Visits Only) */}
-          {showAdmissionTools && !enhancedNote && (
-            <Card className="border-2 border-indigo-500 bg-gradient-to-r from-indigo-50 to-blue-50">
-              <CardHeader className="py-4">
-                <CardTitle className="text-base md:text-lg flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-indigo-500">
-                    <FileText className="w-4 h-4 text-white" />
-                  </div>
-                  <span>Admission Documentation Tools</span>
-                  <Badge className="bg-indigo-600">Admission Only</Badge>
+          {/* Admission Assistant - Simplified */}
+          {visitType === 'admission' && selectedPatientId && !enhancedNote && (
+            <Card className="border-2 border-indigo-300">
+              <CardHeader className="py-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                  Admission Assistant
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <Tabs defaultValue="oasis" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="oasis">OASIS Assistant</TabsTrigger>
-                    <TabsTrigger value="documentation">Admission Documentation</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="oasis" className="space-y-4 mt-4">
-                    <AISmartOASISAssistant
-                      patientData={selectedPatient}
-                      referralData={referralData}
-                      visitData={{
-                        visitType,
-                        vitalSigns,
-                        roughNote
-                      }}
-                      onApplySuggestion={(suggestion) => {
-                        setOasisSuggestions(prev => prev ? [...prev, suggestion] : [suggestion]);
-                      }}
-                      autoAnalyze={true}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="documentation" className="space-y-4 mt-4">
-                    <AIAdmissionDocumentationAssistant
-                      referralData={referralData}
-                      oasisSuggestions={oasisSuggestions}
-                      patientData={selectedPatient}
-                      onSaveSection={handleSaveAdmissionSection}
-                    />
-                    {Object.keys(admissionDocumentation).length > 0 && (
-                      <Alert className="bg-green-50 border-green-300">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <AlertDescription className="text-green-900">
-                          <strong>Sections Saved:</strong> {Object.keys(admissionDocumentation).length} admission sections have been added to your notes.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </TabsContent>
-                </Tabs>
+              <CardContent>
+                {referralData && !roughNote ? (
+                  <AdmissionNotePrePopulator
+                    referralData={referralData}
+                    intakeAnalysis={referralIntakeAnalysis}
+                    patientData={selectedPatient}
+                    onNoteGenerated={(note) => setRoughNote(note)}
+                    autoGenerate={true}
+                  />
+                ) : (
+                  <AIAdmissionDocumentationAssistant
+                    referralData={referralData}
+                    patientData={selectedPatient}
+                    onSaveSection={(title, content) => {
+                      setRoughNote(prev => prev ? prev + `\n\n${title}:\n${content}` : `${title}:\n${content}`);
+                    }}
+                  />
+                )}
               </CardContent>
             </Card>
-          )}
-
-          {/* Integrated OASIS Analyzer */}
-          {selectedPatientId && roughNote.length >= 100 && (
-            <IntegratedOASISAnalyzer
-              patientData={selectedPatient}
-              visitType={visitType}
-              roughNote={roughNote}
-              vitalSigns={vitalSigns}
-              timelineData={recentVisits}
-              onApplySuggestion={(text) => {
-                setRoughNote(prev => prev + text);
-              }}
-            />
           )}
 
           {/* Step 3: Rough Notes */}
@@ -1145,16 +1035,6 @@ export default function SmartNoteAssistant() {
                     </CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-4">
-                {/* Real-time event detection while typing */}
-                {roughNote.length >= 100 && (
-                  <RealTimeClinicalEventTracker
-                    noteText={roughNote}
-                    patientId={selectedPatientId}
-                    visitId={savedVisitId}
-                    autoDetect={true}
-                  />
-                )}
-                
                 <div className="relative">
                  <Textarea
                    value={roughNote}
@@ -1271,36 +1151,12 @@ export default function SmartNoteAssistant() {
                  <Alert className="bg-green-50 border-green-300">
                    <CheckCircle2 className="w-4 h-4 text-green-600" />
                    <AlertDescription className="text-green-800">
-                     Note saved to patient chart successfully!
+                     Note saved to patient chart!
                    </AlertDescription>
                  </Alert>
                 )}
-                
-                {/* Post-enhancement event detection */}
-                {enhancedNote && (
-                  <RealTimeClinicalEventTracker
-                    noteText={enhancedNote}
-                    patientId={selectedPatientId}
-                    visitId={savedVisitId}
-                    autoDetect={false}
-                  />
-                )}
                 </CardContent>
                 </Card>
-                )}
-
-                {/* Auto Event Extractor - shows after note is saved */}
-                {savedVisitId && enhancedNote && (
-                <AutoEventExtractor
-                visitId={savedVisitId}
-                patientId={selectedPatientId}
-                nurseNotes={enhancedNote}
-                visitDate={visitDate}
-                onEventsExtracted={(events) => {
-                console.log('Events extracted:', events);
-                queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
-                }}
-                />
                 )}
 
                 </React.Fragment>
