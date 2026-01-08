@@ -686,17 +686,17 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-purple-600" />
-                Advanced Analytics Dashboard
+                Analytics Dashboard
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Access sophisticated analytics including population trends, predictive readmission models, disease progression tracking, and custom reporting tools.
+                Access detailed analytics and reporting tools.
               </p>
               <Link to={createPageUrl("AgencyAnalytics")}>
                 <Button className="bg-purple-600 hover:bg-purple-700">
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Open Advanced Analytics
+                  Open Analytics
                 </Button>
               </Link>
             </CardContent>

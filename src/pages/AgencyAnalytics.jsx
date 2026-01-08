@@ -146,38 +146,7 @@ export default function AgencyAnalytics() {
           </div>
         </div>
 
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Total Visits"
-            value={overallStats.visits.total}
-            subtitle={`${overallStats.visits.completed} completed`}
-            icon={Calendar}
-            trend={`${overallStats.visits.completionRate}% completion rate`}
-            color="indigo"
-          />
-          <StatCard
-            title="Active Staff"
-            value={overallStats.users.total}
-            subtitle={`${overallStats.users.admins} admins`}
-            icon={Users}
-            color="green"
-          />
-          <StatCard
-            title="Active Patients"
-            value={overallStats.patients.active}
-            subtitle={`${overallStats.patients.total} total`}
-            icon={Activity}
-            color="blue"
-          />
-          <StatCard
-            title="Time Saved"
-            value={`${overallStats.timeSaved.totalHours}h`}
-            subtitle="Via AI documentation"
-            icon={Clock}
-            color="purple"
-          />
-        </div>
+
 
         {/* Tabs for detailed metrics */}
         <Tabs defaultValue="overview" className="space-y-6">

@@ -403,34 +403,7 @@ export default function Reports() {
               </Button>
             </div>
 
-            {/* Key Performance Indicators */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-              <KPICard
-                title="Active Patients"
-                value={patients.filter(p => p.status === 'active').length}
-                icon={Users}
-              />
-              <KPICard
-                title="Enhancements Completed"
-                value={stats.noteEnhancements.total}
-                change={12}
-                trend="up"
-                icon={FileText}
-              />
-              <KPICard
-                title="High Risk Patients"
-                value={highRiskPatients}
-                icon={AlertTriangle}
-                trend="down"
-              />
-              <KPICard
-                title="Avg Compliance Score"
-                value={`${stats.compliance.avgScore}%`}
-                change={8}
-                trend="up"
-                icon={Shield}
-              />
-            </div>
+
 
             {/* Time & Financial Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
