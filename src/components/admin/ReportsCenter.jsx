@@ -286,7 +286,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
             ({ content: reportContent, fileName } = generateDetailedFinancialCSV(filteredVisits, patients, startDate, endDate));
             break;
           case 'trend_analysis':
-            ({ content: reportContent, fileName } = generateTrendAnalysisCSV(visits, incidents, startDate, endDate));
+            ({ content: reportContent, fileName } = generateTrendAnalysisCSV(filteredVisits, filteredIncidents, startDate, endDate));
             break;
           default:
             throw new Error('Unknown report type');
@@ -787,14 +787,14 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     };
   };
 
-  const generateTrendAnalysisData = (allVisits, allIncidents, startDate, endDate) => {
+  const generateTrendAnalysisData = (allVisits, allIncidents) => {
     const days = parseInt(dateRange);
     const trends = [];
 
     for (let i = days - 1; i >= 0; i--) {
       const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
       const dayVisits = allVisits.filter(v => v.visit_date === date);
-      const dayIncidents = allIncidents.filter(i => i.incident_date === date);
+      const dayIncidents = allIncidents.filter(inc => inc.incident_date === date);
 
       trends.push({
         date: format(new Date(date), 'MM/dd'),
@@ -865,8 +865,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     };
   };
 
-  const generateTrendAnalysisCSV = (visits, incidents, startDate, endDate) => {
-    const data = generateTrendAnalysisData(visits, incidents, startDate, endDate);
+  const generateTrendAnalysisCSV = (allVisits, allIncidents, startDate, endDate) => {
+    const data = generateTrendAnalysisData(allVisits, allIncidents);
     
     let content = `Trend Analysis Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n\n`;
