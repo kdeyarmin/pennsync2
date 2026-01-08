@@ -808,8 +808,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
   };
 
   // CSV generators for new report types
-  const generateOutcomesByDiagnosisCSV = (visits, incidents, patients, startDate, endDate) => {
-    const data = generateOutcomesByDiagnosisData(visits, incidents, patients);
+  const generateOutcomesByDiagnosisCSV = (filteredVisits, filteredIncidents, allPatients, startDate, endDate) => {
+    const data = generateOutcomesByDiagnosisData(filteredVisits, filteredIncidents, allPatients);
     
     let content = `Patient Outcomes by Diagnosis Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n\n`;
@@ -826,8 +826,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     };
   };
 
-  const generateStaffComparisonCSV = (visits, users, startDate, endDate) => {
-    const data = generateStaffComparisonData(visits, users);
+  const generateStaffComparisonCSV = (filteredVisits, allUsers, startDate, endDate) => {
+    const data = generateStaffComparisonData(filteredVisits, allUsers);
     
     let content = `Staff Performance Comparison Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n\n`;
@@ -843,8 +843,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     };
   };
 
-  const generateDetailedFinancialCSV = (visits, patients, startDate, endDate) => {
-    const data = generateDetailedFinancialData(visits, patients);
+  const generateDetailedFinancialCSV = (filteredVisits, allPatients, startDate, endDate) => {
+    const data = generateDetailedFinancialData(filteredVisits, allPatients);
     
     let content = `Detailed Financial Summary Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n\n`;
@@ -865,8 +865,9 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     };
   };
 
-  const generateTrendAnalysisCSV = (allVisits, allIncidents, startDate, endDate) => {
-    const data = generateTrendAnalysisData(allVisits, allIncidents);
+  const generateTrendAnalysisCSV = (filteredVisits, filteredIncidents, startDate, endDate) => {
+    // For trend analysis, we need all visits/incidents, not just filtered ones
+    const data = generateTrendAnalysisData(visits, incidents);
     
     let content = `Trend Analysis Report\n`;
     content += `Date Range: ${startDate} to ${endDate}\n\n`;
