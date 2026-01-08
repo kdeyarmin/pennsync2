@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,17 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, BookOpen, TrendingUp, Globe, User, Sparkles, BarChart3 } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, TrendingUp, Globe, User, Sparkles, BarChart3, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import ClinicalLibraryAIAssistant from "./ClinicalLibraryAIAssistant";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClinicalLibraryAnalytics from "./ClinicalLibraryAnalytics";
+import FolderTreeView from "./FolderTreeView";
 
 export default function ClinicalLibraryManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [aiMode, setAIMode] = useState('generate'); // 'generate', 'improve', 'refine'
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [formData, setFormData] = useState({
     phrase: '',
     category: 'education',
@@ -28,7 +30,8 @@ export default function ClinicalLibraryManager() {
     ai_prompt_instructions: '',
     requires_patient_data: false,
     patient_data_fields: [],
-    is_agency_wide: false
+    is_agency_wide: false,
+    folder_id: null
   });
 
   const queryClient = useQueryClient();
@@ -41,6 +44,12 @@ export default function ClinicalLibraryManager() {
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ['clinical-templates'],
     queryFn: () => base44.entities.ClinicalLibraryTemplate.list('-usage_count', 200),
+    initialData: []
+  });
+
+  const { data: folders = [] } = useQuery({
+    queryKey: ['clinical-folders'],
+    queryFn: () => base44.entities.ClinicalLibraryFolder.list('order', 200),
     initialData: []
   });
 
@@ -70,6 +79,30 @@ export default function ClinicalLibraryManager() {
     }
   });
 
+  const createFolderMutation = useMutation({
+    mutationFn: (data) => base44.entities.ClinicalLibraryFolder.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['clinical-folders']);
+      toast.success('Folder created');
+    }
+  });
+
+  const updateFolderMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.ClinicalLibraryFolder.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['clinical-folders']);
+      toast.success('Folder updated');
+    }
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: (id) => base44.entities.ClinicalLibraryFolder.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['clinical-folders']);
+      toast.success('Folder deleted');
+    }
+  });
+
   const resetForm = () => {
     setFormData({
       phrase: '',
@@ -79,7 +112,8 @@ export default function ClinicalLibraryManager() {
       ai_prompt_instructions: '',
       requires_patient_data: false,
       patient_data_fields: [],
-      is_agency_wide: false
+      is_agency_wide: false,
+      folder_id: selectedFolderId
     });
     setEditingTemplate(null);
     setIsDialogOpen(false);
@@ -127,7 +161,8 @@ export default function ClinicalLibraryManager() {
       ai_prompt_instructions: template.ai_prompt_instructions || '',
       requires_patient_data: template.requires_patient_data || false,
       patient_data_fields: template.patient_data_fields || [],
-      is_agency_wide: template.is_agency_wide || false
+      is_agency_wide: template.is_agency_wide || false,
+      folder_id: template.folder_id || null
     });
     setIsDialogOpen(true);
   };
@@ -138,8 +173,66 @@ export default function ClinicalLibraryManager() {
     }
   };
 
+  const handleCreateFolder = () => {
+    const name = prompt('Enter folder name:');
+    if (name?.trim()) {
+      createFolderMutation.mutate({
+        name: name.trim(),
+        parent_folder_id: selectedFolderId,
+        created_by: currentUser?.email,
+        color: 'blue'
+      });
+    }
+  };
+
+  const handleRenameFolder = (folderId, newName) => {
+    updateFolderMutation.mutate({ id: folderId, data: { name: newName } });
+  };
+
+  const handleDeleteFolder = (folderId) => {
+    const templatesInFolder = templates.filter(t => t.folder_id === folderId);
+    if (templatesInFolder.length > 0) {
+      if (!confirm(`This folder contains ${templatesInFolder.length} template(s). Delete anyway? Templates will be moved to uncategorized.`)) {
+        return;
+      }
+      // Move templates to uncategorized
+      templatesInFolder.forEach(t => {
+        updateMutation.mutate({ id: t.id, data: { folder_id: null } });
+      });
+    }
+    if (confirm('Delete this folder?')) {
+      deleteFolderMutation.mutate(folderId);
+      if (selectedFolderId === folderId) {
+        setSelectedFolderId(null);
+      }
+    }
+  };
+
+  const handleMoveTemplate = (templateId, newFolderId) => {
+    updateMutation.mutate({ 
+      id: templateId, 
+      data: { folder_id: newFolderId } 
+    });
+  };
+
   const isAdmin = currentUser?.role === 'admin';
   const userTemplates = templates.filter(t => t.created_by === currentUser?.email || t.is_agency_wide);
+  const userFolders = folders.filter(f => f.created_by === currentUser?.email || f.is_agency_wide);
+
+  const filteredTemplates = useMemo(() => {
+    if (selectedFolderId === null) {
+      return userTemplates;
+    }
+    return userTemplates.filter(t => t.folder_id === selectedFolderId);
+  }, [userTemplates, selectedFolderId]);
+
+  const templatesCount = useMemo(() => {
+    const counts = { uncategorized: userTemplates.filter(t => !t.folder_id).length };
+    userFolders.forEach(folder => {
+      counts[folder.id] = userTemplates.filter(t => t.folder_id === folder.id).length;
+    });
+    return counts;
+  }, [userTemplates, userFolders]);
 
   return (
     <Tabs defaultValue="templates" className="space-y-4">
@@ -155,31 +248,63 @@ export default function ClinicalLibraryManager() {
       </TabsList>
 
       <TabsContent value="templates" className="space-y-6">
-      <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Sidebar */}
+        <Card className="lg:col-span-1">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Organization</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FolderTreeView
+              folders={userFolders}
+              selectedFolderId={selectedFolderId}
+              onSelectFolder={setSelectedFolderId}
+              onCreateFolder={handleCreateFolder}
+              onRenameFolder={handleRenameFolder}
+              onDeleteFolder={handleDeleteFolder}
+              templatesCount={templatesCount}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Main Content */}
+        <Card className="lg:col-span-3">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Clinical Phrase Library
+              {selectedFolderId ? (
+                <>
+                  <FolderOpen className="w-5 h-5" />
+                  {userFolders.find(f => f.id === selectedFolderId)?.name || 'Folder'}
+                </>
+              ) : (
+                <>
+                  <BookOpen className="w-5 h-5" />
+                  All Templates
+                </>
+              )}
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              Create quick phrases that expand into full compliant documentation
+              {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button onClick={() => {
+            setFormData({ ...formData, folder_id: selectedFolderId });
+            setIsDialogOpen(true);
+          }}>
             <Plus className="w-4 h-4 mr-2" />
             New Template
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {userTemplates.length === 0 ? (
+            {filteredTemplates.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p>No templates yet. Create your first quick phrase!</p>
+                <p>No templates in this {selectedFolderId ? 'folder' : 'view'}. Create your first one!</p>
               </div>
             ) : (
-              userTemplates.map((template) => (
+              filteredTemplates.map((template) => (
                 <Card key={template.id} className="border-l-4 border-l-indigo-500">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
@@ -210,7 +335,24 @@ export default function ClinicalLibraryManager() {
                             <TrendingUp className="w-3 h-3" />
                             Used {template.usage_count || 0} times
                           </span>
-                          <span>Created by: {template.created_by}</span>
+                          {userFolders.length > 0 && (
+                            <Select
+                              value={template.folder_id || 'none'}
+                              onValueChange={(value) => handleMoveTemplate(template.id, value === 'none' ? null : value)}
+                            >
+                              <SelectTrigger className="h-6 text-xs w-auto border-0 bg-transparent hover:bg-gray-100">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Uncategorized</SelectItem>
+                                {userFolders.map(folder => (
+                                  <SelectItem key={folder.id} value={folder.id}>
+                                    {folder.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -238,7 +380,8 @@ export default function ClinicalLibraryManager() {
             )}
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -406,6 +549,26 @@ export default function ClinicalLibraryManager() {
                 </div>
               </>
             )}
+
+            <div>
+              <Label className="text-sm">Folder</Label>
+              <Select
+                value={formData.folder_id || 'none'}
+                onValueChange={(value) => setFormData({ ...formData, folder_id: value === 'none' ? null : value })}
+              >
+                <SelectTrigger className="text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {userFolders.map(folder => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {isAdmin && (
               <div className="flex items-center gap-2">
