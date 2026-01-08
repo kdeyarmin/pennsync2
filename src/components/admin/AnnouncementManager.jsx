@@ -227,14 +227,13 @@ export default function AnnouncementManager() {
                 setIsDialogOpen(open);
                 if (!open) resetForm();
               }}>
-              <DialogContent className="max-w-2xl p-4 sm:p-6">
+              <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
-                <DialogTitle className="text-lg sm:text-xl">
+                <DialogTitle>
                   {editingId ? 'Edit Announcement' : 'Create Announcement'}
                 </DialogTitle>
               </DialogHeader>
-              <div className="max-h-[60vh] overflow-y-auto pr-2">
-                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                 <div>
                   <label className="text-sm font-medium">Title</label>
                   <Input
@@ -392,7 +391,6 @@ export default function AnnouncementManager() {
                   </Button>
                   </div>
                   </form>
-                  </div>
                   </DialogContent>
                   </Dialog>
             </div>
