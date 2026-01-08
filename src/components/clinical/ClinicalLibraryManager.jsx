@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, BookOpen, TrendingUp, Globe, User, Sparkles } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, TrendingUp, Globe, User, Sparkles, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import ClinicalLibraryAIAssistant from "./ClinicalLibraryAIAssistant";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ClinicalLibraryAnalytics from "./ClinicalLibraryAnalytics";
 
 export default function ClinicalLibraryManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -140,7 +142,19 @@ export default function ClinicalLibraryManager() {
   const userTemplates = templates.filter(t => t.created_by === currentUser?.email || t.is_agency_wide);
 
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="templates" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="templates">
+          <BookOpen className="w-4 h-4 mr-2" />
+          Templates
+        </TabsTrigger>
+        <TabsTrigger value="analytics">
+          <BarChart3 className="w-4 h-4 mr-2" />
+          Analytics
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="templates" className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -417,6 +431,11 @@ export default function ClinicalLibraryManager() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+      </TabsContent>
+
+      <TabsContent value="analytics">
+        <ClinicalLibraryAnalytics />
+      </TabsContent>
+    </Tabs>
   );
 }
