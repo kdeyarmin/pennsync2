@@ -42,7 +42,7 @@ export default function AgencyAnalytics() {
     initialData: [],
   });
 
-  const { data: patients = [] } = useQuery({
+  const { data: allPatients = [] } = useQuery({
     queryKey: ['all-patients'],
     queryFn: () => base44.entities.Patient.list(),
     initialData: [],
@@ -72,11 +72,11 @@ export default function AgencyAnalytics() {
       visits,
       noteConversions,
       users,
-      patients,
+      patients: allPatients,
       incidents,
       complianceAudits
     });
-  }, [visits, noteConversions, users, patients, incidents, complianceAudits]);
+  }, [visits, noteConversions, users, allPatients, incidents, complianceAudits]);
 
   // Calculate nurse performance stats
   const nurseStats = useMemo(() => {
