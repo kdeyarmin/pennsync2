@@ -692,10 +692,10 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
   ];
 
   // Data generation for new report types
-  const generateOutcomesByDiagnosisData = (visits, incidents, patients) => {
+  const generateOutcomesByDiagnosisData = (filteredVisits, filteredIncidents, allPatients) => {
     const diagnosisData = {};
     
-    patients.forEach(p => {
+    allPatients.forEach(p => {
       const diagnosis = p.primary_diagnosis || 'Unknown';
       if (!diagnosisData[diagnosis]) {
         diagnosisData[diagnosis] = {
@@ -711,8 +711,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       diagnosisData[diagnosis].patientCount++;
     });
 
-    visits.forEach(v => {
-      const patient = patients.find(p => p.id === v.patient_id);
+    filteredVisits.forEach(v => {
+      const patient = allPatients.find(p => p.id === v.patient_id);
       const diagnosis = patient?.primary_diagnosis || 'Unknown';
       if (diagnosisData[diagnosis]) {
         diagnosisData[diagnosis].visitCount++;
@@ -722,8 +722,8 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       }
     });
 
-    incidents.forEach(i => {
-      const patient = patients.find(p => p.id === i.patient_id);
+    filteredIncidents.forEach(i => {
+      const patient = allPatients.find(p => p.id === i.patient_id);
       const diagnosis = patient?.primary_diagnosis || 'Unknown';
       if (diagnosisData[diagnosis]) {
         diagnosisData[diagnosis].incidents++;
@@ -735,9 +735,9 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     return Object.values(diagnosisData).sort((a, b) => b.visitCount - a.visitCount);
   };
 
-  const generateStaffComparisonData = (visits, users) => {
-    return users.filter(u => u.role === 'user').map(nurse => {
-      const nurseVisits = visits.filter(v => v.created_by === nurse.email);
+  const generateStaffComparisonData = (filteredVisits, allUsers) => {
+    return allUsers.filter(u => u.role === 'user').map(nurse => {
+      const nurseVisits = filteredVisits.filter(v => v.created_by === nurse.email);
       const completed = nurseVisits.filter(v => v.status === 'completed');
       const withCompleteDoc = completed.filter(v => 
         v.nurse_notes && v.nurse_notes.length > 100 &&
@@ -755,7 +755,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     }).sort((a, b) => b.completionRate - a.completionRate);
   };
 
-  const generateDetailedFinancialData = (visits, patients) => {
+  const generateDetailedFinancialData = (filteredVisits, allPatients) => {
     const visitTypes = {};
     const revenuePerType = {
       'skilled_nursing': 180,
@@ -766,7 +766,7 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
       'prn': 170
     };
 
-    visits.forEach(v => {
+    filteredVisits.forEach(v => {
       const type = v.visit_type || 'unknown';
       if (!visitTypes[type]) {
         visitTypes[type] = { type, count: 0, revenue: 0 };
@@ -776,14 +776,14 @@ export default function ReportsCenter({ users, patients, visits, incidents }) {
     });
 
     const totalRevenue = Object.values(visitTypes).reduce((sum, vt) => sum + vt.revenue, 0);
-    const timeSavedHours = visits.filter(v => v.status === 'completed').length * 95 / 60;
+    const timeSavedHours = filteredVisits.filter(v => v.status === 'completed').length * 95 / 60;
     const costSavings = timeSavedHours * 40;
 
     return {
       visitTypes: Object.values(visitTypes),
       totalRevenue,
       costSavings,
-      roi: costSavings > 0 ? Math.round((costSavings / totalRevenue) * 100) : 0
+      roi: totalRevenue > 0 ? Math.round((costSavings / totalRevenue) * 100) : 0
     };
   };
 
