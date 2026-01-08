@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Folder, FolderOpen, ChevronRight, ChevronDown, Plus, Edit2, Trash2, FolderPlus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Folder, FolderOpen, ChevronRight, ChevronDown, Plus, Edit2, Trash2, FolderPlus, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function FolderTreeView({ 
@@ -11,11 +12,13 @@ export default function FolderTreeView({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
+  onChangeColor,
   templatesCount = {}
 }) {
   const [expandedFolders, setExpandedFolders] = useState(new Set());
   const [editingFolderId, setEditingFolderId] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [colorPickerOpen, setColorPickerOpen] = useState(null);
 
   const toggleFolder = (folderId) => {
     const newExpanded = new Set(expandedFolders);
@@ -40,16 +43,18 @@ export default function FolderTreeView({
     setEditingName('');
   };
 
-  const colorClasses = {
-    gray: 'text-gray-600',
-    blue: 'text-blue-600',
-    green: 'text-green-600',
-    purple: 'text-purple-600',
-    yellow: 'text-yellow-600',
-    red: 'text-red-600',
-    indigo: 'text-indigo-600',
-    pink: 'text-pink-600'
-  };
+  const colorOptions = [
+    { value: 'gray', class: 'text-gray-600', bg: 'bg-gray-100' },
+    { value: 'blue', class: 'text-blue-600', bg: 'bg-blue-100' },
+    { value: 'green', class: 'text-green-600', bg: 'bg-green-100' },
+    { value: 'purple', class: 'text-purple-600', bg: 'bg-purple-100' },
+    { value: 'yellow', class: 'text-yellow-600', bg: 'bg-yellow-100' },
+    { value: 'red', class: 'text-red-600', bg: 'bg-red-100' },
+    { value: 'indigo', class: 'text-indigo-600', bg: 'bg-indigo-100' },
+    { value: 'pink', class: 'text-pink-600', bg: 'bg-pink-100' }
+  ];
+
+  const colorClasses = Object.fromEntries(colorOptions.map(c => [c.value, c.class]));
 
   const buildFolderTree = (parentId = null, depth = 0) => {
     return folders
@@ -122,6 +127,36 @@ export default function FolderTreeView({
               )}
 
               <div className="opacity-0 group-hover:opacity-100 flex gap-0.5" onClick={(e) => e.stopPropagation()}>
+                <Popover open={colorPickerOpen === folder.id} onOpenChange={(open) => setColorPickerOpen(open ? folder.id : null)}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                    >
+                      <Palette className="w-3 h-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-2" align="start">
+                    <div className="grid grid-cols-4 gap-1">
+                      {colorOptions.map(color => (
+                        <button
+                          key={color.value}
+                          onClick={() => {
+                            onChangeColor(folder.id, color.value);
+                            setColorPickerOpen(null);
+                          }}
+                          className={cn(
+                            "w-8 h-8 rounded border-2 hover:scale-110 transition-transform",
+                            color.bg,
+                            folder.color === color.value && "border-gray-900 scale-110"
+                          )}
+                          title={color.value}
+                        />
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <Button
                   variant="ghost"
                   size="icon"

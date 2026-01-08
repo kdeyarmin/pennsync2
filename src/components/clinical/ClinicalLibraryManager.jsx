@@ -22,6 +22,7 @@ export default function ClinicalLibraryManager() {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [aiMode, setAIMode] = useState('generate'); // 'generate', 'improve', 'refine'
   const [selectedFolderId, setSelectedFolderId] = useState(null);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState(new Set());
   const [formData, setFormData] = useState({
     phrase: '',
     category: 'education',
@@ -208,11 +209,42 @@ export default function ClinicalLibraryManager() {
     }
   };
 
+  const handleChangeColor = (folderId, color) => {
+    updateFolderMutation.mutate({ id: folderId, data: { color } });
+  };
+
   const handleMoveTemplate = (templateId, newFolderId) => {
     updateMutation.mutate({ 
       id: templateId, 
       data: { folder_id: newFolderId } 
     });
+  };
+
+  const handleBulkMove = (folderId) => {
+    const idsToMove = Array.from(selectedTemplateIds);
+    idsToMove.forEach(id => {
+      updateMutation.mutate({ id, data: { folder_id: folderId } });
+    });
+    setSelectedTemplateIds(new Set());
+    toast.success(`Moved ${idsToMove.length} template(s)`);
+  };
+
+  const toggleTemplateSelection = (templateId) => {
+    const newSelection = new Set(selectedTemplateIds);
+    if (newSelection.has(templateId)) {
+      newSelection.delete(templateId);
+    } else {
+      newSelection.add(templateId);
+    }
+    setSelectedTemplateIds(newSelection);
+  };
+
+  const selectAllTemplates = () => {
+    setSelectedTemplateIds(new Set(filteredTemplates.map(t => t.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedTemplateIds(new Set());
   };
 
   const isAdmin = currentUser?.role === 'admin';
@@ -262,6 +294,7 @@ export default function ClinicalLibraryManager() {
               onCreateFolder={handleCreateFolder}
               onRenameFolder={handleRenameFolder}
               onDeleteFolder={handleDeleteFolder}
+              onChangeColor={handleChangeColor}
               templatesCount={templatesCount}
             />
           </CardContent>
@@ -297,6 +330,50 @@ export default function ClinicalLibraryManager() {
           </Button>
         </CardHeader>
         <CardContent>
+          {selectedTemplateIds.size > 0 && (
+            <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-indigo-900">
+                  {selectedTemplateIds.size} selected
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearSelection}
+                  className="h-7"
+                >
+                  Clear
+                </Button>
+              </div>
+              <Select onValueChange={handleBulkMove}>
+                <SelectTrigger className="w-48 h-8 text-sm">
+                  <SelectValue placeholder="Move to folder..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>Uncategorized</SelectItem>
+                  {userFolders.map(folder => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {filteredTemplates.length > 0 && (
+            <div className="mb-3 flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={selectedTemplateIds.size === filteredTemplates.length ? clearSelection : selectAllTemplates}
+                className="h-7 text-xs"
+              >
+                {selectedTemplateIds.size === filteredTemplates.length ? 'Deselect All' : 'Select All'}
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-3">
             {filteredTemplates.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
@@ -307,7 +384,13 @@ export default function ClinicalLibraryManager() {
               filteredTemplates.map((template) => (
                 <Card key={template.id} className="border-l-4 border-l-indigo-500">
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedTemplateIds.has(template.id)}
+                        onChange={() => toggleTemplateSelection(template.id)}
+                        className="mt-1 rounded"
+                      />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
@@ -355,7 +438,7 @@ export default function ClinicalLibraryManager() {
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="sm"
