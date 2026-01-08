@@ -787,14 +787,14 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     };
   };
 
-  const generateTrendAnalysisData = (allVisits, allIncidents) => {
+  const generateTrendAnalysisData = (visitsData, incidentsData) => {
     const days = parseInt(dateRange);
     const trends = [];
 
     for (let i = days - 1; i >= 0; i--) {
       const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      const dayVisits = allVisits.filter(v => v.visit_date === date);
-      const dayIncidents = allIncidents.filter(inc => inc.incident_date === date);
+      const dayVisits = visitsData.filter(v => v.visit_date === date);
+      const dayIncidents = incidentsData.filter(inc => inc.incident_date === date);
 
       trends.push({
         date: format(new Date(date), 'MM/dd'),
