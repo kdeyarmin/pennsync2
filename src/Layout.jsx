@@ -40,6 +40,7 @@ import OfflineIndicator from "../components/mobile/OfflineIndicator";
 import FeedbackButton from "../components/feedback/FeedbackButton";
 import NotificationCenter from "../components/notifications/NotificationCenter";
 import SessionTimeoutManager from "../components/security/SessionTimeoutManager";
+import Breadcrumbs from "../components/navigation/Breadcrumbs";
 import { Toaster } from "sonner";
 
 export default function Layout({ children, currentPageName }) {
@@ -603,7 +604,12 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">{children}</main>
+      <main className="flex-1 overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">
+        <div className="p-4 lg:p-6">
+          <Breadcrumbs currentPageName={currentPageName} />
+          {children}
+        </div>
+      </main>
 
       {/* Offline Indicator */}
       <OfflineIndicator />
