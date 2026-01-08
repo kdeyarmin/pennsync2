@@ -223,176 +223,6 @@ export default function AnnouncementManager() {
                 <Plus className="w-4 h-4 mr-2" />
                 New Announcement
               </Button>
-              <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                setIsDialogOpen(open);
-                if (!open) resetForm();
-              }}>
-              <DialogContent className="sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingId ? 'Edit Announcement' : 'Create Announcement'}
-                </DialogTitle>
-              </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                <div>
-                  <label className="text-sm font-medium">Title</label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    required
-                    placeholder="Enter announcement title..."
-                    className="text-base"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Content</label>
-                  <Textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData({...formData, content: e.target.value})}
-                    required
-                    rows={3}
-                    placeholder="Enter announcement content..."
-                    className="text-base"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Status</Label>
-                  <Select 
-                    value={formData.is_active ? "active" : "inactive"} 
-                    onValueChange={(v) => setFormData({...formData, is_active: v === "active"})}
-                  >
-                    <SelectTrigger className="text-base">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-sm font-medium">Schedule For (Optional)</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal text-sm sm:text-base">
-                          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-                          <span className="truncate">{formData.scheduled_for ? format(formData.scheduled_for, 'PPp') : 'Select date & time'}</span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={formData.scheduled_for}
-                          onSelect={(date) => {
-                            if (date) {
-                              const now = new Date();
-                              date.setHours(now.getHours(), now.getMinutes(), 0, 0);
-                              setFormData({...formData, scheduled_for: date});
-                            } else {
-                              setFormData({...formData, scheduled_for: null});
-                            }
-                          }}
-                          initialFocus
-                        />
-                        {formData.scheduled_for && (
-                          <div className="p-3 border-t">
-                            <Label className="text-xs">Time</Label>
-                            <Input
-                              type="time"
-                              value={format(formData.scheduled_for, 'HH:mm')}
-                              onChange={(e) => {
-                                const [hours, minutes] = e.target.value.split(':');
-                                const newDate = new Date(formData.scheduled_for);
-                                newDate.setHours(parseInt(hours), parseInt(minutes));
-                                setFormData({...formData, scheduled_for: newDate});
-                              }}
-                              className="mt-1"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setFormData({...formData, scheduled_for: null})}
-                              className="w-full mt-2"
-                            >
-                              Clear
-                            </Button>
-                          </div>
-                        )}
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-gray-500 mt-1">Leave empty to publish immediately</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium">Expires At (Optional)</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal text-sm sm:text-base">
-                          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-                          <span className="truncate">{formData.expires_at ? format(formData.expires_at, 'PPp') : 'Select date & time'}</span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={formData.expires_at}
-                          onSelect={(date) => {
-                            if (date) {
-                              const now = new Date();
-                              date.setHours(23, 59, 59, 999);
-                              setFormData({...formData, expires_at: date});
-                            } else {
-                              setFormData({...formData, expires_at: null});
-                            }
-                          }}
-                          initialFocus
-                        />
-                        {formData.expires_at && (
-                          <div className="p-3 border-t">
-                            <Label className="text-xs">Time</Label>
-                            <Input
-                              type="time"
-                              value={format(formData.expires_at, 'HH:mm')}
-                              onChange={(e) => {
-                                const [hours, minutes] = e.target.value.split(':');
-                                const newDate = new Date(formData.expires_at);
-                                newDate.setHours(parseInt(hours), parseInt(minutes));
-                                setFormData({...formData, expires_at: newDate});
-                              }}
-                              className="mt-1"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setFormData({...formData, expires_at: null})}
-                              className="w-full mt-2"
-                            >
-                              Clear
-                            </Button>
-                          </div>
-                        )}
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="bg-blue-600 hover:bg-blue-700"
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                  >
-                    {createMutation.isPending || updateMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Create'}
-                  </Button>
-                  </div>
-                  </form>
-                  </DialogContent>
-                  </Dialog>
             </div>
           </div>
           
@@ -528,6 +358,177 @@ export default function AnnouncementManager() {
           </ScrollArea>
         )}
       </CardContent>
+
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) resetForm();
+      }}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? 'Edit Announcement' : 'Create Announcement'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                required
+                placeholder="Enter announcement title..."
+                className="text-base"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Content</label>
+              <Textarea
+                value={formData.content}
+                onChange={(e) => setFormData({...formData, content: e.target.value})}
+                required
+                rows={3}
+                placeholder="Enter announcement content..."
+                className="text-base"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Status</Label>
+              <Select 
+                value={formData.is_active ? "active" : "inactive"} 
+                onValueChange={(v) => setFormData({...formData, is_active: v === "active"})}
+              >
+                <SelectTrigger className="text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm font-medium">Schedule For (Optional)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal text-sm sm:text-base">
+                      <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{formData.scheduled_for ? format(formData.scheduled_for, 'PPp') : 'Select date & time'}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.scheduled_for}
+                      onSelect={(date) => {
+                        if (date) {
+                          const now = new Date();
+                          date.setHours(now.getHours(), now.getMinutes(), 0, 0);
+                          setFormData({...formData, scheduled_for: date});
+                        } else {
+                          setFormData({...formData, scheduled_for: null});
+                        }
+                      }}
+                      initialFocus
+                    />
+                    {formData.scheduled_for && (
+                      <div className="p-3 border-t">
+                        <Label className="text-xs">Time</Label>
+                        <Input
+                          type="time"
+                          value={format(formData.scheduled_for, 'HH:mm')}
+                          onChange={(e) => {
+                            const [hours, minutes] = e.target.value.split(':');
+                            const newDate = new Date(formData.scheduled_for);
+                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            setFormData({...formData, scheduled_for: newDate});
+                          }}
+                          className="mt-1"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setFormData({...formData, scheduled_for: null})}
+                          className="w-full mt-2"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-gray-500 mt-1">Leave empty to publish immediately</p>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Expires At (Optional)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal text-sm sm:text-base">
+                      <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{formData.expires_at ? format(formData.expires_at, 'PPp') : 'Select date & time'}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.expires_at}
+                      onSelect={(date) => {
+                        if (date) {
+                          const now = new Date();
+                          date.setHours(23, 59, 59, 999);
+                          setFormData({...formData, expires_at: date});
+                        } else {
+                          setFormData({...formData, expires_at: null});
+                        }
+                      }}
+                      initialFocus
+                    />
+                    {formData.expires_at && (
+                      <div className="p-3 border-t">
+                        <Label className="text-xs">Time</Label>
+                        <Input
+                          type="time"
+                          value={format(formData.expires_at, 'HH:mm')}
+                          onChange={(e) => {
+                            const [hours, minutes] = e.target.value.split(':');
+                            const newDate = new Date(formData.expires_at);
+                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            setFormData({...formData, expires_at: newDate});
+                          }}
+                          className="mt-1"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setFormData({...formData, expires_at: null})}
+                          className="w-full mt-2"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Create'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
