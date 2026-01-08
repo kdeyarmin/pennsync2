@@ -466,13 +466,17 @@ export default function ClinicalLibraryManager() {
         </Card>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) resetForm();
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">
               {editingTemplate ? 'Edit Template' : 'Create New Template'}
             </DialogTitle>
           </DialogHeader>
+          <div className="overflow-y-auto max-h-[65vh] pr-2">
 
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {/* AI Assistant Section */}
@@ -675,6 +679,7 @@ export default function ClinicalLibraryManager() {
               </Button>
             </div>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
       </TabsContent>
