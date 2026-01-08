@@ -213,16 +213,20 @@ export default function AnnouncementManager() {
               >
                 Refresh
               </Button>
+              <Button 
+                onClick={() => {
+                  resetForm();
+                  setIsDialogOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Announcement
+              </Button>
               <Dialog open={isDialogOpen} onOpenChange={(open) => {
                 setIsDialogOpen(open);
                 if (!open) resetForm();
               }}>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Announcement
-                  </Button>
-                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[70vh] overflow-hidden w-[95vw] sm:w-full p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
