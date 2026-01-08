@@ -36,10 +36,12 @@ const DialogContent = React.forwardRef((props, ref) => (
         left: '50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        zIndex: 10000
+        zIndex: 10000,
+        backgroundColor: 'white',
+        opacity: 1
       }}
       className={cn(
-        "w-[90vw] max-w-2xl gap-4 border border-gray-200 bg-white p-6 shadow-2xl rounded-lg max-h-[85vh] overflow-y-auto",
+        "w-[90vw] max-w-2xl gap-4 border border-gray-200 p-6 shadow-2xl rounded-lg max-h-[85vh] overflow-y-auto",
         props.className
       )}
       {...props}
