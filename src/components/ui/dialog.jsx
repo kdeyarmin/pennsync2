@@ -27,12 +27,12 @@ const DialogOverlay = React.forwardRef((props, ref) => (
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef((props, ref) => (
-  <DialogPortal container={typeof document !== 'undefined' ? document.body : undefined}>
+  <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-4 z-[9999] m-auto w-auto max-w-lg h-fit max-h-[85vh] gap-4 border border-gray-200 bg-white p-6 shadow-xl rounded-lg overflow-auto",
+        "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[99999] w-[calc(100vw-2rem)] max-w-lg max-h-[90vh] overflow-y-auto gap-4 border border-gray-200 bg-white p-6 shadow-2xl rounded-lg",
         props.className
       )}
       {...props}
