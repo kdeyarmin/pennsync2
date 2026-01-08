@@ -33,6 +33,7 @@ import OfflineDataManager from "../components/mobile/OfflineDataManager";
 import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import DashboardSkeleton from "../components/loading/DashboardSkeleton";
 import MobileQuickActions from "../components/mobile/MobileQuickActions";
+import TopTemplatesWidget from "../components/clinical/TopTemplatesWidget";
 
 
 export default function Dashboard() {
@@ -291,6 +292,11 @@ export default function Dashboard() {
           incidents={incidents}
           currentUser={currentUser}
         />
+      </div>
+
+      {/* Top Clinical Templates */}
+      <div className="mb-6">
+        <TopTemplatesWidget />
       </div>
 
       {/* Regulatory Alerts for Nurses */}
