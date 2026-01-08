@@ -68,7 +68,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         previewData = generateDetailedFinancialData(filteredVisits, allPatients);
         break;
       case 'trend_analysis':
-        previewData = generateTrendAnalysisData(visits, incidents);
+        previewData = generateTrendAnalysisData(visits, incidents, allPatients);
         break;
       default:
         break;
