@@ -208,20 +208,21 @@ export default function ClinicalLibraryManager() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
               {editingTemplate ? 'Edit Template' : 'Create New Template'}
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
-              <Label>Quick Phrase</Label>
+              <Label className="text-sm">Quick Phrase</Label>
               <Input
                 value={formData.phrase}
                 onChange={(e) => setFormData({ ...formData, phrase: e.target.value })}
-                placeholder="e.g., diabetic education, wound care provided"
+                placeholder="e.g., diabetic education"
+                className="text-base"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -230,12 +231,12 @@ export default function ClinicalLibraryManager() {
             </div>
 
             <div>
-              <Label>Category</Label>
+              <Label className="text-sm">Category</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -253,12 +254,12 @@ export default function ClinicalLibraryManager() {
             </div>
 
             <div>
-              <Label>Template Type</Label>
+              <Label className="text-sm">Template Type</Label>
               <Select
                 value={formData.template_type}
                 onValueChange={(value) => setFormData({ ...formData, template_type: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,39 +276,42 @@ export default function ClinicalLibraryManager() {
 
             {formData.template_type === 'generic' ? (
               <div>
-                <Label>Expanded Text</Label>
+                <Label className="text-sm">Expanded Text</Label>
                 <Textarea
                   value={formData.expanded_text}
                   onChange={(e) => setFormData({ ...formData, expanded_text: e.target.value })}
                   placeholder="Full Medicare-compliant documentation text..."
-                  rows={6}
+                  rows={4}
+                  className="text-base"
                   required
                 />
               </div>
             ) : (
               <>
                 <div>
-                  <Label>AI Instructions</Label>
+                  <Label className="text-sm">AI Instructions</Label>
                   <Textarea
                     value={formData.ai_prompt_instructions}
                     onChange={(e) => setFormData({ ...formData, ai_prompt_instructions: e.target.value })}
-                    placeholder="Instructions for AI to generate patient-specific text. E.g., 'Generate wound care documentation including wound location, size, treatment, and patient education based on the patient's wound data.'"
-                    rows={4}
+                    placeholder="Instructions for AI..."
+                    rows={3}
+                    className="text-base"
                     required
                   />
                 </div>
                 <div>
-                  <Label>Patient Data Fields (comma-separated)</Label>
+                  <Label className="text-sm">Patient Data Fields</Label>
                   <Input
                     value={formData.patient_data_fields.join(', ')}
                     onChange={(e) => setFormData({ 
                       ...formData, 
                       patient_data_fields: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                     })}
-                    placeholder="e.g., wounds, medications, primary_diagnosis"
+                    placeholder="wounds, medications"
+                    className="text-base"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Which patient fields to include (wounds, medications, diagnoses, etc.)
+                    Comma-separated field names
                   </p>
                 </div>
               </>
