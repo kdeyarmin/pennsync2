@@ -142,14 +142,22 @@ ${patientContext}
 IMPORTANT INSTRUCTIONS:
 1. Generate a professional, complete document ready for use
 2. Use proper medical terminology and formatting
-3. Include all relevant patient information from the context
+3. AUTO-FILL ALL AVAILABLE PATIENT INFORMATION:
+   - Replace [PATIENT NAME] with: ${patient.first_name} ${patient.last_name}
+   - Replace [DATE OF BIRTH] with: ${patient.date_of_birth}
+   - Replace [MRN] with: ${patient.medical_record_number || 'N/A'}
+   - Replace [TODAY'S DATE] or [DATE] with: ${new Date().toLocaleDateString()}
+   - Replace [PRIMARY DIAGNOSIS] with: ${patient.primary_diagnosis || 'N/A'}
+   - Replace [ALLERGIES] with: ${patient.allergies || 'None'}
+   - Replace [PHYSICIAN] with: ${patient.physician_name || 'N/A'}
+   - Replace [EMERGENCY CONTACT] with: ${patient.emergency_contact_name || 'N/A'} (${patient.emergency_contact_phone || 'N/A'})
 4. Make the document clear, concise, and compliant with healthcare standards
 5. Format the document with proper sections and headers
 6. Include signature lines and date fields where appropriate
 7. Use placeholders [TO BE COMPLETED] only for information not available in the context
 8. Make it ready for printing or digital signing
 
-Generate the complete document now:`;
+Generate the complete document now with all available fields pre-filled:`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,

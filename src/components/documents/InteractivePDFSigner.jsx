@@ -113,6 +113,21 @@ export default function InteractivePDFSigner({
     const pageAnnotations = annotations[currentPage] || [];
     
     pageAnnotations.forEach(annotation => {
+      // Draw selection border if annotation has id and is recent
+      const isRecent = Date.now() - (annotation.id || 0) < 5000;
+      if (isRecent) {
+        context.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+        context.lineWidth = 2;
+        context.setLineDash([5, 3]);
+        
+        if (annotation.type === 'signature') {
+          context.strokeRect(annotation.x - 2, annotation.y - 2, annotation.width + 4, annotation.height + 4);
+        } else {
+          context.strokeRect(annotation.x - 2, annotation.y - 16, 100, 20);
+        }
+        context.setLineDash([]);
+      }
+      
       if (annotation.type === 'text') {
         context.font = `${annotation.fontSize || 14}px Arial`;
         context.fillStyle = 'black';
@@ -402,9 +417,13 @@ export default function InteractivePDFSigner({
         {/* Mode Instructions */}
         {mode !== 'view' && mode !== 'text' && (
           <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-900">
-              {mode === 'signature' && "Click on the PDF where you want to place your signature"}
-              {mode === 'date' && "Click on the PDF where you want to add today's date"}
+            <p className="text-sm text-blue-900 font-medium mb-1">
+              {mode === 'signature' && "✍️ Multiple Signatures Supported"}
+              {mode === 'date' && "📅 Add Dates Anywhere"}
+            </p>
+            <p className="text-xs text-blue-700">
+              {mode === 'signature' && "Click anywhere on the PDF to add signatures. You can place multiple signatures on the same page or across different pages."}
+              {mode === 'date' && "Click on the PDF where you want to add today's date. You can add multiple dates."}
             </p>
           </div>
         )}
@@ -422,31 +441,49 @@ export default function InteractivePDFSigner({
           />
         </div>
         
-        {/* Page Navigation */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </Button>
+        {/* Page Navigation & Annotation Summary */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            
+            <div className="text-center">
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {numPages}
+              </span>
+              <div className="text-xs text-gray-500 mt-1">
+                {(annotations[currentPage] || []).length} annotation{(annotations[currentPage] || []).length !== 1 ? 's' : ''} on this page
+              </div>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(numPages, p + 1))}
+              disabled={currentPage === numPages}
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
           
-          <span className="text-sm text-gray-600">
-            Page {currentPage} of {numPages}
-          </span>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(p => Math.min(numPages, p + 1))}
-            disabled={currentPage === numPages}
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+          {/* Total Annotations Summary */}
+          <div className="flex justify-center gap-4 text-xs text-gray-600 p-2 bg-gray-50 rounded">
+            <span>
+              Total Signatures: {Object.values(annotations).flat().filter(a => a.type === 'signature').length}
+            </span>
+            <span>•</span>
+            <span>
+              Total Annotations: {Object.values(annotations).flat().length}
+            </span>
+          </div>
         </div>
         
         {/* Signature Pad Dialog */}
