@@ -369,7 +369,7 @@ export default function AnnouncementManager() {
               {editingId ? 'Edit Announcement' : 'Create Announcement'}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4 overflow-visible">
             <div>
               <label className="text-sm font-medium">Title</label>
               <Input
