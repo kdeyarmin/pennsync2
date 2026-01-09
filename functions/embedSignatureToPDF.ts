@@ -12,17 +12,28 @@ Deno.serve(async (req) => {
 
     const { 
       pdf_url, 
-      signature_data_url, 
-      signer_name, 
+      signatures, // Array of signature objects
+      signature_data_url, // Legacy support
+      signer_name, // Legacy support
       signature_date,
+      form_data = {},
       patient_id,
       document_type 
     } = await req.json();
 
+    // Support both single signature (legacy) and multiple signatures
+    const signatureArray = signatures || [{
+      field_name: 'signature',
+      signature_data_url,
+      signer_name,
+      signer_role: 'Patient',
+      signature_date: signature_date || new Date().toISOString()
+    }];
+
     // Validate required fields
-    if (!pdf_url || !signature_data_url || !signer_name) {
+    if (!pdf_url || signatureArray.length === 0) {
       return Response.json({ 
-        error: 'Missing required fields: pdf_url, signature_data_url, signer_name' 
+        error: 'Missing required fields: pdf_url and signatures' 
       }, { status: 400 });
     }
 
@@ -35,48 +46,67 @@ Deno.serve(async (req) => {
 
     // Load the PDF document
     const pdfDoc = await PDFDocument.load(pdfBytes);
-
-    // Convert base64 signature to bytes
-    const signatureBase64 = signature_data_url.split(',')[1];
-    const signatureBytes = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0));
-
-    // Embed the signature image
-    const signatureImage = await pdfDoc.embedPng(signatureBytes);
-
-    // Get the last page (typically where signature goes)
     const pages = pdfDoc.getPages();
     const lastPage = pages[pages.length - 1];
     const { width, height } = lastPage.getSize();
 
-    // Calculate signature dimensions and position
-    const signatureWidth = 200;
-    const signatureHeight = 80;
-    const signatureX = 50;
-    const signatureY = 100;
+    // Pre-fill form fields if any
+    const form = pdfDoc.getForm();
+    if (form && Object.keys(form_data).length > 0) {
+      try {
+        const fields = form.getFields();
+        Object.entries(form_data).forEach(([fieldName, value]) => {
+          try {
+            const field = form.getTextField(fieldName);
+            if (field) field.setText(String(value));
+          } catch (e) {
+            console.log(`Could not fill field ${fieldName}:`, e.message);
+          }
+        });
+      } catch (e) {
+        console.log('Form filling warning:', e.message);
+      }
+    }
 
-    // Draw signature image
-    lastPage.drawImage(signatureImage, {
-      x: signatureX,
-      y: signatureY,
-      width: signatureWidth,
-      height: signatureHeight,
-    });
+    // Embed all signatures
+    let yOffset = 150;
+    const signatureWidth = 180;
+    const signatureHeight = 70;
+    const fontSize = 9;
 
-    // Add signature text info below the image
-    const fontSize = 10;
-    lastPage.drawText(`Signed by: ${signer_name}`, {
-      x: signatureX,
-      y: signatureY - 15,
-      size: fontSize,
-      color: rgb(0, 0, 0),
-    });
+    for (const sig of signatureArray) {
+      // Convert base64 signature to bytes
+      const signatureBase64 = sig.signature_data_url.split(',')[1];
+      const signatureBytes = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0));
 
-    lastPage.drawText(`Date: ${new Date(signature_date).toLocaleDateString()}`, {
-      x: signatureX,
-      y: signatureY - 30,
-      size: fontSize,
-      color: rgb(0, 0, 0),
-    });
+      // Embed the signature image
+      const signatureImage = await pdfDoc.embedPng(signatureBytes);
+
+      // Draw signature image
+      lastPage.drawImage(signatureImage, {
+        x: 50,
+        y: yOffset,
+        width: signatureWidth,
+        height: signatureHeight,
+      });
+
+      // Add signature text info
+      lastPage.drawText(`${sig.signer_role}: ${sig.signer_name}`, {
+        x: 50,
+        y: yOffset - 15,
+        size: fontSize,
+        color: rgb(0, 0, 0),
+      });
+
+      lastPage.drawText(`Date: ${new Date(sig.signature_date).toLocaleDateString()}`, {
+        x: 50,
+        y: yOffset - 28,
+        size: fontSize,
+        color: rgb(0, 0, 0),
+      });
+
+      yOffset -= 120; // Move down for next signature
+    }
 
     // Save the modified PDF
     const signedPdfBytes = await pdfDoc.save();
@@ -99,8 +129,12 @@ Deno.serve(async (req) => {
       details: {
         document_type,
         patient_id,
-        signer_name,
-        signature_date,
+        signatures: signatureArray.map(s => ({
+          role: s.signer_role,
+          name: s.signer_name,
+          date: s.signature_date
+        })),
+        form_data,
         original_pdf: pdf_url,
         signed_pdf: uploadResult.file_url
       },
@@ -110,8 +144,8 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       signed_pdf_url: uploadResult.file_url,
-      signer_name,
-      signature_date
+      signatures: signatureArray.map(s => ({ role: s.signer_role, name: s.signer_name })),
+      signature_date: new Date().toISOString()
     });
 
   } catch (error) {

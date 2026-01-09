@@ -71,6 +71,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import SignDocument from './pages/SignDocument';
+import DocumentSignatures from './pages/DocumentSignatures';
 import __Layout from './Layout.jsx';
 
 
@@ -148,6 +149,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "SignDocument": SignDocument,
+    "DocumentSignatures": DocumentSignatures,
 }
 
 export const pagesConfig = {
