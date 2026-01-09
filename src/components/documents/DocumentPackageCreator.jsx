@@ -239,12 +239,13 @@ export default function DocumentPackageCreator({ open, onClose }) {
 
           {/* File Upload */}
           <div>
-            <Label>Upload Documents</Label>
+            <Label>Upload Patient-Specific Documents</Label>
+            <p className="text-xs text-gray-500 mt-1 mb-2">Upload custom PDFs for this patient only</p>
             <div className="mt-2">
               <label htmlFor="file-upload" className="cursor-pointer">
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
                   <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Click to upload PDF files</p>
+                  <p className="text-sm text-gray-600">Click to upload patient-specific PDF files</p>
                   <p className="text-xs text-gray-500 mt-1">or drag and drop</p>
                 </div>
               </label>
@@ -282,7 +283,8 @@ export default function DocumentPackageCreator({ open, onClose }) {
 
           {/* Document Selection */}
           <div>
-            <Label>Or Select from Templates ({selectedDocuments.length} selected)</Label>
+            <Label>Or Select from Global Templates ({selectedDocuments.length} selected)</Label>
+            <p className="text-xs text-gray-500 mt-1 mb-2">Pre-configured documents available for all patients</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 max-h-96 overflow-y-auto p-2 border rounded-lg">
               {templates.map((template) => (
                 <div
