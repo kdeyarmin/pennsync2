@@ -134,63 +134,63 @@ export default function DocumentManagementDashboard() {
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Documents</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Total Documents</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
               </div>
-              <FileText className="w-8 h-8 text-gray-400" />
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Pending</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
               </div>
-              <Clock className="w-8 h-8 text-yellow-400" />
+              <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Signed</p>
-                <p className="text-2xl font-bold text-green-600">{stats.signed}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Signed</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.signed}</p>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-green-400" />
+              <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Overdue</p>
-                <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Overdue</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.overdue}</p>
               </div>
-              <AlertTriangle className="w-8 h-8 text-red-400" />
+              <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Packages</p>
-                <p className="text-2xl font-bold text-blue-600">{documentPackages.length}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Packages</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{documentPackages.length}</p>
               </div>
-              <Package className="w-8 h-8 text-blue-400" />
+              <Package className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
             </div>
           </CardContent>
         </Card>
@@ -199,7 +199,7 @@ export default function DocumentManagementDashboard() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
@@ -210,7 +210,7 @@ export default function DocumentManagementDashboard() {
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -229,14 +229,14 @@ export default function DocumentManagementDashboard() {
         {filteredGroups.map((group) => (
           <Card key={group.patient_id}>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
+              <CardTitle className="text-base sm:text-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <Link 
                   to={createPageUrl(`PatientDetails?id=${group.patient_id}`)}
-                  className="hover:text-blue-600 transition-colors"
+                  className="hover:text-blue-600 transition-colors break-words"
                 >
                   {group.patient_name}
                 </Link>
-                <Badge variant="outline">{group.documents.length} document(s)</Badge>
+                <Badge variant="outline" className="self-start sm:self-auto">{group.documents.length} document(s)</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -244,33 +244,37 @@ export default function DocumentManagementDashboard() {
                 {group.documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
                   >
-                    {getStatusIcon(doc.status)}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-gray-900">{doc.document_name}</h4>
-                        {getStatusBadge(doc.status)}
-                        {isOverdue(doc) && (
-                          <Badge className="bg-red-100 text-red-700">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            Overdue
-                          </Badge>
-                        )}
+                    <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                      {getStatusIcon(doc.status)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-900 break-words">{doc.document_name}</h4>
+                          {getStatusBadge(doc.status)}
+                          {isOverdue(doc) && (
+                            <Badge className="bg-red-100 text-red-700">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Overdue
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-600 break-words">
+                          Type: {doc.document_type} 
+                          {doc.due_date && ` • Due: ${new Date(doc.due_date).toLocaleDateString()}`}
+                          {doc.signed_at && ` • Signed: ${new Date(doc.signed_at).toLocaleDateString()}`}
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-600">
-                        Type: {doc.document_type} 
-                        {doc.due_date && ` • Due: ${new Date(doc.due_date).toLocaleDateString()}`}
-                        {doc.signed_at && ` • Signed: ${new Date(doc.signed_at).toLocaleDateString()}`}
-                      </p>
                     </div>
                     {doc.signed_pdf_url && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => window.open(doc.signed_pdf_url, '_blank')}
+                        className="w-full sm:w-auto"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4 h-4 sm:mr-2" />
+                        <span className="sm:inline hidden">View</span>
                       </Button>
                     )}
                   </div>
