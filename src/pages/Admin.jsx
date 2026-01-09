@@ -38,9 +38,11 @@ import {
   Mail,
   RefreshCw,
   BookOpen,
-  Download
+  Download,
+  FolderArchive
 } from "lucide-react";
 import { format } from "date-fns";
+import DischargeReportUploader from "../components/admin/DischargeReportUploader";
 
 export default function Admin() {
   const queryClient = useQueryClient();
@@ -279,10 +281,11 @@ If you have any questions, please contact your administrator.`,
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-5 gap-1 min-w-max h-auto">
+          <TabsList className="inline-flex md:grid md:w-full md:grid-cols-6 gap-1 min-w-max h-auto">
             <TabsTrigger value="overview" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Overview</TabsTrigger>
             <TabsTrigger value="users" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Users</TabsTrigger>
             <TabsTrigger value="compliance" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Compliance</TabsTrigger>
+            <TabsTrigger value="discharges" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Discharges</TabsTrigger>
             <TabsTrigger value="security" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Security</TabsTrigger>
             <TabsTrigger value="data" className="py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap">Data</TabsTrigger>
           </TabsList>
@@ -571,6 +574,11 @@ If you have any questions, please contact your administrator.`,
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Discharge Report Tab */}
+        <TabsContent value="discharges" className="space-y-6">
+          <DischargeReportUploader />
         </TabsContent>
 
         {/* Security Logs Tab */}
