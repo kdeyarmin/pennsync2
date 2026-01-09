@@ -15,6 +15,8 @@ import ComplianceRegulatory from './pages/ComplianceRegulatory';
 import CustomizableDashboard from './pages/CustomizableDashboard';
 import Dashboard from './pages/Dashboard';
 import DocumentGenerator from './pages/DocumentGenerator';
+import DocumentManagement from './pages/DocumentManagement';
+import DocumentSignatures from './pages/DocumentSignatures';
 import DocumentVisit from './pages/DocumentVisit';
 import DocumentationTraining from './pages/DocumentationTraining';
 import DuplicatePatients from './pages/DuplicatePatients';
@@ -40,6 +42,9 @@ import OASISDocumentationReview from './pages/OASISDocumentationReview';
 import OASISRevenueAnalysis from './pages/OASISRevenueAnalysis';
 import OASISReview from './pages/OASISReview';
 import OfflineMode from './pages/OfflineMode';
+import PDFSearch from './pages/PDFSearch';
+import PDFTemplateLibrary from './pages/PDFTemplateLibrary';
+import PDFTools from './pages/PDFTools';
 import Patient360 from './pages/Patient360';
 import PatientAlerts from './pages/PatientAlerts';
 import PatientDataManagement from './pages/PatientDataManagement';
@@ -58,6 +63,7 @@ import RegulatoryCompliance from './pages/RegulatoryCompliance';
 import Reports from './pages/Reports';
 import SecurityCompliance from './pages/SecurityCompliance';
 import SecurityPolicy from './pages/SecurityPolicy';
+import SignDocument from './pages/SignDocument';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import StaffTraining from './pages/StaffTraining';
 import StaffTrainingHub from './pages/StaffTrainingHub';
@@ -70,12 +76,6 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import SignDocument from './pages/SignDocument';
-import DocumentSignatures from './pages/DocumentSignatures';
-import PDFTools from './pages/PDFTools';
-import PDFTemplateLibrary from './pages/PDFTemplateLibrary';
-import PDFSearch from './pages/PDFSearch';
-import DocumentManagement from './pages/DocumentManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -97,6 +97,8 @@ export const PAGES = {
     "CustomizableDashboard": CustomizableDashboard,
     "Dashboard": Dashboard,
     "DocumentGenerator": DocumentGenerator,
+    "DocumentManagement": DocumentManagement,
+    "DocumentSignatures": DocumentSignatures,
     "DocumentVisit": DocumentVisit,
     "DocumentationTraining": DocumentationTraining,
     "DuplicatePatients": DuplicatePatients,
@@ -122,6 +124,9 @@ export const PAGES = {
     "OASISRevenueAnalysis": OASISRevenueAnalysis,
     "OASISReview": OASISReview,
     "OfflineMode": OfflineMode,
+    "PDFSearch": PDFSearch,
+    "PDFTemplateLibrary": PDFTemplateLibrary,
+    "PDFTools": PDFTools,
     "Patient360": Patient360,
     "PatientAlerts": PatientAlerts,
     "PatientDataManagement": PatientDataManagement,
@@ -140,6 +145,7 @@ export const PAGES = {
     "Reports": Reports,
     "SecurityCompliance": SecurityCompliance,
     "SecurityPolicy": SecurityPolicy,
+    "SignDocument": SignDocument,
     "SmartNoteAssistant": SmartNoteAssistant,
     "StaffTraining": StaffTraining,
     "StaffTrainingHub": StaffTrainingHub,
@@ -152,12 +158,6 @@ export const PAGES = {
     "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "SignDocument": SignDocument,
-    "DocumentSignatures": DocumentSignatures,
-    "PDFTools": PDFTools,
-    "PDFTemplateLibrary": PDFTemplateLibrary,
-    "PDFSearch": PDFSearch,
-    "DocumentManagement": DocumentManagement,
 }
 
 export const pagesConfig = {

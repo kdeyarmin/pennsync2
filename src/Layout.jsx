@@ -182,6 +182,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Quick Note", icon: Sparkles, page: "QuickNote" },
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
         { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
+        { name: "Document Management", icon: FileText, page: "DocumentManagement" },
         { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Referral Intake", icon: FileText, page: "ReferralIntake" },
         { name: "Patient Education", icon: FileText, page: "PatientEducationHub" }
