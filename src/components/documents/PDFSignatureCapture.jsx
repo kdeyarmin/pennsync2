@@ -94,6 +94,29 @@ export default function PDFSignatureCapture({
       });
 
       setSignedPdfUrl(response.data.signed_pdf_url);
+      
+      // Auto-route: Update DocumentSignature if exists
+      if (patientId && response.data.signed_pdf_url) {
+        try {
+          const existingDocs = await base44.entities.DocumentSignature.filter({
+            patient_id: patientId,
+            original_pdf_url: pdfUrl,
+            status: 'pending'
+          });
+          
+          if (existingDocs.length > 0) {
+            await base44.entities.DocumentSignature.update(existingDocs[0].id, {
+              signed_pdf_url: response.data.signed_pdf_url,
+              status: 'signed',
+              signed_at: new Date().toISOString(),
+              signed_by: (await base44.auth.me()).email
+            });
+          }
+        } catch (err) {
+          console.error("Failed to auto-route document:", err);
+        }
+      }
+      
       toast.success("Document signed successfully!");
       
       if (onComplete) {
