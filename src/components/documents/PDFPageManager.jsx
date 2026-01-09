@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import * as pdfjsLib from "pdfjs-dist";
 import { 
   Trash2, 
   ArrowUp, 
@@ -12,6 +13,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+
+// Set worker source
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export default function PDFPageManager({ pdfUrl, onSave }) {
   const [pages, setPages] = useState([]);
@@ -26,9 +30,6 @@ export default function PDFPageManager({ pdfUrl, onSave }) {
   const loadPDFPages = async () => {
     setIsLoading(true);
     try {
-      const pdfjsLib = window['pdfjs-dist/build/pdf'];
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      
       const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
       const numPages = pdf.numPages;
       setTotalPages(numPages);

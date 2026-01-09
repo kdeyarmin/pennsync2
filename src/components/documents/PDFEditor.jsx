@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import * as pdfjsLib from "pdfjs-dist";
 import { 
   Type, 
   Highlighter, 
@@ -21,6 +22,9 @@ import {
   Redo
 } from "lucide-react";
 import { toast } from "sonner";
+
+// Set worker source
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export default function PDFEditor({ pdfUrl, onSave }) {
   const canvasRef = useRef(null);
@@ -51,9 +55,6 @@ export default function PDFEditor({ pdfUrl, onSave }) {
   const loadPDF = async () => {
     setIsLoading(true);
     try {
-      const pdfjsLib = window['pdfjs-dist/build/pdf'];
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      
       const loadingTask = pdfjsLib.getDocument(pdfUrl);
       const pdf = await loadingTask.promise;
       setPdfDoc(pdf);
