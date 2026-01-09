@@ -470,7 +470,7 @@ export default function ClinicalLibraryManager() {
         setIsDialogOpen(open);
         if (!open) resetForm();
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="w-[95vw] sm:w-[90vw] max-w-5xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">
               {editingTemplate ? 'Edit Template' : 'Create New Template'}
