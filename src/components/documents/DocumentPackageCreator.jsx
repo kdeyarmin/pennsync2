@@ -28,7 +28,16 @@ import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 
 export default function DocumentPackageCreator({ open, onClose }) {
   const queryClient = useQueryClient();
+  const [useExistingPatient, setUseExistingPatient] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [manualPatientInfo, setManualPatientInfo] = useState({
+    first_name: '',
+    last_name: '',
+    date_of_birth: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
   const [packageName, setPackageName] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [selectedDocuments, setSelectedDocuments] = useState([]);
@@ -43,36 +52,55 @@ export default function DocumentPackageCreator({ open, onClose }) {
 
   const createPackageMutation = useMutation({
     mutationFn: async (packageData) => {
+      let patientId = selectedPatient;
+      
+      // If manually entering patient info, prepare it for the PDF
+      const patientData = useExistingPatient ? null : manualPatientInfo;
+      
       const signaturePromises = [];
       
       // Create document signatures for each template
-      selectedDocuments.forEach(templateId => {
+      for (const templateId of selectedDocuments) {
         const template = templates.find(t => t.id === templateId);
+        
+        let pdfUrl = template.template_file_url;
+        
+        // If using manual patient info, prepare PDF with that data
+        if (!useExistingPatient) {
+          const result = await base44.functions.invoke('preparePDFWithPatientInfo', {
+            template_url: template.template_file_url,
+            patient_info: patientData
+          });
+          pdfUrl = result.pdf_url;
+        }
+        
         signaturePromises.push(
           base44.entities.DocumentSignature.create({
-            patient_id: selectedPatient,
+            patient_id: patientId,
             document_type: template.template_category,
             document_name: template.template_name,
-            original_pdf_url: template.template_file_url,
+            original_pdf_url: pdfUrl,
             status: 'pending',
             required_signatures: template.signature_fields || [],
-            due_date: dueDate || null
+            due_date: dueDate || null,
+            form_data: useExistingPatient ? null : patientData
           })
         );
-      });
+      }
 
       // Create document signatures for uploaded files
       for (const file of uploadedFiles) {
         const { file_url } = await base44.integrations.Core.UploadFile({ file: file.file });
         signaturePromises.push(
           base44.entities.DocumentSignature.create({
-            patient_id: selectedPatient,
+            patient_id: patientId,
             document_type: 'other',
             document_name: file.name,
             original_pdf_url: file_url,
             status: 'pending',
             required_signatures: [],
-            due_date: dueDate || null
+            due_date: dueDate || null,
+            form_data: useExistingPatient ? null : patientData
           })
         );
       }
@@ -83,7 +111,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
       // Create the package
       const pkg = await base44.entities.DocumentPackage.create({
         package_name: packageName,
-        patient_id: selectedPatient,
+        patient_id: patientId,
         document_signatures: signatureIds,
         status: 'pending',
         due_date: dueDate || null,
@@ -105,7 +133,16 @@ export default function DocumentPackageCreator({ open, onClose }) {
   });
 
   const resetForm = () => {
+    setUseExistingPatient(true);
     setSelectedPatient(null);
+    setManualPatientInfo({
+      first_name: '',
+      last_name: '',
+      date_of_birth: '',
+      email: '',
+      phone: '',
+      address: ''
+    });
     setPackageName('');
     setDueDate('');
     setSelectedDocuments([]);
@@ -121,8 +158,20 @@ export default function DocumentPackageCreator({ open, onClose }) {
   };
 
   const handleCreate = () => {
-    if (!selectedPatient || !packageName || (selectedDocuments.length === 0 && uploadedFiles.length === 0)) {
-      toast.error("Please fill in all required fields and select or upload at least one document");
+    if (useExistingPatient && !selectedPatient) {
+      toast.error("Please select a patient");
+      return;
+    }
+    
+    if (!useExistingPatient) {
+      if (!manualPatientInfo.first_name || !manualPatientInfo.last_name || !manualPatientInfo.date_of_birth) {
+        toast.error("Please enter patient name and date of birth");
+        return;
+      }
+    }
+    
+    if (!packageName || (selectedDocuments.length === 0 && uploadedFiles.length === 0)) {
+      toast.error("Please fill in package name and select or upload at least one document");
       return;
     }
 
@@ -190,14 +239,101 @@ export default function DocumentPackageCreator({ open, onClose }) {
         </DialogHeader>
 
         <div className="space-y-4 sm:space-y-6">
-          {/* Patient Selection */}
+          {/* Patient Selection Mode */}
           <div>
-            <Label>Patient *</Label>
-            <SearchablePatientSelect
-              value={selectedPatient}
-              onChange={setSelectedPatient}
-            />
+            <Label>Patient Information *</Label>
+            <div className="flex gap-2 mt-2">
+              <Button
+                type="button"
+                variant={useExistingPatient ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseExistingPatient(true)}
+                className="flex-1"
+              >
+                Select Existing Patient
+              </Button>
+              <Button
+                type="button"
+                variant={!useExistingPatient ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseExistingPatient(false)}
+                className="flex-1"
+              >
+                Enter Patient Info
+              </Button>
+            </div>
           </div>
+
+          {/* Existing Patient Selection */}
+          {useExistingPatient && (
+            <div>
+              <Label>Select Patient *</Label>
+              <SearchablePatientSelect
+                value={selectedPatient}
+                onChange={setSelectedPatient}
+              />
+              <p className="text-xs text-gray-500 mt-1">Patient data will auto-populate in documents</p>
+            </div>
+          )}
+
+          {/* Manual Patient Information */}
+          {!useExistingPatient && (
+            <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>First Name *</Label>
+                  <Input
+                    value={manualPatientInfo.first_name}
+                    onChange={(e) => setManualPatientInfo({...manualPatientInfo, first_name: e.target.value})}
+                    placeholder="Enter first name"
+                  />
+                </div>
+                <div>
+                  <Label>Last Name *</Label>
+                  <Input
+                    value={manualPatientInfo.last_name}
+                    onChange={(e) => setManualPatientInfo({...manualPatientInfo, last_name: e.target.value})}
+                    placeholder="Enter last name"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Date of Birth *</Label>
+                <Input
+                  type="date"
+                  value={manualPatientInfo.date_of_birth}
+                  onChange={(e) => setManualPatientInfo({...manualPatientInfo, date_of_birth: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={manualPatientInfo.email}
+                  onChange={(e) => setManualPatientInfo({...manualPatientInfo, email: e.target.value})}
+                  placeholder="patient@example.com"
+                />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input
+                  type="tel"
+                  value={manualPatientInfo.phone}
+                  onChange={(e) => setManualPatientInfo({...manualPatientInfo, phone: e.target.value})}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div>
+                <Label>Address</Label>
+                <Input
+                  value={manualPatientInfo.address}
+                  onChange={(e) => setManualPatientInfo({...manualPatientInfo, address: e.target.value})}
+                  placeholder="123 Main St, City, State ZIP"
+                />
+              </div>
+              <p className="text-xs text-gray-600">This information will be pre-filled in the documents</p>
+            </div>
+          )}
 
           {/* Package Name */}
           <div>
