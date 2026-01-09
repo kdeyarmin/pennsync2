@@ -18,7 +18,10 @@ import {
   Trash2,
   CheckSquare,
   Square,
-  Send
+  Send,
+  Upload,
+  File,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
@@ -29,6 +32,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
   const [packageName, setPackageName] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const { data: templates = [] } = useQuery({
     queryKey: ['pdf-templates-active'],
@@ -39,19 +43,39 @@ export default function DocumentPackageCreator({ open, onClose }) {
 
   const createPackageMutation = useMutation({
     mutationFn: async (packageData) => {
+      const signaturePromises = [];
+      
       // Create document signatures for each template
-      const signaturePromises = selectedDocuments.map(templateId => {
+      selectedDocuments.forEach(templateId => {
         const template = templates.find(t => t.id === templateId);
-        return base44.entities.DocumentSignature.create({
-          patient_id: selectedPatient,
-          document_type: template.template_category,
-          document_name: template.template_name,
-          original_pdf_url: template.template_file_url,
-          status: 'pending',
-          required_signatures: template.signature_fields || [],
-          due_date: dueDate || null
-        });
+        signaturePromises.push(
+          base44.entities.DocumentSignature.create({
+            patient_id: selectedPatient,
+            document_type: template.template_category,
+            document_name: template.template_name,
+            original_pdf_url: template.template_file_url,
+            status: 'pending',
+            required_signatures: template.signature_fields || [],
+            due_date: dueDate || null
+          })
+        );
       });
+
+      // Create document signatures for uploaded files
+      for (const file of uploadedFiles) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: file.file });
+        signaturePromises.push(
+          base44.entities.DocumentSignature.create({
+            patient_id: selectedPatient,
+            document_type: 'other',
+            document_name: file.name,
+            original_pdf_url: file_url,
+            status: 'pending',
+            required_signatures: [],
+            due_date: dueDate || null
+          })
+        );
+      }
 
       const signatures = await Promise.all(signaturePromises);
       const signatureIds = signatures.map(s => s.id);
@@ -85,6 +109,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
     setPackageName('');
     setDueDate('');
     setSelectedDocuments([]);
+    setUploadedFiles([]);
   };
 
   const toggleDocument = (templateId) => {
@@ -96,12 +121,33 @@ export default function DocumentPackageCreator({ open, onClose }) {
   };
 
   const handleCreate = () => {
-    if (!selectedPatient || !packageName || selectedDocuments.length === 0) {
-      toast.error("Please fill in all required fields and select at least one document");
+    if (!selectedPatient || !packageName || (selectedDocuments.length === 0 && uploadedFiles.length === 0)) {
+      toast.error("Please fill in all required fields and select or upload at least one document");
       return;
     }
 
     createPackageMutation.mutate();
+  };
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+    
+    if (pdfFiles.length !== files.length) {
+      toast.error("Only PDF files are allowed");
+    }
+    
+    const newFiles = pdfFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      file: file
+    }));
+    
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+  };
+
+  const removeUploadedFile = (fileId) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
   // Preset packages
@@ -191,9 +237,52 @@ export default function DocumentPackageCreator({ open, onClose }) {
             </div>
           </div>
 
+          {/* File Upload */}
+          <div>
+            <Label>Upload Documents</Label>
+            <div className="mt-2">
+              <label htmlFor="file-upload" className="cursor-pointer">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">Click to upload PDF files</p>
+                  <p className="text-xs text-gray-500 mt-1">or drag and drop</p>
+                </div>
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".pdf"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              
+              {uploadedFiles.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {uploadedFiles.map((file) => (
+                    <div key={file.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <File className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="text-sm truncate">{file.name}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeUploadedFile(file.id)}
+                        className="shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Document Selection */}
           <div>
-            <Label>Select Documents * ({selectedDocuments.length} selected)</Label>
+            <Label>Or Select from Templates ({selectedDocuments.length} selected)</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 max-h-96 overflow-y-auto p-2 border rounded-lg">
               {templates.map((template) => (
                 <div
