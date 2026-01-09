@@ -20,19 +20,29 @@ import {
   AlertTriangle,
   Search,
   Eye,
-  Package
+  Package,
+  Pen,
+  Send
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function DocumentManagementDashboard() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: documentSignatures = [], isLoading: docsLoading } = useQuery({
     queryKey: ['document-signatures-dashboard'],
     queryFn: () => base44.entities.DocumentSignature.list('-created_date', 200),
-    initialData: []
+    initialData: [],
+    refetchInterval: 10000 // Real-time updates every 10 seconds
   });
 
   const { data: documentPackages = [], isLoading: packagesLoading } = useQuery({
@@ -125,6 +135,22 @@ export default function DocumentManagementDashboard() {
 
   const isOverdue = (doc) => {
     return doc.status === 'pending' && doc.due_date && new Date(doc.due_date) < new Date();
+  };
+
+  const handleSignDocument = (doc) => {
+    const url = createPageUrl(`SignDocument?pdf_url=${encodeURIComponent(doc.original_pdf_url)}&signature_id=${doc.id}&patient_id=${doc.patient_id}`);
+    navigate(url);
+  };
+
+  const handleSendReminder = async (doc) => {
+    try {
+      await base44.functions.invoke('sendSignatureReminder', {
+        signature_id: doc.id
+      });
+      toast.success("Reminder sent successfully!");
+    } catch (error) {
+      toast.error(`Failed to send reminder: ${error.message}`);
+    }
   };
 
   if (docsLoading || packagesLoading) {
@@ -266,17 +292,40 @@ export default function DocumentManagementDashboard() {
                         </p>
                       </div>
                     </div>
-                    {doc.signed_pdf_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(doc.signed_pdf_url, '_blank')}
-                        className="w-full sm:w-auto"
-                      >
-                        <Eye className="w-4 h-4 sm:mr-2" />
-                        <span className="sm:inline hidden">View</span>
-                      </Button>
-                    )}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {doc.status === 'pending' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleSignDocument(doc)}
+                          className="w-full sm:w-auto"
+                        >
+                          <Pen className="w-4 h-4 sm:mr-2" />
+                          <span className="sm:inline hidden">Sign</span>
+                        </Button>
+                      )}
+                      {doc.status === 'pending' && currentUser?.role === 'admin' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendReminder(doc)}
+                          className="w-full sm:w-auto"
+                        >
+                          <Send className="w-4 h-4 sm:mr-2" />
+                          <span className="sm:inline hidden">Remind</span>
+                        </Button>
+                      )}
+                      {doc.signed_pdf_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(doc.signed_pdf_url, '_blank')}
+                          className="w-full sm:w-auto"
+                        >
+                          <Eye className="w-4 h-4 sm:mr-2" />
+                          <span className="sm:inline hidden">View</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
