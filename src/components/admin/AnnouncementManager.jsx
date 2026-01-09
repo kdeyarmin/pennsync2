@@ -363,7 +363,7 @@ export default function AnnouncementManager() {
         setIsDialogOpen(open);
         if (!open) resetForm();
       }}>
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="w-[98vw] max-w-6xl overflow-visible">
           <DialogHeader>
             <DialogTitle>
               {editingId ? 'Edit Announcement' : 'Create Announcement'}
