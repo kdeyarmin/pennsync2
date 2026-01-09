@@ -280,7 +280,10 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 value={selectedPatient}
                 onValueChange={setSelectedPatient}
               />
-              <p className="text-xs text-gray-500 mt-1">Patient data will auto-populate in documents</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Patient data will auto-populate in documents 
+                {patients.length > 0 && ` (${patients.length} patients available)`}
+              </p>
             </div>
           )}
 
