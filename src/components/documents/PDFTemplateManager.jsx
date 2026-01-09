@@ -33,12 +33,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import TemplateFieldMapper from "./TemplateFieldMapper";
+import VisualPDFTemplateEditor from "./VisualPDFTemplateEditor";
 
 export default function PDFTemplateManager() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [showFieldMapper, setShowFieldMapper] = useState(false);
+  const [showVisualEditor, setShowVisualEditor] = useState(false);
   const [templateData, setTemplateData] = useState({
     template_name: '',
     template_category: 'consent',
@@ -48,7 +50,8 @@ export default function PDFTemplateManager() {
     signature_fields: [
       { field_name: 'patient_signature', label: 'Patient Signature', role: 'Patient', required: true }
     ],
-    version: '1.0'
+    version: '1.0',
+    visual_elements: []
   });
 
   const { data: templates = [], isLoading } = useQuery({
@@ -95,10 +98,12 @@ export default function PDFTemplateManager() {
       signature_fields: [
         { field_name: 'patient_signature', label: 'Patient Signature', role: 'Patient', required: true }
       ],
-      version: '1.0'
+      version: '1.0',
+      visual_elements: []
     });
     setEditingTemplate(null);
     setShowFieldMapper(false);
+    setShowVisualEditor(false);
   };
 
   const handleEdit = (template) => {
@@ -314,16 +319,39 @@ export default function PDFTemplateManager() {
               </div>
             </div>
 
-            <div className="border-t pt-4">
+            <div className="border-t pt-4 space-y-2">
               <Button
                 variant="outline"
-                onClick={() => setShowFieldMapper(!showFieldMapper)}
+                onClick={() => {
+                  setShowVisualEditor(!showVisualEditor);
+                  setShowFieldMapper(false);
+                }}
+                className="w-full bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                {showVisualEditor ? 'Hide' : 'Open'} Visual Editor ({templateData.visual_elements?.length || 0} elements)
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowFieldMapper(!showFieldMapper);
+                  setShowVisualEditor(false);
+                }}
                 className="w-full"
               >
                 <Settings className="w-4 h-4 mr-2" />
                 {showFieldMapper ? 'Hide' : 'Configure'} Field Mappings ({templateData.field_mappings?.length || 0})
               </Button>
             </div>
+
+            {showVisualEditor && (
+              <VisualPDFTemplateEditor
+                templateElements={templateData.visual_elements || []}
+                onElementsChange={(elements) => setTemplateData(prev => ({ ...prev, visual_elements: elements }))}
+                pdfUrl={templateData.template_file_url}
+              />
+            )}
 
             {showFieldMapper && (
               <TemplateFieldMapper
