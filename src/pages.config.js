@@ -70,6 +70,7 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
+import SignDocument from './pages/SignDocument';
 import __Layout from './Layout.jsx';
 
 
@@ -146,6 +147,7 @@ export const PAGES = {
     "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
+    "SignDocument": SignDocument,
 }
 
 export const pagesConfig = {
