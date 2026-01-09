@@ -50,6 +50,13 @@ export default function DocumentPackageCreator({ open, onClose }) {
     enabled: open
   });
 
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients-for-select'],
+    queryFn: () => base44.entities.Patient.list('-created_date', 500),
+    initialData: [],
+    enabled: open
+  });
+
   const createPackageMutation = useMutation({
     mutationFn: async (packageData) => {
       let patientId = selectedPatient;
@@ -269,8 +276,9 @@ export default function DocumentPackageCreator({ open, onClose }) {
             <div>
               <Label>Select Patient *</Label>
               <SearchablePatientSelect
+                patients={patients}
                 value={selectedPatient}
-                onChange={setSelectedPatient}
+                onValueChange={setSelectedPatient}
               />
               <p className="text-xs text-gray-500 mt-1">Patient data will auto-populate in documents</p>
             </div>
