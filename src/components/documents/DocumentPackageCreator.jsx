@@ -110,6 +110,10 @@ export default function DocumentPackageCreator({ open, onClose }) {
       name: 'Admission Onboarding',
       categories: ['consent', 'admission']
     },
+    consent: {
+      name: 'Consent Packet',
+      categories: ['consent']
+    },
     discharge: {
       name: 'Discharge Package',
       categories: ['discharge']
@@ -131,15 +135,15 @@ export default function DocumentPackageCreator({ open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Package className="w-5 h-5" />
             Create Document Package
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Patient Selection */}
           <div>
             <Label>Patient *</Label>
@@ -172,13 +176,14 @@ export default function DocumentPackageCreator({ open, onClose }) {
           {/* Presets */}
           <div>
             <Label>Quick Presets</Label>
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {Object.entries(presets).map(([key, preset]) => (
                 <Button
                   key={key}
                   variant="outline"
                   size="sm"
                   onClick={() => applyPreset(preset)}
+                  className="flex-shrink-0"
                 >
                   {preset.name}
                 </Button>
@@ -189,7 +194,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
           {/* Document Selection */}
           <div>
             <Label>Select Documents * ({selectedDocuments.length} selected)</Label>
-            <div className="grid grid-cols-2 gap-3 mt-2 max-h-96 overflow-y-auto p-2 border rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 max-h-96 overflow-y-auto p-2 border rounded-lg">
               {templates.map((template) => (
                 <div
                   key={template.id}
@@ -207,8 +212,8 @@ export default function DocumentPackageCreator({ open, onClose }) {
                       <Square className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm">{template.template_name}</h4>
-                      <Badge variant="outline" className="mt-1 text-xs">
+                      <h4 className="font-medium text-sm break-words">{template.template_name}</h4>
+                      <Badge variant="outline" className="mt-1 text-xs capitalize">
                         {template.template_category}
                       </Badge>
                     </div>
@@ -219,13 +224,18 @@ export default function DocumentPackageCreator({ open, onClose }) {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => { resetForm(); onClose(); }}>
+          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={() => { resetForm(); onClose(); }}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
             <Button 
               onClick={handleCreate}
               disabled={createPackageMutation.isPending}
+              className="w-full sm:w-auto"
             >
               <Send className="w-4 h-4 mr-2" />
               {createPackageMutation.isPending ? 'Creating...' : 'Create Package'}
