@@ -476,7 +476,7 @@ export default function ClinicalLibraryManager() {
               {editingTemplate ? 'Edit Template' : 'Create New Template'}
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[65vh] pr-2">
+          <div className="overflow-y-auto overflow-x-visible max-h-[65vh] pr-2">
 
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {/* AI Assistant Section */}
