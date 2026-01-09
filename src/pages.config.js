@@ -74,6 +74,7 @@ import SignDocument from './pages/SignDocument';
 import DocumentSignatures from './pages/DocumentSignatures';
 import PDFTools from './pages/PDFTools';
 import PDFTemplateLibrary from './pages/PDFTemplateLibrary';
+import PDFSearch from './pages/PDFSearch';
 import __Layout from './Layout.jsx';
 
 
@@ -154,6 +155,7 @@ export const PAGES = {
     "DocumentSignatures": DocumentSignatures,
     "PDFTools": PDFTools,
     "PDFTemplateLibrary": PDFTemplateLibrary,
+    "PDFSearch": PDFSearch,
 }
 
 export const pagesConfig = {
