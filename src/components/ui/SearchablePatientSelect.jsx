@@ -32,9 +32,12 @@ export default function SearchablePatientSelect({
   patients = [], 
   value, 
   onValueChange,
+  onChange, // Support both for backwards compatibility
   placeholder = "Select patient...",
   className 
 }) {
+  // Use either onValueChange or onChange
+  const handleChange = onValueChange || onChange || (() => {});
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [recentPatients, setRecentPatients] = useState([]);
@@ -66,7 +69,7 @@ export default function SearchablePatientSelect({
 
   // Save to recent when patient is selected
   const handleSelect = (patientId) => {
-    onValueChange(patientId);
+    handleChange(patientId);
     setOpen(false);
 
     if (!currentUserEmail) return;
