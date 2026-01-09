@@ -81,10 +81,31 @@ export default function DuplicateScanner() {
         const data = response.data || response;
         setResults(data);
       } else {
-        // Advanced client-side scanning with multiple algorithms
+        // Advanced client-side scanning with multiple algorithms and batching
         const duplicateGroups = [];
         const processedIds = new Set();
+        const updateBatch = [];
+        const BATCH_SIZE = 10;
+        const BATCH_DELAY = 1000; // 1 second between batches
         
+        // Helper to process batches with delay
+        const processBatch = async (batch) => {
+          if (batch.length === 0) return;
+          
+          const promises = batch.map(update => 
+            base44.entities.Patient.update(update.id, update.data)
+              .catch(err => console.error(`Failed to update ${update.id}:`, err))
+          );
+          
+          await Promise.all(promises);
+          
+          // Delay between batches to avoid rate limiting
+          if (batch.length === BATCH_SIZE) {
+            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+          }
+        };
+        
+        // Phase 1: Identify duplicates (no API calls)
         for (let i = 0; i < allPatients.length; i++) {
           if (processedIds.has(allPatients[i].id)) continue;
           
@@ -178,28 +199,26 @@ export default function DuplicateScanner() {
             processedIds.add(toKeep.id);
             toRemove.forEach(p => processedIds.add(p.id));
             
-            // Auto-merge data if enabled
+            // Prepare updates for batching
             if (advancedOptions.autoMergeData) {
               const mergedData = { ...toKeep };
               toRemove.forEach(p => {
                 Object.keys(p).forEach(key => {
-                  if (!mergedData[key] && p[key]) {
+                  if (!mergedData[key] && p[key] && key !== 'id' && key !== 'created_date') {
                     mergedData[key] = p[key];
                   }
                 });
               });
               
-              // Update the kept record with merged data
-              await base44.entities.Patient.update(toKeep.id, mergedData);
+              updateBatch.push({ id: toKeep.id, data: mergedData });
             }
             
-            // Close or delete duplicates
-            for (const dup of toRemove) {
-              if (advancedOptions.closeInactiveOnly && dup.status === 'active') {
-                continue;
+            // Add duplicate closures to batch
+            toRemove.forEach(dup => {
+              if (!advancedOptions.closeInactiveOnly || dup.status !== 'active') {
+                updateBatch.push({ id: dup.id, data: { status: 'discharged' } });
               }
-              await base44.entities.Patient.update(dup.id, { status: 'discharged' });
-            }
+            });
             
             duplicateGroups.push({
               kept: {
@@ -218,6 +237,17 @@ export default function DuplicateScanner() {
               )
             });
           }
+        }
+        
+        // Phase 2: Process updates in batches
+        toast.info(`Processing ${updateBatch.length} updates in batches...`);
+        for (let i = 0; i < updateBatch.length; i += BATCH_SIZE) {
+          const batch = updateBatch.slice(i, i + BATCH_SIZE);
+          await processBatch(batch);
+          
+          // Update progress
+          const progress = Math.min(100, Math.round(((i + batch.length) / updateBatch.length) * 100));
+          toast.info(`Progress: ${progress}% (${i + batch.length}/${updateBatch.length})`);
         }
         
         setResults({
