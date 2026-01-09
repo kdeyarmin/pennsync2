@@ -253,6 +253,31 @@ Deno.serve(async (req) => {
         }
 
         if (!matchingPatient) {
+          // Check for potential duplicates before creating
+          const potentialDuplicates = existingPatients.filter(p => {
+            const firstNameMatch = p.first_name?.toLowerCase() === uploadedPatient.first_name?.toLowerCase();
+            const lastNameMatch = p.last_name?.toLowerCase() === uploadedPatient.last_name?.toLowerCase();
+            
+            // Check name similarity
+            if (firstNameMatch && lastNameMatch) return true;
+            
+            // Check DOB match if available
+            if (uploadedPatient.date_of_birth && p.date_of_birth === uploadedPatient.date_of_birth) {
+              return true;
+            }
+            
+            return false;
+          });
+
+          if (potentialDuplicates.length > 0) {
+            // Duplicate detected - skip creation and log
+            results.errors.push({
+              patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
+              error: `Potential duplicate detected. Matches existing patient(s): ${potentialDuplicates.map(p => p.first_name + ' ' + p.last_name).join(', ')}`
+            });
+            continue;
+          }
+
           // Create new patient
           const newPatient = await base44.asServiceRole.entities.Patient.create(uploadedPatient);
           results.created++;
