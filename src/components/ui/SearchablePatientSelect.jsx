@@ -47,6 +47,7 @@ export default function SearchablePatientSelect({
   const [creating, setCreating] = useState(false);
   const [currentUserEmail, setCurrentUserEmail] = useState("");
   const queryClient = useQueryClient();
+  const [localPatients, setLocalPatients] = useState(Array.isArray(patients) ? patients : []);
 
   // Load current user and their preferences
   useEffect(() => {
