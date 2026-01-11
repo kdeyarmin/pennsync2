@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
-import { User, CheckCircle2 } from "lucide-react";
+import { User, CheckCircle2, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { todayEastern } from "../utils/timezone";
 
 const commonDiagnoses = [
