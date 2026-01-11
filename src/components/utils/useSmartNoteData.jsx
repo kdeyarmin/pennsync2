@@ -13,13 +13,29 @@ export const useSmartNoteData = (selectedPatientId) => {
   const { data: patients = [], isLoading: isLoadingPatients, error: errorPatients } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
-      const result = await base44.entities.Patient.list();
-      console.log('useSmartNoteData - fetched patients:', result);
-      return result;
+      console.log('🔍 STARTING patient fetch...');
+      try {
+        const result = await base44.entities.Patient.list();
+        console.log('✅ Patient fetch SUCCESS - count:', result?.length || 0, 'data:', result);
+        return Array.isArray(result) ? result : [];
+      } catch (err) {
+        console.error('❌ Patient fetch ERROR:', err);
+        throw err;
+      }
     },
-    initialData: [],
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
   });
+
+  // Debug effect
+  React.useEffect(() => {
+    console.log('📊 useSmartNoteData state:', {
+      patientsLength: patients?.length,
+      isLoadingPatients,
+      hasError: !!errorPatients,
+      selectedPatientId
+    });
+  }, [patients, isLoadingPatients, errorPatients, selectedPatientId]);
 
   // Fetch selected patient's care plans
   const { data: carePlans = [], isLoading: isLoadingCarePlans, error: errorCarePlans } = useQuery({
