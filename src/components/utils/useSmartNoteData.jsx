@@ -22,13 +22,11 @@ export const useSmartNoteData = (selectedPatientId) => {
     queryKey: ['patients'],
     queryFn: async () => {
       try {
-        const listResult = await base44.entities.Patient.list('-created_date', 100);
+        const listResult = await base44.entities.Patient.list('-updated_date', 500);
+        console.log('Patient list result:', { listResult, isArray: Array.isArray(listResult), length: listResult?.length });
+        
         let patientArray = normalizeApiResponse(listResult);
-
-        if (!patientArray || patientArray.length === 0) {
-          const filterResult = await base44.entities.Patient.filter({});
-          patientArray = normalizeApiResponse(filterResult);
-        }
+        console.log('Normalized patients:', { patientArray, length: patientArray?.length });
 
         return Array.isArray(patientArray) ? patientArray : [];
       } catch (err) {
@@ -37,9 +35,9 @@ export const useSmartNoteData = (selectedPatientId) => {
       }
     },
     initialData: [],
-    staleTime: 0,
-    gcTime: 0,
-    retry: 2,
+    staleTime: 300000,
+    gcTime: 300000,
+    retry: 3,
     retryDelay: 1000
   });
 
