@@ -76,6 +76,38 @@ const commonDiagnoses = [
   "Custom (type below)"
 ];
 
+// Helper function to match and set diagnosis
+const matchAndSetDiagnosis = (patientDiagnosis, setDiagnosis, setCustomDiagnosis) => {
+  if (!patientDiagnosis) return;
+  const matchingDiagnosis = commonDiagnoses.find(dx => 
+    patientDiagnosis.toLowerCase().includes(dx.toLowerCase().split(' ')[0].toLowerCase()) ||
+    dx.toLowerCase().includes(patientDiagnosis.toLowerCase().split(' ')[0].toLowerCase())
+  );
+  if (matchingDiagnosis) {
+    setDiagnosis(matchingDiagnosis);
+  } else {
+    setDiagnosis("Custom (type below)");
+    setCustomDiagnosis(patientDiagnosis);
+  }
+};
+
+// Helper function to reset note state
+const resetNoteState = (setState) => {
+  setState.setRoughNote("");
+  setState.setEnhancedNote("");
+  setState.setAnalysisResults(null);
+  setState.setVisitDate(todayEastern());
+  setState.setCopied(false);
+  setState.setSavedSuccessfully(false);
+  setState.setCollapsedSteps([]);
+  setState.setRecheckMode(false);
+};
+
+// Helper function to update vital signs
+const updateVitalSigns = (vitalSigns, setVitalSigns, field, value) => {
+  setVitalSigns({ ...vitalSigns, [field]: value });
+};
+
 
 
 
@@ -282,16 +314,7 @@ export default function SmartNoteAssistant() {
   // Auto-fill diagnosis when patient is selected
   React.useEffect(() => {
     if (selectedPatient?.primary_diagnosis && selectedPatientId) {
-      const matchingDiagnosis = commonDiagnoses.find(dx => 
-        selectedPatient.primary_diagnosis.toLowerCase().includes(dx.toLowerCase().split(' ')[0].toLowerCase()) ||
-        dx.toLowerCase().includes(selectedPatient.primary_diagnosis.toLowerCase().split(' ')[0].toLowerCase())
-      );
-      if (matchingDiagnosis) {
-        setDiagnosis(matchingDiagnosis);
-      } else {
-        setDiagnosis("Custom (type below)");
-        setCustomDiagnosis(selectedPatient.primary_diagnosis);
-      }
+      matchAndSetDiagnosis(selectedPatient.primary_diagnosis, setDiagnosis, setCustomDiagnosis);
     }
   }, [selectedPatient, selectedPatientId]);
 
@@ -462,20 +485,30 @@ export default function SmartNoteAssistant() {
 
 
   const handleClearNote = () => {
-    setRoughNote("");
-    setEnhancedNote("");
-    setAnalysisResults(null);
-    setVisitDate(todayEastern());
-    setCopied(false);
-    setSavedSuccessfully(false);
-    setCollapsedSteps([]);
-    setRecheckMode(false);
+    resetNoteState({
+      setRoughNote,
+      setEnhancedNote,
+      setAnalysisResults,
+      setVisitDate,
+      setCopied,
+      setSavedSuccessfully,
+      setCollapsedSteps,
+      setRecheckMode
+    });
   };
 
   const handleRecheck = () => {
     setRoughNote(enhancedNote);
-    setEnhancedNote("");
-    setAnalysisResults(null);
+    resetNoteState({
+      setRoughNote: () => {},
+      setEnhancedNote,
+      setAnalysisResults,
+      setVisitDate: () => {},
+      setCopied,
+      setSavedSuccessfully,
+      setCollapsedSteps,
+      setRecheckMode
+    });
     setRecheckMode(true);
   };
 
@@ -700,16 +733,7 @@ export default function SmartNoteAssistant() {
                       setSelectedPatientId(id);
                       const patient = patients.find(p => p.id === id);
                       if (patient?.primary_diagnosis) {
-                        const matchingDiagnosis = commonDiagnoses.find(dx => 
-                          patient.primary_diagnosis.toLowerCase().includes(dx.toLowerCase().split(' ')[0].toLowerCase()) ||
-                          dx.toLowerCase().includes(patient.primary_diagnosis.toLowerCase().split(' ')[0].toLowerCase())
-                        );
-                        if (matchingDiagnosis) {
-                          setDiagnosis(matchingDiagnosis);
-                        } else {
-                          setDiagnosis("Custom (type below)");
-                          setCustomDiagnosis(patient.primary_diagnosis);
-                        }
+                        matchAndSetDiagnosis(patient.primary_diagnosis, setDiagnosis, setCustomDiagnosis);
                       }
                     }}
                     placeholder="Search patients..."
