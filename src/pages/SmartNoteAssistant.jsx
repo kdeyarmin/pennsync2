@@ -676,33 +676,7 @@ export default function SmartNoteAssistant() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="lg:col-span-2 space-y-4 md:space-y-6">
 
-          {/* Guided Workflow Mode */}
-
-          {useGuidedWorkflow && selectedPatientId && !enhancedNote && (
-            <GuidedVisitWorkflow
-              patientData={selectedPatient}
-              visitType={visitType}
-              carePlans={carePlans}
-              recentVisits={recentVisits}
-              onComplete={(workflowData) => {
-                // Compile all workflow data into rough notes
-                let compiledNotes = '';
-                Object.entries(workflowData).forEach(([stepId, stepData]) => {
-                  compiledNotes += `\n\n=== ${stepId.toUpperCase()} ===\n`;
-                  Object.entries(stepData).forEach(([field, value]) => {
-                    if (value && !field.startsWith('previous_') && !field.startsWith('last_')) {
-                      compiledNotes += `${field}: ${value}\n`;
-                    }
-                  });
-                });
-                setRoughNote(compiledNotes.trim());
-                setUseGuidedWorkflow(false);
-              }}
-            />
-          )}
-
-          {!useGuidedWorkflow && (
-            <React.Fragment>
+          <React.Fragment>
 
           {/* Step 1: Patient Selection - Collapsible */}
           <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
@@ -1114,7 +1088,6 @@ export default function SmartNoteAssistant() {
                 )}
 
                 </React.Fragment>
-                )}
                 </div>
 
                 {/* Right Sidebar - AI Tools */}
