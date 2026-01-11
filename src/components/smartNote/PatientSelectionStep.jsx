@@ -65,15 +65,26 @@ export default function PatientSelectionStep({
       {!isCollapsed && (
         <CardContent className="p-4 md:p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            <div>
-              <Label className="text-sm md:text-base mb-2 block">Patient {isLoading && "(Loading...)"}</Label>
-              <SearchablePatientSelect
-                patients={patients || []}
-                value={selectedPatientId}
-                onValueChange={onPatientChange}
-                placeholder={isLoading ? "Loading patients..." : "Search patients..."}
-              />
-            </div>
+             <div>
+               <div className="flex items-center justify-between mb-2">
+                 <Label className="text-sm md:text-base">Patient {isLoading && "(Loading...)"}</Label>
+                 <Button 
+                   size="sm" 
+                   variant="ghost" 
+                   onClick={handleRefresh}
+                   disabled={isRefreshing || isLoading}
+                   className="h-6 w-6 p-0"
+                 >
+                   <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                 </Button>
+               </div>
+               <SearchablePatientSelect
+                 patients={patients || []}
+                 value={selectedPatientId}
+                 onValueChange={onPatientChange}
+                 placeholder={isLoading ? "Loading patients..." : "Search patients..."}
+               />
+             </div>
             <div>
               <Label className="text-sm md:text-base mb-2 block">Visit Date</Label>
               <Input 
