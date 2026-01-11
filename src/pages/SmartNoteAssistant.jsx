@@ -89,7 +89,7 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
       title: "✨ Ready to Enhance", 
       subtitle: "Step 3 of 4",
       items: [
-        { label: "Transform to Medicare-Compliant", action: "enhance", type: "action", primary: true, icon: Sparkles },
+        { label: "Enhance Note", action: "enhance", type: "action", primary: true, icon: Sparkles },
       ],
       hint: diagnosis ? `AI will optimize for ${diagnosis.split(' ')[0]}` : "AI adds clinical language & compliance elements"
     };
@@ -1015,9 +1015,33 @@ export default function SmartNoteAssistant() {
             </Card>
           )}
 
-          {/* Step 4: Auto-Enhancement */}
+          {/* Step 4: Enhancement Ready - Show button to start */}
           {roughNote.length >= 50 && !enhancedNote && (
-            <div id="step-review">
+            <Card id="step-review" className="border-2 border-indigo-400 bg-indigo-50">
+              <CardHeader className="py-4">
+                <CardTitle className="text-base md:text-lg flex items-center gap-3">
+                  <Brain className="w-5 h-5 text-indigo-600" />
+                  Ready to Enhance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-4 space-y-3">
+                <p className="text-sm text-gray-700">
+                  Your note is ready for AI enhancement. Click below to transform it into a Medicare-compliant document.
+                </p>
+                <Button 
+                  onClick={() => setRecheckMode(false)}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 min-h-[44px] text-base"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Enhance Note
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 4: Running Enhancement */}
+          {roughNote.length >= 50 && !enhancedNote && !recheckMode && (
+            <div id="step-review-running">
               <UnifiedDocumentReview
                 roughNote={roughNote}
                 visitType={visitType}
@@ -1028,7 +1052,7 @@ export default function SmartNoteAssistant() {
                 recentVisits={recentVisits}
                 nurseType={currentUser?.credential_type || 'RN'}
                 onEnhancedNoteReady={handleEnhancedNoteReady}
-                autoRun={!recheckMode}
+                autoRun={true}
               />
             </div>
           )}
