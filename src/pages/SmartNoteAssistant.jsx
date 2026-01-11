@@ -85,14 +85,7 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
   const getTools = () => {
     if (!hasPatient) return null;
     if (!hasNotes) return null;
-    if (!hasEnhancedNote) return { 
-      title: "✨ Ready to Enhance", 
-      subtitle: "Step 3 of 4",
-      items: [
-        { label: "Enhance Note", action: "enhance", type: "action", primary: true, icon: Sparkles },
-      ],
-      hint: diagnosis ? `AI will optimize for ${diagnosis.split(' ')[0]}` : "AI adds clinical language & compliance elements"
-    };
+    if (!hasEnhancedNote) return null;
     return { 
       title: "🎉 Note Complete!", 
       subtitle: complianceScore ? `${complianceScore}% Compliant` : "Ready to use",
