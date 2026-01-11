@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, CheckCircle2, User, ChevronRight, ChevronLeft, Brain, HelpCircle, ArrowRight, Copy, RotateCcw, Lightbulb, MessageCircle, FileText, Clock, AlertTriangle, ClipboardList } from "lucide-react";
+import { Sparkles, CheckCircle2, User, ChevronRight, ChevronLeft, Brain, HelpCircle, ArrowRight, Copy, RotateCcw, Lightbulb, MessageCircle, FileText, Clock, AlertTriangle, ClipboardList, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import { todayEastern } from "../components/utils/timezone";
 import FavoriteButton from "../components/navigation/FavoriteButton";
