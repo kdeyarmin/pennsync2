@@ -1,67 +1,26 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Sparkles,
-  CheckCircle2,
-  User,
-  Activity,
-  ClipboardList,
-  AlertTriangle,
-  Mic,
-  MicOff,
-  ChevronRight,
-  ChevronLeft,
-  Brain,
-  HelpCircle,
-  ArrowRight,
-  Copy,
-  RotateCcw,
-  Lightbulb,
-  MessageCircle,
-  Edit3,
-  BookOpen,
-  DollarSign,
-  AlertCircle,
-  FileText,
-  Clock
-} from "lucide-react";
-import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
+import { Sparkles, CheckCircle2, User, ChevronRight, ChevronLeft, Brain, HelpCircle, ArrowRight, Copy, RotateCcw, Lightbulb, MessageCircle, FileText, Clock } from "lucide-react";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import { todayEastern } from "../components/utils/timezone";
 import FavoriteButton from "../components/navigation/FavoriteButton";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
 import UnifiedDocumentReview from "../components/smartNote/UnifiedDocumentReview";
 import QuickActionsBar from "../components/smartNote/QuickActionsBar";
-import GuidedVisitWorkflow from "../components/visit/GuidedVisitWorkflow";
 import AdmissionNotePrePopulator from "../components/smartNote/AdmissionNotePrePopulator";
 import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
+import { useNoteManagement } from "../components/utils/useNoteManagement";
+import { useSpeechRecognition } from "../components/utils/useSpeechRecognition";
+import { usePatientData } from "../components/utils/usePatientData";
+import PatientSelectionStep from "../components/smartNote/PatientSelectionStep";
+import VitalsStep from "../components/smartNote/VitalsStep";
+import NotesStep from "../components/smartNote/NotesStep";
+import EnhancementStep from "../components/smartNote/EnhancementStep";
 
 // Common diagnoses list
 const commonDiagnoses = [
