@@ -16,7 +16,7 @@ import AdmissionNotePrePopulator from "../components/smartNote/AdmissionNotePreP
 import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
 import { useNoteManagement } from "../components/utils/useNoteManagement";
 import { useSpeechRecognition } from "../components/utils/useSpeechRecognition";
-import { usePatientData } from "../components/utils/usePatientData";
+import { useSmartNoteData } from "../components/utils/useSmartNoteData";
 import PatientSelectionStep from "../components/smartNote/PatientSelectionStep";
 import VitalsStep from "../components/smartNote/VitalsStep";
 import NotesStep from "../components/smartNote/NotesStep";
@@ -140,12 +140,7 @@ export default function SmartNoteAssistant() {
   const { listening, interimText, startDictation, stopDictation } = useSpeechRecognition((transcript) => {
     setRoughNote(prev => prev ? prev + ' ' + transcript : transcript);
   });
-  const { patients, selectedPatient, carePlans, recentVisits, oasisContext, patientContext } = usePatientData(selectedPatientId);
-
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  const { currentUser, patients, selectedPatient, carePlans, recentVisits, patientOASIS, oasisContext, patientContext, isLoading, error } = useSmartNoteData(selectedPatientId);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
