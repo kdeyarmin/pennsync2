@@ -294,7 +294,7 @@ export default function SmartNoteAssistant() {
             }));
           }
         }
-      });
+      }).catch(err => console.error('Error loading referral:', err));
     }
   }, []);
 
@@ -379,7 +379,7 @@ export default function SmartNoteAssistant() {
         setCustomDiagnosis(selectedPatient.primary_diagnosis);
       }
     }
-  }, [selectedPatientId]);
+  }, [selectedPatient, selectedPatientId]);
 
   // Clear AI cache when patient changes
   React.useEffect(() => {
@@ -518,8 +518,8 @@ export default function SmartNoteAssistant() {
         patient_id: selectedPatientId,
         visit_type: visitType,
         diagnosis: finalDiagnosis,
-        overall_score: analysis.overall_score,
-        suggestions_applied: appliedSuggestions.length,
+        overall_score: analysis?.overall_score || 85,
+        suggestions_applied: appliedSuggestions?.length || 0,
         page: 'SmartNoteAssistant',
         ai_utilization: true
       });
@@ -605,16 +605,18 @@ export default function SmartNoteAssistant() {
     };
     
     recognition.onend = () => {
-      if (listening) {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.error('Restart error:', e);
+      setListening(prev => {
+        if (prev) {
+          try {
+            recognition.start();
+          } catch (e) {
+            console.error('Restart error:', e);
+          }
+        } else {
+          setInterimText('');
         }
-      } else {
-        setListening(false);
-        setInterimText('');
-      }
+        return prev;
+      });
     };
     
     recognition.onerror = (event) => {
