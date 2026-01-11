@@ -415,6 +415,16 @@ export default function SmartNoteAssistant() {
         </div>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <Alert className="mb-4 border-red-200 bg-red-50">
+          <AlertTriangle className="w-4 h-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            Unable to load patients. Please refresh the page or contact support if the problem persists.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Progress Indicator */}
       {selectedPatientId && !enhancedNote && (
         <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
