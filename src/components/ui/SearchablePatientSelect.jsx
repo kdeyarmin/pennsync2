@@ -160,6 +160,10 @@ export default function SearchablePatientSelect({
       const fullName = `${firstName} ${lastName}`;
       const mrn = (p.medical_record_number || '').trim().toLowerCase();
       return fullName.includes(searchLower) || mrn.includes(searchLower) || firstName.includes(searchLower) || lastName.includes(searchLower);
+    }).sort((a, b) => {
+      const aName = `${(a.last_name || '').trim()} ${(a.first_name || '').trim()}`.toLowerCase();
+      const bName = `${(b.last_name || '').trim()} ${(b.first_name || '').trim()}`.toLowerCase();
+      return aName.localeCompare(bName);
     });
 
     const favorites = filtered.filter(p => favoritedPatients.includes(p.id));
