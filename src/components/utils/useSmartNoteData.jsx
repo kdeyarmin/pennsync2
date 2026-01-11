@@ -16,13 +16,24 @@ export const useSmartNoteData = (selectedPatientId) => {
       try {
         console.log('Starting Patient.list() fetch...');
         const result = await base44.entities.Patient.list('-created_date', 100);
-        console.log('Patient.list() result:', {
+        console.log('Patient.list() raw result:', {
           type: typeof result,
           isArray: Array.isArray(result),
-          value: result,
+          keys: result ? Object.keys(result) : null,
           length: result?.length
         });
-        return Array.isArray(result) ? result : [];
+        
+        // Handle if result is an object with data property
+        let patientArray = Array.isArray(result) ? result : [];
+        if (!Array.isArray(result) && result?.data && Array.isArray(result.data)) {
+          patientArray = result.data;
+        }
+        
+        console.log('Patient.list() normalized:', {
+          count: patientArray.length,
+          patients: patientArray.slice(0, 3)
+        });
+        return patientArray;
       } catch (err) {
         console.error('Patient.list() error:', err);
         throw err;
