@@ -28,7 +28,7 @@ export default function NotesStep({
               value={roughNote}
               onChange={(e) => onNotesChange(e.target.value)}
               placeholder="Type or dictate your rough notes or bullet points...&#10;&#10;Examples:&#10;• Patient states feeling better&#10;• Wound improving, less drainage&#10;• Taught medication management&#10;• BP elevated, pt needs MD follow-up"
-              className="min-h-[450px] text-base touch-target"
+              className="min-h-[700px] text-base touch-target"
             />
             {interimText && (
               <div className="absolute bottom-2 left-2 right-2 bg-blue-100/90 border border-blue-300 rounded px-3 py-2 text-sm text-blue-900 italic pointer-events-none">
