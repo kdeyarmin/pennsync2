@@ -152,12 +152,14 @@ export default function SearchablePatientSelect({
       recentCount: recentPatients.length
     });
 
-    const searchLower = search.toLowerCase();
+    const searchLower = search.toLowerCase().trim();
     const filtered = localPatients.filter(p => {
       if (!p) return false;
-      const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
-      const mrn = (p.medical_record_number || '').toLowerCase();
-      return fullName.includes(searchLower) || mrn.includes(searchLower);
+      const firstName = (p.first_name || '').trim().toLowerCase();
+      const lastName = (p.last_name || '').trim().toLowerCase();
+      const fullName = `${firstName} ${lastName}`;
+      const mrn = (p.medical_record_number || '').trim().toLowerCase();
+      return fullName.includes(searchLower) || mrn.includes(searchLower) || firstName.includes(searchLower) || lastName.includes(searchLower);
     });
 
     const favorites = filtered.filter(p => favoritedPatients.includes(p.id));
