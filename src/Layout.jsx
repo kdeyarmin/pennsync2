@@ -623,7 +623,10 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Notification Center Dialog */}
       <Dialog open={notificationCenterOpen} onOpenChange={setNotificationCenterOpen}>
-        <DialogContent className="max-w-2xl p-0">
+        <DialogContent className="max-w-2xl p-0 border-0">
+          <div className="sr-only">
+            <DialogTitle>Notifications</DialogTitle>
+          </div>
           <NotificationCenter 
             currentUser={currentUser} 
             onClose={() => setNotificationCenterOpen(false)} 
