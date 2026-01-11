@@ -22,7 +22,6 @@ import VitalsStep from "../components/smartNote/VitalsStep";
 import NotesStep from "../components/smartNote/NotesStep";
 import EnhancementStep from "../components/smartNote/EnhancementStep";
 
-// Common diagnoses list
 const commonDiagnoses = [
   "CHF (Congestive Heart Failure)",
   "COPD (Chronic Obstructive Pulmonary Disease)",
@@ -35,36 +34,14 @@ const commonDiagnoses = [
   "Custom (type below)"
 ];
 
-// Helper function to match and set diagnosis
 const matchAndSetDiagnosis = (patientDiagnosis, setDiagnosis, setCustomDiagnosis) => {
   if (!patientDiagnosis) return;
   const matchingDiagnosis = commonDiagnoses.find(dx => 
     patientDiagnosis.toLowerCase().includes(dx.toLowerCase().split(' ')[0].toLowerCase()) ||
     dx.toLowerCase().includes(patientDiagnosis.toLowerCase().split(' ')[0].toLowerCase())
   );
-  if (matchingDiagnosis) {
-    setDiagnosis(matchingDiagnosis);
-  } else {
-    setDiagnosis("Custom (type below)");
-    setCustomDiagnosis(patientDiagnosis);
-  }
-};
-
-// Helper function to reset note state
-const resetNoteState = (setState) => {
-  setState.setRoughNote("");
-  setState.setEnhancedNote("");
-  setState.setAnalysisResults(null);
-  setState.setVisitDate(todayEastern());
-  setState.setCopied(false);
-  setState.setSavedSuccessfully(false);
-  setState.setCollapsedSteps([]);
-  setState.setRecheckMode(false);
-};
-
-// Helper function to update vital signs
-const updateVitalSigns = (vitalSigns, setVitalSigns, field, value) => {
-  setVitalSigns({ ...vitalSigns, [field]: value });
+  setDiagnosis(matchingDiagnosis || "Custom (type below)");
+  if (!matchingDiagnosis) setCustomDiagnosis(patientDiagnosis);
 };
 
 
