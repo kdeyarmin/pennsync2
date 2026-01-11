@@ -23,7 +23,7 @@ export default function PatientSelectionStep({
   patients, selectedPatientId, selectedPatient, 
   visitDate, visitType, diagnosis, customDiagnosis,
   onPatientChange, onVisitDateChange, onVisitTypeChange, onDiagnosisChange, onCustomDiagnosisChange,
-  isCollapsed, onToggleCollapse, currentStep
+  isCollapsed, onToggleCollapse, currentStep, isLoading = false
 }) {
   return (
     <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
@@ -46,12 +46,12 @@ export default function PatientSelectionStep({
         <CardContent className="p-4 md:p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <div>
-              <Label className="text-sm md:text-base mb-2 block">Patient</Label>
+              <Label className="text-sm md:text-base mb-2 block">Patient {isLoading && "(Loading...)"}</Label>
               <SearchablePatientSelect
-                patients={patients}
+                patients={patients || []}
                 value={selectedPatientId}
                 onValueChange={onPatientChange}
-                placeholder="Search patients..."
+                placeholder={isLoading ? "Loading patients..." : "Search patients..."}
               />
             </div>
             <div>
