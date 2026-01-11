@@ -426,7 +426,7 @@ export default function SmartNoteAssistant() {
     const currentIndex = stepOrder.indexOf(currentStep);
     
     // Allow clicking on completed steps or current step
-    if (targetIndex <= currentIndex || completedSteps.includes(stepId)) {
+    if (targetIndex <= currentIndex) {
       // Scroll to the relevant section
       const sectionId = `step-${stepId}`;
       document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });

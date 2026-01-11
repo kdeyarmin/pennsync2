@@ -1,3 +1,4 @@
+import AIDocumentGenerator from './pages/AIDocumentGenerator';
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
@@ -76,11 +77,11 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import AIDocumentGenerator from './pages/AIDocumentGenerator';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIDocumentGenerator": AIDocumentGenerator,
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
@@ -159,7 +160,6 @@ export const PAGES = {
     "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "AIDocumentGenerator": AIDocumentGenerator,
 }
 
 export const pagesConfig = {
