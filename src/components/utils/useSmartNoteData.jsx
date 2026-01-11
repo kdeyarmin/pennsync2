@@ -19,20 +19,28 @@ export const useSmartNoteData = (selectedPatientId) => {
         // Try list() first
         console.log('Trying Patient.list()...');
         const listResult = await base44.entities.Patient.list('-created_date', 100);
+              console.log('Patient.list() raw result:', listResult);
               let patientArray = Array.isArray(listResult) ? listResult : (listResult?.data ? listResult.data : []);
 
+              console.log('After normalization:', {
+                isArray: Array.isArray(patientArray),
+                count: patientArray?.length || 0
+              });
+
               if (!patientArray || patientArray.length === 0) {
+                console.log('Empty result, trying filter()...');
                 const filterResult = await base44.entities.Patient.filter({});
+                console.log('Patient.filter() raw result:', filterResult);
                 patientArray = Array.isArray(filterResult) ? filterResult : (filterResult?.data ? filterResult.data : []);
               }
-        
-        console.log('Final patient array:', {
-          count: patientArray.length,
-          firstPatient: patientArray[0] ? {
-            id: patientArray[0].id,
-            name: `${patientArray[0].first_name} ${patientArray[0].last_name}`
-          } : null
-        });
+
+              console.log('Final patient array:', {
+                count: patientArray.length,
+                firstPatient: patientArray[0] ? {
+                  id: patientArray[0].id,
+                  name: `${patientArray[0].first_name} ${patientArray[0].last_name}`
+                } : null
+              });
         
         return patientArray;
       } catch (err) {
