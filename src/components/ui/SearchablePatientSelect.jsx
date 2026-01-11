@@ -145,6 +145,13 @@ export default function SearchablePatientSelect({
 
   // Filter and organize patients
   const { favoritesList, recentList, allPatientsList } = useMemo(() => {
+    console.log('SearchablePatientSelect organizing:', {
+      localPatientsCount: localPatients.length,
+      search,
+      favoritedCount: favoritedPatients.length,
+      recentCount: recentPatients.length
+    });
+
     const searchLower = search.toLowerCase();
     const filtered = localPatients.filter(p => {
       if (!p) return false;
@@ -164,6 +171,13 @@ export default function SearchablePatientSelect({
       !favoritedPatients.includes(p.id) && 
       !recent.some(r => r?.id === p.id)
     );
+
+    console.log('SearchablePatientSelect organized:', {
+      favoritesList: favorites.length,
+      recentList: recent.length,
+      allPatientsList: all.length,
+      totalFiltered: filtered.length
+    });
 
     return {
       favoritesList: favorites,
