@@ -462,6 +462,7 @@ export default function SmartNoteAssistant() {
             isCollapsed={collapsedSteps.includes('patient')}
             onToggleCollapse={() => toggleStepCollapse('patient')}
             currentStep={currentStep}
+            isLoading={isLoading}
           />
 
 
