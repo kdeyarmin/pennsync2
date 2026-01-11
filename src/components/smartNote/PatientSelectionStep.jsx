@@ -25,6 +25,11 @@ export default function PatientSelectionStep({
   onPatientChange, onVisitDateChange, onVisitTypeChange, onDiagnosisChange, onCustomDiagnosisChange,
   isCollapsed, onToggleCollapse, currentStep, isLoading = false
 }) {
+  React.useEffect(() => {
+    console.log('PatientSelectionStep - patients array:', patients);
+    console.log('PatientSelectionStep - patients length:', Array.isArray(patients) ? patients.length : 'not an array');
+  }, [patients]);
+
   return (
     <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
       <CardHeader 
