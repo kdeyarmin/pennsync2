@@ -136,14 +136,15 @@ export default function SearchablePatientSelect({
   };
 
   // Get patient by ID
-  const getPatient = (id) => patients.find(p => p.id === id);
+  const getPatient = (id) => localPatients.find(p => p.id === id);
   const selectedPatient = getPatient(value);
 
   // Filter and organize patients
   const { favoritesList, recentList, allPatientsList } = useMemo(() => {
     const searchLower = search.toLowerCase();
-    const filtered = patients.filter(p => {
-      const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+    const filtered = localPatients.filter(p => {
+      if (!p) return false;
+      const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
       const mrn = (p.medical_record_number || '').toLowerCase();
       return fullName.includes(searchLower) || mrn.includes(searchLower);
     });
@@ -165,7 +166,7 @@ export default function SearchablePatientSelect({
       recentList: recent,
       allPatientsList: all
     };
-  }, [patients, search, favoritedPatients, recentPatients]);
+  }, [localPatients, search, favoritedPatients, recentPatients]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
