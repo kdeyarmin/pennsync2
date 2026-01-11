@@ -51,13 +51,18 @@ export default function SearchablePatientSelect({
 
   // Sync local patients when prop changes
   useEffect(() => {
+    let patientArray = [];
     if (Array.isArray(patients)) {
-      console.log('SearchablePatientSelect syncing patients:', {
-        incomingPatients: patients,
-        count: patients.length
-      });
-      setLocalPatients(patients);
+      patientArray = patients;
+    } else if (patients?.data && Array.isArray(patients.data)) {
+      patientArray = patients.data;
     }
+    
+    console.log('SearchablePatientSelect syncing patients:', {
+      incomingPatients: patientArray,
+      count: patientArray.length
+    });
+    setLocalPatients(patientArray);
   }, [patients]);
 
   // Load current user and their preferences
