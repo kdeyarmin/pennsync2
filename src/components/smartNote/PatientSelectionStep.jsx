@@ -27,6 +27,9 @@ export default function PatientSelectionStep({
   onPatientChange, onVisitDateChange, onVisitTypeChange, onDiagnosisChange, onCustomDiagnosisChange,
   isCollapsed, onToggleCollapse, currentStep, isLoading = false
 }) {
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
   React.useEffect(() => {
     console.log('PatientSelectionStep props:', {
       patientsArray: patients,
@@ -35,6 +38,12 @@ export default function PatientSelectionStep({
       isLoading
     });
   }, [patients, selectedPatientId, isLoading]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ['patients'] });
+    setIsRefreshing(false);
+  };
 
   return (
     <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
