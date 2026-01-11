@@ -760,6 +760,7 @@ export default function SmartNoteAssistant() {
         <div className="lg:col-span-2 space-y-4 md:space-y-6">
 
           {/* Guided Workflow Mode */}
+
           {useGuidedWorkflow && selectedPatientId && !enhancedNote && (
             <GuidedVisitWorkflow
               patientData={selectedPatient}
@@ -1161,8 +1162,48 @@ export default function SmartNoteAssistant() {
 
                 </React.Fragment>
                 )}
-        </div>
-      </div>
-    </div>
-  );
-}
+                </div>
+
+                {/* Right Sidebar - AI Tools */}
+                <div className="lg:col-span-1 space-y-4">
+                <ContextualAITools
+                currentStep={currentStep}
+                hasPatient={!!selectedPatientId}
+                hasNotes={roughNote.length >= 50}
+                hasEnhancedNote={!!enhancedNote}
+                onAction={(action) => {
+                if (action === 'enhance') {
+                // Trigger enhancement
+                } else if (action === 'copy') {
+                handleCopy();
+                } else if (action === 'tasks') {
+                // Open task generator
+                } else if (action === 'clear') {
+                handleClearNote();
+                }
+                }}
+                diagnosis={finalDiagnosis}
+                complianceScore={analysisResults?.overall_score}
+                />
+
+                {/* Guidelines Reference */}
+                {selectedPatientId && selectedPatient && (
+                <GuidelineReferencePanel
+                diagnosis={finalDiagnosis}
+                visitType={visitType}
+                />
+                )}
+
+                {/* Patient Quick Actions */}
+                {selectedPatientId && selectedPatient && (
+                <QuickActionsBar
+                patient={selectedPatient}
+                visitType={visitType}
+                carePlans={carePlans}
+                />
+                )}
+                </div>
+                </div>
+                </div>
+                );
+                }
