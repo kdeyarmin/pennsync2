@@ -134,7 +134,12 @@ export default function SearchablePatientSelect({
   // Filter and organize patients
   const { favoritesList, recentList, allPatientsList } = useMemo(() => {
     const searchLower = search.toLowerCase();
-    const filtered = patients.filter(p => {
+    const patientsArray = patients || [];
+    
+    console.log('SearchablePatientSelect - patients:', patientsArray.length, patientsArray);
+    
+    const filtered = patientsArray.filter(p => {
+      if (!p || !p.first_name || !p.last_name) return false;
       const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
       const mrn = (p.medical_record_number || '').toLowerCase();
       return fullName.includes(searchLower) || mrn.includes(searchLower);
@@ -151,6 +156,8 @@ export default function SearchablePatientSelect({
       !favoritedPatients.includes(p.id) && 
       !recent.some(r => r?.id === p.id)
     );
+
+    console.log('Filtered results - favorites:', favorites.length, 'recent:', recent.length, 'all:', all.length);
 
     return {
       favoritesList: favorites,
