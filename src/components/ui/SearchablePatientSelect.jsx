@@ -222,7 +222,8 @@ export default function SearchablePatientSelect({
       <PopoverContent 
         className="w-[500px] p-0" 
         align="start"
-        sideOffset={4}
+        side="bottom"
+        sideOffset={8}
       >
         <Command shouldFilter={false}>
           <CommandInput 
