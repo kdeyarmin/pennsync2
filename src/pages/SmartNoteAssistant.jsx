@@ -132,18 +132,15 @@ export default function SmartNoteAssistant() {
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
   const [vitalSigns, setVitalSigns] = useState({ bp_systolic: "", bp_diastolic: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
-  const [roughNote, setRoughNote] = useState("");
-  const [enhancedNote, setEnhancedNote] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [collapsedSteps, setCollapsedSteps] = useState([]);
-  const [recheckMode, setRecheckMode] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [interimText, setInterimText] = useState('');
-  const recognitionRef = React.useRef(null);
   const [referralData, setReferralData] = useState(null);
+  const [savedVisitId, setSavedVisitId] = useState(null);
+  
+  const { roughNote, setRoughNote, enhancedNote, setEnhancedNote, analysisResults, setAnalysisResults, copied, setCopied, savedSuccessfully, setSavedSuccessfully, recheckMode, setRecheckMode, resetNote, startRecheck, completeEnhancement } = useNoteManagement();
+  const { listening, interimText, startDictation, stopDictation } = useSpeechRecognition((transcript) => {
+    setRoughNote(prev => prev ? prev + ' ' + transcript : transcript);
+  });
+  const { patients, selectedPatient, carePlans, recentVisits, oasisContext, patientContext } = usePatientData(selectedPatientId);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
