@@ -227,7 +227,7 @@ export default function SearchablePatientSelect({
             {localPatients.length === 0 ? (
               <CommandEmpty>
                 <div className="py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">No patients available.</p>
+                  <p className="text-sm text-muted-foreground mb-3">No patients available. (Loaded: {localPatients.length})</p>
                   <Button 
                     onClick={openCreateDialog}
                     size="sm"
