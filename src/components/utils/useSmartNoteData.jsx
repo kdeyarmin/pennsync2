@@ -33,11 +33,15 @@ export const useSmartNoteData = (selectedPatientId) => {
     queryKey: ['patients'],
     queryFn: async () => {
       try {
-        const listResult = await base44.entities.Patient.list('-updated_date', 500);
-        console.log('Patient list result:', { listResult, isArray: Array.isArray(listResult), length: listResult?.length });
-        
+        const listResult = await base44.entities.Patient.list('-updated_date', 1000);
         let patientArray = normalizeApiResponse(listResult);
-        console.log('Normalized patients:', { patientArray, length: patientArray?.length });
+        
+        // Fallback: If list returns empty, try filter
+        if (!patientArray || patientArray.length === 0) {
+          console.log('List returned empty, trying filter...');
+          const filterResult = await base44.entities.Patient.filter({}, '-updated_date', 1000);
+          patientArray = normalizeApiResponse(filterResult);
+        }
 
         return Array.isArray(patientArray) ? patientArray : [];
       } catch (err) {
@@ -46,10 +50,10 @@ export const useSmartNoteData = (selectedPatientId) => {
       }
     },
     initialData: [],
-    staleTime: 300000,
-    gcTime: 300000,
-    retry: 3,
-    retryDelay: 1000
+    staleTime: 0,
+    gcTime: 0,
+    retry: 2,
+    retryDelay: 500
   });
 
   // Fetch selected patient's care plans
