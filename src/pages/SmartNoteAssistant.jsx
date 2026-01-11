@@ -904,6 +904,7 @@ export default function SmartNoteAssistant() {
                     <div>
                        <Label className="text-xs mb-1 block">Blood Pressure</Label>
                        <Input
+                         type="text"
                          placeholder="120/80"
                          value={vitalSigns.bp || ''}
                          onChange={(e) => setVitalSigns({...vitalSigns, bp: e.target.value})}
@@ -914,6 +915,7 @@ export default function SmartNoteAssistant() {
                      <div>
                        <Label className="text-xs mb-1 block">Heart Rate</Label>
                        <Input
+                         type="text"
                          placeholder="72"
                          value={vitalSigns.hr || ''}
                          onChange={(e) => setVitalSigns({...vitalSigns, hr: e.target.value})}
@@ -924,6 +926,7 @@ export default function SmartNoteAssistant() {
                      <div>
                        <Label className="text-xs mb-1 block">Temperature</Label>
                        <Input
+                         type="text"
                          placeholder="98.6"
                          value={vitalSigns.temp || ''}
                          onChange={(e) => setVitalSigns({...vitalSigns, temp: e.target.value})}
@@ -934,6 +937,7 @@ export default function SmartNoteAssistant() {
                      <div>
                        <Label className="text-xs mb-1 block">Pain (0-10)</Label>
                        <Input
+                         type="text"
                          placeholder="0"
                          value={vitalSigns.pain || ''}
                          onChange={(e) => setVitalSigns({...vitalSigns, pain: e.target.value})}
@@ -946,14 +950,15 @@ export default function SmartNoteAssistant() {
                     <div>
                       <Label className="text-xs mb-1 block">O2 Saturation</Label>
                       <Input
+                        type="text"
                         placeholder="98"
                         value={vitalSigns.o2 || ''}
                         onChange={(e) => setVitalSigns({...vitalSigns, o2: e.target.value})}
                         inputMode="numeric"
                         className="text-sm"
                       />
-                    </div>
-                    <div>
+                      </div>
+                      <div>
                       <Label className="text-xs mb-1 block">O2 Source</Label>
                       <Select 
                         value={vitalSigns.o2Source || 'room_air'} 
@@ -972,6 +977,7 @@ export default function SmartNoteAssistant() {
                       <div>
                         <Label className="text-xs mb-1 block">O2 Flow Rate</Label>
                         <Input
+                          type="text"
                           placeholder="L/min"
                           value={vitalSigns.o2Flow || ''}
                           onChange={(e) => setVitalSigns({...vitalSigns, o2Flow: e.target.value})}
