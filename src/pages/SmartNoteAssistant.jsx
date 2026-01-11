@@ -52,66 +52,16 @@ import {
   FileText,
   Clock
 } from "lucide-react";
-import ComplianceScoreIndicator from "../components/smartNote/ComplianceScoreIndicator";
-import ClinicalDecisionSupport from "../components/smartNote/ClinicalDecisionSupport";
-import TaskGenerator from "../components/smartNote/TaskGenerator";
-import UnifiedComplianceEngine from "../components/compliance/UnifiedComplianceEngine";
-import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
-import AICarePlanOptimizer from "../components/carePlan/AICarePlanOptimizer";
-import ComplianceSummaryReport from "../components/smartNote/ComplianceSummaryReport";
-import FloatingActionBar from "../components/smartNote/FloatingActionBar";
-import QuickPhraseButtons from "../components/smartNote/QuickPhraseButtons";
-import EnhancedStepIndicator from "../components/smartNote/EnhancedStepIndicator";
-import UnifiedAIPanel from "../components/smartNote/UnifiedAIPanel";
-import QuickActionsBar from "../components/smartNote/QuickActionsBar";
-import RichTextNoteEditor from "../components/smartNote/RichTextNoteEditor";
-
-import SmartAutoComplete from "../components/smartNote/SmartAutoComplete";
 import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
-import AIPatientHistorySummarizer from "../components/smartNote/AIPatientHistorySummarizer";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
-import { todayEastern, formatEastern } from "../components/utils/timezone";
-import ConsolidatedAIFeedback from "../components/smartNote/ConsolidatedAIFeedback";
-import NextStepsPanel from "../components/smartNote/NextStepsPanel";
-import UnifiedPatientOverview from "../components/smartNote/UnifiedPatientOverview";
-import UnifiedAISuggestions from "../components/smartNote/UnifiedAISuggestions";
-import DynamicAISidebar from "../components/smartNote/DynamicAISidebar";
-import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "../components/smartNote/GuidelineContextRetriever";
+import { todayEastern } from "../components/utils/timezone";
 import FavoriteButton from "../components/navigation/FavoriteButton";
-import MedicalTerminologyProcessor, { standardizeTerminology } from "../components/smartNote/MedicalTerminologyProcessor";
-import ComprehensivePatientContext, { buildComprehensiveContext, formatContextForAI } from "../components/smartNote/ComprehensivePatientContext";
-import AIProactiveSuggestions from "../components/smartNote/AIProactiveSuggestions";
 import GuidelineReferencePanel from "../components/guidelines/GuidelineReferencePanel";
-import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentReviewer";
-import RealTimeClinicalAlertMonitor from "../components/smartNote/RealTimeClinicalAlertMonitor";
-import AIMedicalKnowledgeBase from "../components/smartNote/AIMedicalKnowledgeBase";
-import AIDocumentAnalyzer from "../components/smartNote/AIDocumentAnalyzer";
-import PatientHistoryTimeline from "../components/patient/PatientHistoryTimeline";
-import { buildComprehensivePatientHistory } from "../components/utils/patientHistoryAnalyzer";
-import OASISAutomationPanel from "../components/oasis/OASISAutomationPanel";
-import GuidedDocumentationWorkflow from "../components/smartNote/GuidedDocumentationWorkflow";
-import PatientHistoryAutoPopulator from "../components/smartNote/PatientHistoryAutoPopulator";
-import ConditionalAIAssistant from "../components/smartNote/ConditionalAIAssistant";
-import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
-import VisitTypeSpecificGuidance from "../components/smartNote/VisitTypeSpecificGuidance";
-import PersonalizedEducationGenerator from "../components/education/PersonalizedEducationGenerator";
-import AIComplianceAssistant from "../components/compliance/AIComplianceAssistant";
 import UnifiedDocumentReview from "../components/smartNote/UnifiedDocumentReview";
-import AIScenarioTemplates from "../components/smartNote/AIScenarioTemplates";
-import ProactiveEducationSuggester from "../components/smartNote/ProactiveEducationSuggester";
-import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
-import AISmartOASISAssistant from "../components/oasis/AISmartOASISAssistant";
+import QuickActionsBar from "../components/smartNote/QuickActionsBar";
 import GuidedVisitWorkflow from "../components/visit/GuidedVisitWorkflow";
-import EnhancedPatientContextPanel from "../components/smartNote/EnhancedPatientContextPanel";
-import PatientTimelineView from "../components/smartNote/PatientTimelineView";
-import IntegratedOASISAnalyzer from "../components/smartNote/IntegratedOASISAnalyzer";
-import AutoEventExtractor from "../components/smartNote/AutoEventExtractor";
-import ReferralBasedDocumentationAssistant from "../components/smartNote/ReferralBasedDocumentationAssistant";
-import RealTimeClinicalEventTracker from "../components/smartNote/RealTimeClinicalEventTracker";
-import ClinicalEventsSummary from "../components/smartNote/ClinicalEventsSummary";
-import AIDraftSOAPNote from "../components/smartNote/AIDraftSOAPNote";
-import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import AdmissionNotePrePopulator from "../components/smartNote/AdmissionNotePrePopulator";
+import AIAdmissionDocumentationAssistant from "../components/clinical/AIAdmissionDocumentationAssistant";
 
 // Common diagnoses list
 const commonDiagnoses = [
@@ -211,25 +161,7 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
   );
 }
 
-// Smart caching for AI responses to prevent redundant API calls
-const aiResponseCache = new Map();
 
-const useCachedAIResponse = (cacheKey, fetcher, ttl = 300000) => { // 5 min TTL
-  const getCached = () => {
-    const cached = aiResponseCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < ttl) {
-      return cached.data;
-    }
-    return null;
-  };
-
-  const setCached = (data) => {
-    aiResponseCache.set(cacheKey, { data, timestamp: Date.now() });
-    return data;
-  };
-
-  return { getCached, setCached };
-};
 
 export default function SmartNoteAssistant() {
   const queryClient = useQueryClient();
@@ -250,13 +182,7 @@ export default function SmartNoteAssistant() {
   const [listening, setListening] = useState(false);
   const [interimText, setInterimText] = useState('');
   const recognitionRef = React.useRef(null);
-  const [oasisSuggestions, setOasisSuggestions] = useState(null);
-  const [admissionDocumentation, setAdmissionDocumentation] = useState({});
-  const [useGuidedWorkflow, setUseGuidedWorkflow] = useState(false);
-  const [savedVisitId, setSavedVisitId] = useState(null);
   const [referralData, setReferralData] = useState(null);
-  const [referralIntakeAnalysis, setReferralIntakeAnalysis] = useState(null);
-  const [referralId, setReferralId] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -269,21 +195,15 @@ export default function SmartNoteAssistant() {
     const refId = urlParams.get('referral_id');
     
     if (refId) {
-      setReferralId(refId);
       base44.entities.Referral.filter({ id: refId }).then(referrals => {
         if (referrals.length > 0 && referrals[0].extracted_data) {
           const referral = referrals[0];
-          setReferralData(referral.extracted_data);
-          setReferralIntakeAnalysis(referral.analysis_results?.intake_analysis);
-          setVisitType('admission');
-          
-          // Prepopulate from referral data
-          if (referral.patient_id) {
-            setSelectedPatientId(referral.patient_id);
-          }
-          
-          // Prepopulate vitals if available
           const vitals = referral.extracted_data.vital_signs || {};
+          
+          setReferralData(referral.extracted_data);
+          setVisitType('admission');
+          if (referral.patient_id) setSelectedPatientId(referral.patient_id);
+          
           if (vitals.blood_pressure || vitals.blood_pressure_systolic) {
             setVitalSigns(prev => ({
               ...prev,
@@ -382,12 +302,7 @@ export default function SmartNoteAssistant() {
     }
   }, [selectedPatient, selectedPatientId]);
 
-  // Clear AI cache when patient changes
-  React.useEffect(() => {
-    if (selectedPatientId) {
-      aiResponseCache.clear();
-    }
-  }, [selectedPatientId]);
+
 
   const finalDiagnosis = diagnosis === "Custom (type below)" ? customDiagnosis : diagnosis;
 
@@ -442,15 +357,7 @@ export default function SmartNoteAssistant() {
     }
   };
 
-  const completedSteps = useMemo(() => {
-    const steps = [];
-    if (selectedPatientId) steps.push('patient');
-    if (vitalSigns.bp_systolic || vitalSigns.hr) steps.push('vitals');
-    if (roughNote.length >= 50) steps.push('notes');
-    if (analysisResults) steps.push('review');
-    if (enhancedNote) steps.push('complete');
-    return steps;
-  }, [selectedPatientId, vitalSigns, roughNote, enhancedNote, analysisResults]);
+
 
   const toggleStepCollapse = (step) => {
     setCollapsedSteps(prev => 
@@ -532,8 +439,6 @@ export default function SmartNoteAssistant() {
       });
 
       queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['nurseNoteConversions', currentUser.email] });
     } catch (error) {
       console.error('Error saving note:', error);
       alert('Failed to save note. Please try again.');
@@ -676,19 +581,7 @@ export default function SmartNoteAssistant() {
     };
   }, []);
 
-  const handleSaveAdmissionSection = (sectionTitle, content) => {
-    setAdmissionDocumentation(prev => ({
-      ...prev,
-      [sectionTitle]: content
-    }));
-    
-    // Optionally append to rough notes for continuity
-    const sectionText = `\n\n=== ${sectionTitle} ===\n${content}`;
-    setRoughNote(prev => prev + sectionText);
-  };
 
-  // Show admission tools only for admission visits
-  const showAdmissionTools = visitType === 'admission' && selectedPatientId;
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
