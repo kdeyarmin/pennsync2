@@ -12,7 +12,11 @@ export const useSmartNoteData = (selectedPatientId) => {
   // Fetch all patients
   const { data: patients = [], isLoading: isLoadingPatients, error: errorPatients } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryFn: async () => {
+      const result = await base44.entities.Patient.list();
+      console.log('useSmartNoteData - fetched patients:', result);
+      return result;
+    },
     initialData: [],
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
