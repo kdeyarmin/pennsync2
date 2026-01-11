@@ -246,20 +246,23 @@ export default function Dashboard() {
       </div>
 
       {/* Dashboard Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
-        <ComplianceAlertNotifications 
-          nurseEmail={currentUser?.email}
-          showAll={false}
-          maxAlerts={5}
-          compact={true}
-        />
-        <SmartRouteOptimizer
-          visits={visits.filter(v => v.status === 'scheduled')}
-          patients={patients}
-          onOptimizedSchedule={(order) => console.log('Optimized:', order)}
-        />
-
-      </div>
+      {currentUser?.email && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
+          <ComplianceAlertNotifications 
+            nurseEmail={currentUser?.email}
+            showAll={false}
+            maxAlerts={5}
+            compact={true}
+          />
+          {visits.length > 0 && (
+            <SmartRouteOptimizer
+              visits={visits.filter(v => v.status === 'scheduled')}
+              patients={patients}
+              onOptimizedSchedule={(order) => console.log('Optimized:', order)}
+            />
+          )}
+        </div>
+      )}
 
       {/* Proactive Clinical Support - Show for first scheduled patient */}
       {visits.length > 0 && visits[0]?.patient_id && (
