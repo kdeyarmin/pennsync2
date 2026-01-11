@@ -142,15 +142,12 @@ export default function SmartNoteAssistant() {
   });
   const { currentUser, patients, selectedPatient, carePlans, recentVisits, patientOASIS, oasisContext, patientContext, isLoading, error } = useSmartNoteData(selectedPatientId);
 
+  // Show error alert if patient loading fails
   useEffect(() => {
-    console.log('SmartNoteAssistant - useSmartNoteData returned:', {
-      patientsCount: Array.isArray(patients) ? patients.length : 'not array',
-      patients: patients,
-      selectedPatient,
-      isLoading,
-      error
-    });
-  }, [patients, selectedPatient, isLoading, error]);
+    if (error) {
+      console.error('Patient loading error:', error);
+    }
+  }, [error]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
