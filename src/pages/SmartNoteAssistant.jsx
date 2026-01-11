@@ -891,7 +891,7 @@ export default function SmartNoteAssistant() {
                 onClick={() => collapsedSteps.includes('vitals') && toggleStepCollapse('vitals')}
               >
                 <CardTitle className="text-base md:text-lg flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${(vitalSigns.bp || vitalSigns.hr) ? 'bg-green-500' : 'bg-gray-400'}`}>
+                  <div className={`p-2 rounded-full ${(vitalSigns.bp_systolic || vitalSigns.hr) ? 'bg-green-500' : 'bg-gray-400'}`}>
                     <Activity className="w-4 h-4 text-white" />
                   </div>
                   <span>2. Vitals</span>
