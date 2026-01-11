@@ -459,13 +459,17 @@ export default function SmartNoteAssistant() {
   };
 
   const handleEnhancedNoteReady = async ({ enhancedNote: finalNote, analysis, appliedSuggestions }) => {
+    if (!selectedPatientId || !currentUser?.email) {
+      console.error('Missing required data for saving note');
+      return;
+    }
+
     setEnhancedNote(finalNote);
     setAnalysisResults(analysis);
     setRecheckMode(false);
 
-    // Auto-save to patient chart
     try {
-      const savedVisit = await base44.entities.Visit.create({
+      const visitData = {
         patient_id: selectedPatientId,
         visit_date: visitDate,
         visit_type: visitType,
@@ -473,53 +477,55 @@ export default function SmartNoteAssistant() {
         nurse_notes: finalNote,
         raw_transcription: roughNote,
         vital_signs: {
-           blood_pressure_systolic: vitalSigns.bp_systolic ? parseInt(vitalSigns.bp_systolic) : null,
-           blood_pressure_diastolic: vitalSigns.bp_diastolic ? parseInt(vitalSigns.bp_diastolic) : null,
-          heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
+          blood_pressure_systolic: vitalSigns.bp_systolic ? parseInt(vitalSigns.bp_systolic, 10) : null,
+          blood_pressure_diastolic: vitalSigns.bp_diastolic ? parseInt(vitalSigns.bp_diastolic, 10) : null,
+          heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr, 10) : null,
           temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
-          oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
-          pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain) : null
+          oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2, 10) : null,
+          pain_level: vitalSigns.pain ? parseInt(vitalSigns.pain, 10) : null
         }
-      });
+      };
 
+      const savedVisit = await base44.entities.Visit.create(visitData);
       setSavedVisitId(savedVisit.id);
       setSavedSuccessfully(true);
       setTimeout(() => setSavedSuccessfully(false), 3000);
 
-      // Track note enhancement
-      await base44.entities.NoteConversion.create({
-        nurse_email: currentUser?.email,
-        patient_id: selectedPatientId,
-        visit_type: visitType,
-        diagnosis: finalDiagnosis,
-        rough_note_length: roughNote.length,
-        enhanced_note_length: finalNote.length,
-        quality_score: analysis?.overall_score || 85,
-        rough_note_compliance: 50,
-        enhanced_note_compliance: analysis?.overall_score || 85,
-        compliance_improvement: (analysis?.overall_score || 85) - 50,
-        conversion_time_ms: 0,
-        nurse_name: currentUser?.full_name || 'Unknown'
-      });
+      const complianceScore = analysis?.overall_score || 85;
 
-      // Create compliance audit record for Medicare Compliance Dashboard
-      await base44.entities.ComplianceAudit.create({
-        visit_id: savedVisit.id,
-        nurse_email: currentUser?.email,
-        patient_id: selectedPatientId,
-        audit_date: new Date().toISOString(),
-        compliance_score: analysis?.overall_score || 85,
-        status: (analysis?.overall_score || 85) >= 90 ? 'passed' : (analysis?.overall_score || 85) >= 80 ? 'flagged' : 'critical',
-        issues: analysis?.issues || [],
-        compliant_elements: analysis?.compliant_elements || [],
-        audit_type: 'automated'
-      });
+      await Promise.all([
+        base44.entities.NoteConversion.create({
+          nurse_email: currentUser.email,
+          patient_id: selectedPatientId,
+          visit_type: visitType,
+          diagnosis: finalDiagnosis,
+          rough_note_length: roughNote.length,
+          enhanced_note_length: finalNote.length,
+          quality_score: complianceScore,
+          rough_note_compliance: 50,
+          enhanced_note_compliance: complianceScore,
+          compliance_improvement: complianceScore - 50,
+          conversion_time_ms: 0,
+          nurse_name: currentUser.full_name || 'Unknown'
+        }),
+        base44.entities.ComplianceAudit.create({
+          visit_id: savedVisit.id,
+          nurse_email: currentUser.email,
+          patient_id: selectedPatientId,
+          audit_date: new Date().toISOString(),
+          compliance_score: complianceScore,
+          status: complianceScore >= 90 ? 'passed' : complianceScore >= 80 ? 'flagged' : 'critical',
+          issues: analysis?.issues || [],
+          compliant_elements: analysis?.compliant_elements || [],
+          audit_type: 'automated'
+        })
+      ]);
 
       logActivity(ActivityActions.NOTE_ENHANCED, {
         patient_id: selectedPatientId,
         visit_type: visitType,
         diagnosis: finalDiagnosis,
-        overall_score: analysis?.overall_score || 85,
+        overall_score: complianceScore,
         suggestions_applied: appliedSuggestions?.length || 0,
         page: 'SmartNoteAssistant',
         ai_utilization: true
@@ -527,27 +533,32 @@ export default function SmartNoteAssistant() {
 
       queryClient.invalidateQueries({ queryKey: ['patientRecentVisits', selectedPatientId] });
       queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['nurseNoteConversions', currentUser?.email] });
+      queryClient.invalidateQueries({ queryKey: ['nurseNoteConversions', currentUser.email] });
     } catch (error) {
       console.error('Error saving note:', error);
+      alert('Failed to save note. Please try again.');
     }
   };
 
 
 
-    const handleCopy = () => {
-    navigator.clipboard.writeText(enhancedNote);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    
-    // Log copy action
-    logActivity(ActivityActions.EXPORT, {
-      type: 'clipboard_copy',
-      patient_id: selectedPatientId,
-      content_type: 'enhanced_note',
-      note_length: enhancedNote.length,
-      page: 'SmartNoteAssistant'
-    });
+    const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(enhancedNote);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      
+      logActivity(ActivityActions.EXPORT, {
+        type: 'clipboard_copy',
+        patient_id: selectedPatientId,
+        content_type: 'enhanced_note',
+        note_length: enhancedNote.length,
+        page: 'SmartNoteAssistant'
+      });
+    } catch (error) {
+      console.error('Copy to clipboard failed:', error);
+      alert('Failed to copy. Please try again.');
+    }
   };
 
 
@@ -576,68 +587,76 @@ export default function SmartNoteAssistant() {
       return;
     }
     
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
 
-    recognition.onresult = (event) => {
-      let interim = '';
-      let final = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          final += transcript + ' ';
-        } else {
-          interim += transcript;
-        }
-      }
-      
-      if (final) {
-        setRoughNote(prev => prev ? prev + ' ' + final.trim() : final.trim());
-        setInterimText('');
-      } else if (interim) {
-        setInterimText(interim);
-      }
-    };
-    
-    recognition.onend = () => {
-      setListening(prev => {
-        if (prev) {
-          try {
-            recognition.start();
-          } catch (e) {
-            console.error('Restart error:', e);
+      recognition.onresult = (event) => {
+        let interim = '';
+        let final = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += transcript + ' ';
+          } else {
+            interim += transcript;
           }
-        } else {
-          setInterimText('');
         }
-        return prev;
-      });
-    };
-    
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        if (listening) {
-          setTimeout(() => {
+        
+        if (final) {
+          setRoughNote(prev => prev ? prev + ' ' + final.trim() : final.trim());
+          setInterimText('');
+        } else if (interim) {
+          setInterimText(interim);
+        }
+      };
+      
+      recognition.onend = () => {
+        setListening(prev => {
+          if (prev) {
             try {
               recognition.start();
-            } catch (e) {}
+            } catch (e) {
+              console.error('Restart error:', e);
+              return false;
+            }
+          } else {
+            setInterimText('');
+          }
+          return prev;
+        });
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'no-speech' || event.error === 'audio-capture') {
+          setTimeout(() => {
+            try {
+              if (recognitionRef.current) {
+                recognition.start();
+              }
+            } catch (e) {
+              console.error('Restart after error failed:', e);
+            }
           }, 100);
+        } else {
+          setListening(false);
+          setInterimText('');
         }
-      } else {
-        setListening(false);
-        setInterimText('');
-      }
-    };
-    
-    setListening(true);
-    recognition.start();
+      };
+      
+      setListening(true);
+      recognition.start();
+    } catch (error) {
+      console.error('Failed to start dictation:', error);
+      alert('Failed to start voice dictation. Please try again.');
+    }
   };
 
   const stopDictation = () => {
@@ -700,11 +719,14 @@ export default function SmartNoteAssistant() {
             size="default" 
             className="text-gray-500 gap-1 min-h-[44px] flex-1 sm:flex-initial"
             onClick={async () => {
-              try {
-                const response = await base44.functions.invoke('generateSmartNoteGuide');
-                const data = response.data || response;
-                
-                if (data.pdf) {
+                try {
+                  const response = await base44.functions.invoke('generateSmartNoteGuide');
+                  const data = response?.data || response;
+
+                  if (!data?.pdf) {
+                    throw new Error('No PDF data received');
+                  }
+
                   const binaryString = atob(data.pdf);
                   const bytes = new Uint8Array(binaryString.length);
                   for (let i = 0; i < binaryString.length; i++) {
@@ -712,19 +734,18 @@ export default function SmartNoteAssistant() {
                   }
                   const blob = new Blob([bytes], { type: 'application/pdf' });
                   const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = data.filename || 'Smart_Note_Guide.pdf';
-                  document.body.appendChild(a);
-                  a.click();
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = data.filename || 'Smart_Note_Guide.pdf';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
                   window.URL.revokeObjectURL(url);
-                  a.remove();
+                } catch (error) {
+                  console.error('Error downloading guide:', error);
+                  alert('Failed to download guide. Please try again.');
                 }
-              } catch (error) {
-                console.error('Error downloading guide:', error);
-                alert('Failed to download guide. Please try again.');
-              }
-            }}
+              }}
           >
             <HelpCircle className="w-5 h-5" />
             <span className="hidden xl:inline">User Guide</span>
