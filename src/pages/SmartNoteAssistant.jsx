@@ -147,34 +147,29 @@ export default function SmartNoteAssistant() {
     queryFn: () => base44.auth.me(),
   });
 
-  // Check for referral data in URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('referral_id');
-    
-    if (refId) {
-      base44.entities.Referral.filter({ id: refId }).then(referrals => {
-        if (referrals.length > 0 && referrals[0].extracted_data) {
-          const referral = referrals[0];
-          const vitals = referral.extracted_data.vital_signs || {};
-          
-          setReferralData(referral.extracted_data);
-          setVisitType('admission');
-          if (referral.patient_id) setSelectedPatientId(referral.patient_id);
-          
-          if (vitals.blood_pressure || vitals.blood_pressure_systolic) {
-            setVitalSigns(prev => ({
-              ...prev,
-              bp_systolic: vitals.blood_pressure_systolic || vitals.blood_pressure?.split('/')[0] || '',
-              bp_diastolic: vitals.blood_pressure_diastolic || vitals.blood_pressure?.split('/')[1] || '',
-              hr: vitals.heart_rate || '',
-              temp: vitals.temperature || '',
-              o2: vitals.oxygen_saturation || ''
-            }));
-          }
-        }
-      }).catch(err => console.error('Error loading referral:', err));
-    }
+    if (!refId) return;
+
+    base44.entities.Referral.filter({ id: refId }).then(referrals => {
+      if (!referrals.length || !referrals[0].extracted_data) return;
+      const referral = referrals[0];
+      const vitals = referral.extracted_data.vital_signs || {};
+      setReferralData(referral.extracted_data);
+      setVisitType('admission');
+      if (referral.patient_id) setSelectedPatientId(referral.patient_id);
+      if (vitals.blood_pressure || vitals.blood_pressure_systolic) {
+        setVitalSigns(prev => ({
+          ...prev,
+          bp_systolic: vitals.blood_pressure_systolic || vitals.blood_pressure?.split('/')[0] || '',
+          bp_diastolic: vitals.blood_pressure_diastolic || vitals.blood_pressure?.split('/')[1] || '',
+          hr: vitals.heart_rate || '',
+          temp: vitals.temperature || '',
+          o2: vitals.oxygen_saturation || ''
+        }));
+      }
+    }).catch(err => console.error('Error loading referral:', err));
   }, []);
 
   // Log page visit
