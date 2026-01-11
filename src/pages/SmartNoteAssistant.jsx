@@ -238,7 +238,7 @@ export default function SmartNoteAssistant() {
   const [visitDate, setVisitDate] = useState(todayEastern());
   const [diagnosis, setDiagnosis] = useState("");
   const [customDiagnosis, setCustomDiagnosis] = useState("");
-  const [vitalSigns, setVitalSigns] = useState({ bp: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
+  const [vitalSigns, setVitalSigns] = useState({ bp_systolic: "", bp_diastolic: "", hr: "", temp: "", o2: "", o2Source: "room_air", o2Flow: "", pain: "" });
   const [roughNote, setRoughNote] = useState("");
   const [enhancedNote, setEnhancedNote] = useState("");
   const [copied, setCopied] = useState(false);
@@ -284,10 +284,11 @@ export default function SmartNoteAssistant() {
           
           // Prepopulate vitals if available
           const vitals = referral.extracted_data.vital_signs || {};
-          if (vitals.blood_pressure) {
+          if (vitals.blood_pressure || vitals.blood_pressure_systolic) {
             setVitalSigns(prev => ({
               ...prev,
-              bp: vitals.blood_pressure,
+              bp_systolic: vitals.blood_pressure_systolic || vitals.blood_pressure?.split('/')[0] || '',
+              bp_diastolic: vitals.blood_pressure_diastolic || vitals.blood_pressure?.split('/')[1] || '',
               hr: vitals.heart_rate || '',
               temp: vitals.temperature || '',
               o2: vitals.oxygen_saturation || ''
@@ -444,7 +445,7 @@ export default function SmartNoteAssistant() {
   const completedSteps = useMemo(() => {
     const steps = [];
     if (selectedPatientId) steps.push('patient');
-    if (vitalSigns.bp || vitalSigns.hr) steps.push('vitals');
+    if (vitalSigns.bp_systolic || vitalSigns.hr) steps.push('vitals');
     if (roughNote.length >= 50) steps.push('notes');
     if (analysisResults) steps.push('review');
     if (enhancedNote) steps.push('complete');
@@ -472,8 +473,8 @@ export default function SmartNoteAssistant() {
         nurse_notes: finalNote,
         raw_transcription: roughNote,
         vital_signs: {
-          blood_pressure_systolic: vitalSigns.bp?.split('/')[0] || null,
-          blood_pressure_diastolic: vitalSigns.bp?.split('/')[1] || null,
+           blood_pressure_systolic: vitalSigns.bp_systolic ? parseInt(vitalSigns.bp_systolic) : null,
+           blood_pressure_diastolic: vitalSigns.bp_diastolic ? parseInt(vitalSigns.bp_diastolic) : null,
           heart_rate: vitalSigns.hr ? parseInt(vitalSigns.hr) : null,
           temperature: vitalSigns.temp ? parseFloat(vitalSigns.temp) : null,
           oxygen_saturation: vitalSigns.o2 ? parseInt(vitalSigns.o2) : null,
@@ -894,23 +895,34 @@ export default function SmartNoteAssistant() {
                     <Activity className="w-4 h-4 text-white" />
                   </div>
                   <span>2. Vitals</span>
-                  {(vitalSigns.bp || vitalSigns.hr) && (
-                    <span className="text-sm text-gray-600 ml-2">BP: {vitalSigns.bp || '-'} | HR: {vitalSigns.hr || '-'}</span>
+                  {(vitalSigns.bp_systolic || vitalSigns.hr) && (
+                    <span className="text-sm text-gray-600 ml-2">BP: {vitalSigns.bp_systolic}{vitalSigns.bp_diastolic ? '/' + vitalSigns.bp_diastolic : ''} | HR: {vitalSigns.hr || '-'}</span>
                   )}
-                  {(vitalSigns.bp || vitalSigns.hr) && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
+                  {(vitalSigns.bp_systolic || vitalSigns.hr) && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
                 </CardTitle>
               </CardHeader>
               {!collapsedSteps.includes('vitals') && (
                 <CardContent className="p-4 md:p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
-                       <Label className="text-xs mb-1 block">Blood Pressure</Label>
+                       <Label className="text-xs mb-1 block">BP Systolic</Label>
                        <Input
                          type="text"
-                         placeholder="120/80"
-                         value={vitalSigns.bp || ''}
-                         onChange={(e) => setVitalSigns({...vitalSigns, bp: e.target.value})}
-                         inputMode="decimal"
+                         placeholder="120"
+                         value={vitalSigns.bp_systolic || ''}
+                         onChange={(e) => setVitalSigns({...vitalSigns, bp_systolic: e.target.value})}
+                         inputMode="numeric"
+                         className="text-sm"
+                       />
+                     </div>
+                     <div>
+                       <Label className="text-xs mb-1 block">BP Diastolic</Label>
+                       <Input
+                         type="text"
+                         placeholder="80"
+                         value={vitalSigns.bp_diastolic || ''}
+                         onChange={(e) => setVitalSigns({...vitalSigns, bp_diastolic: e.target.value})}
+                         inputMode="numeric"
                          className="text-sm"
                        />
                      </div>
