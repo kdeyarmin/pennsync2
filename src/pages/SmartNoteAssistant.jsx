@@ -414,10 +414,10 @@ export default function SmartNoteAssistant() {
   useEffect(() => {
     const newCollapsed = [];
     if (selectedPatientId && currentStep !== 'patient') newCollapsed.push('patient');
-    if ((vitalSigns.bp || vitalSigns.hr) && currentStep !== 'vitals') newCollapsed.push('vitals');
+    // Don't auto-collapse vitals - they're optional and user should control
     if (roughNote.length >= 50 && currentStep !== 'notes' && !enhancedNote) newCollapsed.push('notes');
     setCollapsedSteps(newCollapsed);
-  }, [currentStep, selectedPatientId, vitalSigns, roughNote, enhancedNote]);
+  }, [currentStep, selectedPatientId, roughNote, enhancedNote]);
 
   const stepOrder = ['patient', 'vitals', 'notes', 'review', 'complete'];
   
