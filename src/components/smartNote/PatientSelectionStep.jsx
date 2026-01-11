@@ -30,14 +30,7 @@ export default function PatientSelectionStep({
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  React.useEffect(() => {
-    console.log('PatientSelectionStep props:', {
-      patientsArray: patients,
-      patientsLength: Array.isArray(patients) ? patients.length : 'not array',
-      selectedPatientId,
-      isLoading
-    });
-  }, [patients, selectedPatientId, isLoading]);
+
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
