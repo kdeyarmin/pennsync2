@@ -49,6 +49,13 @@ export default function SearchablePatientSelect({
   const queryClient = useQueryClient();
   const [localPatients, setLocalPatients] = useState(Array.isArray(patients) ? patients : []);
 
+  // Sync local patients when prop changes
+  useEffect(() => {
+    if (Array.isArray(patients) && patients.length > 0) {
+      setLocalPatients(patients);
+    }
+  }, [patients]);
+
   // Load current user and their preferences
   useEffect(() => {
     const loadUserPreferences = async () => {
