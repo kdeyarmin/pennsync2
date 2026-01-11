@@ -348,6 +348,14 @@ export default function SearchablePatientSelect({
                 ))}
               </CommandGroup>
             )}
+
+            {localPatients.length > 0 && favoritesList.length === 0 && recentList.length === 0 && allPatientsList.length === 0 && (
+             <CommandEmpty>
+               <div className="py-6 text-center">
+                 <p className="text-sm text-muted-foreground mb-3">No patients match your search.</p>
+               </div>
+             </CommandEmpty>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
