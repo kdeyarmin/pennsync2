@@ -224,6 +224,7 @@ export default function SearchablePatientSelect({
         align="start"
         side="bottom"
         sideOffset={8}
+        avoidCollisions={false}
       >
         <Command shouldFilter={false}>
           <CommandInput 
