@@ -445,87 +445,29 @@ export default function SmartNoteAssistant() {
 
           <React.Fragment>
 
-          {/* Step 1: Patient Selection - Collapsible */}
-          <Card id="step-patient" className={`border-2 transition-all duration-300 ${currentStep === 'patient' ? 'border-blue-500 shadow-lg' : 'border-gray-300'}`}>
-            <CardHeader 
-              className={`py-4 md:py-5 cursor-pointer ${currentStep === 'patient' ? 'bg-gradient-to-r from-blue-100 to-indigo-100' : 'bg-gray-50'}`}
-              onClick={() => collapsedSteps.includes('patient') && toggleStepCollapse('patient')}
-            >
-              <CardTitle className="text-base md:text-lg flex items-center gap-3">
-                <div className={`p-2 rounded-full ${selectedPatient ? 'bg-green-500' : 'bg-blue-500'}`}>
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                <span>1. Patient & Visit</span>
-                {selectedPatient && (
-                  <span className="text-sm text-gray-600 ml-2">{selectedPatient.first_name} {selectedPatient.last_name}</span>
-                )}
-                {selectedPatient && <CheckCircle2 className="w-5 h-5 text-green-600 ml-auto" />}
-              </CardTitle>
-            </CardHeader>
-            {!collapsedSteps.includes('patient') && (
-              <CardContent className="p-4 md:p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                <div>
-                  <Label className="text-sm md:text-base mb-2 block">Patient</Label>
-                  <SearchablePatientSelect
-                    patients={patients}
-                    value={selectedPatientId}
-                    onValueChange={(id) => {
-                      setSelectedPatientId(id);
-                      const patient = patients.find(p => p.id === id);
-                      if (patient?.primary_diagnosis) {
-                        matchAndSetDiagnosis(patient.primary_diagnosis, setDiagnosis, setCustomDiagnosis);
-                      }
-                    }}
-                    placeholder="Search patients..."
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm md:text-base mb-2 block">Visit Date</Label>
-                  <Input 
-                    type="date" 
-                    value={visitDate} 
-                    onChange={(e) => setVisitDate(e.target.value)}
-                    max={todayEastern()}
-                    className="h-11 md:h-12 text-base"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm md:text-base mb-2 block">Visit Type</Label>
-                  <Select value={visitType} onValueChange={setVisitType}>
-                    <SelectTrigger className="h-11 md:h-12 text-base"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admission" className="text-base py-3">Admission</SelectItem>
-                      <SelectItem value="routine_visit" className="text-base py-3">Routine Visit</SelectItem>
-                      <SelectItem value="recertification" className="text-base py-3">Recertification</SelectItem>
-                      <SelectItem value="discharge" className="text-base py-3">Discharge</SelectItem>
-                      <SelectItem value="prn" className="text-base py-3">PRN Visit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm md:text-base mb-2 block">Diagnosis</Label>
-                  <Select value={diagnosis} onValueChange={setDiagnosis}>
-                    <SelectTrigger className="h-11 md:h-12 text-base"><SelectValue placeholder="Select..." /></SelectTrigger>
-                    <SelectContent>
-                      {commonDiagnoses.map((dx) => (
-                        <SelectItem key={dx} value={dx} className="text-base py-3">{dx}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              {diagnosis === "Custom (type below)" && (
-                <Input 
-                  placeholder="Enter custom diagnosis" 
-                  value={customDiagnosis} 
-                  onChange={(e) => setCustomDiagnosis(e.target.value)}
-                  className="h-11 md:h-12 text-base"
-                />
-              )}
-              </CardContent>
-            )}
-          </Card>
+          <PatientSelectionStep 
+            patients={patients}
+            selectedPatientId={selectedPatientId}
+            selectedPatient={selectedPatient}
+            visitDate={visitDate}
+            visitType={visitType}
+            diagnosis={diagnosis}
+            customDiagnosis={customDiagnosis}
+            onPatientChange={(id) => {
+              setSelectedPatientId(id);
+              const patient = patients.find(p => p.id === id);
+              if (patient?.primary_diagnosis) {
+                matchAndSetDiagnosis(patient.primary_diagnosis, setDiagnosis, setCustomDiagnosis);
+              }
+            }}
+            onVisitDateChange={setVisitDate}
+            onVisitTypeChange={setVisitType}
+            onDiagnosisChange={setDiagnosis}
+            onCustomDiagnosisChange={setCustomDiagnosis}
+            isCollapsed={collapsedSteps.includes('patient')}
+            onToggleCollapse={() => toggleStepCollapse('patient')}
+            currentStep={currentStep}
+          />
 
 
 
