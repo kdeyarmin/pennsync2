@@ -15,16 +15,21 @@ export const useSmartNoteData = (selectedPatientId) => {
     queryFn: async () => {
       try {
         console.log('Starting Patient.list() fetch...');
-        const result = await base44.entities.Patient.list();
-        console.log('useSmartNoteData - fetched patients:', result, 'count:', result?.length || 0);
-        return result || [];
+        const result = await base44.entities.Patient.list('-created_date', 100);
+        console.log('Patient.list() result:', {
+          type: typeof result,
+          isArray: Array.isArray(result),
+          value: result,
+          length: result?.length
+        });
+        return Array.isArray(result) ? result : [];
       } catch (err) {
-        console.error('Error fetching patients:', err);
+        console.error('Patient.list() error:', err);
         throw err;
       }
     },
     initialData: [],
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 
   // Fetch selected patient's care plans
