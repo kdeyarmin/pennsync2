@@ -225,13 +225,14 @@ export default function SearchablePatientSelect({
         sideOffset={4}
       >
         <Command shouldFilter={false}>
-          <div className="flex items-center border-b px-3 bg-white">
-            <Search className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
+          <div className="flex items-center border-b border-gray-200 px-3 py-2 bg-white gap-2">
+            <Search className="h-4 w-4 text-gray-400 flex-shrink-0" />
             <input
+              type="text"
               placeholder="Search patients..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex h-11 w-full bg-white py-3 text-sm outline-none placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full bg-white text-gray-900 text-sm focus:outline-none placeholder:text-gray-400"
               autoFocus
             />
           </div>
