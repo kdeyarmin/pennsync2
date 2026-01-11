@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import React from "react";
 
 export const useSmartNoteData = (selectedPatientId) => {
   // Fetch current user
