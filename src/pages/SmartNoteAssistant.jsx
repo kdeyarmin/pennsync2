@@ -89,7 +89,7 @@ function ContextualAITools({ currentStep, hasPatient, hasNotes, hasEnhancedNote,
       title: "✨ Ready to Enhance", 
       subtitle: "Step 3 of 4",
       items: [
-        { label: "Enhance Note", action: "enhance", type: "action", primary: true, icon: Sparkles },
+        { label: "Transform to Medicare-Compliant", action: "enhance", type: "action", primary: true, icon: Sparkles },
       ],
       hint: diagnosis ? `AI will optimize for ${diagnosis.split(' ')[0]}` : "AI adds clinical language & compliance elements"
     };
@@ -179,7 +179,6 @@ export default function SmartNoteAssistant() {
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [collapsedSteps, setCollapsedSteps] = useState([]);
   const [recheckMode, setRecheckMode] = useState(false);
-  const [shouldEnhance, setShouldEnhance] = useState(false);
   const [listening, setListening] = useState(false);
   const [interimText, setInterimText] = useState('');
   const recognitionRef = React.useRef(null);
@@ -478,7 +477,6 @@ export default function SmartNoteAssistant() {
     setSavedSuccessfully(false);
     setCollapsedSteps([]);
     setRecheckMode(false);
-    setShouldEnhance(false);
   };
 
   const handleRecheck = () => {
@@ -486,7 +484,6 @@ export default function SmartNoteAssistant() {
     setEnhancedNote("");
     setAnalysisResults(null);
     setRecheckMode(true);
-    setShouldEnhance(true);
   };
 
   const startDictation = () => {
@@ -1019,7 +1016,7 @@ export default function SmartNoteAssistant() {
           )}
 
           {/* Step 4: Auto-Enhancement */}
-          {shouldEnhance && roughNote.length >= 50 && !enhancedNote && (
+          {roughNote.length >= 50 && !enhancedNote && (
             <div id="step-review">
               <UnifiedDocumentReview
                 roughNote={roughNote}
@@ -1031,7 +1028,7 @@ export default function SmartNoteAssistant() {
                 recentVisits={recentVisits}
                 nurseType={currentUser?.credential_type || 'RN'}
                 onEnhancedNoteReady={handleEnhancedNoteReady}
-                autoRun={true}
+                autoRun={!recheckMode}
               />
             </div>
           )}
@@ -1106,12 +1103,13 @@ export default function SmartNoteAssistant() {
                 hasEnhancedNote={!!enhancedNote}
                 onAction={(action) => {
                 if (action === 'enhance') {
-                  setShouldEnhance(true);
+                // Trigger enhancement
                 } else if (action === 'copy') {
-                  handleCopy();
+                handleCopy();
+                } else if (action === 'tasks') {
+                // Open task generator
                 } else if (action === 'clear') {
-                  handleClearNote();
-                  setShouldEnhance(false);
+                handleClearNote();
                 }
                 }}
                 diagnosis={finalDiagnosis}
