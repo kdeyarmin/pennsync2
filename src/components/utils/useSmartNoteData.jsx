@@ -9,31 +9,30 @@ export const useSmartNoteData = (selectedPatientId) => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Fetch all patients
+  // Fetch all patients with robust error handling
   const { data: patients = [], isLoading: isLoadingPatients, error: errorPatients } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
       try {
-        console.log('=== Patient Fetch Debug ===');
-        
         const listResult = await base44.entities.Patient.list('-created_date', 100);
-                let patientArray = Array.isArray(listResult) ? listResult : (listResult?.data ? listResult.data : []);
+        let patientArray = normalizeApiResponse(listResult);
 
-                if (!patientArray || patientArray.length === 0) {
-                  const filterResult = await base44.entities.Patient.filter({});
-                  patientArray = Array.isArray(filterResult) ? filterResult : (filterResult?.data ? filterResult.data : []);
-                }
+        if (!patientArray || patientArray.length === 0) {
+          const filterResult = await base44.entities.Patient.filter({});
+          patientArray = normalizeApiResponse(filterResult);
+        }
 
-                // Ensure we always return an array
-                return Array.isArray(patientArray) ? patientArray : [];
+        return Array.isArray(patientArray) ? patientArray : [];
       } catch (err) {
         console.error('Patient fetch error:', err);
-        throw err;
+        throw new Error(`Failed to load patients: ${err.message || 'Unknown error'}`);
       }
     },
     initialData: [],
-    staleTime: 0, // Don't cache - fetch fresh data
-    gcTime: 0
+    staleTime: 0,
+    gcTime: 0,
+    retry: 2,
+    retryDelay: 1000
   });
 
   // Fetch selected patient's care plans
