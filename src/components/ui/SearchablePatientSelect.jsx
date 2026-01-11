@@ -206,19 +206,27 @@ export default function SearchablePatientSelect({
             />
           </div>
           <CommandList className="max-h-[400px]">
-            <CommandEmpty>
-              <div className="py-6 text-center">
-                <p className="text-sm text-muted-foreground mb-3">No patient found.</p>
-                <Button 
-                  onClick={openCreateDialog}
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create New Patient
-                </Button>
-              </div>
-            </CommandEmpty>
+            {localPatients.length === 0 ? (
+              <CommandEmpty>
+                <div className="py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-3">No patients available.</p>
+                  <Button 
+                    onClick={openCreateDialog}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create New Patient
+                  </Button>
+                </div>
+              </CommandEmpty>
+            ) : favoritesList.length === 0 && recentList.length === 0 && allPatientsList.length === 0 ? (
+              <CommandEmpty>
+                <div className="py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-3">No patients match your search.</p>
+                </div>
+              </CommandEmpty>
+            ) : null}
             
             {favoritesList.length > 0 && (
               <CommandGroup heading="Favorites">
