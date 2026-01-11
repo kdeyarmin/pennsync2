@@ -957,8 +957,8 @@ export default function SmartNoteAssistant() {
                         inputMode="numeric"
                         className="text-sm"
                       />
-                      </div>
-                      <div>
+                    </div>
+                    <div>
                       <Label className="text-xs mb-1 block">O2 Source</Label>
                       <Select 
                         value={vitalSigns.o2Source || 'room_air'} 
