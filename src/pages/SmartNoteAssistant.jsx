@@ -537,10 +537,24 @@ export default function SmartNoteAssistant() {
                   autoRun={true}
                 />
               </div>
-            ) : (
+            ) : enhancedNote ? (
               <EnhancementStep
                 roughNote={roughNote}
                 enhancedNote={enhancedNote}
+                copied={copied}
+                savedSuccessfully={savedSuccessfully}
+                recheckMode={recheckMode}
+                onEnhance={() => setRecheckMode(true)}
+                onCopy={handleCopy}
+                onRecheck={handleRecheck}
+                onClear={handleClearNote}
+                onNoteChange={setEnhancedNote}
+                analysisResults={analysisResults}
+              />
+            ) : (
+              <EnhancementStep
+                roughNote={roughNote}
+                enhancedNote={null}
                 copied={copied}
                 savedSuccessfully={savedSuccessfully}
                 recheckMode={recheckMode}
