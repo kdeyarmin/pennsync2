@@ -224,7 +224,7 @@ export default function SearchablePatientSelect({
         align="start"
         sideOffset={4}
       >
-        <Command shouldFilter={false}>
+        <Command>
           <CommandInput 
             placeholder="Search patients..." 
             value={search}
