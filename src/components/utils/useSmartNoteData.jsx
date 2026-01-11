@@ -13,9 +13,15 @@ export const useSmartNoteData = (selectedPatientId) => {
   const { data: patients = [], isLoading: isLoadingPatients, error: errorPatients } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
-      const result = await base44.entities.Patient.list();
-      console.log('useSmartNoteData - fetched patients:', result);
-      return result;
+      try {
+        console.log('Starting Patient.list() fetch...');
+        const result = await base44.entities.Patient.list();
+        console.log('useSmartNoteData - fetched patients:', result, 'count:', result?.length || 0);
+        return result || [];
+      } catch (err) {
+        console.error('Error fetching patients:', err);
+        throw err;
+      }
     },
     initialData: [],
     staleTime: 10 * 60 * 1000, // 10 minutes
