@@ -47,7 +47,7 @@ export default function EnhancementStep({
           <Textarea
             value={enhancedNote}
             onChange={(e) => onNoteChange(e.target.value)}
-            className="min-h-[500px] font-mono text-sm touch-target"
+            className="min-h-[700px] font-mono text-sm touch-target"
           />
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
