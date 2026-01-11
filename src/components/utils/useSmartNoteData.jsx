@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
+// Utility function to normalize API responses
+const normalizeApiResponse = (response) => {
+  if (Array.isArray(response)) return response;
+  if (response?.data && Array.isArray(response.data)) return response.data;
+  if (response?.results && Array.isArray(response.results)) return response.results;
+  return [];
+};
+
 export const useSmartNoteData = (selectedPatientId) => {
   // Fetch current user
   const { data: currentUser, isLoading: isLoadingUser, error: errorUser } = useQuery({
