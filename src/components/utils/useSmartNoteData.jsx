@@ -14,33 +14,49 @@ export const useSmartNoteData = (selectedPatientId) => {
     queryKey: ['patients'],
     queryFn: async () => {
       try {
-        console.log('Starting Patient.list() fetch...');
-        const result = await base44.entities.Patient.list('-created_date', 100);
-        console.log('Patient.list() raw result:', {
-          type: typeof result,
-          isArray: Array.isArray(result),
-          keys: result ? Object.keys(result) : null,
-          length: result?.length
+        console.log('=== Patient Fetch Debug ===');
+        
+        // Try list() first
+        console.log('Trying Patient.list()...');
+        const listResult = await base44.entities.Patient.list('-created_date', 100);
+        console.log('Patient.list() result:', {
+          raw: listResult,
+          type: typeof listResult,
+          isArray: Array.isArray(listResult),
+          length: listResult?.length || 0
         });
         
-        // Handle if result is an object with data property
-        let patientArray = Array.isArray(result) ? result : [];
-        if (!Array.isArray(result) && result?.data && Array.isArray(result.data)) {
-          patientArray = result.data;
+        let patientArray = Array.isArray(listResult) ? listResult : [];
+        
+        // If list() gave us nothing, try filter()
+        if (!patientArray || patientArray.length === 0) {
+          console.log('list() returned empty, trying filter()...');
+          const filterResult = await base44.entities.Patient.filter({});
+          console.log('Patient.filter() result:', {
+            raw: filterResult,
+            isArray: Array.isArray(filterResult),
+            length: filterResult?.length || 0
+          });
+          patientArray = Array.isArray(filterResult) ? filterResult : [];
         }
         
-        console.log('Patient.list() normalized:', {
+        console.log('Final patient array:', {
           count: patientArray.length,
-          patients: patientArray.slice(0, 3)
+          firstPatient: patientArray[0] ? {
+            id: patientArray[0].id,
+            name: `${patientArray[0].first_name} ${patientArray[0].last_name}`
+          } : null
         });
+        
         return patientArray;
       } catch (err) {
-        console.error('Patient.list() error:', err);
+        console.error('Patient fetch error:', err);
         throw err;
       }
     },
     initialData: [],
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0, // Don't cache - fetch fresh data
+    gcTime: 0
   });
 
   // Fetch selected patient's care plans
