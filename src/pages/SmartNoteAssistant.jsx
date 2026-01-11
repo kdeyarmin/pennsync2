@@ -142,16 +142,6 @@ export default function SmartNoteAssistant() {
   });
   const { currentUser, patients, selectedPatient, carePlans, recentVisits, patientOASIS, oasisContext, patientContext, isLoading, error } = useSmartNoteData(selectedPatientId);
 
-  // Debug SmartNoteAssistant props
-  React.useEffect(() => {
-    console.log('🏥 SmartNoteAssistant state:', {
-      patientsCount: patients?.length,
-      selectedPatientId,
-      selectedPatientName: selectedPatient?.first_name,
-      isLoading
-    });
-  }, [patients, selectedPatientId, selectedPatient, isLoading]);
-
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refId = urlParams.get('referral_id');
