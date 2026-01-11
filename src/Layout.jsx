@@ -35,6 +35,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
 import FeedbackButton from "../components/feedback/FeedbackButton";
