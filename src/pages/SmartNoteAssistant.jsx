@@ -784,16 +784,6 @@ export default function SmartNoteAssistant() {
             />
           )}
 
-          {/* Patient Context - Simplified */}
-          {selectedPatientId && (recentVisits.length > 0 || selectedPatient?.primary_diagnosis) && (
-            <EnhancedPatientContextPanel
-              patient={selectedPatient}
-              onContextUpdate={(context) => {
-                console.log('Patient context updated:', context);
-              }}
-            />
-          )}
-
           {!useGuidedWorkflow && (
             <React.Fragment>
 
