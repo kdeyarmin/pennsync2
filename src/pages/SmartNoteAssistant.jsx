@@ -526,8 +526,7 @@ export default function SmartNoteAssistant() {
             />
           )}
 
-          {/* Step 4: Enhancement Ready or Running */}
-          {roughNote.length >= 50 && !enhancedNote && (
+          {roughNote.length >= 50 && (
             recheckMode ? (
               <div id="step-review-running">
                 <UnifiedDocumentReview
@@ -544,85 +543,21 @@ export default function SmartNoteAssistant() {
                 />
               </div>
             ) : (
-              <Card id="step-review" className="border-2 border-indigo-400 bg-indigo-50">
-                <CardHeader className="py-4">
-                  <CardTitle className="text-base md:text-lg flex items-center gap-3">
-                    <Brain className="w-5 h-5 text-indigo-600" />
-                    Ready to Enhance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="py-4 space-y-3">
-                  <p className="text-sm text-gray-700">
-                    Your note is ready for AI enhancement. Click below to transform it into a Medicare-compliant document.
-                  </p>
-                  <Button 
-                    onClick={() => setRecheckMode(true)}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 min-h-[44px] text-base"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Enhance Note
-                  </Button>
-                </CardContent>
-              </Card>
+              <EnhancementStep
+                roughNote={roughNote}
+                enhancedNote={enhancedNote}
+                copied={copied}
+                savedSuccessfully={savedSuccessfully}
+                recheckMode={recheckMode}
+                onEnhance={() => setRecheckMode(true)}
+                onCopy={handleCopy}
+                onRecheck={handleRecheck}
+                onClear={handleClearNote}
+                onNoteChange={setEnhancedNote}
+                analysisResults={analysisResults}
+              />
             )
           )}
-
-
-
-          {/* Final Enhanced Note */}
-          {enhancedNote && (
-            <Card id="step-complete" className="border-3 border-green-500 shadow-xl">
-              <CardHeader className="py-5 bg-green-100">
-                <CardTitle className="text-lg flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  <span>Ready for EHR</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6 space-y-4">
-                <Textarea
-                  value={enhancedNote}
-                  onChange={(e) => setEnhancedNote(e.target.value)}
-                  className="min-h-[500px] font-mono text-sm touch-target"
-                />
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    onClick={handleCopy}
-                    className="flex-1 bg-green-600 hover:bg-green-700 min-h-[44px]"
-                  >
-                    {copied ? (
-                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Copied!</>
-                    ) : (
-                      <><Copy className="w-4 h-4 mr-2" /> Copy to EHR</>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleRecheck}
-                    variant="outline"
-                    className="flex-1 min-h-[44px]"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Re-check Note
-                  </Button>
-                  <Button
-                    onClick={handleClearNote}
-                    variant="outline"
-                    className="flex-1 min-h-[44px]"
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Start New
-                  </Button>
-                </div>
-                {savedSuccessfully && (
-                 <Alert className="bg-green-50 border-green-300">
-                   <CheckCircle2 className="w-4 h-4 text-green-600" />
-                   <AlertDescription className="text-green-800">
-                     Note saved to patient chart!
-                   </AlertDescription>
-                 </Alert>
-                )}
-                </CardContent>
-                </Card>
-                )}
 
                 </React.Fragment>
                 </div>
