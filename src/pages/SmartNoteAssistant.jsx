@@ -1015,46 +1015,45 @@ export default function SmartNoteAssistant() {
             </Card>
           )}
 
-          {/* Step 4: Enhancement Ready - Show button to start */}
+          {/* Step 4: Enhancement Ready or Running */}
           {roughNote.length >= 50 && !enhancedNote && (
-            <Card id="step-review" className="border-2 border-indigo-400 bg-indigo-50">
-              <CardHeader className="py-4">
-                <CardTitle className="text-base md:text-lg flex items-center gap-3">
-                  <Brain className="w-5 h-5 text-indigo-600" />
-                  Ready to Enhance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-4 space-y-3">
-                <p className="text-sm text-gray-700">
-                  Your note is ready for AI enhancement. Click below to transform it into a Medicare-compliant document.
-                </p>
-                <Button 
-                  onClick={() => setRecheckMode(false)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 min-h-[44px] text-base"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Enhance Note
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 4: Running Enhancement */}
-          {roughNote.length >= 50 && !enhancedNote && !recheckMode && (
-            <div id="step-review-running">
-              <UnifiedDocumentReview
-                roughNote={roughNote}
-                visitType={visitType}
-                diagnosis={finalDiagnosis}
-                patientData={selectedPatient}
-                vitalSigns={vitalSigns}
-                carePlans={carePlans}
-                recentVisits={recentVisits}
-                nurseType={currentUser?.credential_type || 'RN'}
-                onEnhancedNoteReady={handleEnhancedNoteReady}
-                autoRun={true}
-              />
-            </div>
+            recheckMode ? (
+              <div id="step-review-running">
+                <UnifiedDocumentReview
+                  roughNote={roughNote}
+                  visitType={visitType}
+                  diagnosis={finalDiagnosis}
+                  patientData={selectedPatient}
+                  vitalSigns={vitalSigns}
+                  carePlans={carePlans}
+                  recentVisits={recentVisits}
+                  nurseType={currentUser?.credential_type || 'RN'}
+                  onEnhancedNoteReady={handleEnhancedNoteReady}
+                  autoRun={true}
+                />
+              </div>
+            ) : (
+              <Card id="step-review" className="border-2 border-indigo-400 bg-indigo-50">
+                <CardHeader className="py-4">
+                  <CardTitle className="text-base md:text-lg flex items-center gap-3">
+                    <Brain className="w-5 h-5 text-indigo-600" />
+                    Ready to Enhance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="py-4 space-y-3">
+                  <p className="text-sm text-gray-700">
+                    Your note is ready for AI enhancement. Click below to transform it into a Medicare-compliant document.
+                  </p>
+                  <Button 
+                    onClick={() => setRecheckMode(true)}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 min-h-[44px] text-base"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Enhance Note
+                  </Button>
+                </CardContent>
+              </Card>
+            )
           )}
 
 
