@@ -57,7 +57,6 @@ import PatientEducationHub from './pages/PatientEducationHub';
 import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
-import QuickNote from './pages/QuickNote';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import ReferralAdmissionNote from './pages/ReferralAdmissionNote';
 import ReferralIntake from './pages/ReferralIntake';
@@ -142,7 +141,6 @@ export const PAGES = {
     "PatientRecordDashboard": PatientRecordDashboard,
     "Patients": Patients,
     "PredictiveAnalytics": PredictiveAnalytics,
-    "QuickNote": QuickNote,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
     "ReferralAdmissionNote": ReferralAdmissionNote,
     "ReferralIntake": ReferralIntake,
