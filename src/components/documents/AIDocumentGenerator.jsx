@@ -384,5 +384,15 @@ Generate the complete document now with all available fields pre-filled:`;
         </Card>
       )}
     </div>
+    
+    {signatureWorkflowOpen && (
+      <ESignatureWorkflow
+        document={generatedDocument}
+        documentType={selectedDocType?.label}
+        patient={patient}
+        onClose={() => setSignatureWorkflowOpen(false)}
+      />
+    )}
+    </>
   );
 }
