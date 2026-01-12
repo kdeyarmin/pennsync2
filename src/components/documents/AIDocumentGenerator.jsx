@@ -203,6 +203,7 @@ Generate the complete document now with all available fields pre-filled:`;
   };
 
   return (
+    <>
     <div className="space-y-6">
       <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
         <CardHeader>
