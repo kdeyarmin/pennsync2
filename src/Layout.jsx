@@ -203,7 +203,7 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const adminItems = [
-    { name: "Admin Dashboard", icon: Settings, page: "AdminDashboard" },
+      { name: "Admin Dashboard", icon: BarChart3, page: "AdminDashboard" },
     { name: "Reports & Analytics", icon: BarChart3, page: "Reports" },
     { name: "Users & Settings", icon: Users, page: "UserManagement" },
     { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
