@@ -305,11 +305,31 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
               </div>
             </div>
 
+            {selectedField && (
+              <div className="border-t pt-2">
+                <p className="text-xs font-medium text-gray-700 mb-2">Field Options</p>
+                <Button
+                  onClick={() => {
+                    const field = fields.find(f => f.id === selectedField);
+                    if (field) {
+                      updateField(selectedField, {
+                        conditional: field.conditional ? null : { field: "", operator: "equals", value: "" }
+                      });
+                    }
+                  }}
+                  variant="outline"
+                  className="w-full text-xs"
+                >
+                  {fields.find(f => f.id === selectedField)?.conditional ? "Remove Condition" : "Add Condition"}
+                </Button>
+              </div>
+            )}
+
             {fields.length > 0 && (
               <Button
                 onClick={handleSave}
                 variant="outline"
-                className="w-full text-sm"
+                className="w-full text-sm mt-2"
               >
                 Save Field Positions
               </Button>
