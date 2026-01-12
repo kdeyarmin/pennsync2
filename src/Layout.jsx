@@ -180,7 +180,6 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Documentation",
       items: [
-        { name: "Quick Note", icon: Sparkles, page: "QuickNote" },
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
         { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
         { name: "Document Management", icon: FileText, page: "DocumentManagement" },
