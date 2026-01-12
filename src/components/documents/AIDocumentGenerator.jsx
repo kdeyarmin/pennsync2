@@ -361,14 +361,14 @@ Generate the complete document now with all available fields pre-filled:`;
                 </CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleReset}>
+                <Button onClick={handleReset} className="border border-gray-300 hover:bg-gray-50">
                   Generate New
                 </Button>
-                <Button variant="outline" onClick={handleDownload}>
+                <Button onClick={handleDownload} className="border border-gray-300 hover:bg-gray-50">
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
-                <Button onClick={handleCreateForSigning} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleCreateForSigning} className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Send className="w-4 h-4 mr-2" />
                   Send for Signature
                 </Button>
