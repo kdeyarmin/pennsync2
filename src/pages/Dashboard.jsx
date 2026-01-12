@@ -211,11 +211,11 @@ export default function Dashboard() {
 
       {/* Quick Action Buttons */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Link to={createPageUrl("QuickNote")}>
+        <Link to={createPageUrl("SmartNoteAssistant")}>
           <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-blue-200 hover:border-blue-400 active:scale-95">
             <CardContent className="p-4 sm:p-6 text-center touch-target">
               <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Quick Note</h3>
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Smart Notes</h3>
             </CardContent>
           </Card>
         </Link>
