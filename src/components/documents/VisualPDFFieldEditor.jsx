@@ -436,6 +436,25 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
         </div>
       </div>
 
+      {/* Features Info */}
+      <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+        <p className="text-sm font-medium text-gray-900 mb-3">Advanced Features</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <p className="font-medium text-gray-900">Rich Text Formatting</p>
+            <p className="text-gray-600 mt-1">Bold, italic, underline, custom colors & sizes</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">Dynamic Tables</p>
+            <p className="text-gray-600 mt-1">Create configurable rows and columns</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">Conditional Logic</p>
+            <p className="text-gray-600 mt-1">Show/hide fields based on other answers (⚡)</p>
+          </div>
+        </div>
+      </Card>
+
       {/* Field Legend */}
       <Card className="p-4 bg-gray-50">
         <p className="text-sm font-medium text-gray-900 mb-2">Field Types</p>
