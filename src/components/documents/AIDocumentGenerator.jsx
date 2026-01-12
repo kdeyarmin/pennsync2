@@ -193,18 +193,7 @@ Generate the complete document now with all available fields pre-filled:`;
 
   const handleCreateForSigning = async () => {
     if (!generatedDocument || !selectedPatientId) return;
-
-    try {
-      // Convert text to PDF would normally happen here
-      // For now, we'll create a document signature record
-      toast.info("Creating document for signing...");
-      
-      // In a real implementation, you'd upload the generated document as a PDF
-      toast.success("Document ready for signing workflow!");
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error("Failed to create signing document");
-    }
+    setSignatureWorkflowOpen(true);
   };
 
   const handleReset = () => {
