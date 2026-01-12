@@ -78,6 +78,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import MedicalScribe from './pages/MedicalScribe';
+import AdminUserSetup from './pages/AdminUserSetup';
 import __Layout from './Layout.jsx';
 
 
@@ -162,6 +163,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "MedicalScribe": MedicalScribe,
+    "AdminUserSetup": AdminUserSetup,
 }
 
 export const pagesConfig = {
