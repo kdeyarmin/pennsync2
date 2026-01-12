@@ -34,6 +34,8 @@ import {
 import { toast } from "sonner";
 import TemplateFieldMapper from "./TemplateFieldMapper";
 import VisualPDFTemplateEditor from "./VisualPDFTemplateEditor";
+import TemplateSearchFilter from "./TemplateSearchFilter";
+import TemplateVersionHistory from "./TemplateVersionHistory";
 
 export default function PDFTemplateManager() {
   const queryClient = useQueryClient();
@@ -41,6 +43,8 @@ export default function PDFTemplateManager() {
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [showFieldMapper, setShowFieldMapper] = useState(false);
   const [showVisualEditor, setShowVisualEditor] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(null);
+  const [filteredTemplates, setFilteredTemplates] = useState([]);
   const [templateData, setTemplateData] = useState({
     template_name: '',
     template_category: 'consent',
@@ -59,6 +63,10 @@ export default function PDFTemplateManager() {
     queryFn: () => base44.entities.PDFTemplate.list('-created_date'),
     initialData: []
   });
+
+  React.useEffect(() => {
+    setFilteredTemplates(templates);
+  }, [templates]);
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.PDFTemplate.create(data),
@@ -170,9 +178,22 @@ export default function PDFTemplateManager() {
         </Button>
       </div>
 
+      {/* Search & Filter */}
+      <TemplateSearchFilter 
+        templates={templates} 
+        onFilter={setFilteredTemplates}
+      />
+
       {/* Template List by Category */}
       <div className="space-y-6">
-        {Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
+        {Object.entries(
+          filteredTemplates.reduce((acc, template) => {
+            const category = template.template_category;
+            if (!acc[category]) acc[category] = [];
+            acc[category].push(template);
+            return acc;
+          }, {})
+        ).map(([category, categoryTemplates]) => (
           <Card key={category}>
             <CardHeader>
               <CardTitle className="text-lg capitalize">{category} Templates</CardTitle>
@@ -211,6 +232,14 @@ export default function PDFTemplateManager() {
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        onClick={() => setShowVersionHistory(template.id)}
+                        title="View version history"
+                      >
+                        <History className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
                         onClick={() => {
                           if (confirm('Delete this template?')) {
                             deleteMutation.mutate(template.id);
@@ -227,6 +256,26 @@ export default function PDFTemplateManager() {
           </Card>
         ))}
       </div>
+
+      {/* Version History Dialog */}
+      {showVersionHistory && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
+              <h3 className="text-lg font-semibold">Version History</h3>
+              <button 
+                onClick={() => setShowVersionHistory(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <TemplateVersionHistory parentTemplateId={showVersionHistory} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
