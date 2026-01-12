@@ -273,7 +273,10 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                 {fields.map((field) => (
                   <div
                     key={field.id}
-                    className={`p-2 rounded-lg border cursor-move ${getFieldTypeColor(field.type)}`}
+                    onClick={() => setSelectedField(field.id)}
+                    className={`p-2 rounded-lg border cursor-pointer transition-all ${getFieldTypeColor(field.type)} ${
+                      selectedField === field.id ? "ring-2 ring-blue-500 border-blue-500" : "hover:border-gray-400"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-1">
                       <div className="flex-1 min-w-0">
@@ -283,9 +286,15 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                         <p className="text-xs text-gray-600">
                           {field.type} @ {field.x}, {field.y}
                         </p>
+                        {field.conditional && (
+                          <p className="text-xs text-blue-600 mt-0.5">⚡ Has condition</p>
+                        )}
                       </div>
                       <button
-                        onClick={() => removeField(field.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeField(field.id);
+                        }}
                         className="p-0.5 hover:bg-red-200 rounded text-red-600"
                       >
                         <Trash2 className="w-3 h-3" />
