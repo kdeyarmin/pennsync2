@@ -80,6 +80,7 @@ export default function AIDocumentGenerator() {
   const [additionalContext, setAdditionalContext] = useState("");
   const [generatedDocument, setGeneratedDocument] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [signatureWorkflowOpen, setSignatureWorkflowOpen] = useState(false);
 
   // Fetch patient data
   const { data: patient } = useQuery({
