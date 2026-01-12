@@ -418,11 +418,11 @@ export default function DocumentPackageCreator({ open, onClose }) {
                         size="sm"
                         onClick={() => removeUploadedFile(file.id)}
                         className="shrink-0"
-                      >
+                        >
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
-                  ))}
+              ))}
                 </div>
               )}
             </div>
