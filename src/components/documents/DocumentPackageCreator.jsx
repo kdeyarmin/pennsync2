@@ -237,7 +237,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[95vw] sm:w-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Package className="w-5 h-5" />
