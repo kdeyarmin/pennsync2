@@ -72,6 +72,8 @@ export default function UserManagement() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resetPasswordResult, setResetPasswordResult] = useState(null);
   const [editedRole, setEditedRole] = useState("");
+  const [showDeleteInvitationDialog, setShowDeleteInvitationDialog] = useState(false);
+  const [selectedInvitation, setSelectedInvitation] = useState(null);
 
   const queryClient = useQueryClient();
 
