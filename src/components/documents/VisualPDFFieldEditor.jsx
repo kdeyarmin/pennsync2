@@ -12,8 +12,19 @@ const FIELD_TYPES = [
   { value: "signature", label: "Signature", color: "bg-purple-100" },
   { value: "initials", label: "Initials", color: "bg-pink-100" },
   { value: "date", label: "Date", color: "bg-green-100" },
-  { value: "checkbox", label: "Checkbox", color: "bg-yellow-100" }
+  { value: "checkbox", label: "Checkbox", color: "bg-yellow-100" },
+  { value: "table", label: "Dynamic Table", color: "bg-orange-100" },
+  { value: "rich_text", label: "Rich Text", color: "bg-indigo-100" }
 ];
+
+const TEXT_FORMATTING_OPTIONS = [
+  { value: "bold", label: "Bold" },
+  { value: "italic", label: "Italic" },
+  { value: "underline", label: "Underline" }
+];
+
+const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px"];
+const COLORS = ["#000000", "#333333", "#666666", "#1f2937", "#dc2626", "#2563eb"];
 
 export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
   const canvasRef = useRef(null);
