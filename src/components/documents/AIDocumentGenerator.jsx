@@ -383,9 +383,9 @@ Generate the complete document now with all available fields pre-filled:`;
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
     
-    {signatureWorkflowOpen && (
+      {signatureWorkflowOpen && (
       <ESignatureWorkflow
         document={generatedDocument}
         documentType={selectedDocType?.label}
