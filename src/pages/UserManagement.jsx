@@ -141,6 +141,19 @@ export default function UserManagement() {
     },
   });
 
+  const deleteInvitationMutation = useMutation({
+    mutationFn: (invitationId) => base44.entities.UserInvitation.delete(invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
+      setShowDeleteInvitationDialog(false);
+      setSelectedInvitation(null);
+      toast.success('Invitation deleted successfully!');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete invitation: ' + error.message);
+    }
+  });
+
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setEditedRole(user.role);
