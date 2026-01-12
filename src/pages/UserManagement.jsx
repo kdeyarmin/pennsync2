@@ -737,6 +737,51 @@ export default function UserManagement() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Delete Invitation Dialog */}
+      <AlertDialog open={showDeleteInvitationDialog} onOpenChange={setShowDeleteInvitationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Delete Invitation
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-3">
+                <p>
+                  Are you sure you want to delete the invitation for <strong>{selectedInvitation?.email}</strong>?
+                </p>
+                <Alert className="bg-red-50 border-red-300">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <AlertDescription className="text-red-900 text-sm">
+                    This user will need to be invited again to sign up.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteInvitationMutation.mutate(selectedInvitation.id)}
+              disabled={deleteInvitationMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteInvitationMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Invitation
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Reset Password Dialog */}
       <AlertDialog open={showPasswordResetDialog} onOpenChange={setShowPasswordResetDialog}>
         <AlertDialogContent>
