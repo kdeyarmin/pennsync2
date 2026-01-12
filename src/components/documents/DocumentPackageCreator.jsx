@@ -25,6 +25,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
+import QuickPresetsSelector from "./QuickPresetsSelector";
+import CustomPDFUploader from "./CustomPDFUploader";
+import PDFFieldMapper from "./PDFFieldMapper";
 
 export default function DocumentPackageCreator({ open, onClose }) {
   const queryClient = useQueryClient();
