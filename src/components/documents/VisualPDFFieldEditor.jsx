@@ -160,6 +160,93 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
               />
             </div>
 
+            {selectedFieldType === "rich_text" && (
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Font Size
+                  </label>
+                  <Select value={fontStyle.size} onValueChange={(size) => setFontStyle({...fontStyle, size})}>
+                    <SelectTrigger className="text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FONT_SIZES.map(sz => <SelectItem key={sz} value={sz}>{sz}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Text Color
+                  </label>
+                  <div className="flex gap-1">
+                    {COLORS.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setFontStyle({...fontStyle, color})}
+                        className="w-6 h-6 rounded border-2"
+                        style={{
+                          backgroundColor: color,
+                          borderColor: fontStyle.color === color ? "#000" : "#ccc"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Styling
+                  </label>
+                  <div className="flex gap-1">
+                    {TEXT_FORMATTING_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setFontStyle({...fontStyle, [opt.value]: !fontStyle[opt.value]})}
+                        className={`flex-1 px-2 py-1 text-xs rounded border transition-colors ${
+                          fontStyle[opt.value] ? "bg-gray-800 text-white border-gray-800" : "bg-gray-100 border-gray-300"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedFieldType === "table" && (
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Rows
+                  </label>
+                  <Input
+                    type="number"
+                    min="2"
+                    max="20"
+                    value={tableRows}
+                    onChange={(e) => setTableRows(parseInt(e.target.value) || 3)}
+                    className="text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Columns
+                  </label>
+                  <Input
+                    type="number"
+                    min="2"
+                    max="10"
+                    value={tableColumns}
+                    onChange={(e) => setTableColumns(parseInt(e.target.value) || 3)}
+                    className="text-xs"
+                  />
+                </div>
+              </div>
+            )}
+
             <Button
               onClick={() => {
                 const event = new MouseEvent("click", {
