@@ -26,16 +26,17 @@ const buttonVariants = ({ variant = "default", size = "default", className }) =>
 }
 
 const Button = React.forwardRef((props, ref) => {
-  const { className, variant = "default", size = "default", asChild = false, ...otherProps } = props
-  
-  const classes = buttonVariants({ variant, size, className })
-  
-  if (asChild && props.children && React.isValidElement(props.children)) {
-    return React.cloneElement(props.children, { className: classes, ref })
-  }
-  
-  return <button ref={ref} className={classes} {...otherProps} />
-})
+    if (!props) return null;
+    const { className, variant = "default", size = "default", asChild = false, ...otherProps } = props
+
+    const classes = buttonVariants({ variant, size, className })
+
+    if (asChild && props.children && React.isValidElement(props.children)) {
+      return React.cloneElement(props.children, { className: classes, ref })
+    }
+
+    return <button ref={ref} className={classes} {...otherProps} />
+  })
 
 Button.displayName = "Button"
 
