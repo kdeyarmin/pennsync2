@@ -330,17 +330,27 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                 {/* Placed Fields */}
                 {fields.map((field) => {
                   const fieldType = FIELD_TYPES.find(ft => ft.value === field.type);
+                  const formatting = field.formatting || {};
+                  const textStyle = {
+                    fontSize: formatting.fontSize || "14px",
+                    fontWeight: formatting.bold ? "bold" : "normal",
+                    fontStyle: formatting.italic ? "italic" : "normal",
+                    textDecoration: formatting.underline ? "underline" : "none",
+                    color: formatting.color || "#000000"
+                  };
+
                   return (
                     <div
                       key={field.id}
                       draggable
                       onDragStart={() => handleDragStart(field.id)}
                       onDragEnd={handleDragEnd}
-                      className={`absolute border-2 border-dashed cursor-move transition-all ${
+                      onClick={() => setSelectedField(field.id)}
+                      className={`absolute border-2 cursor-move transition-all ${
                         draggingField === field.id
                           ? "opacity-100 border-blue-500 bg-blue-50"
-                          : "opacity-75 border-gray-400 hover:opacity-100"
-                      } ${fieldType?.color || "bg-gray-100"}`}
+                          : selectedField === field.id ? "border-blue-600" : "border-dashed border-gray-400 hover:opacity-100"
+                      } ${fieldType?.color || "bg-gray-100"} ${selectedField === field.id ? "ring-2 ring-blue-400" : ""}`}
                       style={{
                         left: `${field.x}px`,
                         top: `${field.y}px`,
@@ -348,13 +358,29 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
                         height: `${field.height}px`
                       }}
                     >
-                      <div className="flex items-center justify-center h-full p-1">
-                        <span className="text-xs font-medium text-gray-700 text-center truncate">
-                          {field.label}
-                        </span>
-                      </div>
+                      {field.type === "table" ? (
+                        <div className="w-full h-full p-1 overflow-hidden">
+                          <table className="w-full h-full border-collapse text-xs">
+                            <tbody>
+                              {Array(field.tableConfig?.rows || 3).fill(null).map((_, row) => (
+                                <tr key={row}>
+                                  {Array(field.tableConfig?.columns || 3).fill(null).map((_, col) => (
+                                    <td key={col} className="border border-gray-400 p-0.5" />
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full p-1" style={field.type === "rich_text" ? textStyle : {}}>
+                          <span className="text-xs text-gray-700 text-center truncate">
+                            {field.label}
+                          </span>
+                        </div>
+                      )}
                       <div className="absolute -top-6 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none">
-                        {field.type}
+                        {field.type} {field.conditional && "⚡"}
                       </div>
                     </div>
                   );
