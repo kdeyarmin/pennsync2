@@ -55,8 +55,17 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
       label: fieldLabel,
       x: Math.round(x),
       y: Math.round(y),
-      width: 120,
-      height: 30
+      width: selectedFieldType === "table" ? 300 : 120,
+      height: selectedFieldType === "table" ? 150 : 30,
+      formatting: {
+        fontSize: fontStyle.size,
+        bold: fontStyle.bold,
+        italic: fontStyle.italic,
+        underline: fontStyle.underline,
+        color: fontStyle.color
+      },
+      conditional: null,
+      tableConfig: selectedFieldType === "table" ? { rows: tableRows, columns: tableColumns } : null
     };
 
     setFields([...fields, newField]);
