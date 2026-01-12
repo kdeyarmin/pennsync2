@@ -2,6 +2,7 @@ import AIDocumentGenerator from './pages/AIDocumentGenerator';
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
+import AdminUserSetup from './pages/AdminUserSetup';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
@@ -24,6 +25,7 @@ import DuplicatePatients from './pages/DuplicatePatients';
 import Features from './pages/Features';
 import Home from './pages/Home';
 import ManageNewFeatures from './pages/ManageNewFeatures';
+import MedicalScribe from './pages/MedicalScribe';
 import MedicareComplianceDashboard from './pages/MedicareComplianceDashboard';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
 import Messages from './pages/Messages';
@@ -77,8 +79,6 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import MedicalScribe from './pages/MedicalScribe';
-import AdminUserSetup from './pages/AdminUserSetup';
 import __Layout from './Layout.jsx';
 
 
@@ -87,6 +87,7 @@ export const PAGES = {
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
+    "AdminUserSetup": AdminUserSetup,
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
@@ -109,6 +110,7 @@ export const PAGES = {
     "Features": Features,
     "Home": Home,
     "ManageNewFeatures": ManageNewFeatures,
+    "MedicalScribe": MedicalScribe,
     "MedicareComplianceDashboard": MedicareComplianceDashboard,
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
     "Messages": Messages,
@@ -162,8 +164,6 @@ export const PAGES = {
     "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "MedicalScribe": MedicalScribe,
-    "AdminUserSetup": AdminUserSetup,
 }
 
 export const pagesConfig = {
