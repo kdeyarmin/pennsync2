@@ -74,6 +74,8 @@ export default function UserManagement() {
   const [editedRole, setEditedRole] = useState("");
   const [showDeleteInvitationDialog, setShowDeleteInvitationDialog] = useState(false);
   const [selectedInvitation, setSelectedInvitation] = useState(null);
+  const [showUserSetupDialog, setShowUserSetupDialog] = useState(false);
+  const [setupFormData, setSetupFormData] = useState({ email: '', full_name: '', role: 'user', staff_type: '' });
 
   const queryClient = useQueryClient();
 
@@ -154,6 +156,19 @@ export default function UserManagement() {
     }
   });
 
+  const createUserMutation = useMutation({
+    mutationFn: (data) => base44.functions.invoke('createUserWithTempPassword', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
+      setShowUserSetupDialog(false);
+      setSetupFormData({ email: '', full_name: '', role: 'user', staff_type: '' });
+      toast.success('User invitation sent successfully!');
+    },
+    onError: (error) => {
+      toast.error('Failed to create user: ' + error.message);
+    }
+  });
+
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setEditedRole(user.role);
@@ -198,6 +213,14 @@ export default function UserManagement() {
   const handleDeleteUser = (user) => {
     setSelectedUser(user);
     setShowDeleteDialog(true);
+  };
+
+  const handleCreateUser = () => {
+    if (!setupFormData.email || !setupFormData.full_name) {
+      toast.error('Email and full name are required');
+      return;
+    }
+    createUserMutation.mutate(setupFormData);
   };
 
   const confirmDeleteUser = () => {
