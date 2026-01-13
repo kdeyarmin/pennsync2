@@ -275,8 +275,8 @@ If you have any questions, please contact your administrator.`,
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium mb-1">Visits This Week</p>
-                <p className="text-4xl font-bold">{visitsThisWeek}</p>
+                <p className="text-purple-100 text-sm font-medium mb-1">Visits/Enhancements This Week</p>
+                <p className="text-4xl font-bold">{totalVisitsAndEnhancements}</p>
                 <p className="text-purple-100 text-xs mt-1">{completedVisits} total completed</p>
               </div>
               <CheckCircle2 className="w-12 h-12 text-purple-200" />
