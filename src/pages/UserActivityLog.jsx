@@ -111,7 +111,22 @@ export default function UserActivityLog() {
       'note_enhanced': Sparkles,
       'note_compliance_check': Shield,
       'alert_viewed': Bell,
-      'alert_dismissed': AlertTriangle
+      'alert_dismissed': AlertTriangle,
+      'user_created': Plus,
+      'user_role_changed': Edit,
+      'user_enabled': UserCheck,
+      'user_disabled': UserX,
+      'user_password_reset': Key,
+      'user_deleted': Trash2,
+      'invitation_sent': Mail,
+      'invitation_resent': Send,
+      'invitation_deleted': Trash2,
+      'document_generated': FileText,
+      'document_signed': CheckCircle2,
+      'document_uploaded': Upload,
+      'document_deleted': Trash2,
+      'settings_updated': Shield,
+      'role_permission_changed': Shield
     };
     const Icon = icons[action] || Activity;
     return <Icon className="w-4 h-4" />;
@@ -145,7 +160,22 @@ export default function UserActivityLog() {
       'note_enhanced': 'bg-indigo-100 text-indigo-800',
       'note_compliance_check': 'bg-blue-100 text-blue-800',
       'alert_viewed': 'bg-yellow-100 text-yellow-800',
-      'alert_dismissed': 'bg-orange-100 text-orange-800'
+      'alert_dismissed': 'bg-orange-100 text-orange-800',
+      'user_created': 'bg-green-100 text-green-800',
+      'user_role_changed': 'bg-blue-100 text-blue-800',
+      'user_enabled': 'bg-green-100 text-green-800',
+      'user_disabled': 'bg-red-100 text-red-800',
+      'user_password_reset': 'bg-yellow-100 text-yellow-800',
+      'user_deleted': 'bg-red-100 text-red-800',
+      'invitation_sent': 'bg-indigo-100 text-indigo-800',
+      'invitation_resent': 'bg-indigo-100 text-indigo-800',
+      'invitation_deleted': 'bg-red-100 text-red-800',
+      'document_generated': 'bg-purple-100 text-purple-800',
+      'document_signed': 'bg-green-100 text-green-800',
+      'document_uploaded': 'bg-cyan-100 text-cyan-800',
+      'document_deleted': 'bg-red-100 text-red-800',
+      'settings_updated': 'bg-blue-100 text-blue-800',
+      'role_permission_changed': 'bg-blue-100 text-blue-800'
     };
     return colors[action] || 'bg-gray-100 text-gray-800';
   };
