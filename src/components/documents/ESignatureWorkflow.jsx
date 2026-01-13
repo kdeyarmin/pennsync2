@@ -171,10 +171,13 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
           {step === "signers" && (
             <div className="space-y-4">
               <div>
-                <Label className="text-base font-semibold mb-3 block">Signers</Label>
+                <Label className="text-base font-semibold mb-3 block">Signers (in order)</Label>
                 <div className="space-y-3">
-                  {signers.map((signer) => (
-                    <div key={signer.id} className="flex gap-3 p-3 border border-gray-200 rounded-lg">
+                  {signers.map((signer, idx) => (
+                    <div key={signer.id} className="flex gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <div className="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full text-sm font-semibold flex-shrink-0">
+                        {idx + 1}
+                      </div>
                       <div className="flex-1 space-y-2">
                         <Input
                           placeholder="Signer name"
@@ -190,7 +193,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                       </div>
                       <div className="flex flex-col gap-2">
                         <Select value={signer.role} onValueChange={(v) => updateSigner(signer.id, "role", v)}>
-                          <SelectTrigger className="w-32">
+                          <SelectTrigger className="w-36">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -198,6 +201,8 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                             <SelectItem value="guardian">Guardian</SelectItem>
                             <SelectItem value="witness">Witness</SelectItem>
                             <SelectItem value="clinician">Clinician</SelectItem>
+                            <SelectItem value="physician">Physician</SelectItem>
+                            <SelectItem value="nurse">Nurse</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
@@ -219,6 +224,48 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                   <Plus className="w-4 h-4 mr-2" />
                   Add Signer
                 </Button>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="deadline">Signature Deadline *</Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={deadlineDate}
+                    onChange={(e) => setDeadlineDate(e.target.value)}
+                    className="mt-1"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  <p className="text-xs text-gray-600 mt-1">Signers must complete by this date</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="reminders"
+                      checked={enableReminders}
+                      onChange={(e) => setEnableReminders(e.target.checked)}
+                      className="rounded"
+                    />
+                    <Label htmlFor="reminders" className="text-sm">Send automated reminders</Label>
+                  </div>
+                  {enableReminders && (
+                    <div>
+                      <Label htmlFor="reminderDays" className="text-xs">Days before deadline</Label>
+                      <Input
+                        id="reminderDays"
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={reminderDays}
+                        onChange={(e) => setReminderDays(parseInt(e.target.value))}
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
