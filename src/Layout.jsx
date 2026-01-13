@@ -282,7 +282,7 @@ export default function Layout({ children, currentPageName }) {
       <div className="min-h-screen flex">
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-gradient-to-br from-sky-50 to-blue-100 shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0`}>
+      <aside className={`hidden md:flex flex-col bg-gradient-to-br from-sky-50 to-blue-100 shadow-lg border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-56'} print:hidden h-screen sticky top-0`}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
@@ -462,7 +462,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 shadow-md border-b border-slate-700 h-16 flex items-center justify-between px-4 print:hidden">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 shadow-md border-b border-slate-700 h-16 flex items-center justify-between px-4 print:hidden">
         <div className="flex items-center gap-2">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
             <img 
@@ -501,7 +501,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
+        <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 flex-shrink-0">
               <span className="font-bold text-lg text-gray-900">Menu</span>
@@ -607,8 +607,8 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-16 lg:pt-0 pb-24 lg:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">
-        <div className="p-4 lg:p-6">
+      <main className="flex-1 overflow-auto pt-16 md:pt-0 pb-24 md:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">
+        <div className="p-3 sm:p-4 md:p-5 lg:p-6">
           <Breadcrumbs currentPageName={currentPageName} />
           {children}
         </div>

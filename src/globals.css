@@ -265,7 +265,7 @@ css
 
   /* Modern button styles */
   .btn-primary {
-    @apply bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 hover:shadow-md active:bg-indigo-800 active:scale-95 transition-all duration-200 shadow-sm;
+    @apply bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 hover:shadow-md active:bg-indigo-800 active:scale-95 transition-all duration-200 shadow-sm min-h-[44px] flex items-center justify-center;
   }
 
   .btn-secondary {
@@ -289,10 +289,27 @@ css
     @apply border-gray-200 rounded-lg px-4 py-2.5 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-lg transition-all duration-200 bg-white;
   }
 
-  /* Touch-optimized for mobile */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
-  }
+  /* Touch-optimized for mobile and tablet */
+    .touch-target {
+      @apply min-h-[48px] min-w-[48px] md:min-h-[44px] md:min-w-[44px];
+    }
+
+    /* iPad-specific optimizations */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      /* Increase spacing on tablets */
+      .p-4 { @apply p-5; }
+      .gap-4 { @apply gap-5; }
+
+      /* Improve button/input sizing for touch */
+      button, input, select, textarea {
+        min-height: 44px;
+      }
+
+      /* Optimize card spacing */
+      .modern-card, .card-elevated, .card-subtle {
+        @apply rounded-2xl;
+      }
+    }
 
   /* Prevent text selection on buttons/links */
   .no-select {
