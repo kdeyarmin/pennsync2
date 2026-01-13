@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
@@ -31,11 +31,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid JSON payload', details: parseError.message }, { status: 400 });
     }
     
-    const { email, full_name, role, care_scope, phone, credentials } = payload;
+    const { email, full_name, role, staff_type, temporary_password, care_scope, phone, credentials } = payload;
 
-    if (!email || !full_name) {
+    if (!email || !full_name || !temporary_password) {
       console.error('Missing required fields');
-      return Response.json({ error: 'Email and full name are required' }, { status: 400 });
+      return Response.json({ error: 'Email, full name, and temporary password are required' }, { status: 400 });
     }
 
     console.log('Step 3: Creating invitation record...');
@@ -43,19 +43,23 @@ Deno.serve(async (req) => {
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       
-      const invitation = await base44.asServiceRole.entities.UserInvitation.create({
+      const userData = {
         email,
         full_name,
         role: role || 'user',
+        temporary_password,
         care_scope: care_scope || 'home_health',
         phone: phone || null,
         credentials: credentials || null,
+        staff_type: staff_type || null,
         invited_by: user.email,
         status: 'pending',
         expires_at: expiresAt.toISOString(),
         last_sent_at: now.toISOString(),
         resend_count: 0
-      });
+      };
+
+      const invitation = await base44.asServiceRole.entities.UserInvitation.create(userData);
       console.log('✓ Invitation record created:', invitation.id, 'Expires:', expiresAt.toISOString());
       
       console.log('Step 4: Sending invitation email...');
@@ -64,8 +68,8 @@ Deno.serve(async (req) => {
         
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: email,
-          subject: 'Invitation to Penn Sync',
-          body: `Hello ${full_name},\n\nYou've been invited to join Penn Sync.\n\nEmail: ${email}\nRole: ${role || 'user'}\n\nPlease visit ${signupUrl} to create your account.\n\n⏰ This invitation expires in 7 days (${expiresAt.toLocaleDateString()}).\n\nWelcome to Penn Sync!`,
+          subject: 'Welcome to Penn Sync - Account Created',
+          body: `Hello ${full_name},\n\nYour account has been created in Penn Sync.\n\nEmail: ${email}\nRole: ${role || 'user'}${staff_type ? '\nStaff Type: ' + staff_type.toUpperCase() : ''}\nTemporary Password: ${temporary_password}\n\nPlease log in at ${signupUrl} and change your password on first login.\n\n⏰ Your temporary password will expire in 7 days.\n\nWelcome to Penn Sync!`,
           from_name: 'Penn Sync'
         });
         console.log('✓ Invitation email sent');
