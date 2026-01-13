@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brain, CheckCircle2, Copy, RotateCcw, Sparkles } from "lucide-react";
 
@@ -44,10 +43,10 @@ export default function EnhancementStep({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 md:p-6 space-y-4">
-          <Textarea
+          <textarea
             value={enhancedNote}
             onChange={(e) => onNoteChange(e.target.value)}
-            className="min-h-[900px] font-mono text-sm touch-target"
+            className="w-full min-h-[900px] font-mono text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-all duration-200 bg-white"
           />
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
