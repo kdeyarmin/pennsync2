@@ -115,6 +115,9 @@ export default function Reports() {
     initialData: []
   });
 
+  // Combine visits and enhancements
+  const totalVisitsAndEnhancements = visits.length + noteConversions.length;
+
   const { data: scheduledTasks = [], isLoading: schedulesLoading } = useQuery({
     queryKey: ['scheduledReports'],
     queryFn: async () => {
