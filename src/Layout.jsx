@@ -158,15 +158,13 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Overview",
       items: [
-        { name: "Dashboard", icon: Home, page: "Dashboard" },
-        { name: "My Workflow", icon: Sparkles, page: "NurseWorkflow" }
+        { name: "Dashboard", icon: Home, page: "Dashboard" }
       ]
     },
     {
       category: "Patient Care",
       items: [
         { name: "Patients", icon: Users, page: "Patients" },
-        { name: "Patient 360", icon: Brain, page: "Patient360" },
         { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
         { name: "Alerts", icon: Bell, page: "PatientAlerts" }
       ]

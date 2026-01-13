@@ -33,7 +33,6 @@ import NurseEducationVideos from './pages/NurseEducationVideos';
 import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
 import NurseTraining from './pages/NurseTraining';
 import NurseTrainingHub from './pages/NurseTrainingHub';
-import NurseWorkflow from './pages/NurseWorkflow';
 import OASIS from './pages/OASIS';
 import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
 import OASISAnalyzer from './pages/OASISAnalyzer';
@@ -47,7 +46,6 @@ import OfflineMode from './pages/OfflineMode';
 import PDFSearch from './pages/PDFSearch';
 import PDFTemplateLibrary from './pages/PDFTemplateLibrary';
 import PDFTools from './pages/PDFTools';
-import Patient360 from './pages/Patient360';
 import PatientAlerts from './pages/PatientAlerts';
 import PatientDataManagement from './pages/PatientDataManagement';
 import PatientDetails from './pages/PatientDetails';
@@ -116,7 +114,6 @@ export const PAGES = {
     "NursePerformanceDashboard": NursePerformanceDashboard,
     "NurseTraining": NurseTraining,
     "NurseTrainingHub": NurseTrainingHub,
-    "NurseWorkflow": NurseWorkflow,
     "OASIS": OASIS,
     "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
     "OASISAnalyzer": OASISAnalyzer,
@@ -130,7 +127,6 @@ export const PAGES = {
     "PDFSearch": PDFSearch,
     "PDFTemplateLibrary": PDFTemplateLibrary,
     "PDFTools": PDFTools,
-    "Patient360": Patient360,
     "PatientAlerts": PatientAlerts,
     "PatientDataManagement": PatientDataManagement,
     "PatientDetails": PatientDetails,
