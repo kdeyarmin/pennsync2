@@ -487,53 +487,7 @@ export default function Reports() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="p-3 sm:p-4 md:p-6">
-                  <CardTitle className="text-sm sm:text-base">Incident Distribution</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4 md:p-6">
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={incidentData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={(entry) => `${entry.name}: ${entry.value}`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {incidentData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
 
-              <Card>
-                <CardHeader className="p-3 sm:p-4 md:p-6">
-                  <CardTitle className="text-sm sm:text-base">Patient Risk Distribution</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4 md:p-6">
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={riskData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" name="Patients">
-                        {riskData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 

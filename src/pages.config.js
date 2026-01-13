@@ -15,6 +15,7 @@ import ComplianceRegulatory from './pages/ComplianceRegulatory';
 import CustomizableDashboard from './pages/CustomizableDashboard';
 import Dashboard from './pages/Dashboard';
 import DocumentGenerator from './pages/DocumentGenerator';
+import DocumentHub from './pages/DocumentHub';
 import DocumentManagement from './pages/DocumentManagement';
 import DocumentSignatures from './pages/DocumentSignatures';
 import DocumentVisit from './pages/DocumentVisit';
@@ -76,7 +77,6 @@ import UserActivityReport from './pages/UserActivityReport';
 import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
-import DocumentHub from './pages/DocumentHub';
 import __Layout from './Layout.jsx';
 
 
@@ -98,6 +98,7 @@ export const PAGES = {
     "CustomizableDashboard": CustomizableDashboard,
     "Dashboard": Dashboard,
     "DocumentGenerator": DocumentGenerator,
+    "DocumentHub": DocumentHub,
     "DocumentManagement": DocumentManagement,
     "DocumentSignatures": DocumentSignatures,
     "DocumentVisit": DocumentVisit,
@@ -159,7 +160,6 @@ export const PAGES = {
     "UserGuides": UserGuides,
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
-    "DocumentHub": DocumentHub,
 }
 
 export const pagesConfig = {
