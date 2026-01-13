@@ -700,34 +700,30 @@ If you have any questions, please contact your administrator.`,
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Visits</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total</span>
-                    <span className="font-bold">{visits.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Completed</span>
-                    <span className="font-bold">{completedVisits}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Scheduled</span>
-                    <span className="font-bold">
-                      {visits.filter(v => v.status === 'scheduled').length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">In Progress</span>
-                    <span className="font-bold">
-                      {visits.filter(v => v.status === 'in_progress').length}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+               <CardHeader>
+                 <CardTitle>Visits/Enhancements</CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <div className="space-y-2">
+                   <div className="flex justify-between">
+                     <span className="text-sm text-gray-600">Total</span>
+                     <span className="font-bold">{visits.length + noteConversions.length}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-sm text-gray-600">Visits</span>
+                     <span className="font-bold">{visits.length}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-sm text-gray-600">Enhancements</span>
+                     <span className="font-bold">{noteConversions.length}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-sm text-gray-600">Completed</span>
+                     <span className="font-bold">{completedVisits}</span>
+                   </div>
+                 </div>
+               </CardContent>
+             </Card>
 
             <Card>
               <CardHeader>
