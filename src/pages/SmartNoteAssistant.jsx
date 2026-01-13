@@ -218,10 +218,9 @@ export default function SmartNoteAssistant() {
 
   const currentStep = useMemo(() => {
     if (!selectedPatientId) return 'patient';
-    if (!roughNote || roughNote.length < 50) return 'notes';
-    if (!enhancedNote) return 'review';
+    if (!enhancedNote) return 'notes';
     return 'complete';
-  }, [selectedPatientId, roughNote, enhancedNote]);
+  }, [selectedPatientId, enhancedNote]);
 
   // Auto-collapse completed steps (but keep patient step open until visit type is confirmed)
   useEffect(() => {
@@ -559,14 +558,28 @@ export default function SmartNoteAssistant() {
               interimText={interimText}
               onStartDictation={startDictation}
               onStopDictation={stopDictation}
-              isCollapsed={collapsedSteps.includes('notes') && roughNote.length >= 50}
+              isCollapsed={false}
               onToggleCollapse={() => toggleStepCollapse('notes')}
               currentStep={currentStep}
             />
           )}
 
-          {roughNote.length >= 50 && (
-            recheckMode ? (
+          {roughNote.length >= 50 && !enhancedNote && (
+            !recheckMode ? (
+              <EnhancementStep
+                roughNote={roughNote}
+                enhancedNote={null}
+                copied={copied}
+                savedSuccessfully={savedSuccessfully}
+                recheckMode={recheckMode}
+                onEnhance={() => setRecheckMode(true)}
+                onCopy={handleCopy}
+                onRecheck={handleRecheck}
+                onClear={handleClearNote}
+                onNoteChange={setEnhancedNote}
+                analysisResults={analysisResults}
+              />
+            ) : (
               <div id="step-review-running">
                 <UnifiedDocumentReview
                   roughNote={roughNote}
@@ -581,35 +594,23 @@ export default function SmartNoteAssistant() {
                   autoRun={true}
                 />
               </div>
-            ) : enhancedNote ? (
-              <EnhancementStep
-                roughNote={roughNote}
-                enhancedNote={enhancedNote}
-                copied={copied}
-                savedSuccessfully={savedSuccessfully}
-                recheckMode={recheckMode}
-                onEnhance={() => setRecheckMode(true)}
-                onCopy={handleCopy}
-                onRecheck={handleRecheck}
-                onClear={handleClearNote}
-                onNoteChange={setEnhancedNote}
-                analysisResults={analysisResults}
-              />
-            ) : (
-              <EnhancementStep
-                roughNote={roughNote}
-                enhancedNote={null}
-                copied={copied}
-                savedSuccessfully={savedSuccessfully}
-                recheckMode={recheckMode}
-                onEnhance={() => setRecheckMode(true)}
-                onCopy={handleCopy}
-                onRecheck={handleRecheck}
-                onClear={handleClearNote}
-                onNoteChange={setEnhancedNote}
-                analysisResults={analysisResults}
-              />
             )
+          )}
+
+          {enhancedNote && (
+            <EnhancementStep
+              roughNote={roughNote}
+              enhancedNote={enhancedNote}
+              copied={copied}
+              savedSuccessfully={savedSuccessfully}
+              recheckMode={recheckMode}
+              onEnhance={() => setRecheckMode(true)}
+              onCopy={handleCopy}
+              onRecheck={handleRecheck}
+              onClear={handleClearNote}
+              onNoteChange={setEnhancedNote}
+              analysisResults={analysisResults}
+            />
           )}
 
                 </React.Fragment>
