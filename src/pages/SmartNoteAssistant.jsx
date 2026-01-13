@@ -559,7 +559,7 @@ export default function SmartNoteAssistant() {
               interimText={interimText}
               onStartDictation={startDictation}
               onStopDictation={stopDictation}
-              isCollapsed={collapsedSteps.includes('notes')}
+              isCollapsed={collapsedSteps.includes('notes') && roughNote.length >= 50}
               onToggleCollapse={() => toggleStepCollapse('notes')}
               currentStep={currentStep}
             />
