@@ -43,23 +43,19 @@ Deno.serve(async (req) => {
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       
-      const userData = {
+      const invitation = await base44.asServiceRole.entities.UserInvitation.create({
         email,
         full_name,
         role: role || 'user',
-        temporary_password,
         care_scope: care_scope || 'home_health',
         phone: phone || null,
         credentials: credentials || null,
-        staff_type: staff_type || null,
         invited_by: user.email,
         status: 'pending',
         expires_at: expiresAt.toISOString(),
         last_sent_at: now.toISOString(),
         resend_count: 0
-      };
-
-      const invitation = await base44.asServiceRole.entities.UserInvitation.create(userData);
+      });
       console.log('✓ Invitation record created:', invitation.id, 'Expires:', expiresAt.toISOString());
       
       console.log('Step 4: Sending invitation email...');
