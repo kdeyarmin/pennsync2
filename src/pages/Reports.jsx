@@ -408,6 +408,34 @@ export default function Reports() {
 
 
 
+            {/* Visits/Enhancements Overview */}
+            <Card className="mb-4 sm:mb-6">
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                  <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" />
+                  <span className="truncate">Visits/Enhancements</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-3xl font-bold text-indigo-600">{totalVisitsAndEnhancements}</p>
+                    <p className="text-sm text-gray-500">Total visits + enhancements</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t">
+                    <div>
+                      <p className="text-lg font-bold text-gray-900">{visits.length}</p>
+                      <p className="text-xs text-gray-500">Visits</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-gray-900">{noteConversions.length}</p>
+                      <p className="text-xs text-gray-500">Enhancements</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Time & Financial Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <Card>
