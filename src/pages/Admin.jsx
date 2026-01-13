@@ -125,12 +125,24 @@ export default function Admin() {
   const totalUsers = users.length;
   const adminUsers = users.filter(u => u.role === 'admin').length;
   const activePatients = patients.filter(p => p.status === 'active').length;
+  
+  // Combine visits and enhancements (visits + note conversions)
   const visitsThisWeek = visits.filter(v => {
     const visitDate = new Date(v.visit_date);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     return visitDate >= weekAgo;
   }).length;
+  
+  const enhancementsThisWeek = noteConversions.filter(nc => {
+    const createdDate = new Date(nc.created_date);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return createdDate >= weekAgo;
+  }).length;
+  
+  const totalVisitsAndEnhancements = visitsThisWeek + enhancementsThisWeek;
+  
   const completedVisits = visits.filter(v => v.status === 'completed').length;
   const avgDocTime = visits
     .filter(v => v.start_time && v.end_time)
