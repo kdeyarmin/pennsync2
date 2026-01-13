@@ -60,6 +60,7 @@ import {
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
 import { toast } from "sonner";
+import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -177,6 +178,13 @@ export default function UserManagement() {
 
   const handleSaveUser = () => {
     if (!selectedUser) return;
+    logActivity(ActivityActions.USER_ROLE_CHANGED, {
+      user_email: selectedUser.email,
+      old_role: selectedUser.role,
+      new_role: editedRole,
+      entity_type: 'User',
+      entity_id: selectedUser.id
+    });
     updateUserMutation.mutate({
       userId: selectedUser.id,
       data: { role: editedRole }
@@ -191,6 +199,12 @@ export default function UserManagement() {
   const confirmToggleActive = () => {
     if (!selectedUser) return;
     const newStatus = selectedUser.is_active === false ? true : false;
+    logActivity(newStatus ? ActivityActions.USER_ENABLED : ActivityActions.USER_DISABLED, {
+      user_email: selectedUser.email,
+      user_name: selectedUser.full_name,
+      entity_type: 'User',
+      entity_id: selectedUser.id
+    });
     updateUserMutation.mutate({
       userId: selectedUser.id,
       data: { is_active: newStatus }
@@ -207,6 +221,12 @@ export default function UserManagement() {
 
   const confirmResetPassword = () => {
     if (!selectedUser) return;
+    logActivity(ActivityActions.USER_PASSWORD_RESET, {
+      user_email: selectedUser.email,
+      user_name: selectedUser.full_name,
+      entity_type: 'User',
+      entity_id: selectedUser.id
+    });
     resetPasswordMutation.mutate(selectedUser.email);
   };
 
@@ -220,11 +240,24 @@ export default function UserManagement() {
       toast.error('Email and full name are required');
       return;
     }
+    logActivity(ActivityActions.INVITATION_SENT, {
+      invited_email: setupFormData.email,
+      invited_name: setupFormData.full_name,
+      role: setupFormData.role,
+      staff_type: setupFormData.staff_type,
+      entity_type: 'UserInvitation'
+    });
     createUserMutation.mutate(setupFormData);
   };
 
   const confirmDeleteUser = () => {
     if (!selectedUser) return;
+    logActivity(ActivityActions.USER_DELETED, {
+      user_email: selectedUser.email,
+      user_name: selectedUser.full_name,
+      entity_type: 'User',
+      entity_id: selectedUser.id
+    });
     deleteUserMutation.mutate(selectedUser.id);
   };
 
