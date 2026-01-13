@@ -41,6 +41,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfUrl, setPdfUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef(null);
   const queryClient = useQueryClient();
 
   const createTemplateMutation = useMutation({
@@ -190,30 +191,30 @@ export default function PDFTemplateBuilder({ open, onClose }) {
           {/* Step 2: Upload PDF */}
           {step === 'upload' && (
             <div className="space-y-4">
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileSelect}
-                    disabled={uploading}
-                    className="hidden"
-                  />
-                  <div className="space-y-2">
-                    {uploading ? (
-                      <>
-                        <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
-                        <p className="text-sm text-gray-600">Uploading...</p>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-                        <p className="text-sm font-medium text-gray-700">Click to upload PDF</p>
-                        <p className="text-xs text-gray-500">or drag and drop</p>
-                      </>
-                    )}
-                  </div>
-                </label>
+              <div 
+                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="space-y-2">
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
+                      <p className="text-sm text-gray-600">Uploading...</p>
+                    </>
+                  ) : pdfUrl ? (
+                    <>
+                      <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
+                      <p className="text-sm font-medium text-gray-700">{pdfFile?.name}</p>
+                      <p className="text-xs text-gray-500">Ready to create template</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                      <p className="text-sm font-medium text-gray-700">Click to upload PDF</p>
+                      <p className="text-xs text-gray-500">or drag and drop</p>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -260,9 +261,19 @@ export default function PDFTemplateBuilder({ open, onClose }) {
               <Button variant="outline" onClick={() => setStep('info')}>
                 Back
               </Button>
-              <Button disabled={!pdfUrl}>
-                {pdfUrl ? 'PDF Uploaded' : 'Upload PDF'}
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? 'Uploading...' : pdfUrl ? 'PDF Uploaded ✓' : 'Select & Upload PDF'}
               </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
             </>
           )}
           {step === 'confirm' && (
