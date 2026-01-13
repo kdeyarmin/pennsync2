@@ -33,7 +33,8 @@ export default function AdminUserSetup() {
   const [formData, setFormData] = useState({
     email: "",
     full_name: "",
-    role: "user"
+    role: "user",
+    staff_type: "office" // rn, lpn, office
   });
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -60,12 +61,13 @@ export default function AdminUserSetup() {
     setIsLoading(true);
     try {
       // Create user through backend function
-      const { user } = await base44.functions.invoke('createUserWithTempPassword', {
-        email: formData.email,
-        full_name: formData.full_name,
-        role: formData.role,
-        temporary_password: temporaryPassword
-      });
+       const { user } = await base44.functions.invoke('createUserWithTempPassword', {
+         email: formData.email,
+         full_name: formData.full_name,
+         role: formData.role,
+         staff_type: formData.role === 'user' ? formData.staff_type : null,
+         temporary_password: temporaryPassword
+       });
 
       // Send welcome email
       await base44.functions.invoke('sendWelcomeEmail', {
@@ -82,7 +84,7 @@ export default function AdminUserSetup() {
       setSetupSuccess(true);
 
       // Reset form
-      setFormData({ email: "", full_name: "", role: "user" });
+      setFormData({ email: "", full_name: "", role: "user", staff_type: "office" });
       setTemporaryPassword("");
 
       toast.success(`User ${formData.full_name} created and welcome email sent!`);
@@ -129,10 +131,16 @@ export default function AdminUserSetup() {
               <p className="font-semibold">{createdUser.email}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Role</p>
-              <p className="font-semibold capitalize">{createdUser.role}</p>
+                <p className="text-sm text-gray-600">Role</p>
+                <p className="font-semibold capitalize">{createdUser.role}</p>
+              </div>
+              {createdUser.staff_type && (
+                <div>
+                  <p className="text-sm text-gray-600">Staff Type</p>
+                  <p className="font-semibold uppercase">{createdUser.staff_type}</p>
+                </div>
+              )}
             </div>
-          </div>
 
           <Button
             onClick={() => setSetupSuccess(false)}
@@ -189,17 +197,36 @@ export default function AdminUserSetup() {
             </div>
 
             <div>
-              <Label htmlFor="role">User Role *</Label>
-              <Select value={formData.role} onValueChange={(val) => setFormData({ ...formData, role: val })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User (Staff Member)</SelectItem>
-                  <SelectItem value="admin">Admin (Administrator)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+               <Label htmlFor="role">User Role *</Label>
+               <Select value={formData.role} onValueChange={(val) => setFormData({ ...formData, role: val })}>
+                 <SelectTrigger>
+                   <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="user">User (Staff Member)</SelectItem>
+                   <SelectItem value="admin">Admin (Administrator)</SelectItem>
+                 </SelectContent>
+               </Select>
+             </div>
+
+             {formData.role === "user" && (
+               <div>
+                 <Label htmlFor="staff_type">Staff Type *</Label>
+                 <Select value={formData.staff_type} onValueChange={(val) => setFormData({ ...formData, staff_type: val })}>
+                   <SelectTrigger>
+                     <SelectValue />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="rn">RN (Registered Nurse)</SelectItem>
+                     <SelectItem value="lpn">LPN (Licensed Practical Nurse)</SelectItem>
+                     <SelectItem value="office">Office Staff</SelectItem>
+                   </SelectContent>
+                 </Select>
+                 <p className="text-xs text-gray-500 mt-1">
+                   Specify the staff member's role for proper permissions and training tracking.
+                 </p>
+               </div>
+             )}
 
             <div>
               <div className="flex items-center justify-between mb-2">
