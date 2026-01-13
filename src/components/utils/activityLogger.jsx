@@ -51,7 +51,25 @@ export const ActivityActions = {
   ALERT_DISMISSED: 'alert_dismissed',
   AI_FEATURE_USED: 'ai_feature_used',
   SEARCH: 'search',
-  FILTER_APPLIED: 'filter_applied'
+  FILTER_APPLIED: 'filter_applied',
+  // User management actions
+  USER_CREATED: 'user_created',
+  USER_ROLE_CHANGED: 'user_role_changed',
+  USER_ENABLED: 'user_enabled',
+  USER_DISABLED: 'user_disabled',
+  USER_PASSWORD_RESET: 'user_password_reset',
+  USER_DELETED: 'user_deleted',
+  INVITATION_SENT: 'invitation_sent',
+  INVITATION_RESENT: 'invitation_resent',
+  INVITATION_DELETED: 'invitation_deleted',
+  // Document actions
+  DOCUMENT_GENERATED: 'document_generated',
+  DOCUMENT_SIGNED: 'document_signed',
+  DOCUMENT_UPLOADED: 'document_uploaded',
+  DOCUMENT_DELETED: 'document_deleted',
+  // Admin actions
+  SETTINGS_UPDATED: 'settings_updated',
+  ROLE_PERMISSION_CHANGED: 'role_permission_changed'
 };
 
 export const logError = async (errorMessage, errorDetails = {}) => {
