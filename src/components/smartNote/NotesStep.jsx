@@ -24,10 +24,18 @@ export default function NotesStep({
         <CardContent className="p-2 md:p-3 space-y-4">
           <div className="relative">
             <textarea
-              value={roughNote}
-              onChange={(e) => onNotesChange(e.target.value)}
-              placeholder={`Type or dictate your rough notes or bullet points...\n\nExamples:\n• Patient states feeling better\n• Wound improving, less drainage\n• Taught medication management\n• BP elevated, pt needs MD follow-up`}
-              className="w-full min-h-[700px] text-base border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-all duration-200 bg-white font-mono"
+              key="rough-note-textarea"
+              value={roughNote || ''}
+              onChange={(e) => {
+                e.preventDefault?.();
+                onNotesChange(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                // Don't prevent any keys - let all typing flow through
+              }}
+              placeholder="Type or dictate your rough notes or bullet points...\n\nExamples:\n• Patient states feeling better\n• Wound improving, less drainage\n• Taught medication management\n• BP elevated, pt needs MD follow-up"
+              className="w-full min-h-[700px] text-base border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-shadow duration-200 bg-white font-mono resize-none"
+              spellCheck="false"
             />
             {interimText && (
               <div className="absolute bottom-2 left-2 right-2 bg-blue-100/90 border border-blue-300 rounded px-3 py-2 text-sm text-blue-900 italic pointer-events-none">
