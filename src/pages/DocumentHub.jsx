@@ -9,11 +9,11 @@ import {
   Pen,
   Send
 } from "lucide-react";
-import DocumentManagementDashboard from "../components/documents/DocumentManagementDashboard";
-import DocumentPackageCreator from "../components/documents/DocumentPackageCreator";
-import SignatureTracking from "../components/documents/SignatureTracking";
-import TemplateLibrary from "../components/documents/TemplateLibrary";
-import PDFTemplateBuilder from "../components/documents/PDFTemplateBuilder";
+import DocumentManagementDashboard from "@/components/documents/DocumentManagementDashboard";
+import DocumentPackageCreator from "@/components/documents/DocumentPackageCreator";
+import SignatureTracking from "@/components/documents/SignatureTracking";
+import TemplateLibrary from "@/components/documents/TemplateLibrary";
+import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
 
 export default function DocumentHub() {
   const [activeTab, setActiveTab] = useState("signatures");
