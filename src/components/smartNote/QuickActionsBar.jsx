@@ -104,16 +104,16 @@ export default function QuickActionsBar({
 
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 print:hidden">
-      <div className="bg-white shadow-2xl rounded-full border-2 border-indigo-300 px-4 py-3 flex items-center gap-2">
+      <div className="bg-white shadow-lg rounded-full border border-indigo-300 px-3 py-1.5 flex items-center gap-1.5">
         {complianceScore !== null && complianceScore !== undefined && (
           <Badge 
-            className={`${
+            className={`text-[10px] ${
               complianceScore >= 90 ? 'bg-green-100 text-green-800' :
               complianceScore >= 75 ? 'bg-yellow-100 text-yellow-800' :
               'bg-red-100 text-red-800'
-            } mr-2`}
+            }`}
           >
-            {complianceScore}% Compliant
+            {complianceScore}%
           </Badge>
         )}
         
@@ -126,14 +126,14 @@ export default function QuickActionsBar({
               variant={action.variant}
               onClick={action.onClick}
               disabled={action.disabled}
-              className={`gap-2 min-h-[40px] ${action.className || ''}`}
+              className={`gap-1 text-sm px-3 py-1 ${action.className || ''}`}
             >
               {action.loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3 h-3" />
               )}
-              <span className="hidden sm:inline">{action.label}</span>
+              <span className="hidden sm:inline text-xs">{action.label}</span>
             </Button>
           );
         })}
