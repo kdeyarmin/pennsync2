@@ -44,6 +44,9 @@ export default function UserGuides() {
         'Notification center',
         'My Workflow dashboard',
         'Patient management',
+        'Document management & templates',
+        'Visual PDF editor & field mapping',
+        'E-signature workflows',
         'Documentation tools',
         'OASIS & care plans',
         'Patient alerts & monitoring',
@@ -54,6 +57,27 @@ export default function UserGuides() {
         'Admin features & analytics'
       ],
       featured: true
+    },
+    {
+      type: 'document_management',
+      title: 'Document Management Guide',
+      description: 'Master PDF templates, visual field editor, and document package creation',
+      icon: FileText,
+      color: 'blue',
+      audience: 'Administrative Staff & Nurses',
+      topics: [
+        'Template library & categories',
+        'Version control',
+        'Search & filters',
+        'Quick document presets',
+        'Custom PDF uploads',
+        'Visual field editor',
+        'Conditional logic',
+        'Dynamic tables',
+        'Rich text formatting',
+        'Document packages',
+        'E-signature setup'
+      ]
     },
     {
       type: 'referral_intake',

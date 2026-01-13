@@ -32,7 +32,9 @@ import {
   BookOpen,
   CheckCircle2,
   Lightbulb,
-  WifiOff
+  WifiOff,
+  Edit,
+  Grid3x3
 } from "lucide-react";
 
 export default function FeaturesPage() {
@@ -41,6 +43,76 @@ export default function FeaturesPage() {
   const [isGeneratingManual, setIsGeneratingManual] = useState(false);
 
   const features = [
+    {
+      category: "Document Management",
+      icon: FileText,
+      color: "cyan",
+      items: [
+        {
+          name: "Enhanced PDF Template Manager",
+          icon: Layers,
+          description: "Organize templates by category, version control with history, and powerful search/filter capabilities",
+          timeSaved: "5-8 min finding templates",
+          impact: "high",
+          details: "Categorized templates (consent, assessment, care plan, etc.), version tracking, search by name or description, grid/list view toggle",
+          howToUse: "Navigate to Document Management > Template Library. Use category filters and search to find templates. View version history with change notes."
+        },
+        {
+          name: "Quick Document Presets",
+          icon: Zap,
+          description: "One-click document packages for common workflows (Admission, Consent Packet, Discharge)",
+          timeSaved: "3-5 min per package",
+          impact: "high",
+          details: "Pre-configured document bundles for common scenarios, instant selection of multiple related documents",
+          howToUse: "Click 'Create Package' > Select a Quick Preset (Admission Onboarding, Full Consent Packet, etc.) > Review and send."
+        },
+        {
+          name: "Custom PDF Upload",
+          icon: FileCheck,
+          description: "Upload your own PDF forms to include in document packages alongside system templates",
+          timeSaved: "2-3 min per document",
+          impact: "medium",
+          details: "Drag-and-drop PDF upload, organize custom documents, combine with system templates",
+          howToUse: "In document creation, click 'Upload Custom PDF' > Drag file or browse > Add to package with other templates."
+        },
+        {
+          name: "Visual PDF Field Editor",
+          icon: Edit,
+          description: "Drag-and-drop field placement on PDFs with real-time positioning and multiple field types",
+          timeSaved: "10-15 min per template",
+          impact: "critical",
+          details: "Click to place fields, drag to reposition, support for text, signature, initials, date, checkbox fields, field preview",
+          howToUse: "In Template Editor, upload PDF > Click to add fields > Drag fields to position > Configure field properties > Save."
+        },
+        {
+          name: "Conditional Field Logic",
+          icon: Sparkles,
+          description: "Show/hide fields dynamically based on other field values with visual indicators",
+          timeSaved: "Smart forms",
+          impact: "high",
+          details: "Set conditional rules on fields (if checkbox checked, show text field), visual ⚡ indicator for conditional fields",
+          howToUse: "Select a field > Click 'Add Condition' > Set trigger field, operator, and value > Fields show/hide automatically."
+        },
+        {
+          name: "Dynamic Tables",
+          icon: Grid3x3,
+          description: "Add configurable tables with custom rows and columns to PDF templates",
+          timeSaved: "Flexible layouts",
+          impact: "medium",
+          details: "Drag table element onto PDF, configure row/column count, auto-sizing, supports data entry",
+          howToUse: "Select 'Dynamic Table' field type > Set rows and columns > Place on PDF > Table renders with borders."
+        },
+        {
+          name: "Rich Text Formatting",
+          icon: FileText,
+          description: "Advanced text styling with bold, italic, underline, custom colors, and font sizes",
+          timeSaved: "Professional appearance",
+          impact: "medium",
+          details: "Font sizes 12-24px, 6 color options, bold/italic/underline styling, preview in real-time",
+          howToUse: "Select 'Rich Text' field > Choose font size, color, and styling > Place on PDF > Preview formatting."
+        }
+      ]
+    },
     {
       category: "Smart Note Assistant",
       icon: Brain,
