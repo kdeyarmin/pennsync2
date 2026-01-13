@@ -1,119 +1,274 @@
-import React, { useState } from "react";
-import PDFSignatureCapture from "../components/documents/PDFSignatureCapture";
-import PatientInfoSignatureFlow from "../components/documents/PatientInfoSignatureFlow";
-import InteractivePDFSigner from "../components/documents/InteractivePDFSigner";
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react/query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, FileText, Pen, User } from "lucide-react";
 import { toast } from "sonner";
-import { Wand2, FileEdit } from "lucide-react";
+import { createPageUrl } from "@/utils";
+import { useNavigate } from "react-router-dom";
+import SignatureCanvas from "../components/documents/SignatureCanvas";
 
 export default function SignDocument() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
-  const pdfUrl = urlParams.get('pdf_url');
+  const signatureId = urlParams.get('signature_id');
   const patientId = urlParams.get('patient_id');
-  const documentType = urlParams.get('document_type') || 'Consent Form';
-  const withPatientInfo = urlParams.get('patient_info') === 'true';
-  const useInteractive = urlParams.get('interactive') === 'true';
-  
-  const [signingMode, setSigningMode] = useState(useInteractive ? 'interactive' : 'standard');
 
-  if (!pdfUrl) {
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [currentSignerIndex, setCurrentSignerIndex] = useState(0);
+  const [signatures, setSignatures] = useState({});
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: signatureRecord } = useQuery({
+    queryKey: ['signature-record', signatureId],
+    queryFn: () => base44.entities.DocumentSignature.filter({ id: signatureId }),
+    select: (data) => data[0],
+    enabled: !!signatureId
+  });
+
+  const { data: patient } = useQuery({
+    queryKey: ['patient', patientId],
+    queryFn: () => base44.entities.Patient.filter({ id: patientId }),
+    select: (data) => data[0],
+    enabled: !!patientId
+  });
+
+  const updateSignatureMutation = useMutation({
+    mutationFn: async ({ signatureData }) => {
+      return await base44.entities.DocumentSignature.update(signatureId, signatureData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['signature-record'] });
+      queryClient.invalidateQueries({ queryKey: ['all-signatures'] });
+    }
+  });
+
+  const handleOpenSignature = (signerIndex) => {
+    setCurrentSignerIndex(signerIndex);
+    setShowSignatureDialog(true);
+  };
+
+  const handleSaveSignature = (dataUrl, method) => {
+    const signer = signatureRecord?.signers[currentSignerIndex];
+    if (!signer) return;
+
+    setSignatures(prev => ({
+      ...prev,
+      [signer.id]: { dataUrl, method, timestamp: new Date().toISOString() }
+    }));
+
+    setShowSignatureDialog(false);
+    toast.success("Signature saved!");
+  };
+
+  const handleSubmitAll = async () => {
+    if (!signatureRecord) return;
+
+    const updatedSigners = signatureRecord.signers.map(signer => {
+      const sig = signatures[signer.id];
+      return {
+        ...signer,
+        signature: sig?.dataUrl || null,
+        signature_method: sig?.method || null,
+        signed_date: sig?.timestamp || null,
+        ip_address: "unknown" // Could be enhanced with real IP tracking
+      };
+    });
+
+    const allRequiredSigned = updatedSigners
+      .filter(s => s.required)
+      .every(s => s.signature);
+
+    if (!allRequiredSigned) {
+      toast.error("Please complete all required signatures");
+      return;
+    }
+
+    try {
+      await updateSignatureMutation.mutateAsync({
+        signatureData: {
+          signers: updatedSigners,
+          status: "completed",
+          completed_date: new Date().toISOString(),
+          audit_trail: [
+            ...(signatureRecord.audit_trail || []),
+            {
+              action: "all_signatures_completed",
+              timestamp: new Date().toISOString(),
+              notes: `${updatedSigners.length} signature(s) collected`
+            }
+          ]
+        }
+      });
+
+      toast.success("Document signed successfully!");
+      
+      setTimeout(() => {
+        navigate(createPageUrl("DocumentSignatures"));
+      }, 1500);
+    } catch (error) {
+      toast.error("Failed to save signatures");
+    }
+  };
+
+  if (!signatureRecord || !patient) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="p-8 max-w-4xl mx-auto">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-red-600">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              No PDF document specified. Please provide a valid PDF URL.
-            </p>
+          <CardContent className="p-12 text-center">
+            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600">Loading document...</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const handleComplete = (signedPdfUrl, patientInfo) => {
-    console.log("Document signed:", signedPdfUrl);
-    toast.success("Document signed successfully!");
-    
-    // Navigate back to patient details or show success
-    if (patientId) {
-      setTimeout(() => {
-        navigate(createPageUrl(`PatientDetails?id=${patientId}`));
-      }, 2000);
+  const getSignerStatus = (signer) => {
+    if (signatures[signer.id]) {
+      return { label: "Signed", color: "bg-green-600" };
     }
+    if (signer.signed_date) {
+      return { label: "Previously Signed", color: "bg-green-600" };
+    }
+    return { label: "Pending", color: "bg-yellow-600" };
   };
 
-  // Use enhanced flow with patient info if requested
-  if (withPatientInfo) {
-    return (
-      <div className="max-w-5xl mx-auto p-6">
-        <PatientInfoSignatureFlow
-          pdfTemplateUrl={pdfUrl}
-          patientId={patientId}
-          documentType={documentType}
-          onComplete={handleComplete}
-        />
-      </div>
-    );
-  }
-
-  // Standard signature flow (direct PDF signing)
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6">
-      {/* Mode Selector */}
-      <Card className="mb-4">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              variant={signingMode === 'standard' ? 'default' : 'outline'}
-              onClick={() => setSigningMode('standard')}
-              className="flex-1 flex items-center justify-center gap-2"
-            >
-              <Wand2 className="w-4 h-4" />
-              Standard Signing
-            </Button>
-            <Button
-              variant={signingMode === 'interactive' ? 'default' : 'outline'}
-              onClick={() => setSigningMode('interactive')}
-              className="flex-1 flex items-center justify-center gap-2"
-            >
-              <FileEdit className="w-4 h-4" />
-              Interactive Editor (Fill & Sign)
-            </Button>
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            {signingMode === 'interactive' 
-              ? 'Fill out forms, add text, dates, and place signatures directly on the PDF'
-              : 'Quick signature capture with automatic placement'}
-          </p>
+    <div className="p-6 max-w-5xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign Document</h1>
+        <p className="text-gray-600">
+          {patient.first_name} {patient.last_name} • {signatureRecord.document_title}
+        </p>
+      </div>
+
+      {/* Document Preview */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Document Preview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {signatureRecord.document_url ? (
+            <div className="border rounded-lg overflow-hidden">
+              <iframe
+                src={signatureRecord.document_url}
+                className="w-full h-96"
+                title="Document Preview"
+              />
+            </div>
+          ) : signatureRecord.document_content ? (
+            <div className="p-4 border rounded-lg bg-gray-50 max-h-96 overflow-auto">
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: signatureRecord.document_content }} />
+            </div>
+          ) : (
+            <Alert>
+              <AlertDescription>Document content not available</AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
-      
-      {/* Signing Component */}
-      {signingMode === 'interactive' ? (
-        <InteractivePDFSigner
-          pdfUrl={pdfUrl}
-          patientId={patientId}
-          documentType={documentType}
-          onComplete={handleComplete}
-        />
-      ) : (
-        <PDFSignatureCapture
-          pdfUrl={pdfUrl}
-          patientId={patientId}
-          documentType={documentType}
-          signatureFields={[
-            { name: "patient_signature", label: "Patient Signature", role: "Patient" },
-            { name: "witness_signature", label: "Witness Signature", role: "Witness" }
-          ]}
-          onComplete={handleComplete}
-        />
+
+      {/* Signatures Required */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Required Signatures</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {signatureRecord.signers.map((signer, index) => {
+              const status = getSignerStatus(signer);
+              
+              return (
+                <div
+                  key={signer.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <User className="w-5 h-5 text-gray-600" />
+                    <div>
+                      <p className="font-medium">{signer.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {signer.role} {signer.required && <span className="text-red-600">*</span>}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <Badge className={status.color}>{status.label}</Badge>
+                    
+                    {!signer.signed_date && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleOpenSignature(index)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Pen className="w-4 h-4 mr-2" />
+                        Sign
+                      </Button>
+                    )}
+                    
+                    {signatures[signer.id] && (
+                      <div className="border rounded-lg p-1 bg-white">
+                        <img 
+                          src={signatures[signer.id].dataUrl} 
+                          alt="Signature"
+                          className="h-8 w-24 object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Submit */}
+      <div className="flex gap-3 justify-end">
+        <Button
+          variant="outline"
+          onClick={() => navigate(createPageUrl("DocumentSignatures"))}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmitAll}
+          disabled={updateSignatureMutation.isPending}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <CheckCircle2 className="w-4 h-4 mr-2" />
+          {updateSignatureMutation.isPending ? "Submitting..." : "Submit All Signatures"}
+        </Button>
+      </div>
+
+      {/* Signature Dialog */}
+      {showSignatureDialog && (
+        <Dialog open={showSignatureDialog} onOpenChange={setShowSignatureDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {signatureRecord.signers[currentSignerIndex]?.name} - Please Sign
+              </DialogTitle>
+            </DialogHeader>
+            <SignatureCanvas
+              onSave={handleSaveSignature}
+              onCancel={() => setShowSignatureDialog(false)}
+              signerName={signatureRecord.signers[currentSignerIndex]?.name}
+              isInitials={false}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -21,13 +21,16 @@ import {
   Send,
   Upload,
   File,
-  X
+  X,
+  Mail
 } from "lucide-react";
 import { toast } from "sonner";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 import QuickPresetsSelector from "./QuickPresetsSelector";
 import CustomPDFUploader from "./CustomPDFUploader";
 import PDFFieldMapper from "./PDFFieldMapper";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function DocumentPackageCreator({ open, onClose }) {
   const queryClient = useQueryClient();
@@ -45,6 +48,10 @@ export default function DocumentPackageCreator({ open, onClose }) {
   const [dueDate, setDueDate] = useState('');
   const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [sendForSignature, setSendForSignature] = useState(true);
+  const [signerEmail, setSignerEmail] = useState('');
+  const [signerName, setSignerName] = useState('');
+  const [signatureMessage, setSignatureMessage] = useState('');
 
   const { data: templates = [] } = useQuery({
     queryKey: ['pdf-templates-active'],
@@ -128,6 +135,19 @@ export default function DocumentPackageCreator({ open, onClose }) {
         sent_to_patient_at: new Date().toISOString()
       });
 
+      // Send signature request if enabled
+      if (sendForSignature && signerEmail && signerName) {
+        const signatureUrl = window.location.origin + `/sign?signature_id=${signatures[0].id}&patient_id=${patientId}`;
+        
+        await base44.integrations.Core.SendEmail({
+          to: signerEmail,
+          subject: `Signature Requested: ${packageName}`,
+          body: `Hello ${signerName},\n\nYou have been requested to sign the following documents: ${packageName}\n\nPatient: ${patient ? `${patient.first_name} ${patient.last_name}` : 'See package details'}\n\n${signatureMessage ? `Message: ${signatureMessage}\n\n` : ''}Please click the link below to review and sign:\n${signatureUrl}\n\n${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}\n\n` : ''}Thank you!`
+        });
+        
+        toast.success("Package created and signature request sent!");
+      }
+
       return pkg;
     },
     onSuccess: () => {
@@ -157,6 +177,10 @@ export default function DocumentPackageCreator({ open, onClose }) {
     setDueDate('');
     setSelectedDocuments([]);
     setUploadedFiles([]);
+    setSendForSignature(true);
+    setSignerEmail('');
+    setSignerName('');
+    setSignatureMessage('');
   };
 
   const toggleDocument = (templateId) => {
@@ -182,6 +206,11 @@ export default function DocumentPackageCreator({ open, onClose }) {
     
     if (!packageName || (selectedDocuments.length === 0 && uploadedFiles.length === 0)) {
       toast.error("Please fill in package name and select or upload at least one document");
+      return;
+    }
+
+    if (sendForSignature && (!signerEmail || !signerName)) {
+      toast.error("Please enter signer name and email for e-signature");
       return;
     }
 
@@ -464,6 +493,57 @@ export default function DocumentPackageCreator({ open, onClose }) {
             </div>
           </div>
 
+          {/* E-Signature Options */}
+          <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="send-signature"
+                checked={sendForSignature}
+                onCheckedChange={setSendForSignature}
+              />
+              <Label htmlFor="send-signature" className="cursor-pointer font-semibold">
+                Send for E-Signature
+              </Label>
+            </div>
+
+            {sendForSignature && (
+              <div className="space-y-3 pl-6 border-l-2 border-blue-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Signer Name *</Label>
+                    <Input
+                      placeholder="Enter signer name"
+                      value={signerName}
+                      onChange={(e) => setSignerName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Signer Email *</Label>
+                    <Input
+                      type="email"
+                      placeholder="signer@email.com"
+                      value={signerEmail}
+                      onChange={(e) => setSignerEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Message to Signer (Optional)</Label>
+                  <Textarea
+                    placeholder="Add a message to include with the signature request..."
+                    value={signatureMessage}
+                    onChange={(e) => setSignatureMessage(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div className="flex items-center gap-2 text-xs text-blue-700">
+                  <Mail className="w-4 h-4" />
+                  <span>Signer will receive an email with a link to review and sign documents</span>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Actions */}
           <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t">
             <Button 
@@ -479,7 +559,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
               className="w-full sm:w-auto"
             >
               <Send className="w-4 h-4 mr-2" />
-              {createPackageMutation.isPending ? 'Creating...' : 'Create Package'}
+              {createPackageMutation.isPending ? 'Creating...' : sendForSignature ? 'Create & Send' : 'Create Package'}
             </Button>
           </div>
         </div>
