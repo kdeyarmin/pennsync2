@@ -352,16 +352,16 @@ Generate the complete document now with all available fields pre-filled:`;
                   {selectedDocType?.label} for {patient?.first_name} {patient?.last_name}
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={handleReset} className="border border-gray-300 hover:bg-gray-50">
+              <div className="flex gap-1.5">
+                <Button onClick={handleReset} size="sm" className="text-xs px-2 py-0.5 h-auto border border-gray-300 hover:bg-gray-50">
                   Generate New
                 </Button>
-                <Button onClick={handleDownload} className="border border-gray-300 hover:bg-gray-50">
-                  <Download className="w-4 h-4 mr-2" />
+                <Button onClick={handleDownload} size="sm" className="text-xs px-2 py-0.5 h-auto border border-gray-300 hover:bg-gray-50">
+                  <Download className="w-2.5 h-2.5 mr-1" />
                   Download
                 </Button>
-                <Button onClick={handleCreateForSigning} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Send className="w-4 h-4 mr-2" />
+                <Button onClick={handleCreateForSigning} size="sm" className="text-xs px-2 py-0.5 h-auto bg-blue-600 hover:bg-blue-700 text-white">
+                  <Send className="w-2.5 h-2.5 mr-1" />
                   Send for Signature
                 </Button>
               </div>
