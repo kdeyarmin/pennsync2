@@ -16,10 +16,13 @@ import { toast } from "sonner";
 export default function ESignatureWorkflow({ document, documentType, patient, onClose }) {
   const [step, setStep] = useState("signers"); // signers, review, sent, tracking
   const [signers, setSigners] = useState([
-    { id: 1, name: patient?.first_name || "", email: patient?.email || "", role: "patient", required: true }
+    { id: 1, name: patient?.first_name || "", email: patient?.email || "", role: "patient", required: true, order: 1 }
   ]);
   const [nextSignerId, setNextSignerId] = useState(2);
   const [signMessage, setSignMessage] = useState("");
+  const [deadlineDate, setDeadlineDate] = useState("");
+  const [enableReminders, setEnableReminders] = useState(true);
+  const [reminderDays, setReminderDays] = useState(3);
   const [sending, setSending] = useState(false);
   const queryClient = useQueryClient();
 
@@ -32,7 +35,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
   const addSigner = () => {
     setSigners([
       ...signers,
-      { id: nextSignerId, name: "", email: "", role: "witness", required: false }
+      { id: nextSignerId, name: "", email: "", role: "witness", required: false, order: signers.length + 1 }
     ]);
     setNextSignerId(nextSignerId + 1);
   };
@@ -63,9 +66,14 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
 
   const handleSendForSignature = async () => {
     if (!validateSigners()) return;
+    if (!deadlineDate) {
+      toast.error("Please set a signature deadline");
+      return;
+    }
 
     setSending(true);
     try {
+      const currentUser = await base44.auth.me();
       // Create document signature record
       const docRecord = await base44.entities.DocumentSignature.create({
         patient_id: patient?.id,
@@ -80,10 +88,21 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
           role: s.role,
           required: s.required,
           signed_date: null,
-          signature: null
+          signature: null,
+          ip_address: null,
+          signature_method: null,
+          order: s.order
         })),
-        created_by_email: (await base44.auth.me()).email,
-        message: signMessage
+        created_by_email: currentUser.email,
+        message: signMessage,
+        expires_at: new Date(deadlineDate).toISOString(),
+        reminder_sent: false,
+        audit_trail: [{
+          action: "sent",
+          timestamp: new Date().toISOString(),
+          signer_id: null,
+          notes: `Document sent by ${currentUser.full_name}`
+        }]
       });
 
       // Send signing requests to signers
@@ -91,18 +110,28 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
         await base44.entities.Notification.create({
           user_email: signer.email,
           subject: `Signature Requested: ${documentType}`,
-          message: `${patient?.first_name} ${patient?.last_name} requests your signature on the following document: ${documentType}\n\nMessage: ${signMessage}`,
+          message: `${patient?.first_name} ${patient?.last_name} requests your signature on the following document: ${documentType}\n\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}`,
           type: "signature_request",
           related_entity: "DocumentSignature",
           related_id: docRecord.id,
           is_read: false
         });
 
-        // Send email notification
+        // Send email notification with deadline
         await base44.integrations.Core.SendEmail({
           to: signer.email,
-          subject: `Signature Requested: ${documentType}`,
-          body: `You have been requested to sign a document.\n\nDocument: ${documentType}\nFrom: ${patient?.first_name} ${patient?.last_name}\n\nMessage: ${signMessage}\n\nPlease log in to the system to review and sign the document.`
+          subject: `[${signer.role.toUpperCase()}] Signature Requested: ${documentType}`,
+          body: `You have been requested to sign a document as a ${signer.role}.\n\nDocument: ${documentType}\nFrom: ${patient?.first_name} ${patient?.last_name}\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}\n\nPlease log in to the system to review and sign the document.`
+        });
+      }
+
+      // Schedule automated reminders if enabled
+      if (enableReminders && reminderDays > 0) {
+        await base44.functions.invoke('scheduleSignatureReminders', {
+          document_id: docRecord.id,
+          signer_emails: signers.map(s => s.email),
+          reminder_days: reminderDays,
+          deadline_date: deadlineDate
         });
       }
 
