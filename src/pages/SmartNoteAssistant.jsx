@@ -154,24 +154,48 @@ export default function SmartNoteAssistant() {
     const refId = urlParams.get('referral_id');
     if (!refId) return;
 
-    base44.entities.Referral.filter({ id: refId }).then(referrals => {
-      if (!referrals.length || !referrals[0].extracted_data) return;
-      const referral = referrals[0];
-      const vitals = referral.extracted_data.vital_signs || {};
-      setReferralData(referral.extracted_data);
-      setVisitType('admission');
-      if (referral.patient_id) setSelectedPatientId(referral.patient_id);
-      if (vitals.blood_pressure || vitals.blood_pressure_systolic) {
-        setVitalSigns(prev => ({
-          ...prev,
-          bp_systolic: vitals.blood_pressure_systolic || vitals.blood_pressure?.split('/')[0] || '',
-          bp_diastolic: vitals.blood_pressure_diastolic || vitals.blood_pressure?.split('/')[1] || '',
-          hr: vitals.heart_rate || '',
-          temp: vitals.temperature || '',
-          o2: vitals.oxygen_saturation || ''
-        }));
+    const loadReferralData = async () => {
+      try {
+        // Use backend function to extract and format referral data
+        const response = await base44.functions.invoke('extractReferralDataForSmartNote', {
+          referral_id: refId
+        });
+        
+        const { smartNoteData } = response.data || response;
+        if (!smartNoteData) return;
+        
+        // Pre-populate form with extracted data
+        setReferralData(smartNoteData.clinical_summary);
+        setVisitType('admission');
+        setDiagnosis(smartNoteData.diagnosis || 'Custom (type below)');
+        
+        if (smartNoteData.patient_id) {
+          setSelectedPatientId(smartNoteData.patient_id);
+        }
+        
+        // Pre-populate vitals
+        if (smartNoteData.vital_signs) {
+          setVitalSigns(prev => ({
+            ...prev,
+            bp_systolic: smartNoteData.vital_signs.bp_systolic || '',
+            bp_diastolic: smartNoteData.vital_signs.bp_diastolic || '',
+            hr: smartNoteData.vital_signs.hr || '',
+            temp: smartNoteData.vital_signs.temp || '',
+            o2: smartNoteData.vital_signs.o2 || '',
+            pain: smartNoteData.vital_signs.pain || ''
+          }));
+        }
+        
+        // Auto-populate rough note with admission template
+        if (smartNoteData.admission_note_template && !roughNote) {
+          setRoughNote(smartNoteData.admission_note_template);
+        }
+      } catch (err) {
+        console.error('Error loading referral:', err);
       }
-    }).catch(err => console.error('Error loading referral:', err));
+    };
+    
+    loadReferralData();
   }, []);
 
   // Log page visit
