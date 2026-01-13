@@ -118,7 +118,18 @@ export default function UserManagement() {
   });
 
   const resendInvitationMutation = useMutation({
-    mutationFn: (invitationId) => base44.functions.invoke('resendInvitation', { invitation_id: invitationId }),
+    mutationFn: async (invitationId) => {
+      const invitation = invitations.find(i => i.id === invitationId);
+      if (invitation) {
+        await logActivity(ActivityActions.INVITATION_RESENT, {
+          invited_email: invitation.email,
+          invited_name: invitation.full_name,
+          entity_type: 'UserInvitation',
+          entity_id: invitationId
+        });
+      }
+      return base44.functions.invoke('resendInvitation', { invitation_id: invitationId });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
       toast.success('Invitation resent successfully!');
@@ -145,7 +156,18 @@ export default function UserManagement() {
   });
 
   const deleteInvitationMutation = useMutation({
-    mutationFn: (invitationId) => base44.entities.UserInvitation.delete(invitationId),
+    mutationFn: async (invitationId) => {
+      const invitation = invitations.find(i => i.id === invitationId);
+      if (invitation) {
+        await logActivity(ActivityActions.INVITATION_DELETED, {
+          invited_email: invitation.email,
+          invited_name: invitation.full_name,
+          entity_type: 'UserInvitation',
+          entity_id: invitationId
+        });
+      }
+      return base44.entities.UserInvitation.delete(invitationId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
       setShowDeleteInvitationDialog(false);
