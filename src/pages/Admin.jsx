@@ -88,6 +88,14 @@ export default function Admin() {
     enabled: isAdmin === true,
   });
 
+  // Fetch all note conversions (enhancements)
+  const { data: noteConversions = [] } = useQuery({
+    queryKey: ['allNoteConversions'],
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 500),
+    initialData: [],
+    enabled: isAdmin === true,
+  });
+
   // Fetch security logs
   const { data: securityLogs } = useQuery({
     queryKey: ['securityLogs'],
