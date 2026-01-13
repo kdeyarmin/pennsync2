@@ -42,7 +42,6 @@ import {
   FolderArchive
 } from "lucide-react";
 import { format } from "date-fns";
-import DischargeReportUploader from "../components/admin/DischargeReportUploader";
 
 export default function Admin() {
   const queryClient = useQueryClient();
@@ -598,7 +597,14 @@ If you have any questions, please contact your administrator.`,
 
         {/* Discharge Report Tab */}
         <TabsContent value="discharges" className="space-y-6">
-          <DischargeReportUploader />
+          <Card>
+            <CardHeader>
+              <CardTitle>Discharge Reports</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">Discharge report management is available in the Patient Data Management section.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Security Logs Tab */}
