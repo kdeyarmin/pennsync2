@@ -23,11 +23,11 @@ export default function NotesStep({
       {!isCollapsed && (
         <CardContent className="p-2 md:p-3 space-y-4">
           <div className="relative">
-            <Textarea
+            <textarea
               value={roughNote}
               onChange={(e) => onNotesChange(e.target.value)}
-              placeholder="Type or dictate your rough notes or bullet points...&#10;&#10;Examples:&#10;• Patient states feeling better&#10;• Wound improving, less drainage&#10;• Taught medication management&#10;• BP elevated, pt needs MD follow-up"
-              className="min-h-[700px] text-base touch-target"
+              placeholder={`Type or dictate your rough notes or bullet points...\n\nExamples:\n• Patient states feeling better\n• Wound improving, less drainage\n• Taught medication management\n• BP elevated, pt needs MD follow-up`}
+              className="w-full min-h-[700px] text-base border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-all duration-200 bg-white font-mono"
             />
             {interimText && (
               <div className="absolute bottom-2 left-2 right-2 bg-blue-100/90 border border-blue-300 rounded px-3 py-2 text-sm text-blue-900 italic pointer-events-none">
