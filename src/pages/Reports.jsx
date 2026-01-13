@@ -45,7 +45,8 @@ import {
   Trash2,
   Play,
   Pause,
-  Filter
+  Filter,
+  Activity
 } from "lucide-react";
 import ReferralVolumeReport from "../components/reports/ReferralVolumeReport";
 import PatientOutcomesReport from "../components/reports/PatientOutcomesReport";
