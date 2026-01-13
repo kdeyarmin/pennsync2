@@ -268,14 +268,14 @@ export default function SecurityCompliance() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-7 mb-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="security-audit">Security Audit</TabsTrigger>
-          <TabsTrigger value="vulnerabilities">Vulnerabilities</TabsTrigger>
-          <TabsTrigger value="encryption">Encryption</TabsTrigger>
-          <TabsTrigger value="audit">Audit Logs</TabsTrigger>
-          <TabsTrigger value="activity">User Activity</TabsTrigger>
-          <TabsTrigger value="ai-analysis">AI Analysis</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 mb-6 h-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
+          <TabsTrigger value="security-audit" className="text-xs sm:text-sm py-2">Security Audit</TabsTrigger>
+          <TabsTrigger value="vulnerabilities" className="text-xs sm:text-sm py-2">Vulnerabilities</TabsTrigger>
+          <TabsTrigger value="encryption" className="text-xs sm:text-sm py-2">Encryption</TabsTrigger>
+          <TabsTrigger value="audit" className="text-xs sm:text-sm py-2">Audit Logs</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs sm:text-sm py-2">User Activity</TabsTrigger>
+          <TabsTrigger value="ai-analysis" className="text-xs sm:text-sm py-2">AI Analysis</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
