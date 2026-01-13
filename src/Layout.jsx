@@ -181,20 +181,19 @@ export default function Layout({ children, currentPageName }) {
       category: "Documentation",
       items: [
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
+        { name: "Documents", icon: FileText, page: "DocumentHub" },
         { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
-        { name: "Document Hub", icon: FileText, page: "DocumentHub" },
-        { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
-        { name: "Referral Intake", icon: FileText, page: "ReferralIntake" },
-        { name: "Patient Education", icon: FileText, page: "PatientEducationHub" }
+        { name: "Referrals", icon: FileText, page: "ReferralIntake" },
+        { name: "Patient Education", icon: BookOpen, page: "PatientEducationHub" },
+        { name: "Offline", icon: WifiOff, page: "OfflineMode" }
       ]
     },
     {
       category: "Quality & Compliance",
       items: [
-        { name: "Medicare Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
-        { name: "Training Hub", icon: GraduationCap, page: "StaffTrainingHub" },
-        { name: "Guidelines Library", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
-        { name: "Features", icon: Sparkles, page: "Features" }
+        { name: "Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
+        { name: "Training", icon: GraduationCap, page: "StaffTrainingHub" },
+        { name: "Guidelines", icon: BookOpen, page: "MedicareGuidelinesLibrary" }
       ]
     }
   ];
