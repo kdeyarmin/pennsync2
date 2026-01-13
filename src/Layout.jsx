@@ -202,8 +202,8 @@ export default function Layout({ children, currentPageName }) {
 
   const adminItems = [
       { name: "Admin Dashboard", icon: BarChart3, page: "AdminDashboard" },
-    { name: "Reports & Analytics", icon: BarChart3, page: "Reports" },
-    { name: "Users & Settings", icon: Users, page: "UserManagement" },
+      { name: "Reports & Analytics", icon: BarChart3, page: "Reports" },
+      { name: "User Management", icon: Users, page: "UserManagement" },
     { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
     { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
@@ -391,21 +391,9 @@ export default function Layout({ children, currentPageName }) {
           ))}
 
           {isAdmin && (
-            <>
-              <div className="border-t border-gray-200 my-3" />
-              {!sidebarCollapsed && <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</p>}
-              <Link
-                to={createPageUrl("AdminUserSetup")}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive("AdminUserSetup")
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-                title={sidebarCollapsed ? "User Setup" : undefined}
-              >
-                <Users className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>User Setup</span>}
-              </Link>
+                    <>
+                      <div className="border-t border-gray-200 my-3" />
+                      {!sidebarCollapsed && <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</p>}
               {adminItems.map((item) => (
                 item.action ? (
                   <button
