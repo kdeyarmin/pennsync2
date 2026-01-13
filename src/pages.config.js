@@ -1,4 +1,3 @@
-import AIDocumentGenerator from './pages/AIDocumentGenerator';
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
@@ -82,7 +81,6 @@ import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "AIDocumentGenerator": AIDocumentGenerator,
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
