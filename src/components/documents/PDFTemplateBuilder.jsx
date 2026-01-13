@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, FileText, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import VisualFieldEditor from "./VisualFieldEditor";
 
 const TEMPLATE_CATEGORIES = [
   { value: 'consent', label: 'Consent Form' },
@@ -32,7 +33,7 @@ const TEMPLATE_CATEGORIES = [
 ];
 
 export default function PDFTemplateBuilder({ open, onClose }) {
-  const [step, setStep] = useState('info'); // info, upload, confirm
+  const [step, setStep] = useState('info'); // info, upload, fields, confirm
   const [formData, setFormData] = useState({
     template_name: '',
     template_category: 'consent',
@@ -41,11 +42,27 @@ export default function PDFTemplateBuilder({ open, onClose }) {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfUrl, setPdfUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [fields, setFields] = useState([]);
   const fileInputRef = React.useRef(null);
   const queryClient = useQueryClient();
 
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData) => {
+      const signatureFields = fields.filter(f => f.field_type === 'signature');
+      const visualElements = fields.map((f, i) => ({
+        id: f.id,
+        type: f.field_type,
+        label: f.label,
+        position: f.position || { x: 50, y: 50 + (i * 40) },
+        size: f.size || { width: 200, height: 30 },
+        properties: {
+          required: f.required,
+          placeholder: f.placeholder,
+          defaultValue: f.default_value,
+          conditional: f.conditional
+        }
+      }));
+
       return base44.entities.PDFTemplate.create({
         template_name: templateData.template_name,
         template_category: templateData.template_category,
@@ -53,9 +70,22 @@ export default function PDFTemplateBuilder({ open, onClose }) {
         template_file_url: templateData.template_file_url,
         version: '1.0',
         is_active: true,
-        field_mappings: [],
-        signature_fields: [],
-        visual_elements: [],
+        field_mappings: fields.filter(f => f.field_type !== 'signature').map(f => ({
+          pdf_field_name: f.field_name,
+          data_source: f.data_source,
+          field_path: f.field_path,
+          label: f.label,
+          field_type: f.field_type,
+          default_value: f.default_value,
+          format: f.field_type === 'date' ? 'MM/dd/yyyy' : undefined
+        })),
+        signature_fields: signatureFields.map(f => ({
+          field_name: f.field_name,
+          label: f.label,
+          role: f.role || 'patient',
+          required: f.required
+        })),
+        visual_elements: visualElements,
         usage_count: 0
       });
     },
@@ -100,6 +130,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
     });
     setPdfFile(null);
     setPdfUrl('');
+    setFields([]);
     setStep('info');
   };
 
@@ -189,114 +220,149 @@ export default function PDFTemplateBuilder({ open, onClose }) {
           )}
 
           {/* Step 2: Upload PDF */}
-          {step === 'upload' && (
-            <div className="space-y-4">
-              <div 
-                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="space-y-2">
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
-                      <p className="text-sm text-gray-600">Uploading...</p>
-                    </>
-                  ) : pdfUrl ? (
-                    <>
-                      <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
-                      <p className="text-sm font-medium text-gray-700">{pdfFile?.name}</p>
-                      <p className="text-xs text-gray-500">Ready to create template</p>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-                      <p className="text-sm font-medium text-gray-700">Click to upload PDF</p>
-                      <p className="text-xs text-gray-500">or drag and drop</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+           {step === 'upload' && (
+             <div className="space-y-4">
+               <div 
+                 className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                 onClick={() => fileInputRef.current?.click()}
+               >
+                 <div className="space-y-2">
+                   {uploading ? (
+                     <>
+                       <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
+                       <p className="text-sm text-gray-600">Uploading...</p>
+                     </>
+                   ) : pdfUrl ? (
+                     <>
+                       <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
+                       <p className="text-sm font-medium text-gray-700">{pdfFile?.name}</p>
+                       <p className="text-xs text-gray-500">Ready to configure fields</p>
+                     </>
+                   ) : (
+                     <>
+                       <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                       <p className="text-sm font-medium text-gray-700">Click to upload PDF</p>
+                       <p className="text-xs text-gray-500">or drag and drop</p>
+                     </>
+                   )}
+                 </div>
+               </div>
+             </div>
+           )}
+
+           {/* Step 3: Configure Fields */}
+           {step === 'fields' && (
+             <VisualFieldEditor 
+               pdfUrl={pdfUrl}
+               initialFields={fields}
+               onFieldsChange={setFields}
+             />
+           )}
 
           {/* Step 3: Confirm */}
+          {/* Step 4: Confirm */}
           {step === 'confirm' && (
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-gray-900">{formData.template_name}</p>
-                    <p className="text-sm text-gray-600">{pdfFile?.name}</p>
-                    <div className="mt-2 inline-block">
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                        {TEMPLATE_CATEGORIES.find(c => c.value === formData.template_category)?.label}
-                      </span>
+            <div className="space-y-4">
+              <Card className="bg-green-50 border-green-200">
+                <CardContent className="pt-6 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-gray-900">{formData.template_name}</p>
+                      <p className="text-sm text-gray-600">{pdfFile?.name}</p>
+                      <div className="mt-2 inline-block">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          {TEMPLATE_CATEGORIES.find(c => c.value === formData.template_category)?.label}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                {formData.description && (
-                  <p className="text-sm text-gray-700 p-3 bg-white rounded border">
-                    {formData.description}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                  {formData.description && (
+                    <p className="text-sm text-gray-700 p-3 bg-white rounded border">
+                      {formData.description}
+                    </p>
+                  )}
+                  <div className="pt-3 border-t">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Fields Configured: {fields.length}</p>
+                    <div className="space-y-1">
+                      {fields.map(f => (
+                        <p key={f.id} className="text-xs text-gray-600">• {f.label} ({f.field_type})</p>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
 
         <DialogFooter className="gap-2">
-          {step === 'info' && (
-            <>
-              <Button variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button onClick={() => setStep('upload')}>
-                Next
-              </Button>
-            </>
-          )}
-          {step === 'upload' && (
-            <>
-              <Button variant="outline" onClick={() => setStep('info')}>
-                Back
-              </Button>
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? 'Uploading...' : pdfUrl ? 'PDF Uploaded ✓' : 'Select & Upload PDF'}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </>
-          )}
-          {step === 'confirm' && (
-            <>
-              <Button variant="outline" onClick={() => setStep('upload')}>
-                Change PDF
-              </Button>
-              <Button 
-                onClick={handleCreate}
-                disabled={createTemplateMutation.isPending}
-              >
-                {createTemplateMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  'Create Template'
-                )}
-              </Button>
-            </>
-          )}
-        </DialogFooter>
+           {step === 'info' && (
+             <>
+               <Button variant="outline" onClick={onClose}>
+                 Cancel
+               </Button>
+               <Button onClick={() => setStep('upload')}>
+                 Next
+               </Button>
+             </>
+           )}
+           {step === 'upload' && (
+             <>
+               <Button variant="outline" onClick={() => setStep('info')}>
+                 Back
+               </Button>
+               <Button 
+                 onClick={() => fileInputRef.current?.click()}
+                 disabled={uploading}
+               >
+                 {uploading ? 'Uploading...' : pdfUrl ? 'PDF Uploaded ✓' : 'Select & Upload PDF'}
+               </Button>
+               {pdfUrl && (
+                 <Button onClick={() => setStep('fields')}>
+                   Configure Fields
+                 </Button>
+               )}
+               <input
+                 ref={fileInputRef}
+                 type="file"
+                 accept=".pdf"
+                 onChange={handleFileSelect}
+                 className="hidden"
+               />
+             </>
+           )}
+           {step === 'fields' && (
+             <>
+               <Button variant="outline" onClick={() => setStep('upload')}>
+                 Back
+               </Button>
+               <Button onClick={() => setStep('confirm')}>
+                 Review & Create
+               </Button>
+             </>
+           )}
+           {step === 'confirm' && (
+             <>
+               <Button variant="outline" onClick={() => setStep('fields')}>
+                 Edit Fields
+               </Button>
+               <Button 
+                 onClick={handleCreate}
+                 disabled={createTemplateMutation.isPending}
+               >
+                 {createTemplateMutation.isPending ? (
+                   <>
+                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                     Creating...
+                   </>
+                 ) : (
+                   'Create Template'
+                 )}
+               </Button>
+             </>
+           )}
+         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
