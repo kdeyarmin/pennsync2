@@ -199,18 +199,17 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const adminItems = [
-      { name: "Admin Dashboard", icon: BarChart3, page: "AdminDashboard" },
-      { name: "Reports & Analytics", icon: BarChart3, page: "Reports" },
-      { name: "User Management", icon: Users, page: "UserManagement" },
-    { name: "Training Management", icon: GraduationCap, page: "TrainingManagement" },
-    { name: "Analytics & Performance", icon: BarChart3, page: "AgencyAnalytics" },
-    { name: "Compliance & Audit", icon: ClipboardList, page: "ComplianceRegulatory" },
-    { name: "Security & HIPAA", icon: Shield, page: "SecurityCompliance" },
-    { name: "Clinical & OASIS", icon: ClipboardList, page: "ClinicalPathwayManager" },
-    { name: "Patient Data Management", icon: Users, page: "PatientDataManagement" },
-    { name: "Notifications", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
-    { name: "AI Settings", icon: Settings, page: "UserSettings" }
-    ];
+        { name: "Dashboard", icon: BarChart3, page: "AdminDashboard" },
+        { name: "Reports", icon: BarChart3, page: "Reports" },
+        { name: "Users", icon: Users, page: "UserManagement" },
+        { name: "Training", icon: GraduationCap, page: "TrainingManagement" },
+        { name: "Compliance", icon: Shield, page: "ComplianceRegulatory" },
+        { name: "Clinical", icon: ClipboardList, page: "ClinicalPathwayManager" },
+        { name: "Data", icon: Users, page: "PatientDataManagement" },
+        { name: "Security", icon: Shield, page: "SecurityCompliance" },
+        { name: "Alerts", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
+        { name: "Settings", icon: Settings, page: "UserSettings" }
+      ];
 
   const handleLogout = async () => {
     // Log logout before actually logging out
