@@ -223,14 +223,17 @@ export default function SmartNoteAssistant() {
     return 'complete';
   }, [selectedPatientId, roughNote, enhancedNote]);
 
-  // Auto-collapse completed steps
+  // Auto-collapse completed steps (but keep patient step open until visit type is confirmed)
   useEffect(() => {
     const newCollapsed = [];
-    if (selectedPatientId && currentStep !== 'patient') newCollapsed.push('patient');
+    // Only collapse patient step if they've selected a visit type and moved to notes
+    if (selectedPatientId && currentStep !== 'patient' && visitType !== 'routine_visit') {
+      newCollapsed.push('patient');
+    }
     // Don't auto-collapse vitals - they're optional and user should control
     if (roughNote.length >= 50 && currentStep !== 'notes' && !enhancedNote) newCollapsed.push('notes');
     setCollapsedSteps(newCollapsed);
-  }, [currentStep, selectedPatientId, roughNote, enhancedNote]);
+  }, [currentStep, selectedPatientId, roughNote, enhancedNote, visitType]);
 
   const stepOrder = ['patient', 'vitals', 'notes', 'review', 'complete'];
   
