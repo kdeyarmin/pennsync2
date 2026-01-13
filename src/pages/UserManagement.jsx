@@ -434,11 +434,11 @@ export default function UserManagement() {
 
       {/* Pending Invitations */}
       {pendingInvitations.length > 0 && (
-        <Card className="mb-4 sm:mb-6 border-yellow-200 bg-yellow-50">
+        <Card className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
           <CardHeader className="p-3 sm:p-4 md:p-6">
             <CardTitle className="flex items-center justify-between text-base sm:text-lg">
               <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-yellow-600" />
+                <Mail className="w-5 h-5 text-blue-600" />
                 <span>Pending Invitations ({pendingInvitations.length})</span>
               </div>
             </CardTitle>
@@ -447,24 +447,24 @@ export default function UserManagement() {
             <div className="space-y-2">
               {pendingInvitations.map((invitation) => {
                 const expiresAt = new Date(invitation.expires_at);
-                const isExpired = now > expiresAt;
                 const hoursUntilExpiry = (expiresAt - now) / (1000 * 60 * 60);
                 const isExpiringSoon = hoursUntilExpiry > 0 && hoursUntilExpiry <= 24;
                 
                 return (
-                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border">
+                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border border-blue-100">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-gray-900">{invitation.full_name}</p>
                         <Badge className="text-xs">{invitation.role}</Badge>
+                        <Badge className="bg-blue-100 text-blue-800 text-xs">Pending</Badge>
                         {isExpiringSoon && (
-                          <Badge className="bg-orange-100 text-orange-800 flex items-center gap-1">
+                          <Badge className="bg-orange-100 text-orange-800 flex items-center gap-1 text-xs">
                             <Clock className="w-3 h-3" />
                             Expiring Soon
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">{invitation.email}</p>
+                      <p className="text-sm text-gray-600 mt-1">{invitation.email}</p>
                       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
@@ -507,15 +507,69 @@ export default function UserManagement() {
         </Card>
       )}
 
-      {/* Expired Invitations Alert */}
+      {/* Expired Invitations */}
       {expiredInvitations.length > 0 && (
-        <Alert className="mb-6 border-red-200 bg-red-50">
-          <AlertTriangle className="w-4 h-4 text-red-600" />
-          <AlertDescription className="text-red-900">
-            <strong>{expiredInvitations.length} invitation{expiredInvitations.length > 1 ? 's have' : ' has'} expired.</strong>
-            {' '}These users will need new invitations to sign up.
-          </AlertDescription>
-        </Alert>
+        <Card className="mb-4 sm:mb-6 border-red-200 bg-red-50">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <span>Expired Invitations ({expiredInvitations.length})</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="space-y-2">
+              {expiredInvitations.map((invitation) => {
+                const expiresAt = new Date(invitation.expires_at);
+                
+                return (
+                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border border-red-100">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-gray-900">{invitation.full_name}</p>
+                        <Badge className="text-xs">{invitation.role}</Badge>
+                        <Badge className="bg-red-100 text-red-800 text-xs">Expired</Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{invitation.email}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Expired: {format(expiresAt, 'MMM d, yyyy')}
+                        </span>
+                        {invitation.resend_count > 0 && (
+                          <span>Previously sent {invitation.resend_count}x</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => resendInvitationMutation.mutate(invitation.id)}
+                        disabled={resendInvitationMutation.isPending}
+                        className="flex items-center gap-2 min-h-[44px] flex-1 sm:flex-none text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      >
+                        <Send className="w-4 h-4" />
+                        Resend New Link
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedInvitation(invitation);
+                          setShowDeleteInvitationDialog(true);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px] w-10"
+                        title="Delete invitation"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Users Table */}
