@@ -31,12 +31,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid JSON payload', details: parseError.message }, { status: 400 });
     }
     
-    const { email, full_name, role, staff_type, temporary_password, care_scope, phone, credentials } = payload;
+    const { email, full_name, role, care_scope, phone, credentials } = payload;
 
-    if (!email || !full_name || !temporary_password) {
+    if (!email || !full_name) {
       console.error('Missing required fields');
-      return Response.json({ error: 'Email, full name, and temporary password are required' }, { status: 400 });
+      return Response.json({ error: 'Email and full name are required' }, { status: 400 });
     }
+
+    // Generate temporary password
+    const temporary_password = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10).toUpperCase();
 
     console.log('Step 3: Creating invitation record...');
     try {
