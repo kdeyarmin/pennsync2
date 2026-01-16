@@ -235,6 +235,9 @@ Deno.serve(async (req) => {
       nameMap.set(nameKey, patient);
     }
 
+    // Track which existing patients were matched in the upload
+    const matchedPatientIds = new Set();
+
     // Process patients with enhanced matching
     for (const uploadedPatient of uploadedPatients) {
       results.processed++;
@@ -381,6 +384,9 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Mark this patient as matched
+        matchedPatientIds.add(matchingPatient.id);
+
         // Enhanced change detection - merge new data with existing
         const changes = {};
         const detectedChanges = [];
@@ -442,6 +448,30 @@ Deno.serve(async (req) => {
           error: error.message
         });
       }
+    }
+
+    // Discharge patients not in the uploaded file (active or hospitalized patients)
+    console.log('Discharging patients not in upload...');
+    const patientsToDischarge = existingPatients.filter(p => 
+      !matchedPatientIds.has(p.id) && 
+      (p.status === 'active' || p.status === 'hospitalized')
+    );
+
+    let dischargedCount = 0;
+    for (const patient of patientsToDischarge) {
+      try {
+        await base44.asServiceRole.entities.Patient.update(patient.id, { 
+          status: 'discharged',
+          discharge_date: new Date().toISOString().split('T')[0]
+        });
+        dischargedCount++;
+      } catch (error) {
+        console.error('Failed to discharge patient:', patient.id, error);
+      }
+    }
+
+    if (dischargedCount > 0) {
+      results.discharged = dischargedCount;
     }
 
     console.log('Processing complete. Results:', results);
