@@ -2,165 +2,209 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit2, Copy, Check, AlertCircle, FileText } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle, AlertCircle, Edit2, Save, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-export default function NoteReviewPanel({ 
-  transcription, 
-  generatedNote, 
+export default function NoteReviewPanel({
+  transcription,
+  generatedNote,
   patientId,
   visitType,
   diagnosis,
   onSave,
-  onDiscard 
+  onDiscard,
+  treatmentSuggestions = []
 }) {
-  const [isEditing, setIsEditing] = useState(false);
   const [editedNote, setEditedNote] = useState(generatedNote);
-  const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(editedNote);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleSave = () => {
-    onSave(editedNote);
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(editedNote);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-600" />
-              Review Generated Note
-            </CardTitle>
-            <div className="flex gap-2 flex-wrap">
-              {visitType && <Badge variant="outline">{visitType}</Badge>}
-              {diagnosis && <Badge variant="outline">{diagnosis}</Badge>}
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <Tabs defaultValue="note" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="note">Clinical Note</TabsTrigger>
-            <TabsTrigger value="transcription">Transcription</TabsTrigger>
-          </TabsList>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Review Clinical Note</h2>
+        <p className="text-gray-600">
+          Review and edit the AI-generated note before saving to patient record
+        </p>
+      </div>
 
-          {/* Clinical Note Tab */}
-          <TabsContent value="note" className="space-y-4 mt-4">
-            <Alert className="bg-blue-50 border-blue-200">
-              <AlertCircle className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
-                Review the AI-generated note below. Edit as needed to ensure accuracy and completeness before saving.
-              </AlertDescription>
-            </Alert>
+      <Tabs defaultValue="note" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="note">Generated Note</TabsTrigger>
+          <TabsTrigger value="transcription">Transcription</TabsTrigger>
+          <TabsTrigger value="treatments">Treatment Suggestions</TabsTrigger>
+        </TabsList>
 
-            {!isEditing ? (
-              <div className="space-y-4">
-                <div className="prose prose-sm max-w-none p-4 bg-gray-50 rounded-lg border border-gray-200 whitespace-pre-wrap text-sm text-gray-800 font-family-mono leading-relaxed max-h-96 overflow-y-auto">
+        {/* Generated Note Tab */}
+        <TabsContent value="note" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>AI-Generated Clinical Note</CardTitle>
+              {!isEditing && (
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isEditing ? (
+                <div className="space-y-4">
+                  <Textarea
+                    value={editedNote}
+                    onChange={(e) => setEditedNote(e.target.value)}
+                    className="font-mono text-sm h-96 p-4"
+                    placeholder="Clinical note content..."
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setEditedNote(generatedNote);
+                        setIsEditing(false);
+                      }}
+                      variant="outline"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => setIsEditing(false)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Done Editing
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-4 rounded-lg border whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800">
                   {editedNote}
                 </div>
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={handleCopy}
-                    className="gap-2 flex-1"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy Note
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                    className="gap-2 flex-1"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit Note
-                  </Button>
-                </div>
+              )}
+
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Note generated from transcription on {new Date().toLocaleString()}
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Transcription Tab */}
+        <TabsContent value="transcription" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Audio Transcription</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-gray-50 p-4 rounded-lg border text-sm leading-relaxed text-gray-800 max-h-96 overflow-y-auto">
+                {transcription}
               </div>
-            ) : (
-              <div className="space-y-4">
-                <Textarea
-                  value={editedNote}
-                  onChange={(e) => setEditedNote(e.target.value)}
-                  className="min-h-96 font-mono text-sm"
-                  placeholder="Edit your clinical note here..."
-                />
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setEditedNote(generatedNote);
-                      setIsEditing(false);
-                    }}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSave}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Treatment Suggestions Tab */}
+        <TabsContent value="treatments" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Treatment Suggestions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {treatmentSuggestions.length > 0 ? (
+                <div className="space-y-3">
+                  {treatmentSuggestions.map((treatment, idx) => (
+                    <div key={idx} className="border rounded-lg p-4 hover:bg-gray-50 transition">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">{treatment.treatment}</h4>
+                        <Badge 
+                          variant="outline"
+                          className={
+                            treatment.category === 'medication' ? 'bg-blue-50 text-blue-700' :
+                            treatment.category === 'therapy' ? 'bg-purple-50 text-purple-700' :
+                            treatment.category === 'monitoring' ? 'bg-orange-50 text-orange-700' :
+                            'bg-green-50 text-green-700'
+                          }
+                        >
+                          {treatment.category}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{treatment.rationale}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 bg-gray-200 rounded-full flex-1">
+                          <div
+                            className="h-2 bg-indigo-600 rounded-full"
+                            style={{ width: `${treatment.confidence}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium text-gray-500">
+                          {treatment.confidence}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            )}
-          </TabsContent>
+              ) : (
+                <Alert className="bg-yellow-50 border-yellow-200">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800">
+                    No treatment suggestions available for this visit.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-          {/* Transcription Tab */}
-          <TabsContent value="transcription" className="space-y-4 mt-4">
-            <Alert className="bg-gray-50 border-gray-200">
-              <AlertCircle className="h-4 w-4 text-gray-600" />
-              <AlertDescription>
-                This is the raw transcription from your voice recording.
-              </AlertDescription>
-            </Alert>
-
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 whitespace-pre-wrap text-sm text-gray-800 leading-relaxed max-h-96 overflow-y-auto">
-              {transcription}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 border-t pt-4">
-          <Button
-            variant="outline"
-            onClick={onDiscard}
-            className="flex-1"
-          >
-            Discard
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isEditing}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Check className="w-4 h-4 mr-2" />
-            Complete Note
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-6 border-t">
+        <Button
+          onClick={onDiscard}
+          variant="outline"
+          size="lg"
+          className="flex-1"
+        >
+          <X className="w-4 h-4 mr-2" />
+          Discard & Re-record
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          size="lg"
+          className="flex-1 bg-green-600 hover:bg-green-700"
+        >
+          {isSaving ? (
+            <>
+              <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Save to Patient Record
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
   );
 }
