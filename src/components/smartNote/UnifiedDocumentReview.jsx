@@ -105,7 +105,7 @@ For EACH finding, provide:
 - Category (compliance/quality/billing/clinical)
 - Severity (critical/high/medium/low)
 - Specific issue identified
-- Actionable suggestion (MUST BE ACTUAL CLINICAL TEXT ready to add to note - NOT instructions like "Add a statement..." or "Include...". Provide the exact sentence or phrase the nurse should use)
+- Actionable suggestion (MUST BE ACTUAL CLINICAL TEXT ONLY - the exact sentence or observation to add, NOT instructions. Example of WRONG: "Document that patient has edema" or "recommendations for monitoring will be..." Example of RIGHT: "Patient presents with 2+ bilateral ankle edema" or "Vital signs: BP 140/90, HR 82, RR 18, O2 sat 96% on room air, Temp 98.6°F")
 - Why this matters (clinical/regulatory/financial reason)
 - Can be auto-applied (true/false)
 
@@ -118,6 +118,7 @@ Create a fully compliant narrative note ready for EHR submission that:
 - Documents patient response and skilled need justification
 - Flows naturally as a narrative document
 - Is ready to paste directly into an EHR system
+- Contains ONLY clinical documentation (no instructions, recommendations about future care, or "end of note" statements)
 The enhanced note should be a polished, complete clinical note, not bullet points.`,
         response_json_schema: {
           type: "object",
