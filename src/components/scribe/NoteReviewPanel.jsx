@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, AlertCircle, Edit2, Save, X } from "lucide-react";
+import { CheckCircle, AlertCircle, Edit2, Save, X, Loader2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { base44 } from "@/api/base44Client";
 
 export default function NoteReviewPanel({
   transcription,
@@ -20,6 +21,8 @@ export default function NoteReviewPanel({
   const [editedNote, setEditedNote] = useState(generatedNote);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -27,6 +30,24 @@ export default function NoteReviewPanel({
       await onSave(editedNote);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const generateSummary = async () => {
+    setIsGeneratingSummary(true);
+    try {
+      const response = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `Create a concise executive summary (3-4 bullet points) of this clinical note highlighting key findings, diagnoses, and recommended actions:
+
+${editedNote}`,
+        add_context_from_internet: false
+      });
+      setSummary(typeof response === 'string' ? response : response.text || '');
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      alert('Failed to generate summary');
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -49,19 +70,56 @@ export default function NoteReviewPanel({
 
         {/* Generated Note Tab */}
         <TabsContent value="note" className="space-y-4">
+          {summary && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2 text-blue-900">
+                  <Sparkles className="w-4 h-4" />
+                  Executive Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-blue-900 whitespace-pre-wrap">
+                {summary}
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>AI-Generated Clinical Note</CardTitle>
-              {!isEditing && (
-                <Button
-                  onClick={() => setIsEditing(true)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {!summary && !isEditing && (
+                  <Button
+                    onClick={generateSummary}
+                    disabled={isGeneratingSummary}
+                    variant="outline"
+                    size="sm"
+                    className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                  >
+                    {isGeneratingSummary ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Summarizing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Summarize
+                      </>
+                    )}
+                  </Button>
+                )}
+                {!isEditing && (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {isEditing ? (
