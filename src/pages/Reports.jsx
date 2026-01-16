@@ -86,11 +86,8 @@ export default function Reports() {
     initialData: []
   });
 
-  const { data: visits = [] } = useQuery({
-    queryKey: ['visits'],
-    queryFn: () => base44.entities.Visit.list('-visit_date', 1000),
-    initialData: []
-  });
+  // Visits are counted from note enhancements (not Visit entity)
+  // Every enhance button click = 1 visit
 
   const { data: incidents = [] } = useQuery({
     queryKey: ['incidents'],
@@ -116,8 +113,8 @@ export default function Reports() {
     initialData: []
   });
 
-  // Combine visits and enhancements
-  const totalVisitsAndEnhancements = visits.length + noteConversions.length;
+  // Visits = enhancements (every enhance button click is a visit)
+  const totalVisits = noteConversions.length;
 
   const { data: scheduledTasks = [], isLoading: schedulesLoading } = useQuery({
     queryKey: ['scheduledReports'],
@@ -129,7 +126,7 @@ export default function Reports() {
   });
 
   const stats = calculateStats({
-    visits,
+    visits: [], // Not used - visits counted from noteConversions
     noteConversions,
     patients,
     incidents,
@@ -145,7 +142,7 @@ export default function Reports() {
     const date = new Date();
     date.setDate(date.getDate() - (29 - i));
     const dateStr = date.toISOString().split('T')[0];
-    const count = visits.filter(v => v.visit_date === dateStr).length;
+    const count = noteConversions.filter(nc => nc.created_date?.startsWith(dateStr)).length;
     return {
       date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       visits: count
