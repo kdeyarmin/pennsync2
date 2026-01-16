@@ -41,14 +41,6 @@ export default function ReferralVolumeReport({ dateRange }) {
     { priority: 'Low', count: filteredReferrals.filter(r => r.priority === 'low').length }
   ];
 
-  // Analyze by status
-  const statusData = [
-    { status: 'New', count: filteredReferrals.filter(r => r.status === 'new').length },
-    { status: 'Processing', count: filteredReferrals.filter(r => r.status === 'processing').length },
-    { status: 'Ready', count: filteredReferrals.filter(r => r.status === 'ready_for_admission').length },
-    { status: 'Archived', count: filteredReferrals.filter(r => r.status === 'archived').length }
-  ];
-
   const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
   const handleExport = () => {
@@ -109,7 +101,7 @@ export default function ReferralVolumeReport({ dateRange }) {
         <Card>
           <CardContent className="p-6">
             <p className="text-sm text-gray-600 mb-1">Ready for Admission</p>
-            <p className="text-3xl font-bold text-green-600">{statusData[2].count}</p>
+            <p className="text-3xl font-bold text-green-600">{filteredReferrals.filter(r => r.status === 'ready_for_admission').length}</p>
           </CardContent>
         </Card>
         <Card>
