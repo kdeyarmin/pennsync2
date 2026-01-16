@@ -209,7 +209,7 @@ export default function PatientFileUpdateUploader() {
         {results && (
           <div className="space-y-4">
             {/* Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
               <div className="p-3 bg-blue-50 rounded-lg">
                 <p className="text-xs text-blue-600 font-semibold mb-1">Processed</p>
                 <p className="text-2xl font-bold text-blue-700">{results.processed}</p>
@@ -225,6 +225,10 @@ export default function PatientFileUpdateUploader() {
               <div className="p-3 bg-orange-50 rounded-lg">
                 <p className="text-xs text-orange-600 font-semibold mb-1">Pending Review</p>
                 <p className="text-2xl font-bold text-orange-700">{results.pendingReview || 0}</p>
+              </div>
+              <div className="p-3 bg-red-50 rounded-lg">
+                <p className="text-xs text-red-600 font-semibold mb-1">Discharged</p>
+                <p className="text-2xl font-bold text-red-700">{results.discharged || 0}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-600 font-semibold mb-1">No Changes</p>
