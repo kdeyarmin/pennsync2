@@ -235,65 +235,118 @@ Deno.serve(async (req) => {
       nameMap.set(nameKey, patient);
     }
 
-    // Process patients with optimized matching
+    // Process patients with enhanced matching
     for (const uploadedPatient of uploadedPatients) {
       results.processed++;
 
       try {
-        // Fast duplicate detection using maps
         let matchingPatient = null;
 
+        // Step 1: Try MRN match (most definitive)
         if (uploadedPatient.medical_record_number) {
           matchingPatient = mrnMap.get(uploadedPatient.medical_record_number);
         }
 
+        // Step 2: Try exact name match
         if (!matchingPatient && uploadedPatient.first_name && uploadedPatient.last_name) {
           const nameKey = `${uploadedPatient.first_name?.toLowerCase()}_${uploadedPatient.last_name?.toLowerCase()}`;
           matchingPatient = nameMap.get(nameKey);
         }
 
+        // Step 3: Enhanced duplicate detection with fuzzy matching
         if (!matchingPatient) {
-          // Check for potential duplicates before creating
-          const potentialDuplicates = existingPatients.filter(p => {
-            const firstNameMatch = p.first_name?.toLowerCase() === uploadedPatient.first_name?.toLowerCase();
-            const lastNameMatch = p.last_name?.toLowerCase() === uploadedPatient.last_name?.toLowerCase();
+          const potentialMatches = existingPatients.filter(p => {
+            const uploadFirst = uploadedPatient.first_name?.toLowerCase().trim() || '';
+            const uploadLast = uploadedPatient.last_name?.toLowerCase().trim() || '';
+            const existFirst = p.first_name?.toLowerCase().trim() || '';
+            const existLast = p.last_name?.toLowerCase().trim() || '';
             
-            // Check name similarity
-            if (firstNameMatch && lastNameMatch) return true;
+            // Exact name match
+            if (uploadFirst === existFirst && uploadLast === existLast) return true;
             
-            // Check DOB match if available
+            // DOB + partial name match
             if (uploadedPatient.date_of_birth && p.date_of_birth === uploadedPatient.date_of_birth) {
-              return true;
+              if (uploadFirst === existFirst || uploadLast === existLast) return true;
+            }
+            
+            // Phone + name match
+            if (uploadedPatient.phone && p.phone) {
+              const uploadPhone = uploadedPatient.phone.replace(/\D/g, '');
+              const existPhone = p.phone.replace(/\D/g, '');
+              if (uploadPhone === existPhone && (uploadFirst === existFirst || uploadLast === existLast)) {
+                return true;
+              }
+            }
+            
+            // Email + name match
+            if (uploadedPatient.email && p.email?.toLowerCase() === uploadedPatient.email?.toLowerCase()) {
+              if (uploadFirst === existFirst || uploadLast === existLast) return true;
             }
             
             return false;
           });
 
-          if (potentialDuplicates.length > 0) {
-            // Duplicate detected - skip creation and log
+          if (potentialMatches.length === 1) {
+            // Single confident match - use it for update
+            matchingPatient = potentialMatches[0];
+          } else if (potentialMatches.length > 1) {
+            // Multiple potential matches - flag as duplicate and skip
             results.errors.push({
               patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
-              error: `Potential duplicate detected. Matches existing patient(s): ${potentialDuplicates.map(p => p.first_name + ' ' + p.last_name).join(', ')}`
+              error: `Multiple potential matches found (${potentialMatches.length}). Please review manually: ${potentialMatches.map(p => `${p.first_name} ${p.last_name} (MRN: ${p.medical_record_number || 'N/A'})`).join(', ')}`
             });
             continue;
           }
+        }
 
-          // Create new patient
+        // If no match found, create new patient
+        if (!matchingPatient) {
           const newPatient = await base44.asServiceRole.entities.Patient.create(uploadedPatient);
           results.created++;
+          results.changes.push({
+            patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
+            changeCount: 1,
+            changes: [{ field: 'status', oldValue: null, newValue: 'Created new patient' }]
+          });
           continue;
         }
 
-        // Simplified change detection - only check key fields
+        // Enhanced change detection - merge new data with existing
         const changes = {};
-        const simpleFields = ['phone', 'email', 'address', 'status', 'primary_diagnosis', 'allergies', 'payor'];
+        const detectedChanges = [];
+        const allFields = [
+          'middle_name', 'phone', 'email', 'address', 'status', 'care_type',
+          'primary_diagnosis', 'allergies', 'payor', 'admission_date',
+          'physician_name', 'physician_phone', 'physician_email',
+          'caregiver_name', 'caregiver_phone', 'caregiver_email',
+          'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship'
+        ];
         
-        for (const field of simpleFields) {
+        for (const field of allFields) {
           const newValue = uploadedPatient[field];
           const oldValue = matchingPatient[field];
           
-          if (newValue && newValue !== oldValue) {
+          // Only update if new value exists and is different
+          if (newValue && newValue !== oldValue && newValue.trim() !== '') {
             changes[field] = newValue;
+            detectedChanges.push({
+              field: field.replace(/_/g, ' '),
+              oldValue: oldValue || '(empty)',
+              newValue: newValue
+            });
+          }
+        }
+
+        // Special handling for MRN - only update if old one is missing or temp
+        if (uploadedPatient.medical_record_number) {
+          const existingMRN = matchingPatient.medical_record_number;
+          if (!existingMRN || existingMRN.startsWith('TEMP_')) {
+            changes.medical_record_number = uploadedPatient.medical_record_number;
+            detectedChanges.push({
+              field: 'medical_record_number',
+              oldValue: existingMRN || '(empty)',
+              newValue: uploadedPatient.medical_record_number
+            });
           }
         }
 
@@ -302,10 +355,16 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Auto-apply all changes (simplified approach)
+        // Apply updates to existing patient
         await base44.asServiceRole.entities.Patient.update(matchingPatient.id, changes);
         results.updated++;
         results.autoApplied++;
+        
+        results.changes.push({
+          patient: `${matchingPatient.first_name} ${matchingPatient.last_name}`,
+          changeCount: detectedChanges.length,
+          changes: detectedChanges
+        });
 
       } catch (error) {
         results.errors.push({
