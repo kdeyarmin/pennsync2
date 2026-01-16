@@ -10,9 +10,9 @@ import { exportToPDF } from "../utils/pdfExporter";
 import { format } from "date-fns";
 
 export default function NursePerformanceReport({ dateRange }) {
-  const { data: visits = [] } = useQuery({
-    queryKey: ['allVisits', dateRange.start, dateRange.end],
-    queryFn: () => base44.entities.Visit.list(),
+  const { data: noteConversions = [] } = useQuery({
+    queryKey: ['allNoteConversions', dateRange.start, dateRange.end],
+    queryFn: () => base44.entities.NoteConversion.list(),
     initialData: [],
   });
 
@@ -30,8 +30,8 @@ export default function NursePerformanceReport({ dateRange }) {
 
   const nurses = users.filter(u => u.role !== 'admin');
 
-  const filteredVisits = visits.filter(v => {
-    const date = new Date(v.visit_date);
+  const filteredVisits = noteConversions.filter(nc => {
+    const date = new Date(nc.created_date);
     return date >= new Date(dateRange.start) && date <= new Date(dateRange.end);
   });
 
@@ -40,12 +40,12 @@ export default function NursePerformanceReport({ dateRange }) {
     return date >= new Date(dateRange.start) && date <= new Date(dateRange.end);
   });
 
-  // Calculate performance metrics per nurse
+  // Calculate performance metrics per nurse (visits = enhancements)
   const nurseMetrics = nurses.map(nurse => {
-    const nurseVisits = filteredVisits.filter(v => v.created_by === nurse.email);
+    const nurseVisits = filteredVisits.filter(nc => nc.nurse_email === nurse.email);
     const nurseAudits = filteredAudits.filter(a => a.nurse_email === nurse.email);
     
-    const completedVisits = nurseVisits.filter(v => v.status === 'completed').length;
+    const completedVisits = nurseVisits.length; // All enhancements are completed visits
     const avgComplianceScore = nurseAudits.length > 0
       ? (nurseAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / nurseAudits.length)
       : 0;
