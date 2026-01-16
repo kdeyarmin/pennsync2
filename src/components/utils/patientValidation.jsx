@@ -1,5 +1,11 @@
 // Validation utilities for patient data
 
+export const SEVERITY = {
+  ERROR: 'error',
+  WARNING: 'warning',
+  INFO: 'info'
+};
+
 export const VALIDATION_ERRORS = {
   INVALID_EMAIL: 'Invalid email format',
   INVALID_PHONE: 'Invalid phone format (10+ digits)',
@@ -90,7 +96,144 @@ export const validateName = (firstName, lastName) => {
   return null;
 };
 
-// Comprehensive patient record validation
+// Format phone number for display
+export const formatPhoneNumber = (phone) => {
+  if (!phone) return '';
+  const digitsOnly = phone.replace(/\D/g, '');
+  if (digitsOnly.length === 10) {
+    return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6)}`;
+  }
+  return phone;
+};
+
+// Comprehensive patient record validation with severity levels
+export const validatePatient = (patient) => {
+  const validationResults = [];
+  
+  // Email validation
+  if (patient.email) {
+    const emailError = validateEmail(patient.email);
+    if (emailError) {
+      validationResults.push({
+        field: 'email',
+        message: emailError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  // Phone validation
+  if (patient.phone) {
+    const phoneError = validatePhone(patient.phone);
+    if (phoneError) {
+      validationResults.push({
+        field: 'phone',
+        message: phoneError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  // Date of birth validation
+  if (patient.date_of_birth) {
+    const dobError = validateDateOfBirth(patient.date_of_birth);
+    if (dobError) {
+      validationResults.push({
+        field: 'date_of_birth',
+        message: dobError,
+        severity: SEVERITY.ERROR
+      });
+    } else {
+      // Age warning for very young patients
+      const dobDate = new Date(patient.date_of_birth + 'T00:00:00');
+      const age = new Date().getFullYear() - dobDate.getFullYear();
+      if (age < 18) {
+        validationResults.push({
+          field: 'date_of_birth',
+          message: `Patient is ${age} years old. Is this correct?`,
+          severity: SEVERITY.WARNING,
+          canOverride: true
+        });
+      }
+    }
+  }
+  
+  // Admission date validation
+  if (patient.admission_date) {
+    const admitError = validateDate(patient.admission_date);
+    if (admitError) {
+      validationResults.push({
+        field: 'admission_date',
+        message: admitError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  // Discharge date validation
+  if (patient.discharge_date) {
+    const dischargeError = validateDate(patient.discharge_date);
+    if (dischargeError) {
+      validationResults.push({
+        field: 'discharge_date',
+        message: dischargeError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  // Cross-field date order validation
+  if (patient.admission_date && patient.discharge_date) {
+    const orderError = validateDateOrder(patient.admission_date, patient.discharge_date);
+    if (orderError) {
+      validationResults.push({
+        field: 'discharge_date',
+        message: orderError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  // Emergency contact phone
+  if (patient.emergency_contact_phone) {
+    const emergPhoneError = validatePhone(patient.emergency_contact_phone);
+    if (emergPhoneError) {
+      validationResults.push({
+        field: 'emergency_contact_phone',
+        message: emergPhoneError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  // Physician phone
+  if (patient.physician_phone) {
+    const physPhoneError = validatePhone(patient.physician_phone);
+    if (physPhoneError) {
+      validationResults.push({
+        field: 'physician_phone',
+        message: physPhoneError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  // Caregiver phone
+  if (patient.caregiver_phone) {
+    const carePhoneError = validatePhone(patient.caregiver_phone);
+    if (carePhoneError) {
+      validationResults.push({
+        field: 'caregiver_phone',
+        message: carePhoneError,
+        severity: SEVERITY.ERROR
+      });
+    }
+  }
+  
+  return validationResults;
+};
+
+// Comprehensive patient record validation (legacy)
 export const validatePatientRecord = (patient) => {
   const errors = {};
   
