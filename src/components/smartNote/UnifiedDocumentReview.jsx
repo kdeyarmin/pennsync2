@@ -118,7 +118,8 @@ Create a fully compliant narrative note ready for EHR submission that:
 - Documents patient response and skilled need justification
 - Flows naturally as a narrative document
 - Is ready to paste directly into an EHR system
-- Contains ONLY clinical documentation (no instructions, recommendations about future care, or "end of note" statements)
+- Contains ONLY clinical documentation (no headers, subject lines, date stamps, instructions, recommendations about future care, or "end of note" statements)
+- Starts directly with the clinical narrative
 The enhanced note should be a polished, complete clinical note, not bullet points.`,
         response_json_schema: {
           type: "object",
