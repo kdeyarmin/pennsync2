@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     // Step 1: Transcribe audio using AI
     console.log('Transcribing audio...');
     const transcriptionResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `Please transcribe the following audio file of a medical visit. Provide a clear, complete transcription of the conversation between the healthcare provider and patient.`,
+      prompt: `Please transcribe the following audio/video file of a medical visit. Provide a clear, complete transcription of the conversation between the healthcare provider and patient. Preserve medical terminology and patient responses accurately.`,
       file_urls: [audio_url],
       add_context_from_internet: false
     });
