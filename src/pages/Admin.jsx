@@ -39,7 +39,8 @@ import {
   RefreshCw,
   BookOpen,
   Download,
-  FolderArchive
+  FolderArchive,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -52,6 +53,8 @@ export default function Admin() {
   const [inviteRole, setInviteRole] = useState("user");
   const [isSyncingRegulations, setIsSyncingRegulations] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState(null);
+  const [isDeletingPatients, setIsDeletingPatients] = useState(false);
+  const [lastDeleteResult, setLastDeleteResult] = useState(null);
 
   // Check if current user is admin
   const { data: currentUser } = useQuery({
@@ -198,6 +201,30 @@ If you have any questions, please contact your administrator.`,
       alert('Failed to sync CMS regulations. Please try again.');
     }
     setIsSyncingRegulations(false);
+  };
+
+  const handleDeletePatientsWithoutFirstName = async () => {
+    const confirm = window.confirm(
+      'This will permanently delete all patients without a first name. This action cannot be undone. Are you sure?'
+    );
+    
+    if (!confirm) return;
+
+    setIsDeletingPatients(true);
+    try {
+      const result = await base44.functions.invoke('deletePatientsMissingFirstName');
+      setLastDeleteResult(result);
+      queryClient.invalidateQueries({ queryKey: ['allPatients'] });
+      alert(
+        `✅ ${result.message}\n\n` +
+        `Deleted: ${result.deletedCount}\n` +
+        (result.failedDeletions.length > 0 ? `Failed: ${result.failedDeletions.length}` : '')
+      );
+    } catch (error) {
+      console.error('Failed to delete patients:', error);
+      alert('Failed to delete patients. ' + error.message);
+    }
+    setIsDeletingPatients(false);
   };
 
   // Check if user is admin
@@ -737,6 +764,58 @@ If you have any questions, please contact your administrator.`,
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                Data Cleanup
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert className="bg-red-50 border-red-200">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <AlertDescription className="text-red-900">
+                  <p className="font-semibold mb-1">Permanent Deletion</p>
+                  <p className="text-sm">These operations permanently delete data and cannot be undone.</p>
+                </AlertDescription>
+              </Alert>
+
+              <div className="p-4 bg-gray-50 rounded-lg border">
+                <h4 className="font-semibold text-gray-900 mb-2">Delete Patients Without First Name</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Removes all patient records that are missing a first name.
+                </p>
+                {lastDeleteResult && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                    <p className="text-sm text-green-900">
+                      ✅ {lastDeleteResult.message}
+                    </p>
+                    <p className="text-xs text-green-700 mt-1">
+                      Deleted: {lastDeleteResult.deletedCount} | Total processed: {lastDeleteResult.totalProcessed}
+                    </p>
+                  </div>
+                )}
+                <Button
+                  onClick={handleDeletePatientsWithoutFirstName}
+                  disabled={isDeletingPatients}
+                  variant="destructive"
+                >
+                  {isDeletingPatients ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Patients Without First Name
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           <Alert>
             <Database className="w-4 h-4" />
