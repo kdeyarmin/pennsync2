@@ -166,20 +166,6 @@ export default function Reports() {
     };
   });
 
-  const incidentData = [
-    { name: 'Falls', value: incidents.filter(i => i.incident_type === 'fall').length },
-    { name: 'Hospitalized', value: incidents.filter(i => i.incident_type === 'hospitalized').length },
-    { name: 'Med Error', value: incidents.filter(i => i.incident_type === 'medication_error').length },
-    { name: 'Other', value: incidents.filter(i => !['fall', 'hospitalized', 'medication_error'].includes(i.incident_type)).length }
-  ].filter(d => d.value > 0);
-
-  const riskData = [
-    { name: 'Low', value: riskAssessments.filter(r => r.overall_risk_level === 'low').length, color: '#10b981' },
-    { name: 'Moderate', value: riskAssessments.filter(r => r.overall_risk_level === 'moderate').length, color: '#f59e0b' },
-    { name: 'High', value: riskAssessments.filter(r => r.overall_risk_level === 'high').length, color: '#f97316' },
-    { name: 'Critical', value: riskAssessments.filter(r => r.overall_risk_level === 'critical').length, color: '#ef4444' }
-  ].filter(d => d.value > 0);
-
   const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
 
   const generateReportMutation = useMutation({
