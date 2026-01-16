@@ -1,4 +1,80 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+// Simple validation functions for Deno
+const validateEmail = (email) => {
+  if (!email) return null;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) ? null : 'Invalid email format';
+};
+
+const validatePhone = (phone) => {
+  if (!phone) return null;
+  const digitsOnly = phone.replace(/\D/g, '');
+  return digitsOnly.length >= 10 ? null : 'Invalid phone format (10+ digits)';
+};
+
+const validateDate = (dateString) => {
+  if (!dateString) return null;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateString)) return 'Invalid date format (YYYY-MM-DD)';
+  const date = new Date(dateString + 'T00:00:00');
+  return isNaN(date.getTime()) ? 'Invalid date format (YYYY-MM-DD)' : null;
+};
+
+const validatePatientRecord = (patient) => {
+  const errors = [];
+  
+  if (patient.email && validateEmail(patient.email)) {
+    errors.push({ field: 'email', error: validateEmail(patient.email) });
+  }
+  if (patient.phone && validatePhone(patient.phone)) {
+    errors.push({ field: 'phone', error: validatePhone(patient.phone) });
+  }
+  if (patient.emergency_contact_phone && validatePhone(patient.emergency_contact_phone)) {
+    errors.push({ field: 'emergency_contact_phone', error: validatePhone(patient.emergency_contact_phone) });
+  }
+  if (patient.date_of_birth && validateDate(patient.date_of_birth)) {
+    errors.push({ field: 'date_of_birth', error: validateDate(patient.date_of_birth) });
+  }
+  if (patient.admission_date && validateDate(patient.admission_date)) {
+    errors.push({ field: 'admission_date', error: validateDate(patient.admission_date) });
+  }
+  if (patient.discharge_date && validateDate(patient.discharge_date)) {
+    errors.push({ field: 'discharge_date', error: validateDate(patient.discharge_date) });
+  }
+  
+  // Cross-field validation
+  if (patient.admission_date && patient.discharge_date) {
+    const admission = new Date(patient.admission_date + 'T00:00:00');
+    const discharge = new Date(patient.discharge_date + 'T00:00:00');
+    if (admission > discharge) {
+      errors.push({ field: 'date_order', error: 'Admission date must be before discharge date' });
+    }
+  }
+  
+  return errors;
+};
+
+// Levenshtein distance for fuzzy matching
+const levenshteinDistance = (str1, str2) => {
+  const a = str1.toLowerCase().trim();
+  const b = str2.toLowerCase().trim();
+  const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+  
+  for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+  for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+  
+  for (let j = 1; j <= b.length; j++) {
+    for (let i = 1; i <= a.length; i++) {
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1,
+        matrix[j - 1][i] + 1,
+        matrix[j - 1][i - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return matrix[b.length][a.length];
+};
 
 Deno.serve(async (req) => {
   try {
@@ -109,35 +185,41 @@ Deno.serve(async (req) => {
       }
 
       // Parse rows into patient objects
-      for (const row of rows) {
-        const patient = {};
-        
-        for (const [field, colIndex] of Object.entries(colIndexMap)) {
-          const value = row[colIndex]?.trim();
-          if (!value || value === '') continue;
-          
-          if (field === 'status') {
-            const val = value.toLowerCase();
-            patient.status = val.includes('active') ? 'active' : 
-                            val.includes('discharge') ? 'discharged' : 
-                            val.includes('hospital') ? 'hospitalized' : 'active';
-          } else if (field === 'care_type') {
-            const val = value.toLowerCase();
-            patient.care_type = val.includes('hospice') ? 'hospice' : 'home_health';
-          } else {
-            patient[field] = value;
-          }
-        }
-        
-        // Only include patients with required fields
-        if (patient.first_name && patient.last_name) {
-          // Set default MRN if missing
-          if (!patient.medical_record_number) {
-            patient.medical_record_number = `TEMP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          }
-          uploadedPatients.push(patient);
-        }
-      }
+       for (const row of rows) {
+         const patient = {};
+
+         for (const [field, colIndex] of Object.entries(colIndexMap)) {
+           const value = row[colIndex]?.trim();
+           if (!value || value === '') continue;
+
+           if (field === 'status') {
+             const val = value.toLowerCase();
+             patient.status = val.includes('active') ? 'active' : 
+                             val.includes('discharge') ? 'discharged' : 
+                             val.includes('hospital') ? 'hospitalized' : 'active';
+           } else if (field === 'care_type') {
+             const val = value.toLowerCase();
+             patient.care_type = val.includes('hospice') ? 'hospice' : 'home_health';
+           } else {
+             patient[field] = value;
+           }
+         }
+
+         // Only include patients with required fields
+         if (patient.first_name && patient.last_name) {
+           // Validate patient record before adding
+           const validationErrors = validatePatientRecord(patient);
+           if (validationErrors.length > 0) {
+             console.warn(`Validation errors for ${patient.first_name} ${patient.last_name}:`, validationErrors);
+           }
+
+           // Set default MRN if missing
+           if (!patient.medical_record_number) {
+             patient.medical_record_number = `TEMP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+           }
+           uploadedPatients.push(patient);
+         }
+       }
 
       console.log('CSV parsed successfully:', uploadedPatients.length, 'patients');
     } else {
