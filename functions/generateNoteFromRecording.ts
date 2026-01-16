@@ -9,87 +9,123 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { audioUrl, patientId, visitType, diagnosis } = await req.json();
+    const { audio_url, patient_id, visit_type, diagnosis } = await req.json();
 
-    if (!audioUrl) {
-      return Response.json({ error: 'Audio URL required' }, { status: 400 });
+    if (!audio_url || !patient_id || !visit_type) {
+      return Response.json(
+        { error: 'Missing required fields: audio_url, patient_id, visit_type' },
+        { status: 400 }
+      );
     }
 
-    // Transcribe audio using LLM with audio processing
-    const transcriptionResponse = await base44.integrations.Core.InvokeLLM({
-      prompt: 'Please transcribe this audio recording of a nurse-patient interaction. Provide a complete, accurate transcription.',
-      add_context_from_internet: false,
-      file_urls: [audioUrl]
-    });
-
-    const transcription = transcriptionResponse;
-
-    // Get patient data for context
-    let patientContext = '';
-    if (patientId) {
-      try {
-        const patient = await base44.entities.Patient.read(patientId);
-        const carePlans = await base44.entities.CarePlan.filter({ patient_id: patientId }, '-created_date', 5);
-        
-        patientContext = `
-Patient: ${patient.first_name} ${patient.last_name}
-MRN: ${patient.medical_record_number || 'N/A'}
-Age: ${patient.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'N/A'}
-Primary Diagnosis: ${patient.primary_diagnosis || 'N/A'}
-Care Type: ${patient.care_type || 'home_health'}
-
-Active Care Plans:
-${carePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n')}
-`;
-      } catch (e) {
-        console.error('Error fetching patient context:', e);
-      }
+    // Fetch patient data for context
+    const patient = await base44.asServiceRole.entities.Patient.get(patient_id);
+    if (!patient) {
+      return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
 
-    // Generate comprehensive note from transcription
-    const noteResponse = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a clinical documentation expert. Based on the following nurse-patient interaction transcription, generate a comprehensive, Medicare-compliant clinical note. 
-
-TRANSCRIPTION:
-${transcription}
-
-${patientContext}
-
-Visit Type: ${visitType || 'Routine Visit'}
-Diagnosis/Focus: ${diagnosis || 'General Assessment'}
-
-Generate a well-structured clinical note with the following sections:
-1. **HOMEBOUND STATUS**: Assess and document
-2. **SUBJECTIVE**: Patient's report, symptoms, concerns
-3. **OBJECTIVE**: Vital signs, physical findings, observations
-4. **ASSESSMENT**: Clinical impression, status changes
-5. **PLAN**: Interventions, medications, follow-up, education
-
-Ensure the note:
-- Is clear, concise, and clinically accurate
-- Uses appropriate medical terminology
-- Documents specific findings and measurements
-- Includes patient/family education provided
-- Notes any changes in status or concerns
-- Is compliant with Medicare documentation standards
-- References the care plan when applicable`,
+    // Step 1: Transcribe audio using AI
+    console.log('Transcribing audio...');
+    const transcriptionResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `Please transcribe the following audio file of a medical visit. Provide a clear, complete transcription of the conversation between the healthcare provider and patient.`,
+      file_urls: [audio_url],
       add_context_from_internet: false
     });
 
+    const transcription = typeof transcriptionResponse === 'string' 
+      ? transcriptionResponse 
+      : transcriptionResponse.transcription || transcriptionResponse.text || '';
+
+    if (!transcription) {
+      return Response.json({ error: 'Failed to transcribe audio' }, { status: 400 });
+    }
+
+    // Step 2: Generate structured clinical note
+    console.log('Generating clinical note...');
+    const notePrompt = `Based on the following patient interaction transcription, generate a professional structured clinical note in SOAP format (Subjective, Objective, Assessment, Plan).
+
+Patient Information:
+- Name: ${patient.first_name} ${patient.last_name}
+- DOB: ${patient.date_of_birth || 'N/A'}
+- Primary Diagnosis: ${diagnosis}
+- Visit Type: ${visit_type.replace(/_/g, ' ')}
+
+Transcription:
+${transcription}
+
+Generate a comprehensive, Medicare-compliant clinical note that includes:
+1. Subjective: Patient's reported symptoms, concerns, and relevant history
+2. Objective: Vital signs, physical findings, assessment results
+3. Assessment: Clinical impression and diagnosis
+4. Plan: Treatment recommendations, medications, follow-up care
+
+Format the note professionally for medical records.`;
+
+    const noteResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: notePrompt,
+      add_context_from_internet: false
+    });
+
+    const generatedNote = typeof noteResponse === 'string' ? noteResponse : noteResponse.text || '';
+
+    // Step 3: Generate treatment suggestions
+    console.log('Generating treatment suggestions...');
+    const treatmentPrompt = `Based on this patient interaction transcript and diagnosis, suggest relevant treatment options:
+
+Diagnosis: ${diagnosis}
+Transcription: ${transcription.substring(0, 1000)}...
+
+Provide 3-5 specific treatment suggestions in JSON format:
+[
+  {
+    "treatment": "treatment name",
+    "rationale": "why this is recommended based on the patient's condition",
+    "category": "medication|therapy|monitoring|education",
+    "confidence": 85
+  }
+]
+
+Only include clinically appropriate suggestions.`;
+
+    const treatmentResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: treatmentPrompt,
+      response_json_schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            treatment: { type: 'string' },
+            rationale: { type: 'string' },
+            category: { type: 'string' },
+            confidence: { type: 'number' }
+          }
+        }
+      },
+      add_context_from_internet: false
+    });
+
+    const treatmentSuggestions = Array.isArray(treatmentResponse) ? treatmentResponse : [];
+
     return Response.json({
       success: true,
-      transcription,
-      generatedNote: noteResponse,
-      patientId,
-      visitType,
-      diagnosis,
-      audioUrl
+      data: {
+        transcription,
+        generatedNote,
+        treatmentSuggestions,
+        metadata: {
+          processedAt: new Date().toISOString(),
+          patientId: patient_id,
+          visitType: visit_type,
+          diagnosis
+        }
+      }
     });
+
   } catch (error) {
     console.error('Error generating note from recording:', error);
-    return Response.json(
-      { error: error.message || 'Failed to generate note from recording' },
-      { status: 500 }
-    );
+    return Response.json({
+      success: false,
+      error: error.message
+    }, { status: 500 });
   }
 });
