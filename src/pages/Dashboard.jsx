@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import ActionableInsightsWidget from "../components/dashboard/ActionableInsightsWidget";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText, Clock as ClockIcon } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText, Clock as ClockIcon, Mic } from "lucide-react";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import { isValid } from "date-fns";
 import ProactiveClinicalTaskGenerator from "../components/tasks/ProactiveClinicalTaskGenerator";
@@ -235,11 +235,11 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link to={createPageUrl("StaffTrainingHub")}>
+        <Link to={createPageUrl("VisitScribe")}>
           <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-orange-200 hover:border-orange-400 active:scale-95">
             <CardContent className="p-4 sm:p-6 text-center touch-target">
-              <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">Training Hub</h3>
+              <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-2" />
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">Visit Scribe</h3>
             </CardContent>
           </Card>
         </Link>

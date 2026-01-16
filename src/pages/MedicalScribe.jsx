@@ -32,7 +32,7 @@ const COMMON_DIAGNOSES = [
   "Other"
 ];
 
-export default function MedicalScribePage() {
+export default function VisitScribePage() {
   const [selectedPatient, setSelectedPatient] = useState("");
   const [visitType, setVisitType] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
@@ -114,7 +114,7 @@ export default function MedicalScribePage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Medical Scribe Assistant</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Visit Scribe</h1>
           <p className="text-gray-600">
             Record your patient interaction and let AI generate your clinical documentation
           </p>

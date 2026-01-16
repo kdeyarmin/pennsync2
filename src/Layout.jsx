@@ -28,7 +28,8 @@ import {
   WifiOff,
   Mail,
   AlertCircle,
-  CheckSquare
+  CheckSquare,
+  Mic
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -178,6 +179,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Documentation",
       items: [
         { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
+        { name: "Visit Scribe", icon: Mic, page: "VisitScribe" },
         { name: "Documents", icon: FileText, page: "DocumentHub" },
         { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
         { name: "Referrals", icon: FileText, page: "ReferralIntake" },
