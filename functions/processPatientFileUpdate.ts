@@ -253,37 +253,107 @@ Deno.serve(async (req) => {
           matchingPatient = nameMap.get(nameKey);
         }
 
-        // Step 3: Enhanced duplicate detection with fuzzy matching
+        // Step 3: Aggressive fuzzy duplicate detection
         if (!matchingPatient) {
+          const uploadFirst = uploadedPatient.first_name?.toLowerCase().trim() || '';
+          const uploadLast = uploadedPatient.last_name?.toLowerCase().trim() || '';
+          const uploadMiddle = uploadedPatient.middle_name?.toLowerCase().trim() || '';
+          const uploadDOB = uploadedPatient.date_of_birth;
+          const uploadPhone = uploadedPatient.phone?.replace(/\D/g, '') || '';
+          const uploadEmail = uploadedPatient.email?.toLowerCase().trim() || '';
+          
+          // Fuzzy name matching helper
+          const namesSimilar = (name1, name2) => {
+            if (!name1 || !name2) return false;
+            const n1 = name1.toLowerCase().trim();
+            const n2 = name2.toLowerCase().trim();
+            if (n1 === n2) return true;
+            // Check if one contains the other (handles nicknames)
+            if (n1.includes(n2) || n2.includes(n1)) return true;
+            // Levenshtein distance <= 2 for typos
+            const distance = (a, b) => {
+              const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+              for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+              for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+              for (let j = 1; j <= b.length; j++) {
+                for (let i = 1; i <= a.length; i++) {
+                  matrix[j][i] = Math.min(
+                    matrix[j][i - 1] + 1,
+                    matrix[j - 1][i] + 1,
+                    matrix[j - 1][i - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+                  );
+                }
+              }
+              return matrix[b.length][a.length];
+            };
+            return distance(n1, n2) <= 2;
+          };
+          
           const potentialMatches = existingPatients.filter(p => {
-            const uploadFirst = uploadedPatient.first_name?.toLowerCase().trim() || '';
-            const uploadLast = uploadedPatient.last_name?.toLowerCase().trim() || '';
             const existFirst = p.first_name?.toLowerCase().trim() || '';
             const existLast = p.last_name?.toLowerCase().trim() || '';
+            const existMiddle = p.middle_name?.toLowerCase().trim() || '';
+            const existDOB = p.date_of_birth;
+            const existPhone = p.phone?.replace(/\D/g, '') || '';
+            const existEmail = p.email?.toLowerCase().trim() || '';
             
-            // Exact name match
-            if (uploadFirst === existFirst && uploadLast === existLast) return true;
+            let matchScore = 0;
             
-            // DOB + partial name match
-            if (uploadedPatient.date_of_birth && p.date_of_birth === uploadedPatient.date_of_birth) {
-              if (uploadFirst === existFirst || uploadLast === existLast) return true;
+            // Exact name match (strong)
+            if (uploadFirst === existFirst && uploadLast === existLast) matchScore += 10;
+            
+            // Similar names (medium)
+            if (namesSimilar(uploadFirst, existFirst) && namesSimilar(uploadLast, existLast)) matchScore += 8;
+            
+            // First/last name match with middle initial
+            if (uploadFirst === existFirst && uploadLast === existLast) {
+              if (uploadMiddle && existMiddle && uploadMiddle[0] === existMiddle[0]) matchScore += 2;
             }
             
-            // Phone + name match
-            if (uploadedPatient.phone && p.phone) {
-              const uploadPhone = uploadedPatient.phone.replace(/\D/g, '');
-              const existPhone = p.phone.replace(/\D/g, '');
-              if (uploadPhone === existPhone && (uploadFirst === existFirst || uploadLast === existLast)) {
-                return true;
+            // Name transposition (common data entry error)
+            if (uploadFirst === existLast && uploadLast === existFirst) matchScore += 6;
+            
+            // DOB match (very strong)
+            if (uploadDOB && existDOB === uploadDOB) matchScore += 15;
+            
+            // DOB match with any name similarity
+            if (uploadDOB && existDOB === uploadDOB) {
+              if (namesSimilar(uploadFirst, existFirst) || namesSimilar(uploadLast, existLast)) matchScore += 5;
+            }
+            
+            // Phone number match (strong)
+            if (uploadPhone && existPhone) {
+              if (uploadPhone === existPhone) matchScore += 12;
+              // Last 7 digits match (different area code)
+              else if (uploadPhone.slice(-7) === existPhone.slice(-7)) matchScore += 8;
+            }
+            
+            // Email match (very strong)
+            if (uploadEmail && existEmail === uploadEmail) matchScore += 15;
+            
+            // Address similarity
+            if (uploadedPatient.address && p.address) {
+              const uploadAddr = uploadedPatient.address.toLowerCase().replace(/[^a-z0-9]/g, '');
+              const existAddr = p.address.toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (uploadAddr.includes(existAddr.slice(0, 15)) || existAddr.includes(uploadAddr.slice(0, 15))) {
+                matchScore += 5;
               }
             }
             
-            // Email + name match
-            if (uploadedPatient.email && p.email?.toLowerCase() === uploadedPatient.email?.toLowerCase()) {
-              if (uploadFirst === existFirst || uploadLast === existLast) return true;
+            // Emergency contact match
+            if (uploadedPatient.emergency_contact_phone && p.emergency_contact_phone) {
+              const uploadEmergPhone = uploadedPatient.emergency_contact_phone.replace(/\D/g, '');
+              const existEmergPhone = p.emergency_contact_phone.replace(/\D/g, '');
+              if (uploadEmergPhone === existEmergPhone) matchScore += 8;
             }
             
-            return false;
+            // Physician match
+            if (uploadedPatient.physician_name && p.physician_name) {
+              if (namesSimilar(uploadedPatient.physician_name, p.physician_name)) matchScore += 4;
+            }
+            
+            // Match threshold: 10+ points = likely duplicate
+            return matchScore >= 10;
           });
 
           if (potentialMatches.length === 1) {
@@ -293,7 +363,7 @@ Deno.serve(async (req) => {
             // Multiple potential matches - flag as duplicate and skip
             results.errors.push({
               patient: `${uploadedPatient.first_name} ${uploadedPatient.last_name}`,
-              error: `Multiple potential matches found (${potentialMatches.length}). Please review manually: ${potentialMatches.map(p => `${p.first_name} ${p.last_name} (MRN: ${p.medical_record_number || 'N/A'})`).join(', ')}`
+              error: `Duplicate detected - matches ${potentialMatches.length} existing patients: ${potentialMatches.map(p => `${p.first_name} ${p.last_name} (MRN: ${p.medical_record_number || 'N/A'}, DOB: ${p.date_of_birth || 'N/A'})`).join(' | ')}`
             });
             continue;
           }
