@@ -91,7 +91,6 @@ Deno.serve(async (req) => {
         'primary_diagnosis': ['primary_diagnosis', 'diagnosis', 'primary_dx', 'dx'],
         'allergies': ['allergies', 'allergy'],
         'admission_date': ['admission_date', 'admitted_date', 'admit_date', 'soc_date'],
-        'discharge_date': ['discharge_date', 'discharged_date', 'discharge_date_time'],
         'status': ['status', 'patient_status', 'current_admission_status'],
         'care_type': ['care_type', 'service_type', 'organization_type'],
         'payor': ['payor', 'payer', 'primary_payor', 'insurance_type']
@@ -393,7 +392,7 @@ Deno.serve(async (req) => {
         const detectedChanges = [];
         const allFields = [
           'middle_name', 'phone', 'email', 'address', 'status', 'care_type',
-          'primary_diagnosis', 'allergies', 'payor', 'admission_date', 'discharge_date',
+          'primary_diagnosis', 'allergies', 'payor', 'admission_date',
           'physician_name', 'physician_phone', 'physician_email',
           'caregiver_name', 'caregiver_phone', 'caregiver_email',
           'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship'
@@ -414,16 +413,14 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Auto-discharge if discharge_date is present
-        if (uploadedPatient.discharge_date) {
-          changes.status = 'discharged';
-          if (!detectedChanges.find(c => c.field === 'status')) {
-            detectedChanges.push({
-              field: 'status',
-              oldValue: matchingPatient.status || '(empty)',
-              newValue: 'discharged'
-            });
-          }
+        // Ensure patient from upload is marked active
+        if (matchingPatient.status !== 'active') {
+          changes.status = 'active';
+          detectedChanges.push({
+            field: 'status',
+            oldValue: matchingPatient.status || '(empty)',
+            newValue: 'active'
+          });
         }
 
         // Special handling for MRN - only update if old one is missing or temp
@@ -463,11 +460,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Discharge patients not in the uploaded file (active or hospitalized patients)
+    // Discharge patients not in the uploaded file (upload file = all active patients)
     console.log('Discharging patients not in upload...');
     const patientsToDischarge = existingPatients.filter(p => 
-      !matchedPatientIds.has(p.id) && 
-      (p.status === 'active' || p.status === 'hospitalized')
+     !matchedPatientIds.has(p.id) && 
+     p.status !== 'discharged'
     );
 
     let dischargedCount = 0;
