@@ -5,18 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, Clock, AlertTriangle, Trash2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PendingPatientUpdates from "./PendingPatientUpdates";
-
-const Progress = ({ value = 0, className = "" }) => (
-  <div className={`relative h-2 w-full overflow-hidden rounded-full bg-gray-200 ${className}`}>
-    <div
-      className="h-full bg-blue-600 transition-all duration-300"
-      style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-    />
-  </div>
-);
 
 export default function PatientFileUpdateUploader() {
   const [file, setFile] = useState(null);
