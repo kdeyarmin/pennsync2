@@ -57,6 +57,14 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
   const processAudio = async () => {
     if (!audioBlob) return;
 
@@ -142,7 +150,7 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
               </div>
 
               {/* File Upload Alternative */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:bg-blue-50 transition-colors">
                 <input
                   type="file"
                   accept="audio/*,video/*"
@@ -151,26 +159,34 @@ export default function ScribeNoteRecorder({ patientId, visitType, diagnosis, on
                   id="audio-upload"
                 />
                 <label htmlFor="audio-upload" className="cursor-pointer">
-                  <Upload className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                  <Upload className="w-10 h-10 mx-auto mb-2 text-blue-400" />
                   <p className="text-sm font-medium text-gray-700">
-                    Or click to upload audio/video file
+                    Or click to upload pre-recorded file
                   </p>
-                  <p className="text-xs text-gray-500">MP3, WAV, M4A, MP4 supported</p>
+                  <p className="text-xs text-gray-500">MP3, WAV, M4A, MP4, OGG, WebM (up to 500MB)</p>
                 </label>
               </div>
             </div>
           ) : (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-green-900 mb-2">
-                ✓ Audio ready for processing ({(audioBlob.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-              <Button
-                onClick={() => setAudioBlob(null)}
-                variant="outline"
-                size="sm"
-              >
-                Clear and Re-record
-              </Button>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-900">
+                    ✓ Audio ready for processing
+                  </p>
+                  <p className="text-xs text-green-700 mt-1">
+                    {formatFileSize(audioBlob.size)}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setAudioBlob(null)}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
           )}
 
