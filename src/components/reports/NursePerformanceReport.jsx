@@ -81,9 +81,13 @@ export default function NursePerformanceReport({ dateRange }) {
   };
 
   const topPerformer = nurseMetrics[0];
-  const avgVisitsPerNurse = nurseMetrics.length > 0
-    ? (nurseMetrics.reduce((sum, n) => sum + n.completedVisits, 0) / nurseMetrics.length).toFixed(1)
-    : 0;
+  const totalVisits = nurseMetrics.reduce((sum, n) => sum + n.completedVisits, 0);
+  const totalTimeSavedMinutes = totalVisits * 20;
+  const totalTimeSavedHours = Math.floor(totalTimeSavedMinutes / 60);
+  const remainingMinutes = totalTimeSavedMinutes % 60;
+  const timeSavedDisplay = totalTimeSavedHours > 0 
+    ? `${totalTimeSavedHours}h ${remainingMinutes}m` 
+    : `${totalTimeSavedMinutes}m`;
 
   return (
     <div className="space-y-6">
@@ -116,14 +120,15 @@ export default function NursePerformanceReport({ dateRange }) {
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Avg Visits per Nurse</p>
-            <p className="text-3xl font-bold text-gray-900">{avgVisitsPerNurse}</p>
+            <p className="text-sm text-gray-600 mb-1">Total Visits</p>
+            <p className="text-3xl font-bold text-gray-900">{totalVisits}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-gray-600 mb-1">Total Active Nurses</p>
-            <p className="text-3xl font-bold text-gray-900">{nurses.length}</p>
+            <p className="text-sm text-gray-600 mb-1">Total Time Saved</p>
+            <p className="text-3xl font-bold text-gray-900">{timeSavedDisplay}</p>
+            <p className="text-xs text-gray-500 mt-1">{totalVisits} visits × 20 min</p>
           </CardContent>
         </Card>
       </div>
