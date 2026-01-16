@@ -176,13 +176,18 @@ Return JSON with COMBINED suggestions:
 
   const handleApply = (suggestion, idx) => {
     if (onApplyFix) {
+      // Clean the suggested fix by removing instruction prefixes like "Add: ", "Include: ", etc.
+      const cleanedFix = suggestion.suggested_fix
+        .replace(/^(Add:|Include:|Write:|Document:|State:|Clarify:|Replace with:|Change to:)\s*/i, '')
+        .trim();
+      
       if (suggestion.type === 'quality_issue' && suggestion.current_text) {
-        // Replace weak text with improved version
-        const updatedNote = roughNote.replace(suggestion.current_text, suggestion.suggested_fix);
+        // Replace weak text with improved version (clean text only)
+        const updatedNote = roughNote.replace(suggestion.current_text, cleanedFix);
         onApplyFix(updatedNote, suggestion.category, true); // true = isReplacement
       } else {
-        // Add missing compliance element
-        onApplyFix(suggestion.suggested_fix, suggestion.category, false);
+        // Add missing compliance element (clean text only, no wrapper)
+        onApplyFix(cleanedFix, suggestion.category, false);
       }
       setAppliedIndices(prev => new Set([...prev, idx]));
     }
@@ -197,14 +202,18 @@ Return JSON with COMBINED suggestions:
     
     if (unappliedSuggestions.length === 0) return;
 
-    // Separate quality replacements from compliance additions
+    // Helper to clean instruction wrappers from suggested text
+    const cleanSuggestion = (text) => 
+      text.replace(/^(Add:|Include:|Write:|Document:|State:|Clarify:|Replace with:|Change to:)\s*/i, '').trim();
+
+    // Separate quality replacements from compliance additions (with cleaned text)
     const replacements = unappliedSuggestions
       .filter(s => s.type === 'quality_issue' && s.current_text)
-      .map(s => ({ from: s.current_text, to: s.suggested_fix }));
+      .map(s => ({ from: s.current_text, to: cleanSuggestion(s.suggested_fix) }));
     
     const additions = unappliedSuggestions
       .filter(s => s.type === 'compliance_gap' || !s.current_text)
-      .map(s => s.suggested_fix);
+      .map(s => cleanSuggestion(s.suggested_fix));
 
     onApplyAll(replacements, additions);
     
