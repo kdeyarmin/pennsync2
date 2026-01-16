@@ -125,14 +125,7 @@ export default function Admin() {
   const adminUsers = users.filter(u => u.role === 'admin').length;
   const activePatients = patients.filter(p => p.status === 'active').length;
   
-  // Combine visits and enhancements (visits + note conversions)
-  const visitsThisWeek = visits.filter(v => {
-    const visitDate = new Date(v.visit_date);
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return visitDate >= weekAgo;
-  }).length;
-  
+  // Visits = enhancements (every enhance button click is a visit)
   const enhancementsThisWeek = noteConversions.filter(nc => {
     const createdDate = new Date(nc.created_date);
     const weekAgo = new Date();
@@ -140,17 +133,16 @@ export default function Admin() {
     return createdDate >= weekAgo;
   }).length;
   
-  const totalVisitsAndEnhancements = visitsThisWeek + enhancementsThisWeek;
+  const totalVisitsAndEnhancements = enhancementsThisWeek; // Visits = enhancements
   
-  const completedVisits = visits.filter(v => v.status === 'completed').length;
-  const avgDocTime = visits
-    .filter(v => v.start_time && v.end_time)
-    .reduce((sum, v) => {
-      const start = new Date(`2000-01-01 ${v.start_time}`);
-      const end = new Date(`2000-01-01 ${v.end_time}`);
-      const diff = (end - start) / 1000 / 60;
-      return sum + diff;
-    }, 0) / (completedVisits || 1);
+  const completedVisits = noteConversions.length; // All enhancements are completed visits
+  // Calculate average time saved per enhancement
+  const avgDocTime = noteConversions.length > 0
+    ? Math.round(noteConversions.reduce((sum, nc) => {
+        const timeSaved = (nc.enhanced_note_length || 0) / 200; // Estimate minutes
+        return sum + timeSaved;
+      }, 0) / noteConversions.length)
+    : 0;
 
   // Filter users by search
   const filteredUsers = (users || []).filter(user =>
@@ -333,7 +325,7 @@ If you have any questions, please contact your administrator.`,
                   <div className="p-4 bg-gray-50 rounded-lg border">
                     <p className="text-sm text-gray-600 mb-1">Database Records</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {patients.length + visits.length + users.length}
+                      {patients.length + noteConversions.length + users.length}
                     </p>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg border">
@@ -351,24 +343,20 @@ If you have any questions, please contact your administrator.`,
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {visits.slice(0, 5).map((visit) => {
-                  const patient = patients.find(p => p.id === visit.patient_id);
+                {noteConversions.slice(0, 5).map((conversion) => {
+                  const patient = patients.find(p => p.id === conversion.patient_id);
                   return (
-                    <div key={visit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={conversion.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">
                           Visit: {patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient'}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {visit.visit_date} • {visit.visit_type.replace(/_/g, ' ')}
+                          {conversion.visit_type?.replace(/_/g, ' ')} • Score: {conversion.quality_score}%
                         </p>
                       </div>
-                      <Badge className={
-                        visit.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        visit.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-blue-100 text-blue-800'
-                      }>
-                        {visit.status}
+                      <Badge className="bg-green-100 text-green-800">
+                        Enhanced
                       </Badge>
                     </div>
                   );
@@ -712,20 +700,20 @@ If you have any questions, please contact your administrator.`,
                <CardContent>
                  <div className="space-y-2">
                    <div className="flex justify-between">
-                     <span className="text-sm text-gray-600">Total</span>
-                     <span className="font-bold">{visits.length + noteConversions.length}</span>
-                   </div>
-                   <div className="flex justify-between">
-                     <span className="text-sm text-gray-600">Visits</span>
-                     <span className="font-bold">{visits.length}</span>
-                   </div>
-                   <div className="flex justify-between">
-                     <span className="text-sm text-gray-600">Enhancements</span>
+                     <span className="text-sm text-gray-600">Total Visits</span>
                      <span className="font-bold">{noteConversions.length}</span>
                    </div>
                    <div className="flex justify-between">
-                     <span className="text-sm text-gray-600">Completed</span>
-                     <span className="font-bold">{completedVisits}</span>
+                     <span className="text-sm text-gray-600">This Week</span>
+                     <span className="font-bold">{enhancementsThisWeek}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-sm text-gray-600">Avg Compliance</span>
+                     <span className="font-bold">{noteConversions.length > 0 ? Math.round(noteConversions.reduce((sum, nc) => sum + (nc.quality_score || 0), 0) / noteConversions.length) : 0}%</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-sm text-gray-600">Unique Patients</span>
+                     <span className="font-bold">{new Set(noteConversions.map(nc => nc.patient_id)).size}</span>
                    </div>
                  </div>
                </CardContent>
