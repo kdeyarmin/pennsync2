@@ -28,9 +28,9 @@ export default function KPIDashboard({ dateRange }) {
     initialData: [],
   });
 
-  const { data: visits = [] } = useQuery({
-    queryKey: ['allVisits', dateRange],
-    queryFn: () => base44.entities.Visit.list(),
+  const { data: noteConversions = [] } = useQuery({
+    queryKey: ['allNoteConversions', dateRange],
+    queryFn: () => base44.entities.NoteConversion.list(),
     initialData: [],
   });
 
@@ -55,14 +55,14 @@ export default function KPIDashboard({ dateRange }) {
   };
 
   const filteredReferrals = filterByDate(referrals, 'referral_date');
-  const filteredVisits = filterByDate(visits, 'visit_date');
+  const filteredVisits = filterByDate(noteConversions, 'created_date'); // Visits = enhancements
   const filteredOASIS = filterByDate(oasisAssessments, 'assessment_date');
   const filteredAudits = filterByDate(complianceAudits, 'audit_date');
 
   // Calculate KPIs
   const totalReferrals = filteredReferrals.length;
   const activePatients = patients.filter(p => p.status === 'active').length;
-  const completedVisits = filteredVisits.filter(v => v.status === 'completed').length;
+  const completedVisits = filteredVisits.length; // All enhancements count as completed visits
   const avgComplianceScore = filteredAudits.length > 0
     ? (filteredAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / filteredAudits.length).toFixed(1)
     : 0;
@@ -141,8 +141,8 @@ export default function KPIDashboard({ dateRange }) {
       return refDate.getMonth() === date.getMonth() && refDate.getFullYear() === date.getFullYear();
     }).length;
 
-    const monthVisits = visits.filter(v => {
-      const visitDate = new Date(v.visit_date);
+    const monthVisits = noteConversions.filter(nc => {
+      const visitDate = new Date(nc.created_date);
       return visitDate.getMonth() === date.getMonth() && visitDate.getFullYear() === date.getFullYear();
     }).length;
 
@@ -176,49 +176,7 @@ export default function KPIDashboard({ dateRange }) {
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Referrals & Visits Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="referrals" stroke="#8b5cf6" strokeWidth={2} name="Referrals" />
-                <Line type="monotone" dataKey="visits" stroke="#3b82f6" strokeWidth={2} name="Visits" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Referral Status Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={[
-                { status: 'New', count: filteredReferrals.filter(r => r.status === 'new').length },
-                { status: 'Processing', count: filteredReferrals.filter(r => r.status === 'processing').length },
-                { status: 'Ready', count: filteredReferrals.filter(r => r.status === 'ready_for_admission').length },
-                { status: 'Archived', count: filteredReferrals.filter(r => r.status === 'archived').length }
-              ]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#8b5cf6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
