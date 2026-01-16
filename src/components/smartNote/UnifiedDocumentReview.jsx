@@ -109,7 +109,16 @@ For EACH finding, provide:
 - Why this matters (clinical/regulatory/financial reason)
 - Can be auto-applied (true/false)
 
-Also generate an ENHANCED VERSION of the note that addresses all critical issues.`,
+IMPORTANT - ENHANCED NOTE GENERATION:
+Create a fully compliant narrative note ready for EHR submission that:
+- Converts all bullet points into complete, clinical sentences
+- Maintains Medicare compliance (42 CFR 484)
+- Uses professional medical terminology
+- Includes all vital signs and observations
+- Documents patient response and skilled need justification
+- Flows naturally as a narrative document
+- Is ready to paste directly into an EHR system
+The enhanced note should be a polished, complete clinical note, not bullet points.`,
         response_json_schema: {
           type: "object",
           properties: {
