@@ -192,10 +192,14 @@ Also generate an ENHANCED VERSION of the note that addresses all critical issues
       // Build enhanced note with selected suggestions applied
       let enhancedNote = analysis.enhanced_note;
       
+      // Clean instruction wrappers from suggestions (e.g., "Add:", "Include:", etc.)
+      const cleanSuggestion = (text) => 
+        text.replace(/^(Add:|Include:|Write:|Document:|State:|Clarify:|Replace with:|Change to:|Note:|Specify:|Mention:)\s*/i, '').trim();
+      
       // If user wants to add specific suggestions beyond what's in enhanced note
       const additionalText = selectedFindings
         .filter(f => !analysis.enhanced_note.toLowerCase().includes(f.suggestion.toLowerCase().substring(0, 50)))
-        .map(f => f.suggestion)
+        .map(f => cleanSuggestion(f.suggestion))
         .join('\n\n');
       
       if (additionalText) {
