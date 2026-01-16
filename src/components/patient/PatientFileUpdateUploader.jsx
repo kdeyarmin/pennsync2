@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, Clock, AlertTriangle } from "lucide-react";
+import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, Clock, AlertTriangle, Trash2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PendingPatientUpdates from "./PendingPatientUpdates";
 
@@ -24,6 +24,7 @@ export default function PatientFileUpdateUploader() {
   const [results, setResults] = useState(null);
   const [expandedPatients, setExpandedPatients] = useState({});
   const [showPendingUpdates, setShowPendingUpdates] = useState(false);
+  const [deletingDuplicates, setDeletingDuplicates] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -80,6 +81,83 @@ export default function PatientFileUpdateUploader() {
 
   const togglePatient = (index) => {
     setExpandedPatients(prev => ({ ...prev, [index]: !prev[index] }));
+  };
+
+  const handleDeleteDuplicates = async () => {
+    if (!results?.errors?.length) return;
+    
+    const duplicateErrors = results.errors.filter(err => 
+      err.error.includes('Duplicate detected') || err.error.includes('Multiple potential matches')
+    );
+    
+    if (duplicateErrors.length === 0) {
+      alert('No duplicates found to delete');
+      return;
+    }
+    
+    const confirmDelete = confirm(
+      `Are you sure you want to delete ${duplicateErrors.length} duplicate patient(s)?\n\n` +
+      `This will permanently remove: ${duplicateErrors.map(e => e.patient).join(', ')}`
+    );
+    
+    if (!confirmDelete) return;
+    
+    setDeletingDuplicates(true);
+    
+    try {
+      let deletedCount = 0;
+      let failedCount = 0;
+      
+      // Fetch all patients to find and delete duplicates
+      const allPatients = await base44.entities.Patient.list();
+      
+      for (const error of duplicateErrors) {
+        try {
+          const patientName = error.patient.trim();
+          const [firstName, ...lastNameParts] = patientName.split(' ');
+          const lastName = lastNameParts.join(' ');
+          
+          // Find matching patient(s) to delete
+          const matchingPatients = allPatients.filter(p => {
+            const pFirstName = p.first_name?.toLowerCase().trim();
+            const pLastName = p.last_name?.toLowerCase().trim();
+            return pFirstName === firstName.toLowerCase() && 
+                   pLastName === lastName.toLowerCase();
+          });
+          
+          // Delete all matching patients
+          for (const patient of matchingPatients) {
+            await base44.entities.Patient.delete(patient.id);
+            deletedCount++;
+          }
+        } catch (err) {
+          console.error('Failed to delete patient:', error.patient, err);
+          failedCount++;
+        }
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      
+      // Update results to remove deleted duplicates from errors
+      setResults(prev => ({
+        ...prev,
+        errors: prev.errors.filter(err => 
+          !err.error.includes('Duplicate detected') && 
+          !err.error.includes('Multiple potential matches')
+        )
+      }));
+      
+      alert(
+        `✅ Deletion complete!\n\n` +
+        `Successfully deleted: ${deletedCount} patient(s)\n` +
+        (failedCount > 0 ? `Failed: ${failedCount} patient(s)` : '')
+      );
+    } catch (error) {
+      console.error('Error deleting duplicates:', error);
+      alert('Failed to delete duplicates: ' + error.message);
+    }
+    
+    setDeletingDuplicates(false);
   };
 
   return (
@@ -269,7 +347,32 @@ export default function PatientFileUpdateUploader() {
             {/* Errors */}
             {results.errors && results.errors.length > 0 && (
               <div>
-                <h3 className="font-semibold text-red-900 mb-3">Errors</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-red-900">Errors & Duplicates ({results.errors.length})</h3>
+                  {results.errors.some(err => 
+                    err.error.includes('Duplicate detected') || 
+                    err.error.includes('Multiple potential matches')
+                  ) && (
+                    <Button
+                      onClick={handleDeleteDuplicates}
+                      disabled={deletingDuplicates}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      {deletingDuplicates ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete All Duplicates
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
                 <ScrollArea className="h-48 border rounded-lg">
                   <div className="p-4 space-y-2">
                     {(results.errors || []).map((error, idx) => (
