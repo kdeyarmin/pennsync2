@@ -70,14 +70,7 @@ export default function Layout({ children, currentPageName }) {
       const hasTrackedLogin = sessionStorage.getItem(sessionKey);
       
       if (!hasTrackedLogin) {
-        // Track via backend function
-        base44.functions.invoke('trackUserLogin').then(() => {
-          sessionStorage.setItem(sessionKey, 'true');
-        }).catch(err => {
-          console.error('Login tracking failed:', err);
-        });
-        
-        // Also log directly to UserActivity
+        // Log directly to UserActivity
         base44.entities.UserActivity.create({
           user_email: currentUser.email,
           user_name: currentUser.full_name,
@@ -87,9 +80,10 @@ export default function Layout({ children, currentPageName }) {
             user_role: currentUser.role,
             session_start: true
           },
-          page: 'login'
+          page: 'login',
+          user_agent: navigator.userAgent
         }).catch(err => {
-          console.error('Direct login logging failed:', err);
+          console.error('Login logging failed:', err);
         });
         
         sessionStorage.setItem(sessionKey, 'true');
@@ -217,8 +211,12 @@ export default function Layout({ children, currentPageName }) {
         user_email: currentUser?.email,
         user_name: currentUser?.full_name,
         action: 'logout',
-        details: { logout_time: new Date().toISOString() },
-        page: 'logout'
+        details: { 
+          logout_time: new Date().toISOString(),
+          user_role: currentUser?.role
+        },
+        page: 'logout',
+        user_agent: navigator.userAgent
       });
     } catch (error) {
       console.error('Failed to log logout:', error);
