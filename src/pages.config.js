@@ -127,6 +127,7 @@ import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import SendFax from './pages/SendFax';
+import FaxAddressBook from './pages/FaxAddressBook';
 import __Layout from './Layout.jsx';
 
 
@@ -211,6 +212,7 @@ export const PAGES = {
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
     "SendFax": SendFax,
+    "FaxAddressBook": FaxAddressBook,
 }
 
 export const pagesConfig = {

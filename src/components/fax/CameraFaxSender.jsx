@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, FileText, Send, X, RotateCcw, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Camera, FileText, Send, X, RotateCcw, Loader2, BookUser } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
+import FaxAddressBook from "./FaxAddressBook";
 
 export default function CameraFaxSender() {
   const [stream, setStream] = useState(null);
@@ -195,26 +197,45 @@ export default function CameraFaxSender() {
         {/* Fax Details */}
         {capturedImage && (
           <div className="space-y-4 pt-4 border-t">
-            <div className="space-y-2">
-              <Label htmlFor="from-number">From Number</Label>
-              <Input
-                id="from-number"
-                type="tel"
-                placeholder="+1234567890"
-                value={fromNumber}
-                onChange={(e) => setFromNumber(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="to-number">To Number</Label>
-              <Input
-                id="to-number"
-                type="tel"
-                placeholder="+1234567890"
-                value={toNumber}
-                onChange={(e) => setToNumber(e.target.value)}
-              />
-            </div>
+            <Tabs defaultValue="manual" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+                <TabsTrigger value="addressbook">
+                  <BookUser className="w-4 h-4 mr-2" />
+                  Address Book
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="manual" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="from-number">From Number</Label>
+                  <Input
+                    id="from-number"
+                    type="tel"
+                    placeholder="+1234567890"
+                    value={fromNumber}
+                    onChange={(e) => setFromNumber(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="to-number">To Number</Label>
+                  <Input
+                    id="to-number"
+                    type="tel"
+                    placeholder="+1234567890"
+                    value={toNumber}
+                    onChange={(e) => setToNumber(e.target.value)}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="addressbook" className="mt-4">
+                <FaxAddressBook
+                  onSelectContact={(contact) => {
+                    setToNumber(contact.fax_number);
+                    toast.success(`Selected ${contact.name}`);
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
             <Button
               onClick={handleSendFax}
               disabled={isSending}
