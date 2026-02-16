@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import ComprehensiveFaxDashboard from "../fax/ComprehensiveFaxDashboard";
 import FaxReceivingToggle from "./FaxReceivingToggle";
 import OCRFeedbackDashboard from "./OCRFeedbackDashboard";
+import OCRTrainingMonitor from "./OCRTrainingMonitor";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
   <Card className="hover:shadow-md transition-shadow">
@@ -131,10 +132,12 @@ export default function AdminDashboardOverview() {
         </div>
       )}
 
-      {/* Fax Controls */}
+      {/* Fax Controls & OCR Management */}
+      <FaxReceivingToggle />
+      
       <div className="grid md:grid-cols-2 gap-6">
-        <FaxReceivingToggle />
         <OCRFeedbackDashboard />
+        <OCRTrainingMonitor />
       </div>
 
       {/* Key Metrics */}
