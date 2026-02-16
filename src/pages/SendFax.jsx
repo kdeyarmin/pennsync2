@@ -11,6 +11,8 @@ import FaxSearchInterface from "../components/fax/FaxSearchInterface";
 import FaxAIAssistant from "../components/fax/FaxAIAssistant";
 
 export default function SendFax() {
+  const [selectedFaxForAI, setSelectedFaxForAI] = useState(null);
+
   return (
     <div className="min-h-screen p-4 md:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -24,8 +26,8 @@ export default function SendFax() {
           </p>
         </div>
 
-        <Tabs defaultValue="camera" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
+        <Tabs defaultValue="camera" className="w-full" onValueChange={() => setSelectedFaxForAI(null)}>
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="camera">
               <Smartphone className="w-4 h-4 mr-2" />
               Camera
@@ -53,6 +55,10 @@ export default function SendFax() {
             <TabsTrigger value="priority">
               <Brain className="w-4 h-4 mr-2" />
               AI Rules
+            </TabsTrigger>
+            <TabsTrigger value="ai-assistant" disabled={!selectedFaxForAI}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Assistant
             </TabsTrigger>
           </TabsList>
 
