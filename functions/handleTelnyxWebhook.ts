@@ -73,6 +73,33 @@ Deno.serve(async (req) => {
       
       if (Object.keys(updateData).length > 0) {
         await base44.asServiceRole.entities.FaxLog.update(faxLog.id, updateData);
+        
+        // If failed, trigger auto-retry system
+        if (updateData.status === 'failed') {
+          try {
+            base44.functions.invoke('autoRetryFailedFaxes', {}).catch(err => 
+              console.error('Auto-retry trigger failed:', err)
+            );
+          } catch (error) {
+            console.error('Failed to trigger auto-retry:', error);
+          }
+        }
+
+        // Send real-time notification for status change
+        if (faxLog.sent_by) {
+          try {
+            await base44.asServiceRole.entities.Notification.create({
+              user_email: faxLog.sent_by,
+              title: `Fax ${updateData.status}`,
+              message: `Your fax to ${faxLog.to_number} is now ${updateData.status}`,
+              type: updateData.status === 'delivered' ? 'success' : updateData.status === 'failed' ? 'error' : 'info',
+              is_read: false,
+              action_url: `/send-fax?fax_id=${faxLog.id}`
+            });
+          } catch (notifError) {
+            console.error('Failed to create notification:', notifError);
+          }
+        }
       }
     }
 
