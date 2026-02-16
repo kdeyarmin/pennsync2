@@ -13,7 +13,6 @@ import FaxAddressBook from "./FaxAddressBook";
 
 export default function PhotoUploadFaxSender() {
   const [uploadedImages, setUploadedImages] = useState([]);
-  const [fromNumber, setFromNumber] = useState("");
   const [toNumbers, setToNumbers] = useState([""]);
   const [isSending, setIsSending] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -122,8 +121,8 @@ export default function PhotoUploadFaxSender() {
   };
 
   const handleSendFax = async () => {
-    if (!fromNumber || toNumbers.filter(n => n.trim()).length === 0) {
-      toast.error("Please enter sender and recipient fax numbers");
+    if (toNumbers.filter(n => n.trim()).length === 0) {
+      toast.error("Please enter recipient fax number(s)");
       return;
     }
 
@@ -142,7 +141,6 @@ export default function PhotoUploadFaxSender() {
       const validRecipients = toNumbers.filter(n => n.trim());
       for (const recipient of validRecipients) {
         await base44.functions.invoke('sendFax', {
-          from_number: fromNumber,
           to_number: recipient,
           document_url: pdfUrl,
           document_name: 'Photo Fax Document'
@@ -153,7 +151,6 @@ export default function PhotoUploadFaxSender() {
       
       // Reset form
       setUploadedImages([]);
-      setFromNumber("");
       setToNumbers([""]);
       
       queryClient.invalidateQueries(['fax-logs']);
@@ -297,15 +294,6 @@ export default function PhotoUploadFaxSender() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>From (Your Fax Number)</Label>
-            <Input
-              placeholder="+1234567890"
-              value={fromNumber}
-              onChange={(e) => setFromNumber(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label>To (Recipient Fax Numbers)</Label>
             {toNumbers.map((number, index) => (
               <div key={index} className="flex gap-2">
@@ -362,7 +350,7 @@ export default function PhotoUploadFaxSender() {
         </Button>
         <Button
           onClick={handleSendFax}
-          disabled={uploadedImages.length === 0 || isSending || !fromNumber || toNumbers.filter(n => n.trim()).length === 0}
+          disabled={uploadedImages.length === 0 || isSending || toNumbers.filter(n => n.trim()).length === 0}
           className="flex-1"
         >
           {isSending ? (
