@@ -6,16 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Send, Loader2 } from "lucide-react";
+import { FileText, Send, Loader2, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
 import FaxAddressBook from "./FaxAddressBook";
+import AICoverPageEditor from "./AICoverPageEditor";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function DocumentFaxSender({ patientId }) {
   const [selectedDocId, setSelectedDocId] = useState("");
   const [fromNumber, setFromNumber] = useState("");
   const [toNumber, setToNumber] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [includeCoverPage, setIncludeCoverPage] = useState(false);
+  const [aiCoverPageData, setAiCoverPageData] = useState(null);
 
   const { data: documents = [] } = useQuery({
     queryKey: patientId ? ['patient-documents', patientId] : ['documents'],
@@ -34,6 +38,10 @@ export default function DocumentFaxSender({ patientId }) {
       toast.error("Please fill in all fields");
       return;
     }
+    if (includeCoverPage && !aiCoverPageData) {
+      toast.error("Please wait for AI cover page to generate");
+      return;
+    }
 
     const doc = pdfDocuments.find(d => d.id === selectedDocId);
     if (!doc) {
@@ -44,17 +52,20 @@ export default function DocumentFaxSender({ patientId }) {
     setIsSending(true);
     try {
       await sendFax({ 
-        from: fromNumber, 
-        to: toNumber, 
-        media_url: doc.file_url,
-        document_name: doc.title,
-        patient_id: patientId
+        file_url: doc.file_url,
+        from_number: fromNumber, 
+        to_number: toNumber, 
+        document_name: includeCoverPage ? `Cover + ${doc.title}` : doc.title,
+        patient_id: patientId,
+        cover_page_details: includeCoverPage ? aiCoverPageData : null
       });
 
       toast.success("Fax sent successfully!");
       setSelectedDocId("");
       setFromNumber("");
       setToNumber("");
+      setIncludeCoverPage(false);
+      setAiCoverPageData(null);
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
     } finally {
@@ -114,14 +125,37 @@ export default function DocumentFaxSender({ patientId }) {
           </div>
         </div>
 
-        <div>
-          <Label className="mb-2 block">Or Select from Address Book</Label>
-          <FaxAddressBook
-            onSelectContact={(contact) => {
-              setToNumber(contact.fax_number);
-              toast.success(`Selected ${contact.name}`);
-            }}
-          />
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="includeCoverPageDoc"
+              checked={includeCoverPage}
+              onCheckedChange={setIncludeCoverPage}
+            />
+            <Label htmlFor="includeCoverPageDoc" className="text-sm font-medium flex items-center gap-1 cursor-pointer">
+              <Brain className="w-4 h-4 text-purple-600" /> Include AI Cover Page
+            </Label>
+          </div>
+
+          {includeCoverPage && (
+            <AICoverPageEditor
+              patientId={patientId}
+              documentId={selectedDocId}
+              recipientNumber={toNumber}
+              senderNumber={fromNumber}
+              onCoverPageGenerated={setAiCoverPageData}
+            />
+          )}
+
+          <div>
+            <Label className="mb-2 block">Or Select from Address Book</Label>
+            <FaxAddressBook
+              onSelectContact={(contact) => {
+                setToNumber(contact.fax_number);
+                toast.success(`Selected ${contact.name}`);
+              }}
+            />
+          </div>
         </div>
 
         <Button

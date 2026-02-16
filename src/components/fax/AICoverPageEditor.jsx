@@ -1,0 +1,131 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Brain, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { generateFaxCoverPage } from "@/functions/generateFaxCoverPage";
+import { useMutation } from "@tanstack/react-query";
+
+export default function AICoverPageEditor({ patientId, documentId, recipientNumber, senderNumber, onCoverPageGenerated }) {
+  const [coverPageData, setCoverPageData] = useState(null);
+  const [formData, setFormData] = useState({});
+
+  const generateMutation = useMutation({
+    mutationFn: (vars) => generateFaxCoverPage({
+      patient_id: patientId,
+      document_id: documentId,
+      recipient_number: recipientNumber,
+      sender_number: senderNumber,
+      ...vars
+    }),
+    onSuccess: (data) => {
+      setCoverPageData(data.cover_page_data);
+      setFormData(data.cover_page_data);
+      onCoverPageGenerated(data.cover_page_data);
+      toast.success("AI cover page generated!");
+    },
+    onError: (error) => {
+      toast.error("Failed to generate AI cover page: " + error.message);
+    }
+  });
+
+  useEffect(() => {
+    if ((patientId || documentId) && recipientNumber && senderNumber) {
+      generateMutation.mutate({});
+    }
+  }, [patientId, documentId, recipientNumber, senderNumber]);
+
+  const handleFieldChange = (path, value) => {
+    const keys = path.split('.');
+    setFormData(prev => {
+      const newData = { ...prev };
+      let current = newData;
+      for (let i = 0; i < keys.length - 1; i++) {
+        current[keys[i]] = { ...current[keys[i]] };
+        current = current[keys[i]];
+      }
+      current[keys[keys.length - 1]] = value;
+      onCoverPageGenerated(newData);
+      return newData;
+    });
+  };
+
+  if (generateMutation.isPending) {
+    return (
+      <Card className="border-purple-200 bg-purple-50">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin mr-2 text-purple-600" />
+            <span className="text-purple-700">Generating AI cover page...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!coverPageData) {
+    return null;
+  }
+
+  return (
+    <Card className="border-purple-200 bg-purple-50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Brain className="w-5 h-5 text-purple-600" />
+          AI-Generated Cover Page
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Sender Name</Label>
+            <Input
+              value={formData.from?.name || ""}
+              onChange={(e) => handleFieldChange('from.name', e.target.value)}
+              className="h-9 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Sender Phone</Label>
+            <Input
+              value={formData.from?.phone || ""}
+              onChange={(e) => handleFieldChange('from.phone', e.target.value)}
+              className="h-9 text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Subject</Label>
+          <Input
+            value={formData.subject || ""}
+            onChange={(e) => handleFieldChange('subject', e.target.value)}
+            className="h-9 text-sm"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Message</Label>
+          <Textarea
+            value={formData.message || ""}
+            onChange={(e) => handleFieldChange('message', e.target.value)}
+            rows={3}
+            className="text-sm"
+          />
+        </div>
+
+        {formData.patient_info?.name && (
+          <div className="p-2 bg-white rounded border border-purple-200">
+            <p className="text-xs font-semibold text-purple-900 mb-1">Patient Info</p>
+            <p className="text-xs text-gray-700">{formData.patient_info.name}</p>
+            {formData.patient_info.dob && <p className="text-xs text-gray-600">DOB: {formData.patient_info.dob}</p>}
+            {formData.patient_info.mrn && <p className="text-xs text-gray-600">MRN: {formData.patient_info.mrn}</p>}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

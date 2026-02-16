@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { file_url, to_number, from_number, document_name, to_name, patient_id } = await req.json();
+    const { file_url, to_number, from_number, document_name, to_name, patient_id, cover_page_details } = await req.json();
 
     if (!file_url || !to_number || !from_number) {
       return Response.json({ 
@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
       document_name: document_name || 'Camera Fax',
       status: 'queued',
       patient_id: patient_id || null,
-      sent_by: user.email
+      sent_by: user.email,
+      cover_page_details: cover_page_details || null
     });
 
     // Send fax via Telnyx API
