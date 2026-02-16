@@ -128,6 +128,16 @@ Deno.serve(async (req) => {
       user_agent: req.headers.get('user-agent') || 'unknown'
     });
 
+    // Queue OCR processing asynchronously
+    try {
+      base44.functions.invoke('processFaxOCR', {
+        fax_log_id: faxLog.id,
+        document_url: file_url
+      }).catch(err => console.error('OCR queue failed:', err));
+    } catch (ocrError) {
+      console.error('OCR processing error:', ocrError);
+    }
+
     return Response.json({
       success: true,
       fax_id: telnyxData.data?.id,
