@@ -1,12 +1,13 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, FileText, History, TrendingUp, Activity, Brain } from "lucide-react";
+import { Smartphone, FileText, History, TrendingUp, Activity, Brain, Search } from "lucide-react";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
 import DocumentFaxSender from "../components/fax/DocumentFaxSender";
 import EnhancedFaxHistory from "../components/fax/EnhancedFaxHistory";
 import FaxAnalyticsDashboard from "../components/fax/FaxAnalyticsDashboard";
 import FaxActivityFeed from "../components/fax/FaxActivityFeed";
 import FaxPriorityRuleManager from "../components/fax/FaxPriorityRuleManager";
+import FaxSearchInterface from "../components/fax/FaxSearchInterface";
 
 export default function SendFax() {
   return (
@@ -23,7 +24,7 @@ export default function SendFax() {
         </div>
 
         <Tabs defaultValue="camera" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="camera">
               <Smartphone className="w-4 h-4 mr-2" />
               Camera
@@ -31,6 +32,10 @@ export default function SendFax() {
             <TabsTrigger value="documents">
               <FileText className="w-4 h-4 mr-2" />
               Document
+            </TabsTrigger>
+            <TabsTrigger value="search">
+              <Search className="w-4 h-4 mr-2" />
+              Search
             </TabsTrigger>
             <TabsTrigger value="history">
               <History className="w-4 h-4 mr-2" />
@@ -56,6 +61,10 @@ export default function SendFax() {
 
           <TabsContent value="documents" className="mt-6">
             <DocumentFaxSender />
+          </TabsContent>
+
+          <TabsContent value="search" className="mt-6">
+            <FaxSearchInterface />
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
