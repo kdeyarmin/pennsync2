@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, Loader2, FileText, AlertCircle } from "lucide-react";
+import { Upload, Loader2, FileText, AlertCircle, Brain } from "lucide-react";
 import { toast } from "sonner";
+import { analyzeDocument } from "@/functions/analyzeDocument";
 
 const CATEGORIES = [
   { value: "lab_results", label: "Lab Results" },
@@ -32,7 +33,8 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
     document_date: new Date().toISOString().split('T')[0],
     tags: "",
     notes: "",
-    is_sensitive: false
+    is_sensitive: false,
+    auto_analyze: true
   });
 
   const queryClient = useQueryClient();
@@ -71,7 +73,18 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
         is_sensitive: data.is_sensitive
       };
 
-      return base44.entities.Document.create(documentData);
+      const newDoc = await base44.entities.Document.create(documentData);
+      
+      // Trigger AI analysis if enabled
+      if (data.auto_analyze) {
+        setTimeout(() => {
+          analyzeDocument({ document_id: newDoc.id }).catch(err => {
+            console.error('Auto-analysis failed:', err);
+          });
+        }, 500);
+      }
+      
+      return newDoc;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['documents']);
@@ -95,7 +108,8 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
       document_date: new Date().toISOString().split('T')[0],
       tags: "",
       notes: "",
-      is_sensitive: false
+      is_sensitive: false,
+      auto_analyze: true
     });
     if (!patientId) setSelectedPatientId("");
   };
@@ -239,18 +253,33 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
             />
           </div>
 
-          <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
-            <input
-              type="checkbox"
-              id="sensitive"
-              checked={formData.is_sensitive}
-              onChange={(e) => setFormData({ ...formData, is_sensitive: e.target.checked })}
-              className="rounded"
-            />
-            <label htmlFor="sensitive" className="text-sm flex items-center gap-2 cursor-pointer">
-              <AlertCircle className="w-4 h-4 text-amber-600" />
-              Mark as sensitive document
-            </label>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <input
+                type="checkbox"
+                id="sensitive"
+                checked={formData.is_sensitive}
+                onChange={(e) => setFormData({ ...formData, is_sensitive: e.target.checked })}
+                className="rounded"
+              />
+              <label htmlFor="sensitive" className="text-sm flex items-center gap-2 cursor-pointer">
+                <AlertCircle className="w-4 h-4 text-amber-600" />
+                Mark as sensitive document
+              </label>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+              <input
+                type="checkbox"
+                id="auto-analyze"
+                checked={formData.auto_analyze}
+                onChange={(e) => setFormData({ ...formData, auto_analyze: e.target.checked })}
+                className="rounded"
+              />
+              <label htmlFor="auto-analyze" className="text-sm flex items-center gap-2 cursor-pointer">
+                <Brain className="w-4 h-4 text-purple-600" />
+                Auto-analyze with AI after upload
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-4">

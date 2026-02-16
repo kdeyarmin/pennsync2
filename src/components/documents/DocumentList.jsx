@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, FileText, Download, Trash2, Eye, Calendar, User, Tag, Filter, Grid, List } from "lucide-react";
+import { Search, FileText, Download, Trash2, Eye, Calendar, User, Tag, Filter, Grid, List, Brain, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import DocumentAIAnalysis from "./DocumentAIAnalysis";
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
@@ -23,6 +24,117 @@ const CATEGORIES = [
   { value: "orders", label: "Orders" },
   { value: "other", label: "Other" }
 ];
+
+const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, getCategoryColor, deleteMutation, showPatientInfo }) => {
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const hasCriticalFlags = doc.ai_analysis?.critical_flags?.some(f => f.severity === 'critical' || f.severity === 'high');
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-gray-900 truncate">{doc.title}</h3>
+              {doc.ai_analysis?.analyzed && (
+                <Brain className="w-4 h-4 text-purple-600 flex-shrink-0" />
+              )}
+              {hasCriticalFlags && (
+                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 animate-pulse" />
+              )}
+            </div>
+            {doc.description && (
+              <p className="text-sm text-gray-600 line-clamp-2 mt-1">{doc.description}</p>
+            )}
+          </div>
+          {doc.is_sensitive && (
+            <Badge variant="destructive" className="ml-2 flex-shrink-0">Sensitive</Badge>
+          )}
+        </div>
+
+        <div className="space-y-2 mb-3">
+          <Badge className={getCategoryColor(doc.category)}>
+            {getCategoryLabel(doc.category)}
+          </Badge>
+          {showPatientInfo && doc.patient_id && (
+            <div className="flex items-center gap-1 text-sm text-gray-600">
+              <User className="w-3 h-3" />
+              {getPatientName(doc.patient_id)}
+            </div>
+          )}
+          {doc.document_date && (
+            <div className="flex items-center gap-1 text-sm text-gray-600">
+              <Calendar className="w-3 h-3" />
+              {format(new Date(doc.document_date), 'MMM d, yyyy')}
+            </div>
+          )}
+          {doc.tags?.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap">
+              <Tag className="w-3 h-3 text-gray-400" />
+              {doc.tags.map((tag, i) => (
+                <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {doc.ai_analysis?.analyzed && showAnalysis && (
+          <div className="mb-3">
+            <DocumentAIAnalysis document={doc} compact={true} />
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          {doc.ai_analysis?.analyzed && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAnalysis(!showAnalysis)}
+            >
+              <Brain className="w-4 h-4" />
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onDocumentClick ? onDocumentClick(doc) : window.open(doc.file_url, '_blank')}
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            View
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = doc.file_url;
+              link.download = doc.file_name;
+              link.click();
+            }}
+          >
+            <Download className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (confirm(`Delete "${doc.title}"?`)) {
+                deleteMutation.mutate(doc.id);
+              }
+            }}
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </Button>
+        </div>
+
+        <div className="mt-3 pt-3 border-t text-xs text-gray-500">
+          Uploaded {format(new Date(doc.created_date), 'MMM d, yyyy')} by {doc.uploaded_by || doc.created_by}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function DocumentList({ patientId, showPatientInfo = true, onDocumentClick }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -144,86 +256,16 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
       ) : (
         <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-2"}>
           {filteredDocuments.map((doc) => (
-            <Card key={doc.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">{doc.title}</h3>
-                    {doc.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{doc.description}</p>
-                    )}
-                  </div>
-                  {doc.is_sensitive && (
-                    <Badge variant="destructive" className="ml-2 flex-shrink-0">Sensitive</Badge>
-                  )}
-                </div>
-
-                <div className="space-y-2 mb-3">
-                  <Badge className={getCategoryColor(doc.category)}>
-                    {getCategoryLabel(doc.category)}
-                  </Badge>
-                  {showPatientInfo && doc.patient_id && (
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                      <User className="w-3 h-3" />
-                      {getPatientName(doc.patient_id)}
-                    </div>
-                  )}
-                  {doc.document_date && (
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                      <Calendar className="w-3 h-3" />
-                      {format(new Date(doc.document_date), 'MMM d, yyyy')}
-                    </div>
-                  )}
-                  {doc.tags?.length > 0 && (
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <Tag className="w-3 h-3 text-gray-400" />
-                      {doc.tags.map((tag, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => onDocumentClick ? onDocumentClick(doc) : window.open(doc.file_url, '_blank')}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = doc.file_url;
-                      link.download = doc.file_name;
-                      link.click();
-                    }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (confirm(`Delete "${doc.title}"?`)) {
-                        deleteMutation.mutate(doc.id);
-                      }
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
-                </div>
-
-                <div className="mt-3 pt-3 border-t text-xs text-gray-500">
-                  Uploaded {format(new Date(doc.created_date), 'MMM d, yyyy')} by {doc.uploaded_by || doc.created_by}
-                </div>
-              </CardContent>
-            </Card>
+            <DocumentCard 
+              key={doc.id} 
+              doc={doc}
+              onDocumentClick={onDocumentClick}
+              getPatientName={getPatientName}
+              getCategoryLabel={getCategoryLabel}
+              getCategoryColor={getCategoryColor}
+              deleteMutation={deleteMutation}
+              showPatientInfo={showPatientInfo}
+            />
           ))}
         </div>
       )}
