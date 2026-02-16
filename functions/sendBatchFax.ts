@@ -9,7 +9,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { file_url, to_numbers, from_number, document_name, patient_id, cover_page_details, priority = 'normal' } = await req.json();
+    const { file_url, to_numbers, from_number, document_name, patient_id, cover_page_details, priority, from_name } = await req.json();
+
+    // AI Priority Analysis
+    let finalPriority = priority || 'normal';
+    
+    if (!priority) {
+      try {
+        const analysisResult = await base44.functions.invoke('analyzeFaxPriority', {
+          document_name,
+          cover_page_details,
+          to_number: to_numbers[0],
+          from_number,
+          from_name
+        });
+        finalPriority = analysisResult.data.priority || 'normal';
+      } catch (error) {
+        console.error('Priority analysis failed:', error);
+      }
+    }
 
     if (!file_url || !to_numbers || to_numbers.length === 0 || !from_number) {
       return Response.json({ 
@@ -37,7 +55,7 @@ Deno.serve(async (req) => {
           patient_id: patient_id || null,
           sent_by: user.email,
           cover_page_details: cover_page_details || null,
-          priority,
+          priority: finalPriority,
           estimated_cost: estimatedCostPerPage
         });
 

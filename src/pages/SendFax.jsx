@@ -1,11 +1,12 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, FileText, History, TrendingUp, Activity } from "lucide-react";
+import { Smartphone, FileText, History, TrendingUp, Activity, Brain } from "lucide-react";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
 import DocumentFaxSender from "../components/fax/DocumentFaxSender";
 import EnhancedFaxHistory from "../components/fax/EnhancedFaxHistory";
 import FaxAnalyticsDashboard from "../components/fax/FaxAnalyticsDashboard";
 import FaxActivityFeed from "../components/fax/FaxActivityFeed";
+import FaxPriorityRuleManager from "../components/fax/FaxPriorityRuleManager";
 
 export default function SendFax() {
   return (
@@ -22,7 +23,7 @@ export default function SendFax() {
         </div>
 
         <Tabs defaultValue="camera" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="camera">
               <Smartphone className="w-4 h-4 mr-2" />
               Camera
@@ -42,6 +43,10 @@ export default function SendFax() {
             <TabsTrigger value="activity">
               <Activity className="w-4 h-4 mr-2" />
               Activity
+            </TabsTrigger>
+            <TabsTrigger value="priority">
+              <Brain className="w-4 h-4 mr-2" />
+              AI Rules
             </TabsTrigger>
           </TabsList>
 
@@ -63,6 +68,10 @@ export default function SendFax() {
 
           <TabsContent value="activity" className="mt-6">
             <FaxActivityFeed />
+          </TabsContent>
+
+          <TabsContent value="priority" className="mt-6">
+            <FaxPriorityRuleManager />
           </TabsContent>
         </Tabs>
       </div>

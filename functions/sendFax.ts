@@ -9,7 +9,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { file_url, to_number, from_number, document_name, to_name, patient_id, cover_page_details, priority = 'normal' } = await req.json();
+    const { file_url, to_number, from_number, document_name, to_name, patient_id, cover_page_details, priority, from_name } = await req.json();
+
+    // AI Priority Analysis
+    let finalPriority = priority || 'normal';
+    let priorityAnalysis = null;
+    
+    if (!priority) {
+      try {
+        const analysisResult = await base44.functions.invoke('analyzeFaxPriority', {
+          document_name,
+          cover_page_details,
+          to_number,
+          from_number,
+          to_name,
+          from_name
+        });
+        finalPriority = analysisResult.data.priority || 'normal';
+        priorityAnalysis = analysisResult.data;
+      } catch (error) {
+        console.error('Priority analysis failed:', error);
+      }
+    }
 
     if (!file_url || !to_number || !from_number) {
       return Response.json({ 
@@ -36,9 +57,24 @@ Deno.serve(async (req) => {
       patient_id: patient_id || null,
       sent_by: user.email,
       cover_page_details: cover_page_details || null,
-      priority: priority,
+      priority: finalPriority,
       estimated_cost: estimatedCostPerPage
     });
+
+    // Send urgent notifications
+    if (finalPriority === 'urgent' && priorityAnalysis?.notify_users?.length > 0) {
+      for (const userEmail of priorityAnalysis.notify_users) {
+        try {
+          await base44.integrations.Core.SendEmail({
+            to: userEmail,
+            subject: `🚨 Urgent Fax: ${document_name}`,
+            body: `An urgent fax has been sent:\n\nTo: ${to_name || to_number}\nFrom: ${from_number}\nDocument: ${document_name}\n\nReason: ${priorityAnalysis.reason}\n\nPlease review immediately.`
+          });
+        } catch (emailError) {
+          console.error('Failed to send notification:', emailError);
+        }
+      }
+    }
 
     // Send fax via Telnyx API
     const telnyxResponse = await fetch('https://api.telnyx.com/v2/faxes', {
