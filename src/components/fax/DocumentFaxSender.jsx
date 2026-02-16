@@ -15,7 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export default function DocumentFaxSender({ patientId }) {
   const [selectedDocId, setSelectedDocId] = useState("");
-  const [fromNumber, setFromNumber] = useState("");
   const [toNumber, setToNumber] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [includeCoverPage, setIncludeCoverPage] = useState(false);
@@ -34,8 +33,8 @@ export default function DocumentFaxSender({ patientId }) {
   );
 
   const handleSendFax = async () => {
-    if (!selectedDocId || !fromNumber || !toNumber) {
-      toast.error("Please fill in all fields");
+    if (!selectedDocId || !toNumber) {
+      toast.error("Please select a document and recipient");
       return;
     }
     if (includeCoverPage && !aiCoverPageData) {
@@ -53,7 +52,6 @@ export default function DocumentFaxSender({ patientId }) {
     try {
       await sendFax({ 
         file_url: doc.file_url,
-        from_number: fromNumber, 
         to_number: toNumber, 
         document_name: includeCoverPage ? `Cover + ${doc.title}` : doc.title,
         patient_id: patientId,
@@ -62,7 +60,6 @@ export default function DocumentFaxSender({ patientId }) {
 
       toast.success("Fax sent successfully!");
       setSelectedDocId("");
-      setFromNumber("");
       setToNumber("");
       setIncludeCoverPage(false);
       setAiCoverPageData(null);
@@ -104,25 +101,14 @@ export default function DocumentFaxSender({ patientId }) {
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>From Number</Label>
-            <Input
-              type="tel"
-              placeholder="+1234567890"
-              value={fromNumber}
-              onChange={(e) => setFromNumber(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>To Number</Label>
-            <Input
-              type="tel"
-              placeholder="+1234567890"
-              value={toNumber}
-              onChange={(e) => setToNumber(e.target.value)}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label>To Number</Label>
+          <Input
+            type="tel"
+            placeholder="+1234567890"
+            value={toNumber}
+            onChange={(e) => setToNumber(e.target.value)}
+          />
         </div>
 
         <div className="space-y-4">
@@ -142,7 +128,6 @@ export default function DocumentFaxSender({ patientId }) {
               patientId={patientId}
               documentId={selectedDocId}
               recipientNumber={toNumber}
-              senderNumber={fromNumber}
               onCoverPageGenerated={setAiCoverPageData}
             />
           )}
