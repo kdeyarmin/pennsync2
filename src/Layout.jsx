@@ -29,7 +29,8 @@ import {
   Mail,
   AlertCircle,
   CheckSquare,
-  Mic
+  Mic,
+  BookUser
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -166,7 +167,8 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Communication",
       items: [
-        { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount }
+        { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
+        { name: "Fax Contacts", icon: BookUser, page: "FaxContacts" }
       ]
     },
     {
