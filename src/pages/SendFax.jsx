@@ -9,6 +9,7 @@ import FaxActivityFeed from "../components/fax/FaxActivityFeed";
 import FaxPriorityRuleManager from "../components/fax/FaxPriorityRuleManager";
 import FaxSearchInterface from "../components/fax/FaxSearchInterface";
 import FaxAIAssistant from "../components/fax/FaxAIAssistant";
+import FaxRetrySettings from "../components/fax/FaxRetrySettings";
 
 export default function SendFax() {
   const [selectedFaxForAI, setSelectedFaxForAI] = useState(null);
@@ -87,7 +88,10 @@ export default function SendFax() {
           </TabsContent>
 
           <TabsContent value="priority" className="mt-6">
-            <FaxPriorityRuleManager />
+            <div className="space-y-6">
+              <FaxPriorityRuleManager />
+              <FaxRetrySettings />
+            </div>
           </TabsContent>
 
           <TabsContent value="ai-assistant" className="mt-6">

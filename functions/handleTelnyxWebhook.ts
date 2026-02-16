@@ -3,6 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    
+    // Validate webhook signature if available
+    const signature = req.headers.get('telnyx-signature-ed25519');
+    const timestamp = req.headers.get('telnyx-timestamp');
+    
+    if (signature && timestamp) {
+      // Signature validation would go here
+      console.log('Webhook signature present:', signature.substring(0, 10) + '...');
+    }
 
     // Parse webhook payload
     const payload = await req.json();
