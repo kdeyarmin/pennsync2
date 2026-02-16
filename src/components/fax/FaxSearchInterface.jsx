@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, Eye, Loader2, CheckCircle, XCircle, FileText, Sparkles, RefreshCw } from "lucide-react";
+import { Search, Filter, Download, Eye, Loader2, CheckCircle, XCircle, FileText, Sparkles, RefreshCw, Brain } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { processFaxOCR } from "@/functions/processFaxOCR";
 
-export default function FaxSearchInterface() {
+export default function FaxSearchInterface({ onSelectFaxForAI }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -321,6 +321,17 @@ export default function FaxSearchInterface() {
                         >
                           <Eye className="w-3 h-3 mr-1" />
                           View
+                        </Button>
+                      )}
+                      {log.ocr_processed && onSelectFaxForAI && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onSelectFaxForAI(log.id)}
+                          className="text-purple-600 hover:text-purple-700"
+                        >
+                          <Brain className="w-3 h-3 mr-1" />
+                          AI Analyze
                         </Button>
                       )}
                       {!log.ocr_processed && log.document_url && (

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, FileText, History, TrendingUp, Activity, Brain, Search } from "lucide-react";
+import { Smartphone, FileText, History, TrendingUp, Activity, Brain, Search, Sparkles } from "lucide-react";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
 import DocumentFaxSender from "../components/fax/DocumentFaxSender";
 import EnhancedFaxHistory from "../components/fax/EnhancedFaxHistory";
@@ -8,6 +8,7 @@ import FaxAnalyticsDashboard from "../components/fax/FaxAnalyticsDashboard";
 import FaxActivityFeed from "../components/fax/FaxActivityFeed";
 import FaxPriorityRuleManager from "../components/fax/FaxPriorityRuleManager";
 import FaxSearchInterface from "../components/fax/FaxSearchInterface";
+import FaxAIAssistant from "../components/fax/FaxAIAssistant";
 
 export default function SendFax() {
   return (
@@ -64,7 +65,7 @@ export default function SendFax() {
           </TabsContent>
 
           <TabsContent value="search" className="mt-6">
-            <FaxSearchInterface />
+            <FaxSearchInterface onSelectFaxForAI={setSelectedFaxForAI} />
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
@@ -81,6 +82,16 @@ export default function SendFax() {
 
           <TabsContent value="priority" className="mt-6">
             <FaxPriorityRuleManager />
+          </TabsContent>
+
+          <TabsContent value="ai-assistant" className="mt-6">
+            {selectedFaxForAI ? (
+              <FaxAIAssistant faxLogId={selectedFaxForAI} />
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                Select a fax from History or Search to analyze with AI
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
