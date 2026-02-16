@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, FileText, History, TrendingUp, Activity, Brain, Search, Sparkles } from "lucide-react";
+import { Smartphone, FileText, History, TrendingUp, Activity, Brain, Search, Sparkles, Upload } from "lucide-react";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
 import DocumentFaxSender from "../components/fax/DocumentFaxSender";
+import PhotoUploadFaxSender from "../components/fax/PhotoUploadFaxSender";
 import EnhancedFaxHistory from "../components/fax/EnhancedFaxHistory";
 import FaxAnalyticsDashboard from "../components/fax/FaxAnalyticsDashboard";
 import FaxActivityFeed from "../components/fax/FaxActivityFeed";
@@ -27,8 +28,12 @@ export default function SendFax() {
           </p>
         </div>
 
-        <Tabs defaultValue="camera" className="w-full" onValueChange={() => setSelectedFaxForAI(null)}>
-          <TabsList className="grid w-full grid-cols-8">
+        <Tabs defaultValue="upload" className="w-full" onValueChange={() => setSelectedFaxForAI(null)}>
+          <TabsList className="grid w-full grid-cols-9">
+            <TabsTrigger value="upload">
+              <Upload className="w-4 h-4 mr-2" />
+              Photo
+            </TabsTrigger>
             <TabsTrigger value="camera">
               <Smartphone className="w-4 h-4 mr-2" />
               Camera
@@ -62,6 +67,10 @@ export default function SendFax() {
               AI Assistant
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="upload" className="mt-6">
+            <PhotoUploadFaxSender />
+          </TabsContent>
 
           <TabsContent value="camera" className="mt-6">
             <EnhancedCameraFaxSender />
