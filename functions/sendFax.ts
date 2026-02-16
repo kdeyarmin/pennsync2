@@ -9,19 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Log the fax in our database
-    const faxLog = await base44.entities.FaxLog.create({
-      from_number: from,
-      to_number: to,
-      to_name: to_name || null,
-      document_url: media_url,
-      document_name: document_name || 'Camera Fax',
-      status: 'queued',
-      patient_id: patient_id || null,
-      sent_by: user.email
-    });
-
-    const { file_url, to_number, from_number } = await req.json();
+    const { file_url, to_number, from_number, document_name, to_name, patient_id } = await req.json();
 
     if (!file_url || !to_number || !from_number) {
       return Response.json({ 
@@ -36,6 +24,18 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
+    // Log the fax in our database
+    const faxLog = await base44.entities.FaxLog.create({
+      from_number: from_number,
+      to_number: to_number,
+      to_name: to_name || null,
+      document_url: file_url,
+      document_name: document_name || 'Camera Fax',
+      status: 'queued',
+      patient_id: patient_id || null,
+      sent_by: user.email
+    });
+
     // Send fax via Telnyx API
     const telnyxResponse = await fetch('https://api.telnyx.com/v2/faxes', {
       method: 'POST',
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        connection_id: Deno.env.get('TELNYX_CONNECTION_ID'), // Optional: set if needed
+        connection_id: Deno.env.get('TELNYX_CONNECTION_ID'),
         media_url: file_url,
         to: to_number,
         from: from_number,
@@ -56,11 +56,21 @@ Deno.serve(async (req) => {
     const telnyxData = await telnyxResponse.json();
 
     if (!telnyxResponse.ok) {
+      await base44.entities.FaxLog.update(faxLog.id, {
+        status: 'failed',
+        failure_reason: telnyxData.errors?.[0]?.detail || 'Fax send failed'
+      });
       return Response.json({ 
         error: 'Telnyx API error',
         details: telnyxData 
       }, { status: telnyxResponse.status });
     }
+
+    // Update fax log with Telnyx ID
+    await base44.entities.FaxLog.update(faxLog.id, {
+      telnyx_fax_id: telnyxData.data?.id,
+      status: 'sending'
+    });
 
     // Log activity
     await base44.entities.UserActivity.create({
@@ -71,6 +81,7 @@ Deno.serve(async (req) => {
         to_number,
         from_number,
         fax_id: telnyxData.data?.id,
+        log_id: faxLog.id,
         timestamp: new Date().toISOString()
       },
       page: 'fax',
@@ -80,6 +91,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       fax_id: telnyxData.data?.id,
+      log_id: faxLog.id,
       status: telnyxData.data?.status,
       message: 'Fax sent successfully'
     });

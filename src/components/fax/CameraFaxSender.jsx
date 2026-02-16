@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, FileText, Send, X, RotateCcw, Loader2, BookUser } from "lucide-react";
+import { Camera, Send, X, Loader2, BookUser } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
@@ -13,7 +13,7 @@ import FaxAddressBook from "./FaxAddressBook";
 
 export default function CameraFaxSender() {
   const [stream, setStream] = useState(null);
-  const [capturedImage, setCapturedImage] = useState(null);
+  const [capturedImages, setCapturedImages] = useState([]);
   const [isSending, setIsSending] = useState(false);
   const [toNumber, setToNumber] = useState("");
   const [fromNumber, setFromNumber] = useState("");
@@ -24,7 +24,7 @@ export default function CameraFaxSender() {
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" } // Use rear camera on mobile
+        video: { facingMode: "environment" }
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -54,48 +54,43 @@ export default function CameraFaxSender() {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageDataUrl = canvas.toDataURL("image/jpeg", 0.9);
-    setCapturedImage(imageDataUrl);
-    stopCamera();
+    setCapturedImages(prev => [...prev, imageDataUrl]);
+    toast.success(`Photo ${capturedImages.length + 1} captured`);
   };
 
-  const retakePhoto = () => {
-    setCapturedImage(null);
-    startCamera();
+  const removeImage = (index) => {
+    setCapturedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const convertToPDF = async (imageDataUrl) => {
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4"
-    });
-
-    const img = new Image();
-    img.src = imageDataUrl;
-
-    await new Promise((resolve) => {
-      img.onload = resolve;
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = img.width;
-    const imgHeight = img.height;
-    const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-
-    const width = imgWidth * ratio;
-    const height = imgHeight * ratio;
-    const x = (pageWidth - width) / 2;
-    const y = (pageHeight - height) / 2;
-
-    pdf.addImage(imageDataUrl, "JPEG", x, y, width, height);
-
+  const convertToPDF = async () => {
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    
+    for (let i = 0; i < capturedImages.length; i++) {
+      const img = new Image();
+      img.src = capturedImages[i];
+      
+      await new Promise((resolve) => {
+        img.onload = () => {
+          if (i > 0) pdf.addPage();
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const ratio = Math.min(pageWidth / img.width, pageHeight / img.height);
+          const width = img.width * ratio;
+          const height = img.height * ratio;
+          const x = (pageWidth - width) / 2;
+          const y = (pageHeight - height) / 2;
+          pdf.addImage(img, "JPEG", x, y, width, height);
+          resolve();
+        };
+      });
+    }
+    
     return pdf.output("blob");
   };
 
   const handleSendFax = async () => {
-    if (!capturedImage) {
-      toast.error("Please capture a photo first");
+    if (capturedImages.length === 0) {
+      toast.error("Please capture at least one photo");
       return;
     }
     if (!toNumber || !fromNumber) {
@@ -106,30 +101,22 @@ export default function CameraFaxSender() {
     setIsSending(true);
 
     try {
-      // Convert image to PDF
-      const pdfBlob = await convertToPDF(capturedImage);
+      const pdfBlob = await convertToPDF();
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfBlob });
 
-      // Upload PDF to Base44 storage
-      const { data: uploadData } = await base44.integrations.Core.UploadFile({
-        file: pdfBlob
-      });
-
-      if (!uploadData?.file_url) {
-        throw new Error("Failed to upload PDF");
-      }
-
-      // Send fax via backend function
       const response = await sendFax({
-        file_url: uploadData.file_url,
+        file_url,
         to_number: toNumber,
-        from_number: fromNumber
+        from_number: fromNumber,
+        document_name: `Camera Fax - ${capturedImages.length} page(s)`
       });
 
       if (response.data.success) {
-        toast.success("Fax sent successfully!");
-        setCapturedImage(null);
+        toast.success(`Fax sent successfully! ${capturedImages.length} page(s)`);
+        setCapturedImages([]);
         setToNumber("");
         setFromNumber("");
+        stopCamera();
       } else {
         throw new Error(response.data.error || "Failed to send fax");
       }
@@ -149,49 +136,64 @@ export default function CameraFaxSender() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Camera View */}
-        {stream && !capturedImage && (
-          <div className="space-y-4">
-            <div className="relative bg-black rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={capturePhoto} className="flex-1">
-                <Camera className="w-4 h-4 mr-2" />
-                Capture Photo
-              </Button>
-              <Button onClick={stopCamera} variant="outline">
-                <X className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Captured Image Preview */}
-        {capturedImage && (
-          <div className="space-y-4">
-            <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-              <img src={capturedImage} alt="Captured" className="w-full" />
-            </div>
-            <Button onClick={retakePhoto} variant="outline" className="w-full">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Retake Photo
-            </Button>
-          </div>
-        )}
-
         {/* No Camera Active */}
-        {!stream && !capturedImage && (
+        {!stream && capturedImages.length === 0 && (
           <Button onClick={startCamera} className="w-full" size="lg">
             <Camera className="w-5 h-5 mr-2" />
             Start Camera
           </Button>
+        )}
+
+        {/* Camera View */}
+        {stream && (
+          <div className="space-y-4">
+            <div className="relative bg-black rounded-lg overflow-hidden">
+              <video ref={videoRef} autoPlay playsInline className="w-full" />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={capturePhoto} className="flex-1">
+                <Camera className="w-4 h-4 mr-2" />
+                Capture Page {capturedImages.length + 1}
+              </Button>
+              <Button onClick={stopCamera} variant="outline">
+                <X className="w-4 h-4 mr-2" />
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Captured Images Preview */}
+        {capturedImages.length > 0 && !stream && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-gray-900">{capturedImages.length} page(s) captured</p>
+              <Button onClick={startCamera} variant="outline" size="sm">
+                <Camera className="w-4 h-4 mr-2" />
+                Add More Pages
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {capturedImages.map((img, index) => (
+                <div key={index} className="relative rounded-lg overflow-hidden border-2 border-gray-200 group">
+                  <img src={img} alt={`Page ${index + 1}`} className="w-full" />
+                  <div className="absolute top-2 right-2">
+                    <Button
+                      onClick={() => removeImage(index)}
+                      variant="destructive"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                    Page {index + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Fax Details */}
@@ -257,7 +259,6 @@ export default function CameraFaxSender() {
           </div>
         )}
 
-        {/* Hidden canvas for image capture */}
         <canvas ref={canvasRef} className="hidden" />
       </CardContent>
     </Card>
