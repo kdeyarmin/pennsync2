@@ -63,6 +63,8 @@ import ReferralDocumentViewer from "../components/documents/ReferralDocumentView
 import HealthHistorySection from "../components/patient/HealthHistorySection";
 import MedicationManagementSection from "../components/patient/MedicationManagementSection";
 import ClinicalEventsTimeline from "../components/patient/ClinicalEventsTimeline";
+import DocumentUploader from "../components/documents/DocumentUploader";
+import DocumentList from "../components/documents/DocumentList";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -73,6 +75,7 @@ export default function PatientDetails() {
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [showOASISPrompt, setShowOASISPrompt] = useState(false);
   const [oasisTriggerVisit, setOasisTriggerVisit] = useState(null);
+  const [isDocumentUploaderOpen, setIsDocumentUploaderOpen] = useState(false);
   const [newVisit, setNewVisit] = useState({
     visit_date: format(new Date(), 'yyyy-MM-dd'),
     visit_time: '',
@@ -851,14 +854,32 @@ export default function PatientDetails() {
 
         {/* Documents Tab */}
         <TabsContent value="documents" className="space-y-6">
-          <Tabs defaultValue="referral-docs">
-            <TabsList className="grid w-full grid-cols-5">
+          <Tabs defaultValue="uploaded">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="uploaded">Uploaded Docs</TabsTrigger>
               <TabsTrigger value="referral-docs">Referral PDFs</TabsTrigger>
               <TabsTrigger value="discharge">Discharge</TabsTrigger>
               <TabsTrigger value="referral">Referral Letter</TabsTrigger>
               <TabsTrigger value="education">Education</TabsTrigger>
               <TabsTrigger value="progress">Progress</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="uploaded" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Patient Documents</CardTitle>
+                    <Button onClick={() => setIsDocumentUploaderOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Upload Document
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <DocumentList patientId={patientId} showPatientInfo={false} />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="referral-docs">
               <ReferralDocumentViewer patientId={patientId} />
@@ -995,6 +1016,16 @@ export default function PatientDetails() {
           </CardContent>
         )}
       </Card>
+
+      <DocumentUploader
+        patientId={patientId}
+        open={isDocumentUploaderOpen}
+        onOpenChange={setIsDocumentUploaderOpen}
+        onUploadComplete={() => {
+          setIsDocumentUploaderOpen(false);
+          queryClient.invalidateQueries(['patient-documents', patientId]);
+        }}
+      />
     </div>
   );
 }
