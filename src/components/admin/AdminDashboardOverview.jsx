@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Users, FileText, PenTool, Settings, ArrowRight, Loader2, AlertCircle, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import ComprehensiveFaxDashboard from "../fax/ComprehensiveFaxDashboard";
+import FaxReceivingToggle from "./FaxReceivingToggle";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
   <Card className="hover:shadow-md transition-shadow">
@@ -128,6 +129,9 @@ export default function AdminDashboardOverview() {
           <ComprehensiveFaxDashboard />
         </div>
       )}
+
+      {/* Fax Receiving Control */}
+      <FaxReceivingToggle />
 
       {/* Key Metrics */}
       <div className="grid md:grid-cols-3 gap-4">

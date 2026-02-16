@@ -23,6 +23,20 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid webhook payload' }, { status: 400 });
     }
 
+    // Check if fax receiving is enabled (for incoming faxes)
+    if (faxData.direction === 'inbound') {
+      const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1);
+      const faxReceivingEnabled = settings[0]?.fax_receiving_enabled ?? true;
+      
+      if (!faxReceivingEnabled) {
+        console.log('Fax receiving disabled, rejecting incoming fax:', faxData.id);
+        return Response.json({ 
+          success: false, 
+          message: 'Fax receiving is currently disabled' 
+        }, { status: 403 });
+      }
+    }
+
     // Log the webhook event
     await base44.asServiceRole.entities.UserActivity.create({
       user_email: 'system',
