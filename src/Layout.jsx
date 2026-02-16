@@ -168,7 +168,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Communication",
       items: [
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
-        { name: "Fax Contacts", icon: BookUser, page: "FaxContacts" }
+        { name: "Send a Fax", icon: BookUser, page: "SendFax" }
       ]
     },
     {
