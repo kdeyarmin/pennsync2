@@ -1,9 +1,11 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, FileText, History } from "lucide-react";
-import CameraFaxSender from "../components/fax/CameraFaxSender";
+import { Smartphone, FileText, History, TrendingUp, Activity } from "lucide-react";
+import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
 import DocumentFaxSender from "../components/fax/DocumentFaxSender";
-import FaxHistory from "../components/fax/FaxHistory";
+import EnhancedFaxHistory from "../components/fax/EnhancedFaxHistory";
+import FaxAnalyticsDashboard from "../components/fax/FaxAnalyticsDashboard";
+import FaxActivityFeed from "../components/fax/FaxActivityFeed";
 
 export default function SendFax() {
   return (
@@ -20,23 +22,31 @@ export default function SendFax() {
         </div>
 
         <Tabs defaultValue="camera" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="camera">
               <Smartphone className="w-4 h-4 mr-2" />
-              Camera Fax
+              Camera
             </TabsTrigger>
             <TabsTrigger value="documents">
               <FileText className="w-4 h-4 mr-2" />
-              Send Document
+              Document
             </TabsTrigger>
             <TabsTrigger value="history">
               <History className="w-4 h-4 mr-2" />
               History
             </TabsTrigger>
+            <TabsTrigger value="analytics">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="activity">
+              <Activity className="w-4 h-4 mr-2" />
+              Activity
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="camera" className="mt-6">
-            <CameraFaxSender />
+            <EnhancedCameraFaxSender />
           </TabsContent>
 
           <TabsContent value="documents" className="mt-6">
@@ -44,7 +54,15 @@ export default function SendFax() {
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
-            <FaxHistory />
+            <EnhancedFaxHistory />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="mt-6">
+            <FaxAnalyticsDashboard />
+          </TabsContent>
+
+          <TabsContent value="activity" className="mt-6">
+            <FaxActivityFeed />
           </TabsContent>
         </Tabs>
       </div>

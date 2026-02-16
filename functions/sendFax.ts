@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { file_url, to_number, from_number, document_name, to_name, patient_id, cover_page_details } = await req.json();
+    const { file_url, to_number, from_number, document_name, to_name, patient_id, cover_page_details, priority = 'normal' } = await req.json();
 
     if (!file_url || !to_number || !from_number) {
       return Response.json({ 
@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
     }
 
     // Log the fax in our database
+    const estimatedCostPerPage = 10; // 10 cents per page
     const faxLog = await base44.entities.FaxLog.create({
       from_number: from_number,
       to_number: to_number,
@@ -34,7 +35,9 @@ Deno.serve(async (req) => {
       status: 'queued',
       patient_id: patient_id || null,
       sent_by: user.email,
-      cover_page_details: cover_page_details || null
+      cover_page_details: cover_page_details || null,
+      priority: priority,
+      estimated_cost: estimatedCostPerPage
     });
 
     // Send fax via Telnyx API
