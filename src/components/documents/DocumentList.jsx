@@ -1,0 +1,232 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Search, FileText, Download, Trash2, Eye, Calendar, User, Tag, Filter, Grid, List } from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+
+const CATEGORIES = [
+  { value: "all", label: "All Categories" },
+  { value: "lab_results", label: "Lab Results" },
+  { value: "imaging", label: "Imaging/X-Ray" },
+  { value: "consent_forms", label: "Consent Forms" },
+  { value: "insurance", label: "Insurance Documents" },
+  { value: "referral", label: "Referral" },
+  { value: "progress_notes", label: "Progress Notes" },
+  { value: "discharge_summary", label: "Discharge Summary" },
+  { value: "medication_list", label: "Medication List" },
+  { value: "orders", label: "Orders" },
+  { value: "other", label: "Other" }
+];
+
+export default function DocumentList({ patientId, showPatientInfo = true, onDocumentClick }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+
+  const queryClient = useQueryClient();
+
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: patientId ? ['patient-documents', patientId] : ['documents'],
+    queryFn: () => patientId 
+      ? base44.entities.Document.filter({ patient_id: patientId }, '-created_date', 500)
+      : base44.entities.Document.list('-created_date', 500),
+    initialData: []
+  });
+
+  const { data: allPatients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.list(),
+    initialData: [],
+    enabled: showPatientInfo && !patientId
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.Document.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['documents']);
+      queryClient.invalidateQueries(['patient-documents']);
+      toast.success("Document deleted");
+    }
+  });
+
+  const getPatientName = (patientId) => {
+    if (!patientId) return null;
+    const patient = allPatients.find(p => p.id === patientId);
+    return patient ? `${patient.first_name} ${patient.last_name}` : "Unknown Patient";
+  };
+
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  const getCategoryLabel = (category) => {
+    return CATEGORIES.find(c => c.value === category)?.label || category;
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      lab_results: "bg-blue-100 text-blue-800",
+      imaging: "bg-purple-100 text-purple-800",
+      consent_forms: "bg-green-100 text-green-800",
+      insurance: "bg-yellow-100 text-yellow-800",
+      referral: "bg-pink-100 text-pink-800",
+      progress_notes: "bg-indigo-100 text-indigo-800",
+      discharge_summary: "bg-orange-100 text-orange-800",
+      medication_list: "bg-teal-100 text-teal-800",
+      orders: "bg-red-100 text-red-800",
+      other: "bg-gray-100 text-gray-800"
+    };
+    return colors[category] || colors.other;
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-8 text-gray-500">Loading documents...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Search documents..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CATEGORIES.map(cat => (
+              <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex gap-1 border rounded-lg p-1">
+          <Button
+            variant={viewMode === "grid" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("grid")}
+          >
+            <Grid className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {filteredDocuments.length === 0 ? (
+        <div className="text-center py-12">
+          <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <p className="text-gray-500">No documents found</p>
+        </div>
+      ) : (
+        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-2"}>
+          {filteredDocuments.map((doc) => (
+            <Card key={doc.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate">{doc.title}</h3>
+                    {doc.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{doc.description}</p>
+                    )}
+                  </div>
+                  {doc.is_sensitive && (
+                    <Badge variant="destructive" className="ml-2 flex-shrink-0">Sensitive</Badge>
+                  )}
+                </div>
+
+                <div className="space-y-2 mb-3">
+                  <Badge className={getCategoryColor(doc.category)}>
+                    {getCategoryLabel(doc.category)}
+                  </Badge>
+                  {showPatientInfo && doc.patient_id && (
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <User className="w-3 h-3" />
+                      {getPatientName(doc.patient_id)}
+                    </div>
+                  )}
+                  {doc.document_date && (
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Calendar className="w-3 h-3" />
+                      {format(new Date(doc.document_date), 'MMM d, yyyy')}
+                    </div>
+                  )}
+                  {doc.tags?.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Tag className="w-3 h-3 text-gray-400" />
+                      {doc.tags.map((tag, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => onDocumentClick ? onDocumentClick(doc) : window.open(doc.file_url, '_blank')}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    View
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = doc.file_url;
+                      link.download = doc.file_name;
+                      link.click();
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm(`Delete "${doc.title}"?`)) {
+                        deleteMutation.mutate(doc.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </Button>
+                </div>
+
+                <div className="mt-3 pt-3 border-t text-xs text-gray-500">
+                  Uploaded {format(new Date(doc.created_date), 'MMM d, yyyy')} by {doc.uploaded_by || doc.created_by}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
