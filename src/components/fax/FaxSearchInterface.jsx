@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, Eye, Loader2, CheckCircle, XCircle, FileText, Sparkles, RefreshCw, Brain } from "lucide-react";
+import { Search, Filter, Download, Eye, Loader2, CheckCircle, XCircle, FileText, Sparkles, RefreshCw, Brain, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { processFaxOCR } from "@/functions/processFaxOCR";
+import OCRReviewPanel from "./OCRReviewPanel";
 
 export default function FaxSearchInterface({ onSelectFaxForAI }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +20,7 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [reviewingFax, setReviewingFax] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -334,6 +336,17 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
                           AI Analyze
                         </Button>
                       )}
+                      {log.ocr_processed && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReviewingFax(log)}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Review OCR
+                        </Button>
+                      )}
                       {!log.ocr_processed && log.document_url && (
                         <Button
                           variant="outline"
@@ -357,6 +370,18 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
           ))
         )}
       </div>
+
+      {/* OCR Review Modal */}
+      {reviewingFax && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <OCRReviewPanel 
+              faxLog={reviewingFax} 
+              onClose={() => setReviewingFax(null)} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
