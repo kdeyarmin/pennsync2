@@ -9,6 +9,7 @@ import { Users, FileText, PenTool, Settings, ArrowRight, Loader2, AlertCircle, T
 import { format } from "date-fns";
 import ComprehensiveFaxDashboard from "../fax/ComprehensiveFaxDashboard";
 import FaxReceivingToggle from "./FaxReceivingToggle";
+import OCRFeedbackDashboard from "./OCRFeedbackDashboard";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
   <Card className="hover:shadow-md transition-shadow">
@@ -130,8 +131,11 @@ export default function AdminDashboardOverview() {
         </div>
       )}
 
-      {/* Fax Receiving Control */}
-      <FaxReceivingToggle />
+      {/* Fax Controls */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <FaxReceivingToggle />
+        <OCRFeedbackDashboard />
+      </div>
 
       {/* Key Metrics */}
       <div className="grid md:grid-cols-3 gap-4">
