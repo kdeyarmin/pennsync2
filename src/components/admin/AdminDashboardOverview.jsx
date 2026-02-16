@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, PenTool, Settings, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Users, FileText, PenTool, Settings, ArrowRight, Loader2, AlertCircle, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
+import ComprehensiveFaxDashboard from "../fax/ComprehensiveFaxDashboard";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
   <Card className="hover:shadow-md transition-shadow">
@@ -26,6 +27,8 @@ const StatCard = ({ icon: Icon, label, value, trend }) => (
 );
 
 export default function AdminDashboardOverview() {
+  const [showFaxDashboard, setShowFaxDashboard] = useState(false);
+
   // Fetch user count
   const { data: users = [] } = useQuery({
     queryKey: ['admin-users'],
@@ -104,10 +107,27 @@ export default function AdminDashboardOverview() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">System overview and administrative controls</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-1">System overview and administrative controls</p>
+        </div>
+        <Button
+          onClick={() => setShowFaxDashboard(!showFaxDashboard)}
+          variant={showFaxDashboard ? "default" : "outline"}
+        >
+          <TrendingUp className="w-4 h-4 mr-2" />
+          {showFaxDashboard ? "Hide" : "View"} Fax Analytics
+        </Button>
       </div>
+
+      {/* Fax Analytics Dashboard */}
+      {showFaxDashboard && (
+        <div className="border-t pt-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Fax Analytics Dashboard</h2>
+          <ComprehensiveFaxDashboard />
+        </div>
+      )}
 
       {/* Key Metrics */}
       <div className="grid md:grid-cols-3 gap-4">
