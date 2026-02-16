@@ -4,10 +4,22 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    
+
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Log the fax in our database
+    const faxLog = await base44.entities.FaxLog.create({
+      from_number: from,
+      to_number: to,
+      to_name: to_name || null,
+      document_url: media_url,
+      document_name: document_name || 'Camera Fax',
+      status: 'queued',
+      patient_id: patient_id || null,
+      sent_by: user.email
+    });
 
     const { file_url, to_number, from_number } = await req.json();
 

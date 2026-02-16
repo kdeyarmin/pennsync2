@@ -195,7 +195,7 @@ export default function CameraFaxSender() {
         )}
 
         {/* Fax Details */}
-        {capturedImage && (
+        {capturedImages.length > 0 && (
           <div className="space-y-4 pt-4 border-t">
             <Tabs defaultValue="manual" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
