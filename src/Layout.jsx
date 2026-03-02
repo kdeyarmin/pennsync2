@@ -92,29 +92,29 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [currentUser?.email]);
 
-  // Fetch unread message count
+  // Fetch unread messages — server-side filtered to current user
   const { data: messages = [] } = useQuery({
-    queryKey: ['messages'],
-    queryFn: () => base44.entities.Message.list('-created_date', 200),
+    queryKey: ['unreadMessages', currentUser?.email],
+    queryFn: () => base44.entities.Message.filter({ recipients: currentUser.email }, '-created_date', 50),
     initialData: [],
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
+    enabled: !!currentUser?.email,
   });
 
-  // Fetch active patient alerts (only for favorited patients)
+  // Fetch active patient alerts — only for favorited patients
   const { data: allActiveAlerts = [] } = useQuery({
     queryKey: ['active-alerts'],
     queryFn: () => base44.entities.PatientAlert.filter({ status: 'active' }, '-created_date', 50),
     initialData: [],
     refetchInterval: 60000,
-    enabled: !!currentUser,
+    enabled: !!currentUser?.favorited_patients?.length,
   });
 
   // Filter alerts to only favorited patients
   const activeAlerts = React.useMemo(() => {
-    if (!currentUser?.favorited_patients) return [];
-    return allActiveAlerts.filter(alert => 
-      currentUser.favorited_patients.some(fav => fav.id === alert.patient_id)
-    );
+    if (!currentUser?.favorited_patients?.length) return [];
+    const favIds = new Set(currentUser.favorited_patients.map(f => f.id));
+    return allActiveAlerts.filter(alert => favIds.has(alert.patient_id));
   }, [allActiveAlerts, currentUser]);
 
   // Fetch pending tasks
@@ -142,9 +142,7 @@ export default function Layout({ children, currentPageName }) {
     enabled: !!currentUser?.email,
   });
 
-  const unreadMessageCount = messages.filter(m => 
-    m.recipients?.includes(currentUser?.email) && !m.read_by?.includes(currentUser?.email)
-  ).length;
+  const unreadMessageCount = messages.filter(m => !m.read_by?.includes(currentUser?.email)).length;
 
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
 
