@@ -603,7 +603,7 @@ export default function Layout({ children, currentPageName }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-16 md:pt-0 pb-24 md:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">
+      <main className="flex-1 overflow-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">
         <div className="p-3 sm:p-4 md:p-5 lg:p-6">
           <Breadcrumbs currentPageName={currentPageName} />
           {children}
