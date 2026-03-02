@@ -283,7 +283,7 @@ export default function Dashboard() {
 
         {/* Compliance Widget */}
         <div className="mb-6">
-          <ComplianceDashboardWidget />
+          <LazyComplianceDashboard />
         </div>
 
         {/* Offline Data Manager */}
