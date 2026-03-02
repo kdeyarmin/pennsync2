@@ -829,6 +829,13 @@ ${extras}`
               <AlertDescription className="text-green-800 text-sm">Note saved to patient chart.</AlertDescription>
             </Alert>
           )}
+
+          {/* AI Patient Summary from transcript */}
+          <PatientSummaryGenerator
+            patient={selectedPatient}
+            visitTranscript={roughNote}
+            visitType={visitType}
+          />
         </div>
       )}
     </div>
