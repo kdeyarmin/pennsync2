@@ -29,44 +29,30 @@ export default function SendFax() {
         </div>
 
         <Tabs defaultValue="upload" className="w-full" onValueChange={() => setSelectedFaxForAI(null)}>
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1">
-            <TabsTrigger value="upload" className="flex-col sm:flex-row gap-1 py-2 min-h-[44px]">
-              <Upload className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">Photo</span>
-            </TabsTrigger>
-            <TabsTrigger value="camera" className="flex-col sm:flex-row gap-1 py-2 min-h-[44px]">
-              <Smartphone className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">Camera</span>
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="flex-col sm:flex-row gap-1 py-2 min-h-[44px]">
-              <FileText className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">Doc</span>
-            </TabsTrigger>
-            <TabsTrigger value="search" className="hidden sm:flex flex-col lg:flex-row gap-1 py-2 min-h-[44px]">
-              <Search className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">Search</span>
-            </TabsTrigger>
-            <TabsTrigger value="history" className="hidden sm:flex flex-col lg:flex-row gap-1 py-2 min-h-[44px]">
-              <History className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">History</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="hidden lg:flex flex-col lg:flex-row gap-1 py-2 min-h-[44px]">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="hidden lg:flex flex-col lg:flex-row gap-1 py-2 min-h-[44px]">
-              <Activity className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">Activity</span>
-            </TabsTrigger>
-            <TabsTrigger value="priority" className="hidden lg:flex flex-col lg:flex-row gap-1 py-2 min-h-[44px]">
-              <Brain className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">AI Rules</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-assistant" disabled={!selectedFaxForAI} className="hidden lg:flex flex-col lg:flex-row gap-1 py-2 min-h-[44px]">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">AI</span>
-            </TabsTrigger>
-          </TabsList>
+          {/* Scrollable tab bar — works on all screen sizes */}
+          <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-1 scrollbar-hide">
+            <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+              {[
+                { value: "upload",       Icon: Upload,     label: "Photo"     },
+                { value: "camera",       Icon: Smartphone, label: "Camera"    },
+                { value: "documents",    Icon: FileText,   label: "Doc"       },
+                { value: "search",       Icon: Search,     label: "Search"    },
+                { value: "history",      Icon: History,    label: "History"   },
+                { value: "analytics",    Icon: TrendingUp, label: "Analytics" },
+                { value: "activity",     Icon: Activity,   label: "Activity"  },
+                { value: "priority",     Icon: Brain,      label: "AI Rules"  },
+              ].map(({ value, Icon, label }) => (
+                <TabsTrigger key={value} value={value} className="flex flex-col sm:flex-row items-center gap-1 px-3 py-2 min-h-[52px] sm:min-h-[44px] min-w-[60px] sm:min-w-0 text-xs sm:text-sm whitespace-nowrap">
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span>{label}</span>
+                </TabsTrigger>
+              ))}
+              <TabsTrigger value="ai-assistant" disabled={!selectedFaxForAI} className="flex flex-col sm:flex-row items-center gap-1 px-3 py-2 min-h-[52px] sm:min-h-[44px] min-w-[60px] sm:min-w-0 text-xs sm:text-sm whitespace-nowrap">
+                <Sparkles className="w-4 h-4 flex-shrink-0" />
+                <span>AI</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="upload" className="mt-4 sm:mt-6">
             <PhotoUploadFaxSender />
