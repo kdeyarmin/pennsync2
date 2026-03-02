@@ -14,25 +14,24 @@ import { isValid } from "date-fns";
 import ProactiveClinicalTaskGenerator from "../components/tasks/ProactiveClinicalTaskGenerator";
 import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
 
-import RealTimePatientAlerts from "../components/dashboard/RealTimePatientAlerts";
-import PendingReferralsWidget from "../components/referral/PendingReferralsWidget";
-import HighRiskPatientsWidget from "../components/dashboard/HighRiskPatientsWidget";
-
-import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
-import IntelligentTaskPrioritization from "../components/tasks/IntelligentTaskPrioritization";
-import NurseRegulatoryAlerts from "../components/compliance/NurseRegulatoryAlerts";
-import PDGMPredictiveAnalytics from "../components/pdgm/PDGMPredictiveAnalytics";
-import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
-import AITrainingRecommendations from "../components/training/AITrainingRecommendations";
+// Critical above-the-fold components — eager loaded
 import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
+import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSupport";
 import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
 import AnnouncementsWidget from "../components/dashboard/AnnouncementsWidget";
-import { calculateNurseStats } from "@/components/utils/statsCalculator";
-import OfflineDataManager from "../components/mobile/OfflineDataManager";
-import RiskAlertWidget from "../components/alerts/RiskAlertWidget";
 import DashboardSkeleton from "../components/loading/DashboardSkeleton";
-import TopTemplatesWidget from "../components/clinical/TopTemplatesWidget";
+import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
+import { calculateNurseStats } from "@/components/utils/statsCalculator";
+
+// Non-critical below-the-fold components — lazy loaded
+const HighRiskPatientsWidget    = lazy(() => import("../components/dashboard/HighRiskPatientsWidget"));
+const PendingReferralsWidget    = lazy(() => import("../components/referral/PendingReferralsWidget"));
+const RealTimePatientAlerts     = lazy(() => import("../components/dashboard/RealTimePatientAlerts"));
+const TopTemplatesWidget        = lazy(() => import("../components/clinical/TopTemplatesWidget"));
+const NurseRegulatoryAlerts     = lazy(() => import("../components/compliance/NurseRegulatoryAlerts"));
+const ComplianceDashboardWidget = lazy(() => import("../components/compliance/ComplianceDashboardWidget"));
+const OfflineDataManager        = lazy(() => import("../components/mobile/OfflineDataManager"));
 
 
 export default function Dashboard() {
