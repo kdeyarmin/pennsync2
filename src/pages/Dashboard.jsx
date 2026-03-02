@@ -91,30 +91,6 @@ export default function Dashboard() {
     console.error('Dashboard data loading error:', visitsError || patientsError);
   }
 
-  const getStatusColor = (status) => {
-    const colors = {
-      scheduled: "bg-blue-100 text-blue-800 border-blue-200",
-      in_progress: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      completed: "bg-green-100 text-green-800 border-green-200",
-      cancelled: "bg-gray-100 text-gray-800 border-gray-200"
-    };
-    return colors[status] || colors.scheduled;
-  };
-
-  const getVisitTypeLabel = (type) => {
-    const labels = {
-      skilled_nursing: "Skilled Nursing",
-      admission: "Admission",
-      recertification: "Recertification",
-      discharge: "Discharge",
-      routine_visit: "Routine Visit",
-      prn: "PRN Visit"
-    };
-    return labels[type] || type;
-  };
-
-
-
   const stats = useMemo(() => {
     if (!currentUser?.email) {
       return { noteConversions: 0, timeSavedDisplay: '0 hrs', noteEnhancements: { total: 0 } };

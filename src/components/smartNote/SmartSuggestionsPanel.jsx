@@ -15,7 +15,7 @@ const CATEGORY_COLORS = {
 export default function SmartSuggestionsPanel({ patient, visitType, onInsert }) {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [generated, setGenerated] = useState(false);
 
   const generateSuggestions = async () => {
