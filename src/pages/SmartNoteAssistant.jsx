@@ -532,12 +532,13 @@ ${extras}`
 
       {/* ── STEP 1: WRITE ────────────────────────────────────────────────── */}
       {step === 1 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
+          {/* Patient + Visit Type row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Patient (optional)</label>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Patient (optional — enables AI risk analysis)</label>
               <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-white h-11">
                   <SelectValue placeholder="Select patient..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -550,9 +551,9 @@ ${extras}`
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Visit Type</label>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Visit Type</label>
               <Select value={visitType} onValueChange={setVisitType}>
-                <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-white h-11"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {VISIT_TYPES.map(v => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}
                 </SelectContent>
@@ -566,64 +567,65 @@ ${extras}`
               <span>
                 <strong>{selectedPatient.first_name} {selectedPatient.last_name}</strong>
                 {selectedPatient.primary_diagnosis ? ` · ${selectedPatient.primary_diagnosis}` : ""}
-                {selectedPatient.current_medications?.length > 0 && ` · ${selectedPatient.current_medications.length} medications`}
+                {selectedPatient.current_medications?.length > 0 && ` · ${selectedPatient.current_medications.length} meds`}
                 {selectedPatient.functional_status?.fall_risk === "high" && <span className="ml-2 text-red-600 font-semibold">⚠ High Fall Risk</span>}
               </span>
             </div>
           )}
 
-          <Card className="border-2 border-indigo-300 shadow-md">
-            <CardHeader className="py-3 bg-gradient-to-r from-indigo-50 to-purple-50">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
-                Write your rough notes or bullet points
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2">
-              <textarea
-                value={roughNote}
-                onChange={e => setRoughNote(e.target.value)}
-                placeholder={`Write bullet points or rough sentences. AI will review for compliance, flag safety risks, and build the full note.\n\nExamples:\n• pt c/o SOB with exertion, uses walker at home\n• BP 150/92, HR 88, O2 94% RA\n• wound on R heel 2x3cm, pink granulation, no odor\n• taught compression stocking use, pt verbalized understanding\n• fall risk high, clutter in hallway, discussed with family\n• on warfarin, last INR not checked in 6 weeks`}
-                className="w-full min-h-[360px] text-base border-0 rounded-lg px-3 py-2.5 focus:ring-0 bg-white font-mono resize-none outline-none"
-                spellCheck={false}
-              />
-            </CardContent>
-          </Card>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant={listening ? "destructive" : "outline"}
-              size="sm"
-              onClick={listening ? stopDictation : startDictation}
-              className="gap-1.5 min-h-[44px]"
-            >
-              {listening ? <><MicOff className="w-4 h-4" /> Stop</> : <><Mic className="w-4 h-4" /> Dictate</>}
-            </Button>
-            {listening && (
-              <div className="flex items-center gap-1.5 text-red-600 text-sm animate-pulse">
-                <div className="w-2 h-2 bg-red-500 rounded-full" /> Recording...
+          {/* Main note area */}
+          <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+              <span className="text-sm font-semibold text-indigo-800 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" /> Rough Notes
+              </span>
+              <div className="flex items-center gap-2">
+                {listening && (
+                  <span className="flex items-center gap-1 text-red-600 text-xs font-medium animate-pulse">
+                    <div className="w-2 h-2 bg-red-500 rounded-full" /> Recording...
+                  </span>
+                )}
+                <Button
+                  variant={listening ? "destructive" : "ghost"}
+                  size="sm"
+                  onClick={listening ? stopDictation : startDictation}
+                  className="h-8 gap-1.5 text-xs"
+                >
+                  {listening ? <><MicOff className="w-3.5 h-3.5" /> Stop</> : <><Mic className="w-3.5 h-3.5" /> Dictate</>}
+                </Button>
               </div>
-            )}
-            <div className="flex-1" />
-            <span className={`text-xs ${roughNote.length >= 20 ? "text-green-600" : "text-gray-400"}`}>{roughNote.length} chars</span>
-            <Button
-              onClick={analyzeNote}
-              disabled={roughNote.trim().length < 20}
-              className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px] gap-2"
-            >
-              <Sparkles className="w-4 h-4" /> Analyze Note <ArrowRight className="w-4 h-4" />
-            </Button>
+            </div>
+            <textarea
+              value={roughNote}
+              onChange={e => setRoughNote(e.target.value)}
+              placeholder={`Write bullet points or rough sentences — AI builds the compliant note.\n\nExamples:\n• pt c/o SOB with exertion, uses walker at home\n• BP 150/92, HR 88, O2 94% RA\n• wound on R heel 2x3cm, pink granulation, no odor\n• taught compression stocking use, pt verbalized understanding\n• fall risk high, clutter in hallway, discussed with family\n• on warfarin, last INR not checked in 6 weeks`}
+              className="w-full min-h-[380px] text-base border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none"
+              spellCheck={false}
+            />
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100 bg-gray-50">
+              <span className={`text-xs ${roughNote.length >= 20 ? "text-green-600 font-medium" : "text-gray-400"}`}>
+                {roughNote.length < 20 ? `${20 - roughNote.length} more chars needed` : `${roughNote.length} chars — ready`}
+              </span>
+              <Button
+                onClick={analyzeNote}
+                disabled={roughNote.trim().length < 20}
+                className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 gap-2 font-semibold"
+              >
+                <Sparkles className="w-4 h-4" /> Analyze &amp; Review <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-            <p className="text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1"><HelpCircle className="w-3.5 h-3.5" /> Tips for best results:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-500">
-              <span>• Include vital signs with readings</span>
-              <span>• Note why patient can't leave home easily</span>
-              <span>• Mention what you taught the patient</span>
-              <span>• Describe wound size/appearance</span>
-              <span>• Note patient's response to care</span>
-              <span>• List current medications & adherence</span>
+          {/* Tips */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            <p className="text-xs font-semibold text-amber-800 mb-1.5 flex items-center gap-1"><HelpCircle className="w-3.5 h-3.5" /> Tips for a compliant note:</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-0.5 text-xs text-amber-700">
+              <span>• Vital signs with readings</span>
+              <span>• Why patient can't leave home</span>
+              <span>• What you taught the patient</span>
+              <span>• Wound size &amp; appearance</span>
+              <span>• Patient's response to care</span>
+              <span>• Medications &amp; adherence</span>
             </div>
           </div>
         </div>
