@@ -68,7 +68,7 @@ export default function Dashboard() {
 
   const { data: patients, error: patientsError } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-updated_date', 500),
+    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 200),
     initialData: [],
     staleTime: 300000,
   });
@@ -88,10 +88,11 @@ export default function Dashboard() {
   });
 
   const { data: noteConversions = [] } = useQuery({
-    queryKey: ['allNoteConversions'],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date', 500),
+    queryKey: ['myNoteConversions', currentUser?.email],
+    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser.email }, '-created_date', 200),
     initialData: [],
-    staleTime: 0,
+    staleTime: 300000,
+    enabled: !!currentUser?.email,
   });
 
   // Handle errors gracefully
@@ -152,7 +153,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
+    <div className="max-w-7xl mx-auto min-h-screen">
       {/* Welcome Banner */}
       <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border-none shadow-xl overflow-hidden">
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
@@ -298,9 +299,6 @@ export default function Dashboard() {
       <div className="mb-6">
         <OfflineDataManager />
       </div>
-
-      {/* Mobile Quick Actions */}
-      <MobileQuickActions />
 
     </div>
   );
