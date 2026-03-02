@@ -129,11 +129,9 @@ export default function Dashboard() {
     }
     
     // Filter for current user's enhancements
-    const userEnhancements = noteConversions.filter(nc => nc.nurse_email === currentUser.email);
-    
     return calculateNurseStats(currentUser.email, {
       visits,
-      noteConversions: userEnhancements,
+      noteConversions,
       dateRange: 30
     });
   }, [visits, noteConversions, currentUser]);
@@ -185,7 +183,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-xs sm:text-sm text-blue-600 font-medium mb-1">Note Enhancements</p>
                 <p className="text-2xl sm:text-3xl font-bold text-blue-900">
-                  {noteConversions.filter(nc => nc.nurse_email === currentUser?.email).length}
+                  {noteConversions.length}
                 </p>
               </div>
               <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-blue-400 flex-shrink-0" />
