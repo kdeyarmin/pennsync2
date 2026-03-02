@@ -574,6 +574,13 @@ ${extras}`
             </div>
           )}
 
+          {/* Smart Suggestions Panel */}
+          <SmartSuggestionsPanel
+            patient={selectedPatient}
+            visitType={visitType}
+            onInsert={(text) => setRoughNote(prev => prev ? prev + "\n• " + text : "• " + text)}
+          />
+
           {/* Main note area */}
           <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
