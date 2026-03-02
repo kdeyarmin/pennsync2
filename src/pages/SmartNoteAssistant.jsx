@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import SmartSuggestionsPanel from "../components/smartNote/SmartSuggestionsPanel";
+import PatientSummaryGenerator from "../components/smartNote/PatientSummaryGenerator";
 
 const VISIT_TYPES = [
   { value: "routine_visit", label: "Routine Visit" },
