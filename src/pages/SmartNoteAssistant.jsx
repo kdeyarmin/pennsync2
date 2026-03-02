@@ -565,6 +565,16 @@ export default function SmartNoteAssistant() {
             />
           )}
 
+          {selectedPatientId && roughNote.length >= 80 && !enhancedNote && (
+            <LiveDocumentationGapAnalyzer
+              roughNote={roughNote}
+              visitType={visitType}
+              diagnosis={finalDiagnosis}
+              patientData={selectedPatient}
+              onInsertPhrase={(phrase) => setRoughNote(prev => prev ? prev + '\n' + phrase : phrase)}
+            />
+          )}
+
           {roughNote.length >= 50 && !enhancedNote && (
             !recheckMode ? (
               <EnhancementStep
