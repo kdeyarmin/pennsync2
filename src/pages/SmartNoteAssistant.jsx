@@ -240,7 +240,6 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
           base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysis.compliance_score, status: analysis.compliance_score >= 90 ? "passed" : analysis.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
         ]);
         logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysis.overall_score });
-        queryClient.invalidateQueries({ queryKey: ["patientRecentVisits", patientId] });
       }
     } catch (err) {
       alert("Failed to build note. Please try again.");
