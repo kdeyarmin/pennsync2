@@ -11,8 +11,7 @@ import { createPageUrl } from "@/utils";
 import { Calendar, Clock, MapPin, User, Plus, CheckCircle2, AlertCircle, FileText, Clock as ClockIcon, Mic, Send } from "lucide-react";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import { isValid } from "date-fns";
-import ProactiveClinicalTaskGenerator from "../components/tasks/ProactiveClinicalTaskGenerator";
-import ComplianceDashboardWidget from "../components/compliance/ComplianceDashboardWidget";
+
 
 // Critical above-the-fold components — eager loaded
 import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
