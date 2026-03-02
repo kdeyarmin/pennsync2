@@ -767,50 +767,60 @@ ${extras}`
 
       {/* ── STEP 3: DONE ─────────────────────────────────────────────────── */}
       {step === 3 && (
-        <div className="space-y-4">
-          {/* Show any urgent clinical alerts at top of final step */}
+        <div className="space-y-3">
+          {/* Urgent reminders */}
           {immediateAlerts.length > 0 && (
             <Alert className="border-red-400 bg-red-50">
               <AlertTriangle className="w-4 h-4 text-red-600" />
               <AlertDescription className="text-red-900 text-sm">
-                <strong>Reminder:</strong> {immediateAlerts.length} urgent clinical alert{immediateAlerts.length > 1 ? "s were" : " was"} identified. Ensure appropriate follow-up actions have been taken.
+                <strong>Reminder:</strong> {immediateAlerts.length} urgent clinical alert{immediateAlerts.length > 1 ? "s were" : " was"} identified. Ensure appropriate follow-up actions have been taken before closing this visit.
               </AlertDescription>
             </Alert>
           )}
 
-          <Card className="border-2 border-green-400 shadow-xl">
-            <CardHeader className="py-4 bg-green-50">
-              <CardTitle className="flex items-center gap-2 text-green-800">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                Note Ready — Copy to EMR
-                {analysis && <Badge className="ml-auto bg-green-600 text-white">{analysis.overall_score}% compliant</Badge>}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 space-y-3">
-              <textarea
-                value={enhancedNote}
-                onChange={e => setEnhancedNote(e.target.value)}
-                className="w-full min-h-[500px] font-mono text-sm border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 bg-white resize-none"
-              />
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={handleCopy} className="flex-1 bg-green-600 hover:bg-green-700 min-h-[48px] text-base">
-                  {copied ? <><CheckCircle2 className="w-4 h-4 mr-2" /> Copied!</> : <><Copy className="w-4 h-4 mr-2" /> Copy to EMR</>}
-                </Button>
-                <Button variant="outline" className="flex-1 min-h-[48px]" onClick={() => { setStep(2); setEnhancedNote(""); }}>
-                  ← Back to Suggestions
-                </Button>
-                <Button variant="outline" className="flex-1 min-h-[48px]" onClick={handleReset}>
-                  <RotateCcw className="w-4 h-4 mr-2" /> New Note
-                </Button>
-              </div>
-              {savedVisitId && (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <AlertDescription className="text-green-800 text-sm">Note saved to patient chart.</AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
+          {/* Big copy CTA at top */}
+          <div className="flex items-center gap-3 bg-white border-2 border-green-400 rounded-xl px-4 py-3 shadow-sm">
+            <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-green-800">Note Ready!</p>
+              <p className="text-xs text-gray-500">Review below, then copy to your EMR</p>
+            </div>
+            {analysis && <Badge className="bg-green-600 text-white text-sm px-3 py-1">{analysis.overall_score}%</Badge>}
+            <Button onClick={handleCopy} className="bg-green-600 hover:bg-green-700 h-11 px-5 gap-2 font-bold text-base flex-shrink-0">
+              {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy to EMR</>}
+            </Button>
+          </div>
+
+          {/* Note text */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+              <span className="text-sm font-semibold text-gray-700">Medicare-Compliant Note</span>
+              <span className="text-xs text-gray-400">{enhancedNote.length} characters · editable</span>
+            </div>
+            <textarea
+              value={enhancedNote}
+              onChange={e => setEnhancedNote(e.target.value)}
+              className="w-full min-h-[480px] font-mono text-sm border-0 px-4 py-3 focus:ring-0 bg-white resize-none outline-none"
+            />
+            <div className="flex gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
+              <Button onClick={handleCopy} className="flex-1 bg-green-600 hover:bg-green-700 h-11 gap-2 font-semibold">
+                {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy to EMR</>}
+              </Button>
+              <Button variant="outline" className="h-11 px-4" onClick={() => { setStep(2); setEnhancedNote(""); }}>
+                ← Review
+              </Button>
+              <Button variant="outline" className="h-11 px-4" onClick={handleReset}>
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {savedVisitId && (
+            <Alert className="bg-green-50 border-green-200">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <AlertDescription className="text-green-800 text-sm">Note saved to patient chart.</AlertDescription>
+            </Alert>
+          )}
         </div>
       )}
     </div>
