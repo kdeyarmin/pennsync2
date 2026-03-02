@@ -21,6 +21,7 @@ import PatientSelectionStep from "../components/smartNote/PatientSelectionStep";
 import VitalsStep from "../components/smartNote/VitalsStep";
 import NotesStep from "../components/smartNote/NotesStep";
 import EnhancementStep from "../components/smartNote/EnhancementStep";
+import LiveDocumentationGapAnalyzer from "../components/smartNote/LiveDocumentationGapAnalyzer";
 
 const commonDiagnoses = [
   "CHF (Congestive Heart Failure)",
