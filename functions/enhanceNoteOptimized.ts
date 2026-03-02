@@ -1,4 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import OpenAI from 'npm:openai';
+
+const openai = new OpenAI({
+  apiKey: Deno.env.get("OPENAI_API_KEY"),
+});
 
 Deno.serve(async (req) => {
   try {
@@ -9,7 +14,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { 
+    const {
       roughNote,
       patientId,
       visitType,
@@ -38,285 +43,255 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
 
-    // Build comprehensive context
-    const contextPrompt = `
+    const patientAge = patientData.date_of_birth
+      ? Math.floor((new Date() - new Date(patientData.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))
+      : 'Unknown';
+
+    const contextBlock = `
 PATIENT CONTEXT:
 - Name: ${patientData.first_name} ${patientData.last_name}
-- Primary Diagnosis: ${patientData.primary_diagnosis || diagnosis}
+- Age: ${patientAge}
+- Primary Diagnosis: ${patientData.primary_diagnosis || diagnosis || 'Not specified'}
 - Secondary Diagnoses: ${patientData.secondary_diagnoses?.join(', ') || 'None'}
-- Allergies: ${patientData.allergies || 'None'}
-- Current Medications: ${patientData.current_medications?.map(m => m.name).slice(0, 5).join(', ') || 'None'}
-- Age: ${patientData.date_of_birth ? Math.floor((new Date() - new Date(patientData.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}
+- Allergies: ${patientData.allergies || 'NKDA'}
+- Current Medications: ${patientData.current_medications?.map(m => m.name).slice(0, 8).join(', ') || 'See medication list'}
 
 VISIT DETAILS:
 - Visit Type: ${visitType}
 - Visit Date: ${visitDate}
 - Documenting Nurse: ${nurseType}
-- Vitals: ${JSON.stringify(vitalSigns)}
+- Vitals Recorded: ${JSON.stringify(vitalSigns)}
 
 ACTIVE CARE PLANS:
-${carePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n') || '- No active care plans'}
+${carePlans.map(cp => `- ${cp.problem}: Goal: ${cp.goal}`).join('\n') || '- No active care plans on file'}
 
-RECENT HISTORY:
-${recentVisits.length > 0 ? `Last visit ${recentVisits[0].visit_date}: ${recentVisits[0].visit_type}` : 'No previous visits'}
+RECENT VISIT HISTORY:
+${recentVisits.length > 0
+  ? recentVisits.map(v => `- ${v.visit_date} (${v.visit_type}): ${v.nurse_notes?.slice(0, 150) || 'No notes'}...`).join('\n')
+  : '- No previous visits on record'}
 
-${oasis ? `OASIS DATA:
+${oasis ? `OASIS FUNCTIONAL DATA:
 - Functional Level: ${oasis.pdgm_data?.functional_impairment_level || 'Not specified'}
 - Clinical Group: ${oasis.pdgm_data?.clinical_grouping || 'Not specified'}
 - Cognitive Status: ${oasis.extracted_data?.cognitive_functioning || 'Not assessed'}
-- ADL Limitations: ${oasis.extracted_data?.adl_limitations ? Object.keys(oasis.extracted_data.adl_limitations).join(', ') : 'None'}` : ''}
+- ADL Limitations: ${oasis.extracted_data?.adl_limitations ? Object.keys(oasis.extracted_data.adl_limitations).join(', ') : 'See OASIS'}` : ''}
 
-ROUGH NOTES:
+ROUGH NURSE NOTE TO REVIEW AND ENHANCE:
 ${roughNote}
 `;
 
-    // Run rough compliance check and enhancement in parallel
-    const [roughComplianceResult, enhancementResult] = await Promise.all([
-      base44.asServiceRole.integrations.Core.InvokeLLM({
-        prompt: `Analyze rough note for MEDICARE HOME HEALTH compliance per 42 CFR 484 Conditions of Participation.
+    const systemPrompt = `You are an expert Medicare home health compliance specialist and clinical documentation reviewer with deep knowledge of:
+- 42 CFR 484 Conditions of Participation (CoP)
+- CMS Home Health Benefit requirements
+- Medicare documentation standards for skilled nursing
+- OASIS data set requirements
+- PDGM clinical groupings and reimbursement
 
-${contextPrompt}
+Your role is to:
+1. Review rough nurse notes for regulatory, compliance, and Medicare standards
+2. Identify every missing required element
+3. Generate a fully Medicare-compliant clinical note that will withstand ADR (Additional Documentation Request) review
 
-MEDICARE HOME HEALTH DOCUMENTATION REQUIREMENTS (42 CFR 484):
+You must ensure EVERY note contains ALL required Medicare elements or it will be flagged for non-payment.`;
 
-MANDATORY ELEMENTS:
-1. HOMEBOUND STATUS (484.55(a)): Specific reasons patient cannot leave home without taxing effort
-2. SKILLED NEED (484.20): Why skilled nursing/therapy services are reasonable and necessary
-3. PHYSICIAN ORDERS: All services must be under physician's orders
-4. PLAN OF CARE: Documented goals and interventions
-5. COORDINATION: Communication with physician and other providers
-6. PATIENT/CAREGIVER INSTRUCTION: Education provided and comprehension verified
-7. SAFETY ASSESSMENT: Fall risk, medication safety, environment
-8. FUNCTIONAL STATUS: ADL/IADL limitations and assistance needs
-9. PATIENT RESPONSE: Response to treatment/interventions
-10. PROGRESS TOWARD GOALS: Documented improvement/decline
+    const complianceCheckPrompt = `${systemPrompt}
 
-PENNSYLVANIA REQUIREMENTS:
-- RN supervision for LPN visits
-- Infection control measures
-- Patient rights acknowledgment
+${contextBlock}
 
-Return JSON with compliance_score, missing_elements array, and specific_gaps array with element, reason, cop_reference, severity.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            compliance_score: { type: "number" },
-            missing_elements: { type: "array", items: { type: "string" } },
-            specific_gaps: { 
-              type: "array", 
-              items: { 
-                type: "object",
-                properties: {
-                  element: { type: "string" },
-                  reason: { type: "string" },
-                  cop_reference: { type: "string" },
-                  severity: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      }),
-      base44.asServiceRole.integrations.Core.InvokeLLM({
-        prompt: `Transform rough notes into MEDICARE HOME HEALTH COMPLIANT clinical narrative per 42 CFR 484.
+STEP 1 - MEDICARE COMPLIANCE AUDIT:
+Thoroughly analyze the rough note above against ALL of these mandatory Medicare Home Health documentation requirements per 42 CFR 484:
 
-${contextPrompt}
+MANDATORY ELEMENTS CHECKLIST:
+1. HOMEBOUND STATUS (42 CFR 484.55(a)) - Patient cannot leave home without considerable/taxing effort; specific physical limitations documented
+2. SKILLED NURSING NEED (42 CFR 484.20) - Why a licensed nurse (not aide/family) is required; clinical complexity documented
+3. PHYSICIAN ORDERS (42 CFR 484.60) - All services ordered by physician; orders acknowledged
+4. PLAN OF CARE ALIGNMENT (42 CFR 484.60) - Goals addressed; interventions match care plan
+5. PATIENT/CAREGIVER EDUCATION (42 CFR 484.60) - Specific teaching provided; teach-back or demonstration of comprehension documented
+6. SAFETY ASSESSMENT (42 CFR 484.80) - Fall risk, home hazards, medication safety, emergency plan
+7. FUNCTIONAL STATUS (42 CFR 484.55) - ADL/IADL current abilities with measurable data
+8. PATIENT RESPONSE TO TREATMENT (42 CFR 484.60) - Objective response to interventions; changes from last visit
+9. PROGRESS TOWARD GOALS - Measurable progress with objective data; or barriers documented
+10. COORDINATION OF CARE (42 CFR 484.60) - MD communication; interdisciplinary coordination
+11. VITAL SIGNS WITH CLINICAL INTERPRETATION - Not just numbers; clinical significance addressed
+12. MEDICATION REVIEW - Compliance, adverse effects, interactions noted
+13. CONDITION-SPECIFIC CLINICAL FINDINGS - Diagnosis-appropriate assessment documented
 
-CRITICAL MEDICARE CoP REQUIREMENTS (42 CFR 484):
+VISIT TYPE SPECIFIC (${visitType}):
+${visitType === 'admission' ? '- Comprehensive baseline assessment all body systems\n- Initial skilled need establishment\n- Complete medication reconciliation\n- Patient rights reviewed\n- Emergency plan established\n- Care plan goals set with patient/family input' : ''}
+${visitType === 'recertification' ? '- Progress toward each care plan goal with objective data\n- Functional status changes from admission baseline\n- Continued homebound status current justification\n- Updated teaching needs\n- Discharge planning initiated if appropriate' : ''}
+${visitType === 'discharge' ? '- Reason for discharge clearly stated\n- Goals met/partially met/not met with outcomes\n- Discharge instructions provided in writing\n- Follow-up appointments arranged\n- Patient verbalized understanding of self-care' : ''}
 
-1. HOMEBOUND STATUS (484.55(a)) - MANDATORY:
-   - Specific physical limitations (e.g., shortness of breath after 10 feet, severe pain, wheelchair-bound)
-   - Why leaving home requires considerable and taxing effort
-   - Assistance/supportive devices needed
-   - Infrequent absences for medical care or religious services noted if applicable
-   ${oasis ? `- OASIS functional level ${oasis.pdgm_data?.functional_impairment_level} requires documentation` : ''}
+Return a JSON object with:
+{
+  "compliance_score": <number 0-100>,
+  "missing_elements": [<array of missing element names>],
+  "specific_gaps": [
+    {
+      "element": "<element name>",
+      "reason": "<why it's missing or insufficient>",
+      "cop_reference": "<42 CFR 484.XX>",
+      "severity": "<critical|high|medium>"
+    }
+  ],
+  "strengths": [<array of well-documented elements>]
+}`;
 
-2. SKILLED NURSING NEED (484.20) - MANDATORY:
-   ${nurseType === 'RN' ? `RN SKILLED SERVICES INCLUDE:
-   - Comprehensive assessment requiring clinical judgment
-   - Complex medication management requiring nursing expertise
-   - Patient/caregiver teaching requiring professional skills
-   - Observation and assessment of unstable condition
-   - Wound care requiring sterile technique and clinical decisions
-   - Management of multi-system diseases
-   - Coordination of complex care with physician` : `LPN SKILLED SERVICES (Under RN Supervision per PA regulations):
-   - Specific skilled tasks per established care plan
-   - Medication administration requiring nursing judgment
-   - Wound care per protocol
-   - Implementation of teaching plan (not initial assessment/planning)
-   - Monitoring vital signs with clinical assessment
-   - Report significant changes to supervising RN`}
-   - Must explain WHY skilled professional needed (not just what was done)
-   - Unskilled care that family/aide could provide does NOT meet skilled criteria
+    const noteEnhancementPrompt = `${systemPrompt}
 
-3. PATIENT RESPONSE TO TREATMENT (484.60) - MANDATORY:
-   - Objective measurable response to interventions
-   - Changes from previous visit
-   - Patient/caregiver understanding demonstrated (teach-back)
-   - Modifications to care plan based on response
+${contextBlock}
 
-4. COORDINATION OF CARE (484.60):
-   - Physician communication documented (when applicable)
-   - Collaboration with other disciplines noted
-   - Medication reconciliation with physician orders
+STEP 2 - GENERATE FULLY MEDICARE-COMPLIANT CLINICAL NOTE:
 
-5. SAFETY ASSESSMENT (484.80):
-   - Fall risk factors and interventions
-   - Home safety hazards identified and addressed
-   - Emergency plan established
-   - Medication safety reviewed
+Using the rough note and all patient context above, generate a complete, Medicare-compliant home health nursing note that will pass ADR review and support reimbursement under PDGM.
 
-6. FUNCTIONAL STATUS & PROGRESS (484.55):
-   - Current ADL/IADL abilities
-   - Changes from baseline/previous visit
+MANDATORY REQUIREMENTS FOR THE FINAL NOTE:
+
+1. HOMEBOUND STATUS (42 CFR 484.55(a)) — MUST INCLUDE:
+   - Specific physical limitations preventing leaving home without taxing effort
+   - Assistive devices required (walker, wheelchair, O2, etc.)
+   - Distance/exertion limitations (e.g., "SOB after walking 10 feet on room air")
+   - Infrequent absence exceptions documented if applicable
+
+2. SKILLED NURSING NEED (42 CFR 484.20) — MUST INCLUDE:
+   ${nurseType === 'RN'
+     ? '- Clinical complexity requiring RN assessment and judgment\n   - Services that cannot be safely performed by untrained person\n   - Assessment, teaching, medication management, or wound care requiring professional skill'
+     : '- Specific skilled tasks performed under RN supervision per care plan\n   - PA state requirement: RN supervision documented\n   - Tasks requiring nursing judgment and licensure'}
+
+3. VITAL SIGNS WITH CLINICAL INTERPRETATION — include all recorded vitals and their clinical significance
+
+4. HEAD-TO-TOE / SYSTEM-SPECIFIC ASSESSMENT:
+${diagnosis?.toLowerCase().includes('chf') || diagnosis?.toLowerCase().includes('heart failure') ? `   CHF REQUIRED ELEMENTS:
+   - Daily weight and comparison to dry weight/previous weight
+   - Bilateral lower extremity edema (grade 0-4+)
+   - Lung sounds bilateral (clear, crackles location/quality)
+   - JVD presence/absence
+   - Orthopnea, PND symptoms
+   - Fluid restriction compliance
+   - Diuretic/ACE-I/beta-blocker compliance and response` : ''}
+${diagnosis?.toLowerCase().includes('copd') || diagnosis?.toLowerCase().includes('pulmonary') ? `   COPD REQUIRED ELEMENTS:
+   - O2 sat on room air AND prescribed O2 flow rate
+   - Respiratory rate and work of breathing
+   - Lung sounds bilateral (wheezes, rhonchi, diminished)
+   - Dyspnea level with specific activity/distance
+   - Inhaler technique observed
+   - O2 equipment safety
+   - Signs of exacerbation` : ''}
+${diagnosis?.toLowerCase().includes('diabet') ? `   DIABETES REQUIRED ELEMENTS:
+   - Blood glucose at visit and trend
+   - Diabetic foot exam: pedal pulses (DP/PT), capillary refill, skin between toes, monofilament sensation
+   - Peripheral neuropathy symptoms
+   - Glucose monitoring technique demonstrated
+   - Injection technique if applicable
+   - Hypoglycemia recognition/treatment verbalized
+   - Foot care compliance` : ''}
+${diagnosis?.toLowerCase().includes('wound') || diagnosis?.toLowerCase().includes('ulcer') || diagnosis?.toLowerCase().includes('pressure') ? `   WOUND CARE REQUIRED ELEMENTS:
+   - Measurements: length x width x depth in cm
+   - Wound bed: % granulation, slough, eschar
+   - Exudate: type, amount, odor
+   - Periwound skin condition
+   - Undermining/tunneling: clock face location and depth
+   - Treatment rendered: cleansing agent, dressing layers
+   - Pain before/during/after
+   - Infection signs assessed` : ''}
+${diagnosis?.toLowerCase().includes('stroke') || diagnosis?.toLowerCase().includes('cva') ? `   STROKE/CVA REQUIRED ELEMENTS:
+   - LOC and orientation (person/place/time)
+   - Speech quality (clear, slurred, aphasia type)
+   - Facial symmetry
+   - Motor strength bilateral UE/LE (0-5 scale)
+   - Gait and assistive device
+   - Swallowing safety
+   - Fall prevention measures` : ''}
+
+5. PATIENT/CAREGIVER EDUCATION — MUST INCLUDE:
+   - Specific topics taught this visit
+   - Teaching method (verbal, demonstration, written materials)
+   - Comprehension verified via teach-back or return demonstration
+   - Patient/caregiver verbalized understanding or demonstrated skill
+
+6. SAFETY ASSESSMENT — MUST INCLUDE:
+   - Fall risk level and specific interventions
+   - Home environment safety
+   - Medication safety
+   - Emergency plan
+
+7. PATIENT RESPONSE TO TREATMENT — MUST INCLUDE:
+   - Objective response to interventions
+   - Comparison to previous visit
    - Progress toward care plan goals with measurable data
-   - Barriers to progress identified
+   - Barriers if applicable
 
-7. PATIENT/CAREGIVER EDUCATION (484.60):
-   - Specific teaching provided
-   - Methods used for education
-   - Comprehension verified via teach-back or demonstration
-   - Written materials provided
+8. PLAN / COORDINATION:
+   - Physician notification if applicable
+   - Next visit plan
+   - Any referrals or coordination
 
-CONDITION-SPECIFIC REQUIREMENTS:
-${diagnosis?.includes('CHF') || diagnosis?.includes('Heart Failure') ? `CHF DOCUMENTATION:
-- Daily weight trend and comparison to dry weight
-- Bilateral lower extremity edema (grade 0-4+, location)
-- Lung sounds bilateral (crackles, wheezes location)
-- Jugular venous distension presence/absence
-- Orthopnea, paroxysmal nocturnal dyspnea
-- Fluid restriction compliance
-- Medication compliance (diuretics, ACE-I, beta blockers)
-- Patient knowledge of weight monitoring and when to call MD` : ''}
-
-${diagnosis?.includes('COPD') || diagnosis?.includes('Pulmonary') ? `COPD DOCUMENTATION:
-- Oxygen saturation on room air AND on prescribed O2
-- Respiratory rate, work of breathing, accessory muscle use
-- Lung sounds bilateral (wheezes, rhonchi, diminished sounds)
-- Dyspnea level with activity (specific distance/activity)
-- Inhaler technique demonstration and competency
-- Oxygen equipment safety teaching
-- Signs of exacerbation recognized by patient` : ''}
-
-${diagnosis?.includes('Diabetes') || diagnosis?.includes('Diabetic') ? `DIABETES DOCUMENTATION:
-- Blood glucose reading at visit with trend over past week
-- Diabetic foot exam: pedal pulses (DP, PT), capillary refill, skin integrity between toes, sensation test (monofilament)
-- Peripheral neuropathy assessment (numbness, tingling, pain)
-- Patient demonstrates proper glucose monitoring technique
-- Medication administration technique verified
-- Hypoglycemia recognition and treatment plan understood
-- Foot care education and comprehension` : ''}
-
-${diagnosis?.includes('Wound') || diagnosis?.includes('Ulcer') || diagnosis?.includes('Pressure') ? `WOUND DOCUMENTATION:
-- Wound measurements (length x width x depth in cm)
-- Wound bed: % granulation, % slough, % eschar
-- Exudate: type (serous/serosanguinous/purulent), amount (scant/moderate/copious), odor
-- Periwound skin: intact, macerated, erythema, induration
-- Undermining or tunneling: location (clock face) and depth
-- Treatment rendered: cleansing agent, dressing type and layers
-- Pain level before/during/after treatment
-- Signs of infection assessed (increased warmth, erythema, purulent drainage, fever)
-- Patient/caregiver ability to assist with dressing changes` : ''}
-
-${diagnosis?.includes('Stroke') || diagnosis?.includes('CVA') ? `STROKE DOCUMENTATION:
-${nurseType === 'RN' ? `- Level of consciousness: alert, oriented x 3 (person/place/time)
-- Speech: clear, slurred, aphasia (expressive/receptive)
-- Facial symmetry: equal bilaterally or facial droop noted
-- Motor strength: bilateral upper/lower extremities (0-5 scale)
-- Sensation: intact or deficits noted bilateral
-- Coordination: finger to nose, heel to shin tests
-- Gait: steady, unsteady, assistive device used
-- Swallowing safety: choking risk, diet modifications` : `- Level of consciousness and orientation observed
-- Speech clarity during interaction
-- Observed mobility and transfers
-- Assistance provided with ADLs per care plan
-- Swallowing observed during meal/medication (report concerns to RN)
-- Safety measures maintained (fall risk)
-- Patient response to therapy exercises per plan`}
-- Fall prevention measures implemented and reinforced` : ''}
-
-VISIT TYPE-SPECIFIC REQUIREMENTS:
-${visitType === 'admission' || visitType === 'start_of_care' ? `START OF CARE VISIT MANDATORY ELEMENTS:
-- Comprehensive initial assessment all body systems
-- Admission source (home, hospital, SNF) documented
-- Complete medication reconciliation with physician orders
-- Initial skilled need establishment
-- Initial homebound justification
-- Baseline functional status (ADLs/IADLs)
-- Initial safety assessment
-- Patient rights reviewed and acknowledged
-- Emergency plan established
-- Care plan goals established with patient/family input
-- Initial patient/caregiver teaching plan` : ''}
-
-${visitType === 'recertification' ? `RECERTIFICATION VISIT MANDATORY ELEMENTS:
-- Progress toward each care plan goal with objective data
-- Functional status changes from admission baseline
-- Continued homebound status with current justification
-- Continued skilled need documented
-- Medication review and reconciliation
-- Ongoing safety assessment
-- Updated patient/caregiver teaching needs
-- Plan for continued services or discharge planning initiated` : ''}
-
-${visitType === 'discharge' ? `DISCHARGE VISIT MANDATORY ELEMENTS:
-- Reason for discharge clearly stated
-- Goals met/partially met/not met with objective outcomes
-- Functional status at discharge vs admission
-- Patient/caregiver education completed and comprehension verified
-- Discharge instructions provided in writing
-- Follow-up appointments arranged
-- Physician notification of discharge
-- Equipment/supplies status (DME removal, remaining supplies)
-- Safety measures in place for independent management
-- Emergency contact information provided
-- Patient verbalized understanding of self-care` : ''}
-
-FORMATTING REQUIREMENTS:
-- Complete sentences in narrative paragraph format
+FORMATTING STANDARDS:
+- Professional clinical narrative in paragraph format
 - Past tense for completed actions
-- Objective, measurable terminology (avoid vague terms like "stable" or "doing well")
-- Specific clinical findings with measurements
-- Professional medical terminology
-- No abbreviations except standard medical abbreviations
-- Document time in/time out if visit >60 minutes
+- Objective, measurable language (NO vague terms like "stable," "doing well," "no complaints")
+- Use clinical measurements and specifics
+- Standard medical abbreviations only
+- If rough note is missing required data, insert [PLACEHOLDER: description] for nurse to complete
+- Write ONLY the clinical note — no meta-commentary, no compliance notes, no instructions
 
-CRITICAL - DOCUMENTATION STANDARDS:
-- Write ONLY the clinical narrative as it would appear in patient chart
-- NO meta-commentary about documentation requirements
-- NO statements about compliance or reimbursement
-- Focus on WHAT was observed, assessed, done, taught, and patient response
-- If rough notes lack required elements, ADD them with [bracket placeholders] for nurse completion
+Return a JSON object with:
+{
+  "enhanced_note": "<full clinical note text>",
+  "quality_score": <number 0-100>,
+  "elements_added": [<list of Medicare elements added that were missing>],
+  "placeholders_added": [<list of placeholders inserted for nurse to complete>]
+}`;
 
-Return JSON with enhanced_note and quality_score (0-100).`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            enhanced_note: { type: "string" },
-            quality_score: { type: "number" }
-          }
-        }
+    // Run compliance check and note enhancement in parallel using ChatGPT
+    const [complianceResponse, enhancementResponse] = await Promise.all([
+      openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a Medicare home health compliance expert. Always return valid JSON." },
+          { role: "user", content: complianceCheckPrompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.2
+      }),
+      openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are an expert Medicare home health clinical documentation specialist. Always return valid JSON." },
+          { role: "user", content: noteEnhancementPrompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3
       })
     ]);
 
-    // Check enhanced compliance
-    const enhancedComplianceResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `Analyze enhanced note for compliance score.
+    const roughComplianceResult = JSON.parse(complianceResponse.choices[0].message.content);
+    const enhancementResult = JSON.parse(enhancementResponse.choices[0].message.content);
 
-ENHANCED NOTE:
-${enhancementResult.enhanced_note}
+    // Run enhanced note compliance check with ChatGPT
+    const enhancedComplianceResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "You are a Medicare home health compliance auditor. Return valid JSON." },
+        { role: "user", content: `Audit this enhanced home health nursing note for Medicare compliance per 42 CFR 484.
 
 VISIT TYPE: ${visitType}
+DIAGNOSIS: ${diagnosis || patientData.primary_diagnosis}
 
-Return JSON with compliance_score and compliant_elements.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          compliance_score: { type: "number" },
-          compliant_elements: { type: "array", items: { type: "string" } }
-        }
-      }
+NOTE TO AUDIT:
+${enhancementResult.enhanced_note}
+
+Return JSON:
+{
+  "compliance_score": <number 0-100>,
+  "compliant_elements": [<list of all compliant Medicare elements present>],
+  "remaining_gaps": [<any still-missing elements>]
+}` }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.1
     });
+
+    const enhancedComplianceResult = JSON.parse(enhancedComplianceResponse.choices[0].message.content);
 
     // Save to patient history
     const currentHistory = patientData.enhanced_notes_history || [];
@@ -332,14 +307,13 @@ Return JSON with compliance_score and compliant_elements.`,
         nurse_email: user.email,
         vital_signs: vitalSigns
       }
-    ].slice(-10); // Keep last 10
+    ].slice(-10);
 
     await base44.asServiceRole.entities.Patient.update(patientId, {
       enhanced_notes_history: updatedHistory
     });
 
-    // Track conversion
-    const complianceImprovement = enhancedComplianceResult.compliance_score - roughComplianceResult.compliance_score;
+    const complianceImprovement = (enhancedComplianceResult.compliance_score || 0) - (roughComplianceResult.compliance_score || 0);
 
     await base44.asServiceRole.entities.NoteConversion.create({
       nurse_email: user.email,
@@ -358,17 +332,19 @@ Return JSON with compliance_score and compliant_elements.`,
       success: true,
       enhanced_note: enhancementResult.enhanced_note,
       quality_score: enhancementResult.quality_score,
+      elements_added: enhancementResult.elements_added || [],
+      placeholders_added: enhancementResult.placeholders_added || [],
       rough_compliance: roughComplianceResult,
       enhanced_compliance: enhancedComplianceResult,
       compliance_improvement: complianceImprovement,
-      documentation_gaps: roughComplianceResult.specific_gaps
+      documentation_gaps: roughComplianceResult.specific_gaps || []
     });
 
   } catch (error) {
     console.error('Note enhancement error:', error);
-    return Response.json({ 
+    return Response.json({
       error: error.message,
-      success: false 
+      success: false
     }, { status: 500 });
   }
 });
