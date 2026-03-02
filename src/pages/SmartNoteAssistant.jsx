@@ -504,27 +504,29 @@ ${extras}`
   const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-5">
+    <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4">
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Smart Note Assistant</h1>
-          <p className="text-sm text-gray-500 hidden sm:block">Write rough notes → AI reviews & flags risks → select suggestions → copy to EMR</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-indigo-600" /> Smart Note Assistant
+          </h1>
+          <p className="text-sm text-gray-500">Write rough notes → AI reviews → copy compliant note to EMR</p>
         </div>
         {step > 1 && (
-          <Button variant="ghost" size="sm" onClick={handleReset} className="text-gray-500 gap-1">
+          <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5 text-gray-600">
             <RotateCcw className="w-4 h-4" /> New Note
           </Button>
         )}
       </div>
 
       {/* Step indicator */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-1 sm:gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
         <StepBadge n={1} label="Write Notes"     active={step === 1} done={step > 1} />
-        <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+        <div className="flex-1 h-0.5 bg-gray-200 mx-1"><div className={`h-full transition-all duration-500 ${step > 1 ? "bg-green-400 w-full" : "w-0"}`}/></div>
         <StepBadge n={2} label="Review & Select" active={step === 2} done={step > 2} />
-        <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+        <div className="flex-1 h-0.5 bg-gray-200 mx-1"><div className={`h-full transition-all duration-500 ${step > 2 ? "bg-green-400 w-full" : "w-0"}`}/></div>
         <StepBadge n={3} label="Copy to EMR"     active={step === 3} done={false} />
       </div>
 
