@@ -1,7 +1,7 @@
 import React, { useMemo, lazy, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Clock, User, CheckCircle2, FileText, Mic, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +29,7 @@ const OfflineDataManager        = lazy(() => import("../components/mobile/Offlin
 
 
 export default function Dashboard() {
-    const navigate = useNavigate();
+
 
     const { data: currentUser } = useQuery({
       queryKey: ['currentUser'],
