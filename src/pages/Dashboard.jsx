@@ -206,47 +206,25 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Action Buttons */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Link to={createPageUrl("SmartNoteAssistant")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-blue-200 hover:border-blue-400 active:scale-95">
-            <CardContent className="p-4 sm:p-6 text-center touch-target">
-              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Smart Notes</h3>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to={createPageUrl("SendFax")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-indigo-200 hover:border-indigo-400 active:scale-95">
-            <CardContent className="p-4 sm:p-6 text-center touch-target">
-              <Send className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Send Fax</h3>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to={createPageUrl("CarePlanManagement")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-green-200 hover:border-green-400 active:scale-95">
-            <CardContent className="p-4 sm:p-6 text-center touch-target">
-              <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Care Plans</h3>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to={createPageUrl("PatientEducationHub")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-purple-200 hover:border-purple-400 active:scale-95">
-            <CardContent className="p-4 sm:p-6 text-center touch-target">
-              <User className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Patient Education</h3>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to={createPageUrl("VisitScribe")}>
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-orange-200 hover:border-orange-400 active:scale-95">
-            <CardContent className="p-4 sm:p-6 text-center touch-target">
-              <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">Visit Scribe</h3>
-            </CardContent>
-          </Card>
-        </Link>
+      <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-4 sm:mb-6">
+        {[
+          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,    bg: "bg-blue-50",   border: "border-blue-200 hover:border-blue-400",   icon: "text-blue-600"   },
+          { page: "SendFax",            label: "Send Fax",          Icon: Send,        bg: "bg-indigo-50", border: "border-indigo-200 hover:border-indigo-400", icon: "text-indigo-600" },
+          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,bg: "bg-green-50",  border: "border-green-200 hover:border-green-400",  icon: "text-green-600"  },
+          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,        bg: "bg-purple-50", border: "border-purple-200 hover:border-purple-400", icon: "text-purple-600" },
+          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,         bg: "bg-orange-50", border: "border-orange-200 hover:border-orange-400", icon: "text-orange-600" },
+        ].map(({ page, label, Icon, bg, border, icon }) => (
+          <Link key={page} to={createPageUrl(page)}>
+            <Card className={`hover:shadow-md transition-all cursor-pointer border-2 ${border} ${bg} active:scale-95 h-full`}>
+              <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-1.5 min-h-[80px] sm:min-h-[90px]">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white shadow-sm`}>
+                  <Icon className={`w-5 h-5 sm:w-5 sm:h-5 ${icon}`} />
+                </div>
+                <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight">{label}</h3>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
       {/* Dashboard Widgets */}
