@@ -89,7 +89,7 @@ export default function Dashboard() {
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['allNoteConversions'],
-    queryFn: () => base44.entities.NoteConversion.list('-created_date', 10000),
+    queryFn: () => base44.entities.NoteConversion.list('-created_date', 500),
     initialData: [],
     staleTime: 0,
   });
@@ -98,10 +98,6 @@ export default function Dashboard() {
   if (visitsError || patientsError) {
     console.error('Dashboard data loading error:', visitsError || patientsError);
   }
-
-  const getPatient = (patientId) => {
-    return patients.find(p => p.id === patientId);
-  };
 
   const getStatusColor = (status) => {
     const colors = {

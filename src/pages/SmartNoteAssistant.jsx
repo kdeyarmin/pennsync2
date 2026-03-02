@@ -499,7 +499,6 @@ ${extras}`
   };
 
   const immediateAlerts = clinicalAlerts.filter(a => a.urgency === "immediate");
-  const otherAlerts     = clinicalAlerts.filter(a => a.urgency !== "immediate");
   const criticalFindings = analysis?.findings?.filter(f => f.severity === "critical").length || 0;
   const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
 
