@@ -95,7 +95,6 @@ function AlertCard({ alert }) {
 }
 
 export default function SmartNoteAssistant() {
-  const queryClient = useQueryClient();
   const [patientId, setPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
   const [visitDate] = useState(todayEastern());
