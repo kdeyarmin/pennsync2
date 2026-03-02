@@ -71,17 +71,17 @@ export default function Dashboard() {
   });
 
   const { data: carePlans = [] } = useQuery({
-    queryKey: ['allCarePlans'],
-    queryFn: () => base44.entities.CarePlan.list('-updated_date', 200),
+    queryKey: ['activeCarePlans'],
+    queryFn: () => base44.entities.CarePlan.filter({ status: 'active' }, '-updated_date', 100),
     initialData: [],
     staleTime: 300000,
   });
 
   const { data: incidents = [] } = useQuery({
     queryKey: ['recentIncidents'],
-    queryFn: () => base44.entities.Incident.filter({}, '-incident_date', 50),
+    queryFn: () => base44.entities.Incident.list('-incident_date', 30),
     initialData: [],
-    staleTime: 180000,
+    staleTime: 300000,
   });
 
   const { data: noteConversions = [] } = useQuery({
