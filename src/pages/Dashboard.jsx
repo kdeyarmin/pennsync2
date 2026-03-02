@@ -254,46 +254,48 @@ export default function Dashboard() {
 
 
 
-      {/* High-Risk Patients Alert */}
-      <div className="mb-6">
-        <HighRiskPatientsWidget />
-      </div>
+      <Suspense fallback={null}>
+        {/* High-Risk Patients Alert */}
+        <div className="mb-6">
+          <HighRiskPatientsWidget />
+        </div>
 
-      {/* Pending Referrals */}
-      <div className="mb-6">
-        <PendingReferralsWidget />
-      </div>
+        {/* Pending Referrals */}
+        <div className="mb-6">
+          <PendingReferralsWidget />
+        </div>
 
-      {/* Real-time Patient Alerts */}
-      <div className="mb-6">
-        <RealTimePatientAlerts
-          patients={patients}
-          visits={visits}
-          carePlans={carePlans}
-          incidents={incidents}
-          currentUser={currentUser}
-        />
-      </div>
+        {/* Real-time Patient Alerts */}
+        <div className="mb-6">
+          <RealTimePatientAlerts
+            patients={patients}
+            visits={visits}
+            carePlans={carePlans}
+            incidents={incidents}
+            currentUser={currentUser}
+          />
+        </div>
 
-      {/* Top Clinical Templates */}
-      <div className="mb-6">
-        <TopTemplatesWidget />
-      </div>
+        {/* Top Clinical Templates */}
+        <div className="mb-6">
+          <TopTemplatesWidget />
+        </div>
 
-      {/* Regulatory Alerts for Nurses */}
-      <div className="mb-6">
-        <NurseRegulatoryAlerts nurseEmail={currentUser?.email} compact={true} />
-      </div>
+        {/* Regulatory Alerts for Nurses */}
+        <div className="mb-6">
+          <NurseRegulatoryAlerts nurseEmail={currentUser?.email} compact={true} />
+        </div>
 
+        {/* Compliance Widget */}
+        <div className="mb-6">
+          <ComplianceDashboardWidget />
+        </div>
 
-
-      {/* Add Compliance Widget */}
-      <ComplianceDashboardWidget />
-
-      {/* Offline Data Manager */}
-      <div className="mb-6">
-        <OfflineDataManager />
-      </div>
+        {/* Offline Data Manager */}
+        <div className="mb-6">
+          <OfflineDataManager />
+        </div>
+      </Suspense>
 
     </div>
   );
