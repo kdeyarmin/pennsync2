@@ -30,7 +30,6 @@ const OfflineDataManager        = lazy(() => import("../components/mobile/Offlin
 
 export default function Dashboard() {
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
 
     const { data: currentUser } = useQuery({
       queryKey: ['currentUser'],
