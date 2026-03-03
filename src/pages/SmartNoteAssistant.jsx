@@ -343,7 +343,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
   const ready = note.trim().length >= 20;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
+    <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3 sm:space-y-4">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
@@ -364,13 +364,13 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
       <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm gap-1">
         <button
           onClick={() => setActiveTab("write")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "write" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-3 sm:py-2 rounded-lg text-sm font-semibold transition-all min-h-[48px] sm:min-h-0 ${activeTab === "write" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
         >
           <Sparkles className="w-4 h-4" /> Note Builder
         </button>
         <button
           onClick={() => setActiveTab("summary")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "summary" ? "bg-purple-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-3 sm:py-2 rounded-lg text-sm font-semibold transition-all min-h-[48px] sm:min-h-0 ${activeTab === "summary" ? "bg-purple-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
         >
           <FileText className="w-4 h-4" /> Visit Summaries
         </button>
@@ -465,12 +465,12 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
                 <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Visit Type</label>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {VISIT_TYPES.map(v => (
                   <button
                     key={v.value}
                     onClick={() => setVisitType(v.value)}
-                    className={`py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight ${
+                    className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${
                       visitType === v.value
                         ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200"
                         : "bg-gray-50 border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
@@ -520,14 +520,14 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder={"Jot bullet points or rough sentences — AI does the rest.\n\n• BP 148/90, HR 82, O2 95% RA\n• pt c/o SOB with exertion, uses walker\n• wound on R heel 2×3 cm, granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter in hallway, discussed w/ family"}
-              className="w-full min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed"
+              className="w-full min-h-[220px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed"
               spellCheck={false}
             />
-            <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100 bg-gray-50">
-              <span className={`text-xs ${ready ? "text-green-600 font-medium" : "text-gray-400"}`}>
-                {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50 gap-3">
+              <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-gray-400"}`}>
+                {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more needed`}
               </span>
-              <Button onClick={analyze} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-9 px-5 gap-1.5 text-sm font-semibold">
+              <Button onClick={analyze} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
                 <Sparkles className="w-4 h-4" /> Analyze <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -624,7 +624,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
                 </div>
               )}
 
-              <Button onClick={build} disabled={building} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 h-12 text-base font-semibold">
+              <Button onClick={build} disabled={building} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 h-14 sm:h-12 text-base font-semibold">
                 {building
                   ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Building…</>
                   : <><Sparkles className="w-4 h-4 mr-2" /> Build Final Note{selected.size > 0 ? ` (${selected.size} additions)` : ""} <ArrowRight className="w-4 h-4 ml-1.5" /></>}
@@ -670,11 +670,11 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
               className="w-full min-h-[320px] font-mono text-sm border-0 px-4 py-3 focus:ring-0 bg-white resize-none outline-none"
             />
             <div className="flex gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-              <Button onClick={copy} className="flex-1 bg-green-600 hover:bg-green-700 h-10 gap-2 font-semibold">
+              <Button onClick={copy} className="flex-1 bg-green-600 hover:bg-green-700 h-12 sm:h-10 gap-2 font-semibold">
                 {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy All</>}
               </Button>
-              <Button variant="outline" className="h-10 px-4 text-sm" onClick={() => { setStep(2); setFinalNote(""); }}>← Review</Button>
-              <Button variant="outline" className="h-10 px-3" onClick={reset}><RotateCcw className="w-4 h-4" /></Button>
+              <Button variant="outline" className="h-12 sm:h-10 px-4 text-sm" onClick={() => { setStep(2); setFinalNote(""); }}>← Review</Button>
+              <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={reset}><RotateCcw className="w-4 h-4" /></Button>
             </div>
           </div>
 
@@ -698,9 +698,9 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
                     </div>
                     <button
                       onClick={() => copySection(sec.key, sec.text)}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors bg-white border-gray-200 hover:border-indigo-400 hover:text-indigo-600 text-gray-500"
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg text-xs font-medium border transition-colors bg-white border-gray-200 hover:border-indigo-400 hover:text-indigo-600 text-gray-500 active:scale-95"
                     >
-                      {copiedSection === sec.key ? <><CheckCircle2 className="w-3 h-3 text-green-500" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+                      {copiedSection === sec.key ? <><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
                     </button>
                   </div>
                 ))}
