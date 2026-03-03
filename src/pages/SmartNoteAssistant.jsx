@@ -15,6 +15,7 @@ import {
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
+import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 
 const VISIT_TYPES = [
   { value: "routine_visit", label: "Routine Visit" },
