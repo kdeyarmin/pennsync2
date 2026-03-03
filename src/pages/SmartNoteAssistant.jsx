@@ -253,7 +253,34 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
   };
 
   const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
-  const reset = () => { setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set()); setFinalNote(""); setStep(1); };
+  const reset = () => { setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set()); setFinalNote(""); setStep(1); setNoteSections(null); };
+
+  // Parse final note into logical sections for selective copying
+  const parseNoteSections = (text) => {
+    if (!text) return null;
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    const vitals = sentences.filter(s => /bp|blood pressure|hr|heart rate|o2|oxygen|temp|weight|respir|pain/i.test(s));
+    const assessment = sentences.filter(s => /assess|exam|appear|ambul|mobil|wound|skin|edema|breath|lung|bowel/i.test(s));
+    const education = sentences.filter(s => /teach|educat|instruct|verbali|understand|demonstrat/i.test(s));
+    const safety = sentences.filter(s => /fall|safe|hazard|medic|adher|complian/i.test(s));
+    const plan = sentences.filter(s => /plan|next|follow|return|notif|physician|refer|schedul/i.test(s));
+    const rest = sentences.filter(s => !vitals.includes(s) && !assessment.includes(s) && !education.includes(s) && !safety.includes(s) && !plan.includes(s));
+    const secs = [
+      { key: "vitals", label: "Vital Signs", text: vitals.join(" ").trim() },
+      { key: "assessment", label: "Assessment", text: assessment.join(" ").trim() },
+      { key: "education", label: "Education / Teaching", text: education.join(" ").trim() },
+      { key: "safety", label: "Safety", text: safety.join(" ").trim() },
+      { key: "plan", label: "Plan", text: plan.join(" ").trim() },
+      { key: "other", label: "Clinical Narrative", text: rest.join(" ").trim() },
+    ].filter(s => s.text.length > 10);
+    return secs.length > 1 ? secs : null;
+  };
+
+  const copySection = async (key, text) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedSection(key);
+    setTimeout(() => setCopiedSection(null), 2000);
+  };
   const toggle = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const urgentAlerts = alerts.filter(a => a.urgency === "immediate");
