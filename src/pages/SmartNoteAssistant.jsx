@@ -115,8 +115,11 @@ export default function SmartNoteAssistant() {
   const [activeTab, setActiveTab] = useState("write"); // "write" | "summary"
   const [noteSections, setNoteSections] = useState(null);
   const [copiedSection, setCopiedSection] = useState(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
   const recRef = useRef(null);
   const textareaRef = useRef(null);
+  const DRAFT_KEY = "smart_note_draft";
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const { data: patients = [] } = useQuery({
