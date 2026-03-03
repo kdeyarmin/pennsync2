@@ -235,6 +235,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
       }
 
       setFinalNote(result);
+      setNoteSections(parseNoteSections(result));
       setStep(3);
 
       if (patientId && currentUser?.email) {
