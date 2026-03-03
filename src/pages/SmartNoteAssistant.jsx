@@ -307,6 +307,22 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         )}
       </div>
 
+      {/* ── Mode Tabs ── */}
+      <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm gap-1">
+        <button
+          onClick={() => setActiveTab("write")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "write" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+        >
+          <Sparkles className="w-4 h-4" /> Note Builder
+        </button>
+        <button
+          onClick={() => setActiveTab("summary")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "summary" ? "bg-purple-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+        >
+          <FileText className="w-4 h-4" /> Visit Summaries
+        </button>
+      </div>
+
       {/* ── Step pills ── */}
       <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
         {["Write", "Review", "Copy"].map((label, i) => {
