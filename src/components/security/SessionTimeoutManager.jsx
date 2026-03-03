@@ -98,48 +98,43 @@ export default function SessionTimeoutManager({
 
   return (
     <Dialog open={showWarning} onOpenChange={setShowWarning}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-yellow-900">
-            <AlertTriangle className="w-5 h-5 text-yellow-600" />
-            Session Timeout Warning
-          </DialogTitle>
-          <DialogDescription>
-            Your session will expire due to inactivity
+      <DialogContent className="sm:max-w-sm p-0 overflow-hidden rounded-2xl border-0 shadow-2xl">
+        {/* Header band */}
+        <div className="bg-amber-500 px-6 pt-6 pb-5 text-white text-center">
+          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Clock className="w-7 h-7 text-white" />
+          </div>
+          <DialogTitle className="text-white text-xl font-bold">Still there?</DialogTitle>
+          <DialogDescription className="text-amber-100 text-sm mt-1">
+            You've been inactive for a while
           </DialogDescription>
-        </DialogHeader>
-
-        <div className="py-6">
-          <Alert className="bg-yellow-50 border-yellow-300">
-            <Clock className="w-5 h-5 text-yellow-600" />
-            <AlertDescription>
-              <p className="font-semibold text-yellow-900 mb-2">
-                Time Remaining: {formatTime(secondsRemaining)}
-              </p>
-              <p className="text-sm text-yellow-800">
-                Your session will automatically log out in {formatTime(secondsRemaining)} to protect patient data.
-                Click "Stay Logged In" to continue working.
-              </p>
-            </AlertDescription>
-          </Alert>
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="min-h-[44px]"
-          >
-            Log Out Now
-          </Button>
-          <Button
-            onClick={handleExtendSession}
-            className="bg-green-600 hover:bg-green-700 min-h-[44px]"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Stay Logged In
-          </Button>
-        </DialogFooter>
+        {/* Body */}
+        <div className="px-6 py-5 text-center bg-white">
+          <p className="text-gray-500 text-sm mb-2">Auto sign-out in</p>
+          <p className="text-5xl font-bold text-gray-900 tabular-nums tracking-tight mb-1">
+            {formatTime(secondsRemaining)}
+          </p>
+          <p className="text-xs text-gray-400 mb-6">to protect patient data (HIPAA)</p>
+
+          <div className="space-y-2">
+            <Button
+              onClick={handleExtendSession}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold h-11 rounded-xl text-sm"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Keep Me Signed In
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="w-full text-gray-400 hover:text-gray-600 h-9 text-sm"
+            >
+              Sign Out Now
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
