@@ -48,8 +48,8 @@ export default function AnnouncementsWidget() {
   }
 
   return (
-    <Card className="border-2 border-blue-300">
-      <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
+    <Card>
+      <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
           <Bell className="w-5 h-5 text-blue-600" />
           Announcements
