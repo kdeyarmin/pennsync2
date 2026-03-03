@@ -644,6 +644,9 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
             </div>
           </div>
 
+          {/* Diff View */}
+          <NoteDiffView originalNote={note} enhancedNote={finalNote} />
+
           {/* Section-by-section copy */}
           {noteSections && noteSections.length > 1 && (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
