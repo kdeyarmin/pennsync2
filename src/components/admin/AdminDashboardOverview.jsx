@@ -133,14 +133,6 @@ export default function AdminDashboardOverview() {
       {/* System Health Monitoring */}
       <SystemHealthMonitor />
 
-      {/* Fax Controls & OCR Management */}
-      <FaxReceivingToggle />
-      
-      <div className="grid md:grid-cols-2 gap-6">
-        <OCRFeedbackDashboard />
-        <OCRTrainingMonitor />
-      </div>
-
       {/* Key Metrics */}
       <div className="grid md:grid-cols-3 gap-4">
         <StatCard

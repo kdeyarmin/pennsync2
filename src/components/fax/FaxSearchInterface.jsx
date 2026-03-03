@@ -19,8 +19,6 @@ export default function FaxSearchInterface({ onSelectFaxForAI }) {
   const [isSearching, setIsSearching] = useState(false);
   const [reviewingFax, setReviewingFax] = useState(null);
 
-  const queryClient = useQueryClient();
-
   const { data: faxLogs = [], isLoading } = useQuery({
     queryKey: ['fax-search-logs'],
     queryFn: () => base44.entities.FaxLog.list('-created_date', 500),
