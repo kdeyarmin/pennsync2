@@ -386,6 +386,16 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
             </div>
           )}
 
+          {/* Templates */}
+          <NoteTemplateSelector
+            currentVisitType={visitType}
+            onSelect={(templateContent, templateVisitType) => {
+              setNote(templateContent);
+              setVisitType(templateVisitType);
+              setTimeout(() => textareaRef.current?.focus(), 100);
+            }}
+          />
+
           {/* Main note textarea — hero element */}
           <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
