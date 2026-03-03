@@ -498,6 +498,9 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
               </Button>
             </div>
           </div>
+
+          {/* Vital sign validation */}
+          <VitalSignValidator noteText={note} />
         </div>
       )}
 
