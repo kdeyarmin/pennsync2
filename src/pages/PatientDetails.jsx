@@ -364,28 +364,23 @@ export default function PatientDetails() {
 
       {/* Main Patient Tabs */}
       <Tabs defaultValue="overview" className="mb-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 gap-1">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-          <TabsTrigger value="health-history" className="text-xs sm:text-sm">
-            <Heart className="w-3 h-3 mr-1" />
-            <span className="hidden sm:inline">Health History</span>
-            <span className="sm:hidden">History</span>
-          </TabsTrigger>
-          <TabsTrigger value="clinical" className="text-xs sm:text-sm">Clinical</TabsTrigger>
-          <TabsTrigger value="events" className="text-xs sm:text-sm">
-            <Activity className="w-3 h-3 mr-1" />
-            <span className="hidden sm:inline">Events</span>
-          </TabsTrigger>
-          <TabsTrigger value="ai-tools" className="flex items-center gap-1 text-xs sm:text-sm">
-            <Brain className="w-3 h-3" />
-            <span className="hidden sm:inline">AI Tools</span>
-          </TabsTrigger>
-          <TabsTrigger value="care" className="text-xs sm:text-sm">Care Plans</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Documents</span>
-            <span className="sm:hidden">Docs</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-1 scrollbar-hide">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            {[
+              { value: "overview",      label: "Overview"  },
+              { value: "health-history",label: "History"   },
+              { value: "clinical",      label: "Clinical"  },
+              { value: "events",        label: "Events"    },
+              { value: "ai-tools",      label: "AI Tools"  },
+              { value: "care",          label: "Care Plans"},
+              { value: "documents",     label: "Docs"      },
+            ].map(({ value, label }) => (
+              <TabsTrigger key={value} value={value} className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] min-w-[72px] text-xs sm:text-sm whitespace-nowrap">
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         {/* Health History Tab */}
         <TabsContent value="health-history" className="space-y-6 mt-4">
@@ -544,12 +539,14 @@ export default function PatientDetails() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="allergies">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="allergies">Allergies</TabsTrigger>
-                  <TabsTrigger value="medications">Medications</TabsTrigger>
-                  <TabsTrigger value="history">History</TabsTrigger>
-                  <TabsTrigger value="visits">Recent Visits</TabsTrigger>
-                </TabsList>
+                <div className="overflow-x-auto scrollbar-hide">
+                  <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                    <TabsTrigger value="allergies" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Allergies</TabsTrigger>
+                    <TabsTrigger value="medications" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Medications</TabsTrigger>
+                    <TabsTrigger value="history" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">History</TabsTrigger>
+                    <TabsTrigger value="visits" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Recent Visits</TabsTrigger>
+                  </TabsList>
+                </div>
 
                 <TabsContent value="allergies" className="space-y-4">
                   <Alert className={patient.allergies && patient.allergies !== 'NKDA' && patient.allergies.toLowerCase() !== 'none' ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}>
@@ -684,12 +681,14 @@ export default function PatientDetails() {
         {/* AI Tools Tab */}
         <TabsContent value="ai-tools" className="space-y-6">
           <Tabs defaultValue="analysis" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="analysis">Analysis</TabsTrigger>
-              <TabsTrigger value="risk">Risk & Alerts</TabsTrigger>
-              <TabsTrigger value="coordination">Coordination</TabsTrigger>
-              <TabsTrigger value="documentation">Documentation</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                <TabsTrigger value="analysis" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Analysis</TabsTrigger>
+                <TabsTrigger value="risk" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Risk & Alerts</TabsTrigger>
+                <TabsTrigger value="coordination" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Coordination</TabsTrigger>
+                <TabsTrigger value="documentation" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Documentation</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="analysis" className="space-y-6">
               <ProactiveClinicalTaskGenerator
@@ -855,14 +854,16 @@ export default function PatientDetails() {
         {/* Documents Tab */}
         <TabsContent value="documents" className="space-y-6">
           <Tabs defaultValue="uploaded">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="uploaded">Uploaded Docs</TabsTrigger>
-              <TabsTrigger value="referral-docs">Referral PDFs</TabsTrigger>
-              <TabsTrigger value="discharge">Discharge</TabsTrigger>
-              <TabsTrigger value="referral">Referral Letter</TabsTrigger>
-              <TabsTrigger value="education">Education</TabsTrigger>
-              <TabsTrigger value="progress">Progress</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+                <TabsTrigger value="uploaded" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Uploaded</TabsTrigger>
+                <TabsTrigger value="referral-docs" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Referral PDFs</TabsTrigger>
+                <TabsTrigger value="discharge" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Discharge</TabsTrigger>
+                <TabsTrigger value="referral" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Referral Letter</TabsTrigger>
+                <TabsTrigger value="education" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Education</TabsTrigger>
+                <TabsTrigger value="progress" className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] text-xs sm:text-sm whitespace-nowrap">Progress</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="uploaded" className="space-y-4">
               <Card>
