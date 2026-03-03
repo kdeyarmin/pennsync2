@@ -386,6 +386,24 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
       {/* ── Note Builder Tab ── */}
       {activeTab !== "summary" && <React.Fragment>
 
+      {/* ── Draft Restore Banner ── */}
+      {hasDraft && step === 1 && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 shadow-sm">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800">Unsaved draft found</p>
+            <p className="text-xs text-amber-600">You have a note in progress from a previous session.</p>
+          </div>
+          <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs shrink-0" onClick={restoreDraft}>Restore</Button>
+          <Button size="sm" variant="ghost" className="h-8 text-xs text-amber-600 shrink-0" onClick={dismissDraft}>Discard</Button>
+        </div>
+      )}
+      {draftRestored && (
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+          <CheckCircle2 className="w-4 h-4 text-green-600" />
+          <p className="text-xs text-green-700 font-medium">Draft restored successfully.</p>
+        </div>
+      )}
+
       {/* ── Step pills ── */}
       <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
         {["Write", "Review", "Copy"].map((label, i) => {
