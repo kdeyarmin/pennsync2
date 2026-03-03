@@ -323,6 +323,16 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         </button>
       </div>
 
+      {/* ── Visit Summary Tab ── */}
+      {activeTab === "summary" && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <VisitSummaryGenerator patientId={patientId} />
+        </div>
+      )}
+
+      {/* ── Note Builder Tab ── */}
+      {activeTab !== "summary" && <>
+
       {/* ── Step pills ── */}
       <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
         {["Write", "Review", "Copy"].map((label, i) => {
