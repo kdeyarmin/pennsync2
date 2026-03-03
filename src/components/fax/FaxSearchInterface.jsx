@@ -7,11 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, Eye, Loader2, CheckCircle, XCircle, FileText, Sparkles, RefreshCw, Brain, Edit } from "lucide-react";
+import { Search, Download, Eye, Loader2, CheckCircle, XCircle, FileText, Brain } from "lucide-react";
 import { format } from "date-fns";
-import { toast } from "sonner";
-import { processFaxOCR } from "@/functions/processFaxOCR";
-import OCRReviewPanel from "./OCRReviewPanel";
 
 export default function FaxSearchInterface({ onSelectFaxForAI }) {
   const [searchQuery, setSearchQuery] = useState("");

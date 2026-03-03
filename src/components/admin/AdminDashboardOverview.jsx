@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Users, FileText, PenTool, Settings, ArrowRight, Loader2, AlertCircle, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import ComprehensiveFaxDashboard from "../fax/ComprehensiveFaxDashboard";
-import FaxReceivingToggle from "./FaxReceivingToggle";
-import OCRFeedbackDashboard from "./OCRFeedbackDashboard";
-import OCRTrainingMonitor from "./OCRTrainingMonitor";
 import SystemHealthMonitor from "./SystemHealthMonitor";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
