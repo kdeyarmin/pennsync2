@@ -576,21 +576,20 @@ export default function CarePlanManagement() {
                               value={plan.status}
                               onValueChange={(newStatus) => handleStatusChange(plan.id, newStatus)}
                             >
-                              <SelectTrigger className="w-36">
+                              <SelectTrigger className="flex-1 h-11 sm:h-9 text-sm">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="met">Goal Met</SelectItem>
-                                <SelectItem value="not_met">Not Met</SelectItem>
-                                <SelectItem value="revised">Revised</SelectItem>
+                              <SelectContent className="max-h-[50vh]">
+                                <SelectItem value="active" className="py-3 sm:py-2">Active</SelectItem>
+                                <SelectItem value="met" className="py-3 sm:py-2">Goal Met</SelectItem>
+                                <SelectItem value="not_met" className="py-3 sm:py-2">Not Met</SelectItem>
+                                <SelectItem value="revised" className="py-3 sm:py-2">Revised</SelectItem>
                               </SelectContent>
                             </Select>
                             <Button
-                              size="sm"
                               variant="outline"
                               onClick={() => handleDelete(plan.id)}
-                              className="text-red-600 hover:text-red-700"
+                              className="text-red-600 hover:text-red-700 min-h-[44px] px-3"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

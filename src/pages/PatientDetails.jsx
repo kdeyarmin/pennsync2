@@ -991,27 +991,27 @@ export default function PatientDetails() {
                     value={newVisit.visit_type}
                     onValueChange={(value) => setNewVisit({...newVisit, visit_type: value})}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 sm:h-10">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="skilled_nursing">Skilled Nursing</SelectItem>
-                      <SelectItem value="admission">Admission</SelectItem>
-                      <SelectItem value="recertification">Recertification</SelectItem>
-                      <SelectItem value="discharge">Discharge</SelectItem>
-                      <SelectItem value="routine_visit">Routine Visit</SelectItem>
-                      <SelectItem value="prn">PRN Visit</SelectItem>
+                    <SelectContent className="max-h-[50vh]">
+                      <SelectItem value="skilled_nursing" className="py-3 sm:py-2">Skilled Nursing</SelectItem>
+                      <SelectItem value="admission" className="py-3 sm:py-2">Admission</SelectItem>
+                      <SelectItem value="recertification" className="py-3 sm:py-2">Recertification</SelectItem>
+                      <SelectItem value="discharge" className="py-3 sm:py-2">Discharge</SelectItem>
+                      <SelectItem value="routine_visit" className="py-3 sm:py-2">Routine Visit</SelectItem>
+                      <SelectItem value="prn" className="py-3 sm:py-2">PRN Visit</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setShowVisitForm(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateVisit} className="bg-blue-600 hover:bg-blue-700">
-                    Create Visit
-                  </Button>
-                </div>
+                <div className="flex flex-col sm:flex-row justify-end gap-2">
+                    <Button variant="outline" onClick={() => setShowVisitForm(false)} className="min-h-[48px] sm:min-h-[40px]">
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateVisit} className="bg-blue-600 hover:bg-blue-700 min-h-[48px] sm:min-h-[40px]">
+                      Create Visit
+                    </Button>
+                  </div>
               </CardContent>
             </Card>
           </CardContent>
