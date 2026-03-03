@@ -238,14 +238,9 @@ export default function Patients() {
   const filteredPatients = (patients || []).filter(patient => {
     if (!patient) return false;
     
-    // Text search
-    const searchLower = (filters.search || searchTerm || '').toLowerCase();
-    const matchesSearch = !searchLower || 
-      (patient.first_name || '').toLowerCase().includes(searchLower) ||
-      (patient.last_name || '').toLowerCase().includes(searchLower) ||
-      (patient.medical_record_number || '').toLowerCase().includes(searchLower) ||
-      (patient.phone || '').toLowerCase().includes(searchLower) ||
-      (patient.address || '').toLowerCase().includes(searchLower);
+    // Fuzzy search across name, MRN, phone, diagnosis
+    const searchTerm = filters.search || "";
+    const matchesSearch = patientMatchesSearch(patient, searchTerm);
 
     // Status filter
     const matchesStatus = !filters.status || filters.status === 'all' || patient.status === filters.status;
