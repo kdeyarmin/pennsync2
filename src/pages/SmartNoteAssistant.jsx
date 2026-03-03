@@ -303,7 +303,11 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
   };
 
   const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
-  const reset = () => { setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set()); setFinalNote(""); setStep(1); setNoteSections(null); };
+  const reset = () => {
+    setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set());
+    setFinalNote(""); setStep(1); setNoteSections(null); setDraftRestored(false);
+    localStorage.removeItem(DRAFT_KEY);
+  };
 
   // Parse final note into logical sections for selective copying
   const parseNoteSections = (text) => {
