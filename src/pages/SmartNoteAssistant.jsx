@@ -10,10 +10,11 @@ import {
   Sparkles, CheckCircle2, Copy, RotateCcw, Loader2, Mic, MicOff,
   Shield, Lightbulb, AlertTriangle, ChevronDown, ChevronUp,
   ArrowRight, DollarSign, Target, AlertCircle, Activity, Pill,
-  TrendingUp, Phone, ClipboardList, Heart, User
+  TrendingUp, Phone, ClipboardList, Heart, User, FileText
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
 
 const VISIT_TYPES = [
   { value: "routine_visit", label: "Routine Visit" },

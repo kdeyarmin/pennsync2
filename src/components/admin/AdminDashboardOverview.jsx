@@ -11,6 +11,7 @@ import ComprehensiveFaxDashboard from "../fax/ComprehensiveFaxDashboard";
 import FaxReceivingToggle from "./FaxReceivingToggle";
 import OCRFeedbackDashboard from "./OCRFeedbackDashboard";
 import OCRTrainingMonitor from "./OCRTrainingMonitor";
+import SystemHealthMonitor from "./SystemHealthMonitor";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
   <Card className="hover:shadow-md transition-shadow">
