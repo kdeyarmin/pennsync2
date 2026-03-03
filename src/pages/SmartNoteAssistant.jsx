@@ -437,16 +437,16 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
                 <span className="text-xs text-gray-400 font-normal normal-case ml-1">optional</span>
               </div>
               <Select value={patientId} onValueChange={setPatientId}>
-                <SelectTrigger className="bg-gray-50 border-gray-200 hover:border-indigo-400 hover:bg-white transition-all h-11 text-sm rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-none">
+                <SelectTrigger className="bg-gray-50 border-gray-200 hover:border-indigo-400 hover:bg-white transition-all h-12 sm:h-11 text-sm rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-none">
                   <SelectValue placeholder={
                     <span className="flex items-center gap-2 text-gray-400">
                       <User className="w-4 h-4" /> Search for a patient…
                     </span>
                   } />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl shadow-xl border-gray-200 max-h-64">
+                <SelectContent className="rounded-xl shadow-xl border-gray-200 max-h-[50vh]">
                   {patients.map(p => (
-                    <SelectItem key={p.id} value={p.id} className="py-2.5 px-3 cursor-pointer rounded-lg mx-1 my-0.5">
+                    <SelectItem key={p.id} value={p.id} className="py-3 sm:py-2.5 px-3 cursor-pointer rounded-lg mx-1 my-0.5 min-h-[52px] sm:min-h-0">
                       <div className="flex flex-col">
                         <span className="font-semibold text-gray-900">{p.first_name} {p.last_name}</span>
                         {p.primary_diagnosis && <span className="text-xs text-gray-500 mt-0.5">{p.primary_diagnosis}</span>}
