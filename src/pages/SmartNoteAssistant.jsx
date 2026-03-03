@@ -331,7 +331,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
       )}
 
       {/* ── Note Builder Tab ── */}
-      {activeTab !== "summary" && <>
+      {activeTab !== "summary" && <React.Fragment>
 
       {/* ── Step pills ── */}
       <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
