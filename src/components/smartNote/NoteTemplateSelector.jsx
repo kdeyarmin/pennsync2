@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, FileText, Zap } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 const TEMPLATES = [
   {
@@ -131,6 +132,11 @@ export default function NoteTemplateSelector({ onSelect, currentVisitType }) {
   const handleSelect = (template) => {
     onSelect(template.content, template.visitType);
     setOpen(false);
+    // Track template usage analytics
+    base44.analytics.track({
+      eventName: "note_template_used",
+      properties: { template_id: template.id, template_label: template.label, visit_type: template.visitType }
+    });
   };
 
   return (
