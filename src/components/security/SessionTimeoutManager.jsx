@@ -9,8 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Clock, AlertTriangle, RefreshCw } from "lucide-react";
+import { Clock, RefreshCw } from "lucide-react";
 import { logSecurityEvent } from "../utils/security";
 
 /**
