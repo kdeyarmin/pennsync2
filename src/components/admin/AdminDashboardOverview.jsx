@@ -133,6 +133,9 @@ export default function AdminDashboardOverview() {
         </div>
       )}
 
+      {/* System Health Monitoring */}
+      <SystemHealthMonitor />
+
       {/* Fax Controls & OCR Management */}
       <FaxReceivingToggle />
       
