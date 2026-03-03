@@ -294,6 +294,41 @@ css
       @apply min-h-[48px] min-w-[48px] md:min-h-[44px] md:min-w-[44px];
     }
 
+  /* Global: ensure all select triggers and items are touch-friendly on mobile */
+  @media (max-width: 640px) {
+    [data-radix-select-trigger],
+    button[role="combobox"] {
+      min-height: 48px;
+    }
+    [data-radix-select-item],
+    [role="option"] {
+      min-height: 48px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+    [data-radix-select-viewport] {
+      max-height: 55vh;
+    }
+    [data-radix-dropdown-menu-content],
+    [data-radix-popover-content] {
+      max-height: 60vh;
+    }
+    /* Tabs scroll horizontally instead of wrapping/truncating */
+    [role="tablist"] {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    [role="tab"] {
+      min-height: 48px;
+      white-space: nowrap;
+    }
+    /* Dialogs take full screen on mobile */
+    [data-radix-dialog-content] {
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+  }
+
     /* iPad-specific optimizations */
     @media (min-width: 768px) and (max-width: 1024px) {
       /* Increase spacing on tablets */
