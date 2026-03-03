@@ -428,24 +428,58 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
       {step === 1 && (
         <div className="space-y-3">
           {/* Context row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 space-y-4">
+            {/* Patient selector */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Patient <span className="text-gray-400">(optional)</span></label>
+              <div className="flex items-center gap-1.5 mb-2">
+                <User className="w-3.5 h-3.5 text-indigo-500" />
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Patient</label>
+                <span className="text-xs text-gray-400 font-normal normal-case ml-1">optional</span>
+              </div>
               <Select value={patientId} onValueChange={setPatientId}>
-                <SelectTrigger className="bg-white h-10 text-sm"><SelectValue placeholder="Select patient…" /></SelectTrigger>
-                <SelectContent>
+                <SelectTrigger className="bg-gray-50 border-gray-200 hover:border-indigo-400 hover:bg-white transition-all h-11 text-sm rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-none">
+                  <SelectValue placeholder={
+                    <span className="flex items-center gap-2 text-gray-400">
+                      <User className="w-4 h-4" /> Search for a patient…
+                    </span>
+                  } />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl shadow-xl border-gray-200 max-h-64">
                   {patients.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}{p.primary_diagnosis ? ` — ${p.primary_diagnosis}` : ""}</SelectItem>
+                    <SelectItem key={p.id} value={p.id} className="py-2.5 px-3 cursor-pointer rounded-lg mx-1 my-0.5">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-gray-900">{p.first_name} {p.last_name}</span>
+                        {p.primary_diagnosis && <span className="text-xs text-gray-500 mt-0.5">{p.primary_diagnosis}</span>}
+                      </div>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Visit type selector */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Visit Type</label>
-              <Select value={visitType} onValueChange={setVisitType}>
-                <SelectTrigger className="bg-white h-10 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>{VISIT_TYPES.map(v => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}</SelectContent>
-              </Select>
+              <div className="flex items-center gap-1.5 mb-2">
+                <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Visit Type</label>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {VISIT_TYPES.map(v => (
+                  <button
+                    key={v.value}
+                    onClick={() => setVisitType(v.value)}
+                    className={`py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight ${
+                      visitType === v.value
+                        ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200"
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
