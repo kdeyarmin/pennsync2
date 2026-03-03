@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 
 import PatientForm from "../components/patient/PatientForm";
+import { patientMatchesSearch } from "../components/patient/AdvancedPatientFilters";
 import AIPatientSummaryReport from "../components/smartNote/AIPatientSummaryReport";
 import DuplicatePatientManager from "../components/patient/DuplicatePatientManager";
 import AdvancedPatientFilters from "../components/patient/AdvancedPatientFilters";
