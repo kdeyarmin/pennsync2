@@ -109,6 +109,9 @@ export default function SmartNoteAssistant() {
   const [building, setBuilding] = useState(false);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
+  const [activeTab, setActiveTab] = useState("write"); // "write" | "summary"
+  const [noteSections, setNoteSections] = useState(null);
+  const [copiedSection, setCopiedSection] = useState(null);
   const recRef = useRef(null);
   const textareaRef = useRef(null);
 
