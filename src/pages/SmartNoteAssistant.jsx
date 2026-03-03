@@ -132,6 +132,49 @@ export default function SmartNoteAssistant() {
     if (currentUser?.email) logActivity(ActivityActions.PAGE_VISIT, { page: "SmartNoteAssistant" });
   }, [currentUser?.email]);
 
+  // Check for saved draft on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.note && parsed.note.trim().length > 20) setHasDraft(true);
+      } catch {}
+    }
+  }, []);
+
+  // Auto-save draft every 30s when note has content
+  useEffect(() => {
+    if (!note.trim()) return;
+    const timer = setInterval(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId, savedAt: new Date().toISOString() }));
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [note, visitType, patientId]);
+
+  // Also save on note change (debounced via blur or immediate on unmount)
+  useEffect(() => {
+    if (note.trim()) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId, savedAt: new Date().toISOString() }));
+    }
+  }, [note]);
+
+  const restoreDraft = () => {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    setNote(parsed.note || "");
+    setVisitType(parsed.visitType || "routine_visit");
+    setPatientId(parsed.patientId || "");
+    setHasDraft(false);
+    setDraftRestored(true);
+  };
+
+  const dismissDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setHasDraft(false);
+  };
+
   // Auto-focus textarea on step 1
   useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
 
