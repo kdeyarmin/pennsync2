@@ -182,6 +182,79 @@ export default function UserSettings() {
           </TabsTrigger>
         </TabsList>
 
+        {/* Profile / Role Tab */}
+        <TabsContent value="profile" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-indigo-600" />
+                Your Care Service Line
+              </CardTitle>
+              <CardDescription>
+                Tell us what type of nursing you do. This customizes compliance checks, documentation templates, and dashboard widgets to your specific service.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {currentUser?.care_scope && (
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Current setting:</span>
+                  <CareScopeBadge careScope={currentUser.care_scope} />
+                </div>
+              )}
+              <CareScopeSelector
+                currentUser={currentUser}
+                onSaved={() => {}}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                Service Line Compliance Focus
+              </CardTitle>
+              <CardDescription>
+                Key Medicare compliance requirements for your service line
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(!currentUser?.care_scope || currentUser.care_scope === "home_health" || currentUser.care_scope === "both") && (
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Home className="w-4 h-4 text-blue-600" />
+                    <p className="font-semibold text-blue-800 text-sm">Home Health Requirements</p>
+                  </div>
+                  <ul className="text-xs text-blue-700 space-y-1">
+                    <li>• Homebound status documented every visit (42 CFR §484.55)</li>
+                    <li>• Skilled need justified per Medicare coverage guidelines</li>
+                    <li>• OASIS-E assessments at SOC, ROC, Recert, Discharge</li>
+                    <li>• 60-day certification periods with physician signature</li>
+                    <li>• Care plan updated every 60 days or with change in condition</li>
+                    <li>• ICD-10 primary diagnosis supports skilled service need</li>
+                  </ul>
+                </div>
+              )}
+              {(!currentUser?.care_scope || currentUser.care_scope === "hospice" || currentUser.care_scope === "both") && (
+                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Heart className="w-4 h-4 text-purple-600" />
+                    <p className="font-semibold text-purple-800 text-sm">Hospice Requirements</p>
+                  </div>
+                  <ul className="text-xs text-purple-700 space-y-1">
+                    <li>• Terminal prognosis ≤6 months documented (42 CFR §418.22)</li>
+                    <li>• IDG/IDT meeting documentation every 15 days at minimum</li>
+                    <li>• Comfort-focused goals — curative treatments discontinued</li>
+                    <li>• Symptom management notes (pain, dyspnea, nausea, anxiety)</li>
+                    <li>• Medicare Benefit elections and revocations documented</li>
+                    <li>• Bereavement assessment and follow-up plan</li>
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* AI Behavior Tab */}
         <TabsContent value="ai-behavior" className="space-y-6">
           <Card>
