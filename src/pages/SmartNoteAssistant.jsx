@@ -23,13 +23,30 @@ import NoteDiffView from "../components/smartNote/NoteDiffView";
 import ClinicalCodeSuggester from "../components/smartNote/ClinicalCodeSuggester";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 
-const VISIT_TYPES = [
-  { value: "routine_visit", label: "Routine Visit" },
-  { value: "admission", label: "Admission" },
+const HOME_HEALTH_VISIT_TYPES = [
+  { value: "routine_visit", label: "Routine SN Visit" },
+  { value: "admission", label: "Start of Care (SOC)" },
   { value: "recertification", label: "Recertification" },
   { value: "discharge", label: "Discharge" },
   { value: "prn", label: "PRN Visit" },
 ];
+
+const HOSPICE_VISIT_TYPES = [
+  { value: "routine_visit", label: "Routine Hospice Visit" },
+  { value: "admission", label: "Hospice Admission" },
+  { value: "recertification", label: "Recertification (Benefit Period)" },
+  { value: "discharge", label: "Discharge / Revocation" },
+  { value: "prn", label: "After-Hours / Crisis Visit" },
+  { value: "idg", label: "IDG/IDT Meeting Note" },
+  { value: "pronouncement", label: "Death Pronouncement" },
+];
+
+// Returns the right visit types based on care scope
+const getVisitTypes = (careScope) => {
+  if (careScope === "hospice") return HOSPICE_VISIT_TYPES;
+  if (careScope === "both") return [...HOME_HEALTH_VISIT_TYPES, ...HOSPICE_VISIT_TYPES.filter(v => !HOME_HEALTH_VISIT_TYPES.find(h => h.value === v.value))];
+  return HOME_HEALTH_VISIT_TYPES;
+};
 
 const SEV_STYLE = {
   critical: "border-l-red-500 bg-red-50",
