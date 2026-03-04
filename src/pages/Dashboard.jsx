@@ -4,9 +4,11 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Clock, User, CheckCircle2, FileText, Mic, Send } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
+import CareScopeBadge from "../components/profile/CareScopeBadge";
+import CareScopeSelector from "../components/profile/CareScopeSelector";
 
 
 // Critical above-the-fold — eager loaded
