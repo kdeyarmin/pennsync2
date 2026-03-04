@@ -236,6 +236,9 @@ export default function SmartNoteAssistant() {
   const DRAFT_KEY = "smart_note_draft_v2";
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
+  const careScope = currentUser?.care_scope || "home_health";
+  const VISIT_TYPES = getVisitTypes(careScope);
+  const isHospice = careScope === "hospice";
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => base44.entities.Patient.filter({ status: "active" }, "first_name", 200),
