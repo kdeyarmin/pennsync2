@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -480,7 +480,8 @@ Return ONLY the final note text.`
   const urgentAlerts = alerts.filter(a => a.urgency === "immediate");
   const criticalFindings = analysis?.findings?.filter(f => f.severity === "critical") || [];
   const needsClarificationFindings = analysis?.findings?.filter(f => f.needs_clarification) || [];
-  const answeredCount = needsClarificationFindings.filter(f => answers[f.id]).length;
+  const answeredCount = needsClarificationFindings.filter(f => answers[f.id]?.trim()).length;
+  const hasClarificationStep = needsClarificationFindings.length > 0;
   const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
   const ready = note.trim().length >= 20;
 
@@ -862,7 +863,7 @@ Return ONLY the final note text.`
               <Button onClick={build} disabled={building} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 h-14 sm:h-12 text-base font-semibold">
                 {building ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Building…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate Final Note <ArrowRight className="w-4 h-4 ml-1.5" /></>}
               </Button>
-              <button className="w-full text-xs text-gray-400 hover:text-gray-600 py-1" onClick={() => setStep(needsClarificationFindings.length > 0 ? 2 : 1)}>← Back</button>
+              <button className="w-full text-xs text-gray-400 hover:text-gray-600 py-1" onClick={() => setStep(hasClarificationStep ? 2 : 1)}>← Back</button>
             </div>
           )}
 
