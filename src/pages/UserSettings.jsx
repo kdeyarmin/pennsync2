@@ -165,7 +165,7 @@ export default function UserSettings() {
             <span className="hidden sm:inline">My Role</span>
             <span className="sm:hidden">Role</span>
           </TabsTrigger>
-          <TabsTrigger value="ai-behavior" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+          <TabsTrigger value="ai-behavior" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm col-span-1">
             <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">AI Behavior</span>
             <span className="sm:hidden">AI</span>
