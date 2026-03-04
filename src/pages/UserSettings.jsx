@@ -158,8 +158,13 @@ export default function UserSettings() {
         </Alert>
       )}
 
-      <Tabs defaultValue="ai-behavior" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 gap-1 h-auto">
+      <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-4 gap-1 h-auto">
+          <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">My Role</span>
+            <span className="sm:hidden">Role</span>
+          </TabsTrigger>
           <TabsTrigger value="ai-behavior" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
             <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">AI Behavior</span>
