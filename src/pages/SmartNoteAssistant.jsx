@@ -486,7 +486,7 @@ Return ONLY the final note text.`
   const ready = note.trim().length >= 20;
 
   const tabColorMap = { indigo: "bg-indigo-600", violet: "bg-violet-600", purple: "bg-purple-600", emerald: "bg-emerald-600" };
-  const tabHoverMap = { indigo: "hover:text-indigo-700", violet: "hover:text-violet-700", purple: "hover:text-purple-700", emerald: "hover:text-emerald-700" };
+  const tabHoverMap = { indigo: "hover:bg-indigo-50 hover:text-indigo-700", violet: "hover:bg-violet-50 hover:text-violet-700", purple: "hover:bg-purple-50 hover:text-purple-700", emerald: "hover:bg-emerald-50 hover:text-emerald-700" };
 
   return (
     <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3 sm:space-y-4">
