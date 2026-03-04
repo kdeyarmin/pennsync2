@@ -6,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles, CheckCircle2, Copy, RotateCcw, Loader2, Mic, MicOff,
   Shield, Lightbulb, AlertTriangle, ChevronDown, ChevronUp,
   ArrowRight, DollarSign, Target, AlertCircle, Activity, Pill,
-  TrendingUp, Phone, ClipboardList, Heart, User, FileText
+  TrendingUp, Phone, ClipboardList, Heart, User, FileText,
+  HelpCircle, MessageSquare, CheckSquare, XCircle
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -27,20 +29,49 @@ const VISIT_TYPES = [
   { value: "prn", label: "PRN Visit" },
 ];
 
-const SEV_STYLE = { critical: "border-l-red-500 bg-red-50", high: "border-l-orange-500 bg-orange-50", medium: "border-l-yellow-500 bg-yellow-50", low: "border-l-blue-500 bg-blue-50" };
-const SEV_BADGE = { critical: "bg-red-100 text-red-800", high: "bg-orange-100 text-orange-800", medium: "bg-yellow-100 text-yellow-800", low: "bg-blue-100 text-blue-800" };
-const CAT_ICON  = { compliance: Shield, quality: Lightbulb, billing: DollarSign, clinical: Target };
+const SEV_STYLE = {
+  critical: "border-l-red-500 bg-red-50",
+  high: "border-l-orange-500 bg-orange-50",
+  medium: "border-l-yellow-500 bg-yellow-50",
+  low: "border-l-blue-500 bg-blue-50"
+};
+const SEV_BADGE = {
+  critical: "bg-red-100 text-red-800",
+  high: "bg-orange-100 text-orange-800",
+  medium: "bg-yellow-100 text-yellow-800",
+  low: "bg-blue-100 text-blue-800"
+};
+const CAT_ICON = { compliance: Shield, quality: Lightbulb, billing: DollarSign, clinical: Target };
 const CAT_COLOR = { compliance: "text-orange-600", quality: "text-blue-600", billing: "text-green-600", clinical: "text-purple-600" };
+const RISK_COLOR = {
+  immediate: "border-red-400 bg-red-50 text-red-900",
+  soon: "border-orange-400 bg-orange-50 text-orange-900",
+  monitor: "border-yellow-400 bg-yellow-50 text-yellow-900"
+};
 const RISK_ICON = { fall: Activity, medication: Pill, exacerbation: TrendingUp, safety: AlertTriangle, followup: Phone };
-const RISK_COLOR = { immediate: "border-red-400 bg-red-50 text-red-900", soon: "border-orange-400 bg-orange-50 text-orange-900", monitor: "border-yellow-400 bg-yellow-50 text-yellow-900" };
 
-function SuggestionCard({ finding, selected, onToggle }) {
+// Step labels and descriptions
+const STEPS = [
+  { label: "Write", desc: "Enter your notes" },
+  { label: "Clarify", desc: "Answer questions" },
+  { label: "Review", desc: "Select additions" },
+  { label: "Final", desc: "Copy to EMR" },
+];
+
+function SuggestionCard({ finding, selected, onToggle, answers, onAnswerChange }) {
   const [open, setOpen] = useState(finding.severity === "critical" || finding.severity === "high");
   const Icon = CAT_ICON[finding.category] || AlertCircle;
+  const needsAnswer = finding.needs_clarification && !finding.suggestion;
+
   return (
     <div className={`border-l-4 rounded-lg ${SEV_STYLE[finding.severity] || SEV_STYLE.medium} p-3`}>
       <div className="flex items-start gap-3">
-        <Checkbox checked={selected} onCheckedChange={onToggle} className="mt-1 shrink-0" />
+        <Checkbox
+          checked={selected}
+          onCheckedChange={onToggle}
+          disabled={needsAnswer && !answers?.[finding.id]}
+          className="mt-1 shrink-0"
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-1.5">
@@ -54,8 +85,46 @@ function SuggestionCard({ finding, selected, onToggle }) {
               </button>
             </div>
           </div>
-          <p className="text-sm text-gray-800 bg-white/80 border border-gray-200 rounded px-2 py-1.5 italic">"{finding.suggestion}"</p>
-          {open && <p className="text-xs text-gray-500 mt-1">{finding.rationale}{finding.revenue_impact && <span className="text-green-700 font-medium ml-1">💰 {finding.revenue_impact}</span>}</p>}
+
+          {/* If AI has a concrete suggestion from the note text */}
+          {finding.suggestion && (
+            <p className="text-sm text-gray-800 bg-white/80 border border-gray-200 rounded px-2 py-1.5 italic">
+              "{finding.suggestion}"
+            </p>
+          )}
+
+          {/* If AI needs the nurse to provide this info */}
+          {finding.needs_clarification && (
+            <div className="mt-2 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs text-amber-700 font-semibold">
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Needs your input to complete this element:</span>
+              </div>
+              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                {finding.question}
+              </p>
+              <Textarea
+                placeholder="Enter information here…"
+                value={answers?.[finding.id] || ""}
+                onChange={e => onAnswerChange(finding.id, e.target.value)}
+                className="text-sm min-h-[60px] bg-white border-amber-300 focus:border-indigo-400"
+              />
+              {answers?.[finding.id] && (
+                <p className="text-xs text-green-700 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Answer saved — will be included in final note
+                </p>
+              )}
+            </div>
+          )}
+
+          {open && finding.rationale && (
+            <p className="text-xs text-gray-500 mt-1">
+              {finding.rationale}
+              {finding.revenue_impact && (
+                <span className="text-green-700 font-medium ml-1">💰 {finding.revenue_impact}</span>
+              )}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -89,11 +158,45 @@ function AlertCard({ alert }) {
       {open && (
         <div className="mt-2 pt-2 border-t border-current/20 space-y-1">
           {alert.recommended_actions?.map((a, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-xs"><ClipboardList className="w-3 h-3 mt-0.5 shrink-0 opacity-70" /><span>{a}</span></div>
+            <div key={i} className="flex items-start gap-1.5 text-xs">
+              <ClipboardList className="w-3 h-3 mt-0.5 shrink-0 opacity-70" />
+              <span>{a}</span>
+            </div>
           ))}
-          {alert.notify_physician && <div className="flex items-center gap-1.5 text-xs font-semibold"><Phone className="w-3 h-3" /> Notify physician recommended</div>}
+          {alert.notify_physician && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <Phone className="w-3 h-3" /> Notify physician recommended
+            </div>
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+function StepIndicator({ step }) {
+  return (
+    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
+      {STEPS.map((s, i) => {
+        const n = i + 1;
+        const active = step === n;
+        const done = step > n;
+        return (
+          <React.Fragment key={n}>
+            <div className={`flex items-center gap-1.5 text-xs font-semibold ${active ? "text-indigo-700" : done ? "text-green-600" : "text-gray-400"}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${active ? "bg-indigo-600 text-white" : done ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}>
+                {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : n}
+              </div>
+              <span className="hidden sm:inline">{s.label}</span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className="flex-1 h-0.5 bg-gray-200 mx-1">
+                <div className={`h-full ${step > n ? "bg-green-400 w-full" : "w-0"} transition-all duration-500`} />
+              </div>
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
@@ -106,22 +209,26 @@ export default function SmartNoteAssistant() {
   const [analysis, setAnalysis] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [selected, setSelected] = useState(new Set());
+  const [answers, setAnswers] = useState({}); // answers to clarification questions
   const [finalNote, setFinalNote] = useState("");
   const [step, setStep] = useState(1);
   const [analyzing, setAnalyzing] = useState(false);
   const [building, setBuilding] = useState(false);
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
-  const [activeTab, setActiveTab] = useState("write"); // "write" | "summary"
+  const [activeTab, setActiveTab] = useState("write");
   const [noteSections, setNoteSections] = useState(null);
   const [copiedSection, setCopiedSection] = useState(null);
-  const [draftRestored, setDraftRestored] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
   const recRef = useRef(null);
   const textareaRef = useRef(null);
-  const DRAFT_KEY = "smart_note_draft";
+  const DRAFT_KEY = "smart_note_draft_v2";
 
-  const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => base44.auth.me()
+  });
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => base44.entities.Patient.filter({ status: "active" }, "first_name", 200),
@@ -132,32 +239,23 @@ export default function SmartNoteAssistant() {
     if (currentUser?.email) logActivity(ActivityActions.PAGE_VISIT, { page: "SmartNoteAssistant" });
   }, [currentUser?.email]);
 
-  // Check for saved draft on mount
   useEffect(() => {
     const saved = localStorage.getItem(DRAFT_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.note && parsed.note.trim().length > 20) setHasDraft(true);
+        if (parsed.note?.trim().length > 20) setHasDraft(true);
       } catch {}
     }
   }, []);
 
-  // Auto-save draft every 30s when note has content
-  useEffect(() => {
-    if (!note.trim()) return;
-    const timer = setInterval(() => {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId, savedAt: new Date().toISOString() }));
-    }, 30000);
-    return () => clearInterval(timer);
-  }, [note, visitType, patientId]);
-
-  // Also save on note change (debounced via blur or immediate on unmount)
   useEffect(() => {
     if (note.trim()) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId, savedAt: new Date().toISOString() }));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId }));
     }
-  }, [note]);
+  }, [note, visitType, patientId]);
+
+  useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
 
   const restoreDraft = () => {
     const saved = localStorage.getItem(DRAFT_KEY);
@@ -175,9 +273,6 @@ export default function SmartNoteAssistant() {
     setHasDraft(false);
   };
 
-  // Auto-focus textarea on step 1
-  useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
-
   const startDictation = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert("Speech recognition not supported in this browser."); return; }
@@ -194,63 +289,159 @@ export default function SmartNoteAssistant() {
     rec.start();
     setListening(true);
   };
+
   const stopDictation = () => { recRef.current?.stop(); setListening(false); };
 
   const buildCtx = () => {
-    if (!patient) return "No patient selected";
-    const meds = patient.current_medications?.map(m => `${m.name} ${m.dosage}`).join(", ") || "None";
-    return `${patient.first_name} ${patient.last_name} | DOB: ${patient.date_of_birth || "?"} | Dx: ${patient.primary_diagnosis || "?"} | Meds: ${meds} | Allergies: ${patient.allergies || "NKDA"} | Fall Risk: ${patient.functional_status?.fall_risk || "?"} | Ambulation: ${patient.functional_status?.ambulation || "?"}`;
+    if (!patient) return "No patient context available.";
+    const meds = patient.current_medications?.map(m => `${m.name} ${m.dosage}`).join(", ") || "None documented";
+    const diagnoses = [patient.primary_diagnosis, ...(patient.secondary_diagnoses || [])].filter(Boolean).join(", ") || "Not documented";
+    return [
+      `Patient: ${patient.first_name} ${patient.last_name}`,
+      `DOB: ${patient.date_of_birth || "Not on file"}`,
+      `Diagnoses: ${diagnoses}`,
+      `Medications: ${meds}`,
+      `Allergies: ${patient.allergies || "NKDA"}`,
+      `Fall Risk: ${patient.functional_status?.fall_risk || "Not documented"}`,
+      `Ambulation: ${patient.functional_status?.ambulation || "Not documented"}`,
+      `ADL Independence: ${patient.functional_status?.adl_independence || "Not documented"}`,
+      `Cognitive Status: ${patient.functional_status?.cognitive_status || "Not documented"}`,
+      `Care Type: ${patient.care_type || "home_health"}`,
+    ].join(" | ");
   };
 
+  // STEP 1 → 2/3: Analyze note for gaps and missing info
   const analyze = async () => {
     if (!note || note.trim().length < 20) return;
     setAnalyzing(true);
     setStep(2);
     setAnalysis(null);
     setAlerts([]);
+    setAnswers({});
     setFinalNote("");
 
     const ctx = buildCtx();
+    const visitSpecific = {
+      admission: "baseline assessment, medication reconciliation, homebound status establishment, physician orders, emergency plan, primary and secondary diagnoses, functional baseline",
+      recertification: "continued homebound status justification, continued skilled need, progress toward goals, updated care plan, discharge planning",
+      discharge: "reason for discharge, goals met/unmet, patient/caregiver education on discharge, instructions given, follow-up plan",
+      routine_visit: "skilled need for this visit, homebound status, patient response to interventions, progress toward care plan goals",
+      prn: "reason for unscheduled visit, assessment findings, interventions, physician notification if applicable",
+    }[visitType] || "skilled need, homebound status, interventions, patient response";
+
     try {
       const [doc, cds] = await Promise.all([
         base44.integrations.Core.InvokeLLM({
-          prompt: `You are a Medicare home health documentation specialist. Analyze this nursing note for compliance gaps.
+          prompt: `You are a Medicare home health compliance expert and clinical documentation specialist. Your job is to analyze a nurse's rough note and identify EXACTLY what is present and what is missing.
 
-NOTE: ${note}
-PATIENT: ${ctx}
+CRITICAL RULES:
+1. NEVER invent or assume clinical information not present in the note.
+2. For each gap, determine: can it be inferred/completed from what IS in the note? Or does it require the nurse to provide new information?
+3. If you can write the clinical sentence from existing note content → set "needs_clarification": false and provide "suggestion" with the EXACT sentence to add.
+4. If the information is NOT in the note at all and is required → set "needs_clarification": true and provide a specific "question" to ask the nurse.
+5. Do NOT flag something as missing if it's already clearly documented in the note.
+
+NURSE'S ROUGH NOTE:
+${note}
+
+PATIENT CONTEXT:
+${ctx}
+
 VISIT TYPE: ${visitType}
+REQUIRED ELEMENTS FOR THIS VISIT TYPE: ${visitSpecific}
 
-Check for: homebound status, skilled need justification, vital signs with interpretation, patient response to interventions, education with teach-back, safety assessment, functional status, care plan progress${visitType === "admission" ? ", baseline assessment, medication reconciliation, emergency plan" : ""}${visitType === "recertification" ? ", continued homebound status, continued skilled need, discharge planning" : ""}${visitType === "discharge" ? ", reason for discharge, goals met/unmet, discharge instructions" : ""}.
+REGULATORY CHECKS TO PERFORM:
+- Medicare Conditions of Participation (42 CFR Part 484)
+- Homebound status documentation (must be explicit)
+- Skilled nursing need justification (must be explicit)
+- Vital signs present with clinical interpretation
+- Patient/caregiver response to each intervention
+- Education with teach-back or comprehension assessment
+- Safety assessment and fall risk addressed
+- Functional status assessment
+- Care plan goal progress
+- State survey standard: pain assessment documented
+- Clinical standard: medication review/adherence documented
 
-For each gap provide the EXACT clinical sentence to add — not instructions like "document X".
+Also produce an enhanced_note that only expands/formalizes what IS in the note — do not add clinical info not present.
 
-Also produce a complete Medicare-compliant enhanced note (no headers, no patient names inline, just clinical narrative).
-
-Return JSON: { "overall_score": 0-100, "compliance_score": 0-100, "quality_score": 0-100, "summary": "string", "findings": [{ "id": "string", "category": "compliance|quality|billing|clinical", "severity": "critical|high|medium|low", "issue": "string", "suggestion": "string", "rationale": "string", "revenue_impact": "string" }], "strengths": ["string"], "enhanced_note": "string" }`,
+Return JSON:
+{
+  "overall_score": 0-100,
+  "compliance_score": 0-100,
+  "quality_score": 0-100,
+  "summary": "one sentence overall assessment",
+  "strengths": ["what is already well documented"],
+  "findings": [
+    {
+      "id": "unique string",
+      "category": "compliance|quality|billing|clinical",
+      "severity": "critical|high|medium|low",
+      "issue": "short label for what is missing/weak",
+      "needs_clarification": true|false,
+      "suggestion": "EXACT clinical sentence to add (only if needs_clarification is false, otherwise empty string)",
+      "question": "Specific question to ask the nurse (only if needs_clarification is true, otherwise empty string)",
+      "rationale": "Why this is required (cite regulation or clinical reason)",
+      "revenue_impact": "PDGM or billing impact if applicable (or empty string)"
+    }
+  ],
+  "enhanced_note": "expanded version of ONLY what is already in the note, formatted as clinical narrative"
+}`,
           response_json_schema: {
             type: "object",
             properties: {
-              overall_score: { type: "number" }, compliance_score: { type: "number" }, quality_score: { type: "number" },
+              overall_score: { type: "number" },
+              compliance_score: { type: "number" },
+              quality_score: { type: "number" },
               summary: { type: "string" },
-              findings: { type: "array", items: { type: "object", properties: { id: { type: "string" }, category: { type: "string" }, severity: { type: "string" }, issue: { type: "string" }, suggestion: { type: "string" }, rationale: { type: "string" }, revenue_impact: { type: "string" } } } },
               strengths: { type: "array", items: { type: "string" } },
+              findings: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    category: { type: "string" },
+                    severity: { type: "string" },
+                    issue: { type: "string" },
+                    needs_clarification: { type: "boolean" },
+                    suggestion: { type: "string" },
+                    question: { type: "string" },
+                    rationale: { type: "string" },
+                    revenue_impact: { type: "string" },
+                  }
+                }
+              },
               enhanced_note: { type: "string" }
             }
           }
         }),
         base44.integrations.Core.InvokeLLM({
-          prompt: `You are a home health clinical decision support system. Review this note for safety risks and required follow-up.
+          prompt: `You are a home health clinical decision support system. Review ONLY what is documented in this note for genuine safety risks.
+
+IMPORTANT: Only flag issues that are actually evidenced by the note content. Do NOT fabricate concerns.
 
 NOTE: ${note}
 PATIENT: ${ctx}
 
-Flag only issues genuinely evidenced by the notes. Check: fall risk, medication concerns, condition exacerbation, vital sign alerts, wound/infection signs, cognitive changes, safety hazards, required follow-up actions.
-
-Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|safety|followup|cardiovascular|infection|cognitive", "urgency": "immediate|soon|monitor", "title": "string", "finding": "string", "recommended_actions": ["string"], "notify_physician": true|false }] }`,
+Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|safety|followup|cardiovascular|infection|cognitive", "urgency": "immediate|soon|monitor", "title": "string", "finding": "exact text from note that triggered this alert", "recommended_actions": ["string"], "notify_physician": true|false }] }`,
           response_json_schema: {
             type: "object",
             properties: {
-              clinical_alerts: { type: "array", items: { type: "object", properties: { risk_type: { type: "string" }, urgency: { type: "string" }, title: { type: "string" }, finding: { type: "string" }, recommended_actions: { type: "array", items: { type: "string" } }, notify_physician: { type: "boolean" } } } }
+              clinical_alerts: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    risk_type: { type: "string" },
+                    urgency: { type: "string" },
+                    title: { type: "string" },
+                    finding: { type: "string" },
+                    recommended_actions: { type: "array", items: { type: "string" } },
+                    notify_physician: { type: "boolean" }
+                  }
+                }
+              }
             }
           }
         })
@@ -258,8 +449,22 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
 
       setAnalysis(doc);
       setAlerts(cds?.clinical_alerts || []);
-      // Auto-select ALL findings by default
-      setSelected(new Set((doc.findings || []).map(f => f.id)));
+
+      // Auto-select all findings that don't need clarification
+      const autoSelect = new Set(
+        (doc.findings || [])
+          .filter(f => !f.needs_clarification)
+          .map(f => f.id)
+      );
+      setSelected(autoSelect);
+
+      // Check if any findings need clarification — if so, stay on step 2 (clarify), else go to step 3
+      const needsClarification = (doc.findings || []).some(f => f.needs_clarification);
+      if (!needsClarification) {
+        setStep(3); // skip clarify step, go straight to review
+      } else {
+        setStep(2);
+      }
     } catch (err) {
       alert("Analysis failed. Please try again.");
       setStep(1);
@@ -268,32 +473,107 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
     }
   };
 
+  // After nurse answers clarification questions, proceed to review
+  const proceedToReview = () => {
+    // For findings that needed clarification and now have answers, convert them to suggestions
+    if (analysis) {
+      const updatedFindings = analysis.findings.map(f => {
+        if (f.needs_clarification && answers[f.id]) {
+          return {
+            ...f,
+            needs_clarification: false,
+            suggestion: answers[f.id], // use nurse's actual answer as the content
+          };
+        }
+        return f;
+      });
+      setAnalysis({ ...analysis, findings: updatedFindings });
+      // Auto-select all that now have content
+      setSelected(new Set(updatedFindings.filter(f => f.suggestion || !f.needs_clarification).map(f => f.id)));
+    }
+    setStep(3);
+  };
+
+  // Build the final note
   const build = async () => {
     if (!analysis) return;
     setBuilding(true);
     try {
       const selectedFindings = analysis.findings.filter(f => selected.has(f.id));
-      let result = analysis.enhanced_note || "";
-      const extras = selectedFindings.filter(f => f.suggestion && !result.toLowerCase().includes(f.suggestion.toLowerCase().substring(0, 30))).map(f => f.suggestion).join(" ");
+      const baseNote = analysis.enhanced_note || "";
 
-      if (extras) {
-        const woven = await base44.integrations.Core.InvokeLLM({
-          prompt: `Seamlessly incorporate these observations into the nursing note. Return ONLY the final clinical narrative — no headers, dates, or names.\n\nNOTE:\n${result}\n\nADD:\n${extras}`
+      // Collect all approved additions
+      const additions = selectedFindings
+        .filter(f => f.suggestion)
+        .map(f => f.suggestion)
+        .join(" ");
+
+      let result = baseNote;
+
+      if (additions) {
+        result = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a Medicare home health documentation specialist. Your job is to produce a final, polished, Medicare-compliant nursing note.
+
+BASE NOTE (from nurse's original documentation):
+${baseNote}
+
+APPROVED ADDITIONS (selected by the nurse — incorporate these naturally):
+${additions}
+
+RULES:
+1. Only use information from the BASE NOTE and APPROVED ADDITIONS above. Do not add any clinical information not present in those sources.
+2. Write in professional clinical narrative style — past tense, third person ("Patient was assessed...", "Nurse educated patient on...")
+3. No headers, no bullet points, no patient names — pure clinical narrative paragraph(s)
+4. Ensure logical flow: assessment → interventions → patient response → education → plan
+5. Every statement must be supportable by the source material above.
+
+Return ONLY the final clinical note text, nothing else.`
         });
-        result = typeof woven === "string" ? woven : result + " " + extras;
+        if (typeof result !== "string") result = baseNote + " " + additions;
       }
 
       setFinalNote(result);
       setNoteSections(parseNoteSections(result));
-      setStep(3);
+      setStep(4);
 
+      // Save to database
       if (patientId && currentUser?.email) {
-        const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
+        const visit = await base44.entities.Visit.create({
+          patient_id: patientId,
+          visit_date: visitDate,
+          visit_type: visitType,
+          status: "completed",
+          nurse_notes: result,
+          raw_transcription: note
+        });
         await Promise.all([
-          base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: result.length, quality_score: analysis.overall_score, rough_note_compliance: Math.max(0, analysis.compliance_score - 20), enhanced_note_compliance: analysis.compliance_score, compliance_improvement: 20 }),
-          base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysis.compliance_score, status: analysis.compliance_score >= 90 ? "passed" : analysis.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
+          base44.entities.NoteConversion.create({
+            nurse_email: currentUser.email,
+            patient_id: patientId,
+            visit_type: visitType,
+            diagnosis: patient?.primary_diagnosis || "",
+            rough_note_length: note.length,
+            enhanced_note_length: result.length,
+            quality_score: analysis.overall_score,
+            rough_note_compliance: Math.max(0, analysis.compliance_score - 20),
+            enhanced_note_compliance: analysis.compliance_score,
+            compliance_improvement: 20
+          }),
+          base44.entities.ComplianceAudit.create({
+            visit_id: visit.id,
+            nurse_email: currentUser.email,
+            patient_id: patientId,
+            audit_date: new Date().toISOString(),
+            compliance_score: analysis.compliance_score,
+            status: analysis.compliance_score >= 90 ? "passed" : analysis.compliance_score >= 80 ? "flagged" : "critical",
+            audit_type: "automated"
+          })
         ]);
-        logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysis.overall_score });
+        logActivity(ActivityActions.NOTE_ENHANCED, {
+          patient_id: patientId,
+          visit_type: visitType,
+          overall_score: analysis.overall_score
+        });
       }
     } catch (err) {
       alert("Failed to build note. Please try again.");
@@ -302,14 +582,19 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
     }
   };
 
-  const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
+  const copy = async () => {
+    await navigator.clipboard.writeText(finalNote);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
   const reset = () => {
     setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set());
-    setFinalNote(""); setStep(1); setNoteSections(null); setDraftRestored(false);
+    setAnswers({}); setFinalNote(""); setStep(1); setNoteSections(null);
+    setDraftRestored(false);
     localStorage.removeItem(DRAFT_KEY);
   };
 
-  // Parse final note into logical sections for selective copying
   const parseNoteSections = (text) => {
     if (!text) return null;
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
@@ -318,7 +603,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
     const education = sentences.filter(s => /teach|educat|instruct|verbali|understand|demonstrat/i.test(s));
     const safety = sentences.filter(s => /fall|safe|hazard|medic|adher|complian/i.test(s));
     const plan = sentences.filter(s => /plan|next|follow|return|notif|physician|refer|schedul/i.test(s));
-    const rest = sentences.filter(s => !vitals.includes(s) && !assessment.includes(s) && !education.includes(s) && !safety.includes(s) && !plan.includes(s));
+    const rest = sentences.filter(s => ![...vitals, ...assessment, ...education, ...safety, ...plan].includes(s));
     const secs = [
       { key: "vitals", label: "Vital Signs", text: vitals.join(" ").trim() },
       { key: "assessment", label: "Assessment", text: assessment.join(" ").trim() },
@@ -335,23 +620,32 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
     setCopiedSection(key);
     setTimeout(() => setCopiedSection(null), 2000);
   };
-  const toggle = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  const toggle = (id) => setSelected(prev => {
+    const n = new Set(prev);
+    n.has(id) ? n.delete(id) : n.add(id);
+    return n;
+  });
 
   const urgentAlerts = alerts.filter(a => a.urgency === "immediate");
-  const criticalCount = analysis?.findings?.filter(f => f.severity === "critical").length || 0;
-  const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
+  const criticalFindings = analysis?.findings?.filter(f => f.severity === "critical") || [];
+  const needsClarificationFindings = analysis?.findings?.filter(f => f.needs_clarification) || [];
+  const answeredCount = needsClarificationFindings.filter(f => answers[f.id]).length;
+  const scoreColor = !analysis ? "text-gray-400" :
+    analysis.overall_score >= 80 ? "text-green-600" :
+    analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
   const ready = note.trim().length >= 20;
 
   return (
     <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3 sm:space-y-4">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-600" /> Smart Note Assistant
           </h1>
-          <p className="text-xs text-gray-500 mt-0.5">Type or dictate rough notes → AI builds a Medicare-compliant note</p>
+          <p className="text-xs text-gray-500 mt-0.5">Rough notes → fully Medicare-compliant clinical documentation</p>
         </div>
         {step > 1 && (
           <Button variant="outline" size="sm" onClick={reset} className="gap-1.5 text-gray-600">
@@ -360,7 +654,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         )}
       </div>
 
-      {/* ── Mode Tabs ── */}
+      {/* Mode Tabs */}
       <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm gap-1">
         <button
           onClick={() => setActiveTab("write")}
@@ -376,205 +670,284 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         </button>
       </div>
 
-      {/* ── Visit Summary Tab ── */}
+      {/* Visit Summary Tab */}
       {activeTab === "summary" && (
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <VisitSummaryGenerator patientId={patientId} />
         </div>
       )}
 
-      {/* ── Note Builder Tab ── */}
-      {activeTab !== "summary" && <React.Fragment>
-
-      {/* ── Draft Restore Banner ── */}
-      {hasDraft && step === 1 && (
-        <div className="flex items-center gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 shadow-sm">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-800">Unsaved draft found</p>
-            <p className="text-xs text-amber-600">You have a note in progress from a previous session.</p>
-          </div>
-          <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs shrink-0" onClick={restoreDraft}>Restore</Button>
-          <Button size="sm" variant="ghost" className="h-8 text-xs text-amber-600 shrink-0" onClick={dismissDraft}>Discard</Button>
-        </div>
-      )}
-      {draftRestored && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-          <CheckCircle2 className="w-4 h-4 text-green-600" />
-          <p className="text-xs text-green-700 font-medium">Draft restored successfully.</p>
-        </div>
-      )}
-
-      {/* ── Step pills ── */}
-      <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
-        {["Write", "Review", "Copy"].map((label, i) => {
-          const n = i + 1;
-          const active = step === n;
-          const done = step > n;
-          return (
-            <React.Fragment key={n}>
-              <div className={`flex items-center gap-1.5 text-xs font-semibold ${active ? "text-indigo-700" : done ? "text-green-600" : "text-gray-400"}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${active ? "bg-indigo-600 text-white" : done ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}>
-                  {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : n}
-                </div>
-                <span className="hidden sm:inline">{label}</span>
+      {activeTab !== "summary" && (
+        <>
+          {/* Draft banner */}
+          {hasDraft && step === 1 && (
+            <div className="flex items-center gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 shadow-sm">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-800">Unsaved draft found</p>
+                <p className="text-xs text-amber-600">You have a note in progress from a previous session.</p>
               </div>
-              {i < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-1"><div className={`h-full ${step > n ? "bg-green-400 w-full" : "w-0"} transition-all duration-500`} /></div>}
-            </React.Fragment>
-          );
-        })}
-      </div>
-
-      {/* ══ STEP 1: WRITE ══ */}
-      {step === 1 && (
-        <div className="space-y-3">
-          {/* Context row */}
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 space-y-4">
-            {/* Patient selector */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <User className="w-3.5 h-3.5 text-indigo-500" />
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Patient</label>
-                <span className="text-xs text-gray-400 font-normal normal-case ml-1">optional</span>
-              </div>
-              <Select value={patientId} onValueChange={setPatientId}>
-                <SelectTrigger className="bg-gray-50 border-gray-200 hover:border-indigo-400 hover:bg-white transition-all h-12 sm:h-11 text-sm rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 shadow-none">
-                  <SelectValue placeholder={
-                    <span className="flex items-center gap-2 text-gray-400">
-                      <User className="w-4 h-4" /> Search for a patient…
-                    </span>
-                  } />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl shadow-xl border-gray-200 max-h-[50vh]">
-                  {patients.map(p => (
-                    <SelectItem key={p.id} value={p.id} className="py-3 sm:py-2.5 px-3 cursor-pointer rounded-lg mx-1 my-0.5 min-h-[52px] sm:min-h-0">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-gray-900">{p.first_name} {p.last_name}</span>
-                        {p.primary_diagnosis && <span className="text-xs text-gray-500 mt-0.5">{p.primary_diagnosis}</span>}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs shrink-0" onClick={restoreDraft}>Restore</Button>
+              <Button size="sm" variant="ghost" className="h-8 text-xs text-amber-600 shrink-0" onClick={dismissDraft}>Discard</Button>
             </div>
-
-            <div className="border-t border-gray-100" />
-
-            {/* Visit type selector */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Visit Type</label>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {VISIT_TYPES.map(v => (
-                  <button
-                    key={v.value}
-                    onClick={() => setVisitType(v.value)}
-                    className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${
-                      visitType === v.value
-                        ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200"
-                        : "bg-gray-50 border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
-                    }`}
-                  >
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {patient && (
-            <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-              <User className="w-3.5 h-3.5 shrink-0" />
-              <span><strong>{patient.first_name} {patient.last_name}</strong>{patient.primary_diagnosis ? ` · ${patient.primary_diagnosis}` : ""}{patient.current_medications?.length > 0 ? ` · ${patient.current_medications.length} meds` : ""}{patient.functional_status?.fall_risk === "high" && <span className="ml-2 text-red-600 font-bold">⚠ High Fall Risk</span>}</span>
+          )}
+          {draftRestored && (
+            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <p className="text-xs text-green-700 font-medium">Draft restored.</p>
             </div>
           )}
 
-          {/* Templates */}
-          <NoteTemplateSelector
-            currentVisitType={visitType}
-            onSelect={(templateContent, templateVisitType) => {
-              setNote(templateContent);
-              setVisitType(templateVisitType);
-              setTimeout(() => textareaRef.current?.focus(), 100);
-            }}
-          />
+          {/* Step indicator */}
+          <StepIndicator step={step} />
 
-          {/* Main note textarea — hero element */}
-          <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
-              <span className="text-xs font-semibold text-indigo-700">Your Notes</span>
-              <Button
-                variant={listening ? "destructive" : "ghost"}
-                size="sm"
-                onClick={listening ? stopDictation : startDictation}
-                className="h-7 gap-1 text-xs"
-              >
-                {listening
-                  ? <><MicOff className="w-3.5 h-3.5" /><span className="animate-pulse">Stop recording</span></>
-                  : <><Mic className="w-3.5 h-3.5" /> Dictate</>}
-              </Button>
-            </div>
-            <textarea
-              ref={textareaRef}
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              placeholder={"Jot bullet points or rough sentences — AI does the rest.\n\n• BP 148/90, HR 82, O2 95% RA\n• pt c/o SOB with exertion, uses walker\n• wound on R heel 2×3 cm, granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter in hallway, discussed w/ family"}
-              className="w-full min-h-[220px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed"
-              spellCheck={false}
-            />
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50 gap-3">
-              <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-gray-400"}`}>
-                {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more needed`}
-              </span>
-              <Button onClick={analyze} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
-                <Sparkles className="w-4 h-4" /> Analyze <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Vital sign validation */}
-          <VitalSignValidator noteText={note} />
-        </div>
-      )}
-
-      {/* ══ STEP 2: REVIEW ══ */}
-      {step === 2 && (
-        <div className="space-y-4">
-          {analyzing ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
-              <Loader2 className="w-10 h-10 text-indigo-500 mx-auto animate-spin mb-3" />
-              <p className="font-semibold text-gray-800">Analyzing your note…</p>
-              <p className="text-sm text-gray-400 mt-1">Checking Medicare compliance & clinical risks</p>
-            </div>
-          ) : analysis && (
-            <>
-              {/* Score bar */}
-              <div className={`rounded-xl border-2 p-4 ${analysis.overall_score >= 80 ? "border-green-300 bg-green-50" : analysis.overall_score >= 60 ? "border-orange-300 bg-orange-50" : "border-red-300 bg-red-50"}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">Note Quality Score</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{analysis.summary}</p>
+          {/* ══ STEP 1: WRITE ══ */}
+          {step === 1 && (
+            <div className="space-y-3">
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 space-y-4">
+                {/* Patient */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <User className="w-3.5 h-3.5 text-indigo-500" />
+                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Patient</label>
+                    <span className="text-xs text-gray-400 font-normal normal-case ml-1">optional — improves compliance checks</span>
                   </div>
-                  <span className={`text-4xl font-bold ${scoreColor}`}>{analysis.overall_score}%</span>
+                  <Select value={patientId} onValueChange={setPatientId}>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12 sm:h-11 text-sm rounded-xl">
+                      <SelectValue placeholder={<span className="flex items-center gap-2 text-gray-400"><User className="w-4 h-4" /> Search for a patient…</span>} />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl shadow-xl max-h-[50vh]">
+                      {patients.map(p => (
+                        <SelectItem key={p.id} value={p.id} className="py-3 sm:py-2.5 px-3 min-h-[52px] sm:min-h-0">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900">{p.first_name} {p.last_name}</span>
+                            {p.primary_diagnosis && <span className="text-xs text-gray-500 mt-0.5">{p.primary_diagnosis}</span>}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex-1 bg-white rounded-lg p-2 text-center">
-                    <p className="text-xs text-gray-400">Compliance</p>
-                    <p className="text-lg font-bold text-orange-600">{analysis.compliance_score}%</p>
+
+                <div className="border-t border-gray-100" />
+
+                {/* Visit type */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
+                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Visit Type</label>
                   </div>
-                  <div className="flex-1 bg-white rounded-lg p-2 text-center">
-                    <p className="text-xs text-gray-400">Quality</p>
-                    <p className="text-lg font-bold text-blue-600">{analysis.quality_score}%</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {VISIT_TYPES.map(v => (
+                      <button
+                        key={v.value}
+                        onClick={() => setVisitType(v.value)}
+                        className={`py-3 sm:py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-center leading-tight min-h-[48px] sm:min-h-0 active:scale-95 ${
+                          visitType === v.value
+                            ? "bg-indigo-600 border-indigo-600 text-white shadow-md"
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50"
+                        }`}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                {analysis.strengths?.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1 pt-3 border-t border-current/10">
-                    {analysis.strengths.slice(0, 5).map((s, i) => <span key={i} className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">✓ {s}</span>)}
-                  </div>
-                )}
               </div>
 
+              {patient && (
+                <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                  <User className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    <strong>{patient.first_name} {patient.last_name}</strong>
+                    {patient.primary_diagnosis ? ` · ${patient.primary_diagnosis}` : ""}
+                    {patient.current_medications?.length > 0 ? ` · ${patient.current_medications.length} meds` : ""}
+                    {patient.functional_status?.fall_risk === "high" && (
+                      <span className="ml-2 text-red-600 font-bold">⚠ High Fall Risk</span>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              <NoteTemplateSelector
+                currentVisitType={visitType}
+                onSelect={(content, type) => {
+                  setNote(content);
+                  setVisitType(type);
+                  setTimeout(() => textareaRef.current?.focus(), 100);
+                }}
+              />
+
+              {/* What the system checks — transparency banner */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                <p className="text-xs font-semibold text-indigo-700 mb-1.5 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5" /> Regulatory checks performed on your note:
+                </p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-indigo-600">
+                  {[
+                    "Medicare 42 CFR Part 484",
+                    "Homebound status documentation",
+                    "Skilled need justification",
+                    "Vital signs + interpretation",
+                    "Patient response to interventions",
+                    "Education with teach-back",
+                    "Safety / fall risk assessment",
+                    "Functional status documentation",
+                    "Care plan goal progress",
+                    "Pain assessment",
+                    "Medication adherence review",
+                    "State survey standards",
+                  ].map((item, i) => (
+                    <span key={i} className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-indigo-400 shrink-0" />
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Main note area */}
+              <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+                  <span className="text-xs font-semibold text-indigo-700">Your Rough Notes / Bullet Points</span>
+                  <Button
+                    variant={listening ? "destructive" : "ghost"}
+                    size="sm"
+                    onClick={listening ? stopDictation : startDictation}
+                    className="h-7 gap-1 text-xs"
+                  >
+                    {listening
+                      ? <><MicOff className="w-3.5 h-3.5" /><span className="animate-pulse">Stop recording</span></>
+                      : <><Mic className="w-3.5 h-3.5" /> Dictate</>}
+                  </Button>
+                </div>
+                <textarea
+                  ref={textareaRef}
+                  value={note}
+                  onChange={e => setNote(e.target.value)}
+                  placeholder={"Enter bullet points or a rough draft — the system will NOT invent information.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• pt c/o SOB with exertion, uses walker\n• wound on R heel 2×3 cm, granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter in hallway, discussed w/ family\n• homebound: unable to leave home without considerable effort\n• skilled need: wound assessment and dressing change"}
+                  className="w-full min-h-[240px] sm:min-h-[320px] text-sm border-0 px-4 py-3 focus:ring-0 bg-white font-mono resize-none outline-none leading-relaxed"
+                  spellCheck={false}
+                />
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50 gap-3">
+                  <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-gray-400"}`}>
+                    {ready ? `${note.length} chars — ready to analyze` : `${20 - note.trim().length} more chars needed`}
+                  </span>
+                  <Button
+                    onClick={analyze}
+                    disabled={!ready}
+                    className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto"
+                  >
+                    <Sparkles className="w-4 h-4" /> Analyze & Check Compliance <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <VitalSignValidator noteText={note} />
+            </div>
+          )}
+
+          {/* ══ STEP 2: CLARIFY (AI asks questions for missing info) ══ */}
+          {step === 2 && (
+            <div className="space-y-4">
+              {analyzing ? (
+                <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
+                  <Loader2 className="w-10 h-10 text-indigo-500 mx-auto animate-spin mb-3" />
+                  <p className="font-semibold text-gray-800">Performing regulatory compliance check…</p>
+                  <p className="text-sm text-gray-400 mt-1">Checking Medicare, clinical, and state standards</p>
+                </div>
+              ) : analysis && (
+                <>
+                  {/* Score */}
+                  <div className={`rounded-xl border-2 p-4 ${analysis.overall_score >= 80 ? "border-green-300 bg-green-50" : analysis.overall_score >= 60 ? "border-orange-300 bg-orange-50" : "border-red-300 bg-red-50"}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700">Initial Compliance Score</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{analysis.summary}</p>
+                      </div>
+                      <span className={`text-4xl font-bold ${scoreColor}`}>{analysis.overall_score}%</span>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1 bg-white rounded-lg p-2 text-center">
+                        <p className="text-xs text-gray-400">Medicare Compliance</p>
+                        <p className="text-lg font-bold text-orange-600">{analysis.compliance_score}%</p>
+                      </div>
+                      <div className="flex-1 bg-white rounded-lg p-2 text-center">
+                        <p className="text-xs text-gray-400">Clinical Quality</p>
+                        <p className="text-lg font-bold text-blue-600">{analysis.quality_score}%</p>
+                      </div>
+                    </div>
+                    {analysis.strengths?.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1 pt-3 border-t border-current/10">
+                        {analysis.strengths.slice(0, 5).map((s, i) => (
+                          <span key={i} className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">✓ {s}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Clarification questions */}
+                  {needsClarificationFindings.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageSquare className="w-5 h-5 text-amber-600" />
+                          <p className="font-semibold text-amber-900">The system needs your input</p>
+                        </div>
+                        <p className="text-sm text-amber-800">
+                          The following required elements are <strong>not present in your note</strong>. The system cannot complete these without your input — please answer each question below. You may skip any that are not applicable.
+                        </p>
+                        <p className="text-xs text-amber-600 mt-1">{answeredCount} of {needsClarificationFindings.length} answered</p>
+                      </div>
+                      {needsClarificationFindings.map(f => (
+                        <div key={f.id} className={`border-l-4 rounded-lg p-4 ${SEV_STYLE[f.severity] || SEV_STYLE.medium}`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={`text-xs ${SEV_BADGE[f.severity]}`}>{f.severity}</Badge>
+                            <span className="text-sm font-semibold text-gray-900">{f.issue}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-2 italic">{f.rationale}</p>
+                          <p className="text-sm font-medium text-amber-800 mb-2 flex items-center gap-1.5">
+                            <HelpCircle className="w-4 h-4 shrink-0" />
+                            {f.question}
+                          </p>
+                          <Textarea
+                            placeholder="Enter your response here (leave blank to skip)…"
+                            value={answers[f.id] || ""}
+                            onChange={e => setAnswers(prev => ({ ...prev, [f.id]: e.target.value }))}
+                            className="text-sm min-h-[70px] bg-white"
+                          />
+                          {answers[f.id] && (
+                            <p className="text-xs text-green-700 mt-1 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" /> Saved — will be included in final note
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={proceedToReview}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2"
+                    >
+                      <CheckSquare className="w-4 h-4" />
+                      {needsClarificationFindings.length > 0
+                        ? `Continue with ${answeredCount}/${needsClarificationFindings.length} answered`
+                        : "Continue to Review"
+                      } <ArrowRight className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" onClick={() => setStep(1)} className="h-12 px-4">
+                      ← Back
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ══ STEP 3: REVIEW & SELECT ══ */}
+          {step === 3 && analysis && (
+            <div className="space-y-4">
               {/* Clinical alerts */}
               {alerts.length > 0 && (
                 <div className="space-y-2">
@@ -586,131 +959,175 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
                   {urgentAlerts.length > 0 && (
                     <Alert className="border-red-400 bg-red-50 py-2">
                       <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <AlertDescription className="text-red-900 text-sm font-semibold">{urgentAlerts.length} urgent alert{urgentAlerts.length > 1 ? "s" : ""} — review before completing this visit.</AlertDescription>
+                      <AlertDescription className="text-red-900 text-sm font-semibold">
+                        {urgentAlerts.length} urgent alert{urgentAlerts.length > 1 ? "s" : ""} — review before completing this visit.
+                      </AlertDescription>
                     </Alert>
                   )}
                   {alerts.map((a, i) => <AlertCard key={i} alert={a} />)}
                 </div>
               )}
 
-              {/* Documentation suggestions */}
+              {/* Suggestions */}
               {analysis.findings?.length > 0 ? (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">Suggested Additions <span className="text-gray-400 font-normal">({analysis.findings.length})</span></p>
-                      <p className="text-xs text-gray-400">{selected.size} of {analysis.findings.length} selected — uncheck any you don't want</p>
+                  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">Review Suggested Additions</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Check items to include. Only checked items will appear in your final note.
+                        </p>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
+                          onClick={() => setSelected(new Set(analysis.findings.map(f => f.id)))}>
+                          <CheckSquare className="w-3.5 h-3.5" /> All
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
+                          onClick={() => setSelected(new Set())}>
+                          <XCircle className="w-3.5 h-3.5" /> None
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-1.5">
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set(analysis.findings.map(f => f.id)))}>All</Button>
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>None</Button>
-                    </div>
+                    <p className="text-xs text-indigo-600 font-medium">
+                      {selected.size} of {analysis.findings.length} selected
+                    </p>
                   </div>
-                  {criticalCount > 0 && (
+
+                  {criticalFindings.length > 0 && (
                     <Alert className="border-red-300 bg-red-50 py-2">
                       <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <AlertDescription className="text-red-800 text-sm">{criticalCount} critical element{criticalCount > 1 ? "s" : ""} missing — required for Medicare compliance.</AlertDescription>
+                      <AlertDescription className="text-red-800 text-sm">
+                        {criticalFindings.length} critical Medicare compliance element{criticalFindings.length > 1 ? "s" : ""} — required for payment and audit protection.
+                      </AlertDescription>
                     </Alert>
                   )}
+
                   {[...analysis.findings]
                     .sort((a, b) => ({ critical: 0, high: 1, medium: 2, low: 3 }[a.severity] ?? 3) - ({ critical: 0, high: 1, medium: 2, low: 3 }[b.severity] ?? 3))
-                    .map(f => <SuggestionCard key={f.id} finding={f} selected={selected.has(f.id)} onToggle={() => toggle(f.id)} />)}
+                    .map(f => (
+                      <SuggestionCard
+                        key={f.id}
+                        finding={f}
+                        selected={selected.has(f.id)}
+                        onToggle={() => toggle(f.id)}
+                        answers={answers}
+                        onAnswerChange={(id, val) => setAnswers(prev => ({ ...prev, [id]: val }))}
+                      />
+                    ))}
                 </div>
               ) : (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
-                  <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                  <p className="font-semibold text-green-800">Documentation looks complete!</p>
-                  <p className="text-sm text-green-600 mt-1">No gaps detected. Ready to build your note.</p>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                  <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto mb-2" />
+                  <p className="font-bold text-green-800 text-lg">Note is fully compliant!</p>
+                  <p className="text-sm text-green-600 mt-1">No gaps detected. Ready to generate final note.</p>
                 </div>
               )}
 
-              <Button onClick={build} disabled={building} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 h-14 sm:h-12 text-base font-semibold">
+              <Button
+                onClick={build}
+                disabled={building}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 h-14 sm:h-12 text-base font-semibold"
+              >
                 {building
-                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Building…</>
-                  : <><Sparkles className="w-4 h-4 mr-2" /> Build Final Note{selected.size > 0 ? ` (${selected.size} additions)` : ""} <ArrowRight className="w-4 h-4 ml-1.5" /></>}
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Building final note…</>
+                  : <><Sparkles className="w-4 h-4 mr-2" /> Generate Final Medicare-Compliant Note <ArrowRight className="w-4 h-4 ml-1.5" /></>
+                }
               </Button>
-              <button className="w-full text-xs text-gray-400 hover:text-gray-600 py-1" onClick={() => setStep(1)}>← Back to edit</button>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ══ STEP 3: COPY ══ */}
-      {step === 3 && (
-        <div className="space-y-3">
-          {urgentAlerts.length > 0 && (
-            <Alert className="border-red-400 bg-red-50 py-2">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <AlertDescription className="text-red-900 text-sm"><strong>Reminder:</strong> {urgentAlerts.length} urgent alert{urgentAlerts.length > 1 ? "s were" : " was"} flagged. Confirm follow-up actions before closing.</AlertDescription>
-            </Alert>
+              <button className="w-full text-xs text-gray-400 hover:text-gray-600 py-1" onClick={() => setStep(needsClarificationFindings.length > 0 ? 2 : 1)}>
+                ← Back
+              </button>
+            </div>
           )}
 
-          {/* CTA banner */}
-          <div className="flex items-center gap-3 bg-white border-2 border-green-400 rounded-xl px-4 py-3 shadow-sm">
-            <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-green-800">Note Ready!</p>
-              <p className="text-xs text-gray-400">Review below, then copy to your EMR</p>
-            </div>
-            {analysis && <Badge className="bg-green-600 text-white px-2.5 py-1 text-sm">{analysis.overall_score}%</Badge>}
-            <Button onClick={copy} className="bg-green-600 hover:bg-green-700 h-10 px-4 gap-2 font-semibold shrink-0">
-              {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
-            </Button>
-          </div>
+          {/* ══ STEP 4: FINAL NOTE ══ */}
+          {step === 4 && (
+            <div className="space-y-3">
+              {urgentAlerts.length > 0 && (
+                <Alert className="border-red-400 bg-red-50 py-2">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <AlertDescription className="text-red-900 text-sm">
+                    <strong>Reminder:</strong> {urgentAlerts.length} urgent clinical alert{urgentAlerts.length > 1 ? "s were" : " was"} flagged. Confirm follow-up before closing.
+                  </AlertDescription>
+                </Alert>
+              )}
 
-          {/* Note editor */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-              <span className="text-sm font-semibold text-gray-700">Medicare-Compliant Note</span>
-              <span className="text-xs text-gray-400">editable · {finalNote.length} chars</span>
-            </div>
-            <textarea
-              value={finalNote}
-              onChange={e => { setFinalNote(e.target.value); setNoteSections(parseNoteSections(e.target.value)); }}
-              className="w-full min-h-[320px] font-mono text-sm border-0 px-4 py-3 focus:ring-0 bg-white resize-none outline-none"
-            />
-            <div className="flex gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-              <Button onClick={copy} className="flex-1 bg-green-600 hover:bg-green-700 h-12 sm:h-10 gap-2 font-semibold">
-                {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy All</>}
-              </Button>
-              <Button variant="outline" className="h-12 sm:h-10 px-4 text-sm" onClick={() => { setStep(2); setFinalNote(""); }}>← Review</Button>
-              <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={reset}><RotateCcw className="w-4 h-4" /></Button>
-            </div>
-          </div>
-
-          {/* Diff View */}
-          <NoteDiffView originalNote={note} enhancedNote={finalNote} />
-
-          {/* Section-by-section copy */}
-          {noteSections && noteSections.length > 1 && (
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="px-4 py-2.5 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
-                <Copy className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="text-sm font-semibold text-indigo-700">Copy Individual Sections</span>
-                <span className="text-xs text-indigo-400">click any section to copy it</span>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {noteSections.map(sec => (
-                  <div key={sec.key} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 group">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{sec.label}</p>
-                      <p className="text-xs text-gray-700 font-mono line-clamp-2">{sec.text}</p>
-                    </div>
-                    <button
-                      onClick={() => copySection(sec.key, sec.text)}
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg text-xs font-medium border transition-colors bg-white border-gray-200 hover:border-indigo-400 hover:text-indigo-600 text-gray-500 active:scale-95"
-                    >
-                      {copiedSection === sec.key ? <><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
-                    </button>
+              {/* Compliance badge */}
+              <div className="flex items-center gap-3 bg-white border-2 border-green-400 rounded-xl px-4 py-3 shadow-sm">
+                <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-green-800">Medicare-Compliant Note Ready</p>
+                  <p className="text-xs text-gray-400">Based only on information you provided — review before copying to EMR</p>
+                </div>
+                {analysis && (
+                  <div className="flex gap-2 shrink-0">
+                    <Badge className="bg-green-600 text-white px-2.5 py-1 text-sm">{analysis.overall_score}%</Badge>
                   </div>
-                ))}
+                )}
+                <Button onClick={copy} className="bg-green-600 hover:bg-green-700 h-10 px-4 gap-2 font-semibold shrink-0">
+                  {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
+                </Button>
               </div>
+
+              {/* Final note editor */}
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                  <span className="text-sm font-semibold text-gray-700">Final Clinical Note</span>
+                  <span className="text-xs text-gray-400">editable · {finalNote.length} chars</span>
+                </div>
+                <textarea
+                  value={finalNote}
+                  onChange={e => { setFinalNote(e.target.value); setNoteSections(parseNoteSections(e.target.value)); }}
+                  className="w-full min-h-[320px] font-mono text-sm border-0 px-4 py-3 focus:ring-0 bg-white resize-none outline-none"
+                />
+                <div className="flex gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
+                  <Button onClick={copy} className="flex-1 bg-green-600 hover:bg-green-700 h-12 sm:h-10 gap-2 font-semibold">
+                    {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy All</>}
+                  </Button>
+                  <Button variant="outline" className="h-12 sm:h-10 px-4 text-sm" onClick={() => { setStep(3); setFinalNote(""); }}>
+                    ← Revise
+                  </Button>
+                  <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={reset}>
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <NoteDiffView originalNote={note} enhancedNote={finalNote} />
+
+              {/* Section copy */}
+              {noteSections && noteSections.length > 1 && (
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="px-4 py-2.5 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
+                    <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                    <span className="text-sm font-semibold text-indigo-700">Copy Individual Sections</span>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {noteSections.map(sec => (
+                      <div key={sec.key} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{sec.label}</p>
+                          <p className="text-xs text-gray-700 font-mono line-clamp-2">{sec.text}</p>
+                        </div>
+                        <button
+                          onClick={() => copySection(sec.key, sec.text)}
+                          className="shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg text-xs font-medium border transition-colors bg-white border-gray-200 hover:border-indigo-400 hover:text-indigo-600 text-gray-500 active:scale-95"
+                        >
+                          {copiedSection === sec.key
+                            ? <><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Copied</>
+                            : <><Copy className="w-3.5 h-3.5" /> Copy</>
+                          }
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
-
-      </React.Fragment>}
     </div>
   );
 }
