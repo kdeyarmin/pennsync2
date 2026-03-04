@@ -24,8 +24,13 @@ import {
   RotateCcw,
   FileText,
   MessageSquare,
-  BookOpen
+  BookOpen,
+  Heart,
+  Home,
+  Users
 } from "lucide-react";
+import CareScopeSelector from "../components/profile/CareScopeSelector";
+import CareScopeBadge from "../components/profile/CareScopeBadge";
 
 export default function UserSettings() {
   const queryClient = useQueryClient();
