@@ -115,19 +115,46 @@ export default function Dashboard() {
   };
 
   const fullName = currentUser?.full_name || 'there';
+  const careScope = currentUser?.care_scope;
+
+  // Banner gradient based on care scope
+  const bannerGradient = careScope === "hospice"
+    ? "from-purple-500 via-purple-600 to-purple-700"
+    : careScope === "both"
+    ? "from-indigo-500 via-blue-600 to-purple-600"
+    : "from-blue-500 via-blue-600 to-blue-700";
 
   if (isLoading) {
     return <DashboardSkeleton />;
   }
 
+  // If user hasn't set their care scope yet, prompt them
+  if (currentUser && !careScope) {
+    return (
+      <div className="max-w-lg mx-auto pt-8 px-4">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Welcome to Penn Sync!</h1>
+          <p className="text-gray-500 mt-1">Let's set up your profile before we get started.</p>
+        </div>
+        <CareScopeSelector currentUser={currentUser} onSaved={() => {}} />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto min-h-screen">
       {/* Welcome Banner */}
-      <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border-none shadow-xl overflow-hidden">
+      <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-xl overflow-hidden`}>
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
           <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1">
+              {careScope === "hospice" ? <Heart className="w-5 h-5 text-white/80" /> : <Home className="w-5 h-5 text-white/80" />}
+              <span className="text-white/80 text-xs font-medium uppercase tracking-wide">
+                {careScope === "hospice" ? "Hospice" : careScope === "both" ? "Home Health & Hospice" : "Home Health"}
+              </span>
+            </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
               {getGreeting()}, {fullName}! 👋
             </h1>
