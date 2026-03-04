@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -206,12 +206,11 @@ export default function Patients() {
       return base44.entities.Visit.create(visitData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todayVisits'] }); // Invalidate relevant queries, e.g., for a dashboard showing today's visits
-      alert('Visit scheduled successfully!'); // Simple feedback
+    queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
+    toast.success('Visit scheduled successfully!');
     },
     onError: (error) => {
-      console.error("Failed to schedule visit:", error);
-      alert('Failed to schedule visit. Please try again.');
+      toast.error(`Failed to schedule visit: ${error.message}`);
     }
   });
 
