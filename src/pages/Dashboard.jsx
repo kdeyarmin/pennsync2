@@ -1,5 +1,5 @@
 import React, { useMemo, lazy, Suspense, useEffect } from "react";
-import { isValid } from "date-fns";
+
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -130,7 +130,7 @@ export default function Dashboard() {
               {getGreeting()}, {fullName}! 👋
             </h1>
             <p className="text-white text-xs sm:text-sm md:text-base drop-shadow-md">
-              {formatEastern(new Date(), 'EEEE, MMMM d, yyyy')}
+              {formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
             </p>
           </div>
         </CardContent>
