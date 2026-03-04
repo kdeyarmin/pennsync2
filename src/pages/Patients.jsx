@@ -2,14 +2,12 @@ import React, { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, User, Phone, MapPin, FileText, X, Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, User, FileText, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { format, isValid } from 'date-fns';
-import { secureDelete, handleSecureError, logSecurityEvent } from "../components/utils/security";
+import { format } from 'date-fns';
+import { secureDelete, handleSecureError } from "../components/utils/security";
 import {
   Dialog,
   DialogContent,
