@@ -1,4 +1,4 @@
-import React, { useMemo, lazy, Suspense } from "react";
+import React, { useMemo, lazy, Suspense, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -37,7 +37,7 @@ export default function Dashboard() {
     });
 
     // Log page visit with user context
-    React.useEffect(() => {
+    useEffect(() => {
       if (currentUser?.email) {
         logActivity(ActivityActions.PAGE_VISIT, {
           page: 'Dashboard',
@@ -129,7 +129,7 @@ export default function Dashboard() {
               {getGreeting()}, {fullName}! 👋
             </h1>
             <p className="text-white text-xs sm:text-sm md:text-base drop-shadow-md">
-              {isValid(new Date()) ? formatEastern(new Date(), 'EEEE, MMMM d, yyyy').replace(' ET', '') : new Date().toLocaleDateString()}
+              {formatEastern(new Date(), 'EEEE, MMMM d, yyyy')}
             </p>
           </div>
         </CardContent>
