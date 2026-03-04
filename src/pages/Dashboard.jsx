@@ -180,18 +180,21 @@ export default function Dashboard() {
           { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,bg: "bg-green-50",  border: "border-green-200 hover:border-green-400",  icon: "text-green-600"  },
           { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,        bg: "bg-purple-50", border: "border-purple-200 hover:border-purple-400", icon: "text-purple-600" },
           { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,         bg: "bg-orange-50", border: "border-orange-200 hover:border-orange-400", icon: "text-orange-600" },
-        ].map(({ page, label, Icon: QuickIcon, bg, border, icon }) => (
-          <Link key={page} to={createPageUrl(page)}>
-            <Card className={`hover:shadow-md transition-all cursor-pointer border-2 ${border} ${bg} active:scale-95 h-full`}>
-              <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-1.5 min-h-[80px] sm:min-h-[90px]">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white shadow-sm">
-                  <QuickIcon className={`w-5 h-5 ${icon}`} />
-                </div>
-                <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight">{label}</h3>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+        ].map((item) => {
+          const ItemIcon = item.Icon;
+          return (
+            <Link key={item.page} to={createPageUrl(item.page)}>
+              <Card className={`hover:shadow-md transition-all cursor-pointer border-2 ${item.border} ${item.bg} active:scale-95 h-full`}>
+                <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-1.5 min-h-[80px] sm:min-h-[90px]">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white shadow-sm">
+                    <ItemIcon className={`w-5 h-5 ${item.icon}`} />
+                  </div>
+                  <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight">{item.label}</h3>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Dashboard Widgets */}

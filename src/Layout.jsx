@@ -617,18 +617,20 @@ export default function Layout({ children, currentPageName }) {
             { page: "SmartNoteAssistant",  Icon: Brain,   label: "Notes"   },
             { page: "SendFax",             Icon: BookUser,label: "Fax"     },
             { page: "Messages",            Icon: Mail,    label: "Messages", badge: unreadMessageCount },
-          ].map(({ page, Icon: NavIcon, label, badge }) => (
+          ].map((navItem) => {
+            const BottomNavIcon = navItem.Icon;
+            return (
             <Link
-              key={page}
-              to={createPageUrl(page)}
+              key={navItem.page}
+              to={createPageUrl(navItem.page)}
               className={`flex flex-col items-center justify-center gap-0.5 relative transition-colors active:scale-95 ${
-                isActive(page)
+                isActive(navItem.page)
                   ? "text-indigo-600"
                   : "text-gray-500 hover:text-gray-800"
               }`}
             >
               <div className="relative">
-                <NavIcon className="w-5 h-5" />
+                <BottomNavIcon className="w-5 h-5" />
                 {badge > 0 && (
                   <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[10px] rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 font-bold">
                     {badge}
