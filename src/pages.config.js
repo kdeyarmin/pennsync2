@@ -128,6 +128,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
+import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import __Layout from './Layout.jsx';
 
 
@@ -213,6 +214,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
+    "SmartNoteAssistant": SmartNoteAssistant,
 }
 
 export const pagesConfig = {
