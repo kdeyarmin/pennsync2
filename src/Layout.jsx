@@ -617,7 +617,7 @@ export default function Layout({ children, currentPageName }) {
             { page: "SmartNoteAssistant",  Icon: Brain,   label: "Notes"   },
             { page: "SendFax",             Icon: BookUser,label: "Fax"     },
             { page: "Messages",            Icon: Mail,    label: "Messages", badge: unreadMessageCount },
-          ].map(({ page, Icon, label, badge }) => (
+          ].map(({ page, Icon: NavIcon, label, badge }) => (
             <Link
               key={page}
               to={createPageUrl(page)}
@@ -628,7 +628,7 @@ export default function Layout({ children, currentPageName }) {
               }`}
             >
               <div className="relative">
-                <Icon className="w-5 h-5" />
+                <NavIcon className="w-5 h-5" />
                 {badge > 0 && (
                   <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[10px] rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 font-bold">
                     {badge}
