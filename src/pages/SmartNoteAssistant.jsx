@@ -428,8 +428,9 @@ Return ONLY the final note text.`
       setStep(4);
       if (patientId && currentUser?.email) {
         const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
+        const noteText = typeof result === "string" ? result : JSON.stringify(result);
         await Promise.all([
-          base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: result.length, quality_score: analysis.overall_score, rough_note_compliance: Math.max(0, analysis.compliance_score - 20), enhanced_note_compliance: analysis.compliance_score, compliance_improvement: 20 }),
+          base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: noteText.length, quality_score: analysis.overall_score, rough_note_compliance: Math.max(0, analysis.compliance_score - 20), enhanced_note_compliance: analysis.compliance_score, compliance_improvement: 20 }),
           base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysis.compliance_score, status: analysis.compliance_score >= 90 ? "passed" : analysis.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
         ]);
         logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysis.overall_score });
