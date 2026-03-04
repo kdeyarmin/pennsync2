@@ -62,7 +62,7 @@ export default function Patients() {
   });
 
   // Log page visit
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentUser?.email) {
       logActivity(ActivityActions.PAGE_VISIT, {
         page: 'Patients',
