@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -33,7 +33,7 @@ import {
   BookUser
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -111,7 +111,7 @@ export default function Layout({ children, currentPageName }) {
   });
 
   // Filter alerts to only favorited patients
-  const activeAlerts = React.useMemo(() => {
+  const activeAlerts = useMemo(() => {
     if (!currentUser?.favorited_patients?.length) return [];
     const favIds = new Set(currentUser.favorited_patients.map(f => f.id));
     return allActiveAlerts.filter(alert => favIds.has(alert.patient_id));
