@@ -197,7 +197,7 @@ function StepIndicator({ step }) {
 export default function SmartNoteAssistant() {
   const [patientId, setPatientId] = useState("");
   const [visitType, setVisitType] = useState("routine_visit");
-  const [visitDate] = useState(todayEastern());
+  const visitDate = todayEastern();
   const [note, setNote] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [alerts, setAlerts] = useState([]);
