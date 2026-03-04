@@ -126,7 +126,7 @@ export default function NoteTemplateSelector({ onSelect, currentVisitType }) {
   const [open, setOpen] = useState(false);
 
   const filtered = currentVisitType
-    ? TEMPLATES.filter(t => t.visitType === currentVisitType || !currentVisitType)
+    ? TEMPLATES.filter(t => t.visitType === currentVisitType)
     : TEMPLATES;
 
   const handleSelect = (template) => {
@@ -155,7 +155,7 @@ export default function NoteTemplateSelector({ onSelect, currentVisitType }) {
 
       {open && (
         <div className="divide-y divide-gray-100">
-          {TEMPLATES.map(template => (
+          {filtered.map(template => (
             <div key={template.id} className={`border-l-4 ${template.color} p-3 flex items-center justify-between gap-3`}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
