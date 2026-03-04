@@ -342,22 +342,28 @@ export default function SmartNoteAssistant() {
     const visitSpecific = visitSpecificMap[visitType] || (isHospice ? "symptom management, comfort measures, patient/family support" : "skilled need, homebound status, interventions, patient response");
 
     try {
+      const complianceFramework = isHospice
+        ? "42 CFR Part 418 Hospice CoPs, CMS Hospice Benefit, terminal prognosis documentation, IDG interdisciplinary coordination, comfort-focused goal documentation, symptom management standards, Medicare Hospice Benefit election requirements"
+        : "Medicare 42 CFR Part 484, homebound status justification, skilled need per Medicare coverage guidelines, OASIS data element documentation, vitals with clinical interpretation, patient response to skilled interventions, education with teach-back confirmation, safety and fall risk, functional status, care plan goal progress, pain assessment, medication adherence, state home health survey standards";
+
       const [doc, cds] = await Promise.all([
         base44.integrations.Core.InvokeLLM({
-          prompt: `You are a Medicare home health compliance expert. Analyze this nurse's rough note.
+          prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. Analyze this nurse's rough note for ${isHospice ? "hospice" : "home health"} documentation standards.
 
 CRITICAL RULES:
 1. NEVER invent clinical information not in the note.
 2. If you can write the sentence from existing note content → needs_clarification: false, provide suggestion.
 3. If info is NOT in the note and is required → needs_clarification: true, provide a specific question.
 4. Do NOT flag something as missing if already documented.
+5. Apply ONLY ${isHospice ? "hospice" : "home health"} Medicare compliance rules. Do NOT apply ${isHospice ? "home health homebound status or OASIS" : "hospice IDG or terminal prognosis"} requirements.
 
 NOTE: ${note}
 PATIENT: ${ctx}
 VISIT TYPE: ${visitType}
+SERVICE LINE: ${isHospice ? "HOSPICE" : "HOME HEALTH"}
 REQUIRED: ${visitSpecific}
 
-CHECKS: Medicare 42 CFR Part 484, homebound status, skilled need, vitals + interpretation, patient response, education with teach-back, safety/fall risk, functional status, care plan progress, pain assessment, medication adherence, state survey standards.
+COMPLIANCE CHECKS (${isHospice ? "Hospice" : "Home Health"}): ${complianceFramework}
 
 Return JSON:
 {
