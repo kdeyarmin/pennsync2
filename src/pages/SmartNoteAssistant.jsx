@@ -518,7 +518,11 @@ Return ONLY the final note text.`
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-600" /> Smart Note Assistant
           </h1>
-          <p className="text-xs text-gray-500 mt-0.5">AI-powered clinical documentation — compliant, accurate, fast</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+          {careScope === "hospice" ? "Hospice documentation — comfort-focused, Medicare-compliant" :
+           careScope === "both" ? "Home Health & Hospice documentation — Medicare-compliant" :
+           "Home Health documentation — Medicare-compliant, survey-ready"}
+        </p>
         </div>
         {activeTab === "builder" && step > 1 && (
           <Button variant="outline" size="sm" onClick={reset} className="gap-1.5 text-gray-600">
