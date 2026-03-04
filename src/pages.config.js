@@ -116,7 +116,6 @@ import SecurityCompliance from './pages/SecurityCompliance';
 import SecurityPolicy from './pages/SecurityPolicy';
 import SendFax from './pages/SendFax';
 import SignDocument from './pages/SignDocument';
-import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import StaffTraining from './pages/StaffTraining';
 import StaffTrainingHub from './pages/StaffTrainingHub';
 import SystemJobMonitor from './pages/SystemJobMonitor';
@@ -202,7 +201,6 @@ export const PAGES = {
     "SecurityPolicy": SecurityPolicy,
     "SendFax": SendFax,
     "SignDocument": SignDocument,
-    "SmartNoteAssistant": SmartNoteAssistant,
     "StaffTraining": StaffTraining,
     "StaffTrainingHub": StaffTrainingHub,
     "SystemJobMonitor": SystemJobMonitor,
