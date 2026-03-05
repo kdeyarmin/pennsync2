@@ -34,6 +34,7 @@ import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryG
 import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
 import PatientChartExporter from "../components/documents/PatientChartExporter";
+import SecureDocumentShare from "../components/documents/SecureDocumentShare";
 import AIPatientHistoryAnalyzer from "../components/patient/AIPatientHistoryAnalyzer";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 import FavoriteButton from "../components/navigation/FavoriteButton";
@@ -332,7 +333,14 @@ export default function PatientDetails() {
                       </Button>
                     </Link>
                   )}
-                  <PatientChartExporter patient={patient} />
+                  <PatientChartExporter 
+                    patientId={patientId} 
+                    patientName={`${patient.first_name} ${patient.last_name}`}
+                  />
+                  <SecureDocumentShare 
+                    documentName={`${patient.first_name} ${patient.last_name} Medical Chart`}
+                    documentData={patient}
+                  />
                   {patient.status !== 'discharged' && (
                     <DischargeSummaryGenerator 
                       patientId={patientId} 
