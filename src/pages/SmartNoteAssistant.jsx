@@ -1041,7 +1041,7 @@ Return ONLY the final note text.`
                     {copied ? <><CheckCircle2 className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy All</>}
                   </Button>
                   <SmartNotePDFExporter finalNote={finalNote} patient={patient} visitType={visitType} analysisScore={analysis?.overall_score} />
-                  <Button variant="outline" className="h-12 sm:h-10 px-4 text-sm" onClick={() => { setStep(3); setFinalNote(""); }}>← Revise</Button>
+                  <Button variant="outline" className="h-12 sm:h-10 px-4 text-sm" onClick={() => setStep(2)}>← Back to Review</Button>
                   <Button variant="outline" className="h-12 sm:h-10 px-3" onClick={reset}><RotateCcw className="w-4 h-4" /></Button>
                 </div>
               </div>
