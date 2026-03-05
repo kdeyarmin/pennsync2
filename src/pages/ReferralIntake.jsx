@@ -1280,16 +1280,13 @@ Actions available:
 
       {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Upload New Referral</DialogTitle>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-xl sm:text-2xl">Upload New Referral</DialogTitle>
+            <p className="text-sm text-gray-600">Upload a referral document (PDF, fax, or image). AI will automatically extract and populate patient information.</p>
           </DialogHeader>
-          <div className="space-y-4">
-            <Alert className="bg-blue-50 border-blue-200">
-              <AlertDescription className="text-blue-900 text-sm">
-                Upload a referral document (PDF, fax, or image). AI will automatically extract patient information and populate the form fields below for your review.
-              </AlertDescription>
-            </Alert>
+          <div className="space-y-5">
+
 
             {extractedFormData && (
               <div className="space-y-3">
@@ -1372,96 +1369,102 @@ Actions available:
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-2">
-                  Patient Name (if known)
-                  {extractedFormData?.patient_name && (
-                    <Badge className="bg-green-100 text-green-700 text-xs">AI Extracted</Badge>
-                  )}
-                </Label>
-                <Input
-                  placeholder="First Last"
-                  value={newReferral.patient_name}
-                  onChange={(e) => setNewReferral({ ...newReferral, patient_name: e.target.value })}
-                  className={extractedFormData?.patient_name ? "border-green-300 bg-green-50" : ""}
-                />
+            <div className="space-y-4 border-t border-gray-200 pt-5">
+              <h3 className="font-semibold text-gray-900">Referral Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="patient-name" className="flex items-center gap-2 mb-1.5">
+                    Patient Name (if known)
+                    {extractedFormData?.patient_name && (
+                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                    )}
+                  </Label>
+                  <Input
+                    id="patient-name"
+                    placeholder="First Last"
+                    value={newReferral.patient_name}
+                    onChange={(e) => setNewReferral({ ...newReferral, patient_name: e.target.value })}
+                    className={`h-10 ${extractedFormData?.patient_name ? "border-green-300 bg-green-50" : ""}`}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="referral-source" className="flex items-center gap-2 mb-1.5">
+                    Referral Source
+                    {extractedFormData?.referral_source && (
+                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                    )}
+                  </Label>
+                  <Input
+                    id="referral-source"
+                    placeholder="Hospital, physician, facility"
+                    value={newReferral.referral_source}
+                    onChange={(e) => setNewReferral({ ...newReferral, referral_source: e.target.value })}
+                    className={`h-10 ${extractedFormData?.referral_source ? "border-green-300 bg-green-50" : ""}`}
+                  />
+                </div>
               </div>
-              <div>
-                <Label className="flex items-center gap-2">
-                  Referral Source
-                  {extractedFormData?.referral_source && (
-                    <Badge className="bg-green-100 text-green-700 text-xs">AI Extracted</Badge>
-                  )}
-                </Label>
-                <Input
-                  placeholder="Hospital, physician, facility"
-                  value={newReferral.referral_source}
-                  onChange={(e) => setNewReferral({ ...newReferral, referral_source: e.target.value })}
-                  className={extractedFormData?.referral_source ? "border-green-300 bg-green-50" : ""}
-                />
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="referral-date" className="flex items-center gap-2 mb-1.5">
+                    Referral Date
+                    {extractedFormData?.referral_date && (
+                      <Badge className="bg-green-100 text-green-700 text-xs">Extracted</Badge>
+                    )}
+                  </Label>
+                  <Input
+                    id="referral-date"
+                    type="date"
+                    value={newReferral.referral_date}
+                    onChange={(e) => setNewReferral({ ...newReferral, referral_date: e.target.value })}
+                    className={`h-10 ${extractedFormData?.referral_date ? "border-green-300 bg-green-50" : ""}`}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="priority" className="flex items-center gap-2 mb-1.5">
+                    Priority
+                    {extractedFormData?.urgency_level && (
+                      <Badge className="bg-green-100 text-green-700 text-xs">Suggested</Badge>
+                    )}
+                  </Label>
+                  <Select
+                    value={newReferral.priority}
+                    onValueChange={(value) => setNewReferral({ ...newReferral, priority: value })}
+                  >
+                    <SelectTrigger id="priority" className={`h-10 ${extractedFormData?.urgency_level ? "border-green-300 bg-green-50" : ""}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="document-type" className="mb-1.5 block">Document Type</Label>
+                  <Select
+                    value={newReferral.document_type}
+                    onValueChange={(value) => setNewReferral({ ...newReferral, document_type: value })}
+                  >
+                    <SelectTrigger id="document-type" className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pdf">PDF</SelectItem>
+                      <SelectItem value="fax">Fax</SelectItem>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="electronic">Electronic</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <Label className="flex items-center gap-2">
-                  Referral Date
-                  {extractedFormData?.referral_date && (
-                    <Badge className="bg-green-100 text-green-700 text-xs">AI Extracted</Badge>
-                  )}
-                </Label>
-                <Input
-                  type="date"
-                  value={newReferral.referral_date}
-                  onChange={(e) => setNewReferral({ ...newReferral, referral_date: e.target.value })}
-                  className={extractedFormData?.referral_date ? "border-green-300 bg-green-50" : ""}
-                />
-              </div>
-              <div>
-                <Label className="flex items-center gap-2">
-                  Priority
-                  {extractedFormData?.urgency_level && (
-                    <Badge className="bg-green-100 text-green-700 text-xs">AI Suggested</Badge>
-                  )}
-                </Label>
-                <Select
-                  value={newReferral.priority}
-                  onValueChange={(value) => setNewReferral({ ...newReferral, priority: value })}
-                >
-                  <SelectTrigger className={extractedFormData?.urgency_level ? "border-green-300 bg-green-50" : ""}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Document Type</Label>
-                <Select
-                  value={newReferral.document_type}
-                  onValueChange={(value) => setNewReferral({ ...newReferral, document_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pdf">PDF</SelectItem>
-                    <SelectItem value="fax">Fax</SelectItem>
-                    <SelectItem value="image">Image</SelectItem>
-                    <SelectItem value="electronic">Electronic</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label>Upload Document</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+            <div className="space-y-3 border-t border-gray-200 pt-5">
+              <Label htmlFor="file-upload" className="font-semibold text-gray-900">Upload Document</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer">
                 <input
                   type="file"
                   id="file-upload"
@@ -1495,14 +1498,14 @@ Actions available:
               </div>
             </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setUploadDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto">
+          <DialogFooter className="flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">
+            <Button variant="outline" onClick={() => setUploadDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto order-2 sm:order-1">
               Cancel
             </Button>
             <Button
               onClick={handleCreateReferral}
               disabled={isUploading || !uploadedFile}
-              className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
+              className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto order-1 sm:order-2"
             >
               {isUploading ? (
                 <>
