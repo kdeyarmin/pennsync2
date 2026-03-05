@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Loader2, Copy, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
+import VoiceNoteIntegration from "./VoiceNoteIntegration";
 
 const VISIT_TYPES = [
   { value: "routine_visit", label: "Routine Visit" },
@@ -31,6 +32,10 @@ export default function StructuredNoteDrafter({ patient, onDraftReady }) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const symptomsRef = useRef(null);
+  const interventionsRef = useRef(null);
+  const educationRef = useRef(null);
+  const planRef = useRef(null);
 
   const setVital = (k, v) => setVitals(prev => ({ ...prev, [k]: v }));
 
@@ -96,6 +101,21 @@ Return ONLY the clinical narrative note text — nothing else.`
     if (onDraftReady) onDraftReady(draft, visitType);
   };
 
+  const handleInsertVoiceText = (field, text) => {
+    const fieldRefs = {
+      symptoms: { ref: symptomsRef, state: symptoms, setState: setSymptoms },
+      interventions: { ref: interventionsRef, state: interventions, setState: setInterventions },
+      education: { ref: educationRef, state: education, setState: setEducation },
+      plan: { ref: planRef, state: plan, setState: setPlan },
+    };
+
+    const fieldConfig = fieldRefs[field];
+    if (!fieldConfig) return;
+
+    const newValue = fieldConfig.state ? fieldConfig.state + ' ' + text : text;
+    fieldConfig.setState(newValue);
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <button
@@ -156,14 +176,21 @@ Return ONLY the clinical narrative note text — nothing else.`
 
           {/* Text fields */}
           {[
-            { label: "Symptoms / Chief Complaint", val: symptoms, set: setSymptoms, placeholder: "e.g., Patient complains of increased shortness of breath on exertion, bilateral ankle edema noted..." },
-            { label: "Interventions Performed", val: interventions, set: setInterventions, placeholder: "e.g., Wound assessment and dressing change to right heel, medication reconciliation reviewed..." },
-            { label: "Patient Education", val: education, set: setEducation, placeholder: "e.g., Educated on medication schedule and signs of infection; patient verbalized understanding..." },
-            { label: "Plan / Follow-up", val: plan, set: setPlan, placeholder: "e.g., Continue wound care every visit, notify physician if wound deteriorates, next visit in 3 days..." },
+            { label: "Symptoms / Chief Complaint", val: symptoms, set: setSymptoms, ref: symptomsRef, fieldName: "symptoms", placeholder: "e.g., Patient complains of increased shortness of breath on exertion, bilateral ankle edema noted..." },
+            { label: "Interventions Performed", val: interventions, set: setInterventions, ref: interventionsRef, fieldName: "interventions", placeholder: "e.g., Wound assessment and dressing change to right heel, medication reconciliation reviewed..." },
+            { label: "Patient Education", val: education, set: setEducation, ref: educationRef, fieldName: "education", placeholder: "e.g., Educated on medication schedule and signs of infection; patient verbalized understanding..." },
+            { label: "Plan / Follow-up", val: plan, set: setPlan, ref: planRef, fieldName: "plan", placeholder: "e.g., Continue wound care every visit, notify physician if wound deteriorates, next visit in 3 days..." },
           ].map(f => (
             <div key={f.label}>
-              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">{f.label}</Label>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{f.label}</Label>
+                <VoiceNoteIntegration 
+                  onInsertText={(text) => handleInsertVoiceText(f.fieldName, text)}
+                  disabled={loading}
+                />
+              </div>
               <textarea
+                ref={f.ref}
                 value={f.val}
                 onChange={e => f.set(e.target.value)}
                 placeholder={f.placeholder}
