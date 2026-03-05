@@ -828,10 +828,7 @@ Return ONLY the final note text.`
 
               <VitalSignValidator noteText={note} />
 
-              {/* Code suggestions right on step 1 if note is long enough */}
-              {note.trim().length >= 80 && (
-                <ClinicalCodeSuggester noteText={note} patientContext={patient ? buildCtx() : ""} />
-              )}
+
             </div>
           )}
 
@@ -1042,9 +1039,6 @@ Return ONLY the final note text.`
               </div>
 
               <NoteDiffView originalNote={note} enhancedNote={finalNote} />
-
-              {/* ICD/CPT codes for final note */}
-              <ClinicalCodeSuggester noteText={finalNote} patientContext={patient ? buildCtx() : ""} />
 
               {noteSections && noteSections.length > 1 && (
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
