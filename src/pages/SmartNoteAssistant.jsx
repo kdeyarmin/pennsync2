@@ -827,7 +827,7 @@ Return ONLY the final note text.`
             </div>
           )}
 
-          {/* STEP 2: CLARIFY & REVIEW (COMBINED) */}
+          {/* STEP 2: GENERATE & REVIEW */}
           {step === 2 && (
             <div className="space-y-4">
               {analyzing ? (
