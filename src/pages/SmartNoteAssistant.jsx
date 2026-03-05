@@ -12,7 +12,7 @@ import {
   Shield, Lightbulb, AlertTriangle, ChevronDown, ChevronUp,
   ArrowRight, DollarSign, Target, AlertCircle, Activity, Pill,
   TrendingUp, Phone, ClipboardList, Heart, User, FileText,
-  HelpCircle, MessageSquare, CheckSquare, XCircle, Tag
+  HelpCircle, MessageSquare, CheckSquare, XCircle, Tag, FileDown
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
