@@ -356,14 +356,12 @@ export default function SmartNoteAssistant() {
     setFinalNote("");
     const ctx = buildCtx();
     const visitSpecificMap = isHospice ? {
-      admission: "terminal prognosis (≤6 months), election of hospice benefit, comfort-focused goals, IDG team members, initial symptom assessment, advance directives, patient/family education on hospice philosophy",
-      routine_visit: "symptom management (pain/dyspnea/nausea), comfort measures provided, patient/family emotional support, medication review for comfort, IDG coordination, patient prognosis stability",
-      recertification: "continued terminal prognosis, benefit period continuation, IDG review, goals of care reaffirmed, progress/decline documented, face-to-face encounter (if applicable)",
-      discharge: "reason (goals met / revocation / extended prognosis / transfer), discharge summary, patient/family education, bereavement referral, follow-up plan",
-      prn: "reason for unscheduled visit, symptom crisis assessment, comfort interventions provided, physician notification, patient/family response",
-      idg: "IDG/IDT meeting date, disciplines present, clinical updates per discipline, goal review, care plan revisions, family communication",
-      pronouncement: "time of death, attending present, family notification, comfort measures at time of death, bereavement support initiated",
-    } : {
+       admission: "terminal prognosis (≤6 months), election of hospice benefit, comfort-focused goals, IDG team members, initial symptom assessment, advance directives, patient/family education on hospice philosophy",
+       routine_visit: "symptom management (pain/dyspnea/nausea), comfort measures provided, patient/family emotional support, medication review for comfort, IDG coordination, patient prognosis stability",
+       recertification: "continued terminal prognosis, benefit period continuation, IDG review, goals of care reaffirmed, progress/decline documented, face-to-face encounter (if applicable)",
+       discharge: "reason (goals met / revocation / extended prognosis / transfer), discharge summary, patient/family education, bereavement referral, follow-up plan",
+       prn: "reason for unscheduled visit, symptom crisis assessment, comfort interventions provided, physician notification, patient/family response",
+     } : {
       admission: "baseline assessment, medication reconciliation, homebound status establishment, physician orders, emergency plan, primary and secondary diagnoses, functional baseline, OASIS data points",
       recertification: "continued homebound status justification, continued skilled need, progress toward goals, updated care plan, discharge planning, OASIS if required",
       discharge: "reason for discharge, goals met/unmet, patient/caregiver education on discharge, instructions given, follow-up plan, OASIS discharge",

@@ -109,18 +109,18 @@ const TEMPLATES = [
     color: "bg-orange-50 border-orange-200 hover:border-orange-400",
     badgeColor: "bg-orange-100 text-orange-700",
     content: `• Reason for PRN visit: [patient/caregiver call, change in condition, _]
-• Onset of symptoms: [time / date]
-• Current vital signs: BP _/_, HR _, RR _, O2 _%, Temp _°F, Wt _ lbs
-• Comparison to baseline: [stable / changed — detail: _]
-• Clinical assessment: [findings]
-• Interventions performed: _
-• MD notification: [yes / no] — if yes, MD [name] notified at [time], orders received: _
-• Patient response to interventions: _
-• ER / hospitalization: [not indicated / patient sent to ER / hospitalized]
-• Patient/caregiver education: _
-• Plan: [continue current plan / increase visit frequency / modified orders per MD]`,
+  • Onset of symptoms: [time / date]
+  • Current vital signs: BP _/_, HR _, RR _, O2 _%, Temp _°F, Wt _ lbs
+  • Comparison to baseline: [stable / changed — detail: _]
+  • Clinical assessment: [findings]
+  • Interventions performed: _
+  • MD notification: [yes / no] — if yes, MD [name] notified at [time], orders received: _
+  • Patient response to interventions: _
+  • ER / hospitalization: [not indicated / patient sent to ER / hospitalized]
+  • Patient/caregiver education: _
+  • Plan: [continue current plan / increase visit frequency / modified orders per MD]`,
   },
-];
+  ];
 
 export default function NoteTemplateSelector({ onSelect, currentVisitType }) {
   const [open, setOpen] = useState(false);
