@@ -676,6 +676,13 @@ Return ONLY the final note text.`
         </div>
       )}
 
+      {/* ── TAB: VITAL TRENDS ── */}
+      {activeTab === "trends" && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <VitalsTrendAnalysis patientId={patientId} />
+        </div>
+      )}
+
 
 
       {/* ── TAB: NOTE BUILDER ── */}
