@@ -680,9 +680,9 @@ Return ONLY the final note text.`
                     <SelectTrigger className="bg-gray-50 border-gray-200 h-12 sm:h-11 text-sm rounded-xl">
                       <SelectValue placeholder={<span className="flex items-center gap-2 text-gray-400"><User className="w-4 h-4" /> Search for a patient…</span>} />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl shadow-xl max-h-[50vh]">
+                    <SelectContent className="rounded-xl shadow-xl max-h-[50vh] bg-white">
                       {patients.map(p => (
-                        <SelectItem key={p.id} value={p.id} className="py-3 sm:py-2.5 px-3 min-h-[52px] sm:min-h-0">
+                        <SelectItem key={p.id} value={p.id} className="py-3 sm:py-2.5 px-3 min-h-[52px] sm:min-h-0 bg-white hover:bg-indigo-50">
                           <div className="flex flex-col">
                             <span className="font-semibold text-gray-900">{p.first_name} {p.last_name}</span>
                             {p.primary_diagnosis && <span className="text-xs text-gray-500 mt-0.5">{p.primary_diagnosis}</span>}
