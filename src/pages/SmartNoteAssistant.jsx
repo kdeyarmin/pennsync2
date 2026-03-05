@@ -631,6 +631,20 @@ Return ONLY the final note text.`
         })}
       </div>
 
+      {/* ── TAB: MEDICATIONS ── */}
+      {activeTab === "medications" && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <MedicationManagementTab
+            patient={patient}
+            patientId={patientId}
+            onAddToNote={(medNote) => {
+              setNote(prev => prev + "\n\n" + medNote);
+              setActiveTab("builder");
+            }}
+          />
+        </div>
+      )}
+
       {/* ── TAB: DRAFT FROM VITALS ── */}
       {activeTab === "drafter" && (
         <StructuredNoteDrafter
