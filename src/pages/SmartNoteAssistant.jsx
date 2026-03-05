@@ -37,8 +37,6 @@ const HOSPICE_VISIT_TYPES = [
   { value: "recertification", label: "Recertification (Benefit Period)" },
   { value: "discharge", label: "Discharge / Revocation" },
   { value: "prn", label: "After-Hours / Crisis Visit" },
-  { value: "idg", label: "IDG/IDT Meeting Note" },
-  { value: "pronouncement", label: "Death Pronouncement" },
 ];
 
 // Returns the right visit types based on care scope
