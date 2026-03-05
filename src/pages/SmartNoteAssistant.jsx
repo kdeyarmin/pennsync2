@@ -450,6 +450,11 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         const autoSelect = new Set((doc.findings || []).filter(f => !f.needs_clarification).map(f => f.id));
         setSelected(autoSelect);
         setStep(2);
+        
+        // Auto-build if no critical findings or clarifications needed
+        if ((doc.findings || []).filter(f => f.needs_clarification).length === 0 && (doc.findings || []).filter(f => f.severity === "critical").length === 0) {
+          setTimeout(() => autoBuild(doc, autoSelect), 800);
+        }
       } catch (promiseErr) {
         console.error('LLM analysis error:', promiseErr);
         const errorMsg = promiseErr?.status === 402 || promiseErr?.data?.extra_data?.reason === 'integration_credits_limit_reached'
