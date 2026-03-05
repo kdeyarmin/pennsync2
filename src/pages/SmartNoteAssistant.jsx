@@ -71,7 +71,6 @@ const RISK_ICON = { fall: Activity, medication: Pill, exacerbation: TrendingUp, 
 
 const STEPS = [
   { label: "Write" },
-  { label: "Clarify" },
   { label: "Review" },
   { label: "Final" },
 ];
@@ -234,6 +233,8 @@ export default function SmartNoteAssistant() {
   const recRef = useRef(null);
   const textareaRef = useRef(null);
   const DRAFT_KEY = "smart_note_draft_v2";
+  const ANALYSIS_KEY = "smart_note_analysis_v1";
+  const SAVED_PATIENT_KEY = "smart_note_patient_v1";
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const careScope = currentUser?.care_scope || "home_health";
@@ -248,6 +249,23 @@ export default function SmartNoteAssistant() {
   useEffect(() => {
     if (currentUser?.email) logActivity(ActivityActions.PAGE_VISIT, { page: "SmartNoteAssistant" });
   }, [currentUser?.email]);
+
+  // Restore saved patient context across tabs
+  useEffect(() => {
+    const saved = localStorage.getItem(SAVED_PATIENT_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.patientId) setPatientId(parsed.patientId);
+        if (parsed.visitType) setVisitType(parsed.visitType);
+      } catch {}
+    }
+  }, []);
+
+  // Persist patient context across tabs
+  useEffect(() => {
+    localStorage.setItem(SAVED_PATIENT_KEY, JSON.stringify({ patientId, visitType }));
+  }, [patientId, visitType]);
 
   useEffect(() => {
     const saved = localStorage.getItem(DRAFT_KEY);
@@ -264,6 +282,20 @@ export default function SmartNoteAssistant() {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId }));
     }
   }, [note, visitType, patientId]);
+
+  // Save analysis state to localStorage for persistence
+  useEffect(() => {
+    if (analysis && step >= 2) {
+      localStorage.setItem(ANALYSIS_KEY, JSON.stringify({ analysis, answers, selected: Array.from(selected) }));
+    }
+  }, [analysis, answers, selected, step]);
+
+  // Save final note to localStorage
+  useEffect(() => {
+    if (finalNote.trim() && step === 4) {
+      localStorage.setItem("smart_note_final_v1", JSON.stringify({ finalNote, noteSections, timestamp: Date.now() }));
+    }
+  }, [finalNote, step]);
 
   useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
 
@@ -417,7 +449,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
       const autoSelect = new Set((doc.findings || []).filter(f => !f.needs_clarification).map(f => f.id));
       setSelected(autoSelect);
       const needsClarification = (doc.findings || []).some(f => f.needs_clarification);
-      setStep(needsClarification ? 2 : 3);
+      setStep(2); // Always go to combined review step
     } catch (err) {
       alert("Analysis failed. Please try again.");
       setStep(1);
@@ -426,7 +458,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
     }
   };
 
-  const proceedToReview = () => {
+  const proceedToBuild = () => {
     if (analysis) {
       const updatedFindings = analysis.findings.map(f => {
         if (f.needs_clarification && answers[f.id]) {
@@ -438,6 +470,24 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
       setSelected(new Set(updatedFindings.filter(f => f.suggestion).map(f => f.id)));
     }
     setStep(3);
+  };
+
+  const selectBySeverity = (severity) => {
+    if (!analysis) return;
+    const filtered = analysis.findings.filter(f => f.severity === severity).map(f => f.id);
+    setSelected(new Set([...selected, ...filtered]));
+  };
+
+  const calculateTotalRevenueImpact = () => {
+    if (!analysis) return 0;
+    const selected_findings = analysis.findings.filter(f => selected.has(f.id));
+    const impacts = selected_findings
+      .map(f => {
+        const match = f.revenue_impact?.match(/\$?([\d,]+)/);
+        return match ? parseInt(match[1].replace(/,/g, '')) : 0;
+      })
+      .reduce((a, b) => a + b, 0);
+    return impacts;
   };
 
   const build = async () => {
@@ -483,6 +533,8 @@ Return ONLY the final note text.`
     setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set());
     setAnswers({}); setFinalNote(""); setStep(1); setNoteSections(null); setDraftRestored(false);
     localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(ANALYSIS_KEY);
+    localStorage.removeItem("smart_note_final_v1");
   };
 
   const parseNoteSections = (text) => {
@@ -517,7 +569,9 @@ Return ONLY the final note text.`
   const criticalFindings = analysis?.findings?.filter(f => f.severity === "critical") || [];
   const needsClarificationFindings = analysis?.findings?.filter(f => f.needs_clarification) || [];
   const answeredCount = needsClarificationFindings.filter(f => answers[f.id]?.trim()).length;
-  const hasClarificationStep = needsClarificationFindings.length > 0;
+  const complianceFindings = analysis?.findings?.filter(f => f.category === "compliance") || [];
+  const qualityFindings = analysis?.findings?.filter(f => f.category === "quality") || [];
+  const totalRevenueImpact = calculateTotalRevenueImpact();
   const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
   const ready = note.trim().length >= 20;
 
@@ -781,7 +835,7 @@ Return ONLY the final note text.`
             </div>
           )}
 
-          {/* STEP 2: CLARIFY */}
+          {/* STEP 2: CLARIFY & REVIEW (COMBINED) */}
           {step === 2 && (
             <div className="space-y-4">
               {analyzing ? (
@@ -817,6 +871,7 @@ Return ONLY the final note text.`
                     )}
                   </div>
 
+                  {/* Clarification section if needed */}
                   {needsClarificationFindings.length > 0 && (
                     <div className="space-y-3">
                       <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
@@ -848,11 +903,85 @@ Return ONLY the final note text.`
                     </div>
                   )}
 
+                  {/* Review & Select section */}
+                  {analysis?.findings?.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">Review Suggested Additions</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Check items to include — only checked items go into the final note.</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setSelected(new Set(analysis.findings.map(f => f.id)))}>
+                            <CheckSquare className="w-3.5 h-3.5" /> All
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setSelected(new Set())}>
+                            <XCircle className="w-3.5 h-3.5" /> None
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1 bg-red-50 border-red-300 text-red-700" onClick={() => selectBySeverity("critical")}>
+                            Critical Only
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1 bg-orange-50 border-orange-300 text-orange-700" onClick={() => selectBySeverity("high")}>
+                            High Priority
+                          </Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-indigo-600 font-medium">{selected.size} of {analysis.findings.length} selected</p>
+                          {totalRevenueImpact > 0 && <p className="text-xs font-semibold text-green-600">💰 +${totalRevenueImpact.toLocaleString()} potential</p>}
+                        </div>
+                      </div>
+
+                      {criticalFindings.length > 0 && (
+                        <Alert className="border-red-300 bg-red-50 py-2">
+                          <AlertTriangle className="w-4 h-4 text-red-600" />
+                          <AlertDescription className="text-red-800 text-sm">
+                            {criticalFindings.length} critical Medicare compliance element{criticalFindings.length > 1 ? "s" : ""} — required for payment and audit protection.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {[...analysis.findings]
+                        .sort((a, b) => ({ critical: 0, high: 1, medium: 2, low: 3 }[a.severity] ?? 3) - ({ critical: 0, high: 1, medium: 2, low: 3 }[b.severity] ?? 3))
+                        .map(f => {
+                          const isMedicare = f.category === "compliance";
+                          return (
+                            <div key={f.id} className={`border-l-4 rounded-lg ${SEV_STYLE[f.severity] || SEV_STYLE.medium} p-3 ${isMedicare ? "border-l-red-500" : "border-l-blue-500"}`}>
+                              <div className="flex items-start gap-3">
+                                <Checkbox checked={selected.has(f.id)} onCheckedChange={() => toggle(f.id)} className="mt-1 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-2 mb-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-white/60">{isMedicare ? "Medicare" : "Quality"}</span>
+                                      <span className="text-sm font-semibold text-gray-900">{f.issue}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <Badge className={`text-xs ${SEV_BADGE[f.severity] || SEV_BADGE.medium}`}>{f.severity}</Badge>
+                                    </div>
+                                  </div>
+                                  {f.suggestion && (
+                                    <p className="text-sm text-gray-800 bg-white/80 border border-gray-200 rounded px-2 py-1.5 italic">
+                                      "{f.suggestion}"
+                                    </p>
+                                  )}
+                                  {f.revenue_impact && (
+                                    <p className="text-xs text-green-700 font-medium mt-1">💰 {f.revenue_impact}</p>
+                                  )}
+                                  {f.rationale && (
+                                    <p className="text-xs text-gray-500 mt-1">{f.rationale}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
-                    <Button onClick={proceedToReview} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
-                      <CheckSquare className="w-4 h-4" />
-                      {needsClarificationFindings.length > 0 ? `Continue with ${answeredCount}/${needsClarificationFindings.length} answered` : "Continue to Review"}
-                      <ArrowRight className="w-4 h-4" />
+                    <Button onClick={proceedToBuild} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
+                      <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
                     </Button>
                     <Button variant="outline" onClick={() => setStep(1)} className="h-12 px-4">← Back</Button>
                   </div>
@@ -861,9 +990,10 @@ Return ONLY the final note text.`
             </div>
           )}
 
-          {/* STEP 3: REVIEW & SELECT */}
-          {step === 3 && analysis && (
-            <div className="space-y-4">
+          {/* STEP 3: FINAL NOTE */}
+
+          {step === 3 && (
+            <div className="space-y-3">
               {alerts.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -875,74 +1005,12 @@ Return ONLY the final note text.`
                     <Alert className="border-red-400 bg-red-50 py-2">
                       <AlertTriangle className="w-4 h-4 text-red-600" />
                       <AlertDescription className="text-red-900 text-sm font-semibold">
-                        {urgentAlerts.length} urgent alert{urgentAlerts.length > 1 ? "s" : ""} — review before completing this visit.
+                        {urgentAlerts.length} urgent alert{urgentAlerts.length > 1 ? "s" : ""} — confirm follow-up before closing.
                       </AlertDescription>
                     </Alert>
                   )}
                   {alerts.map((a, i) => <AlertCard key={i} alert={a} />)}
                 </div>
-              )}
-
-              {analysis.findings?.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-1">
-                      <div>
-                        <p className="text-sm font-bold text-gray-900">Review Suggested Additions</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Check items to include — only checked items go into the final note.</p>
-                      </div>
-                      <div className="flex gap-1.5 shrink-0">
-                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setSelected(new Set(analysis.findings.map(f => f.id)))}>
-                          <CheckSquare className="w-3.5 h-3.5" /> All
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setSelected(new Set())}>
-                          <XCircle className="w-3.5 h-3.5" /> None
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-indigo-600 font-medium">{selected.size} of {analysis.findings.length} selected</p>
-                  </div>
-
-                  {criticalFindings.length > 0 && (
-                    <Alert className="border-red-300 bg-red-50 py-2">
-                      <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <AlertDescription className="text-red-800 text-sm">
-                        {criticalFindings.length} critical Medicare compliance element{criticalFindings.length > 1 ? "s" : ""} — required for payment and audit protection.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  {[...analysis.findings]
-                    .sort((a, b) => ({ critical: 0, high: 1, medium: 2, low: 3 }[a.severity] ?? 3) - ({ critical: 0, high: 1, medium: 2, low: 3 }[b.severity] ?? 3))
-                    .map(f => (
-                      <SuggestionCard key={f.id} finding={f} selected={selected.has(f.id)} onToggle={() => toggle(f.id)} answers={answers} onAnswerChange={(id, val) => setAnswers(prev => ({ ...prev, [id]: val }))} />
-                    ))}
-                </div>
-              ) : (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-                  <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto mb-2" />
-                  <p className="font-bold text-green-800 text-lg">Note is fully compliant!</p>
-                  <p className="text-sm text-green-600 mt-1">No gaps detected. Ready to generate final note.</p>
-                </div>
-              )}
-
-              <Button onClick={build} disabled={building} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 h-14 sm:h-12 text-base font-semibold">
-                {building ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Building…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate Final Note <ArrowRight className="w-4 h-4 ml-1.5" /></>}
-              </Button>
-              <button className="w-full text-xs text-gray-400 hover:text-gray-600 py-1" onClick={() => setStep(hasClarificationStep ? 2 : 1)}>← Back</button>
-            </div>
-          )}
-
-          {/* STEP 4: FINAL NOTE */}
-          {step === 4 && (
-            <div className="space-y-3">
-              {urgentAlerts.length > 0 && (
-                <Alert className="border-red-400 bg-red-50 py-2">
-                  <AlertTriangle className="w-4 h-4 text-red-600" />
-                  <AlertDescription className="text-red-900 text-sm">
-                    <strong>Reminder:</strong> {urgentAlerts.length} urgent alert{urgentAlerts.length > 1 ? "s were" : " was"} flagged. Confirm follow-up before closing.
-                  </AlertDescription>
-                </Alert>
               )}
 
               <div className="flex items-center gap-3 bg-white border-2 border-green-400 rounded-xl px-4 py-3 shadow-sm">
