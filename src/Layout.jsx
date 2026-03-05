@@ -619,12 +619,15 @@ export default function Layout({ children, currentPageName }) {
             { page: "Messages",            Icon: Mail,    label: "Messages", badge: unreadMessageCount },
           ].map((navItem) => {
             const BottomNavIcon = navItem.Icon;
+            const badge = navItem.badge || 0;
+            const label = navItem.label;
+            const page = navItem.page;
             return (
             <Link
-              key={navItem.page}
-              to={createPageUrl(navItem.page)}
+              key={page}
+              to={createPageUrl(page)}
               className={`flex flex-col items-center justify-center gap-0.5 relative transition-colors active:scale-95 ${
-                isActive(navItem.page)
+                isActive(page)
                   ? "text-indigo-600"
                   : "text-gray-500 hover:text-gray-800"
               }`}

@@ -116,6 +116,7 @@ import SecurityCompliance from './pages/SecurityCompliance';
 import SecurityPolicy from './pages/SecurityPolicy';
 import SendFax from './pages/SendFax';
 import SignDocument from './pages/SignDocument';
+import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import StaffTraining from './pages/StaffTraining';
 import StaffTrainingHub from './pages/StaffTrainingHub';
 import SystemJobMonitor from './pages/SystemJobMonitor';
@@ -128,7 +129,6 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import __Layout from './Layout.jsx';
 
 
@@ -202,6 +202,7 @@ export const PAGES = {
     "SecurityPolicy": SecurityPolicy,
     "SendFax": SendFax,
     "SignDocument": SignDocument,
+    "SmartNoteAssistant": SmartNoteAssistant,
     "StaffTraining": StaffTraining,
     "StaffTrainingHub": StaffTrainingHub,
     "SystemJobMonitor": SystemJobMonitor,
@@ -214,7 +215,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "SmartNoteAssistant": SmartNoteAssistant,
 }
 
 export const pagesConfig = {
