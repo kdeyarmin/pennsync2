@@ -60,6 +60,7 @@ import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer"
 import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
+import MultiReferralDetector from "../components/referral/MultiReferralDetector";
 
 export default function ReferralIntake() {
   const queryClient = useQueryClient();
@@ -83,6 +84,8 @@ export default function ReferralIntake() {
   const [isUploading, setIsUploading] = useState(false);
   const [extractedFormData, setExtractedFormData] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [multiReferralDetection, setMultiReferralDetection] = useState(null);
+  const [processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -112,10 +115,16 @@ export default function ReferralIntake() {
     }
 
     setIsUploading(true);
-    setIsAnalyzing(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFile(file_url);
+      
+      // If it's a PDF, check for multiple referrals
+      if (file.type === 'application/pdf') {
+        setMultiReferralDetection({ fileUrl: file_url, fileName: file.name });
+        setIsUploading(false);
+        return;
+      }
       
       // Immediately extract data from document with enhanced AI categorization
       const extracted = await base44.integrations.Core.InvokeLLM({
@@ -244,7 +253,50 @@ Return comprehensive structured data for intelligent form pre-population and car
       alert('Failed to upload file. Please try again.');
     }
     setIsUploading(false);
-    setIsAnalyzing(false);
+  };
+
+  const handleMultiReferralDetectionComplete = async (analysis, selectedIndices) => {
+    setProcessingMultipleReferrals(true);
+    try {
+      // Create referrals for each selected document
+      const referralsToProcess = analysis.referrals.filter(r => selectedIndices.includes(r.index));
+      
+      for (const referral of referralsToProcess) {
+        await base44.entities.Referral.create({
+          patient_name: referral.patient_name || '',
+          referral_source: referral.referral_source || '',
+          referral_date: referral.referral_date || todayEastern(),
+          document_type: 'pdf',
+          priority: 'normal',
+          document_url: multiReferralDetection.fileUrl,
+          status: 'new',
+          page_range: `${referral.estimated_start_page}-${referral.estimated_end_page}`,
+          detection_confidence: referral.confidence,
+          notes: `Extracted from multi-document PDF: ${multiReferralDetection.fileName}. Pages ${referral.estimated_start_page}-${referral.estimated_end_page}`
+        });
+      }
+
+      // Reset form
+      setMultiReferralDetection(null);
+      setUploadedFile(null);
+      setNewReferral({
+        patient_name: "",
+        referral_source: "",
+        referral_date: todayEastern(),
+        document_type: "pdf",
+        priority: "normal",
+        estimated_start_date: ""
+      });
+      setUploadDialogOpen(false);
+
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      alert(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
+    } catch (error) {
+      console.error('Error processing multiple referrals:', error);
+      alert('Failed to create referrals. Please try again.');
+    } finally {
+      setProcessingMultipleReferrals(false);
+    }
   };
 
   const handleCreateReferral = async () => {
@@ -1498,28 +1550,31 @@ Actions available:
                 </label>
               </div>
             </div>
+            )}
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">
             <Button variant="outline" onClick={() => setUploadDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto order-2 sm:order-1">
               Cancel
             </Button>
-            <Button
-              onClick={handleCreateReferral}
-              disabled={isUploading || !uploadedFile}
-              className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto order-1 sm:order-2"
-            >
-              {isUploading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Create & Process Referral
-                </>
-              )}
-            </Button>
+            {!multiReferralDetection && (
+              <Button
+                onClick={handleCreateReferral}
+                disabled={isUploading || !uploadedFile}
+                className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto order-1 sm:order-2"
+              >
+                {isUploading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Create & Process Referral
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
