@@ -29,8 +29,13 @@ Deno.serve(async (req) => {
       includeIncidents ? base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 100) : []
     ]);
 
+    // Format medications
+    const medicationsList = patient.current_medications?.map(m => `${m.name} ${m.dosage} ${m.frequency}`).join('; ') || 'None';
+    const secondaryDiagnoses = patient.secondary_diagnoses?.join(', ') || 'None';
+    const pastMedicalHistory = patient.past_medical_history?.join('; ') || 'None';
+
     // Use AI to generate professional formatted document
-    const prompt = `Generate a professional, HIPAA-compliant patient medical chart PDF document with the following information:
+    const prompt = `Generate a professional, HIPAA-compliant patient medical chart with the following information:
 
 PATIENT DEMOGRAPHICS:
 Name: ${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}
@@ -52,16 +57,16 @@ Relationship: ${patient.emergency_contact_relationship || 'N/A'}
 
 CLINICAL INFORMATION:
 Primary Diagnosis: ${patient.primary_diagnosis || 'N/A'}
-Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
+Secondary Diagnoses: ${secondaryDiagnoses}
 Allergies: ${patient.allergies || 'No known allergies'}
-Current Medications: ${patient.current_medications?.map(m => \`\${m.name} \${m.dosage} \${m.frequency}\`).join('; ') || 'None'}
-Past Medical History: ${patient.past_medical_history?.join('; ') || 'None'}
+Current Medications: ${medicationsList}
+Past Medical History: ${pastMedicalHistory}
 
 BASELINE VITALS:
-BP: \${patient.baseline_vitals?.blood_pressure_systolic || 'N/A'}/\${patient.baseline_vitals?.blood_pressure_diastolic || 'N/A'}
+BP: ${patient.baseline_vitals?.blood_pressure_systolic || 'N/A'}/${patient.baseline_vitals?.blood_pressure_diastolic || 'N/A'}
 HR: ${patient.baseline_vitals?.heart_rate || 'N/A'} bpm
 RR: ${patient.baseline_vitals?.respiratory_rate || 'N/A'} rpm
-Temp: ${patient.baseline_vitals?.temperature || 'N/A'}°F
+Temp: ${patient.baseline_vitals?.temperature || 'N/A'}F
 O2 Sat: ${patient.baseline_vitals?.oxygen_saturation || 'N/A'}%
 Weight: ${patient.baseline_vitals?.weight || 'N/A'} lbs
 Height: ${patient.baseline_vitals?.height || 'N/A'} inches
@@ -85,25 +90,20 @@ Has Healthcare Proxy: ${patient.advance_directives?.has_healthcare_proxy ? 'Yes'
 DNR Status: ${patient.advance_directives?.dnr_status ? 'Yes' : 'No'}
 
 RECENT VISITS (${visits?.length || 0}):
-${visits?.slice(0, 10).map(v => \`- \${v.visit_date}: \${v.visit_type} - \${v.nurse_notes?.substring(0, 100) || 'No notes'}\`).join('\n')}
+${visits?.slice(0, 10).map((v, i) => `${i + 1}. ${v.visit_date}: ${v.visit_type}`).join('\n')}
 
 ACTIVE CARE PLANS (${carePlans?.length || 0}):
-${carePlans?.slice(0, 10).map(cp => \`- Problem: \${cp.problem}\n  Goal: \${cp.goal}\n  Status: \${cp.status}\`).join('\n\n')}
+${carePlans?.slice(0, 10).map((cp, i) => `${i + 1}. ${cp.problem} - Status: ${cp.status}`).join('\n')}
 
 CLINICAL INCIDENTS (${incidents?.length || 0}):
-${incidents?.slice(0, 10).map(i => \`- \${i.incident_date}: \${i.incident_type} - \${i.severity} severity\`).join('\n')}
+${incidents?.slice(0, 10).map((inc, i) => `${i + 1}. ${inc.incident_date}: ${inc.incident_type} (${inc.severity})`).join('\n')}
 
-Create a professional medical chart PDF with:
-1. Clean, medical-standard layout with proper sections
-2. HIPAA-compliant formatting (no sensitive data in headers/footers)
-3. Date/time of document generation
-4. Document classification (CONFIDENTIAL MEDICAL RECORD)
-5. Page numbers
-6. Professional typography and spacing
-7. Easy-to-read tables for medications and vital signs
-8. Proper medical terminology and formatting
-
-The document should be suitable for sharing with specialists, insurance companies, and other healthcare providers while maintaining patient privacy standards.`;
+Create professional medical chart content with:
+1. Clear section headers and organization
+2. HIPAA-compliant formatting
+3. Medical-standard presentation
+4. Easy-to-read lists and tables
+5. Professional medical terminology`;
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt,
@@ -112,15 +112,11 @@ The document should be suitable for sharing with specialists, insurance companie
         properties: {
           document_content: {
             type: "string",
-            description: "Full HTML/formatted content for the PDF"
+            description: "Full formatted content for the document"
           },
           page_count: {
             type: "number",
             description: "Estimated page count"
-          },
-          includes_phi: {
-            type: "boolean",
-            description: "Whether document contains PHI (Protected Health Information)"
           }
         }
       }
