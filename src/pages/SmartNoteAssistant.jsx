@@ -24,6 +24,8 @@ import NoteDiffView from "../components/smartNote/NoteDiffView";
 import ClinicalCodeSuggester from "../components/smartNote/ClinicalCodeSuggester";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import SmartNotePDFExporter from "../components/smartNote/SmartNotePDFExporter";
+import SmartNotePDFExporterEnhanced from "../components/smartNote/SmartNotePDFExporterEnhanced";
+import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
 import MedicalDictationHelper from "../components/smartNote/MedicalDictationHelper";
 import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
 
