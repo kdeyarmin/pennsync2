@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-import jsPDF from 'npm:jspdf@4.0.0';
 
 Deno.serve(async (req) => {
   try {
@@ -11,287 +10,151 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { patientId, includeVisits = true, includeCare = true, includeIncidents = true } = body;
+    const { patientId, includeVisits = true, includeCarePlans = true, includeIncidents = true } = body;
 
     if (!patientId) {
       return Response.json({ error: 'Missing patientId' }, { status: 400 });
     }
 
     // Fetch patient data
-    const patients = await base44.entities.Patient.filter({ id: patientId });
-    if (!patients || patients.length === 0) {
+    const patient = await base44.entities.Patient.get(patientId);
+    if (!patient) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
 
-    const patient = patients[0];
+    // Fetch related data in parallel
+    const [visits, carePlans, incidents] = await Promise.all([
+      includeVisits ? base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 100) : [],
+      includeCarePlans ? base44.entities.CarePlan.filter({ patient_id: patientId }, '-created_date', 100) : [],
+      includeIncidents ? base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 100) : []
+    ]);
 
-    // Fetch related data
-    const visits = includeVisits ? await base44.entities.Visit.filter({ patient_id: patientId }) : [];
-    const carePlans = includeCare ? await base44.entities.CarePlan.filter({ patient_id: patientId }) : [];
-    const incidents = includeIncidents ? await base44.entities.Incident.filter({ patient_id: patientId }) : [];
+    // Use AI to generate professional formatted document
+    const prompt = `Generate a professional, HIPAA-compliant patient medical chart PDF document with the following information:
 
-    // Create PDF
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+PATIENT DEMOGRAPHICS:
+Name: ${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}
+DOB: ${patient.date_of_birth}
+MRN: ${patient.medical_record_number || 'N/A'}
+Address: ${patient.address || 'N/A'}
+Phone: ${patient.phone || 'N/A'}
+Email: ${patient.email || 'N/A'}
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    let yPosition = 15;
-    const margin = 10;
-    const lineHeight = 5;
+PRIMARY CARE PHYSICIAN:
+Name: ${patient.physician_name || 'N/A'}
+Phone: ${patient.physician_phone || 'N/A'}
+Email: ${patient.physician_email || 'N/A'}
 
-    // Helper to add page break if needed
-    const checkPageBreak = (spaceNeeded) => {
-      if (yPosition + spaceNeeded > pageHeight - 10) {
-        pdf.addPage();
-        yPosition = 15;
-      }
-    };
+EMERGENCY CONTACT:
+Name: ${patient.emergency_contact_name || 'N/A'}
+Phone: ${patient.emergency_contact_phone || 'N/A'}
+Relationship: ${patient.emergency_contact_relationship || 'N/A'}
 
-    // Helper to format text
-    const formatDate = (dateStr) => {
-      if (!dateStr) return 'N/A';
-      try {
-        return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-      } catch {
-        return dateStr;
-      }
-    };
+CLINICAL INFORMATION:
+Primary Diagnosis: ${patient.primary_diagnosis || 'N/A'}
+Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
+Allergies: ${patient.allergies || 'No known allergies'}
+Current Medications: ${patient.current_medications?.map(m => \`\${m.name} \${m.dosage} \${m.frequency}\`).join('; ') || 'None'}
+Past Medical History: ${patient.past_medical_history?.join('; ') || 'None'}
 
-    // Header with HIPAA notice
-    pdf.setFontSize(14);
-    pdf.setTextColor(31, 41, 55);
-    pdf.text('PATIENT MEDICAL RECORD', margin, yPosition);
-    yPosition += 7;
+BASELINE VITALS:
+BP: \${patient.baseline_vitals?.blood_pressure_systolic || 'N/A'}/\${patient.baseline_vitals?.blood_pressure_diastolic || 'N/A'}
+HR: ${patient.baseline_vitals?.heart_rate || 'N/A'} bpm
+RR: ${patient.baseline_vitals?.respiratory_rate || 'N/A'} rpm
+Temp: ${patient.baseline_vitals?.temperature || 'N/A'}°F
+O2 Sat: ${patient.baseline_vitals?.oxygen_saturation || 'N/A'}%
+Weight: ${patient.baseline_vitals?.weight || 'N/A'} lbs
+Height: ${patient.baseline_vitals?.height || 'N/A'} inches
+BMI: ${patient.baseline_vitals?.bmi || 'N/A'}
 
-    pdf.setFontSize(8);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, yPosition);
-    pdf.text(`By: ${user.full_name} (${user.email})`, pageWidth - margin - 60, yPosition);
-    yPosition += 8;
+FUNCTIONAL STATUS:
+Ambulation: ${patient.functional_status?.ambulation || 'N/A'}
+ADL Independence: ${patient.functional_status?.adl_independence || 'N/A'}
+Cognitive Status: ${patient.functional_status?.cognitive_status || 'N/A'}
+Fall Risk: ${patient.functional_status?.fall_risk || 'N/A'}
 
-    // HIPAA Confidentiality Banner
-    pdf.setFillColor(255, 193, 7);
-    pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, 8, 'F');
-    pdf.setFontSize(7);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text('CONFIDENTIAL - For Authorized Users Only. Contains Protected Health Information (PHI) subject to 45 CFR §164.500.', margin + 1, yPosition + 2);
-    yPosition += 12;
+SOCIAL HISTORY:
+Living Situation: ${patient.social_history?.living_situation || 'N/A'}
+Primary Language: ${patient.social_history?.primary_language || 'English'}
+Support System: ${patient.social_history?.support_system || 'N/A'}
+Smoking Status: ${patient.social_history?.smoking_status || 'N/A'}
 
-    // Patient Demographics
-    pdf.setFontSize(11);
-    pdf.setTextColor(31, 41, 55);
-    pdf.text('PATIENT DEMOGRAPHICS', margin, yPosition);
-    yPosition += 6;
+ADVANCE DIRECTIVES:
+Has Living Will: ${patient.advance_directives?.has_living_will ? 'Yes' : 'No'}
+Has Healthcare Proxy: ${patient.advance_directives?.has_healthcare_proxy ? 'Yes' : 'No'}
+DNR Status: ${patient.advance_directives?.dnr_status ? 'Yes' : 'No'}
 
-    pdf.setFontSize(9);
-    pdf.setTextColor(50, 50, 50);
-    const demoData = [
-      `Name: ${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}`,
-      `Date of Birth: ${formatDate(patient.date_of_birth)}`,
-      `Medical Record Number: ${patient.medical_record_number || 'Not specified'}`,
-      `Care Type: ${patient.care_type === 'hospice' ? 'Hospice' : 'Home Health'}`,
-      `Status: ${patient.status || 'Not specified'}`,
-      `Admission Date: ${formatDate(patient.admission_date)}`,
-      `Address: ${patient.address || 'Not specified'}`,
-      `Phone: ${patient.phone || 'Not specified'}`,
-      `Email: ${patient.email || 'Not specified'}`,
-      `Payor: ${patient.payor || 'Not specified'}`
-    ];
+RECENT VISITS (${visits?.length || 0}):
+${visits?.slice(0, 10).map(v => \`- \${v.visit_date}: \${v.visit_type} - \${v.nurse_notes?.substring(0, 100) || 'No notes'}\`).join('\n')}
 
-    demoData.forEach(text => {
-      checkPageBreak(4);
-      pdf.text(text, margin, yPosition);
-      yPosition += 4;
-    });
+ACTIVE CARE PLANS (${carePlans?.length || 0}):
+${carePlans?.slice(0, 10).map(cp => \`- Problem: \${cp.problem}\n  Goal: \${cp.goal}\n  Status: \${cp.status}\`).join('\n\n')}
 
-    // Emergency Contact
-    if (patient.emergency_contact_name) {
-      yPosition += 3;
-      checkPageBreak(8);
-      pdf.setFontSize(10);
-      pdf.setTextColor(31, 41, 55);
-      pdf.text('EMERGENCY CONTACT', margin, yPosition);
-      yPosition += 5;
+CLINICAL INCIDENTS (${incidents?.length || 0}):
+${incidents?.slice(0, 10).map(i => \`- \${i.incident_date}: \${i.incident_type} - \${i.severity} severity\`).join('\n')}
 
-      pdf.setFontSize(9);
-      pdf.setTextColor(50, 50, 50);
-      const emergencyData = [
-        `Name: ${patient.emergency_contact_name}`,
-        `Relationship: ${patient.emergency_contact_relationship || 'Not specified'}`,
-        `Phone: ${patient.emergency_contact_phone || 'Not specified'}`
-      ];
+Create a professional medical chart PDF with:
+1. Clean, medical-standard layout with proper sections
+2. HIPAA-compliant formatting (no sensitive data in headers/footers)
+3. Date/time of document generation
+4. Document classification (CONFIDENTIAL MEDICAL RECORD)
+5. Page numbers
+6. Professional typography and spacing
+7. Easy-to-read tables for medications and vital signs
+8. Proper medical terminology and formatting
 
-      emergencyData.forEach(text => {
-        pdf.text(text, margin, yPosition);
-        yPosition += 4;
-      });
-    }
+The document should be suitable for sharing with specialists, insurance companies, and other healthcare providers while maintaining patient privacy standards.`;
 
-    // Clinical Information
-    yPosition += 5;
-    checkPageBreak(10);
-    pdf.setFontSize(10);
-    pdf.setTextColor(31, 41, 55);
-    pdf.text('CLINICAL INFORMATION', margin, yPosition);
-    yPosition += 5;
-
-    pdf.setFontSize(9);
-    pdf.setTextColor(50, 50, 50);
-    const clinicalData = [
-      `Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}`,
-      `Allergies: ${patient.allergies || 'NKDA'}`,
-      `Physician: ${patient.physician_name || 'Not specified'}`
-    ];
-
-    clinicalData.forEach(text => {
-      pdf.text(text, margin, yPosition);
-      yPosition += 4;
-    });
-
-    // Secondary Diagnoses
-    if (patient.secondary_diagnoses && patient.secondary_diagnoses.length > 0) {
-      yPosition += 3;
-      checkPageBreak(6);
-      pdf.setFontSize(9);
-      pdf.setTextColor(50, 50, 50);
-      const diagText = `Secondary Diagnoses: ${patient.secondary_diagnoses.join(', ')}`;
-      const splitText = pdf.splitTextToSize(diagText, pageWidth - 2 * margin);
-      pdf.text(splitText, margin, yPosition);
-      yPosition += splitText.length * 4 + 2;
-    }
-
-    // Current Medications
-    if (patient.current_medications && patient.current_medications.length > 0) {
-      yPosition += 5;
-      checkPageBreak(10);
-      pdf.setFontSize(10);
-      pdf.setTextColor(31, 41, 55);
-      pdf.text('CURRENT MEDICATIONS', margin, yPosition);
-      yPosition += 5;
-
-      pdf.setFontSize(8);
-      pdf.setTextColor(50, 50, 50);
-      patient.current_medications.forEach((med, idx) => {
-        checkPageBreak(6);
-        const medText = `${idx + 1}. ${med.name} - ${med.dosage || 'N/A'} - ${med.frequency || 'N/A'}`;
-        pdf.text(medText, margin + 2, yPosition);
-        yPosition += 4;
-      });
-    }
-
-    // Recent Visits
-    if (includeVisits && visits.length > 0) {
-      yPosition += 5;
-      checkPageBreak(10);
-      pdf.setFontSize(10);
-      pdf.setTextColor(31, 41, 55);
-      pdf.text('VISIT HISTORY (Last 10)', margin, yPosition);
-      yPosition += 5;
-
-      const recentVisits = visits.slice(0, 10);
-      pdf.setFontSize(8);
-      pdf.setTextColor(50, 50, 50);
-      
-      recentVisits.forEach((visit) => {
-        checkPageBreak(8);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(`${formatDate(visit.visit_date)} - ${visit.visit_type.replace(/_/g, ' ').toUpperCase()}`, margin, yPosition);
-        yPosition += 4;
-        
-        pdf.setFont(undefined, 'normal');
-        if (visit.nurse_notes) {
-          const notesText = pdf.splitTextToSize(visit.nurse_notes.substring(0, 300), pageWidth - 2 * margin - 2);
-          pdf.text(notesText, margin + 2, yPosition);
-          yPosition += notesText.length * 3.5 + 2;
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          document_content: {
+            type: "string",
+            description: "Full HTML/formatted content for the PDF"
+          },
+          page_count: {
+            type: "number",
+            description: "Estimated page count"
+          },
+          includes_phi: {
+            type: "boolean",
+            description: "Whether document contains PHI (Protected Health Information)"
+          }
         }
-        yPosition += 2;
-      });
-    }
-
-    // Care Plans
-    if (includeCare && carePlans.length > 0) {
-      yPosition += 5;
-      checkPageBreak(10);
-      pdf.setFontSize(10);
-      pdf.setTextColor(31, 41, 55);
-      pdf.text('ACTIVE CARE PLANS', margin, yPosition);
-      yPosition += 5;
-
-      pdf.setFontSize(8);
-      pdf.setTextColor(50, 50, 50);
-
-      carePlans.forEach((plan, idx) => {
-        checkPageBreak(8);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(`${idx + 1}. Problem: ${plan.problem}`, margin, yPosition);
-        yPosition += 4;
-        
-        pdf.setFont(undefined, 'normal');
-        const goalText = pdf.splitTextToSize(`Goal: ${plan.goal}`, pageWidth - 2 * margin - 2);
-        pdf.text(goalText, margin + 2, yPosition);
-        yPosition += goalText.length * 3.5 + 2;
-        
-        if (plan.target_date) {
-          pdf.text(`Target Date: ${formatDate(plan.target_date)}`, margin + 2, yPosition);
-          yPosition += 4;
-        }
-        yPosition += 1;
-      });
-    }
-
-    // Incidents
-    if (includeIncidents && incidents.length > 0) {
-      yPosition += 5;
-      checkPageBreak(10);
-      pdf.setFontSize(10);
-      pdf.setTextColor(31, 41, 55);
-      pdf.text('INCIDENT REPORTS', margin, yPosition);
-      yPosition += 5;
-
-      pdf.setFontSize(8);
-      pdf.setTextColor(50, 50, 50);
-
-      incidents.slice(0, 5).forEach((incident, idx) => {
-        checkPageBreak(8);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(`${idx + 1}. ${incident.incident_name || incident.incident_type.replace(/_/g, ' ')} - ${formatDate(incident.incident_date)}`, margin, yPosition);
-        yPosition += 4;
-        
-        pdf.setFont(undefined, 'normal');
-        if (incident.report) {
-          const reportText = pdf.splitTextToSize(incident.report.substring(0, 200), pageWidth - 2 * margin - 2);
-          pdf.text(reportText, margin + 2, yPosition);
-          yPosition += reportText.length * 3.5 + 2;
-        }
-        yPosition += 1;
-      });
-    }
-
-    // Footer
-    pdf.setFontSize(7);
-    pdf.setTextColor(150, 150, 150);
-    const pageCount = pdf.internal.pages.length - 1;
-    for (let i = 1; i <= pageCount; i++) {
-      pdf.setPage(i);
-      pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, pageHeight - 5);
-      pdf.text('This document is confidential and for authorized healthcare providers only.', margin, pageHeight - 5);
-    }
-
-    const pdfBytes = pdf.output('arraybuffer');
-
-    return new Response(pdfBytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="patient_chart_${patient.medical_record_number || patientId}_${new Date().getTime()}.pdf"`
       }
     });
+
+    // Log the export action for compliance
+    await base44.entities.SecurityLog.create({
+      user_email: user.email,
+      user_role: user.role,
+      action: 'export_patient_chart_pdf',
+      details: {
+        patient_id: patientId,
+        patient_name: `${patient.first_name} ${patient.last_name}`,
+        includes_visits: includeVisits,
+        includes_care_plans: includeCarePlans,
+        includes_incidents: includeIncidents,
+        exported_at: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString(),
+      ip_address: req.headers.get('x-forwarded-for') || 'unknown'
+    });
+
+    return Response.json({
+      success: true,
+      document: result.document_content,
+      patient_name: `${patient.first_name} ${patient.last_name}`,
+      mrn: patient.medical_record_number,
+      export_date: new Date().toISOString(),
+      exported_by: user.full_name,
+      pages: result.page_count
+    });
+
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error('Error generating patient chart PDF:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
