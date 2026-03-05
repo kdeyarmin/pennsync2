@@ -131,6 +131,7 @@ import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import About from './pages/About';
 import Support from './pages/Support';
+import ReferralTriage from './pages/ReferralTriage';
 import __Layout from './Layout.jsx';
 
 
@@ -219,6 +220,7 @@ export const PAGES = {
     "VisitScribe": VisitScribe,
     "About": About,
     "Support": Support,
+    "ReferralTriage": ReferralTriage,
 }
 
 export const pagesConfig = {
