@@ -50,14 +50,22 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
 
-  // Auto-detect system dark mode preference
+  // Auto-detect system dark mode preference and sync with HTML
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setDarkMode(mediaQuery.matches);
     
-    const handler = (e) => setDarkMode(e.matches);
+    const updateDarkMode = (isDark) => {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    updateDarkMode(mediaQuery.matches);
+    
+    const handler = (e) => updateDarkMode(e.matches);
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
@@ -467,14 +475,15 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className={`md:hidden fixed top-0 left-0 right-0 z-50 ${darkMode ? 'bg-slate-900' : 'bg-slate-800'} shadow-md border-b ${darkMode ? 'border-slate-800' : 'border-slate-700'} h-16 flex items-center justify-between px-4 print:hidden`}>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 dark:bg-slate-900 shadow-md border-b border-slate-700 dark:border-slate-800 h-16 flex items-center justify-between px-4 print:hidden mobile-header">
         <div className="flex items-center gap-2">
-          {currentPageName !== 'Dashboard' && currentPageName !== 'Patients' && (
+          {['PatientDetails', 'DocumentSignatures', 'DocumentVisit', 'ReferralAdmissionNote'].includes(currentPageName) && (
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-slate-700 h-10 w-10 mr-1"
+              className="text-white hover:bg-slate-700 dark:hover:bg-slate-800 h-10 w-10 mr-1"
               onClick={() => window.history.back()}
+              title="Go back"
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>

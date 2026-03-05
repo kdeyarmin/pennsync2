@@ -54,11 +54,18 @@ css
   }
 
   body {
-    @apply bg-gradient-to-br from-sky-50 to-blue-100 text-gray-900 overscroll-behavior-none;
+    @apply bg-gradient-to-br from-sky-50 to-blue-100 text-gray-900;
+    overscroll-behavior: none;
   }
 
   * {
     @apply border-gray-200;
+  }
+
+  /* Non-content UI elements should not be selectable */
+  button, a[href], nav, header, [role="button"], [role="tab"], [role="tablist"], 
+  .sidebar, .mobile-header, .navigation {
+    @apply user-select-none;
   }
 }
 
