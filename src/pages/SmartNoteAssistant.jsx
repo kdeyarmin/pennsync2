@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
+import { enhanceTranscription, suggestMedicalCorrections } from "../components/utils/medicalDictionary";
 import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
 import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
