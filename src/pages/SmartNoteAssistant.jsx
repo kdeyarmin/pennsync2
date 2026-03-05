@@ -234,6 +234,7 @@ export default function SmartNoteAssistant() {
   const [copiedSection, setCopiedSection] = useState(null);
   const [hasDraft, setHasDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
+  const [signatureImage, setSignatureImage] = useState(null);
   const recRef = useRef(null);
   const textareaRef = useRef(null);
   const DRAFT_KEY = "smart_note_draft_v2";
