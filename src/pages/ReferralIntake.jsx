@@ -49,7 +49,8 @@ import {
   Sparkles,
   ClipboardCheck,
   Target,
-  Trash2
+  Trash2,
+  UserCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
