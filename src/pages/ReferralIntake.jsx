@@ -1552,6 +1552,7 @@ Actions available:
             </div>
             )}
           </div>
+          
           <DialogFooter className="flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">
             <Button variant="outline" onClick={() => setUploadDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto order-2 sm:order-1">
               Cancel
