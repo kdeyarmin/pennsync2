@@ -54,7 +54,7 @@ css
   }
 
   body {
-    @apply bg-gradient-to-br from-sky-50 to-blue-100 text-gray-900;
+    @apply bg-gradient-to-br from-sky-50 to-blue-100 text-gray-900 overscroll-behavior-none;
   }
 
   * {
@@ -135,6 +135,11 @@ css
 }
 
 @layer utilities {
+  /* Navigation and button selection prevention */
+  nav, button, [role="button"], a[href], .touch-target {
+    @apply user-select-none;
+  }
+
   /* Modern animations */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
