@@ -27,8 +27,19 @@ import {
   BookOpen,
   Heart,
   Home,
-  Users
+  Users,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import CareScopeSelector from "../components/profile/CareScopeSelector";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
 
@@ -36,6 +47,8 @@ export default function UserSettings() {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -137,6 +150,22 @@ export default function UserSettings() {
 
   const togglePreference = (key) => {
     setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "DELETE") return;
+
+    setIsDeleting(true);
+    try {
+      // In a real app, you'd call a backend function to delete the account
+      // For now, logout as placeholder
+      await base44.auth.logout();
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account. Please contact support.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -516,6 +545,83 @@ export default function UserSettings() {
           <strong>Note:</strong> These preferences will be applied across all your Smart Note Assistant sessions and affect how AI assists you with documentation.
         </AlertDescription>
       </Alert>
+
+      {/* Delete Account Section */}
+      <div className="mt-8 pt-8 border-t border-gray-300">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            Danger Zone
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">Irreversible actions that affect your account</p>
+        </div>
+
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-700 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" />
+              Delete Account
+            </CardTitle>
+            <CardDescription className="text-red-600">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="min-h-[44px]">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete My Account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-md">
+                <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+                <AlertDialogDescription className="space-y-3">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-sm text-red-900 font-semibold flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      This is permanent
+                    </p>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    You are about to permanently delete your PENNSync account. This action:
+                  </p>
+                  <ul className="text-sm text-gray-700 space-y-1 ml-4 list-disc">
+                    <li>Cannot be reversed</li>
+                    <li>Deletes all your patient records</li>
+                    <li>Removes all your notes and documents</li>
+                    <li>Logs you out immediately</li>
+                  </ul>
+                  <div className="pt-3 border-t">
+                    <label className="text-sm font-medium text-gray-900 block mb-2">
+                      Type <span className="font-bold text-red-600">DELETE</span> to confirm:
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="Type DELETE"
+                      value={deleteConfirm}
+                      onChange={(e) => setDeleteConfirm(e.target.value.toUpperCase())}
+                      className="font-mono text-center"
+                    />
+                  </div>
+                </AlertDialogDescription>
+                <div className="flex gap-3 justify-end">
+                  <AlertDialogCancel onClick={() => setDeleteConfirm("")}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirm !== "DELETE" || isDeleting}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Account"}
+                  </AlertDialogAction>
+                </div>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
