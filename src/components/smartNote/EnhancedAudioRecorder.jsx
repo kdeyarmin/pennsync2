@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Play, Download, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { enhanceTranscription } from "../utils/medicalDictionary";
+import DictationSectionMapper from "./DictationSectionMapper";
 
 export default function EnhancedAudioRecorder({ onTranscribed, disabled = false }) {
   const [recording, setRecording] = useState(false);
@@ -9,6 +10,8 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
   const [audioUrl, setAudioUrl] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [error, setError] = useState(null);
+  const [transcript, setTranscript] = useState(null);
+  const [showMapper, setShowMapper] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const streamRef = useRef(null);
