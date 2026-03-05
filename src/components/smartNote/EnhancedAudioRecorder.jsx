@@ -92,6 +92,8 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
     setAudioUrl(null);
     setRecordingTime(0);
     setError(null);
+    setTranscript(null);
+    setShowMapper(false);
   };
 
   const formatTime = (seconds) => {
