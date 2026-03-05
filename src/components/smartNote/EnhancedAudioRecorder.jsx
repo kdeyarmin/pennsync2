@@ -75,12 +75,11 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
       }
 
       const data = await response.json();
-      const transcript = data.text || "";
-      const enhanced = enhanceTranscription(transcript);
+      const transcriptText = data.text || "";
+      const enhanced = enhanceTranscription(transcriptText);
       
-      if (onTranscribed) {
-        onTranscribed(enhanced);
-      }
+      setTranscript(enhanced);
+      setShowMapper(true);
     } catch (err) {
       setError(`Transcription error: ${err.message}`);
       console.error("Transcription error:", err);
