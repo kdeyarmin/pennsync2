@@ -80,7 +80,8 @@ export default function ReferralTriage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
+      <div className="max-w-6xl mx-auto px-4">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Referral Triage</h1>
@@ -190,6 +191,7 @@ export default function ReferralTriage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -102,7 +102,7 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Input Section */}
       <Card>
         <CardHeader>
