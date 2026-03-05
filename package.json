@@ -79,7 +79,8 @@
     "zod": "^3.24.2",
     "date-fns-tz": "^3.2.0",
     "react-signature-canvas": "^1.0.6",
-    "pdfjs-dist": "^3.11.174"
+    "pdfjs-dist": "^3.11.174",
+    "@floating-ui/core": "^1.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
