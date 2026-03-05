@@ -86,6 +86,7 @@ const TABS = [
   { id: "medications", label: "Medications", icon: Pill, color: "emerald" },
   { id: "drafter", label: "Draft from Vitals", icon: ClipboardList, color: "violet" },
   { id: "summary", label: "Visit Summary", icon: FileText, color: "purple" },
+  { id: "trends", label: "Vital Trends", icon: TrendingUp, color: "cyan" },
 ];
 
 function SuggestionCard({ finding, selected, onToggle, answers, onAnswerChange }) {
