@@ -5,10 +5,11 @@ import { RefreshCw } from 'lucide-react';
  * Pull-to-refresh component for mobile scrollable areas
  * Triggers onRefresh when user pulls down past threshold
  */
-export default function PullToRefresh({ onRefresh, children, threshold = 80 }) {
+export default function PullToRefresh({ onRefresh, children, threshold = 80, containerRef: externalRef }) {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const containerRef = useRef(null);
+  const internalRef = useRef(null);
+  const containerRef = externalRef || internalRef;
   const startYRef = useRef(0);
   const scrollTopRef = useRef(0);
 
@@ -50,7 +51,7 @@ export default function PullToRefresh({ onRefresh, children, threshold = 80 }) {
 
   return (
     <div
-      ref={containerRef}
+      ref={internalRef}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
