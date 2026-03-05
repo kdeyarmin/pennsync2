@@ -50,6 +50,17 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Auto-detect system dark mode preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setDarkMode(mediaQuery.matches);
+    
+    const handler = (e) => setDarkMode(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -456,8 +467,18 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 shadow-md border-b border-slate-700 h-16 flex items-center justify-between px-4 print:hidden">
+      <div className={`md:hidden fixed top-0 left-0 right-0 z-50 ${darkMode ? 'bg-slate-900' : 'bg-slate-800'} shadow-md border-b ${darkMode ? 'border-slate-800' : 'border-slate-700'} h-16 flex items-center justify-between px-4 print:hidden`}>
         <div className="flex items-center gap-2">
+          {currentPageName !== 'Dashboard' && currentPageName !== 'Patients' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-slate-700 h-10 w-10 mr-1"
+              onClick={() => window.history.back()}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          )}
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" 
