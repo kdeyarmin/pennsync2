@@ -4,7 +4,7 @@ import { FileDown, Loader2 } from "lucide-react";
 import jsPDF from "jspdf";
 import { todayEastern } from "../utils/timezone";
 
-export default function SmartNotePDFExporterEnhanced({ finalNote, patient, visitType, analysisScore, currentUser }) {
+export default function SmartNotePDFExporterEnhanced({ finalNote, patient, visitType, analysisScore, currentUser, signatureImage }) {
   const [exporting, setExporting] = useState(false);
 
   const exportPDF = async () => {
@@ -70,7 +70,7 @@ export default function SmartNotePDFExporterEnhanced({ finalNote, patient, visit
 
       const lines = doc.splitTextToSize(finalNote, contentWidth);
       lines.forEach((line) => {
-        if (yPos > pageHeight - margin - 20) {
+        if (yPos > pageHeight - margin - 40) {
           doc.addPage();
           yPos = margin;
         }
@@ -79,21 +79,41 @@ export default function SmartNotePDFExporterEnhanced({ finalNote, patient, visit
       });
 
       yPos += 10;
-      if (yPos > pageHeight - margin - 20) {
+      if (yPos > pageHeight - margin - 40) {
         doc.addPage();
         yPos = margin;
       }
 
-      // Signature line
-      doc.setDrawColor(0, 0, 0);
-      doc.line(margin, yPos, margin + 50, yPos);
+      // Signature section with digital signature image if available
+      if (signatureImage) {
+        doc.setFontSize(9);
+        doc.setFont(undefined, "bold");
+        doc.text("Clinician Signature (Digital)", margin, yPos);
+        yPos += 6;
+        try {
+          const imgWidth = 50;
+          const imgHeight = 25;
+          doc.addImage(signatureImage, "PNG", margin, yPos, imgWidth, imgHeight);
+          yPos += imgHeight + 3;
+        } catch (imgErr) {
+          console.warn("Could not embed signature image:", imgErr);
+        }
+      } else {
+        // Blank signature line
+        doc.setDrawColor(0, 0, 0);
+        doc.line(margin, yPos, margin + 50, yPos);
+        yPos += 3;
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(9);
+        doc.text("Signature / Provider Print", margin, yPos);
+        yPos += 5;
+      }
+
+      yPos += 3;
+      doc.line(margin + 70, yPos, margin + 120, yPos);
       yPos += 3;
       doc.setFont(undefined, "bold");
       doc.setFontSize(9);
-      doc.text("Signature / Provider Print", margin, yPos);
-
-      yPos += 8;
-      doc.line(margin + 70, yPos - 5, margin + 120, yPos - 5);
       doc.text("Date", margin + 70, yPos);
 
       // Footer
