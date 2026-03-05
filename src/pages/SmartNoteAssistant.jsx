@@ -759,7 +759,7 @@ Return ONLY the final note text.`
                     "Patient response",
                     "Education with teach-back",
                     "Safety / fall risk",
-                    "Functional status (OASIS)",
+
                     "Care plan progress",
                     "Pain assessment",
                     "Medication adherence",
