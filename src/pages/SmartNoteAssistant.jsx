@@ -25,6 +25,7 @@ import ClinicalCodeSuggester from "../components/smartNote/ClinicalCodeSuggester
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import SmartNotePDFExporter from "../components/smartNote/SmartNotePDFExporter";
 import MedicalDictationHelper from "../components/smartNote/MedicalDictationHelper";
+import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },

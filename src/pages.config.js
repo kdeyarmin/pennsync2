@@ -67,6 +67,7 @@ import CustomizableDashboard from './pages/CustomizableDashboard';
 import Dashboard from './pages/Dashboard';
 import DocumentGenerator from './pages/DocumentGenerator';
 import DocumentHub from './pages/DocumentHub';
+import DocumentIngestion from './pages/DocumentIngestion';
 import DocumentManagement from './pages/DocumentManagement';
 import DocumentSignatures from './pages/DocumentSignatures';
 import DocumentVisit from './pages/DocumentVisit';
@@ -132,7 +133,6 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import DocumentIngestion from './pages/DocumentIngestion';
 import __Layout from './Layout.jsx';
 
 
@@ -157,6 +157,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DocumentGenerator": DocumentGenerator,
     "DocumentHub": DocumentHub,
+    "DocumentIngestion": DocumentIngestion,
     "DocumentManagement": DocumentManagement,
     "DocumentSignatures": DocumentSignatures,
     "DocumentVisit": DocumentVisit,
@@ -222,7 +223,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "DocumentIngestion": DocumentIngestion,
 }
 
 export const pagesConfig = {
