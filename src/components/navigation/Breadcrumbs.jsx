@@ -97,8 +97,8 @@ export default function Breadcrumbs({ currentPageName, customPath = [] }) {
               {crumb.label}
             </span>
           )}
-        </React.Fragment>
-      ))}
-    </nav>
+          </div>
+          ))}
+          </nav>
   );
 }
