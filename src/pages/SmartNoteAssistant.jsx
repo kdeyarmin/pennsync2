@@ -80,7 +80,6 @@ const TABS = [
   { id: "builder", label: "Note Builder", icon: Sparkles, color: "indigo" },
   { id: "drafter", label: "Draft from Vitals", icon: ClipboardList, color: "violet" },
   { id: "summary", label: "Visit Summary", icon: FileText, color: "purple" },
-  { id: "codes", label: "Code Lookup", icon: Tag, color: "emerald" },
 ];
 
 function SuggestionCard({ finding, selected, onToggle, answers, onAnswerChange }) {
@@ -645,44 +644,7 @@ Return ONLY the final note text.`
         </div>
       )}
 
-      {/* ── TAB: CODE LOOKUP ── */}
-      {activeTab === "codes" && (
-        <div className="space-y-3">
-          {/* Patient selector for context */}
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-indigo-500" /> Patient (optional — for context)
-              </label>
-              <Select value={patientId} onValueChange={setPatientId}>
-                <SelectTrigger className="bg-gray-50 h-10 text-sm rounded-xl">
-                  <SelectValue placeholder="Select a patient…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {patients.map(p => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.first_name} {p.last_name}{p.primary_diagnosis ? ` — ${p.primary_diagnosis}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">Clinical Note Text</label>
-              <textarea
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                placeholder="Paste or type a clinical note here to get ICD-10 and CPT code suggestions…"
-                className="w-full min-h-[140px] text-sm border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 outline-none resize-none leading-relaxed"
-              />
-            </div>
-          </div>
-          <ClinicalCodeSuggester
-            noteText={note}
-            patientContext={patient ? buildCtx() : ""}
-          />
-        </div>
-      )}
+
 
       {/* ── TAB: NOTE BUILDER ── */}
       {activeTab === "builder" && (
