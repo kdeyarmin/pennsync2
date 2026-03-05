@@ -73,8 +73,7 @@ const RISK_ICON = { fall: Activity, medication: Pill, exacerbation: TrendingUp, 
 
 const STEPS = [
   { label: "Write" },
-  { label: "Review" },
-  { label: "Final" },
+  { label: "Generate" },
 ];
 
 // Tabs for the main interface
