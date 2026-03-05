@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +14,7 @@ export default function DocumentIngestion() {
     queryFn: () => base44.auth.me()
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentUser?.email) {
       logActivity(ActivityActions.PAGE_VISIT, { page: "DocumentIngestion" });
     }
