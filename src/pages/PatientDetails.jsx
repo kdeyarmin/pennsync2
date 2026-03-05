@@ -33,6 +33,7 @@ import PatientRiskStratification from "../components/patient/PatientRiskStratifi
 import DischargeSummaryGenerator from "../components/discharge/DischargeSummaryGenerator";
 import AIPatientDashboardSummary from "../components/patient/AIPatientDashboardSummary";
 import QuickActionsPanel from "../components/patient/QuickActionsPanel";
+import PatientChartExporter from "../components/documents/PatientChartExporter";
 import AIPatientHistoryAnalyzer from "../components/patient/AIPatientHistoryAnalyzer";
 import AIComplianceAuditor from "../components/compliance/AIComplianceAuditor";
 import FavoriteButton from "../components/navigation/FavoriteButton";
@@ -331,6 +332,7 @@ export default function PatientDetails() {
                       </Button>
                     </Link>
                   )}
+                  <PatientChartExporter patient={patient} />
                   {patient.status !== 'discharged' && (
                     <DischargeSummaryGenerator 
                       patientId={patientId} 
