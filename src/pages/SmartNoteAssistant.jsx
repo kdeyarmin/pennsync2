@@ -968,8 +968,16 @@ Return ONLY the final note text.`
                   )}
 
                   <div className="flex gap-3">
-                    <Button onClick={proceedToBuild} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
-                      <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
+                    <Button onClick={proceedToBuild} disabled={needsClarificationFindings.length === 0} className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-12 font-semibold gap-2">
+                      {needsClarificationFindings.length === 0 ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" /> Done — Note Generated
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
                     </Button>
                     <Button variant="outline" onClick={() => setStep(1)} className="h-12 px-4">← Back</Button>
                   </div>
