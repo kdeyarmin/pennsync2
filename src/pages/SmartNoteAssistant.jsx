@@ -316,9 +316,11 @@ export default function SmartNoteAssistant() {
     const rec = new SR();
     rec.continuous = true;
     rec.interimResults = false;
+    rec.lang = "en-US";
     rec.onresult = (e) => {
       const t = Array.from(e.results).slice(e.resultIndex).map(r => r[0].transcript).join(" ");
-      setNote(prev => prev ? prev + " " + t : t);
+      const enhanced = enhanceTranscription(t);
+      setNote(prev => prev ? prev + " " + enhanced : enhanced);
     };
     rec.onerror = () => setListening(false);
     rec.onend = () => setListening(false);
