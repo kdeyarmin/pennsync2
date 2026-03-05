@@ -100,5 +100,5 @@ export default function Breadcrumbs({ currentPageName, customPath = [] }) {
           </div>
           ))}
           </nav>
-  );
-}
+          );
+          }
