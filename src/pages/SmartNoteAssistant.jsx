@@ -961,9 +961,42 @@ Return ONLY the final note text.`
             </div>
           )}
 
-          {/* STEP 3: FINAL NOTE */}
+          {/* STEP 3: BUILD FINAL NOTE */}
+          {step === 3 && !finalNote && (
+            <div className="space-y-3">
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm text-center space-y-4">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-8 h-8 text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-gray-900">Ready to Generate Final Note</p>
+                    <p className="text-sm text-gray-500 mt-1">Compiling your answers and selected suggestions into a Medicare-compliant nursing note</p>
+                  </div>
+                </div>
+                <Button onClick={build} disabled={building} className="bg-indigo-600 hover:bg-indigo-700 h-12 w-full gap-2 font-semibold text-base">
+                  {building ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Generate Final Clinical Note
+                    </>
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => setStep(2)} className="h-11 w-full gap-2">
+                  ← Back to Review
+                </Button>
+              </div>
+            </div>
+          )}
 
-          {step === 3 && (
+          {/* STEP 4: FINAL NOTE DISPLAY */}
+
+          {step === 3 && finalNote && (
             <div className="space-y-3">
               {alerts.length > 0 && (
                 <div className="space-y-2">
