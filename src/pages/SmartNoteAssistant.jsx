@@ -365,9 +365,9 @@ export default function SmartNoteAssistant() {
        discharge: "reason (goals met / revocation / extended prognosis / transfer), discharge summary, patient/family education, bereavement referral, follow-up plan",
        prn: "reason for unscheduled visit, symptom crisis assessment, comfort interventions provided, physician notification, patient/family response",
      } : {
-      admission: "baseline assessment, medication reconciliation, homebound status establishment, physician orders, emergency plan, primary and secondary diagnoses, functional baseline, OASIS data points",
-      recertification: "continued homebound status justification, continued skilled need, progress toward goals, updated care plan, discharge planning, OASIS if required",
-      discharge: "reason for discharge, goals met/unmet, patient/caregiver education on discharge, instructions given, follow-up plan, OASIS discharge",
+      admission: "baseline assessment, medication reconciliation, homebound status establishment, physician orders, emergency plan, primary and secondary diagnoses, functional baseline",
+      recertification: "continued homebound status justification, continued skilled need, progress toward goals, updated care plan, discharge planning",
+      discharge: "reason for discharge, goals met/unmet, patient/caregiver education on discharge, instructions given, follow-up plan",
       routine_visit: "skilled need for this visit, homebound status, patient response to interventions, progress toward care plan goals",
       prn: "reason for unscheduled visit, assessment findings, interventions, physician notification if applicable",
     };
