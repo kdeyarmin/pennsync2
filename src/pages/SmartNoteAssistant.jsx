@@ -534,8 +534,8 @@ Return ONLY the final note text.`
       alert("Failed to build note. Please try again.");
     } finally {
       setBuilding(false);
-    }
-  };
+      }
+      };
 
   const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
 
