@@ -542,42 +542,7 @@ Return ONLY the final note text.`
     return impacts;
   };
 
-  const build = async () => {
-    if (!analysis) return;
-    setBuilding(true);
-    try {
-      const selectedFindings = analysis.findings.filter(f => selected.has(f.id));
-      const baseNote = analysis.enhanced_note || "";
-      const additions = selectedFindings.filter(f => f.suggestion).map(f => f.suggestion).join(" ");
-      let result = baseNote;
-      if (additions) {
-        result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Produce a final Medicare-compliant nursing note.
-BASE NOTE (from nurse's documentation): ${baseNote}
-APPROVED ADDITIONS (selected by nurse): ${additions}
-RULES: Only use source material above. No invented clinical info. Past-tense clinical narrative. Logical flow: assessment → interventions → patient response → education → plan.
-Return ONLY the final note text.`
-        });
-        if (typeof result !== "string") result = baseNote + " " + additions;
-      }
-      setFinalNote(result);
-      setNoteSections(parseNoteSections(result));
-      setStep(4);
-      if (patientId && currentUser?.email) {
-        const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
-        const noteText = typeof result === "string" ? result : JSON.stringify(result);
-        await Promise.all([
-          base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: noteText.length, quality_score: analysis.overall_score, rough_note_compliance: Math.max(0, analysis.compliance_score - 20), enhanced_note_compliance: analysis.compliance_score, compliance_improvement: 20 }),
-          base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysis.compliance_score, status: analysis.compliance_score >= 90 ? "passed" : analysis.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
-        ]);
-        logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysis.overall_score });
-      }
-    } catch (err) {
-      alert("Failed to build note. Please try again.");
-    } finally {
-      setBuilding(false);
-      }
-      };
+
 
   const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
 
