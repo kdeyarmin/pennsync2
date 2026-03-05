@@ -129,6 +129,8 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
+import About from './pages/About';
+import Support from './pages/Support';
 import __Layout from './Layout.jsx';
 
 
@@ -215,6 +217,8 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
+    "About": About,
+    "Support": Support,
 }
 
 export const pagesConfig = {
