@@ -546,14 +546,14 @@ export default function UserSettings() {
         </AlertDescription>
       </Alert>
 
-      {/* Delete Account Section */}
-      <div className="mt-8 pt-8 border-t border-gray-300">
+      {/* Delete Account Section - Danger Zone */}
+      <div className="mt-8 pt-8 border-t-2 border-red-300">
         <div className="mb-4">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600" />
             Danger Zone
           </h2>
-          <p className="text-sm text-gray-600 mt-1">Irreversible actions that affect your account</p>
+          <p className="text-sm text-gray-600 mt-1">Actions that cannot be undone</p>
         </div>
 
         <Card className="border-red-200 bg-red-50">
