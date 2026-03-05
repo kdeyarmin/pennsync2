@@ -1,14 +1,15 @@
-import React, { useMemo, lazy, Suspense, useEffect } from "react";
+import React, { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertCircle } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
 import CareScopeSelector from "../components/profile/CareScopeSelector";
+import PullToRefresh from "../components/mobile/PullToRefresh";
 
 
 // Critical above-the-fold — eager loaded
@@ -32,12 +33,32 @@ const OfflineDataManager        = lazy(() => import("../components/mobile/Offlin
 
 
 export default function Dashboard() {
+  const queryClient = useQueryClient();
+  const containerRef = useRef(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
-    const { data: currentUser } = useQuery({
-      queryKey: ['currentUser'],
-      queryFn: () => base44.auth.me(),
-    });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Refetch all dashboard queries
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['todayVisits'] }),
+        queryClient.refetchQueries({ queryKey: ['patients'] }),
+        queryClient.refetchQueries({ queryKey: ['activeCarePlans'] }),
+        queryClient.refetchQueries({ queryKey: ['recentIncidents'] }),
+        queryClient.refetchQueries({ queryKey: ['myNoteConversions'] }),
+      ]);
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
     // Log page visit with user context
     useEffect(() => {
@@ -142,7 +163,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto min-h-screen">
+    <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
+    <div ref={containerRef} className="max-w-7xl mx-auto min-h-screen">
       {/* Welcome Banner */}
       <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-xl overflow-hidden`}>
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
@@ -301,5 +323,6 @@ export default function Dashboard() {
       </Suspense>
 
     </div>
+    </PullToRefresh>
   );
 }
