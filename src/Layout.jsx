@@ -349,7 +349,7 @@ export default function Layout({ children, currentPageName }) {
           )}
 
           {navCategories.map((category, catIndex) => (
-            <React.Fragment key={catIndex}>
+            <div key={catIndex}>
               {category.category && !sidebarCollapsed && (
                 <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase mt-3">
                   {category.category}
@@ -381,7 +381,7 @@ export default function Layout({ children, currentPageName }) {
                 </Link>
               ))}
               {catIndex === 0 && <div className="border-t border-gray-200 my-3" />}
-            </React.Fragment>
+            </div>
           ))}
 
           {isAdmin && (
@@ -505,7 +505,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
             <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
               {navCategories.map((category, catIndex) => (
-                <React.Fragment key={catIndex}>
+                <div key={catIndex}>
                   {category.category && (
                     <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase mt-3">
                       {category.category}
@@ -532,7 +532,7 @@ export default function Layout({ children, currentPageName }) {
                     </Link>
                   ))}
                   {catIndex === 0 && <div className="border-t border-gray-200 my-2" />}
-                </React.Fragment>
+                </div>
               ))}
               {isAdmin && (
                 <>

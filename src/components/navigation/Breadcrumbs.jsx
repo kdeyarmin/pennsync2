@@ -83,7 +83,7 @@ export default function Breadcrumbs({ currentPageName, customPath = [] }) {
       </Link>
       
       {breadcrumbs.map((crumb, index) => (
-        <React.Fragment key={index}>
+        <div key={index} className="flex items-center gap-1">
           <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
           {crumb.page && index < breadcrumbs.length - 1 ? (
             <Link
