@@ -191,7 +191,7 @@ function StepIndicator({ step }) {
         const active = step === n;
         const done = step > n;
         return (
-          <React.Fragment key={n}>
+          <div key={n} className="flex items-center">
             <div className={`flex items-center gap-1.5 text-xs font-semibold ${active ? "text-indigo-700" : done ? "text-green-600" : "text-gray-400"}`}>
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${active ? "bg-indigo-600 text-white" : done ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}>
                 {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : n}
@@ -203,7 +203,7 @@ function StepIndicator({ step }) {
                 <div className={`h-full ${step > n ? "bg-green-400 w-full" : "w-0"} transition-all duration-500`} />
               </div>
             )}
-          </React.Fragment>
+          </div>
         );
       })}
     </div>

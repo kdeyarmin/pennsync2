@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import About from './pages/About';
 import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
@@ -110,6 +111,7 @@ import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import ReferralAdmissionNote from './pages/ReferralAdmissionNote';
 import ReferralIntake from './pages/ReferralIntake';
 import ReferralProcessor from './pages/ReferralProcessor';
+import ReferralTriage from './pages/ReferralTriage';
 import RegulatoryCompliance from './pages/RegulatoryCompliance';
 import Reports from './pages/Reports';
 import SecurityCompliance from './pages/SecurityCompliance';
@@ -119,6 +121,7 @@ import SignDocument from './pages/SignDocument';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import StaffTraining from './pages/StaffTraining';
 import StaffTrainingHub from './pages/StaffTrainingHub';
+import Support from './pages/Support';
 import SystemJobMonitor from './pages/SystemJobMonitor';
 import SystemMonitoring from './pages/SystemMonitoring';
 import TemplateLibrary from './pages/TemplateLibrary';
@@ -129,13 +132,11 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import About from './pages/About';
-import Support from './pages/Support';
-import ReferralTriage from './pages/ReferralTriage';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "About": About,
     "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
@@ -199,6 +200,7 @@ export const PAGES = {
     "ReferralAdmissionNote": ReferralAdmissionNote,
     "ReferralIntake": ReferralIntake,
     "ReferralProcessor": ReferralProcessor,
+    "ReferralTriage": ReferralTriage,
     "RegulatoryCompliance": RegulatoryCompliance,
     "Reports": Reports,
     "SecurityCompliance": SecurityCompliance,
@@ -208,6 +210,7 @@ export const PAGES = {
     "SmartNoteAssistant": SmartNoteAssistant,
     "StaffTraining": StaffTraining,
     "StaffTrainingHub": StaffTrainingHub,
+    "Support": Support,
     "SystemJobMonitor": SystemJobMonitor,
     "SystemMonitoring": SystemMonitoring,
     "TemplateLibrary": TemplateLibrary,
@@ -218,9 +221,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "About": About,
-    "Support": Support,
-    "ReferralTriage": ReferralTriage,
 }
 
 export const pagesConfig = {
