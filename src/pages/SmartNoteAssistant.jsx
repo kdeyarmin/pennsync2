@@ -447,7 +447,10 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         setStep(2);
       } catch (promiseErr) {
         console.error('LLM analysis error:', promiseErr);
-        alert("Analysis failed. Please try again.");
+        const errorMsg = promiseErr?.status === 402 || promiseErr?.data?.extra_data?.reason === 'integration_credits_limit_reached'
+          ? "Monthly integration limit reached. Please upgrade your plan to continue."
+          : "Analysis failed. Please try again.";
+        alert(errorMsg);
         setStep(1);
         setAnalyzing(false);
         return;
