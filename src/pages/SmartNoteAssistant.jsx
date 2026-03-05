@@ -353,7 +353,6 @@ export default function SmartNoteAssistant() {
   const analyze = async () => {
     if (!note || note.trim().length < 20) return;
     setAnalyzing(true);
-    setStep(2);
     setAnalysis(null);
     setAlerts([]);
     setAnswers({});
