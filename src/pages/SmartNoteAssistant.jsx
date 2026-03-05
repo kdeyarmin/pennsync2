@@ -22,6 +22,7 @@ import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import NoteDiffView from "../components/smartNote/NoteDiffView";
 import ClinicalCodeSuggester from "../components/smartNote/ClinicalCodeSuggester";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
+import SmartNotePDFExporter from "../components/smartNote/SmartNotePDFExporter";
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },
