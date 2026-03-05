@@ -798,15 +798,17 @@ Return ONLY the final note text.`
               <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
                   <span className="text-xs font-semibold text-indigo-700">Your Rough Notes / Bullet Points</span>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-violet-600 hover:text-violet-800"
-                      onClick={() => { setActiveTab("drafter"); }}>
-                      <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
-                    </Button>
-                    <Button variant={listening ? "destructive" : "ghost"} size="sm" onClick={listening ? stopDictation : startDictation} className="h-7 gap-1 text-xs">
-                      {listening ? <><MicOff className="w-3.5 h-3.5" /><span className="animate-pulse">Stop</span></> : <><Mic className="w-3.5 h-3.5" /> Dictate</>}
-                    </Button>
-                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-violet-600 hover:text-violet-800"
+                    onClick={() => { setActiveTab("drafter"); }}>
+                    <ClipboardList className="w-3.5 h-3.5" /> Use Structured Form
+                  </Button>
+                </div>
+                {/* Enhanced Audio Recorder */}
+                <div className="px-4 py-2 bg-blue-50 border-b border-blue-100">
+                  <EnhancedAudioRecorder
+                    onTranscribed={(transcribed) => setNote(prev => prev ? prev + " " + transcribed : transcribed)}
+                    disabled={false}
+                  />
                 </div>
                 <textarea ref={textareaRef} value={note} onChange={e => setNote(e.target.value)}
                   placeholder={"Enter bullet points or rough draft — AI will NOT invent information.\n\n• BP 148/90, HR 82, O2 95% RA, pain 3/10\n• homebound: unable to leave without considerable effort\n• skilled need: wound assessment and dressing change\n• wound R heel 2×3 cm granulating, no odor\n• taught med schedule, pt verbalized understanding\n• fall risk — clutter noted, discussed w/ family"}
