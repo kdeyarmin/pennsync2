@@ -378,9 +378,10 @@ export default function SmartNoteAssistant() {
         ? "42 CFR Part 418 Hospice CoPs, CMS Hospice Benefit, terminal prognosis documentation, IDG interdisciplinary coordination, comfort-focused goal documentation, symptom management standards, Medicare Hospice Benefit election requirements"
         : "Medicare 42 CFR Part 484, homebound status justification, skilled need per Medicare coverage guidelines, OASIS data element documentation, vitals with clinical interpretation, patient response to skilled interventions, education with teach-back confirmation, safety and fall risk, functional status, care plan goal progress, pain assessment, medication adherence, state home health survey standards";
 
-      const [doc, cds] = await Promise.all([
-        base44.integrations.Core.InvokeLLM({
-          prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. Analyze this nurse's rough note for ${isHospice ? "hospice" : "home health"} documentation standards.
+      try {
+        const [doc, cds] = await Promise.all([
+          base44.integrations.Core.InvokeLLM({
+            prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. Analyze this nurse's rough note for ${isHospice ? "hospice" : "home health"} documentation standards.
 
 CRITICAL RULES:
 1. NEVER invent clinical information not in the note.
@@ -411,45 +412,51 @@ Return JSON:
   }],
   "enhanced_note": "formalized version of ONLY what is in the note"
 }`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              overall_score: { type: "number" }, compliance_score: { type: "number" }, quality_score: { type: "number" },
-              summary: { type: "string" }, strengths: { type: "array", items: { type: "string" } },
-              findings: { type: "array", items: { type: "object", properties: {
-                id: { type: "string" }, category: { type: "string" }, severity: { type: "string" },
-                issue: { type: "string" }, needs_clarification: { type: "boolean" },
-                suggestion: { type: "string" }, question: { type: "string" },
-                rationale: { type: "string" }, revenue_impact: { type: "string" }
-              }}},
-              enhanced_note: { type: "string" }
+            response_json_schema: {
+              type: "object",
+              properties: {
+                overall_score: { type: "number" }, compliance_score: { type: "number" }, quality_score: { type: "number" },
+                summary: { type: "string" }, strengths: { type: "array", items: { type: "string" } },
+                findings: { type: "array", items: { type: "object", properties: {
+                  id: { type: "string" }, category: { type: "string" }, severity: { type: "string" },
+                  issue: { type: "string" }, needs_clarification: { type: "boolean" },
+                  suggestion: { type: "string" }, question: { type: "string" },
+                  rationale: { type: "string" }, revenue_impact: { type: "string" }
+                }}},
+                enhanced_note: { type: "string" }
+              }
             }
-          }
-        }),
-        base44.integrations.Core.InvokeLLM({
-          prompt: `Home health clinical decision support. Only flag risks genuinely evidenced by the note.
+          }),
+          base44.integrations.Core.InvokeLLM({
+            prompt: `Home health clinical decision support. Only flag risks genuinely evidenced by the note.
 NOTE: ${note}
 PATIENT: ${ctx}
 Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|safety|followup|cardiovascular|infection|cognitive", "urgency": "immediate|soon|monitor", "title": "string", "finding": "exact text from note", "recommended_actions": ["string"], "notify_physician": true|false }] }`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              clinical_alerts: { type: "array", items: { type: "object", properties: {
-                risk_type: { type: "string" }, urgency: { type: "string" }, title: { type: "string" },
-                finding: { type: "string" }, recommended_actions: { type: "array", items: { type: "string" } },
-                notify_physician: { type: "boolean" }
-              }}}
+            response_json_schema: {
+              type: "object",
+              properties: {
+                clinical_alerts: { type: "array", items: { type: "object", properties: {
+                  risk_type: { type: "string" }, urgency: { type: "string" }, title: { type: "string" },
+                  finding: { type: "string" }, recommended_actions: { type: "array", items: { type: "string" } },
+                  notify_physician: { type: "boolean" }
+                }}}
+              }
             }
-          }
-        })
-      ]);
+          })
+        ]);
 
-      setAnalysis(doc);
-      setAlerts(cds?.clinical_alerts || []);
-      const autoSelect = new Set((doc.findings || []).filter(f => !f.needs_clarification).map(f => f.id));
-      setSelected(autoSelect);
-      const needsClarification = (doc.findings || []).some(f => f.needs_clarification);
-      setStep(2); // Always go to combined review step
+        setAnalysis(doc);
+        setAlerts(cds?.clinical_alerts || []);
+        const autoSelect = new Set((doc.findings || []).filter(f => !f.needs_clarification).map(f => f.id));
+        setSelected(autoSelect);
+        setStep(2);
+      } catch (promiseErr) {
+        console.error('LLM analysis error:', promiseErr);
+        alert("Analysis failed. Please try again.");
+        setStep(1);
+        setAnalyzing(false);
+        return;
+      }
     } catch (err) {
       alert("Analysis failed. Please try again.");
       setStep(1);
@@ -697,7 +704,7 @@ Return ONLY the final note text.`
             </div>
           )}
 
-          <StepIndicator step={step} />
+          <StepIndicator currentStep={`step_${step}`} />
 
           {/* STEP 1: WRITE */}
           {step === 1 && (
