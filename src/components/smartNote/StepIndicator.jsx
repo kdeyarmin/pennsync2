@@ -20,7 +20,7 @@ export default function StepIndicator({ currentStep, completedSteps = [] }) {
         const isPast = index < currentIndex;
 
         return (
-          <React.Fragment key={step.id}>
+          <div key={step.id} className="flex items-center gap-1">
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors flex-shrink-0 ${
               isCurrent ? 'bg-blue-100 text-blue-700' : 
               isCompleted || isPast ? 'text-green-600' : 'text-gray-400'
@@ -35,7 +35,7 @@ export default function StepIndicator({ currentStep, completedSteps = [] }) {
             {index < steps.length - 1 && (
               <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
             )}
-          </React.Fragment>
+          </div>
         );
       })}
     </div>
