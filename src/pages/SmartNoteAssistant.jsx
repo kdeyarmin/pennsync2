@@ -869,29 +869,25 @@ Return ONLY the final note text.`
                       <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <MessageSquare className="w-5 h-5 text-amber-600" />
-                          <p className="font-semibold text-amber-900">Additional information needed</p>
+                          <p className="font-semibold text-amber-900">Additional information needed ({needsClarificationFindings.length})</p>
                         </div>
                         <p className="text-sm text-amber-800">
                           These required elements are <strong>not present in your note</strong>. Answer each below, or skip if not applicable.
                         </p>
-                        <p className="text-xs text-amber-600 mt-1">{answeredCount} of {needsClarificationFindings.length} answered</p>
                       </div>
                       {needsClarificationFindings.map(f => (
-                        <div key={f.id} className={`border-l-4 rounded-lg p-4 ${SEV_STYLE[f.severity] || SEV_STYLE.medium}`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={`text-xs ${SEV_BADGE[f.severity]}`}>{f.severity}</Badge>
-                            <span className="text-sm font-semibold text-gray-900">{f.issue}</span>
-                          </div>
-                          <p className="text-xs text-gray-500 mb-2 italic">{f.rationale}</p>
-                          <p className="text-sm font-medium text-amber-800 mb-2 flex items-center gap-1.5">
-                            <HelpCircle className="w-4 h-4 shrink-0" />{f.question}
+                        <div key={f.id} className={`border-l-4 rounded-lg p-3 ${SEV_STYLE[f.severity] || SEV_STYLE.medium}`}>
+                          <p className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                            <HelpCircle className="w-4 h-4 shrink-0 text-amber-700" />{f.question}
                           </p>
                           <Textarea placeholder="Your response (leave blank to skip)…" value={answers[f.id] || ""}
                             onChange={e => setAnswers(prev => ({ ...prev, [f.id]: e.target.value }))}
-                            className="text-sm min-h-[70px] bg-white" />
-                          {answers[f.id] && <p className="text-xs text-green-700 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Will be included in final note</p>}
+                            className="text-sm min-h-[60px] bg-white" />
                         </div>
                       ))}
+                      <Button onClick={proceedToBuild} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 font-semibold gap-2">
+                        <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
+                      </Button>
                     </div>
                   )}
 
