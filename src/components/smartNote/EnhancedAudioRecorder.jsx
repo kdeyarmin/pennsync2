@@ -156,8 +156,29 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
               <X className="w-4 h-4" />
             </Button>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
+          </div>
+
+          {/* Section Mapper - shown after transcription */}
+          {transcript && showMapper && (
+          <div className="border-t border-gray-200 pt-3 mt-3">
+            <p className="text-xs font-semibold text-gray-600 mb-2">📍 Auto-map transcription into note sections</p>
+            <DictationSectionMapper
+              transcript={transcript}
+              onSectionsMapped={(sections) => {
+                if (sections && Object.values(sections).some(v => v?.trim())) {
+                  const fullNote = Object.entries(sections)
+                    .filter(([_, v]) => v?.trim())
+                    .map(([_, v]) => v.trim())
+                    .join("\n\n");
+                  if (onTranscribed) {
+                    onTranscribed(fullNote);
+                  }
+                }
+              }}
+            />
+          </div>
+          )}
+          )}
+          </div>
+          );
+          }
