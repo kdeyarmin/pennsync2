@@ -623,29 +623,30 @@ export default function Layout({ children, currentPageName }) {
             const label = navItem.label;
             const page = navItem.page;
             return (
-            <Link
-              key={page}
-              to={createPageUrl(page)}
-              className={`flex flex-col items-center justify-center gap-0.5 relative transition-colors active:scale-95 ${
-                isActive(page)
-                  ? "text-indigo-600"
-                  : "text-gray-500 hover:text-gray-800"
-              }`}
-            >
-              <div className="relative">
-                <BottomNavIcon className="w-5 h-5" />
-                {badge > 0 && (
-                  <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[10px] rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 font-bold">
-                    {badge}
-                  </span>
+              <Link
+                key={page}
+                to={createPageUrl(page)}
+                className={`flex flex-col items-center justify-center gap-0.5 relative transition-colors active:scale-95 ${
+                  isActive(page)
+                    ? "text-indigo-600"
+                    : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <div className="relative">
+                  <BottomNavIcon className="w-5 h-5" />
+                  {badge > 0 && (
+                    <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[10px] rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 font-bold">
+                      {badge}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium leading-tight">{label}</span>
+                {isActive(page) && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-indigo-600 rounded-full" />
                 )}
-              </div>
-              <span className="text-[10px] font-medium leading-tight">{label}</span>
-              {isActive(page) && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-indigo-600 rounded-full" />
-              )}
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </nav>
 
