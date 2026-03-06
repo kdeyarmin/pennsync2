@@ -245,7 +245,7 @@ Return a JSON object with:
     // Run compliance check and note enhancement in parallel using ChatGPT
     const [complianceResponse, enhancementResponse] = await Promise.all([
       openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o-2024-11-20",
         messages: [
           { role: "system", content: "You are a Medicare home health compliance expert. Always return valid JSON." },
           { role: "user", content: complianceCheckPrompt }
@@ -254,7 +254,7 @@ Return a JSON object with:
         temperature: 0.2
       }),
       openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o-2024-11-20",
         messages: [
           { role: "system", content: "You are an expert Medicare home health clinical documentation specialist. Always return valid JSON." },
           { role: "user", content: noteEnhancementPrompt }
