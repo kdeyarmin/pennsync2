@@ -77,6 +77,7 @@ export default function DocumentFaxSender({ patientId }) {
       setSignatureDataUrl(null);
       setOcrMeta(null);
       setCoverSheetUrl(null);
+      setAnnotatedUrl(null);
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
     } finally {
