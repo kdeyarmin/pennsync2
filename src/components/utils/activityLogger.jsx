@@ -26,6 +26,7 @@ export const ActivityActions = {
   UPDATE: 'update',
   DELETE: 'delete',
   LOGIN: 'login',
+  LOGOUT: 'logout',
   PAGE_VISIT: 'page_visit',
   EXPORT: 'export',
   GENERATE: 'generate',
