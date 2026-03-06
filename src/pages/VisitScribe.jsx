@@ -18,6 +18,17 @@ export default function VisitScribe() {
   const [activeTab, setActiveTab] = useState("record");
   const queryClient = useQueryClient();
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  useEffect(() => {
+    if (currentUser?.email) {
+      logActivity(ActivityActions.PAGE_VISIT, { page: 'VisitScribe' });
+    }
+  }, [currentUser?.email]);
+
   // Process audio file (both recorded and uploaded)
   const processAudioMutation = useMutation({
     mutationFn: async (audioFile) => {
