@@ -265,15 +265,16 @@ export default function SmartNoteAssistant() {
       try {
       const [doc, cds] = await Promise.all([
       base44.integrations.Core.InvokeLLM({
-        prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. Analyze this nurse's rough note for ${isHospice ? "hospice" : "home health"} documentation standards.
+        prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. ONLY analyze Medicare compliance requirements - do NOT flag quality, billing, or clinical issues.
 
       CRITICAL RULES:
       1. NEVER invent clinical information not in the note.
-      2. For EVERY finding, generate a suggestion - a specific sentence/text that should be added to make the note compliant.
-      3. If you can write the sentence from existing note content → needs_clarification: false
-      4. If the suggestion requires nurse input/clarification → needs_clarification: true AND provide a template suggestion the nurse can edit
-      5. Do NOT flag something as missing if already documented.
-      6. Apply ONLY ${isHospice ? "hospice" : "home health"} Medicare compliance rules. Do NOT apply ${isHospice ? "home health homebound status or OASIS" : "hospice IDG or terminal prognosis"} requirements.
+      2. ONLY flag Medicare compliance gaps. Ignore all other issues.
+      3. For EVERY finding, generate the exact sentence/phrase that must be added to the note.
+      4. If you can write the exact sentence from existing note content → needs_clarification: false, provide exact sentence
+      5. If the exact phrase requires nurse input → needs_clarification: true AND provide a template with [bracketed] placeholders
+      6. Do NOT flag something as missing if already documented.
+      7. Apply ONLY ${isHospice ? "hospice" : "home health"} Medicare compliance rules.
 
       NOTE: ${note}
       PATIENT: ${ctx}
@@ -288,12 +289,15 @@ export default function SmartNoteAssistant() {
       "overall_score": 0-100, "compliance_score": 0-100, "quality_score": 0-100,
       "summary": "string", "strengths": ["string"],
       "findings": [{
-      "id": "string", "category": "compliance|quality|billing|clinical",
-      "severity": "critical|high|medium|low", "issue": "string",
+      "id": "string",
+      "category": "compliance",
+      "severity": "critical|high|medium|low",
+      "issue": "what Medicare compliance rule is missing",
       "needs_clarification": true|false,
-      "suggestion": "exact sentence to add to note (template if needs_clarification=true with [brackets] for nurse to fill in)",
-      "question": "specific question for nurse if needs_clarification=true (empty string if not needed)",
-      "rationale": "string", "revenue_impact": "string"
+      "suggestion": "exact sentence/phrase to add to note - must be verbatim text to insert (use [placeholder] if nurse must fill in)",
+      "question": "specific question for nurse if needs_clarification=true (empty if not needed)",
+      "rationale": "why this is required by Medicare",
+      "revenue_impact": "payment impact if missing"
       }],
       "enhanced_note": "formalized version of ONLY what is in the note"
       }`,
