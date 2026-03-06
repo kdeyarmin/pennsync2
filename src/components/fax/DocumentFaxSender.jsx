@@ -40,8 +40,16 @@ export default function DocumentFaxSender({ patientId }) {
 
     setIsSending(true);
     try {
+      let fileUrl = doc.file_url;
+      if (signatureDataUrl) {
+        const result = await base44.functions.invoke('stampSignatureOnPDF', {
+          pdf_url: fileUrl,
+          signature_data_url: signatureDataUrl
+        });
+        fileUrl = result.data.file_url;
+      }
       await sendFax({
-        file_url: doc.file_url,
+        file_url: fileUrl,
         to_number: toNumber,
         document_name: doc.title,
         patient_id: patientId
@@ -49,6 +57,7 @@ export default function DocumentFaxSender({ patientId }) {
       toast.success("Fax sent successfully!");
       setSelectedDocId("");
       setToNumber("");
+      setSignatureDataUrl(null);
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
     } finally {
@@ -87,6 +96,8 @@ export default function DocumentFaxSender({ patientId }) {
           />
           <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
         </div>
+
+        <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
 
         <Button onClick={handleSendFax} disabled={isSending || !selectedDocId || !toNumber.trim()} className="w-full" size="lg">
           {isSending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
