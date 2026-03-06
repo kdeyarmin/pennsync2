@@ -61,6 +61,7 @@ import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
 import { toast } from "sonner";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
+import UserActivityPanel from "@/components/admin/UserActivityPanel";
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
