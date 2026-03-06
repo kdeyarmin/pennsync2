@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
 
     const { fax_log_id } = await req.json();
 
-    if (!faxLogId) {
+    if (!fax_log_id) {
       return Response.json({ error: 'fax_log_id required' }, { status: 400 });
     }
 
