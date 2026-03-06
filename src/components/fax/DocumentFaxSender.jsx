@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
 import FaxAddressBook from "./FaxAddressBook";
 import FaxSignaturePanel from "./FaxSignaturePanel";
+import FaxOCRExtractor from "./FaxOCRExtractor";
 
 export default function DocumentFaxSender({ patientId }) {
   const [selectedDocId, setSelectedDocId] = useState("");
