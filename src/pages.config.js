@@ -75,6 +75,7 @@ import DocumentationTraining from './pages/DocumentationTraining';
 import DuplicatePatients from './pages/DuplicatePatients';
 import FaxAddressBook from './pages/FaxAddressBook';
 import FaxContacts from './pages/FaxContacts';
+import FaxDashboard from './pages/FaxDashboard';
 import Features from './pages/Features';
 import Home from './pages/Home';
 import ManageNewFeatures from './pages/ManageNewFeatures';
@@ -133,7 +134,6 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import FaxDashboard from './pages/FaxDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -166,6 +166,7 @@ export const PAGES = {
     "DuplicatePatients": DuplicatePatients,
     "FaxAddressBook": FaxAddressBook,
     "FaxContacts": FaxContacts,
+    "FaxDashboard": FaxDashboard,
     "Features": Features,
     "Home": Home,
     "ManageNewFeatures": ManageNewFeatures,
@@ -224,7 +225,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "FaxDashboard": FaxDashboard,
 }
 
 export const pagesConfig = {

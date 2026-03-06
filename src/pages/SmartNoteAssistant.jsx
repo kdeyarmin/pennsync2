@@ -1,29 +1,27 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense, lazy, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles, CheckCircle2, Copy, RotateCcw, Loader2, Mic, MicOff,
-  Shield, Lightbulb, AlertTriangle, ChevronDown, ChevronUp,
-  ArrowRight, DollarSign, Target, AlertCircle, Activity, Pill,
+  Shield, AlertTriangle, ArrowRight, Activity, Pill,
   TrendingUp, Phone, ClipboardList, Heart, User, FileText,
-  HelpCircle, MessageSquare, CheckSquare, XCircle, Tag, FileDown
+  MessageSquare
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
-import { enhanceTranscription, suggestMedicalCorrections } from "../components/utils/medicalDictionary";
+import { enhanceTranscription } from "../components/utils/medicalDictionary";
+import SmartNoteHeader from "../components/smartNote/SmartNoteHeader";
+import FindingsReviewPanel from "../components/smartNote/FindingsReviewPanel";
 import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
 import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import NoteDiffView from "../components/smartNote/NoteDiffView";
-import ClinicalCodeSuggester from "../components/smartNote/ClinicalCodeSuggester";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
-import SmartNotePDFExporter from "../components/smartNote/SmartNotePDFExporter";
 import SmartNotePDFExporterEnhanced from "../components/smartNote/SmartNotePDFExporterEnhanced";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
 import MedicalDictationHelper from "../components/smartNote/MedicalDictationHelper";
