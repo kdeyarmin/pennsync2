@@ -27,8 +27,6 @@ const StatCard = ({ icon: Icon, label, value, trend }) => (
 );
 
 export default function AdminDashboardOverview() {
-  const [showFaxDashboard, setShowFaxDashboard] = useState(false);
-
   // Fetch user count
   const { data: users = [] } = useQuery({
     queryKey: ['admin-users'],
