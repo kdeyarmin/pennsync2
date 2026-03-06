@@ -1,5 +1,8 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+/**
+ * Retry a failed fax transmission
+ */
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -11,71 +14,106 @@ Deno.serve(async (req) => {
 
     const { fax_log_id } = await req.json();
 
-    if (!fax_log_id) {
-      return Response.json({ error: 'Missing fax_log_id' }, { status: 400 });
+    if (!faxLogId) {
+      return Response.json({ error: 'fax_log_id required' }, { status: 400 });
     }
 
+    // Fetch the original fax log
     const faxLogs = await base44.entities.FaxLog.filter({ id: fax_log_id });
     if (faxLogs.length === 0) {
-      return Response.json({ error: 'Fax log not found' }, { status: 404 });
+      return Response.json({ error: 'FaxLog not found' }, { status: 404 });
     }
 
-    const faxLog = faxLogs[0];
+    const originalFax = faxLogs[0];
+    const maxRetries = 3;
 
-    if (faxLog.retry_count >= 3) {
-      return Response.json({ error: 'Maximum retry attempts reached' }, { status: 400 });
+    // Check retry limit
+    if (originalFax.retry_count >= maxRetries) {
+      return Response.json({
+        error: `Maximum retries (${maxRetries}) exceeded`,
+        success: false
+      }, { status: 400 });
     }
 
-    const telnyxApiKey = Deno.env.get('TELNYX_API_KEY');
-    if (!telnyxApiKey) {
-      return Response.json({ error: 'Telnyx API key not configured' }, { status: 500 });
+    // Get Twilio credentials
+    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const fromNumber = Deno.env.get('TWILIO_FAX_NUMBER');
+
+    if (!accountSid || !authToken || !fromNumber) {
+      return Response.json({
+        error: 'Twilio credentials not configured',
+        success: false
+      }, { status: 500 });
     }
 
-    // Send fax via Telnyx API
-    const telnyxResponse = await fetch('https://api.telnyx.com/v2/faxes', {
+    const twilioUrl = `https://fax.twilio.com/v1/Faxes`;
+
+    // Re-send the fax
+    const formData = new URLSearchParams();
+    formData.append('From', fromNumber);
+    formData.append('To', originalFax.to_number);
+    formData.append('MediaUrl', originalFax.document_url);
+
+    const auth = btoa(`${accountSid}:${authToken}`);
+
+    const twilioResponse = await fetch(twilioUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${telnyxApiKey}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        connection_id: Deno.env.get('TELNYX_CONNECTION_ID'),
-        media_url: faxLog.document_url,
-        to: faxLog.to_number,
-        from: faxLog.from_number,
-        quality: 'high',
-        store_media: true
-      })
+      body: formData.toString()
     });
 
-    const telnyxData = await telnyxResponse.json();
-
-    if (!telnyxResponse.ok) {
-      await base44.entities.FaxLog.update(faxLog.id, {
-        retry_count: faxLog.retry_count + 1,
-        failure_reason: telnyxData.errors?.[0]?.detail || 'Retry failed'
-      });
-      return Response.json({ 
-        error: 'Telnyx API error',
-        details: telnyxData 
-      }, { status: telnyxResponse.status });
+    if (!twilioResponse.ok) {
+      const errorData = await twilioResponse.text();
+      console.error('Twilio error:', errorData);
+      return Response.json({
+        error: 'Failed to send fax via Twilio',
+        details: errorData,
+        success: false
+      }, { status: twilioResponse.status });
     }
 
-    // Update fax log
-    await base44.entities.FaxLog.update(faxLog.id, {
-      telnyx_fax_id: telnyxData.data?.id,
-      status: 'sending',
-      retry_count: faxLog.retry_count + 1,
-      failure_reason: null
+    const faxData = await twilioResponse.json();
+
+    // Create new FaxLog record for retry
+    const newFaxLog = await base44.entities.FaxLog.create({
+      from_number: originalFax.from_number,
+      to_number: originalFax.to_number,
+      to_name: originalFax.to_name,
+      document_url: originalFax.document_url,
+      document_name: originalFax.document_name + ' (Retry)',
+      status: 'queued',
+      telnyx_fax_id: faxData.sid,
+      pages: originalFax.pages,
+      cover_page_details: originalFax.cover_page_details,
+      patient_id: originalFax.patient_id,
+      sent_by: user.email,
+      priority: originalFax.priority,
+      retry_count: (originalFax.retry_count || 0) + 1,
+      estimated_cost: originalFax.estimated_cost
+    });
+
+    // Update original fax to mark it as retried
+    await base44.entities.FaxLog.update(fax_log_id, {
+      status: 'retried',
+      failure_reason: `Retry attempt #${(originalFax.retry_count || 0) + 1} initiated`
     });
 
     return Response.json({
       success: true,
-      message: `Fax retry #${faxLog.retry_count + 1} initiated`,
-      fax_id: telnyxData.data?.id
+      new_fax_log_id: newFaxLog.id,
+      twilio_fax_id: faxData.sid,
+      retry_count: (originalFax.retry_count || 0) + 1,
+      message: `Fax retry #${(originalFax.retry_count || 0) + 1} queued for ${originalFax.to_number}`
     });
-
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Retry fax error:', error);
+    return Response.json({
+      error: error.message,
+      success: false
+    }, { status: 500 });
   }
 });
