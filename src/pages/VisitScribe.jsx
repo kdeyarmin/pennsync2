@@ -45,6 +45,7 @@ export default function VisitScribe() {
     onSuccess: (data) => {
       setTranscription(data.transcription || "");
       setRoughNote(data.rough_note || data.transcription || "");
+      logActivity(ActivityActions.NOTE_AI_GENERATED, { page: 'VisitScribe', source: 'audio_recording' });
     },
   });
 
