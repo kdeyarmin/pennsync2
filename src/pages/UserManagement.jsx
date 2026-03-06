@@ -55,7 +55,10 @@ import {
   AlertTriangle,
   Key,
   Loader2,
-  Trash2
+  Trash2,
+  Activity,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
