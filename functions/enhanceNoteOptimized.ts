@@ -1,9 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-import OpenAI from 'npm:openai';
-
-const openai = new OpenAI({
-  apiKey: Deno.env.get("OPENAI_API_KEY"),
-});
 
 Deno.serve(async (req) => {
   try {
@@ -242,37 +237,37 @@ Return a JSON object with:
   "placeholders_added": [<list of placeholders inserted for nurse to complete>]
 }`;
 
-    // Run compliance check and note enhancement in parallel using ChatGPT
-    const [complianceResponse, enhancementResponse] = await Promise.all([
-      openai.chat.completions.create({
-        model: "gpt-4o-2024-11-20",
-        messages: [
-          { role: "system", content: "You are a Medicare home health compliance expert. Always return valid JSON." },
-          { role: "user", content: complianceCheckPrompt }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.2
+    // Run compliance check and note enhancement in parallel using Claude 3.5 Sonnet via Base44 InvokeLLM
+    const [roughComplianceResult, enhancementResult] = await Promise.all([
+      base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: complianceCheckPrompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            compliance_score: { type: "number" },
+            missing_elements: { type: "array", items: { type: "string" } },
+            specific_gaps: { type: "array", items: { type: "object" } },
+            strengths: { type: "array", items: { type: "string" } }
+          }
+        }
       }),
-      openai.chat.completions.create({
-        model: "gpt-4o-2024-11-20",
-        messages: [
-          { role: "system", content: "You are an expert Medicare home health clinical documentation specialist. Always return valid JSON." },
-          { role: "user", content: noteEnhancementPrompt }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3
+      base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: noteEnhancementPrompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            enhanced_note: { type: "string" },
+            quality_score: { type: "number" },
+            elements_added: { type: "array", items: { type: "string" } },
+            placeholders_added: { type: "array", items: { type: "string" } }
+          }
+        }
       })
     ]);
 
-    const roughComplianceResult = JSON.parse(complianceResponse.choices[0].message.content);
-    const enhancementResult = JSON.parse(enhancementResponse.choices[0].message.content);
-
-    // Run enhanced note compliance check with ChatGPT
-    const enhancedComplianceResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: "You are a Medicare home health compliance auditor. Return valid JSON." },
-        { role: "user", content: `Audit this enhanced home health nursing note for Medicare compliance per 42 CFR 484.
+    // Run enhanced note compliance check with Claude 3.5 Sonnet
+    const enhancedComplianceResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `Audit this enhanced home health nursing note for Medicare compliance per 42 CFR 484.
 
 VISIT TYPE: ${visitType}
 DIAGNOSIS: ${diagnosis || patientData.primary_diagnosis}
@@ -285,13 +280,16 @@ Return JSON:
   "compliance_score": <number 0-100>,
   "compliant_elements": [<list of all compliant Medicare elements present>],
   "remaining_gaps": [<any still-missing elements>]
-}` }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.1
+}`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          compliance_score: { type: "number" },
+          compliant_elements: { type: "array", items: { type: "string" } },
+          remaining_gaps: { type: "array", items: { type: "string" } }
+        }
+      }
     });
-
-    const enhancedComplianceResult = JSON.parse(enhancedComplianceResponse.choices[0].message.content);
 
     // Save to patient history
     const currentHistory = patientData.enhanced_notes_history || [];
