@@ -54,7 +54,8 @@ export default function DocumentFaxSender({ patientId }) {
         file_url: fileUrl,
         to_number: toNumber,
         document_name: doc.title,
-        patient_id: patientId
+        patient_id: patientId,
+        to_name: ocrMeta?.patient_name || undefined
       });
       toast.success("Fax sent successfully!");
       setSelectedDocId("");
