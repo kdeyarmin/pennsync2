@@ -691,8 +691,16 @@ Return ONLY the final note text.`
                   <span className={`text-xs shrink-0 ${ready ? "text-green-600 font-medium" : "text-gray-400"}`}>
                     {ready ? `${note.length} chars — ready` : `${20 - note.trim().length} more chars needed`}
                   </span>
-                  <Button onClick={analyze} disabled={!ready} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
-                    <Sparkles className="w-4 h-4" /> Analyze & Check Compliance <ArrowRight className="w-3.5 h-3.5" />
+                  <Button onClick={analyze} disabled={!ready || analyzing} className="bg-indigo-600 hover:bg-indigo-700 h-11 sm:h-9 px-5 gap-1.5 text-sm font-semibold w-full sm:w-auto">
+                    {analyzing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Analyzing…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" /> Analyze & Check Compliance <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
