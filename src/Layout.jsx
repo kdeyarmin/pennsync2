@@ -90,21 +90,25 @@ export default function Layout({ children, currentPageName }) {
       const hasTrackedLogin = sessionStorage.getItem(sessionKey);
       
       if (!hasTrackedLogin) {
-        // Log directly to UserActivity
-        base44.asServiceRole.entities.UserActivity.create({
-          user_email: currentUser.email,
-          user_name: currentUser.full_name,
-          action: 'login',
-          device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
-          details: {
-            timestamp: new Date().toISOString(),
-            user_role: currentUser.role,
-            session_start: true
-          },
-          user_agent: navigator.userAgent
-        }).catch(err => {
-          console.error('Login logging failed:', err);
-        });
+        // Log directly to UserActivity (silently fail if it fails)
+        try {
+          base44.entities.UserActivity.create({
+            user_email: currentUser.email,
+            user_name: currentUser.full_name,
+            action: 'login',
+            device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
+            details: {
+              timestamp: new Date().toISOString(),
+              user_role: currentUser.role,
+              session_start: true
+            },
+            user_agent: navigator.userAgent
+          }).catch(err => {
+            // Silently fail
+          });
+        } catch (err) {
+          // Silently fail
+        }
         
         sessionStorage.setItem(sessionKey, 'true');
       }
@@ -225,9 +229,9 @@ export default function Layout({ children, currentPageName }) {
       ];
 
   const handleLogout = async () => {
-    // Log logout before actually logging out
+    // Log logout before actually logging out (silently fail if it fails)
     try {
-      await base44.asServiceRole.entities.UserActivity.create({
+      await base44.entities.UserActivity.create({
         user_email: currentUser?.email,
         user_name: currentUser?.full_name,
         action: 'logout',
@@ -239,7 +243,7 @@ export default function Layout({ children, currentPageName }) {
         user_agent: navigator.userAgent
       });
     } catch (error) {
-      console.error('Failed to log logout:', error);
+      // Silently fail
     }
     
     base44.auth.logout();
