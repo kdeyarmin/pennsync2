@@ -91,16 +91,16 @@ export default function Layout({ children, currentPageName }) {
       
       if (!hasTrackedLogin) {
         // Log directly to UserActivity
-        base44.entities.UserActivity.create({
+        base44.asServiceRole.entities.UserActivity.create({
           user_email: currentUser.email,
           user_name: currentUser.full_name,
           action: 'login',
+          device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
           details: {
             timestamp: new Date().toISOString(),
             user_role: currentUser.role,
             session_start: true
           },
-          page: 'login',
           user_agent: navigator.userAgent
         }).catch(err => {
           console.error('Login logging failed:', err);
@@ -227,15 +227,15 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = async () => {
     // Log logout before actually logging out
     try {
-      await base44.entities.UserActivity.create({
+      await base44.asServiceRole.entities.UserActivity.create({
         user_email: currentUser?.email,
         user_name: currentUser?.full_name,
         action: 'logout',
+        device_type: /mobile|android|iphone/i.test(navigator.userAgent) ? 'mobile' : /tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'desktop',
         details: { 
           logout_time: new Date().toISOString(),
           user_role: currentUser?.role
         },
-        page: 'logout',
         user_agent: navigator.userAgent
       });
     } catch (error) {
