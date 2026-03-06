@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, FileText, PenTool, Settings, ArrowRight, Loader2, AlertCircle, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
-import ComprehensiveFaxDashboard from "../fax/ComprehensiveFaxDashboard";
 import SystemHealthMonitor from "./SystemHealthMonitor";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
