@@ -1,103 +1,118 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const {
+      patient_id,
+      document_id,
+      recipient_number,
+      recipient_name,
+      recipient_organization,
+      sender_name,
+      sender_number,
+      subject,
+      notes,
+      urgency = 'routine',
+      page_count = 1
+    } = await req.json();
 
-    const { patient_id, document_id, recipient_number, sender_number, recipient_name, sender_name, subject, notes } = await req.json();
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicKey) return Response.json({ error: 'Anthropic API key not configured' }, { status: 500 });
 
-    let patientDetails = {};
-    if (patient_id) {
-      const patients = await base44.entities.Patient.filter({ id: patient_id });
-      if (patients.length > 0) {
-        patientDetails = patients[0];
-      }
-    }
+    // Fetch patient + document in parallel
+    const [patientResults, documentResults] = await Promise.all([
+      patient_id ? base44.asServiceRole.entities.Patient.filter({ id: patient_id }) : Promise.resolve([]),
+      document_id ? base44.asServiceRole.entities.Document.filter({ id: document_id }) : Promise.resolve([])
+    ]);
 
-    let documentDetails = {};
-    if (document_id) {
-      const documents = await base44.entities.Document.filter({ id: document_id });
-      if (documents.length > 0) {
-        documentDetails = documents[0];
-      }
-    }
+    const patient = patientResults[0] || null;
+    const document = documentResults[0] || null;
 
-    const llmPrompt = `Generate a professional fax cover page in JSON format. Populate the fields based on the provided data. If a field is not provided, use a reasonable default or leave it blank.
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-Sender Information:
-  Name: ${sender_name || user.full_name}
-  Phone: ${sender_number || ''}
+    const prompt = `You are a medical administrative assistant. Generate a HIPAA-compliant professional fax cover sheet as a clean JSON object.
 
-Recipient Information:
-  Name: ${recipient_name || ''}
-  Fax Number: ${recipient_number || ''}
+Sender: ${sender_name || user.full_name}
+Sender Fax: ${sender_number || 'See letterhead'}
+Recipient Name: ${recipient_name || 'To Whom It May Concern'}
+Recipient Organization: ${recipient_organization || ''}
+Recipient Fax: ${recipient_number || ''}
+Date: ${dateStr} at ${timeStr}
+Subject: ${subject || (patient ? `RE: Patient ${patient.first_name} ${patient.last_name}` : 'Medical Communication')}
+Urgency: ${urgency}
+Total Pages (including cover): ${page_count + 1}
+Additional Notes: ${notes || ''}
 
-Subject: ${subject || 'Regarding patient ' + (patientDetails.first_name || '') + ' ' + (patientDetails.last_name || '')}
+Patient Info (if provided):
+  Name: ${patient ? `${patient.first_name} ${patient.last_name}` : 'N/A'}
+  DOB: ${patient?.date_of_birth || 'N/A'}
+  MRN: ${patient?.medical_record_number || 'N/A'}
+  Primary Diagnosis: ${patient?.primary_diagnosis || 'N/A'}
 
-Notes: ${notes || ''}
+Document: ${document?.title || 'See attached'}
+Document Category: ${document?.category || ''}
 
-Current Date: ${new Date().toLocaleDateString()}
+Generate a professional cover sheet with a HIPAA confidentiality disclaimer. Return only JSON.`;
 
-Patient Details (if available):
-  Patient Name: ${patientDetails.first_name || ''} ${patientDetails.last_name || ''}
-  Date of Birth: ${patientDetails.date_of_birth || ''}
-  Medical Record Number: ${patientDetails.medical_record_number || ''}
-
-Document Details (if available):
-  Document Title: ${documentDetails.title || ''}
-  Document Category: ${documentDetails.category || ''}
-
-Output a JSON object with the following structure. Do NOT include any other text, only the JSON.
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: prompt + `\n\nReturn JSON with exactly these fields:
 {
-  "from": {
-    "name": "<Sender Name>",
-    "phone": "<Sender Phone>"
-  },
-  "to": {
-    "name": "<Recipient Name>",
-    "fax": "<Recipient Fax Number>"
-  },
-  "date": "<Current Date>",
-  "subject": "<Fax Subject>",
-  "message": "<Notes to Recipient>",
-  "patient_info": {
-    "name": "<Patient Full Name>",
-    "dob": "<Patient DOB>",
-    "mrn": "<Patient MRN>"
-  },
-  "document_info": {
-    "title": "<Document Title>",
-    "category": "<Document Category>"
-  }
-}
-`;
-
-    const aiResponse = await base44.integrations.Core.InvokeLLM({
-      prompt: llmPrompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          from: { type: "object", properties: { name: { type: "string" }, phone: { type: "string" } } },
-          to: { type: "object", properties: { name: { type: "string" }, fax: { type: "string" } } },
-          date: { type: "string" },
-          subject: { type: "string" },
-          message: { type: "string" },
-          patient_info: { type: "object", properties: { name: { type: "string" }, dob: { type: "string" }, mrn: { type: "string" } } },
-          document_info: { type: "object", properties: { title: { type: "string" }, category: { type: "string" } } }
-        },
-        required: ["from", "to", "date", "subject"]
-      }
+  "from_name": string,
+  "from_fax": string,
+  "to_name": string,
+  "to_organization": string,
+  "to_fax": string,
+  "date": string,
+  "time": string,
+  "subject": string,
+  "urgency": "routine" | "urgent" | "stat",
+  "total_pages": number,
+  "patient_name": string,
+  "patient_dob": string,
+  "patient_mrn": string,
+  "patient_diagnosis": string,
+  "document_title": string,
+  "notes": string,
+  "confidentiality_notice": string
+}`
+        }]
+      })
     });
 
-    return Response.json({ success: true, cover_page_data: aiResponse });
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('Claude API error:', err);
+      return Response.json({ error: 'AI generation failed' }, { status: 500 });
+    }
+
+    const claudeData = await response.json();
+    const content = claudeData.content[0]?.text || '{}';
+
+    // Extract JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const coverData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+
+    return Response.json({ success: true, cover_page_data: coverData });
 
   } catch (error) {
-    console.error('AI fax cover page generation error:', error);
+    console.error('Cover page generation error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
