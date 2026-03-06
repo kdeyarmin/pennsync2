@@ -6,13 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, PenLine, CheckCircle, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
 import FaxAddressBook from "./FaxAddressBook";
 import FaxSignaturePanel from "./FaxSignaturePanel";
 import FaxOCRExtractor from "./FaxOCRExtractor";
 import FaxCoverSheetGenerator from "./FaxCoverSheetGenerator";
+import PDFAnnotator from "./PDFAnnotator";
 
 export default function DocumentFaxSender({ patientId }) {
   const [selectedDocId, setSelectedDocId] = useState("");
