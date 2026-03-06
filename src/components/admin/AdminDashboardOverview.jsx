@@ -105,27 +105,10 @@ export default function AdminDashboardOverview() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">System overview and administrative controls</p>
-        </div>
-        <Button
-          onClick={() => setShowFaxDashboard(!showFaxDashboard)}
-          variant={showFaxDashboard ? "default" : "outline"}
-        >
-          <TrendingUp className="w-4 h-4 mr-2" />
-          {showFaxDashboard ? "Hide" : "View"} Fax Analytics
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-gray-600 mt-1">System overview and administrative controls</p>
       </div>
-
-      {/* Fax Analytics Dashboard */}
-      {showFaxDashboard && (
-        <div className="border-t pt-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Fax Analytics Dashboard</h2>
-          <ComprehensiveFaxDashboard />
-        </div>
-      )}
 
       {/* System Health Monitoring */}
       <SystemHealthMonitor />
