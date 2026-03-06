@@ -108,12 +108,41 @@ export default function DocumentFaxSender({ patientId }) {
 
         {selectedDocId && (() => {
           const doc = pdfDocuments.find(d => d.id === selectedDocId);
-          return doc?.file_url ? (
-            <FaxOCRExtractor
-              fileUrl={doc.file_url}
-              onExtracted={(meta) => setOcrMeta(meta)}
-            />
-          ) : null;
+          if (!doc?.file_url) return null;
+          return (
+            <>
+              <FaxOCRExtractor fileUrl={doc.file_url} onExtracted={(meta) => setOcrMeta(meta)} />
+
+              {/* Annotate button */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAnnotator(true)}
+                  className="gap-2 text-indigo-700 border-indigo-300 hover:bg-indigo-50"
+                >
+                  <PenLine className="w-4 h-4" />
+                  Annotate / Sign / Date PDF
+                </Button>
+                {annotatedUrl && (
+                  <Badge className="bg-green-100 text-green-700 border-green-200 gap-1">
+                    <CheckCircle className="w-3 h-3" /> Annotated
+                    <button onClick={() => setAnnotatedUrl(null)} className="ml-1 hover:text-red-600">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+              </div>
+
+              {showAnnotator && (
+                <PDFAnnotator
+                  pdfUrl={annotatedUrl || doc.file_url}
+                  onAnnotatedReady={(url) => { setAnnotatedUrl(url); setShowAnnotator(false); }}
+                  onClose={() => setShowAnnotator(false)}
+                />
+              )}
+            </>
+          );
         })()}
 
         <div className="space-y-2">
