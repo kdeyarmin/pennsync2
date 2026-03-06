@@ -180,13 +180,14 @@ export default function EnhancedCameraFaxSender() {
 
         {/* Recipient */}
         {capturedImages.length > 0 && (
-          <div className="space-y-2">
-            <Label>Recipient Fax Number</Label>
-            <Input type="tel" placeholder="+1234567890" value={toNumber} onChange={(e) => setToNumber(e.target.value)} />
-            <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
-          </div>
-
-          <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
+          <>
+            <div className="space-y-2">
+              <Label>Recipient Fax Number</Label>
+              <Input type="tel" placeholder="+1234567890" value={toNumber} onChange={(e) => setToNumber(e.target.value)} />
+              <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
+            </div>
+            <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
+          </>
         )}
 
         {/* Send */}
