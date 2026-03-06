@@ -99,11 +99,20 @@ export default function EnhancedCameraFaxSender() {
     setIsSending(true);
     try {
       const pdfBlob = await convertToPDF();
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfBlob });
+      const pdfFile = new File([pdfBlob], 'camera-fax.pdf', { type: 'application/pdf' });
+      let { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
+      if (signatureDataUrl) {
+        const result = await base44.functions.invoke('stampSignatureOnPDF', {
+          pdf_url: file_url,
+          signature_data_url: signatureDataUrl
+        });
+        file_url = result.data.file_url;
+      }
       await sendFax({ file_url, to_number: toNumber, document_name: `Camera Fax - ${capturedImages.length} page(s)` });
       toast.success("Fax sent successfully!");
       setCapturedImages([]);
       setToNumber("");
+      setSignatureDataUrl(null);
       stopCamera();
     } catch (error) {
       toast.error("Error sending fax: " + error.message);
@@ -176,6 +185,8 @@ export default function EnhancedCameraFaxSender() {
             <Input type="tel" placeholder="+1234567890" value={toNumber} onChange={(e) => setToNumber(e.target.value)} />
             <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
           </div>
+
+          <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
         )}
 
         {/* Send */}
