@@ -699,8 +699,6 @@ Return ONLY the final note text.`
 
               <VitalSignValidator noteText={note} />
 
-              <MedicalDictationHelper noteText={note} onApplySuggestion={setNote} />
-
             </div>
           )}
 
