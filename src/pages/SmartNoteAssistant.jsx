@@ -10,7 +10,7 @@ import {
   Sparkles, CheckCircle2, Copy, RotateCcw, Loader2, Mic, MicOff,
   Shield, AlertTriangle, ArrowRight, Activity, Pill,
   TrendingUp, Phone, ClipboardList, Heart, User, FileText,
-  MessageSquare
+  MessageSquare, HelpCircle, ChevronDown, ChevronUp
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
