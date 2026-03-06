@@ -752,24 +752,16 @@ Return ONLY the final note text.`
                           These required elements are <strong>not present in your note</strong>. Answer each below, or skip if not applicable.
                         </p>
                       </div>
-                      {needsClarificationFindings.map(f => {
-                        const severityColors = {
-                          critical: "border-l-red-500 bg-red-50",
-                          high: "border-l-orange-500 bg-orange-50",
-                          medium: "border-l-yellow-500 bg-yellow-50",
-                          low: "border-l-blue-500 bg-blue-50"
-                        };
-                        return (
-                        <div key={f.id} className={`border-l-4 rounded-lg p-3 ${severityColors[f.severity] || severityColors.medium}`}>
+                      {needsClarificationFindings.map(f => (
+                        <div key={f.id} className={`border-l-4 rounded-lg p-3 ${{ critical: "border-l-red-500 bg-red-50", high: "border-l-orange-500 bg-orange-50", medium: "border-l-yellow-500 bg-yellow-50", low: "border-l-blue-500 bg-blue-50" }[f.severity] || "border-l-yellow-500 bg-yellow-50"}`}>
                           <p className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
                             <HelpCircle className="w-4 h-4 shrink-0 text-amber-700" />{f.question}
                           </p>
                           <Textarea placeholder="Your response (leave blank to skip)…" value={answers[f.id] || ""}
                             onChange={e => setAnswers(prev => ({ ...prev, [f.id]: e.target.value }))}
                             className="text-sm min-h-[60px] bg-white" />
-                          </div>
-                          );
-                          })}
+                        </div>
+                      ))}
                       <Button onClick={proceedToBuild} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 font-semibold gap-2">
                         <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
                       </Button>
