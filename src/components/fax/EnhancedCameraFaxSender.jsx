@@ -110,11 +110,18 @@ export default function EnhancedCameraFaxSender() {
         });
         file_url = result.data.file_url;
       }
+      if (coverSheetUrl) {
+        const merged = await base44.functions.invoke('mergePDFs', {
+          pdf_urls: [coverSheetUrl, file_url]
+        });
+        file_url = merged.data?.merged_url || file_url;
+      }
       await sendFax({ file_url, to_number: toNumber, document_name: `Camera Fax - ${capturedImages.length} page(s)` });
       toast.success("Fax sent successfully!");
       setCapturedImages([]);
       setToNumber("");
       setSignatureDataUrl(null);
+      setCoverSheetUrl(null);
       stopCamera();
     } catch (error) {
       toast.error("Error sending fax: " + error.message);

@@ -78,6 +78,12 @@ export default function PhotoUploadFaxSender() {
         });
         pdfUrl = result.data.file_url;
       }
+      if (coverSheetUrl) {
+        const merged = await base44.functions.invoke('mergePDFs', {
+          pdf_urls: [coverSheetUrl, pdfUrl]
+        });
+        pdfUrl = merged.data?.merged_url || pdfUrl;
+      }
       await base44.functions.invoke('sendFax', {
         to_number: toNumber,
         file_url: pdfUrl,
@@ -87,6 +93,7 @@ export default function PhotoUploadFaxSender() {
       setUploadedImages([]);
       setToNumber("");
       setSignatureDataUrl(null);
+      setCoverSheetUrl(null);
       queryClient.invalidateQueries(['fax-logs']);
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);

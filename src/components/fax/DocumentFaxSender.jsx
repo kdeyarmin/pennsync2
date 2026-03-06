@@ -52,6 +52,13 @@ export default function DocumentFaxSender({ patientId }) {
         });
         fileUrl = result.data.file_url;
       }
+      // Prepend cover sheet if generated
+      if (coverSheetUrl) {
+        const merged = await base44.functions.invoke('mergePDFs', {
+          pdf_urls: [coverSheetUrl, fileUrl]
+        });
+        fileUrl = merged.data?.merged_url || fileUrl;
+      }
       await sendFax({
         file_url: fileUrl,
         to_number: toNumber,
@@ -64,6 +71,7 @@ export default function DocumentFaxSender({ patientId }) {
       setToNumber("");
       setSignatureDataUrl(null);
       setOcrMeta(null);
+      setCoverSheetUrl(null);
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
     } finally {
