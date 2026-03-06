@@ -90,6 +90,16 @@ export default function DocumentFaxSender({ patientId }) {
           </Select>
         </div>
 
+        {selectedDocId && (() => {
+          const doc = pdfDocuments.find(d => d.id === selectedDocId);
+          return doc?.file_url ? (
+            <FaxOCRExtractor
+              fileUrl={doc.file_url}
+              onExtracted={(meta) => setOcrMeta(meta)}
+            />
+          ) : null;
+        })()}
+
         <div className="space-y-2">
           <Label>Recipient Fax Number</Label>
           <Input
