@@ -665,7 +665,8 @@ export default function UserManagement() {
                     const isActive = user.is_active !== false;
                     
                     return (
-                      <TableRow key={user.id} className={!isActive ? 'opacity-50' : ''}>
+                      <React.Fragment key={user.id}>
+                      <TableRow className={!isActive ? 'opacity-50' : ''}>
                         <TableCell className="text-xs sm:text-sm">
                           <div className="flex items-center gap-2 sm:gap-3">
                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-medium flex-shrink-0">
