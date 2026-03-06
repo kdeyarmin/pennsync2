@@ -773,6 +773,7 @@ export default function UserManagement() {
                           </TableCell>
                         </TableRow>
                       )}
+                      </React.Fragment>
                     );
                   })}
                 </TableBody>
