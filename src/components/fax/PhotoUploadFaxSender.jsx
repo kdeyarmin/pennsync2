@@ -68,15 +68,23 @@ export default function PhotoUploadFaxSender() {
     if (uploadedImages.length === 0) return toast.error("Please upload at least one image");
     setIsSending(true);
     try {
-      const pdfUrl = await generatePDF();
+      let pdfUrl = await generatePDF();
+      if (signatureDataUrl) {
+        const result = await base44.functions.invoke('stampSignatureOnPDF', {
+          pdf_url: pdfUrl,
+          signature_data_url: signatureDataUrl
+        });
+        pdfUrl = result.data.file_url;
+      }
       await base44.functions.invoke('sendFax', {
         to_number: toNumber,
-        document_url: pdfUrl,
+        file_url: pdfUrl,
         document_name: 'Photo Fax'
       });
       toast.success("Fax sent successfully!");
       setUploadedImages([]);
       setToNumber("");
+      setSignatureDataUrl(null);
       queryClient.invalidateQueries(['fax-logs']);
     } catch (error) {
       toast.error("Failed to send fax: " + error.message);
@@ -125,6 +133,8 @@ export default function PhotoUploadFaxSender() {
           />
           <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
         </div>
+
+        <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
 
         {/* Send */}
         <Button
