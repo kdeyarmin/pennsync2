@@ -776,18 +776,49 @@ Return ONLY the final note text.`
 
                   {/* Review & Select section */}
                   {analysis?.findings?.length > 0 && (
-                    <FindingsReviewPanel
-                      analysis={analysis}
-                      selected={selected}
-                      onToggle={toggle}
-                      answers={answers}
-                      onAnswerChange={(id, val) => setAnswers(prev => ({ ...prev, [id]: val }))}
-                      needsClarificationFindings={needsClarificationFindings}
-                      criticalFindings={criticalFindings}
-                      onSelectAll={() => setSelected(new Set(analysis.findings.map(f => f.id)))}
-                      onSelectNone={() => setSelected(new Set())}
-                      onSelectByType={selectBySeverity}
-                    />
+                    <div className="space-y-3">
+                      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold text-gray-900">Suggested Additions to Note</h3>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" text-xs onClick={() => setSelected(new Set(analysis.findings.filter(f => f.suggestion).map(f => f.id)))}>Select All</Button>
+                            <Button variant="outline" size="sm" text-xs onClick={() => setSelected(new Set())}>Clear</Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {analysis.findings.filter(f => f.suggestion && !f.needs_clarification).map(f => (
+                            <div key={f.id} className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => toggle(f.id)}>
+                              <input 
+                                type="checkbox" 
+                                checked={selected.has(f.id)} 
+                                onChange={() => toggle(f.id)}
+                                className="w-5 h-5 mt-0.5 text-indigo-600 rounded"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900">{f.issue}</p>
+                                <p className="text-sm text-gray-700 mt-1">{f.suggestion}</p>
+                                {f.revenue_impact && <p className="text-xs text-green-600 mt-1 font-semibold">{f.revenue_impact}</p>}
+                              </div>
+                              <Badge className={`shrink-0 ${f.severity === 'critical' ? 'bg-red-100 text-red-800' : f.severity === 'high' ? 'bg-orange-100 text-orange-800' : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {f.severity}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <FindingsReviewPanel
+                        analysis={analysis}
+                        selected={selected}
+                        onToggle={toggle}
+                        answers={answers}
+                        onAnswerChange={(id, val) => setAnswers(prev => ({ ...prev, [id]: val }))}
+                        needsClarificationFindings={needsClarificationFindings}
+                        criticalFindings={criticalFindings}
+                        onSelectAll={() => setSelected(new Set(analysis.findings.map(f => f.id)))}
+                        onSelectNone={() => setSelected(new Set())}
+                        onSelectByType={selectBySeverity}
+                      />
+                    </div>
                   )}
 
                   <div className="flex gap-3">
