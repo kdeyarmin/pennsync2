@@ -890,78 +890,18 @@ Return ONLY the final note text.`
 
                   {/* Review & Select section */}
                   {analysis?.findings?.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">Review Suggested Additions</p>
-                            <p className="text-xs text-gray-500 mt-0.5">Check items to include — only checked items go into the final note.</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setSelected(new Set(analysis.findings.map(f => f.id)))}>
-                            <CheckSquare className="w-3.5 h-3.5" /> All
-                          </Button>
-                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setSelected(new Set())}>
-                            <XCircle className="w-3.5 h-3.5" /> None
-                          </Button>
-                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1 bg-red-50 border-red-300 text-red-700" onClick={() => selectBySeverity("critical")}>
-                            Critical Only
-                          </Button>
-                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1 bg-orange-50 border-orange-300 text-orange-700" onClick={() => selectBySeverity("high")}>
-                            High Priority
-                          </Button>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-indigo-600 font-medium">{selected.size} of {analysis.findings.length} selected</p>
-                          {totalRevenueImpact > 0 && <p className="text-xs font-semibold text-green-600">💰 +${totalRevenueImpact.toLocaleString()} potential</p>}
-                        </div>
-                      </div>
-
-                      {criticalFindings.length > 0 && (
-                        <Alert className="border-red-300 bg-red-50 py-2">
-                          <AlertTriangle className="w-4 h-4 text-red-600" />
-                          <AlertDescription className="text-red-800 text-sm">
-                            {criticalFindings.length} critical Medicare compliance element{criticalFindings.length > 1 ? "s" : ""} — required for payment and audit protection.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-
-                      {[...analysis.findings]
-                        .sort((a, b) => ({ critical: 0, high: 1, medium: 2, low: 3 }[a.severity] ?? 3) - ({ critical: 0, high: 1, medium: 2, low: 3 }[b.severity] ?? 3))
-                        .map(f => {
-                          const isMedicare = f.category === "compliance";
-                          return (
-                            <div key={f.id} className={`border-l-4 rounded-lg ${SEV_STYLE[f.severity] || SEV_STYLE.medium} p-3 ${isMedicare ? "border-l-red-500" : "border-l-blue-500"}`}>
-                              <div className="flex items-start gap-3">
-                                <Checkbox checked={selected.has(f.id)} onCheckedChange={() => toggle(f.id)} className="mt-1 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between gap-2 mb-1">
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-white/60">{isMedicare ? "Medicare" : "Quality"}</span>
-                                      <span className="text-sm font-semibold text-gray-900">{f.issue}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                      <Badge className={`text-xs ${SEV_BADGE[f.severity] || SEV_BADGE.medium}`}>{f.severity}</Badge>
-                                    </div>
-                                  </div>
-                                  {f.suggestion && (
-                                    <p className="text-sm text-gray-800 bg-white/80 border border-gray-200 rounded px-2 py-1.5 italic">
-                                      "{f.suggestion}"
-                                    </p>
-                                  )}
-                                  {f.revenue_impact && (
-                                    <p className="text-xs text-green-700 font-medium mt-1">💰 {f.revenue_impact}</p>
-                                  )}
-                                  {f.rationale && (
-                                    <p className="text-xs text-gray-500 mt-1">{f.rationale}</p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
+                    <FindingsReviewPanel
+                      analysis={analysis}
+                      selected={selected}
+                      onToggle={toggle}
+                      answers={answers}
+                      onAnswerChange={(id, val) => setAnswers(prev => ({ ...prev, [id]: val }))}
+                      needsClarificationFindings={needsClarificationFindings}
+                      criticalFindings={criticalFindings}
+                      onSelectAll={() => setSelected(new Set(analysis.findings.map(f => f.id)))}
+                      onSelectNone={() => setSelected(new Set())}
+                      onSelectByType={selectBySeverity}
+                    />
                   )}
 
                   <div className="flex gap-3">
