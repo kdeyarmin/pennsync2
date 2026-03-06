@@ -52,33 +52,6 @@ const getVisitTypes = (careScope) => {
   return HOME_HEALTH_VISIT_TYPES;
 };
 
-const SEV_STYLE = {
-  critical: "border-l-red-500 bg-red-50",
-  high: "border-l-orange-500 bg-orange-50",
-  medium: "border-l-yellow-500 bg-yellow-50",
-  low: "border-l-blue-500 bg-blue-50"
-};
-const SEV_BADGE = {
-  critical: "bg-red-100 text-red-800",
-  high: "bg-orange-100 text-orange-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  low: "bg-blue-100 text-blue-800"
-};
-const CAT_ICON = { compliance: Shield, quality: Lightbulb, billing: DollarSign, clinical: Target };
-const CAT_COLOR = { compliance: "text-orange-600", quality: "text-blue-600", billing: "text-green-600", clinical: "text-purple-600" };
-const RISK_COLOR = {
-  immediate: "border-red-400 bg-red-50 text-red-900",
-  soon: "border-orange-400 bg-orange-50 text-orange-900",
-  monitor: "border-yellow-400 bg-yellow-50 text-yellow-900"
-};
-const RISK_ICON = { fall: Activity, medication: Pill, exacerbation: TrendingUp, safety: AlertTriangle, followup: Phone };
-
-const STEPS = [
-  { label: "Write" },
-  { label: "Generate" },
-];
-
-// Tabs for the main interface
 const TABS = [
   { id: "builder", label: "Note Builder", icon: Sparkles, color: "indigo" },
   { id: "medications", label: "Medications", icon: Pill, color: "emerald" },
@@ -87,105 +60,10 @@ const TABS = [
   { id: "trends", label: "Vital Trends", icon: TrendingUp, color: "cyan" },
 ];
 
-function SuggestionCard({ finding, selected, onToggle, answers, onAnswerChange }) {
-  const [open, setOpen] = useState(finding.severity === "critical" || finding.severity === "high");
-  const Icon = CAT_ICON[finding.category] || AlertCircle;
-  return (
-    <div className={`border-l-4 rounded-lg ${SEV_STYLE[finding.severity] || SEV_STYLE.medium} p-3`}>
-      <div className="flex items-start gap-3">
-        <Checkbox checked={selected} onCheckedChange={onToggle} className="mt-1 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="flex items-center gap-1.5">
-              <Icon className={`w-3.5 h-3.5 shrink-0 ${CAT_COLOR[finding.category] || "text-gray-500"}`} />
-              <span className="text-sm font-semibold text-gray-900">{finding.issue}</span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Badge className={`text-xs ${SEV_BADGE[finding.severity] || SEV_BADGE.medium}`}>{finding.severity}</Badge>
-              <button onClick={() => setOpen(!open)} className="text-gray-400 hover:text-gray-600">
-                {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-          </div>
-          {finding.suggestion && (
-            <p className="text-sm text-gray-800 bg-white/80 border border-gray-200 rounded px-2 py-1.5 italic">
-              "{finding.suggestion}"
-            </p>
-          )}
-          {finding.needs_clarification && (
-            <div className="mt-2 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs text-amber-700 font-semibold">
-                <HelpCircle className="w-3.5 h-3.5" />
-                <span>Needs your input:</span>
-              </div>
-              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">{finding.question}</p>
-              <Textarea
-                placeholder="Enter information here…"
-                value={answers?.[finding.id] || ""}
-                onChange={e => onAnswerChange(finding.id, e.target.value)}
-                className="text-sm min-h-[60px] bg-white border-amber-300 focus:border-indigo-400"
-              />
-              {answers?.[finding.id] && (
-                <p className="text-xs text-green-700 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Saved — will be included in final note
-                </p>
-              )}
-            </div>
-          )}
-          {open && finding.rationale && (
-            <p className="text-xs text-gray-500 mt-1">
-              {finding.rationale}
-              {finding.revenue_impact && <span className="text-green-700 font-medium ml-1">💰 {finding.revenue_impact}</span>}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AlertCard({ alert }) {
-  const [open, setOpen] = useState(alert.urgency === "immediate");
-  const Icon = RISK_ICON[alert.risk_type] || AlertCircle;
-  return (
-    <div className={`rounded-lg border-2 p-3 ${RISK_COLOR[alert.urgency] || RISK_COLOR.monitor}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-start gap-2 flex-1 min-w-0">
-          <Icon className="w-4 h-4 mt-0.5 shrink-0" />
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold">{alert.title}</p>
-              <Badge className={`text-xs ${SEV_BADGE[alert.urgency === "immediate" ? "critical" : alert.urgency === "soon" ? "high" : "medium"]}`}>
-                {alert.urgency === "immediate" ? "Urgent" : alert.urgency === "soon" ? "Soon" : "Monitor"}
-              </Badge>
-            </div>
-            <p className="text-xs opacity-75 mt-0.5">{alert.finding}</p>
-          </div>
-        </div>
-        {(alert.recommended_actions?.length > 0 || alert.notify_physician) && (
-          <button onClick={() => setOpen(!open)} className="opacity-50 hover:opacity-100 shrink-0">
-            {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-        )}
-      </div>
-      {open && (
-        <div className="mt-2 pt-2 border-t border-current/20 space-y-1">
-          {alert.recommended_actions?.map((a, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-xs">
-              <ClipboardList className="w-3 h-3 mt-0.5 shrink-0 opacity-70" />
-              <span>{a}</span>
-            </div>
-          ))}
-          {alert.notify_physician && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold">
-              <Phone className="w-3 h-3" /> Notify physician recommended
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+const STEPS = [
+  { label: "Write", icon: FileText },
+  { label: "Generate", icon: Sparkles },
+];
 
 function StepIndicator({ step }) {
   return (
