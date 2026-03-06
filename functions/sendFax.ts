@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
@@ -9,106 +9,64 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { file_url, to_number, from_number, document_name, to_name, patient_id, cover_page_details, priority, from_name } = await req.json();
+    const { file_url, to_number, document_name, to_name, patient_id } = await req.json();
 
-    // AI Priority Analysis
-    let finalPriority = priority || 'normal';
-    let priorityAnalysis = null;
-    
-    if (!priority) {
-      try {
-        const analysisResult = await base44.functions.invoke('analyzeFaxPriority', {
-          document_name,
-          cover_page_details,
-          to_number,
-          from_number,
-          to_name,
-          from_name
-        });
-        finalPriority = analysisResult.data.priority || 'normal';
-        priorityAnalysis = analysisResult.data;
-      } catch (error) {
-        console.error('Priority analysis failed:', error);
-      }
+    if (!file_url || !to_number) {
+      return Response.json({ error: 'Missing required fields: file_url, to_number' }, { status: 400 });
     }
 
-    if (!file_url || !to_number || !from_number) {
-      return Response.json({ 
-        error: 'Missing required fields: file_url, to_number, from_number' 
-      }, { status: 400 });
+    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const fromNumber = Deno.env.get('TWILIO_FAX_NUMBER');
+
+    if (!accountSid || !authToken || !fromNumber) {
+      return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
     }
 
-    const telnyxApiKey = Deno.env.get('TELNYX_API_KEY');
-    if (!telnyxApiKey) {
-      return Response.json({ 
-        error: 'Telnyx API key not configured' 
-      }, { status: 500 });
-    }
-
-    // Log the fax in our database
-    const estimatedCostPerPage = 10; // 10 cents per page
+    // Log the fax in the database
     const faxLog = await base44.entities.FaxLog.create({
-      from_number: from_number,
+      from_number: fromNumber,
       to_number: to_number,
       to_name: to_name || null,
       document_url: file_url,
-      document_name: document_name || 'Camera Fax',
+      document_name: document_name || 'Fax',
       status: 'queued',
       patient_id: patient_id || null,
-      sent_by: user.email,
-      cover_page_details: cover_page_details || null,
-      priority: finalPriority,
-      estimated_cost: estimatedCostPerPage
+      sent_by: user.email
     });
 
-    // Send urgent notifications
-    if (finalPriority === 'urgent' && priorityAnalysis?.notify_users?.length > 0) {
-      for (const userEmail of priorityAnalysis.notify_users) {
-        try {
-          await base44.integrations.Core.SendEmail({
-            to: userEmail,
-            subject: `🚨 Urgent Fax: ${document_name}`,
-            body: `An urgent fax has been sent:\n\nTo: ${to_name || to_number}\nFrom: ${from_number}\nDocument: ${document_name}\n\nReason: ${priorityAnalysis.reason}\n\nPlease review immediately.`
-          });
-        } catch (emailError) {
-          console.error('Failed to send notification:', emailError);
-        }
+    // Send fax via Twilio
+    const formData = new URLSearchParams();
+    formData.append('To', to_number);
+    formData.append('From', fromNumber);
+    formData.append('MediaUrl', file_url);
+    formData.append('Quality', 'fine');
+
+    const twilioResponse = await fetch(
+      `https://fax.twilio.com/v1/Faxes`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
       }
-    }
+    );
 
-    // Send fax via Telnyx API
-    const telnyxResponse = await fetch('https://api.telnyx.com/v2/faxes', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${telnyxApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        connection_id: Deno.env.get('TELNYX_CONNECTION_ID'),
-        media_url: file_url,
-        to: to_number,
-        from: from_number,
-        quality: 'high',
-        store_media: true
-      })
-    });
+    const twilioData = await twilioResponse.json();
 
-    const telnyxData = await telnyxResponse.json();
-
-    if (!telnyxResponse.ok) {
+    if (!twilioResponse.ok) {
       await base44.entities.FaxLog.update(faxLog.id, {
         status: 'failed',
-        failure_reason: telnyxData.errors?.[0]?.detail || 'Fax send failed'
+        failure_reason: twilioData.message || 'Fax send failed'
       });
-      return Response.json({ 
-        error: 'Telnyx API error',
-        details: telnyxData 
-      }, { status: telnyxResponse.status });
+      return Response.json({ error: 'Twilio API error', details: twilioData }, { status: twilioResponse.status });
     }
 
-    // Update fax log with Telnyx ID
+    // Update log with Twilio SID
     await base44.entities.FaxLog.update(faxLog.id, {
-      telnyx_fax_id: telnyxData.data?.id,
+      telnyx_fax_id: twilioData.sid, // reusing existing field to store fax SID
       status: 'sending'
     });
 
@@ -119,8 +77,8 @@ Deno.serve(async (req) => {
       action: 'fax_sent',
       details: {
         to_number,
-        from_number,
-        fax_id: telnyxData.data?.id,
+        from_number: fromNumber,
+        fax_sid: twilioData.sid,
         log_id: faxLog.id,
         timestamp: new Date().toISOString()
       },
@@ -128,27 +86,15 @@ Deno.serve(async (req) => {
       user_agent: req.headers.get('user-agent') || 'unknown'
     });
 
-    // Queue OCR processing asynchronously
-    try {
-      base44.functions.invoke('processFaxOCR', {
-        fax_log_id: faxLog.id,
-        document_url: file_url
-      }).catch(err => console.error('OCR queue failed:', err));
-    } catch (ocrError) {
-      console.error('OCR processing error:', ocrError);
-    }
-
     return Response.json({
       success: true,
-      fax_id: telnyxData.data?.id,
+      fax_sid: twilioData.sid,
       log_id: faxLog.id,
-      status: telnyxData.data?.status,
+      status: twilioData.status,
       message: 'Fax sent successfully'
     });
 
   } catch (error) {
-    return Response.json({ 
-      error: error.message 
-    }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
