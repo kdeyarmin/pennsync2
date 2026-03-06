@@ -1,41 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Copy, RotateCcw } from "lucide-react";
 import SmartNotePDFExporterEnhanced from "./SmartNotePDFExporterEnhanced";
 import NoteDiffView from "./NoteDiffView";
-import SignatureCapture from "./SignatureCapture";
 
-export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copied, patient, visitType, analysisScore, currentUser, signatureImage, setSignatureImage, onReset, originalNote, noteSections, onCopySection }) {
-  const [copiedSection, setCopiedSection] = useState(null);
-
-  const copySection = async (key, text) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedSection(key);
-    setTimeout(() => setCopiedSection(null), 2000);
-  };
-
-  const parseNoteSections = (text) => {
-    if (!text) return null;
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    const vitals = sentences.filter(s => /bp|blood pressure|hr|heart rate|o2|oxygen|temp|weight|respir|pain/i.test(s));
-    const assessment = sentences.filter(s => /assess|exam|appear|ambul|mobil|wound|skin|edema|breath|lung|bowel/i.test(s));
-    const education = sentences.filter(s => /teach|educat|instruct|verbali|understand|demonstrat/i.test(s));
-    const safety = sentences.filter(s => /fall|safe|hazard|medic|adher|complian/i.test(s));
-    const plan = sentences.filter(s => /plan|next|follow|return|notif|physician|refer|schedul/i.test(s));
-    const rest = sentences.filter(s => ![...vitals, ...assessment, ...education, ...safety, ...plan].includes(s));
-    const secs = [
-      { key: "vitals", label: "Vital Signs", text: vitals.join(" ").trim() },
-      { key: "assessment", label: "Assessment", text: assessment.join(" ").trim() },
-      { key: "education", label: "Education / Teaching", text: education.join(" ").trim() },
-      { key: "safety", label: "Safety", text: safety.join(" ").trim() },
-      { key: "plan", label: "Plan", text: plan.join(" ").trim() },
-      { key: "other", label: "Clinical Narrative", text: rest.join(" ").trim() },
-    ].filter(s => s.text.length > 10);
-    return secs.length > 1 ? secs : null;
-  };
-
-  const sections = parseNoteSections(finalNote);
+export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copied, patient, visitType, analysisScore, currentUser, signatureImage, onReset, originalNote }) {
 
   return (
     <div className="space-y-4">
