@@ -34,25 +34,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
     }
 
-    // Create a temporary file path for the PDF
-    const tempPdfPath = `/tmp/visit_${visitId}_${Date.now()}.pdf`;
-    
-    // Decode base64 and write to file
-    const binaryString = atob(pdfBase64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    
-    // Write to temporary file
-    await Deno.writeFile(tempPdfPath, bytes);
-    
-    // Read file back as Blob-like object
-    const fileData = await Deno.readFile(tempPdfPath);
-    
-    // Upload PDF to storage and get URL
+    // Decode base64 PDF - pass directly as string
     const uploadResponse = await base44.integrations.Core.UploadFile({
-      file: fileData
+      file: pdfBase64
     });
 
     if (!uploadResponse.file_url) {

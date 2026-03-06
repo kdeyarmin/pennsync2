@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, Loader, AlertCircle, CheckCircle } from 'lucide-react';
+import { Mail, Loader, AlertCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 
