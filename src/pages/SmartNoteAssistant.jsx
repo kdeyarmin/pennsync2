@@ -566,7 +566,7 @@ Return ONLY the final note text.`
             </div>
           )}
 
-          <StepIndicator currentStep={`step_${step}`} />
+          <StepIndicator step={step} />
 
           {/* STEP 1: WRITE */}
           {step === 1 && (
