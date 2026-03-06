@@ -806,24 +806,7 @@ Return ONLY the final note text.`
 
           {step === 2 && finalNote && (
             <div className="space-y-3">
-              {alerts.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-red-500" />
-                    <p className="text-sm font-bold text-gray-800">Clinical Alerts</p>
-                    <Badge className="bg-red-100 text-red-700 text-xs">{alerts.length}</Badge>
-                  </div>
-                  {urgentAlerts.length > 0 && (
-                    <Alert className="border-red-400 bg-red-50 py-2">
-                      <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <AlertDescription className="text-red-900 text-sm font-semibold">
-                        {urgentAlerts.length} urgent alert{urgentAlerts.length > 1 ? "s" : ""} — confirm follow-up before closing.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  {alerts.map((a, i) => <AlertCard key={i} alert={a} />)}
-                </div>
-              )}
+              <AlertsPanel alerts={alerts} />
 
               <div className="flex items-center gap-3 bg-white border-2 border-green-400 rounded-xl px-4 py-3 shadow-sm">
                 <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0" />
