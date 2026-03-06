@@ -145,6 +145,12 @@ export default function PhotoUploadFaxSender() {
 
         <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
 
+        <FaxCoverSheetGenerator
+          recipientNumber={toNumber}
+          pageCount={uploadedImages.length}
+          onCoverSheetReady={(url) => setCoverSheetUrl(url)}
+        />
+
         {/* Send */}
         <Button
           onClick={handleSendFax}

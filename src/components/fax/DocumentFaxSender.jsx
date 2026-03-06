@@ -123,6 +123,15 @@ export default function DocumentFaxSender({ patientId }) {
 
         <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
 
+        <FaxCoverSheetGenerator
+          patientId={patientId}
+          documentId={selectedDocId || undefined}
+          recipientNumber={toNumber}
+          recipientName={ocrMeta?.patient_name || undefined}
+          pageCount={1}
+          onCoverSheetReady={(url) => setCoverSheetUrl(url)}
+        />
+
         <Button onClick={handleSendFax} disabled={isSending || !selectedDocId || !toNumber.trim()} className="w-full" size="lg">
           {isSending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
           {isSending ? "Sending..." : "Send Fax"}

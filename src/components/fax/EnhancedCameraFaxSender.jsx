@@ -196,6 +196,11 @@ export default function EnhancedCameraFaxSender() {
               <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
             </div>
             <FaxSignaturePanel onSignatureReady={setSignatureDataUrl} />
+            <FaxCoverSheetGenerator
+              recipientNumber={toNumber}
+              pageCount={capturedImages.length}
+              onCoverSheetReady={(url) => setCoverSheetUrl(url)}
+            />
           </>
         )}
 
