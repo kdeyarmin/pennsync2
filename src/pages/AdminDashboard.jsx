@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import AdminDashboardOverview from "../components/admin/AdminDashboardOverview";
-import { ShieldAlert } from "lucide-react";
+import UserActivityDashboard from "../components/admin/UserActivityDashboard";
+import { ShieldAlert, Activity } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminDashboardPage() {
   const { data: currentUser, isLoading } = useQuery({
@@ -27,8 +29,24 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <AdminDashboardOverview />
+    <div className="max-w-7xl mx-auto">
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">Dashboard Overview</TabsTrigger>
+          <TabsTrigger value="activity" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            User Activity
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <AdminDashboardOverview />
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <UserActivityDashboard />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
