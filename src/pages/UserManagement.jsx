@@ -710,6 +710,15 @@ export default function UserManagement() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => setExpandedActivityUser(expandedActivityUser === user.id ? null : user.id)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 min-h-[44px] w-10 sm:w-auto p-2"
+                              title="View activity"
+                            >
+                              <Activity className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleEditUser(user)}
                               disabled={currentUser.email === user.email}
                               title="Edit user role"
@@ -749,6 +758,20 @@ export default function UserManagement() {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {expandedActivityUser === user.id && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="bg-blue-50 border-blue-100 px-4 py-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Activity className="w-4 h-4 text-blue-600" />
+                              <span className="text-sm font-semibold text-blue-900">Activity Log — {user.full_name}</span>
+                              <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs text-blue-600" onClick={() => setExpandedActivityUser(null)}>
+                                Close <ChevronUp className="w-3.5 h-3.5 ml-1" />
+                              </Button>
+                            </div>
+                            <UserActivityPanel userEmail={user.email} userName={user.full_name} />
+                          </TableCell>
+                        </TableRow>
+                      )}
                     );
                   })}
                 </TableBody>
