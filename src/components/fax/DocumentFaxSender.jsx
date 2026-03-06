@@ -20,6 +20,7 @@ export default function DocumentFaxSender({ patientId }) {
   const [isSending, setIsSending] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
   const [ocrMeta, setOcrMeta] = useState(null);
+  const [coverSheetUrl, setCoverSheetUrl] = useState(null);
 
   const { data: documents = [] } = useQuery({
     queryKey: patientId ? ['patient-documents', patientId] : ['documents'],

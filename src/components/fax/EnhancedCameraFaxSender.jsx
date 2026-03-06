@@ -18,6 +18,7 @@ export default function EnhancedCameraFaxSender() {
   const [isSending, setIsSending] = useState(false);
   const [toNumber, setToNumber] = useState("");
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
+  const [coverSheetUrl, setCoverSheetUrl] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 

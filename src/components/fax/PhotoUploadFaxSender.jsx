@@ -18,6 +18,7 @@ export default function PhotoUploadFaxSender() {
   const [isSending, setIsSending] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
+  const [coverSheetUrl, setCoverSheetUrl] = useState(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
