@@ -751,50 +751,7 @@ Return ONLY the final note text.`
                     )}
                   </div>
 
-                  {/* Clarification section if needed */}
-                  {needsClarificationFindings.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="w-5 h-5 text-amber-600" />
-                          <p className="font-semibold text-amber-900">Suggested additions to make compliant ({needsClarificationFindings.length})</p>
-                        </div>
-                        <p className="text-sm text-amber-800">
-                          Check the suggestions you want to add to your note, or edit them below first.
-                        </p>
-                      </div>
-                      {needsClarificationFindings.map(f => (
-                        <div key={f.id} className="space-y-2">
-                          <div className={`border-l-4 rounded-lg p-3 ${{ critical: "border-l-red-500 bg-red-50", high: "border-l-orange-500 bg-orange-50", medium: "border-l-yellow-500 bg-yellow-50", low: "border-l-blue-500 bg-blue-50" }[f.severity] || "border-l-yellow-500 bg-yellow-50"}`}>
-                            <div className="flex items-start gap-3 mb-2">
-                              <input 
-                                type="checkbox" 
-                                checked={selected.has(f.id)} 
-                                onChange={() => toggle(f.id)}
-                                className="w-5 h-5 mt-0.5 text-indigo-600 rounded cursor-pointer"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900">{f.issue}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">{f.question}</p>
-                              </div>
-                            </div>
-                            <div className="ml-8 space-y-2">
-                              <p className="text-xs font-medium text-gray-600">Suggested text to add:</p>
-                              <Textarea 
-                                value={answers[f.id] || f.suggestion || ""} 
-                                onChange={e => setAnswers(prev => ({ ...prev, [f.id]: e.target.value }))}
-                                placeholder="Edit or add text here…"
-                                className="text-sm min-h-[70px] bg-white border border-gray-300"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      <Button onClick={proceedToBuild} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 font-semibold gap-2">
-                        <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
+
 
                   {/* Medicare Compliance Suggestions */}
                   {analysis?.findings?.filter(f => f.category === 'compliance' && f.suggestion).length > 0 && (
