@@ -78,6 +78,7 @@ export default function UserManagement() {
   const [selectedInvitation, setSelectedInvitation] = useState(null);
   const [showUserSetupDialog, setShowUserSetupDialog] = useState(false);
   const [setupFormData, setSetupFormData] = useState({ email: '', full_name: '', role: 'user', staff_type: '' });
+  const [expandedActivityUser, setExpandedActivityUser] = useState(null);
 
   const queryClient = useQueryClient();
 
