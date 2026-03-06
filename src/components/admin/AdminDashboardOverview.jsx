@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, PenTool, Settings, ArrowRight, Loader2, AlertCircle, TrendingUp } from "lucide-react";
+import { Users, FileText, PenTool, Settings, ArrowRight, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import SystemHealthMonitor from "./SystemHealthMonitor";
 
