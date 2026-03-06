@@ -767,8 +767,9 @@ Return ONLY the final note text.`
                           <Textarea placeholder="Your response (leave blank to skip)…" value={answers[f.id] || ""}
                             onChange={e => setAnswers(prev => ({ ...prev, [f.id]: e.target.value }))}
                             className="text-sm min-h-[60px] bg-white" />
-                        </div>
-                      ))}
+                          </div>
+                          );
+                          })}
                       <Button onClick={proceedToBuild} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 font-semibold gap-2">
                         <Sparkles className="w-4 h-4" /> Generate Final Note <ArrowRight className="w-4 h-4" />
                       </Button>
