@@ -603,24 +603,7 @@ Return ONLY the final note text.`
   return (
     <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3 sm:space-y-4">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600" /> Smart Note Assistant
-          </h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-          {careScope === "hospice" ? "Hospice documentation — comfort-focused, Medicare-compliant" :
-           careScope === "both" ? "Home Health & Hospice documentation — Medicare-compliant" :
-           "Home Health documentation — Medicare-compliant, survey-ready"}
-        </p>
-        </div>
-        {activeTab === "builder" && step > 1 && (
-          <Button variant="outline" size="sm" onClick={reset} className="gap-1.5 text-gray-600">
-            <RotateCcw className="w-4 h-4" /> New Note
-          </Button>
-        )}
-      </div>
+      <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
 
       {/* Tabs */}
       <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm gap-1 overflow-x-auto">
