@@ -263,54 +263,55 @@ export default function SmartNoteAssistant() {
         : "Medicare 42 CFR Part 484, homebound status justification, skilled need per Medicare coverage guidelines, OASIS data element documentation, vitals with clinical interpretation, patient response to skilled interventions, education with teach-back confirmation, safety and fall risk, functional status, care plan goal progress, pain assessment, medication adherence, state home health survey standards";
 
       try {
-        const [doc, cds] = await Promise.all([
-          base44.integrations.Core.InvokeLLM({
-            prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. Analyze this nurse's rough note for ${isHospice ? "hospice" : "home health"} documentation standards.
+      const [doc, cds] = await Promise.all([
+      base44.integrations.Core.InvokeLLM({
+        prompt: `You are a Medicare ${isHospice ? "hospice" : "home health"} compliance expert. Analyze this nurse's rough note for ${isHospice ? "hospice" : "home health"} documentation standards.
 
-CRITICAL RULES:
-1. NEVER invent clinical information not in the note.
-2. If you can write the sentence from existing note content → needs_clarification: false, provide suggestion.
-3. If info is NOT in the note and is required → needs_clarification: true, provide a specific question.
-4. Do NOT flag something as missing if already documented.
-5. Apply ONLY ${isHospice ? "hospice" : "home health"} Medicare compliance rules. Do NOT apply ${isHospice ? "home health homebound status or OASIS" : "hospice IDG or terminal prognosis"} requirements.
+      CRITICAL RULES:
+      1. NEVER invent clinical information not in the note.
+      2. For EVERY finding, generate a suggestion - a specific sentence/text that should be added to make the note compliant.
+      3. If you can write the sentence from existing note content → needs_clarification: false
+      4. If the suggestion requires nurse input/clarification → needs_clarification: true AND provide a template suggestion the nurse can edit
+      5. Do NOT flag something as missing if already documented.
+      6. Apply ONLY ${isHospice ? "hospice" : "home health"} Medicare compliance rules. Do NOT apply ${isHospice ? "home health homebound status or OASIS" : "hospice IDG or terminal prognosis"} requirements.
 
-NOTE: ${note}
-PATIENT: ${ctx}
-VISIT TYPE: ${visitType}
-SERVICE LINE: ${isHospice ? "HOSPICE" : "HOME HEALTH"}
-REQUIRED: ${visitSpecific}
+      NOTE: ${note}
+      PATIENT: ${ctx}
+      VISIT TYPE: ${visitType}
+      SERVICE LINE: ${isHospice ? "HOSPICE" : "HOME HEALTH"}
+      REQUIRED: ${visitSpecific}
 
-COMPLIANCE CHECKS (${isHospice ? "Hospice" : "Home Health"}): ${complianceFramework}
+      COMPLIANCE CHECKS (${isHospice ? "Hospice" : "Home Health"}): ${complianceFramework}
 
-Return JSON:
-{
-  "overall_score": 0-100, "compliance_score": 0-100, "quality_score": 0-100,
-  "summary": "string", "strengths": ["string"],
-  "findings": [{
-    "id": "string", "category": "compliance|quality|billing|clinical",
-    "severity": "critical|high|medium|low", "issue": "string",
-    "needs_clarification": true|false,
-    "suggestion": "exact sentence (or empty string if needs_clarification)",
-    "question": "specific question for nurse (or empty string if not needed)",
-    "rationale": "string", "revenue_impact": "string"
-  }],
-  "enhanced_note": "formalized version of ONLY what is in the note"
-}`,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                overall_score: { type: "number" }, compliance_score: { type: "number" }, quality_score: { type: "number" },
-                summary: { type: "string" }, strengths: { type: "array", items: { type: "string" } },
-                findings: { type: "array", items: { type: "object", properties: {
-                  id: { type: "string" }, category: { type: "string" }, severity: { type: "string" },
-                  issue: { type: "string" }, needs_clarification: { type: "boolean" },
-                  suggestion: { type: "string" }, question: { type: "string" },
-                  rationale: { type: "string" }, revenue_impact: { type: "string" }
-                }}},
-                enhanced_note: { type: "string" }
-              }
-            }
-          }),
+      Return JSON:
+      {
+      "overall_score": 0-100, "compliance_score": 0-100, "quality_score": 0-100,
+      "summary": "string", "strengths": ["string"],
+      "findings": [{
+      "id": "string", "category": "compliance|quality|billing|clinical",
+      "severity": "critical|high|medium|low", "issue": "string",
+      "needs_clarification": true|false,
+      "suggestion": "exact sentence to add to note (template if needs_clarification=true with [brackets] for nurse to fill in)",
+      "question": "specific question for nurse if needs_clarification=true (empty string if not needed)",
+      "rationale": "string", "revenue_impact": "string"
+      }],
+      "enhanced_note": "formalized version of ONLY what is in the note"
+      }`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            overall_score: { type: "number" }, compliance_score: { type: "number" }, quality_score: { type: "number" },
+            summary: { type: "string" }, strengths: { type: "array", items: { type: "string" } },
+            findings: { type: "array", items: { type: "object", properties: {
+              id: { type: "string" }, category: { type: "string" }, severity: { type: "string" },
+              issue: { type: "string" }, needs_clarification: { type: "boolean" },
+              suggestion: { type: "string" }, question: { type: "string" },
+              rationale: { type: "string" }, revenue_impact: { type: "string" }
+            }}},
+            enhanced_note: { type: "string" }
+          }
+        }
+      }),
           base44.integrations.Core.InvokeLLM({
             prompt: `Home health clinical decision support. Only flag risks genuinely evidenced by the note.
 NOTE: ${note}
