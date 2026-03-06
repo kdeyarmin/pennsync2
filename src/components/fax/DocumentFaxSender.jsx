@@ -10,6 +10,7 @@ import { Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
 import FaxAddressBook from "./FaxAddressBook";
+import FaxSignaturePanel from "./FaxSignaturePanel";
 
 export default function DocumentFaxSender({ patientId }) {
   const [selectedDocId, setSelectedDocId] = useState("");

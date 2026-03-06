@@ -9,6 +9,7 @@ import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
 import FaxAddressBook from "./FaxAddressBook";
+import FaxSignaturePanel from "./FaxSignaturePanel";
 
 export default function EnhancedCameraFaxSender() {
   const [stream, setStream] = useState(null);

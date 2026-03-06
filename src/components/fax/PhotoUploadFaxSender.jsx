@@ -9,6 +9,7 @@ import { Upload, Loader2, X, Send, Camera } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import FaxAddressBook from "./FaxAddressBook";
+import FaxSignaturePanel from "./FaxSignaturePanel";
 
 export default function PhotoUploadFaxSender() {
   const [uploadedImages, setUploadedImages] = useState([]);
