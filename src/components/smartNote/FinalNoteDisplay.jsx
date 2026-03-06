@@ -73,38 +73,7 @@ export default function FinalNoteDisplay({ finalNote, setFinalNote, onCopy, copi
         </div>
       </div>
 
-      <SignatureCapture onSignatureCapture={setSignatureImage} disabled={false} />
-
       <NoteDiffView originalNote={originalNote} enhancedNote={finalNote} />
-
-      {sections && sections.length > 1 && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-4 py-2.5 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
-            <Copy className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="text-sm font-semibold text-indigo-700">Copy Individual Sections</span>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {sections.map(sec => (
-              <div key={sec.key} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{sec.label}</p>
-                  <p className="text-xs text-gray-700 font-mono line-clamp-2">{sec.text}</p>
-                </div>
-                <button
-                  onClick={() => copySection(sec.key, sec.text)}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg text-xs font-medium border transition-colors bg-white border-gray-200 hover:border-indigo-400 hover:text-indigo-600 text-gray-500 active:scale-95"
-                >
-                  {copiedSection === sec.key ? (
-                    <><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Copied</>
-                  ) : (
-                    <><Copy className="w-3.5 h-3.5" /> Copy</>
-                  )}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
