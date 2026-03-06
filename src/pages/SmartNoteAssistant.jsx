@@ -796,21 +796,21 @@ Return ONLY the final note text.`
                     </div>
                   )}
 
-                  {/* Suggested Additions - After Clarification Answered */}
-                  {analysis?.findings?.length > 0 && analysis.findings.filter(f => f.suggestion).length > 0 && (
+                  {/* Medicare Compliance Suggestions */}
+                  {analysis?.findings?.filter(f => f.category === 'compliance' && f.suggestion).length > 0 && (
                     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h3 className="font-semibold text-gray-900">Suggested Additions to Note</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">Check the items you want to include in your final note</p>
+                          <h3 className="font-semibold text-gray-900">Medicare Compliance Additions</h3>
+                          <p className="text-xs text-gray-500 mt-0.5">Check items to add to your final note</p>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set(analysis.findings.filter(f => f.suggestion).map(f => f.id)))}>Select All</Button>
+                          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set(analysis.findings.filter(f => f.category === 'compliance' && f.suggestion).map(f => f.id)))}>Select All</Button>
                           <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelected(new Set())}>Clear</Button>
                         </div>
                       </div>
                       <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {analysis.findings.filter(f => f.suggestion).map(f => (
+                        {analysis.findings.filter(f => f.category === 'compliance' && f.suggestion).map(f => (
                           <div key={f.id} className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer" onClick={() => toggle(f.id)}>
                             <input 
                               type="checkbox" 
@@ -820,7 +820,7 @@ Return ONLY the final note text.`
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900">{f.issue}</p>
-                              <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded border border-gray-200">{f.suggestion}</p>
+                              <div className="mt-2 p-2 bg-white border border-indigo-200 rounded text-sm text-gray-700 font-mono whitespace-pre-wrap">{f.suggestion}</div>
                               {f.revenue_impact && <p className="text-xs text-green-600 mt-1.5 font-semibold">{f.revenue_impact}</p>}
                             </div>
                             <Badge className={`shrink-0 text-xs ${f.severity === 'critical' ? 'bg-red-100 text-red-800' : f.severity === 'high' ? 'bg-orange-100 text-orange-800' : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
