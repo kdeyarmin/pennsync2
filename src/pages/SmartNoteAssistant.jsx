@@ -29,6 +29,7 @@ import MedicationManagementTab from "../components/smartNote/MedicationManagemen
 import SignatureCapture from "../components/smartNote/SignatureCapture";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import AlertsPanel from "../components/smartNote/AlertsPanel";
+import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },
