@@ -48,7 +48,8 @@ export default function DocumentFaxSender({ patientId }) {
 
     setIsSending(true);
     try {
-      let fileUrl = doc.file_url;
+      // Use annotated version if available
+      let fileUrl = annotatedUrl || doc.file_url;
       if (signatureDataUrl) {
         const result = await base44.functions.invoke('stampSignatureOnPDF', {
           pdf_url: fileUrl,
