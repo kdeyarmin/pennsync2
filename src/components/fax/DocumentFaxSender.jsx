@@ -12,6 +12,7 @@ import { sendFax } from "@/functions/sendFax";
 import FaxAddressBook from "./FaxAddressBook";
 import FaxSignaturePanel from "./FaxSignaturePanel";
 import FaxOCRExtractor from "./FaxOCRExtractor";
+import FaxCoverSheetGenerator from "./FaxCoverSheetGenerator";
 
 export default function DocumentFaxSender({ patientId }) {
   const [selectedDocId, setSelectedDocId] = useState("");

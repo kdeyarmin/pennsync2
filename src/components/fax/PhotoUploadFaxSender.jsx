@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import FaxAddressBook from "./FaxAddressBook";
 import FaxSignaturePanel from "./FaxSignaturePanel";
+import FaxCoverSheetGenerator from "./FaxCoverSheetGenerator";
 
 export default function PhotoUploadFaxSender() {
   const [uploadedImages, setUploadedImages] = useState([]);

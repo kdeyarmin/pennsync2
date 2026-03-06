@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { sendFax } from "@/functions/sendFax";
 import FaxAddressBook from "./FaxAddressBook";
 import FaxSignaturePanel from "./FaxSignaturePanel";
+import FaxCoverSheetGenerator from "./FaxCoverSheetGenerator";
 
 export default function EnhancedCameraFaxSender() {
   const [stream, setStream] = useState(null);
