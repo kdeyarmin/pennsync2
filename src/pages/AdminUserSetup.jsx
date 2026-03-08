@@ -35,11 +35,11 @@ export default function AdminUserSetup() {
   });
 
   const inviteUserMutation = useMutation({
-    mutationFn: async (email) => {
-      return await base44.users.inviteUser(email, inviteRole);
+    mutationFn: async ({ email, role }) => {
+      return await base44.functions.invoke('createUserWithTempPassword', { email, full_name: email.split('@')[0], role });
     },
     onSuccess: () => {
-      toast.success(`Invitation sent to ${inviteEmail}`);
+      toast.success(`Invitation sent to ${inviteEmail}. They will be auto-approved when they sign up.`);
       setInviteEmail("");
       setInviteRole("user");
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
@@ -58,7 +58,7 @@ export default function AdminUserSetup() {
       toast.error("Please enter a valid email address");
       return;
     }
-    inviteUserMutation.mutate(inviteEmail);
+    inviteUserMutation.mutate({ email: inviteEmail, role: inviteRole });
   };
 
   const isAdmin = currentUser?.role === 'admin';
