@@ -30,6 +30,8 @@ import SignatureCapture from "../components/smartNote/SignatureCapture";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import AlertsPanel from "../components/smartNote/AlertsPanel";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
+import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
+import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },
@@ -115,6 +117,8 @@ export default function SmartNoteAssistant() {
   const [hasDraft, setHasDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [signatureImage, setSignatureImage] = useState(null);
+  const [followUpTasks, setFollowUpTasks] = useState([]);
+  const [generatingTasks, setGeneratingTasks] = useState(false);
   const recRef = useRef(null);
   const textareaRef = useRef(null);
   const DRAFT_KEY = "smart_note_draft_v2";

@@ -122,6 +122,7 @@ import SecurityPolicy from './pages/SecurityPolicy';
 import SendFax from './pages/SendFax';
 import SignDocument from './pages/SignDocument';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
+import SmartOASISAssessment from './pages/SmartOASISAssessment';
 import StaffTraining from './pages/StaffTraining';
 import StaffTrainingHub from './pages/StaffTrainingHub';
 import Support from './pages/Support';
@@ -136,7 +137,6 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import SmartOASISAssessment from './pages/SmartOASISAssessment';
 import __Layout from './Layout.jsx';
 
 
@@ -216,6 +216,7 @@ export const PAGES = {
     "SendFax": SendFax,
     "SignDocument": SignDocument,
     "SmartNoteAssistant": SmartNoteAssistant,
+    "SmartOASISAssessment": SmartOASISAssessment,
     "StaffTraining": StaffTraining,
     "StaffTrainingHub": StaffTrainingHub,
     "Support": Support,
@@ -230,7 +231,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "SmartOASISAssessment": SmartOASISAssessment,
 }
 
 export const pagesConfig = {
