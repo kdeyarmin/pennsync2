@@ -15,6 +15,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    if (action === 'inspect') {
+      return Response.json({
+        config: base44.getConfig ? base44.getConfig() : null,
+        verifyOtpSource: String(base44.auth.verifyOtp),
+        resendOtpSource: String(base44.auth.resendOtp)
+      });
+    }
+
     if (action === 'resend') {
       const result = await base44.auth.resendOtp(email);
       return Response.json({ success: true, action, result });
