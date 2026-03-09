@@ -65,7 +65,6 @@ export default function FaxSignaturePanel({ onSignatureReady }) {
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-100"
       >
-        <PenLine className="w-4 h-4" />
         <span className="flex items-center gap-2">
           <PenLine className="w-4 h-4 text-indigo-600" />
           {appliedSignature ? (

@@ -265,7 +265,7 @@ export default function FaxCoverSheetGenerator({
 
       {includeCover && expanded && (
         <CardContent className="pt-0 pb-4 px-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">Subject</Label>
               <Input
@@ -278,7 +278,7 @@ export default function FaxCoverSheetGenerator({
             <div className="space-y-1">
               <Label className="text-xs">Urgency</Label>
               <Select value={form.urgency} onValueChange={(v) => setForm(f => ({ ...f, urgency: v }))}>
-                <SelectTrigger className="h-8 text-sm">
+                <SelectTrigger className="h-11 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -290,7 +290,7 @@ export default function FaxCoverSheetGenerator({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">Recipient Organization</Label>
               <Input

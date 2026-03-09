@@ -188,11 +188,11 @@ export default function FaxAddressBook({ onSelectContact }) {
                   rows={3}
                 />
               </div>
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button type="submit" className="flex-1 h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
                   {editingContact ? "Update" : "Add"} Contact
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="h-11 rounded-xl border-slate-300 bg-white">
                   Cancel
                 </Button>
               </div>
@@ -210,7 +210,7 @@ export default function FaxAddressBook({ onSelectContact }) {
 
       <div className="grid gap-2 max-h-96 overflow-y-auto">
         {filteredContacts.map((contact) => (
-          <Card key={contact.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelectContact?.(contact)}>
+          <Card key={contact.id} className="cursor-pointer border-slate-200 bg-white hover:-translate-y-0.5 hover:shadow-lg" onClick={() => onSelectContact?.(contact)}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
