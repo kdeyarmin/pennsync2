@@ -8,6 +8,7 @@ import {
   Loader2, RefreshCw, ChevronDown, ChevronUp, PenLine
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import MedicationBottleScanner from "./MedicationBottleScanner";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -203,6 +204,13 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
     <div className="space-y-4">
 
       {/* ── Summary row ─────────────────────────────────────────────────── */}
+      {/* Medication Bottle Scanner ──────────────────────────────────── */}
+      <MedicationBottleScanner
+        onMedicationExtracted={(med) => {
+          setMedications(prev => [...prev, { ...med, _id: `scanned-${Date.now()}` }]);
+        }}
+      />
+
       {medications.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           <Badge className="bg-green-100 text-green-800 border border-green-300 px-3 py-1 text-xs font-semibold">
