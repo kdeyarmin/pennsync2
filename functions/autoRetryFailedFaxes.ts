@@ -1,92 +1,142 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+
+/**
+ * Exponential backoff retry schedule: attempt 1 → 5 min, attempt 2 → 15 min, attempt 3 → 60 min
+ * Called every 5 minutes by a scheduled automation.
+ * Sends a final failure email/notification ONLY when all retries are exhausted.
+ */
+
+const BACKOFF_MINUTES = [5, 15, 60]; // delay before each retry attempt
+const MAX_RETRIES = BACKOFF_MINUTES.length;
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Get retry configuration
-    const configs = await base44.asServiceRole.entities.FaxRetryConfig.filter({ is_active: true });
-    const config = configs[0] || {
-      max_retries: 3,
-      retry_delay_minutes: 15,
-      auto_retry_enabled: true,
-      priority_multiplier: { urgent: 0.5, high: 1, normal: 1, low: 2 },
-      notify_on_final_failure: true
-    };
-
-    if (!config.auto_retry_enabled) {
-      return Response.json({ message: 'Auto-retry is disabled' });
-    }
-
-    // Find failed faxes that need retry
-    const failedFaxes = await base44.asServiceRole.entities.FaxLog.filter({
-      status: 'failed'
-    }, '-updated_date', 100);
+    // Get all faxes that are failed and have a scheduled next_retry_at
+    const allFailed = await base44.asServiceRole.entities.FaxLog.filter(
+      { status: 'failed' },
+      '-updated_date',
+      200
+    );
 
     const now = new Date();
     let retriedCount = 0;
-    let exhaustedCount = 0;
+    let skippedCount = 0;
 
-    for (const fax of failedFaxes) {
-      const retryCount = fax.retry_count || 0;
+    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const fromNumber = Deno.env.get('TWILIO_FAX_NUMBER');
 
-      // Check if max retries reached
-      if (retryCount >= config.max_retries) {
-        // Mark as permanently failed and notify if needed
-        if (config.notify_on_final_failure && !fax.final_failure_notified) {
-          try {
-            await base44.asServiceRole.integrations.Core.SendEmail({
-              to: fax.sent_by,
-              subject: `⚠️ Fax Failed: ${fax.document_name}`,
-              body: `Your fax to ${fax.to_number} has failed after ${retryCount} retry attempts.\n\nDocument: ${fax.document_name}\nReason: ${fax.failure_reason}\n\nPlease review and resend manually if needed.`
-            });
+    if (!accountSid || !authToken || !fromNumber) {
+      return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
+    }
 
-            await base44.asServiceRole.entities.FaxLog.update(fax.id, {
-              final_failure_notified: true
-            });
-          } catch (emailError) {
-            console.error('Failed to send notification:', emailError);
-          }
-        }
-        exhaustedCount++;
+    for (const fax of allFailed) {
+      // Skip if no retry is scheduled
+      if (!fax.next_retry_at) {
+        skippedCount++;
         continue;
       }
 
-      // Calculate retry delay based on priority
-      const priority = fax.priority || 'normal';
-      const multiplier = config.priority_multiplier[priority] || 1;
-      const delayMinutes = config.retry_delay_minutes * multiplier;
-      
-      const lastUpdate = new Date(fax.updated_date);
-      const nextRetryTime = new Date(lastUpdate.getTime() + delayMinutes * 60000);
+      // Skip if it's not time yet
+      if (now < new Date(fax.next_retry_at)) {
+        skippedCount++;
+        continue;
+      }
 
-      // Check if it's time to retry
-      if (now >= nextRetryTime) {
-        try {
-          // Retry the fax
-          const retryResult = await base44.functions.invoke('retryFailedFax', {
-            fax_log_id: fax.id
+      // Attempt the retry via Twilio
+      try {
+        const formBody = new URLSearchParams();
+        formBody.append('From', fromNumber);
+        formBody.append('To', fax.to_number);
+        formBody.append('MediaUrl', fax.document_url);
+        formBody.append('Quality', 'fine');
+
+        const twilioResp = await fetch('https://fax.twilio.com/v1/Faxes', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formBody.toString()
+        });
+
+        if (twilioResp.ok) {
+          const twilioData = await twilioResp.json();
+          // Reset status to queued with new Twilio SID — webhook will update from here
+          await base44.asServiceRole.entities.FaxLog.update(fax.id, {
+            status: 'queued',
+            telnyx_fax_id: twilioData.sid,
+            next_retry_at: null,
+            failure_reason: null
           });
-
-          if (retryResult.data.success) {
-            retriedCount++;
-          }
-        } catch (error) {
-          console.error(`Failed to retry fax ${fax.id}:`, error);
+          retriedCount++;
+          console.log(`Retry attempt ${fax.retry_count} dispatched for fax ${fax.id} → new SID ${twilioData.sid}`);
+        } else {
+          const errText = await twilioResp.text();
+          console.error(`Twilio error on retry for fax ${fax.id}:`, errText);
+          // Twilio itself rejected — treat as a failed attempt
+          await handleRetryExhausted(base44, fax, `Twilio rejected retry: ${errText}`);
         }
+      } catch (err) {
+        console.error(`Network error retrying fax ${fax.id}:`, err.message);
+        await handleRetryExhausted(base44, fax, err.message);
       }
     }
 
     return Response.json({
       success: true,
       retried: retriedCount,
-      exhausted: exhaustedCount,
-      total_failed: failedFaxes.length,
-      timestamp: new Date().toISOString()
+      skipped: skippedCount,
+      timestamp: now.toISOString()
     });
 
   } catch (error) {
-    console.error('Auto-retry error:', error);
+    console.error('autoRetryFailedFaxes error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+/**
+ * Mark fax as permanently failed and notify user (only called when all retries exhausted).
+ */
+async function handleRetryExhausted(base44, fax, reason) {
+  if (fax.final_failure_notified) return;
+
+  await base44.asServiceRole.entities.FaxLog.update(fax.id, {
+    next_retry_at: null,
+    final_failure_notified: true,
+    failure_reason: reason || fax.failure_reason
+  });
+
+  if (!fax.sent_by) return;
+
+  const docName = fax.document_name || 'your document';
+  const recipient = fax.to_name ? `${fax.to_name} (${fax.to_number})` : fax.to_number;
+
+  // In-app notification
+  try {
+    await base44.asServiceRole.entities.Notification.create({
+      user_email: fax.sent_by,
+      title: '❌ Fax Failed — All Retries Exhausted',
+      message: `"${docName}" to ${recipient} could not be delivered after ${MAX_RETRIES} attempts.`,
+      type: 'error',
+      is_read: false,
+      action_url: `/send-fax?fax_id=${fax.id}`
+    });
+  } catch (e) {
+    console.error('Failed to create in-app notification:', e.message);
+  }
+
+  // Email notification
+  try {
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: fax.sent_by,
+      subject: `❌ Fax Failed After ${MAX_RETRIES} Attempts`,
+      body: `Your fax could not be delivered after ${MAX_RETRIES} automatic retry attempts.\n\nDocument: ${docName}\nRecipient: ${recipient}\nLast Error: ${fax.failure_reason || reason || 'Unknown'}\n\nPlease verify the recipient fax number and resend manually from the Fax Center.`
+    });
+  } catch (e) {
+    console.error('Failed to send final failure email:', e.message);
+  }
+}
