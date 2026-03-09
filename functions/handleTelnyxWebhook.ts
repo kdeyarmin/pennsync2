@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Send real-time notification for status change
+        // Send real-time in-app notification for status change
         if (faxLog.sent_by) {
           try {
             await base44.asServiceRole.entities.Notification.create({
@@ -112,6 +112,31 @@ Deno.serve(async (req) => {
             });
           } catch (notifError) {
             console.error('Failed to create notification:', notifError);
+          }
+
+          // Send email alert on terminal statuses (delivered or failed)
+          if (updateData.status === 'delivered' || updateData.status === 'failed') {
+            try {
+              const isDelivered = updateData.status === 'delivered';
+              const docName = faxLog.document_name || 'your document';
+              const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+
+              const subject = isDelivered
+                ? `✅ Fax Delivered Successfully`
+                : `❌ Fax Delivery Failed`;
+
+              const body = isDelivered
+                ? `Your fax has been successfully delivered.\n\nDocument: ${docName}\nRecipient: ${recipient}\nPages: ${faxLog.pages || 'N/A'}\nTime: ${new Date().toLocaleString()}\n\nNo further action is required.`
+                : `Your fax could not be delivered after all retry attempts.\n\nDocument: ${docName}\nRecipient: ${recipient}\nReason: ${updateData.failure_reason || 'Unknown error'}\nTime: ${new Date().toLocaleString()}\n\nPlease check the recipient fax number and try again from the Fax Center.`;
+
+              await base44.asServiceRole.integrations.Core.SendEmail({
+                to: faxLog.sent_by,
+                subject,
+                body
+              });
+            } catch (emailErr) {
+              console.error('Failed to send email alert:', emailErr);
+            }
           }
         }
       }
