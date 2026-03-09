@@ -21,13 +21,18 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'verify') {
-      const result = await base44.auth.verifyOtp({ email, otp });
-      return Response.json({ success: true, action, result });
+      try {
+        const result = await base44.auth.verifyOtp({ email, otp });
+        return Response.json({ success: true, action, format: 'otp', result });
+      } catch (firstError) {
+        const result = await base44.auth.verifyOtp({ email, code: otp });
+        return Response.json({ success: true, action, format: 'code', result, firstError: String(firstError?.message || firstError) });
+      }
     }
 
     return Response.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('manageUserVerification error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: String(error?.message || error), details: JSON.stringify(error, Object.getOwnPropertyNames(error || {})) }, { status: 500 });
   }
 });
