@@ -438,6 +438,34 @@ The enhanced note should be a polished, complete clinical note, not bullet point
         </CardContent>
       </Card>
 
+      {/* Sync Follow-up Tasks */}
+      <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+        <ListTodo className="w-5 h-5 text-green-600 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-green-900">Auto-Generate Follow-up Tasks</p>
+          <p className="text-xs text-green-700">Sync AI-identified tasks directly to Task Management</p>
+        </div>
+        {tasksSynced ? (
+          <div className="flex items-center gap-1.5 text-green-700 font-semibold text-sm shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
+            {syncedTaskCount} tasks synced
+          </div>
+        ) : (
+          <Button
+            onClick={handleSyncTasks}
+            disabled={syncingTasks}
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white shrink-0"
+          >
+            {syncingTasks ? (
+              <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Syncing…</>
+            ) : (
+              <><ListTodo className="w-3.5 h-3.5 mr-1.5" /> Sync Tasks</>
+            )}
+          </Button>
+        )}
+      </div>
+
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
         <Button
