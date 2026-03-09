@@ -245,11 +245,11 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-      <div>
-        <Label>Patient</Label>
+    <form onSubmit={handleSubmit} className="space-y-6 py-4">
+      <div className="space-y-2">
+        <Label className="font-semibold text-gray-900">Patient</Label>
         <Select value={form.patient_id} onValueChange={v => setForm(f => ({ ...f, patient_id: v }))}>
-          <SelectTrigger className="mt-1">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select patient..." />
           </SelectTrigger>
           <SelectContent>
@@ -260,10 +260,10 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
         </Select>
       </div>
 
-      <div>
-        <Label>Visit Type</Label>
+      <div className="space-y-2">
+        <Label className="font-semibold text-gray-900">Visit Type</Label>
         <Select value={form.visit_type} onValueChange={v => setForm(f => ({ ...f, visit_type: v }))}>
-          <SelectTrigger className="mt-1">
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -274,17 +274,17 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
         </Select>
       </div>
 
-      <div>
-        <Label>Scheduled Date & Time</Label>
+      <div className="space-y-2">
+        <Label className="font-semibold text-gray-900">Scheduled Date & Time</Label>
         <Input
           type="datetime-local"
-          className="mt-1"
+          className="w-full"
           value={form.scheduled_at}
           onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))}
         />
       </div>
 
-      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 gap-2" disabled={loading || !form.patient_id}>
+      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 gap-2 h-11" disabled={loading || !form.patient_id}>
         <Video className="w-4 h-4" />
         {loading ? "Creating..." : "Create Session"}
       </Button>
