@@ -343,6 +343,17 @@ export default function FaxContactsPage() {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <AIContactExtractor
+              onExtracted={(data) =>
+                setFormData(prev => ({
+                  ...prev,
+                  name:         data.name         || prev.name,
+                  organization: data.organization || prev.organization,
+                  fax_number:   data.fax_number   || prev.fax_number,
+                  notes:        data.notes        ? (prev.notes ? prev.notes + "\n" + data.notes : data.notes) : prev.notes
+                }))
+              }
+            />
             <div className="space-y-2">
               <Label htmlFor="name">Name *</Label>
               <Input
