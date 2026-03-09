@@ -840,6 +840,15 @@ Return ONLY the final note text.`
           {step === 2 && finalNote && (
             <>
               <AlertsPanel alerts={alerts} />
+              {generatingTasks && (
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
+                  <Loader2 className="w-4 h-4 animate-spin text-green-600 shrink-0" />
+                  Generating follow-up tasks from your note…
+                </div>
+              )}
+              {followUpTasks.length > 0 && (
+                <FollowUpTasksPanel tasks={followUpTasks} onDismiss={() => setFollowUpTasks([])} />
+              )}
               <FinalNoteDisplay
                 finalNote={finalNote}
                 setFinalNote={setFinalNote}
