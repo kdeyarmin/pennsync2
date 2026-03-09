@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
@@ -9,90 +9,122 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { patient_id } = await req.json();
+    const { patientId, visitId, carePlanId } = await req.json();
 
-    if (!patient_id) {
-      return Response.json({ error: 'Missing patient_id' }, { status: 400 });
+    if (!patientId) {
+      return Response.json({ error: 'patientId is required' }, { status: 400 });
     }
 
-    // Fetch patient data
-    const [patients, carePlans, clinicalEvents] = await Promise.all([
-      base44.entities.Patient.filter({ id: patient_id }),
-      base44.entities.CarePlan.filter({ patient_id, status: 'active' }),
-      base44.entities.ClinicalEvent.filter({ patient_id }, '-event_date', 20)
-    ]);
+    // Get patient
+    const patients = await base44.asServiceRole.entities.Patient.list();
+    const patient = patients.find(p => p.id === patientId);
 
-    const patient = patients[0];
     if (!patient) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
 
-    // Generate education materials
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Create personalized patient education materials for a home health patient. Write in clear, simple language appropriate for patients and families (6th-8th grade reading level).
+    // Get recent visit if visitId provided
+    let visitData = null;
+    if (visitId) {
+      const visits = await base44.asServiceRole.entities.Visit.filter({ id: visitId });
+      visitData = visits[0];
+    }
 
-PATIENT INFORMATION:
+    // Get care plans
+    const carePlans = await base44.asServiceRole.entities.CarePlan.filter({
+      patient_id: patientId,
+      status: 'active'
+    });
+
+    // Use LLM to generate personalized education topics
+    const educationPrompt = `You are a healthcare education specialist. Based on the patient's medical information, generate 3-4 personalized educational topics that would benefit this patient.
+
+Patient Information:
 - Primary Diagnosis: ${patient.primary_diagnosis || 'Not specified'}
 - Secondary Diagnoses: ${patient.secondary_diagnoses?.join(', ') || 'None'}
-- Current Medications: ${patient.current_medications?.map(m => `${m.name} ${m.dosage || ''}`).join(', ') || 'None'}
-- Allergies: ${patient.allergies || 'None documented'}
-- Active Care Plans: ${carePlans.map(cp => cp.problem).join(', ') || 'None'}
+- Current Medications: ${patient.current_medications?.map(m => m.name).join(', ') || 'None'}
+- Allergies: ${patient.allergies || 'NKDA'}
+- Functional Status: ${patient.functional_status?.adl_independence || 'Not documented'}
+- Fall Risk: ${patient.functional_status?.fall_risk || 'Not documented'}
+${visitData?.nurse_notes ? `\nLatest Visit Notes: ${visitData.nurse_notes.substring(0, 500)}` : ''}
 
-Create education materials for each relevant topic:
-1. Condition Overview (for each diagnosis)
-2. Medication Guide (for key medications)
-3. Care Plan Education (related to active care plans)
-4. Warning Signs (what to watch for)
-5. Self-Care Tips (practical daily management)
+Care Plan Goals:
+${carePlans.map(cp => `- ${cp.problem}: ${cp.goal}`).join('\n')}
 
-For each material, provide:
-- Title (clear, descriptive)
-- Category (condition, medication, care_plan, warning_signs, self_care)
-- Content (2-4 paragraphs in simple language)
-- Key Points (3-5 bullet points)
-- When to Call (specific warning signs or situations)
-- Additional Resources (optional)
+Return JSON: { "topics": [{ "title": "string", "reason": "brief explanation why this education is needed", "key_points": ["point1", "point2", "point3"] }] }`;
 
-Make content practical, actionable, and empowering. Focus on what the patient/family needs to know to manage care at home.`,
+    const topicsResult = await base44.integrations.Core.InvokeLLM({
+      prompt: educationPrompt,
       response_json_schema: {
-        type: "object",
+        type: 'object',
         properties: {
-          materials: {
-            type: "array",
+          topics: {
+            type: 'array',
             items: {
-              type: "object",
+              type: 'object',
               properties: {
-                title: { type: "string" },
-                category: { type: "string" },
-                content: { type: "string" },
-                key_points: {
-                  type: "array",
-                  items: { type: "string" }
-                },
-                when_to_call: {
-                  type: "array",
-                  items: { type: "string" }
-                },
-                additional_resources: { type: "string" }
+                title: { type: 'string' },
+                reason: { type: 'string' },
+                key_points: { type: 'array', items: { type: 'string' } }
               }
             }
-          },
-          summary: { type: "string" }
+          }
         }
       }
     });
 
+    // Generate detailed content for each topic
+    const educationMaterials = [];
+
+    for (const topic of topicsResult.topics || []) {
+      const contentPrompt = `Create patient-friendly educational material on "${topic.title}" for a patient with ${patient.primary_diagnosis || 'chronic health condition'}.
+
+Key Points to Cover:
+${topic.key_points?.map(p => `- ${p}`).join('\n') || ''}
+
+Instructions:
+1. Use simple, clear language (8th grade reading level)
+2. Include practical, actionable steps
+3. Format with headings and bullet points
+4. Include warning signs to watch for
+5. Suggest when to call the doctor
+6. Keep to 300-400 words
+
+Do NOT use medical jargon. Make it conversational and supportive.`;
+
+      const contentResult = await base44.integrations.Core.InvokeLLM({
+        prompt: contentPrompt,
+        model: 'gpt_5'
+      });
+
+      const material = {
+        patient_id: patientId,
+        topic: topic.title,
+        diagnosis_related: patient.primary_diagnosis,
+        education_content: contentResult,
+        content_type: 'text',
+        reading_level: 'basic',
+        generated_from_visit_id: visitId || null,
+        generated_date: new Date().toISOString(),
+        delivery_status: 'pending'
+      };
+
+      // Save education material
+      const saved = await base44.asServiceRole.entities.PatientEducationDelivery.create(material);
+      educationMaterials.push(saved);
+    }
+
     return Response.json({
       success: true,
-      patient_name: `${patient.first_name} ${patient.last_name}`,
-      ...result
+      patient_id: patientId,
+      materials_generated: educationMaterials.length,
+      materials: educationMaterials
     });
-
   } catch (error) {
-    console.error('Error generating patient education:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
-    }, { status: 500 });
+    console.error('Education generation error:', error);
+    return Response.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 });
