@@ -21,8 +21,17 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'verify') {
-      const result = await base44.auth.verifyOtp({ email, otp_code: otp });
-      return Response.json({ success: true, action, result });
+      try {
+        const result = await base44.auth.verifyOtp({ email, otp_code: otp });
+        return Response.json({ success: true, action, result });
+      } catch (error) {
+        return Response.json({
+          error: String(error?.message || error),
+          status: error?.status || 500,
+          data: error?.data || null,
+          original: error?.originalError?.response?.data || null
+        }, { status: 500 });
+      }
     }
 
     return Response.json({ error: 'Invalid action' }, { status: 400 });
