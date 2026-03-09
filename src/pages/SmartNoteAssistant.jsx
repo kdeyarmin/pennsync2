@@ -31,7 +31,9 @@ import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import AlertsPanel from "../components/smartNote/AlertsPanel";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
+import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNoteRecorder";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
+import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },
@@ -395,12 +397,27 @@ Return ONLY the final note text.`
         ]);
         // Auto-generate follow-up tasks from the finalized note
         generateTasksFromNote(noteText, visit.id);
+        // Auto-analyze supply usage from visit notes
+        analyzeSupplyUsage(noteText, visit.id);
         logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysisData.overall_score });
       }
     } catch (err) {
       console.error("Auto-build error:", err);
     } finally {
       setBuilding(false);
+    }
+  };
+
+  const analyzeSupplyUsage = async (noteText, visitId) => {
+    if (!noteText || !patientId) return;
+    try {
+      await analyzeVisitForSupplyUsage({
+        visitId,
+        visitNotes: noteText,
+        patientId
+      });
+    } catch (err) {
+      console.error("Supply analysis failed:", err);
     }
   };
 
@@ -659,6 +676,14 @@ Return ONLY the final note text.`
                 setNote(content); setVisitType(type);
                 setTimeout(() => textareaRef.current?.focus(), 100);
               }} />
+
+              {/* Voice Clinical Note Recorder */}
+              <VoiceClinicalNoteRecorder
+                onTranscriptionComplete={(enhancedNote) => {
+                  setNote(prev => (prev ? prev + "\n\n" + enhancedNote : enhancedNote));
+                  setTimeout(() => textareaRef.current?.focus(), 100);
+                }}
+              />
 
               {/* Regulatory checks transparency - scope-specific */}
               <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
