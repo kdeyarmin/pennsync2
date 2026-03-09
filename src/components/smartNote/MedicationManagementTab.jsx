@@ -348,7 +348,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
                         <Button
                           size="sm"
                           className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700"
-                          onClick={() => applyStatusChange(med._id, med._pendingStatus, editReason)}
+                          onClick={() => applyStatusChange(med._id, null, editReason)}
                         >
                           Save
                         </Button>
