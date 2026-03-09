@@ -369,8 +369,14 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
                         key={s.value}
                         title={`Mark as ${s.label}`}
                         onClick={() => {
-                          setMedications(prev => prev.map(m => m._id === med._id ? { ...m, _pendingStatus: s.value } : m));
-                          changeStatus(med._id, s.value);
+                          // For non-active statuses, show a reason prompt inline
+                          if (s.value !== "active") {
+                            setMedications(prev => prev.map(m => m._id === med._id ? { ...m, _pendingStatus: s.value } : m));
+                            setEditingId(med._id);
+                            setEditReason("");
+                          } else {
+                            applyStatusChange(med._id, s.value, "");
+                          }
                         }}
                         className={`text-xs px-2 py-1 rounded border font-medium transition-all ${s.color} hover:opacity-80`}
                       >
