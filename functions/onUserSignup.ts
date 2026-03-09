@@ -35,10 +35,12 @@ Deno.serve(async (req) => {
           is_approved: true
         });
 
-        // Delete the invitation instead of updating it
-        await base44.asServiceRole.entities.UserInvitation.delete(invitation.id);
+        const verification = await verifyInvitedUser(base44, user.email);
 
-        // Log auto-approval
+        if (verification.success) {
+          await base44.asServiceRole.entities.UserInvitation.delete(invitation.id);
+        }
+
         try {
           await base44.asServiceRole.entities.UserActivity.create({
             user_email: user.email,
@@ -48,7 +50,8 @@ Deno.serve(async (req) => {
               invitation_id: invitation.id,
               role: invitation.role,
               care_scope: invitation.care_scope,
-              invited_by: invitation.invited_by
+              invited_by: invitation.invited_by,
+              auth_verified: verification.success
             },
             page: 'Signup',
             entity_type: 'User',
@@ -58,8 +61,8 @@ Deno.serve(async (req) => {
           console.error('Failed to log activity:', logError);
         }
 
-        console.log('Auto-approved invited user:', user.email);
-        return Response.json({ success: true, auto_approved: true });
+        console.log('Auto-approved invited user:', user.email, verification.success ? '(verified)' : '(verification pending)');
+        return Response.json({ success: true, auto_approved: true, auth_verified: verification.success });
       } catch (updateError) {
         console.error('Failed to auto-approve user:', updateError);
       }
@@ -132,3 +135,48 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+async function verifyInvitedUser(base44, email) {
+  try {
+    const config = base44.getConfig();
+    let users = await base44.asServiceRole.entities.User.filter({ email });
+    let authUser = users?.[0];
+
+    if (authUser?.is_verified) {
+      return { success: true, already_verified: true };
+    }
+
+    const otpExpired = !authUser?.otp_code || !authUser?.otp_expires_at || new Date(authUser.otp_expires_at) <= new Date();
+
+    if (otpExpired) {
+      const resendResponse = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (!resendResponse.ok) {
+        return { success: false, step: 'resend_failed' };
+      }
+
+      users = await base44.asServiceRole.entities.User.filter({ email });
+      authUser = users?.[0];
+    }
+
+    if (!authUser?.otp_code) {
+      return { success: false, step: 'missing_otp_code' };
+    }
+
+    const verifyResponse = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp_code: authUser.otp_code })
+    });
+
+    const result = await verifyResponse.json();
+    return { success: verifyResponse.ok, result };
+  } catch (error) {
+    console.error('verifyInvitedUser error:', error);
+    return { success: false, step: 'exception', error: String(error?.message || error) };
+  }
+}

@@ -25,9 +25,7 @@ Deno.serve(async (req) => {
 
       const user = matchingUsers[0];
 
-      // Skip if already approved
-      if (user.is_approved) {
-        // Clean up stale invitation
+      if (user.is_approved && user.is_verified) {
         await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
           status: 'accepted',
           accepted_at: new Date().toISOString()
@@ -35,25 +33,29 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      console.log('Found stuck user, auto-approving:', user.email);
+      console.log('Found invited user needing recovery:', user.email);
 
-      // Auto-approve and mark auth as verified
-      await base44.asServiceRole.entities.User.update(user.id, {
-        is_approved: true,
-        role: invitation.role || 'user',
-        care_scope: invitation.care_scope || 'home_health',
-        ...(invitation.phone ? { phone: invitation.phone } : {}),
-        ...(invitation.credentials ? { credentials: invitation.credentials } : {})
-      });
+      if (!user.is_approved) {
+        await base44.asServiceRole.entities.User.update(user.id, {
+          is_approved: true,
+          role: invitation.role || 'user',
+          care_scope: invitation.care_scope || 'home_health',
+          ...(invitation.phone ? { phone: invitation.phone } : {}),
+          ...(invitation.credentials ? { credentials: invitation.credentials } : {})
+        });
+      }
 
+      const verification = await verifyInvitedUser(base44, user.email);
+      if (!verification.success) {
+        console.log('Verification still pending for:', user.email);
+        continue;
+      }
 
-      // Mark invitation accepted
       await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
         status: 'accepted',
         accepted_at: new Date().toISOString()
       });
 
-      // Send welcome email
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: user.email,
         from_name: 'Penn Sync',
@@ -72,7 +74,7 @@ Penn Sync Team`
       });
 
       approvedCount++;
-      console.log('✓ Auto-approved:', user.email);
+      console.log('✓ Auto-approved and verified:', user.email);
     }
 
     return Response.json({ success: true, approved: approvedCount });
@@ -82,3 +84,48 @@ Penn Sync Team`
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+async function verifyInvitedUser(base44, email) {
+  try {
+    const config = base44.getConfig();
+    let users = await base44.asServiceRole.entities.User.filter({ email });
+    let authUser = users?.[0];
+
+    if (authUser?.is_verified) {
+      return { success: true, already_verified: true };
+    }
+
+    const otpExpired = !authUser?.otp_code || !authUser?.otp_expires_at || new Date(authUser.otp_expires_at) <= new Date();
+
+    if (otpExpired) {
+      const resendResponse = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (!resendResponse.ok) {
+        return { success: false, step: 'resend_failed' };
+      }
+
+      users = await base44.asServiceRole.entities.User.filter({ email });
+      authUser = users?.[0];
+    }
+
+    if (!authUser?.otp_code) {
+      return { success: false, step: 'missing_otp_code' };
+    }
+
+    const verifyResponse = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp_code: authUser.otp_code })
+    });
+
+    const result = await verifyResponse.json();
+    return { success: verifyResponse.ok, result };
+  } catch (error) {
+    console.error('verifyInvitedUser error:', error);
+    return { success: false, step: 'exception', error: String(error?.message || error) };
+  }
+}
