@@ -17,8 +17,10 @@ import {
   Target,
   ClipboardList,
   BookOpen,
-  AlertCircle
+  AlertCircle,
+  ListTodo
 } from "lucide-react";
+import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import {
   Accordion,
   AccordionContent,
@@ -42,6 +44,9 @@ export default function UnifiedDocumentReview({
   const [analysis, setAnalysis] = useState(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState(new Set());
   const [isApplying, setIsApplying] = useState(false);
+  const [syncingTasks, setSyncingTasks] = useState(false);
+  const [tasksSynced, setTasksSynced] = useState(false);
+  const [syncedTaskCount, setSyncedTaskCount] = useState(0);
 
   useEffect(() => {
     if (autoRun && roughNote && roughNote.length >= 50 && !analysis) {
