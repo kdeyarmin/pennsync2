@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
     if (action === 'raw_verify') {
       const config = base44.getConfig();
-      const response = await fetch(`${config.serverUrl}/apps/${config.appId}/auth/verify-otp`, {
+      const response = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp_code: otp })
