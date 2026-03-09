@@ -71,42 +71,47 @@ export default function Dashboard() {
       }
     }, [currentUser?.email]);
 
-    const { data: visits, isLoading, error: visitsError } = useQuery({
+    const { data: visits = [], isLoading, error: visitsError } = useQuery({
       queryKey: ['todayVisits'],
       queryFn: async () => {
         const today = todayEastern();
         return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
       },
       initialData: [],
-      staleTime: 60000,
+      staleTime: 120000,      // 2 min — visits change occasionally
+      gcTime: 300000,
     });
 
-  const { data: patients, error: patientsError } = useQuery({
+  const { data: patients = [], error: patientsError } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 200),
+    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 100), // reduced from 200
     initialData: [],
-    staleTime: 300000,
+    staleTime: 600000,        // 10 min — patient list rarely changes mid-session
+    gcTime: 900000,
   });
 
   const { data: carePlans = [] } = useQuery({
     queryKey: ['activeCarePlans'],
-    queryFn: () => base44.entities.CarePlan.filter({ status: 'active' }, '-updated_date', 100),
+    queryFn: () => base44.entities.CarePlan.filter({ status: 'active' }, '-updated_date', 50),  // reduced from 100
     initialData: [],
-    staleTime: 300000,
+    staleTime: 600000,
+    gcTime: 900000,
   });
 
   const { data: incidents = [] } = useQuery({
     queryKey: ['recentIncidents'],
-    queryFn: () => base44.entities.Incident.list('-incident_date', 30),
+    queryFn: () => base44.entities.Incident.list('-incident_date', 20),  // reduced from 30
     initialData: [],
-    staleTime: 300000,
+    staleTime: 600000,
+    gcTime: 900000,
   });
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['myNoteConversions', currentUser?.email],
-    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser.email }, '-created_date', 200),
+    queryFn: () => base44.entities.NoteConversion.filter({ nurse_email: currentUser.email }, '-created_date', 100), // reduced from 200
     initialData: [],
-    staleTime: 300000,
+    staleTime: 600000,
+    gcTime: 900000,
     enabled: !!currentUser?.email,
   });
 
@@ -128,12 +133,12 @@ export default function Dashboard() {
     });
   }, [visits, noteConversions, currentUser]);
 
-  const getGreeting = () => {
+  const getGreeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
     if (hour < 18) return "Good Afternoon";
     return "Good Evening";
-  };
+  }, []);
 
   const fullName = currentUser?.full_name || 'there';
   const careScope = currentUser?.care_scope;
@@ -178,7 +183,7 @@ export default function Dashboard() {
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
-              {getGreeting()}, {fullName}! 👋
+              {getGreeting}, {fullName}! 👋
             </h1>
             <p className="text-white text-xs sm:text-sm md:text-base drop-shadow-md">
               {formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
