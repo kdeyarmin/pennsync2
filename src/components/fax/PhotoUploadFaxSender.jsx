@@ -107,12 +107,16 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6 space-y-5">
-        {/* Upload */}
+    <Card className="overflow-hidden border-slate-200/80 bg-white/95">
+      <CardContent className="pt-6 space-y-6">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold text-slate-900">Photo Fax</h2>
+          <p className="text-sm text-slate-500">Upload one or more photos and send them as a clean fax packet.</p>
+        </div>
+
         <div>
           <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={isProcessing} className="w-full" size="lg" variant="outline">
+          <Button onClick={() => fileInputRef.current?.click()} disabled={isProcessing} className="w-full h-14 rounded-2xl border-dashed border-slate-300 bg-slate-50 text-slate-900 hover:bg-slate-100" size="lg" variant="outline">
             {isProcessing ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Camera className="w-5 h-5 mr-2" />}
             {isProcessing ? "Uploading..." : "Select Photos"}
           </Button>
@@ -120,13 +124,13 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
 
         {/* Preview */}
         {uploadedImages.length > 0 && (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {uploadedImages.map((image, index) => (
-              <div key={index} className="relative group">
-                <img src={image.url} alt={image.name} className="w-full h-24 object-cover rounded-lg border" />
+              <div key={index} className="relative group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+                <img src={image.url} alt={image.name} className="w-full h-24 object-cover" />
                 <button
                   onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== index))}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-2 top-2 rounded-full bg-white/95 p-1 text-slate-600 shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -159,7 +163,7 @@ export default function PhotoUploadFaxSender({ prefilledData }) {
         <Button
           onClick={handleSendFax}
           disabled={uploadedImages.length === 0 || isSending || !toNumber.trim()}
-          className="w-full"
+          className="w-full h-14 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-violet-700"
           size="lg"
         >
           {isSending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}

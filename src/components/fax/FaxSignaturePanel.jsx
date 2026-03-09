@@ -63,21 +63,24 @@ export default function FaxSignaturePanel({ onSignatureReady }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-100"
       >
         <PenLine className="w-4 h-4" />
-        {appliedSignature ? (
-          <span className="flex items-center gap-1">
-            Signature applied <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-          </span>
-        ) : (
-          "Add Signature (optional)"
-        )}
-        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        <span className="flex items-center gap-2">
+          <PenLine className="w-4 h-4 text-indigo-600" />
+          {appliedSignature ? (
+            <span className="flex items-center gap-1">
+              Signature applied <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+            </span>
+          ) : (
+            "Add Signature (optional)"
+          )}
+        </span>
+        {open ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
       </button>
 
       {open && (
-        <Card className="border-indigo-200">
+        <Card className="border-slate-200 bg-white">
           <CardContent className="pt-4 space-y-4">
 
             {/* Applied preview */}

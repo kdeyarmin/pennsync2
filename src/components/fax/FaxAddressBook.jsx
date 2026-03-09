@@ -127,9 +127,9 @@ export default function FaxAddressBook({ onSelectContact }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search contacts..."
             value={searchTerm}
@@ -145,7 +145,7 @@ export default function FaxAddressBook({ onSelectContact }) {
           }
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm hover:from-indigo-700 hover:to-violet-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Contact
             </Button>
@@ -199,7 +199,7 @@ export default function FaxAddressBook({ onSelectContact }) {
             </form>
           </DialogContent>
         </Dialog>
-        <Button variant="outline" asChild>
+        <Button variant="outline" asChild className="h-11 rounded-xl border-slate-300 bg-white">
           <label className="cursor-pointer">
             <Upload className="w-4 h-4 mr-2" />
             Upload CSV
@@ -261,7 +261,7 @@ export default function FaxAddressBook({ onSelectContact }) {
           </Card>
         ))}
         {filteredContacts.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-slate-500">
             No contacts found. Add your first contact or upload a CSV file.
           </div>
         )}

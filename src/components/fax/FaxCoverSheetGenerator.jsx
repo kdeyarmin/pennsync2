@@ -232,11 +232,11 @@ export default function FaxCoverSheetGenerator({
   };
 
   return (
-    <Card className="border-blue-200 bg-blue-50/30">
-      <CardHeader className="py-3 px-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-blue-800 flex items-center gap-2">
-            <FileText className="w-4 h-4" />
+    <Card className="overflow-hidden border-slate-200 bg-slate-50/70">
+      <CardHeader className="py-4 px-4 sm:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-indigo-600" />
             Fax Cover Sheet
             {coverData && (
               <Badge className="bg-green-100 text-green-700 border-green-200 text-xs gap-1">
@@ -245,7 +245,7 @@ export default function FaxCoverSheetGenerator({
             )}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeCover}
@@ -272,7 +272,7 @@ export default function FaxCoverSheetGenerator({
                 placeholder="RE: Patient records..."
                 value={form.subject}
                 onChange={(e) => setForm(f => ({ ...f, subject: e.target.value }))}
-                className="h-8 text-sm"
+                className="h-11 text-sm"
               />
             </div>
             <div className="space-y-1">
@@ -297,7 +297,7 @@ export default function FaxCoverSheetGenerator({
                 placeholder="Hospital / Clinic name"
                 value={form.recipient_organization}
                 onChange={(e) => setForm(f => ({ ...f, recipient_organization: e.target.value }))}
-                className="h-8 text-sm"
+                className="h-11 text-sm"
               />
             </div>
             <div className="space-y-1">
@@ -306,7 +306,7 @@ export default function FaxCoverSheetGenerator({
                 placeholder="+1234567890"
                 value={form.sender_number}
                 onChange={(e) => setForm(f => ({ ...f, sender_number: e.target.value }))}
-                className="h-8 text-sm"
+                className="h-11 text-sm"
               />
             </div>
           </div>
@@ -333,7 +333,7 @@ export default function FaxCoverSheetGenerator({
             onClick={generateCoverSheet}
             disabled={isGenerating}
             size="sm"
-            className="w-full"
+            className="w-full h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
           >
             {isGenerating ? (
               <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Generating...</>
@@ -359,7 +359,7 @@ export default function FaxCoverSheetGenerator({
             onClick={() => { setExpanded(true); }}
             variant="outline"
             size="sm"
-            className="w-full text-blue-700 border-blue-200 hover:bg-blue-50 text-xs"
+            className="w-full h-11 rounded-xl text-slate-700 border-slate-300 hover:bg-slate-100 text-sm"
           >
             Configure & Generate Cover Sheet
           </Button>
