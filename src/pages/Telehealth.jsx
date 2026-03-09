@@ -205,7 +205,7 @@ export default function Telehealth() {
 
       {/* New Session Dialog */}
       <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogTitle>New Telehealth Session</DialogTitle>
           <NewSessionForm
             patients={patients}
