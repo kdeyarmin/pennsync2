@@ -63,6 +63,10 @@ export default function SendFax() {
             <DocumentFaxSender prefilledData={prefilledData} />
           </TabsContent>
 
+          <TabsContent value="batch" className="mt-4 sm:mt-6">
+            <BatchFaxSender prefilledData={prefilledData} />
+          </TabsContent>
+
           <TabsContent value="templates" className="mt-4 sm:mt-6">
             <FaxTemplateManager onApplyTemplate={handleApplyTemplate} />
           </TabsContent>
