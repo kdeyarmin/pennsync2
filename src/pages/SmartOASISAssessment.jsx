@@ -489,8 +489,13 @@ export default function SmartOASISAssessment() {
 
       await base44.entities.OASISAssessment.create({
         patient_id: selectedPatientId,
-        assessment_type: "SOC",
-        responses: answers,
+        visit_type: "Start of Care",
+        oasis_items: Object.entries(answers).map(([item_number, response]) => ({
+          item_number,
+          response: String(response),
+          ai_suggested: false,
+          manually_edited: true,
+        })),
         status: "completed",
         completed_date: new Date().toISOString(),
       });
