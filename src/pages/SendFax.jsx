@@ -9,6 +9,14 @@ import FaxSearchInterface from "../components/fax/FaxSearchInterface";
 import FaxTemplateManager from "../components/fax/FaxTemplateManager";
 
 export default function SendFax() {
+  const [activeTab, setActiveTab] = useState("upload");
+  const [prefilledData, setPrefilledData] = useState(null);
+
+  const handleApplyTemplate = (tpl) => {
+    setPrefilledData(tpl);
+    setActiveTab("upload");
+  };
+
   return (
     <div className="min-h-screen p-3 sm:p-4 md:p-6">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
