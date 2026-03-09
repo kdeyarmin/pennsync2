@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -96,7 +97,7 @@ export default function Layout({ children, currentPageName }) {
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
-  const navCategories = [
+  const navCategories = useMemo(() => [
     { category: "Overview", items: [{ name: "Dashboard", icon: Home, page: "Dashboard" }] },
     {
       category: "Patient Care",
@@ -138,7 +139,10 @@ export default function Layout({ children, currentPageName }) {
     },
   ];
 
-  const adminItems = [
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [unreadMessageCount]);
+
+  const adminItems = useMemo(() => [
     { name: "Dashboard", icon: BarChart3, page: "AdminDashboard" },
     { name: "Reports", icon: BarChart3, page: "Reports" },
     { name: "Users", icon: Users, page: "UserManagement" },
@@ -149,9 +153,10 @@ export default function Layout({ children, currentPageName }) {
     { name: "Security", icon: Shield, page: "SecurityCompliance" },
     { name: "Alerts", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
     { name: "Settings", icon: Settings, page: "UserSettings" },
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [totalNotificationCount, isAdmin]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await base44.entities.UserActivity.create({
         user_email: currentUser?.email, user_name: currentUser?.full_name, action: 'logout',
@@ -161,9 +166,10 @@ export default function Layout({ children, currentPageName }) {
       });
     } catch {}
     base44.auth.logout();
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.email]);
 
-  const isActive = (pageName) => currentPageName === pageName;
+  const isActive = useCallback((pageName) => currentPageName === pageName, [currentPageName]);
 
   if (currentUser && !isApproved) {
     return (
