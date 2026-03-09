@@ -43,16 +43,32 @@ export default function NotificationCenter({ currentUser, onClose }) {
     refetchInterval: 30000,
   });
 
-  const { data: activeAlerts = [] } = useQuery({
-    queryKey: ['active-alerts-nc'],
-    queryFn: () => base44.entities.PatientAlert.filter(
-      { status: 'active' },
-      '-created_date',
-      50
+  const { data: chartedVisits = [] } = useQuery({
+    queryKey: ['charted-visits', currentUser?.email],
+    queryFn: () => base44.entities.Visit.filter(
+      { created_by: currentUser?.email },
+      '-visit_date',
+      500
     ),
     initialData: [],
+    enabled: !!currentUser?.email,
+  });
+
+  const { data: activeAlerts = [] } = useQuery({
+    queryKey: ['active-alerts-nc', currentUser?.email],
+    queryFn: async () => {
+      const allAlerts = await base44.entities.PatientAlert.filter(
+        { status: 'active' },
+        '-created_date',
+        50
+      );
+      // Only return alerts for patients this clinician has charted on
+      const chartedPatientIds = new Set(chartedVisits.map(v => v.patient_id));
+      return allAlerts.filter(a => chartedPatientIds.has(a.patient_id));
+    },
+    initialData: [],
     refetchInterval: 60000,
-    enabled: !!currentUser?.favorited_patients?.length,
+    enabled: !!currentUser?.email && chartedVisits.length > 0,
   });
 
   const { data: pendingTasks = [] } = useQuery({
