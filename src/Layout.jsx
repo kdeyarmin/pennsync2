@@ -70,16 +70,12 @@ export default function Layout({ children, currentPageName }) {
   });
 
   const { data: allActiveAlerts = [] } = useQuery({
-    queryKey: ['active-alerts'],
-    queryFn: () => base44.entities.PatientAlert.filter({ status: 'active' }, '-created_date', 50),
-    initialData: [], refetchInterval: 60000, enabled: !!currentUser?.favorited_patients?.length,
+    queryKey: ['active-alerts', currentUser?.email],
+    queryFn: () => base44.entities.PatientAlert.filter({ status: 'active', created_by: currentUser?.email }, '-created_date', 50),
+    initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email,
   });
 
-  const activeAlerts = useMemo(() => {
-    if (!currentUser?.favorited_patients?.length) return [];
-    const favIds = new Set(currentUser.favorited_patients.map(f => f.id));
-    return allActiveAlerts.filter(a => favIds.has(a.patient_id));
-  }, [allActiveAlerts, currentUser]);
+  const activeAlerts = useMemo(() => allActiveAlerts, [allActiveAlerts]);
 
   const { data: pendingTasks = [] } = useQuery({
     queryKey: ['pending-tasks', currentUser?.email],
