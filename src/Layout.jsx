@@ -14,15 +14,15 @@ import { Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 
-import DesktopSidebar from "./components/layout/DesktopSidebar";
-import MobileHeader from "./components/layout/MobileHeader";
-import MobileMenu from "./components/layout/MobileMenu";
-import MobileBottomNav from "./components/layout/MobileBottomNav";
-import OfflineIndicator from "./components/mobile/OfflineIndicator";
-import FeedbackButton from "./components/feedback/FeedbackButton";
-import NotificationCenter from "./components/notifications/NotificationCenter";
-import SessionTimeoutManager from "./components/security/SessionTimeoutManager";
-import Breadcrumbs from "./components/navigation/Breadcrumbs";
+import DesktopSidebar from "../components/layout/DesktopSidebar";
+import MobileHeader from "../components/layout/MobileHeader";
+import MobileMenu from "../components/layout/MobileMenu";
+import MobileBottomNav from "../components/layout/MobileBottomNav";
+import OfflineIndicator from "../components/mobile/OfflineIndicator";
+import FeedbackButton from "../components/feedback/FeedbackButton";
+import NotificationCenter from "../components/notifications/NotificationCenter";
+import SessionTimeoutManager from "../components/security/SessionTimeoutManager";
+import Breadcrumbs from "../components/navigation/Breadcrumbs";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
