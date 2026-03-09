@@ -16,9 +16,13 @@ import FaxOCRExtractor from "./FaxOCRExtractor";
 import FaxCoverSheetGenerator from "./FaxCoverSheetGenerator";
 import PDFAnnotator from "./PDFAnnotator";
 
-export default function DocumentFaxSender({ patientId }) {
+export default function DocumentFaxSender({ patientId, prefilledData }) {
   const [selectedDocId, setSelectedDocId] = useState("");
-  const [toNumber, setToNumber] = useState("");
+  const [toNumber, setToNumber] = useState(prefilledData?.recipient_fax_number || "");
+
+  React.useEffect(() => {
+    if (prefilledData?.recipient_fax_number) setToNumber(prefilledData.recipient_fax_number);
+  }, [prefilledData]);
   const [isSending, setIsSending] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
   const [ocrMeta, setOcrMeta] = useState(null);
