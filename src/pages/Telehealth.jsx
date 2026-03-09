@@ -205,8 +205,8 @@ export default function Telehealth() {
 
       {/* New Session Dialog */}
       <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogTitle>New Telehealth Session</DialogTitle>
+        <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto sm:rounded-2xl border-0 shadow-2xl">
+          <DialogTitle className="text-xl font-bold text-gray-900">New Telehealth Session</DialogTitle>
           <NewSessionForm
             patients={patients}
             currentUser={currentUser}
@@ -245,11 +245,11 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 py-4">
-      <div className="space-y-2">
-        <Label className="font-semibold text-gray-900">Patient</Label>
+    <form onSubmit={handleSubmit} className="space-y-5 py-2">
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold text-gray-900">Patient</Label>
         <Select value={form.patient_id} onValueChange={v => setForm(f => ({ ...f, patient_id: v }))}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full h-11 border-gray-300 rounded-lg shadow-sm hover:border-gray-400">
             <SelectValue placeholder="Select patient..." />
           </SelectTrigger>
           <SelectContent>
@@ -260,10 +260,10 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label className="font-semibold text-gray-900">Visit Type</Label>
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold text-gray-900">Visit Type</Label>
         <Select value={form.visit_type} onValueChange={v => setForm(f => ({ ...f, visit_type: v }))}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full h-11 border-gray-300 rounded-lg shadow-sm hover:border-gray-400">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -274,17 +274,17 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label className="font-semibold text-gray-900">Scheduled Date & Time</Label>
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold text-gray-900">Scheduled Date & Time</Label>
         <Input
           type="datetime-local"
-          className="w-full"
+          className="w-full h-11 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
           value={form.scheduled_at}
           onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))}
         />
       </div>
 
-      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 gap-2 h-11" disabled={loading || !form.patient_id}>
+      <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 h-11 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all mt-2" disabled={loading || !form.patient_id}>
         <Video className="w-4 h-4" />
         {loading ? "Creating..." : "Create Session"}
       </Button>
