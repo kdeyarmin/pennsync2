@@ -158,8 +158,8 @@ export default function NotificationCenter({ currentUser, onClose }) {
 
   return (
     <>
-      <Card className="w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <CardHeader className="border-b flex-shrink-0">
+      <Card className="w-full max-w-2xl h-[80vh] flex flex-col border-slate-200 bg-white">
+        <CardHeader className="border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Bell className="w-5 h-5" />
@@ -191,9 +191,9 @@ export default function NotificationCenter({ currentUser, onClose }) {
           </div>
         </CardHeader>
 
-        <CardContent className="p-0 flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden flex flex-col">
           <Tabs defaultValue="unread" className="h-full flex flex-col">
-            <TabsList className="grid grid-cols-2 rounded-none border-b flex-shrink-0">
+            <TabsList className="grid grid-cols-2 rounded-none border-b border-slate-200 flex-shrink-0">
               <TabsTrigger value="unread">
                 Unread ({unreadNotifications.length})
               </TabsTrigger>
@@ -203,7 +203,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
             </TabsList>
 
             <div className="flex-1 overflow-y-auto">
-              <TabsContent value="unread" className="m-0">
+              <TabsContent value="unread" className="m-0 h-full">
                 {unreadNotifications.length > 0 ? (
                   unreadNotifications.map((notification) => (
                     <NotificationItem key={notification.id} notification={notification} />
@@ -216,7 +216,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
                 )}
               </TabsContent>
 
-              <TabsContent value="all" className="m-0">
+              <TabsContent value="all" className="m-0 h-full">
                 {notifications.length > 0 ? (
                   notifications.map((notification) => (
                     <NotificationItem key={notification.id} notification={notification} />
@@ -230,7 +230,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
               </TabsContent>
             </div>
           </Tabs>
-        </CardContent>
+        </div>
       </Card>
 
       {/* Notification Detail Dialog */}
