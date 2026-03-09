@@ -138,9 +138,6 @@ export default function Layout({ children, currentPageName }) {
         { name: "Guidelines", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
       ],
     },
-  ];
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [unreadMessageCount]);
 
   const adminItems = useMemo(() => [
