@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -411,10 +411,11 @@ export default function PatientDetails() {
                <div className="border-t border-gray-200 my-6" />
                <MedicationBottleScanner
                  onMedicationExtracted={(med) => {
-                   if (patient.current_medications) {
+                   if (patient?.current_medications && patientId) {
                      const updated = [...patient.current_medications, med];
-                     base44.entities.Patient.update(patientId, { current_medications: updated });
-                     queryClient.invalidateQueries({ queryKey: ['patients'] });
+                     base44.entities.Patient.update(patientId, { current_medications: updated })
+                       .then(() => queryClient.invalidateQueries({ queryKey: ['patients'] }))
+                       .catch(err => console.error('Update failed:', err));
                    }
                  }}
                />
