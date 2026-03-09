@@ -249,6 +249,27 @@ The enhanced note should be a polished, complete clinical note, not bullet point
     setIsApplying(false);
   };
 
+  const handleSyncTasks = async () => {
+    if (!analysis?.enhanced_note || syncingTasks) return;
+    setSyncingTasks(true);
+    try {
+      const result = await generateFollowUpTasks({
+        noteText: analysis.enhanced_note || roughNote,
+        patientId: patientData?.id,
+        visitType,
+        diagnosis,
+      });
+      if (result?.data?.tasks_created > 0) {
+        setSyncedTaskCount(result.data.tasks_created);
+        setTasksSynced(true);
+      }
+    } catch (err) {
+      console.error("Failed to sync tasks:", err);
+    } finally {
+      setSyncingTasks(false);
+    }
+  };
+
   const handleSelectAll = () => {
     if (selectedSuggestions.size === analysis.findings.length) {
       setSelectedSuggestions(new Set());
