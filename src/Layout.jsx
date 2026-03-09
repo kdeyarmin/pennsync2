@@ -240,7 +240,7 @@ export default function Layout({ children, currentPageName }) {
         <SessionTimeoutManager timeoutMinutes={15} warningMinutes={2} />
 
         <Dialog open={notificationCenterOpen} onOpenChange={setNotificationCenterOpen}>
-          <DialogContent className="max-w-2xl p-0 border-0">
+          <DialogContent className="max-w-2xl p-0 border-0 bg-white">
             <div className="sr-only"><DialogTitle>Notifications</DialogTitle></div>
             <NotificationCenter currentUser={currentUser} onClose={() => setNotificationCenterOpen(false)} />
           </DialogContent>
