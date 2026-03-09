@@ -26,8 +26,6 @@ const HighRiskPatientsWidget    = lazy(() => import("../components/dashboard/Hig
 const PendingReferralsWidget    = lazy(() => import("../components/referral/PendingReferralsWidget"));
 const RealTimePatientAlerts     = lazy(() => import("../components/dashboard/RealTimePatientAlerts"));
 const TopTemplatesWidget        = lazy(() => import("../components/clinical/TopTemplatesWidget"));
-const NurseRegulatoryAlerts     = lazy(() => import("../components/compliance/NurseRegulatoryAlerts"));
-const LazyComplianceDashboard   = lazy(() => import("../components/compliance/ComplianceDashboardWidget"));
 const OfflineDataManager        = lazy(() => import("../components/mobile/OfflineDataManager"));
 
 
@@ -252,22 +250,14 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Dashboard Widgets */}
-      {currentUser?.email && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
-          <ComplianceAlertNotifications 
-            nurseEmail={currentUser?.email}
-            showAll={false}
-            maxAlerts={5}
-            compact={true}
+      {/* Route Optimizer */}
+      {visits.length > 0 && (
+        <div className="mb-6">
+          <SmartRouteOptimizer
+            visits={visits.filter(v => v.status === 'scheduled')}
+            patients={patients}
+            onOptimizedSchedule={(order) => console.log('Optimized:', order)}
           />
-          {visits.length > 0 && (
-            <SmartRouteOptimizer
-              visits={visits.filter(v => v.status === 'scheduled')}
-              patients={patients}
-              onOptimizedSchedule={(order) => console.log('Optimized:', order)}
-            />
-          )}
         </div>
       )}
 
@@ -310,15 +300,7 @@ export default function Dashboard() {
           <TopTemplatesWidget />
         </div>
 
-        {/* Regulatory Alerts for Nurses */}
-        <div className="mb-6">
-          <NurseRegulatoryAlerts nurseEmail={currentUser?.email} compact={true} />
-        </div>
 
-        {/* Compliance Widget */}
-        <div className="mb-6">
-          <LazyComplianceDashboard />
-        </div>
 
         {/* Offline Data Manager */}
         <div className="mb-6">
