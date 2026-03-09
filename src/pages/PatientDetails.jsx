@@ -64,6 +64,7 @@ import AIGeneratedOASISAssessment from "../components/oasis/AIGeneratedOASISAsse
 import ReferralDocumentViewer from "../components/documents/ReferralDocumentViewer";
 import HealthHistorySection from "../components/patient/HealthHistorySection";
 import MedicationManagementSection from "../components/patient/MedicationManagementSection";
+import MedicationManager from "../components/medication/MedicationManager";
 import ClinicalEventsTimeline from "../components/patient/ClinicalEventsTimeline";
 import DocumentUploader from "../components/documents/DocumentUploader";
 import DocumentList from "../components/documents/DocumentList";
@@ -404,25 +405,14 @@ export default function PatientDetails() {
          <TabsContent value="health-history" className="space-y-6 mt-4">
            <Card>
              <CardHeader>
-               <CardTitle className="text-gray-900">Health History & Medications</CardTitle>
+               <CardTitle className="text-gray-900">Health History</CardTitle>
              </CardHeader>
              <CardContent className="space-y-6">
                <HealthHistorySection patient={patient} />
-               <div className="border-t border-gray-200 my-6" />
-               <MedicationBottleScanner
-                 onMedicationExtracted={(med) => {
-                   if (patient?.current_medications && patientId) {
-                     const updated = [...patient.current_medications, med];
-                     base44.entities.Patient.update(patientId, { current_medications: updated })
-                       .then(() => queryClient.invalidateQueries({ queryKey: ['patients'] }))
-                       .catch(err => console.error('Update failed:', err));
-                   }
-                 }}
-               />
-               <div className="border-t border-gray-200 my-6" />
-               <MedicationManagementSection patient={patient} />
              </CardContent>
            </Card>
+
+           <MedicationManager patientId={patientId} />
          </TabsContent>
 
         {/* Overview Tab */}
