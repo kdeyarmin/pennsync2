@@ -12,9 +12,13 @@ import FaxAddressBook from "./FaxAddressBook";
 import FaxSignaturePanel from "./FaxSignaturePanel";
 import FaxCoverSheetGenerator from "./FaxCoverSheetGenerator";
 
-export default function PhotoUploadFaxSender() {
+export default function PhotoUploadFaxSender({ prefilledData }) {
   const [uploadedImages, setUploadedImages] = useState([]);
-  const [toNumber, setToNumber] = useState("");
+  const [toNumber, setToNumber] = useState(prefilledData?.recipient_fax_number || "");
+
+  React.useEffect(() => {
+    if (prefilledData?.recipient_fax_number) setToNumber(prefilledData.recipient_fax_number);
+  }, [prefilledData]);
   const [isSending, setIsSending] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
