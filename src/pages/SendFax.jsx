@@ -38,6 +38,7 @@ export default function SendFax() {
                 { value: "upload",     Icon: Upload,        label: "Photo"     },
                 { value: "camera",     Icon: Smartphone,    label: "Camera"    },
                 { value: "documents",  Icon: FileText,      label: "Doc"       },
+                { value: "batch",      Icon: Layers,        label: "Batch"     },
                 { value: "templates",  Icon: BookTemplate,  label: "Templates" },
                 { value: "search",     Icon: Search,        label: "Search"    },
                 { value: "history",    Icon: History,       label: "History"   },
