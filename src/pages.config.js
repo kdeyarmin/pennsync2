@@ -48,7 +48,6 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import About from './pages/About';
-import Admin from './pages/Admin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
 import AdminUserSetup from './pages/AdminUserSetup';
@@ -66,7 +65,6 @@ import ComplianceDashboard from './pages/ComplianceDashboard';
 import ComplianceRegulatory from './pages/ComplianceRegulatory';
 import CustomizableDashboard from './pages/CustomizableDashboard';
 import Dashboard from './pages/Dashboard';
-import DocumentGenerator from './pages/DocumentGenerator';
 import DocumentHub from './pages/DocumentHub';
 import DocumentIngestion from './pages/DocumentIngestion';
 import DocumentManagement from './pages/DocumentManagement';
@@ -89,7 +87,6 @@ import NurseEducationVideos from './pages/NurseEducationVideos';
 import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
 import NurseTraining from './pages/NurseTraining';
 import NurseTrainingHub from './pages/NurseTrainingHub';
-import OASIS from './pages/OASIS';
 import OASISAnalyticsDashboard from './pages/OASISAnalyticsDashboard';
 import OASISAnalyzer from './pages/OASISAnalyzer';
 import OASISAuditDashboard from './pages/OASISAuditDashboard';
@@ -124,7 +121,6 @@ import SendFax from './pages/SendFax';
 import SignDocument from './pages/SignDocument';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import SmartOASISAssessment from './pages/SmartOASISAssessment';
-import StaffTraining from './pages/StaffTraining';
 import StaffTrainingHub from './pages/StaffTrainingHub';
 import Support from './pages/Support';
 import SystemJobMonitor from './pages/SystemJobMonitor';
@@ -143,7 +139,6 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "About": About,
-    "Admin": Admin,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
     "AdminUserSetup": AdminUserSetup,
@@ -161,7 +156,6 @@ export const PAGES = {
     "ComplianceRegulatory": ComplianceRegulatory,
     "CustomizableDashboard": CustomizableDashboard,
     "Dashboard": Dashboard,
-    "DocumentGenerator": DocumentGenerator,
     "DocumentHub": DocumentHub,
     "DocumentIngestion": DocumentIngestion,
     "DocumentManagement": DocumentManagement,
@@ -184,7 +178,6 @@ export const PAGES = {
     "NursePerformanceDashboard": NursePerformanceDashboard,
     "NurseTraining": NurseTraining,
     "NurseTrainingHub": NurseTrainingHub,
-    "OASIS": OASIS,
     "OASISAnalyticsDashboard": OASISAnalyticsDashboard,
     "OASISAnalyzer": OASISAnalyzer,
     "OASISAuditDashboard": OASISAuditDashboard,
@@ -219,7 +212,6 @@ export const PAGES = {
     "SignDocument": SignDocument,
     "SmartNoteAssistant": SmartNoteAssistant,
     "SmartOASISAssessment": SmartOASISAssessment,
-    "StaffTraining": StaffTraining,
     "StaffTrainingHub": StaffTrainingHub,
     "Support": Support,
     "SystemJobMonitor": SystemJobMonitor,
