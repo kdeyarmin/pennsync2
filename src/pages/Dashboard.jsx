@@ -294,17 +294,10 @@ export default function Dashboard() {
         </div>
 
         {/* Top Clinical Templates */}
-        <div className="mb-6">
-          <TopTemplatesWidget />
-        </div>
-
-
-
-        {/* Offline Data Manager */}
-        <div className="mb-6">
-          <OfflineDataManager />
-        </div>
-      </Suspense>
+         <div className="mb-6">
+           <TopTemplatesWidget />
+         </div>
+        </Suspense>
 
     </div>
     </PullToRefresh>
