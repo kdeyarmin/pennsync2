@@ -77,67 +77,69 @@ Deno.serve(async (req) => {
             pages: faxData.page_count || faxLog.pages
           };
           break;
-        case 'fax.failed':
-          updateData = { 
-            status: 'failed',
-            failure_reason: faxData.failure_reason || 'Unknown error'
-          };
+        case 'fax.failed': {
+          // Exponential backoff schedule: attempt 0→5min, 1→15min, 2→60min, 3→exhausted
+          const BACKOFF_MINUTES = [5, 15, 60];
+          const retryCount = faxLog.retry_count || 0;
+          if (retryCount < BACKOFF_MINUTES.length) {
+            const delayMs = BACKOFF_MINUTES[retryCount] * 60 * 1000;
+            const nextRetryAt = new Date(Date.now() + delayMs).toISOString();
+            updateData = {
+              status: 'failed',
+              failure_reason: faxData.failure_reason || 'Unknown error',
+              next_retry_at: nextRetryAt,
+              retry_count: retryCount + 1
+            };
+            console.log(`Fax ${faxLog.id} failed — retry ${retryCount + 1} scheduled at ${nextRetryAt}`);
+          } else {
+            // All retries exhausted — mark final
+            updateData = {
+              status: 'failed',
+              failure_reason: faxData.failure_reason || 'Unknown error',
+              next_retry_at: null,
+              final_failure_notified: false // autoRetryFailedFaxes will pick this up and notify
+            };
+          }
           break;
+        }
       }
       
       if (Object.keys(updateData).length > 0) {
         await base44.asServiceRole.entities.FaxLog.update(faxLog.id, updateData);
-        
-        // If failed, trigger auto-retry system
-        if (updateData.status === 'failed') {
-          try {
-            base44.functions.invoke('autoRetryFailedFaxes', {}).catch(err => 
-              console.error('Auto-retry trigger failed:', err)
-            );
-          } catch (error) {
-            console.error('Failed to trigger auto-retry:', error);
-          }
-        }
 
-        // Send real-time in-app notification for status change
+        // Notify user only on successful delivery (not on failure — retry system handles that)
         if (faxLog.sent_by) {
-          try {
-            await base44.asServiceRole.entities.Notification.create({
-              user_email: faxLog.sent_by,
-              title: `Fax ${updateData.status}`,
-              message: `Your fax to ${faxLog.to_number} is now ${updateData.status}`,
-              type: updateData.status === 'delivered' ? 'success' : updateData.status === 'failed' ? 'error' : 'info',
-              is_read: false,
-              action_url: `/send-fax?fax_id=${faxLog.id}`
-            });
-          } catch (notifError) {
-            console.error('Failed to create notification:', notifError);
-          }
+          if (updateData.status === 'delivered') {
+            const docName = faxLog.document_name || 'your document';
+            const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
 
-          // Send email alert on terminal statuses (delivered or failed)
-          if (updateData.status === 'delivered' || updateData.status === 'failed') {
+            // In-app notification
             try {
-              const isDelivered = updateData.status === 'delivered';
-              const docName = faxLog.document_name || 'your document';
-              const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
+              await base44.asServiceRole.entities.Notification.create({
+                user_email: faxLog.sent_by,
+                title: '✅ Fax Delivered',
+                message: `"${docName}" was successfully delivered to ${recipient}`,
+                type: 'success',
+                is_read: false,
+                action_url: `/send-fax?fax_id=${faxLog.id}`
+              });
+            } catch (e) {
+              console.error('Failed to create notification:', e.message);
+            }
 
-              const subject = isDelivered
-                ? `✅ Fax Delivered Successfully`
-                : `❌ Fax Delivery Failed`;
-
-              const body = isDelivered
-                ? `Your fax has been successfully delivered.\n\nDocument: ${docName}\nRecipient: ${recipient}\nPages: ${faxLog.pages || 'N/A'}\nTime: ${new Date().toLocaleString()}\n\nNo further action is required.`
-                : `Your fax could not be delivered after all retry attempts.\n\nDocument: ${docName}\nRecipient: ${recipient}\nReason: ${updateData.failure_reason || 'Unknown error'}\nTime: ${new Date().toLocaleString()}\n\nPlease check the recipient fax number and try again from the Fax Center.`;
-
+            // Email confirmation
+            try {
               await base44.asServiceRole.integrations.Core.SendEmail({
                 to: faxLog.sent_by,
-                subject,
-                body
+                subject: '✅ Fax Delivered Successfully',
+                body: `Your fax has been successfully delivered.\n\nDocument: ${docName}\nRecipient: ${recipient}\nPages: ${faxLog.pages || 'N/A'}\nTime: ${new Date().toLocaleString()}\n\nNo further action is required.`
               });
-            } catch (emailErr) {
-              console.error('Failed to send email alert:', emailErr);
+            } catch (e) {
+              console.error('Failed to send delivery email:', e.message);
             }
           }
+          // Failure notifications are intentionally suppressed here.
+          // The autoRetryFailedFaxes scheduler will send ONE final notification only after all retries fail.
         }
       }
     }
