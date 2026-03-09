@@ -30,7 +30,8 @@ import {
   AlertCircle,
   CheckSquare,
   Mic,
-  BookUser
+  BookUser,
+  Video
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
