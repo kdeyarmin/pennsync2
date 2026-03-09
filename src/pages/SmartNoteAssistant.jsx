@@ -439,10 +439,31 @@ Return ONLY the final note text.`
 
   const copy = async () => { await navigator.clipboard.writeText(finalNote); setCopied(true); setTimeout(() => setCopied(false), 2500); };
 
+  const generateTasksFromNote = async (noteText, visitId) => {
+    if (!noteText || generatingTasks) return;
+    setGeneratingTasks(true);
+    try {
+      const result = await generateFollowUpTasks({
+        noteText,
+        patientId: patientId || undefined,
+        visitId: visitId || undefined,
+        visitType,
+        diagnosis: patient?.primary_diagnosis || "",
+      });
+      if (result?.data?.tasks?.length) {
+        setFollowUpTasks(result.data.tasks);
+      }
+    } catch (err) {
+      console.error("Failed to generate follow-up tasks:", err);
+    } finally {
+      setGeneratingTasks(false);
+    }
+  };
+
   const reset = () => {
     setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set());
     setAnswers({}); setFinalNote(""); setStep(1); setNoteSections(null); setDraftRestored(false);
-    setSignatureImage(null);
+    setSignatureImage(null); setFollowUpTasks([]);
     localStorage.removeItem(DRAFT_KEY);
     localStorage.removeItem(ANALYSIS_KEY);
     localStorage.removeItem("smart_note_final_v1");
