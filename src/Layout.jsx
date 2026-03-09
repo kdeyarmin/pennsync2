@@ -184,7 +184,8 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Patients", icon: Users, page: "Patients" },
         { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
-      { name: "Plan Builder", icon: Target, page: "CarePlanBuilder" }
+      { name: "Plan Builder", icon: Target, page: "CarePlanBuilder" },
+      { name: "OASIS Assessment", icon: Brain, page: "SmartOASISAssessment" }
       ]
     },
     {
