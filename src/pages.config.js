@@ -56,6 +56,7 @@ import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
+import CarePlanBuilder from './pages/CarePlanBuilder';
 import CarePlanManagement from './pages/CarePlanManagement';
 import ClinicalInsightsDashboard from './pages/ClinicalInsightsDashboard';
 import ClinicalLibrary from './pages/ClinicalLibrary';
@@ -135,7 +136,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import CarePlanBuilder from './pages/CarePlanBuilder';
+import SmartOASISAssessment from './pages/SmartOASISAssessment';
 import __Layout from './Layout.jsx';
 
 
@@ -149,6 +150,7 @@ export const PAGES = {
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
     "AutomaticCarePlans": AutomaticCarePlans,
+    "CarePlanBuilder": CarePlanBuilder,
     "CarePlanManagement": CarePlanManagement,
     "ClinicalInsightsDashboard": ClinicalInsightsDashboard,
     "ClinicalLibrary": ClinicalLibrary,
@@ -228,7 +230,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "CarePlanBuilder": CarePlanBuilder,
+    "SmartOASISAssessment": SmartOASISAssessment,
 }
 
 export const pagesConfig = {
