@@ -144,9 +144,11 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
   const applyStatusChange = (id, status, reason) => {
     setMedications(prev => prev.map(m => {
       if (m._id !== id) return m;
-      const update = { ...m, status };
-      if (status === "held")         update.hold_reason = reason;
-      if (status === "discontinued") update.dc_reason   = reason;
+      const resolvedStatus = status || m._pendingStatus || "active";
+      const update = { ...m, status: resolvedStatus };
+      if (resolvedStatus === "held")         update.hold_reason = reason;
+      if (resolvedStatus === "discontinued") update.dc_reason   = reason;
+      delete update._pendingStatus;
       return update;
     }));
     setEditingId(null);
