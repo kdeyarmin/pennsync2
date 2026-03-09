@@ -46,7 +46,6 @@ Deno.serve(async (req) => {
         ...(invitation.credentials ? { credentials: invitation.credentials } : {})
       });
 
-      await base44.asServiceRole.users.verifyUser(user.id);
 
       // Mark invitation accepted
       await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {

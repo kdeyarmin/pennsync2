@@ -35,8 +35,6 @@ Deno.serve(async (req) => {
           is_approved: true
         });
 
-        await base44.asServiceRole.users.verifyUser(user.id);
-
         // Delete the invitation instead of updating it
         await base44.asServiceRole.entities.UserInvitation.delete(invitation.id);
 
