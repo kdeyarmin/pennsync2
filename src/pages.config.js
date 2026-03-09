@@ -107,6 +107,7 @@ import PatientDataManagement from './pages/PatientDataManagement';
 import PatientDetails from './pages/PatientDetails';
 import PatientEducation from './pages/PatientEducation';
 import PatientEducationHub from './pages/PatientEducationHub';
+import PatientEducationPortal from './pages/PatientEducationPortal';
 import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
@@ -137,7 +138,6 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import PatientEducationPortal from './pages/PatientEducationPortal';
 import __Layout from './Layout.jsx';
 
 
@@ -202,6 +202,7 @@ export const PAGES = {
     "PatientDetails": PatientDetails,
     "PatientEducation": PatientEducation,
     "PatientEducationHub": PatientEducationHub,
+    "PatientEducationPortal": PatientEducationPortal,
     "PatientRecordDashboard": PatientRecordDashboard,
     "Patients": Patients,
     "PredictiveAnalytics": PredictiveAnalytics,
@@ -232,7 +233,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "PatientEducationPortal": PatientEducationPortal,
 }
 
 export const pagesConfig = {
