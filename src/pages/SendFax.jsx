@@ -30,15 +30,16 @@ export default function SendFax() {
           </p>
         </div>
 
-        <Tabs defaultValue="upload" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-1 scrollbar-hide">
             <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
               {[
-                { value: "upload",    Icon: Upload,     label: "Photo"   },
-                { value: "camera",    Icon: Smartphone, label: "Camera"  },
-                { value: "documents", Icon: FileText,   label: "Doc"     },
-                { value: "search",    Icon: Search,     label: "Search"  },
-                { value: "history",   Icon: History,    label: "History" },
+                { value: "upload",     Icon: Upload,        label: "Photo"     },
+                { value: "camera",     Icon: Smartphone,    label: "Camera"    },
+                { value: "documents",  Icon: FileText,      label: "Doc"       },
+                { value: "templates",  Icon: BookTemplate,  label: "Templates" },
+                { value: "search",     Icon: Search,        label: "Search"    },
+                { value: "history",    Icon: History,       label: "History"   },
               ].map(({ value, Icon, label }) => (
                 <TabsTrigger key={value} value={value} className="flex flex-col sm:flex-row items-center gap-1 px-3 py-2 min-h-[52px] sm:min-h-[44px] min-w-[60px] sm:min-w-0 text-xs sm:text-sm whitespace-nowrap">
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -49,7 +50,7 @@ export default function SendFax() {
           </div>
 
           <TabsContent value="upload" className="mt-4 sm:mt-6">
-            <PhotoUploadFaxSender />
+            <PhotoUploadFaxSender prefilledData={prefilledData} />
           </TabsContent>
 
           <TabsContent value="camera" className="mt-4 sm:mt-6">
@@ -57,7 +58,11 @@ export default function SendFax() {
           </TabsContent>
 
           <TabsContent value="documents" className="mt-4 sm:mt-6">
-            <DocumentFaxSender />
+            <DocumentFaxSender prefilledData={prefilledData} />
+          </TabsContent>
+
+          <TabsContent value="templates" className="mt-4 sm:mt-6">
+            <FaxTemplateManager onApplyTemplate={handleApplyTemplate} />
           </TabsContent>
 
           <TabsContent value="search" className="mt-4 sm:mt-6">
