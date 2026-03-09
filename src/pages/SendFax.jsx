@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, FileText, History, Search, Upload, BookTemplate } from "lucide-react";
+import { Smartphone, FileText, History, Search, Upload, BookTemplate, Layers } from "lucide-react";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
 import DocumentFaxSender from "../components/fax/DocumentFaxSender";
 import PhotoUploadFaxSender from "../components/fax/PhotoUploadFaxSender";
 import EnhancedFaxHistory from "../components/fax/EnhancedFaxHistory";
 import FaxSearchInterface from "../components/fax/FaxSearchInterface";
 import FaxTemplateManager from "../components/fax/FaxTemplateManager";
+import BatchFaxSender from "../components/fax/BatchFaxSender";
 
 export default function SendFax() {
   const [activeTab, setActiveTab] = useState("upload");
