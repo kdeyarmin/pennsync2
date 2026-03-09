@@ -126,6 +126,7 @@ import StaffTrainingHub from './pages/StaffTrainingHub';
 import Support from './pages/Support';
 import SystemJobMonitor from './pages/SystemJobMonitor';
 import SystemMonitoring from './pages/SystemMonitoring';
+import Telehealth from './pages/Telehealth';
 import TemplateLibrary from './pages/TemplateLibrary';
 import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
@@ -134,7 +135,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import Telehealth from './pages/Telehealth';
+import CarePlanBuilder from './pages/CarePlanBuilder';
 import __Layout from './Layout.jsx';
 
 
@@ -218,6 +219,7 @@ export const PAGES = {
     "Support": Support,
     "SystemJobMonitor": SystemJobMonitor,
     "SystemMonitoring": SystemMonitoring,
+    "Telehealth": Telehealth,
     "TemplateLibrary": TemplateLibrary,
     "TrainingManagement": TrainingManagement,
     "UserActivityLog": UserActivityLog,
@@ -226,7 +228,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "Telehealth": Telehealth,
+    "CarePlanBuilder": CarePlanBuilder,
 }
 
 export const pagesConfig = {
