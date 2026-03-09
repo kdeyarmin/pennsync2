@@ -2,10 +2,9 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2,
-  Loader2, AlertCircle, Brain, ArrowRight, ChevronRight, Activity
+  Loader2, AlertCircle, Brain, Activity
 } from "lucide-react";
 import { toast } from "sonner";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
@@ -446,8 +445,6 @@ export default function SmartOASISAssessment() {
 
   const answeredTotal = Object.values(answers).filter(v => v !== "" && v !== undefined).length;
   const totalQuestions = OASIS_SECTIONS.reduce((sum, s) => sum + s.questions.length, 0);
-
-  const existingCarePlanInterventionNames = new Set(existingCarePlans.map(p => p.problem));
 
   const handleAddToCarePlan = async (interventionIds) => {
     if (!selectedPatientId) { toast.error("Please select a patient first."); return; }
