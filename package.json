@@ -80,7 +80,8 @@
     "date-fns-tz": "^3.2.0",
     "react-signature-canvas": "^1.0.6",
     "pdfjs-dist": "^3.11.174",
-    "@floating-ui/core": "^1.6.1"
+    "@floating-ui/core": "^1.6.1",
+    "twilio-video": "^2.28.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
