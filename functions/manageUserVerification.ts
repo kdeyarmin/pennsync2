@@ -23,6 +23,28 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'raw_resend') {
+      const config = base44.getConfig();
+      const response = await fetch(`${config.serverUrl}/apps/${config.appId}/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const result = await response.json();
+      return Response.json({ success: response.ok, action, status: response.status, result });
+    }
+
+    if (action === 'raw_verify') {
+      const config = base44.getConfig();
+      const response = await fetch(`${config.serverUrl}/apps/${config.appId}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp_code: otp })
+      });
+      const result = await response.json();
+      return Response.json({ success: response.ok, action, status: response.status, result });
+    }
+
     if (action === 'resend') {
       const result = await base44.auth.resendOtp(email);
       return Response.json({ success: true, action, result });
