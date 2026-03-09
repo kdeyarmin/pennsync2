@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
     if (action === 'raw_resend') {
       const config = base44.getConfig();
-      const response = await fetch(`${config.serverUrl}/apps/${config.appId}/auth/resend-otp`, {
+      const response = await fetch(`${config.serverUrl}/api/apps/${config.appId}/auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
