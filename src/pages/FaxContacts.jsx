@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import AIContactExtractor from "../components/fax/AIContactExtractor";
 
 export default function FaxContactsPage() {
   const [searchTerm, setSearchTerm] = useState("");
