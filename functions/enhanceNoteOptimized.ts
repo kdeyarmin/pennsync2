@@ -241,6 +241,7 @@ Return a JSON object with:
     const [roughComplianceResult, enhancementResult] = await Promise.all([
       base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: complianceCheckPrompt,
+        model: "gpt_5_4",
         response_json_schema: {
           type: "object",
           properties: {
@@ -253,6 +254,7 @@ Return a JSON object with:
       }),
       base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: noteEnhancementPrompt,
+        model: "gpt_5_4",
         response_json_schema: {
           type: "object",
           properties: {
@@ -267,6 +269,7 @@ Return a JSON object with:
 
     // Run enhanced note compliance check with Claude 3.5 Sonnet
     const enhancedComplianceResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      model: "gpt_5_4",
       prompt: `Audit this enhanced home health nursing note for Medicare compliance per 42 CFR 484.
 
 VISIT TYPE: ${visitType}

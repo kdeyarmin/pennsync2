@@ -83,6 +83,7 @@ async function enhanceNote(base44, user, params) {
   // Parallel compliance check and enhancement
   const [roughComplianceResult, enhancementResult] = await Promise.all([
     base44.asServiceRole.integrations.Core.InvokeLLM({
+      model: "gpt_5_4",
       prompt: `Analyze rough note for MEDICARE HOME HEALTH compliance per 42 CFR 484.
 
 ${contextPrompt}
@@ -109,6 +110,7 @@ Return JSON with compliance_score (0-100), missing_elements array, and specific_
       }
     }),
     base44.asServiceRole.integrations.Core.InvokeLLM({
+      model: "gpt_5_4",
       prompt: `Transform rough notes into MEDICARE HOME HEALTH COMPLIANT clinical narrative per 42 CFR 484 and CMS Conditions of Participation.
 
 ${contextPrompt}
@@ -200,6 +202,7 @@ Return comprehensive Medicare-compliant note that would pass CMS audit. Make med
 
   // Check enhanced compliance
   const enhancedComplianceResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    model: "gpt_5_4",
     prompt: `Analyze enhanced note for compliance.
 
 ENHANCED NOTE:
@@ -258,6 +261,7 @@ Return compliance_score and compliant_elements.`,
   if (autoExtractEvents && patientId) {
     try {
       const eventsResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        model: "gpt_5_4",
         prompt: `Analyze this clinical note and extract ALL significant clinical events. Be thorough and specific.
 
 ENHANCED NOTE:
@@ -360,6 +364,7 @@ async function transcribeAudio(base44, user, params) {
 
   // Extract structured clinical data
   const structuredData = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    model: "gpt_5_4",
     prompt: `Extract structured clinical information from this transcript.
 
 ${patientContext ? `Patient Context: ${patientContext}\n\n` : ''}Transcript:
@@ -387,6 +392,7 @@ Extract: Chief Complaint, HPI, Vital Signs, Assessment, Medications, Allergies, 
 
   // Generate clinical narrative
   const clinicalNarrative = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    model: "gpt_5_4",
     prompt: `Generate a Medicare-compliant clinical narrative from this data:
 
 ${JSON.stringify(structuredData, null, 2)}
@@ -423,6 +429,7 @@ async function extractEventsFromNote(base44, user, params) {
   }
 
   const result = await base44.integrations.Core.InvokeLLM({
+    model: "gpt_5_4",
     prompt: `Extract ALL significant clinical events from this note.
 
 ${nurse_notes}
