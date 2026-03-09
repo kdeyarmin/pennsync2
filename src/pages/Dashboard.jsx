@@ -12,7 +12,6 @@ import PullToRefresh from "../components/mobile/PullToRefresh";
 
 
 // Critical above-the-fold — eager loaded
-import ComplianceAlertNotifications from "../components/alerts/ComplianceAlertNotifications";
 import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
 import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSupport";
 import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
