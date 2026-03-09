@@ -72,10 +72,10 @@ export default function Layout({ children, currentPageName }) {
   const { data: allActiveAlerts = [] } = useQuery({
     queryKey: ['active-alerts', currentUser?.email],
     queryFn: () => base44.entities.PatientAlert.filter({ status: 'active', created_by: currentUser?.email }, '-created_date', 50),
-    initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email,
+    initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email && currentUser?.role !== 'admin',
   });
 
-  const activeAlerts = useMemo(() => allActiveAlerts, [allActiveAlerts]);
+  const activeAlerts = useMemo(() => isAdmin ? [] : allActiveAlerts, [allActiveAlerts, isAdmin]);
 
   const { data: pendingTasks = [] } = useQuery({
     queryKey: ['pending-tasks', currentUser?.email],
