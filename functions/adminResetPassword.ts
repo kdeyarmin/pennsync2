@@ -10,10 +10,18 @@ Deno.serve(async (req) => {
     }
 
     // Generate temp password
-    const tempPassword = Math.random().toString(36).slice(-6) + Math.random().toString(36).slice(-4).toUpperCase() + Math.floor(Math.random() * 90 + 10);
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let tempPassword = '';
+    for (let i = 0; i < 10; i++) tempPassword += chars[Math.floor(Math.random() * chars.length)];
 
-    // Reset the password
-    await base44.asServiceRole.auth.updateUserPassword(userEmail, tempPassword);
+    // Update user password via users API
+    const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
+    if (!users || users.length === 0) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Use base44 users API to reset
+    await base44.asServiceRole.users.resetPassword(userEmail, tempPassword);
 
     const appUrl = `https://hub.base44.app/apps/68ee80d98929370f9e8f2932`;
 
