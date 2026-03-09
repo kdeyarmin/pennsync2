@@ -190,7 +190,8 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
         { name: "Send a Fax", icon: BookUser, page: "SendFax" },
-        { name: "Fax Dashboard", icon: BarChart3, page: "FaxDashboard" }
+        { name: "Fax Dashboard", icon: BarChart3, page: "FaxDashboard" },
+        { name: "Telehealth", icon: Video, page: "Telehealth" }
       ]
     },
     {
