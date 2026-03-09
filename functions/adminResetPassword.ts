@@ -9,38 +9,32 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'userEmail is required' }, { status: 400 });
     }
 
-    // Generate temp password
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let tempPassword = '';
-    for (let i = 0; i < 10; i++) tempPassword += chars[Math.floor(Math.random() * chars.length)];
-
-    // Update user password via users API
     const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
     if (!users || users.length === 0) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
+    const targetUser = users[0];
 
-    // Use base44 users API to reset
-    await base44.asServiceRole.users.resetPassword(userEmail, tempPassword);
+    // Re-invite the user — this sends them a fresh link to set/reset their password
+    await base44.users.inviteUser(userEmail, targetUser.role || 'user');
 
     const appUrl = `https://hub.base44.app/apps/68ee80d98929370f9e8f2932`;
 
-    // Send email
+    // Also send a clear email with login details
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: userEmail,
       from_name: 'Penn Sync',
-      subject: 'Your Penn Sync Login Credentials',
-      body: `Hello,
+      subject: 'Penn Sync — Your Account Access',
+      body: `Hello ${targetUser.full_name || userEmail},
 
-Your password has been reset by an administrator. Here are your login details:
+An administrator has reset your account access for Penn Sync.
+
+You should receive a separate email shortly with a link to set your password. Once set, use the details below to log in:
 
 🔗 Login URL: ${appUrl}
 👤 Username / Email: ${userEmail}
-🔑 Temporary Password: ${tempPassword}
 
-Please log in and update your password at your earliest convenience.
-
-If you have any questions, please contact your administrator.
+If you do not receive the password setup email within a few minutes, please check your spam folder or contact your administrator.
 
 Best regards,
 Penn Sync Team`
@@ -48,8 +42,7 @@ Penn Sync Team`
 
     return Response.json({
       success: true,
-      message: `Password reset and email sent to ${userEmail}`,
-      tempPassword
+      message: `Password reset invite and login instructions sent to ${userEmail}`
     });
 
   } catch (error) {
