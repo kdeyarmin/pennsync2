@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
@@ -34,6 +34,8 @@ Deno.serve(async (req) => {
           credentials: invitation.credentials,
           is_approved: true
         });
+
+        await base44.asServiceRole.users.verifyUser(user.id);
 
         // Delete the invitation instead of updating it
         await base44.asServiceRole.entities.UserInvitation.delete(invitation.id);

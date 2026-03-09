@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 
       console.log('Found stuck user, auto-approving:', user.email);
 
-      // Auto-approve
+      // Auto-approve and mark auth as verified
       await base44.asServiceRole.entities.User.update(user.id, {
         is_approved: true,
         role: invitation.role || 'user',
@@ -45,6 +45,8 @@ Deno.serve(async (req) => {
         ...(invitation.phone ? { phone: invitation.phone } : {}),
         ...(invitation.credentials ? { credentials: invitation.credentials } : {})
       });
+
+      await base44.asServiceRole.users.verifyUser(user.id);
 
       // Mark invitation accepted
       await base44.asServiceRole.entities.UserInvitation.update(invitation.id, {
