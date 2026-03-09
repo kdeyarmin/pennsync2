@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     if (action === 'verify') {
       try {
-        const result = await base44.auth.verifyOtp(email, otp);
+        const result = await base44.auth.verifyOtp({ email, otpCode: otp });
         return Response.json({ success: true, action, result });
       } catch (error) {
         return Response.json({
