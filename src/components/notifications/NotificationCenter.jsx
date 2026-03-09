@@ -31,7 +31,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
   const queryClient = useQueryClient();
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  const { data: notifications = [] } = useQuery({
+  const { data: notificationEntities = [] } = useQuery({
     queryKey: ['notifications', currentUser?.email],
     queryFn: () => base44.entities.Notification.filter(
       { user_email: currentUser?.email },
@@ -40,8 +40,78 @@ export default function NotificationCenter({ currentUser, onClose }) {
     ),
     initialData: [],
     enabled: !!currentUser?.email,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
+
+  const { data: inAppNotifications = [] } = useQuery({
+    queryKey: ['inAppNotifications', currentUser?.email],
+    queryFn: () => base44.entities.Notification.filter(
+      { user_email: currentUser?.email },
+      '-created_date',
+      100
+    ),
+    initialData: [],
+    enabled: !!currentUser?.email,
+    refetchInterval: 30000,
+  });
+
+  const { data: activeAlerts = [] } = useQuery({
+    queryKey: ['active-alerts-nc'],
+    queryFn: () => base44.entities.PatientAlert.filter(
+      { status: 'active' },
+      '-created_date',
+      50
+    ),
+    initialData: [],
+    refetchInterval: 60000,
+    enabled: !!currentUser?.favorited_patients?.length,
+  });
+
+  const { data: pendingTasks = [] } = useQuery({
+    queryKey: ['pending-tasks-nc', currentUser?.email],
+    queryFn: () => base44.entities.Task.filter(
+      { status: 'pending', assigned_to: currentUser?.email },
+      '-created_date',
+      50
+    ),
+    initialData: [],
+    refetchInterval: 60000,
+    enabled: !!currentUser?.email,
+  });
+
+  // Combine all notifications
+  const combinedNotifications = [
+    ...notificationEntities,
+    ...inAppNotifications.map(n => ({
+      id: n.id,
+      type: 'notification',
+      title: 'Notification',
+      message: n.message || n.title,
+      created_date: n.created_date,
+      is_read: n.is_read,
+      priority: 'medium'
+    })),
+    ...activeAlerts.map(a => ({
+      id: a.id,
+      type: 'patient_alert',
+      title: 'Patient Alert',
+      message: a.message || a.description,
+      created_date: a.created_date,
+      is_read: false,
+      priority: a.severity || 'high'
+    })),
+    ...pendingTasks.map(t => ({
+      id: t.id,
+      type: 'task_assigned',
+      title: t.title || 'Task Assigned',
+      message: t.description,
+      created_date: t.created_date,
+      is_read: false,
+      priority: 'medium'
+    }))
+  ].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+
+  const notifications = combinedNotifications;
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.update(notificationId, {
