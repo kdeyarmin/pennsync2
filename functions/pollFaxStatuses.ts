@@ -4,16 +4,19 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Get all pending/sending faxes
+    // Only poll faxes from the last 48 hours that are still pending
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    
     const pendingFaxes = await base44.asServiceRole.entities.FaxLog.filter(
-      { 
-        status: { $in: ['queued', 'sending'] }
-      },
+      { status: { $in: ['queued', 'sending'] } },
       '-created_date',
-      100
+      20  // Small batch to avoid CPU limit
     );
 
-    if (pendingFaxes.length === 0) {
+    // Filter to only recent faxes and those with a Twilio ID
+    const faxesToCheck = pendingFaxes.filter(f => f.telnyx_fax_id && f.created_date > cutoff);
+
+    if (faxesToCheck.length === 0) {
       return Response.json({ success: true, checked: 0, updated: 0 });
     }
 
@@ -27,66 +30,45 @@ Deno.serve(async (req) => {
     const auth = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
     let updated = 0;
 
-    // Check status of each fax
-    for (const fax of pendingFaxes) {
-      if (!fax.telnyx_fax_id) continue; // Skip if no Twilio ID (might be stored differently)
-
+    // Process all faxes in parallel instead of sequentially
+    await Promise.all(faxesToCheck.map(async (fax) => {
       try {
-        // Twilio Fax API endpoint
         const response = await fetch(
           `https://fax.twilio.com/v1/Faxes/${fax.telnyx_fax_id}`,
-          {
-            headers: {
-              Authorization: `Basic ${auth}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
-          }
+          { headers: { Authorization: `Basic ${auth}` } }
         );
 
-        if (!response.ok) continue;
+        if (!response.ok) return;
 
         const faxData = await response.json();
         const newStatus = mapTwilioStatus(faxData.status);
 
-        // Only update if status changed
         if (newStatus !== fax.status) {
           await base44.asServiceRole.entities.FaxLog.update(fax.id, {
             status: newStatus,
             telnyx_fax_id: faxData.sid
           });
 
-          // Create notification for the user if sent/delivered/failed
-          if (['sent', 'delivered', 'failed'].includes(newStatus)) {
-            const notificationMessage = getNotificationMessage(newStatus, fax);
-            
-            if (fax.sent_by) {
-              await base44.asServiceRole.entities.Notification.create({
-                user_email: fax.sent_by,
-                type: newStatus === 'failed' ? 'error' : 'success',
-                title: newStatus === 'failed' ? 'Fax Failed' : 'Fax Status Update',
-                message: notificationMessage,
-                related_entity: 'FaxLog',
-                related_entity_id: fax.id,
-                is_read: false
-              }).catch(() => {
-                // Silently fail if notification creation fails
-              });
-            }
+          if (['sent', 'delivered', 'failed'].includes(newStatus) && fax.sent_by) {
+            await base44.asServiceRole.entities.Notification.create({
+              user_email: fax.sent_by,
+              type: newStatus === 'failed' ? 'error' : 'success',
+              title: newStatus === 'failed' ? 'Fax Failed' : 'Fax Status Update',
+              message: getNotificationMessage(newStatus, fax),
+              related_entity: 'FaxLog',
+              related_entity_id: fax.id,
+              is_read: false
+            }).catch(() => {});
           }
 
           updated++;
         }
       } catch (error) {
         console.error(`Error checking fax ${fax.id}:`, error.message);
-        // Continue with next fax
       }
-    }
+    }));
 
-    return Response.json({ 
-      success: true, 
-      checked: pendingFaxes.length, 
-      updated 
-    });
+    return Response.json({ success: true, checked: faxesToCheck.length, updated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
@@ -107,15 +89,10 @@ function mapTwilioStatus(twilioStatus) {
 function getNotificationMessage(status, fax) {
   const docName = fax.document_name || 'Document';
   const recipient = fax.to_name || fax.to_number;
-  
   switch (status) {
-    case 'sent':
-      return `Fax "${docName}" sent to ${recipient}`;
-    case 'delivered':
-      return `Fax "${docName}" delivered to ${recipient}`;
-    case 'failed':
-      return `Fax "${docName}" failed to ${recipient}. Reason: ${fax.failure_reason || 'Unknown'}`;
-    default:
-      return `Fax status updated to ${status}`;
+    case 'sent': return `Fax "${docName}" sent to ${recipient}`;
+    case 'delivered': return `Fax "${docName}" delivered to ${recipient}`;
+    case 'failed': return `Fax "${docName}" failed to ${recipient}. Reason: ${fax.failure_reason || 'Unknown'}`;
+    default: return `Fax status updated to ${status}`;
   }
 }
