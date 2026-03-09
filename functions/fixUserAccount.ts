@@ -8,15 +8,7 @@ Deno.serve(async (req) => {
     // Try entity update first
     const result = await base44.asServiceRole.entities.User.update(userId, updates);
 
-    // Also try force-verifying via users API
-    let verifyResult = null;
-    try {
-      verifyResult = await base44.asServiceRole.users.verifyUser(userId);
-    } catch(e) {
-      verifyResult = e.message;
-    }
-
-    return Response.json({ success: true, result, verifyResult });
+    return Response.json({ success: true, result });
   } catch (error) {
     console.error('fixUserAccount error:', error);
     return Response.json({ error: error.message }, { status: 500 });
