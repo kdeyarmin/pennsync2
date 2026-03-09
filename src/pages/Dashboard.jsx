@@ -25,7 +25,6 @@ const HighRiskPatientsWidget    = lazy(() => import("../components/dashboard/Hig
 const PendingReferralsWidget    = lazy(() => import("../components/referral/PendingReferralsWidget"));
 const RealTimePatientAlerts     = lazy(() => import("../components/dashboard/RealTimePatientAlerts"));
 const TopTemplatesWidget        = lazy(() => import("../components/clinical/TopTemplatesWidget"));
-const OfflineDataManager        = lazy(() => import("../components/mobile/OfflineDataManager"));
 
 
 export default function Dashboard() {
