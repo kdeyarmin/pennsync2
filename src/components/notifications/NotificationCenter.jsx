@@ -145,9 +145,9 @@ export default function NotificationCenter({ currentUser, onClose }) {
       case 'critical_alert':
         return <AlertCircle className="w-5 h-5 text-red-600" />;
       case 'patient_alert':
-        return <Users className="w-5 h-5 text-purple-600" />;
+        return <AlertCircle className="w-5 h-5 text-purple-600" />;
       case 'task_assigned':
-        return <CheckCheck className="w-5 h-5 text-green-600" />;
+        return <Check className="w-5 h-5 text-green-600" />;
       case 'training_due':
         return <GraduationCap className="w-5 h-5 text-indigo-600" />;
       default:
