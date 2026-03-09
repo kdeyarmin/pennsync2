@@ -80,10 +80,16 @@ export default function VisitScribe() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="dictate">🎙️ Live Dictation</TabsTrigger>
             <TabsTrigger value="record">Record Visit</TabsTrigger>
             <TabsTrigger value="upload">Upload Audio</TabsTrigger>
           </TabsList>
+
+          {/* Live Dictation Tab */}
+          <TabsContent value="dictate" className="space-y-4">
+            <RealTimeDictationScribe currentUser={currentUser} />
+          </TabsContent>
 
           {/* Record Tab */}
           <TabsContent value="record" className="space-y-4">
