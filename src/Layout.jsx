@@ -69,10 +69,29 @@ export default function Layout({ children, currentPageName }) {
     initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email,
   });
 
+  // Fetch charted visits to filter alerts
+  const { data: chartedVisits = [] } = useQuery({
+    queryKey: ['my-charted-visits', currentUser?.email],
+    queryFn: () => base44.entities.Visit.filter(
+      { created_by: currentUser?.email },
+      '-visit_date',
+      500
+    ),
+    initialData: [],
+    enabled: !!currentUser?.email && currentUser?.role !== 'admin',
+  });
+
   const { data: allActiveAlerts = [] } = useQuery({
     queryKey: ['active-alerts', currentUser?.email],
-    queryFn: () => base44.entities.PatientAlert.filter({ status: 'active', created_by: currentUser?.email }, '-created_date', 50),
-    initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email && currentUser?.role !== 'admin',
+    queryFn: async () => {
+      const alerts = await base44.entities.PatientAlert.filter({ status: 'active' }, '-created_date', 50);
+      // Filter to only alerts for patients this clinician has charted on
+      const chartedPatientIds = new Set(chartedVisits.map(v => v.patient_id));
+      return alerts.filter(a => chartedPatientIds.has(a.patient_id));
+    },
+    initialData: [], 
+    refetchInterval: 60000, 
+    enabled: !!currentUser?.email && currentUser?.role !== 'admin' && chartedVisits.length > 0,
   });
 
   const activeAlerts = useMemo(() => isAdmin ? [] : allActiveAlerts, [allActiveAlerts, isAdmin]);
