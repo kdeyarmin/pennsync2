@@ -43,18 +43,6 @@ export default function NotificationCenter({ currentUser, onClose }) {
     refetchInterval: 30000,
   });
 
-  const { data: inAppNotifications = [] } = useQuery({
-    queryKey: ['inAppNotifications', currentUser?.email],
-    queryFn: () => base44.entities.Notification.filter(
-      { user_email: currentUser?.email },
-      '-created_date',
-      100
-    ),
-    initialData: [],
-    enabled: !!currentUser?.email,
-    refetchInterval: 30000,
-  });
-
   const { data: activeAlerts = [] } = useQuery({
     queryKey: ['active-alerts-nc'],
     queryFn: () => base44.entities.PatientAlert.filter(
