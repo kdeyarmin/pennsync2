@@ -261,8 +261,8 @@ export default function FaxAddressBook({ onSelectContact }) {
           </Card>
         ))}
         {filteredContacts.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-slate-500">
-            No contacts found. Add your first contact or upload a CSV file.
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-slate-500">
+            <p className="text-sm leading-relaxed break-words">No contacts found. Add your first contact or upload a CSV file.</p>
           </div>
         )}
       </div>
