@@ -183,7 +183,8 @@ export default function Layout({ children, currentPageName }) {
       category: "Patient Care",
       items: [
         { name: "Patients", icon: Users, page: "Patients" },
-        { name: "Care Plans", icon: Target, page: "CarePlanManagement" }
+        { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
+      { name: "Plan Builder", icon: Target, page: "CarePlanBuilder" }
       ]
     },
     {
