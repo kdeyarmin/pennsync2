@@ -5,9 +5,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     return Response.json({
+      rootKeys: Object.keys(base44 || {}),
+      authKeys: Object.keys(base44.auth || {}),
+      usersKeys: Object.keys(base44.users || {}),
       asServiceRoleKeys: Object.keys(base44.asServiceRole || {}),
-      authKeys: Object.keys(base44.asServiceRole?.auth || {}),
-      usersKeys: Object.keys(base44.asServiceRole?.users || {}),
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
