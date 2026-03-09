@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mic, Upload, Loader2, Check } from "lucide-react";
 import AudioRecorder from "../components/visit/AudioRecorder";
 import UnifiedDocumentReview from "../components/smartNote/UnifiedDocumentReview";
+import RealTimeDictationScribe from "../components/visit/RealTimeDictationScribe";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 
 export default function VisitScribe() {
