@@ -30,15 +30,19 @@ Deno.serve(async (req) => {
     // Update user password using service role
     await base44.asServiceRole.auth.updateUserPassword(userEmail, tempPassword);
 
+    const appUrl = `https://hub.base44.app/apps/68ee80d98929370f9e8f2932`;
+
     // Send email with temporary password
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: userEmail,
-      subject: 'Your Password Has Been Reset',
+      subject: 'Your Penn Sync Password Has Been Reset',
       body: `Hello ${targetUser.full_name || 'User'},
 
-Your password has been reset by an administrator.
+Your password has been reset by an administrator. Here are your login details:
 
-Your temporary password is: ${tempPassword}
+🔗 Login URL: ${appUrl}
+👤 Username: ${userEmail}
+🔑 Temporary Password: ${tempPassword}
 
 Please log in and change your password immediately for security purposes.
 
