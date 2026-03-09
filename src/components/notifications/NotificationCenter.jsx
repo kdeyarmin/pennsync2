@@ -69,15 +69,14 @@ export default function NotificationCenter({ currentUser, onClose }) {
 
   // Combine all notifications
   const combinedNotifications = [
-    ...notificationEntities,
-    ...inAppNotifications.map(n => ({
+    ...notificationEntities.map(n => ({
       id: n.id,
-      type: 'notification',
-      title: 'Notification',
+      type: n.type || 'notification',
+      title: n.title || 'Notification',
       message: n.message || n.title,
       created_date: n.created_date,
       is_read: n.is_read,
-      priority: 'medium'
+      priority: n.priority || 'medium'
     })),
     ...activeAlerts.map(a => ({
       id: a.id,
