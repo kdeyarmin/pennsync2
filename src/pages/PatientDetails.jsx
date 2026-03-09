@@ -67,6 +67,8 @@ import MedicationManagementSection from "../components/patient/MedicationManagem
 import ClinicalEventsTimeline from "../components/patient/ClinicalEventsTimeline";
 import DocumentUploader from "../components/documents/DocumentUploader";
 import DocumentList from "../components/documents/DocumentList";
+import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashboard";
+import MedicationBottleScanner from "../components/smartNote/MedicationBottleScanner";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -378,6 +380,7 @@ export default function PatientDetails() {
           <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
             {[
               { value: "overview",      label: "Overview"  },
+              { value: "vitals-trends", label: "Vitals"    },
               { value: "health-history",label: "History"   },
               { value: "clinical",      label: "Clinical"  },
               { value: "events",        label: "Events"    },
@@ -392,19 +395,34 @@ export default function PatientDetails() {
           </TabsList>
         </div>
 
+        {/* Vital Signs Trends Tab */}
+         <TabsContent value="vitals-trends" className="space-y-6 mt-4">
+           <VitalSignsTrendDashboard patientId={patientId} />
+         </TabsContent>
+
         {/* Health History Tab */}
-        <TabsContent value="health-history" className="space-y-6 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-gray-900">Health History & Medications</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <HealthHistorySection patient={patient} />
-              <div className="border-t border-gray-200 my-6" />
-              <MedicationManagementSection patient={patient} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+         <TabsContent value="health-history" className="space-y-6 mt-4">
+           <Card>
+             <CardHeader>
+               <CardTitle className="text-gray-900">Health History & Medications</CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-6">
+               <HealthHistorySection patient={patient} />
+               <div className="border-t border-gray-200 my-6" />
+               <MedicationBottleScanner
+                 onMedicationExtracted={(med) => {
+                   if (patient.current_medications) {
+                     const updated = [...patient.current_medications, med];
+                     base44.entities.Patient.update(patientId, { current_medications: updated });
+                     queryClient.invalidateQueries({ queryKey: ['patients'] });
+                   }
+                 }}
+               />
+               <div className="border-t border-gray-200 my-6" />
+               <MedicationManagementSection patient={patient} />
+             </CardContent>
+           </Card>
+         </TabsContent>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
