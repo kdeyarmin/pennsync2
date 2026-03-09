@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
       authKeys: Object.keys(base44.auth || {}),
       usersKeys: Object.keys(base44.users || {}),
       asServiceRoleKeys: Object.keys(base44.asServiceRole || {}),
+      sameInviteMethod: base44.auth?.inviteUser === base44.users?.inviteUser,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
