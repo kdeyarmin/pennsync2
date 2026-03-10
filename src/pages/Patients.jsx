@@ -426,9 +426,9 @@ export default function Patients() {
               <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
               <p className="text-gray-500 mb-6">
-                {searchTerm ? 'No patients match your search.' : 'Start by adding your first patient.'}
+                {filters.search ? 'No patients match your search.' : 'Start by adding your first patient.'}
               </p>
-              {!searchTerm && (
+              {!filters.search && (
                 <Button
                   onClick={() => setShowForm(true)}
                   className="bg-blue-600 hover:bg-blue-700 min-h-[44px]"
