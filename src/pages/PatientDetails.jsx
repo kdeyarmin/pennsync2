@@ -1043,7 +1043,7 @@ export default function PatientDetails() {
         onOpenChange={setIsDocumentUploaderOpen}
         onUploadComplete={() => {
           setIsDocumentUploaderOpen(false);
-          queryClient.invalidateQueries(['patient-documents', patientId]);
+          queryClient.invalidateQueries({ queryKey: ['patient-documents', patientId] });
         }}
       />
     </div>
