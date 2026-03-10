@@ -949,11 +949,6 @@ export default function PatientDetails() {
                   className="bg-purple-600 hover:bg-purple-700"
                   onClick={() => {
                     setShowOASISPrompt(false);
-                    // Scroll to AI Tools tab and switch to documentation
-                    document.querySelector('[value="ai-tools"]')?.click();
-                    setTimeout(() => {
-                      document.querySelector('[value="documentation"]')?.click();
-                    }, 100);
                   }}
                 >
                   <ClipboardList className="w-4 h-4 mr-1" />
