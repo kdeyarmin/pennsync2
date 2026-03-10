@@ -418,7 +418,7 @@ export default function Messages() {
               <label className="text-sm font-medium mb-1 block">Related Patient (Optional)</label>
               <Select
                 value={newMessage.patient_id || ""}
-                onValueChange={(value) => setNewMessage({...newMessage, patient_id: value})}
+                onValueChange={(value) => setNewMessage({...newMessage, patient_id: value || null})}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select patient" />
