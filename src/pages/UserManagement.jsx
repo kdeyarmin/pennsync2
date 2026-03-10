@@ -1076,7 +1076,7 @@ export default function UserManagement() {
             </div>
             <div>
               <Label htmlFor="staff_type">Staff Type (Optional)</Label>
-              <Select value={setupFormData.staff_type} onValueChange={(staff_type) => setSetupFormData({ ...setupFormData, staff_type })}>
+              <Select value={setupFormData.staff_type || ""} onValueChange={(staff_type) => setSetupFormData({ ...setupFormData, staff_type: staff_type || "" })}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select staff type" />
                 </SelectTrigger>
