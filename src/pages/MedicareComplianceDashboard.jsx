@@ -63,6 +63,12 @@ export default function MedicareComplianceDashboard() {
     queryFn: () => base44.auth.me(),
   });
 
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.list(),
+    initialData: [],
+  });
+
   const isAdmin = currentUser?.role === 'admin';
 
   // Filter audits by time range
