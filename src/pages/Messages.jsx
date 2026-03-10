@@ -42,6 +42,7 @@ export default function Messages() {
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterRead, setFilterRead] = useState("all");
+  const [replyText, setReplyText] = useState("");
   const [newMessage, setNewMessage] = useState({
     subject: "",
     message_text: "",
