@@ -79,14 +79,16 @@ export default function Patients() {
 
   const { data: allVisits = [] } = useQuery({
     queryKey: ['allVisits'],
-    queryFn: () => base44.entities.Visit.list(),
+    queryFn: () => base44.entities.Visit.list('-visit_date', 500),
     initialData: [],
+    staleTime: 300000,
   });
 
   const { data: allCarePlans = [] } = useQuery({
     queryKey: ['allCarePlans'],
-    queryFn: () => base44.entities.CarePlan.list(),
+    queryFn: () => base44.entities.CarePlan.list('-updated_date', 300),
     initialData: [],
+    staleTime: 300000,
   });
 
   // Fetch visits and care plans for summary dialog
