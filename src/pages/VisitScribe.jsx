@@ -44,8 +44,9 @@ export default function VisitScribe() {
       return result;
     },
     onSuccess: (data) => {
-      setTranscription(data.transcription || "");
-      setRoughNote(data.rough_note || data.transcription || "");
+      const result = data?.data || data;
+      setTranscription(result.transcription || "");
+      setRoughNote(result.rough_note || result.transcription || "");
       logActivity(ActivityActions.NOTE_AI_GENERATED, { page: 'VisitScribe', source: 'audio_recording' });
     },
   });
