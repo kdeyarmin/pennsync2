@@ -21,6 +21,7 @@ import {
 const STATUS_CONFIG = {
   queued: { icon: Clock, color: 'bg-yellow-100 text-yellow-800', label: 'Queued' },
   sending: { icon: Clock, color: 'bg-blue-100 text-blue-800', label: 'Sending' },
+  sent: { icon: CheckCircle, color: 'bg-teal-100 text-teal-800', label: 'Sent' },
   delivered: { icon: CheckCircle, color: 'bg-green-100 text-green-800', label: 'Delivered' },
   failed: { icon: AlertCircle, color: 'bg-red-100 text-red-800', label: 'Failed' },
   retried: { icon: RefreshCw, color: 'bg-orange-100 text-orange-800', label: 'Retried' }
@@ -181,6 +182,7 @@ export default function FaxDashboard() {
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="queued">Queued</SelectItem>
                 <SelectItem value="sending">Sending</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
                 <SelectItem value="retried">Retried</SelectItem>

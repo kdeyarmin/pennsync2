@@ -346,8 +346,8 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         setSelected(autoSelect);
         setStep(2);
         
-        // Auto-build if no critical findings or clarifications needed
-        if ((doc.findings || []).filter(f => f.needs_clarification).length === 0 && (doc.findings || []).filter(f => f.severity === "critical").length === 0) {
+        // Auto-build if no clarifications needed (critical findings are shown as warnings but don't block generation)
+        if ((doc.findings || []).filter(f => f.needs_clarification).length === 0) {
           setTimeout(() => autoBuild(doc, autoSelect), 800);
         }
       } catch (promiseErr) {
