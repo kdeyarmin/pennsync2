@@ -319,9 +319,9 @@ export default function Messages() {
                     {selectedThread.priority}
                   </Badge>
                 </CardTitle>
-                <Button size="sm" onClick={handleReply} className="min-h-[40px] w-full sm:w-auto">
+                <Button size="sm" onClick={handleReply} disabled={!replyText.trim() || sendMessageMutation.isPending} className="min-h-[40px] w-full sm:w-auto">
                   <Reply className="w-4 h-4 mr-1" />
-                  Reply
+                  Send Reply
                 </Button>
                 </div>
               </CardHeader>
