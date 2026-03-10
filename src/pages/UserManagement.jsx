@@ -147,7 +147,7 @@ export default function UserManagement() {
   const resetPasswordMutation = useMutation({
     mutationFn: (userEmail) => base44.functions.invoke('resetUserPassword', { userEmail }),
     onSuccess: (data) => {
-      setResetPasswordResult(data);
+      setResetPasswordResult(data?.data || data);
     },
   });
 
