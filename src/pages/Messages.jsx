@@ -150,6 +150,7 @@ export default function Messages() {
 
   const handleThreadClick = (thread) => {
     setSelectedThread(thread);
+    setReplyText("");
     // Mark all unread messages in thread as read
     thread.messages
       .filter(m => !m.read_by?.includes(currentUser?.email))
