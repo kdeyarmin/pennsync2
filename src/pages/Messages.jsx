@@ -171,15 +171,12 @@ export default function Messages() {
   };
 
   const handleReply = () => {
-    if (!selectedThread) return;
-    
-    const replyText = prompt('Enter your reply:');
-    if (!replyText) return;
+    if (!selectedThread || !replyText.trim()) return;
 
     const originalMessage = selectedThread.latestMessage;
     sendMessageMutation.mutate({
       subject: `Re: ${originalMessage.subject}`,
-      message_text: replyText,
+      message_text: replyText.trim(),
       sender_name: currentUser?.full_name,
       sender_email: currentUser?.email,
       recipients: [originalMessage.sender_email],
@@ -187,6 +184,7 @@ export default function Messages() {
       patient_id: originalMessage.patient_id,
       thread_id: selectedThread.threadId
     });
+    setReplyText("");
   };
 
   const getPriorityColor = (priority) => {
