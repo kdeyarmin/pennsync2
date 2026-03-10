@@ -776,6 +776,12 @@ Return ONLY the final note text.`
                   <p className="font-semibold text-gray-800">Performing compliance check…</p>
                   <p className="text-sm text-gray-400 mt-1">Checking Medicare, clinical, and state standards</p>
                 </div>
+              ) : building ? (
+                <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm">
+                  <Loader2 className="w-10 h-10 text-indigo-500 mx-auto animate-spin mb-3" />
+                  <p className="font-semibold text-gray-800">Building your final note…</p>
+                  <p className="text-sm text-gray-400 mt-1">Incorporating approved suggestions</p>
+                </div>
               ) : analysis && (
                 <>
                   <div className={`rounded-xl border-2 p-4 ${analysis.overall_score >= 80 ? "border-green-300 bg-green-50" : analysis.overall_score >= 60 ? "border-orange-300 bg-orange-50" : "border-red-300 bg-red-50"}`}>
