@@ -684,16 +684,10 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                   const byPatient = {};
                   filteredAudits.forEach(audit => {
                     if (!byPatient[audit.patient_id]) {
-                      byPatient[audit.patient_id] = { total: 0, score: 0, count: 0 };
+                      byPatient[audit.patient_id] = { score: 0, count: 0 };
                     }
                     byPatient[audit.patient_id].score += audit.compliance_score || 0;
                     byPatient[audit.patient_id].count += 1;
-                  });
-
-                  const { data: patients = [] } = useQuery({
-                    queryKey: ['patients'],
-                    queryFn: () => base44.entities.Patient.list(),
-                    initialData: [],
                   });
 
                   const patientStats = Object.entries(byPatient).map(([id, data]) => {
@@ -706,7 +700,11 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                     };
                   }).sort((a, b) => a.avgScore - b.avgScore).slice(0, 10);
 
-                  return patientStats.map((patient, idx) => (
+                  if (patientStats.length === 0) {
+                    return <p className="text-gray-500 text-center py-4">No patient audit data available</p>;
+                  }
+
+                  return patientStats.map((patient) => (
                     <div key={patient.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-2 min-h-[44px]">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div>
@@ -727,9 +725,6 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
                     </div>
                   ));
                 })()}
-                {Object.entries(byPatient).length === 0 && (
-                  <p className="text-gray-500 text-center py-4">No patient audit data available</p>
-                )}
               </div>
             </CardContent>
           </Card>
