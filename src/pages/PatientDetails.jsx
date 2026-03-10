@@ -105,14 +105,14 @@ export default function PatientDetails() {
     }
   }, [patientId, currentUser?.email]);
 
-  const { data: patients } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list(),
+  const { data: patientArr = [], isLoading } = useQuery({
+    queryKey: ['patient', patientId],
+    queryFn: () => base44.entities.Patient.filter({ id: patientId }),
     initialData: [],
+    enabled: !!patientId,
   });
 
-  const patient = patients?.find(p => p.id === patientId);
-  const isLoading = !patients;
+  const patient = patientArr?.[0] ?? null;
 
   const { data: visits } = useQuery({
     queryKey: ['patientVisits', patientId],
