@@ -183,10 +183,10 @@ export default function SmartNoteAssistant() {
 
   // Save final note to localStorage
   useEffect(() => {
-    if (finalNote.trim() && step === 4) {
+    if (finalNote.trim()) {
       localStorage.setItem("smart_note_final_v1", JSON.stringify({ finalNote, noteSections, timestamp: Date.now() }));
     }
-  }, [finalNote, step]);
+  }, [finalNote, noteSections]);
 
   useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
 
