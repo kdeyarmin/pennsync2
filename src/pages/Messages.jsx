@@ -386,6 +386,7 @@ export default function Messages() {
                     </CardContent>
                   </Card>
                 ))}
+              </CardContent>
 
               {/* Inline Reply Box */}
               <div className="border-t border-gray-200 px-4 pb-4 pt-3 space-y-2">
