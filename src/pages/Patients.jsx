@@ -44,7 +44,6 @@ import {
 export default function Patients() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({});
   const [editingPatient, setEditingPatient] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
