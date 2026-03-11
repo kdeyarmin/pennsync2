@@ -15,6 +15,8 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import VideoRoom from "../components/telehealth/VideoRoom";
 import SessionCard from "../components/telehealth/SessionCard";
+import SessionDocumentation from "../components/telehealth/SessionDocumentation";
+import TelehealthChat from "../components/telehealth/TelehealthChat";
 
 const visitTypes = [
   { value: "routine_followup", label: "Routine Follow-up" },
@@ -28,7 +30,8 @@ const visitTypes = [
 export default function Telehealth() {
   const [activeSession, setActiveSession] = useState(null);
   const [showNewSession, setShowNewSession] = useState(false);
-  const [postNotes, setPostNotes] = useState("");
+  const [showChat, setShowChat] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -64,7 +67,7 @@ export default function Telehealth() {
   const handleJoin = async (session) => {
     await updateSession.mutateAsync({ id: session.id, data: { status: "active", started_at: new Date().toISOString() } });
     setActiveSession(session);
-    setPostNotes("");
+    setShowDocumentation(false);
   };
 
   const handleDisconnect = async () => {
@@ -77,13 +80,26 @@ export default function Telehealth() {
         data: {
           status: "completed",
           ended_at: endTime.toISOString(),
-          duration_minutes: durationMinutes,
-          notes: postNotes || undefined
+          duration_minutes: durationMinutes
         }
       });
-      toast.success("Session ended");
+      setShowDocumentation(true);
+      toast.success("Session ended - Please complete documentation");
+    } else {
+      setActiveSession(null);
+      setShowDocumentation(false);
     }
-    setActiveSession(null);
+  };
+
+  const handleSaveDocumentation = async (docData) => {
+    if (activeSession) {
+      await updateSession.mutateAsync({
+        id: activeSession.id,
+        data: docData
+      });
+      setActiveSession(null);
+      setShowDocumentation(false);
+    }
   };
 
   const handleCancel = async (session) => {
@@ -137,36 +153,58 @@ export default function Telehealth() {
         ))}
       </div>
 
-      {/* Active session banner */}
-      {activeSession && (
-        <Card className="border-green-400 bg-green-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                <span className="font-semibold text-green-800">Active Session — {activeSession.patient_name}</span>
-              </div>
-              <Button size="sm" variant="outline" onClick={handleDisconnect} className="text-red-600 border-red-300">
-                End Session
-              </Button>
-            </div>
-            <VideoRoom
-              roomName={activeSession.room_name}
-              identity={currentUser?.full_name || currentUser?.email}
-              onDisconnect={handleDisconnect}
-            />
-            <div className="mt-4">
-              <Label className="text-sm font-medium text-gray-700">Post-visit notes</Label>
-              <Textarea
-                className="mt-1"
-                placeholder="Document clinical observations, patient response, follow-up needed..."
-                value={postNotes}
-                onChange={e => setPostNotes(e.target.value)}
-                rows={3}
+      {/* Active session */}
+      {activeSession && !showDocumentation && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <Card className="border-green-400 bg-green-50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+                    <span className="font-semibold text-green-800">Active Session — {activeSession.patient_name}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => setShowChat(!showChat)}
+                      className="gap-2"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      {showChat ? 'Hide' : 'Show'} Chat
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleDisconnect} className="text-red-600 border-red-300">
+                      End Session
+                    </Button>
+                  </div>
+                </div>
+                <VideoRoom
+                  roomName={activeSession.room_name}
+                  identity={currentUser?.full_name || currentUser?.email}
+                  onDisconnect={handleDisconnect}
+                />
+              </CardContent>
+            </Card>
+          </div>
+          {showChat && (
+            <div className="lg:col-span-1">
+              <TelehealthChat 
+                sessionId={activeSession.id}
+                userName={currentUser?.full_name || currentUser?.email}
               />
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+      )}
+
+      {/* Post-session documentation */}
+      {showDocumentation && activeSession && (
+        <SessionDocumentation
+          sessionId={activeSession.id}
+          onSave={handleSaveDocumentation}
+          initialData={activeSession}
+        />
       )}
 
       {/* Session lists */}
