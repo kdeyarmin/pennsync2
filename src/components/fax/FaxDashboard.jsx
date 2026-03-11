@@ -115,8 +115,8 @@ export default function FaxDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Fax Dashboard</h1>
-        <p className="text-gray-600">Monitor sent faxes with real-time status updates</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Outbound Fax Dashboard</h1>
+        <p className="text-gray-600">Track and monitor all faxes sent from PennSync</p>
       </div>
 
       {/* Stats Cards */}

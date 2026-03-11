@@ -785,8 +785,10 @@ Deno.serve(async (req) => {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     const faxIntro = doc.splitTextToSize(
-      'Send and receive faxes directly from PennSync. Supports document uploads, mobile camera capture, ' +
-      'and batch sending. All faxes are tracked with delivery confirmation and OCR text extraction.',
+      'Send faxes directly from PennSync to physicians, hospitals, and other healthcare providers. ' +
+      'Supports document uploads, mobile camera capture, and batch sending to multiple recipients. ' +
+      'All faxes are tracked with delivery confirmation. Note: PennSync is send-only - receiving ' +
+      'faxes is not supported.',
       pageWidth - 40
     );
     doc.text(faxIntro, 20, yPos);
