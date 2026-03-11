@@ -82,6 +82,7 @@ import FaxLogsDashboard from './pages/FaxLogsDashboard';
 import Features from './pages/Features';
 import Help from './pages/Help';
 import Home from './pages/Home';
+import IncidentReporting from './pages/IncidentReporting';
 import JoinTelehealth from './pages/JoinTelehealth';
 import LearningCenter from './pages/LearningCenter';
 import LearningReports from './pages/LearningReports';
@@ -147,7 +148,9 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import IncidentReporting from './pages/IncidentReporting';
+import MyTraining from './pages/MyTraining';
+import TrainingCoursePlayer from './pages/TrainingCoursePlayer';
+import AIComplianceInServices from './pages/AIComplianceInServices';
 import __Layout from './Layout.jsx';
 
 
@@ -187,6 +190,7 @@ export const PAGES = {
     "Features": Features,
     "Help": Help,
     "Home": Home,
+    "IncidentReporting": IncidentReporting,
     "JoinTelehealth": JoinTelehealth,
     "LearningCenter": LearningCenter,
     "LearningReports": LearningReports,
@@ -252,7 +256,9 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "IncidentReporting": IncidentReporting,
+    "MyTraining": MyTraining,
+    "TrainingCoursePlayer": TrainingCoursePlayer,
+    "AIComplianceInServices": AIComplianceInServices,
 }
 
 export const pagesConfig = {

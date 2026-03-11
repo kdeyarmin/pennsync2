@@ -1,235 +1,197 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { Award, BookOpen, CheckCircle2, Clock, RefreshCcw, TriangleAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createPageUrl } from "@/utils";
+import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  BookOpen,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Play,
-  Award
-} from "lucide-react";
-import { format, parseISO, differenceInDays } from "date-fns";
 
-export default function MyTrainingDashboard({ nurseEmail }) {
-  const queryClient = useQueryClient();
+const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
-  const { data: completions = [] } = useQuery({
-    queryKey: ['myCompletions', nurseEmail],
-    queryFn: () => base44.entities.TrainingCompletion.filter({ nurse_email: nurseEmail }).catch(() => []),
-    enabled: !!nurseEmail
+export default function MyTrainingDashboard() {
+  const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
+
+  const { data: assignments = [] } = useQuery({
+    queryKey: ["my-training-assignments", currentUser?.email],
+    queryFn: () => base44.entities.TrainingAssignment.filter({ assigned_to_user_id: currentUser?.email }, '-due_date', 300),
+    enabled: !!currentUser?.email,
+    initialData: []
   });
 
-  const { data: modules = [] } = useQuery({
-    queryKey: ['trainingModules'],
-    queryFn: () => base44.entities.TrainingModule.list().catch(() => [])
+  const { data: courses = [] } = useQuery({
+    queryKey: ["my-training-courses"],
+    queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 300),
+    initialData: []
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.TrainingCompletion.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['myCompletions'])
+  const { data: attempts = [] } = useQuery({
+    queryKey: ["my-training-attempts", currentUser?.email],
+    queryFn: () => base44.entities.TrainingAttempt.filter({ user_id: currentUser?.email }, '-submitted_at', 500),
+    enabled: !!currentUser?.email,
+    initialData: []
   });
 
-  const getModule = (moduleId) => modules.find(m => m.id === moduleId);
-
-  const assignedTraining = completions.filter(c => c.status === 'assigned' || c.status === 'in_progress');
-  const completedTraining = completions.filter(c => c.status === 'completed');
-  
-  const overdueTraining = assignedTraining.filter(c => {
-    if (!c.due_date) return false;
-    return differenceInDays(new Date(), parseISO(c.due_date)) > 0;
+  const { data: certificates = [] } = useQuery({
+    queryKey: ["my-training-certificates", currentUser?.email],
+    queryFn: () => base44.entities.TrainingCertificate.filter({ user_id: currentUser?.email }, '-issued_at', 200),
+    enabled: !!currentUser?.email,
+    initialData: []
   });
 
-  const startTraining = (completion) => {
-    updateMutation.mutate({ id: completion.id, data: { status: 'in_progress' } });
-  };
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["my-plan-enrollments", currentUser?.email],
+    queryFn: () => base44.entities.PlanEnrollment.filter({ user_id: currentUser?.email }, '-enrolled_at', 100),
+    enabled: !!currentUser?.email,
+    initialData: []
+  });
 
-  const completeTraining = (completion) => {
-    updateMutation.mutate({ 
-      id: completion.id, 
-      data: { 
-        status: 'completed', 
-        completion_date: format(new Date(), 'yyyy-MM-dd')
-      } 
+  const courseMap = useMemo(() => Object.fromEntries(courses.map((course) => [course.id, course])), [courses]);
+  const latestAttempts = useMemo(() => {
+    const map = {};
+    attempts.forEach((attempt) => {
+      if (!map[attempt.assignment_id]) map[attempt.assignment_id] = [];
+      map[attempt.assignment_id].push(attempt);
     });
+    return map;
+  }, [attempts]);
+
+  const stats = {
+    assigned: assignments.length,
+    overdue: assignments.filter((assignment) => assignment.status === 'overdue').length,
+    passed: assignments.filter((assignment) => assignment.pass_fail_result === 'passed').length,
+    failed: assignments.filter((assignment) => assignment.pass_fail_result === 'failed').length,
   };
 
-  const getStatusColor = (status, dueDate) => {
-    if (status === 'completed') return 'bg-green-100 text-green-800';
-    if (status === 'in_progress') return 'bg-blue-100 text-blue-800';
-    if (dueDate && differenceInDays(new Date(), parseISO(dueDate)) > 0) return 'bg-red-100 text-red-800';
-    return 'bg-yellow-100 text-yellow-800';
+  const downloadCertificate = async (certificate) => {
+    const response = await generateTrainingCertificate({
+      moduleName: certificate.course_title,
+      completionDate: certificate.completion_date || certificate.issued_at,
+      score: certificate.score
+    });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${certificate.course_title.replace(/\s+/g, '_')}_certificate.pdf`;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
   };
-
-  const completionRate = completions.length > 0 
-    ? Math.round((completedTraining.length / completions.length) * 100) 
-    : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{assignedTraining.length}</p>
-              <p className="text-sm text-gray-500">Pending</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{completedTraining.length}</p>
-              <p className="text-sm text-gray-500">Completed</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{overdueTraining.length}</p>
-              <p className="text-sm text-gray-500">Overdue</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <Award className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{completionRate}%</p>
-              <p className="text-sm text-gray-500">Complete</p>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white p-6 shadow-xl">
+        <h1 className="text-3xl font-bold mb-2">My Training</h1>
+        <p className="text-blue-100">Assigned in-services, due dates, scores, certificates, and learning plan progress in one place.</p>
       </div>
 
-      {/* Overdue Alert */}
-      {overdueTraining.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-red-800">
-              <AlertTriangle className="w-5 h-5" />
-              <span className="font-semibold">You have {overdueTraining.length} overdue training(s)</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[{ label: 'Assigned', value: stats.assigned, icon: BookOpen }, { label: 'Overdue', value: stats.overdue, icon: TriangleAlert }, { label: 'Passed', value: stats.passed, icon: CheckCircle2 }, { label: 'Failed', value: stats.failed, icon: RefreshCcw }].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.label}>
+              <CardContent className="p-5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">{item.label}</p>
+                  <p className="text-3xl font-bold text-slate-900">{item.value}</p>
+                </div>
+                <Icon className="w-8 h-8 text-indigo-500" />
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-      {/* Pending Training */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            Assigned Training
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {assignedTraining.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No pending training assignments</p>
-          ) : (
-            <div className="space-y-3">
-              {assignedTraining.map(completion => {
-                const module = getModule(completion.training_module_id);
-                const isOverdue = completion.due_date && differenceInDays(new Date(), parseISO(completion.due_date)) > 0;
-                
-                return (
-                  <div key={completion.id} className={`p-4 border rounded-lg ${isOverdue ? 'border-red-300 bg-red-50' : ''}`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold">{module?.title || 'Unknown Module'}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className={getStatusColor(completion.status, completion.due_date)}>
-                            {isOverdue ? 'Overdue' : completion.status.replace('_', ' ')}
-                          </Badge>
-                          {module?.duration_minutes && (
-                            <span className="text-xs text-gray-500">{module.duration_minutes} min</span>
-                          )}
-                          {completion.due_date && (
-                            <span className="text-xs text-gray-500">
-                              Due: {format(parseISO(completion.due_date), 'MMM d, yyyy')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {completion.status === 'assigned' && (
-                          <Button size="sm" onClick={() => startTraining(completion)}>
-                            <Play className="w-4 h-4 mr-1" /> Start
-                          </Button>
-                        )}
-                        {completion.status === 'in_progress' && (
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => completeTraining(completion)}>
-                            <CheckCircle2 className="w-4 h-4 mr-1" /> Complete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    {module?.description && (
-                      <p className="text-sm text-gray-600 mt-2">{module.description}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="assignments" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="assignments">Assigned In-Services</TabsTrigger>
+          <TabsTrigger value="plans">Learning Plans</TabsTrigger>
+          <TabsTrigger value="transcript">Transcript & Certificates</TabsTrigger>
+        </TabsList>
 
-      {/* Completed Training */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            Completed Training
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {completedTraining.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No completed training yet</p>
-          ) : (
-            <div className="space-y-2">
-              {completedTraining.slice(0, 10).map(completion => {
-                const module = getModule(completion.training_module_id);
-                return (
-                  <div key={completion.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      <div>
-                        <p className="font-medium">{module?.title || 'Unknown Module'}</p>
-                        <p className="text-xs text-gray-500">
-                          Completed: {completion.completion_date ? format(parseISO(completion.completion_date), 'MMM d, yyyy') : 'N/A'}
-                        </p>
+        <TabsContent value="assignments" className="space-y-4">
+          {assignments.map((assignment) => {
+            const course = courseMap[assignment.course_id] || {};
+            const attemptsForAssignment = latestAttempts[assignment.id] || [];
+            return (
+              <Card key={assignment.id}>
+                <CardContent className="p-5">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="space-y-2 min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-lg font-semibold text-slate-900">{assignment.course_title}</h2>
+                        <Badge variant="outline">{course.category || 'in-service'}</Badge>
+                        <Badge className={assignment.pass_fail_result === 'passed' ? 'bg-green-100 text-green-800' : assignment.pass_fail_result === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>
+                          {assignment.status}
+                        </Badge>
                       </div>
+                      <p className="text-sm text-slate-500">{course.business_line_scope || 'all'} • {course.employee_audience || assignment.assigned_to_role || 'assigned audience'}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-slate-600">
+                        <div><span className="font-medium">Due:</span> {formatDate(assignment.due_date)}</div>
+                        <div><span className="font-medium">Estimated:</span> {course.estimated_minutes || 0} min</div>
+                        <div><span className="font-medium">Latest score:</span> {assignment.score_percentage ?? '—'}%</div>
+                        <div><span className="font-medium">Attempts:</span> {assignment.latest_attempt_number || attemptsForAssignment.length || 0}</div>
+                        <div><span className="font-medium">Passing score:</span> {assignment.passing_score_required || course.passing_score || 80}%</div>
+                        <div><span className="font-medium">Renewal:</span> {formatDate(assignment.renewal_due_date)}</div>
+                      </div>
+                      <Progress value={assignment.progress_percentage || 0} className="h-2" />
                     </div>
-                    {completion.score && (
-                      <Badge className="bg-green-100 text-green-800">Score: {completion.score}%</Badge>
-                    )}
+                    <div className="flex flex-col gap-2 lg:w-52">
+                      <Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${assignment.id}`}>
+                        <Button className="w-full">{assignment.status === 'in_progress' ? 'Continue In-Service' : 'Open In-Service'}</Button>
+                      </Link>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </CardContent>
+              </Card>
+            );
+          })}
+          {assignments.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No in-services assigned yet.</CardContent></Card>}
+        </TabsContent>
+
+        <TabsContent value="plans" className="space-y-4">
+          {enrollments.map((enrollment) => (
+            <Card key={enrollment.id}>
+              <CardHeader>
+                <CardTitle>{enrollment.plan_name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm text-slate-600">
+                  <span>{enrollment.courses_completed}/{enrollment.courses_total} completed</span>
+                  <span>Due {formatDate(enrollment.due_date)}</span>
+                </div>
+                <Progress value={enrollment.progress_percentage || 0} className="h-2" />
+              </CardContent>
+            </Card>
+          ))}
+          {enrollments.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No learning plans assigned.</CardContent></Card>}
+        </TabsContent>
+
+        <TabsContent value="transcript" className="space-y-4">
+          {certificates.map((certificate) => (
+            <Card key={certificate.id}>
+              <CardContent className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Award className="w-5 h-5 text-amber-500" />
+                    <h3 className="font-semibold text-slate-900">{certificate.course_title}</h3>
+                  </div>
+                  <p className="text-sm text-slate-500">Completed {formatDate(certificate.completion_date || certificate.issued_at)} • Score {certificate.score}%</p>
+                  <p className="text-sm text-slate-500">Certificate ID: {certificate.certificate_id}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => downloadCertificate(certificate)}>Download PDF</Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {certificates.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No certificates available yet.</CardContent></Card>}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
