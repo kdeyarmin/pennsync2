@@ -62,7 +62,6 @@ import { createPageUrl } from "@/utils";
 import { formatEastern } from "../components/utils/timezone";
 
 export default function PatientDataManagement() {
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
