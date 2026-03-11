@@ -77,6 +77,7 @@ import EducationLibrary from './pages/EducationLibrary';
 import FaxAddressBook from './pages/FaxAddressBook';
 import FaxContacts from './pages/FaxContacts';
 import FaxDashboard from './pages/FaxDashboard';
+import FaxLogsDashboard from './pages/FaxLogsDashboard';
 import Features from './pages/Features';
 import Help from './pages/Help';
 import Home from './pages/Home';
@@ -111,6 +112,7 @@ import PatientEducationHub from './pages/PatientEducationHub';
 import PatientEducationPortal from './pages/PatientEducationPortal';
 import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
+import PhysicianDirectory from './pages/PhysicianDirectory';
 import PopulationHealthAnalytics from './pages/PopulationHealthAnalytics';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
@@ -139,8 +141,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import FaxLogsDashboard from './pages/FaxLogsDashboard';
-import PhysicianDirectory from './pages/PhysicianDirectory';
+import OfflineDocumentation from './pages/OfflineDocumentation';
 import __Layout from './Layout.jsx';
 
 
@@ -175,6 +176,7 @@ export const PAGES = {
     "FaxAddressBook": FaxAddressBook,
     "FaxContacts": FaxContacts,
     "FaxDashboard": FaxDashboard,
+    "FaxLogsDashboard": FaxLogsDashboard,
     "Features": Features,
     "Help": Help,
     "Home": Home,
@@ -209,6 +211,7 @@ export const PAGES = {
     "PatientEducationPortal": PatientEducationPortal,
     "PatientRecordDashboard": PatientRecordDashboard,
     "Patients": Patients,
+    "PhysicianDirectory": PhysicianDirectory,
     "PopulationHealthAnalytics": PopulationHealthAnalytics,
     "PredictiveAnalytics": PredictiveAnalytics,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
@@ -237,8 +240,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "FaxLogsDashboard": FaxLogsDashboard,
-    "PhysicianDirectory": PhysicianDirectory,
+    "OfflineDocumentation": OfflineDocumentation,
 }
 
 export const pagesConfig = {

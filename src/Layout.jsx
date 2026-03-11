@@ -20,6 +20,7 @@ import MobileHeader from "../components/layout/MobileHeader";
 import MobileMenu from "../components/layout/MobileMenu";
 import MobileBottomNav from "../components/layout/MobileBottomNav";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
+import OfflineSyncService from "../components/offline/OfflineSyncService";
 import FeedbackButton from "../components/feedback/FeedbackButton";
 import NotificationCenter from "../components/notifications/NotificationCenter";
 import SessionTimeoutManager from "../components/security/SessionTimeoutManager";
@@ -270,6 +271,11 @@ export default function Layout({ children, currentPageName }) {
         <MobileBottomNav isActive={isActive} unreadMessageCount={unreadMessageCount} />
 
         <OfflineIndicator />
+        
+        {/* Floating Sync Status */}
+        <div className="fixed bottom-20 md:bottom-4 right-4 z-40 max-w-sm">
+          <OfflineSyncService />
+        </div>
         <SessionTimeoutManager timeoutMinutes={15} warningMinutes={2} />
 
         <Dialog open={notificationCenterOpen} onOpenChange={setNotificationCenterOpen}>
