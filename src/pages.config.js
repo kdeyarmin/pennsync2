@@ -100,7 +100,9 @@ import OASISComplianceReview from './pages/OASISComplianceReview';
 import OASISDocumentationReview from './pages/OASISDocumentationReview';
 import OASISRevenueAnalysis from './pages/OASISRevenueAnalysis';
 import OASISReview from './pages/OASISReview';
+import OfflineDocumentation from './pages/OfflineDocumentation';
 import OfflineMode from './pages/OfflineMode';
+import OfflineVisitDocumentation from './pages/OfflineVisitDocumentation';
 import PDFSearch from './pages/PDFSearch';
 import PDFTemplateLibrary from './pages/PDFTemplateLibrary';
 import PDFTools from './pages/PDFTools';
@@ -141,8 +143,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import OfflineDocumentation from './pages/OfflineDocumentation';
-import OfflineVisitDocumentation from './pages/OfflineVisitDocumentation';
+import LearningCenter from './pages/LearningCenter';
 import __Layout from './Layout.jsx';
 
 
@@ -200,7 +201,9 @@ export const PAGES = {
     "OASISDocumentationReview": OASISDocumentationReview,
     "OASISRevenueAnalysis": OASISRevenueAnalysis,
     "OASISReview": OASISReview,
+    "OfflineDocumentation": OfflineDocumentation,
     "OfflineMode": OfflineMode,
+    "OfflineVisitDocumentation": OfflineVisitDocumentation,
     "PDFSearch": PDFSearch,
     "PDFTemplateLibrary": PDFTemplateLibrary,
     "PDFTools": PDFTools,
@@ -241,8 +244,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "OfflineDocumentation": OfflineDocumentation,
-    "OfflineVisitDocumentation": OfflineVisitDocumentation,
+    "LearningCenter": LearningCenter,
 }
 
 export const pagesConfig = {
