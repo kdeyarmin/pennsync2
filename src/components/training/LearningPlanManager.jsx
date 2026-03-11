@@ -86,13 +86,15 @@ export default function LearningPlanManager() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create Learning Plan</DialogTitle>
-              </DialogHeader>
-              <LearningPlanForm onSuccess={() => {
-                setShowForm(false);
-                queryClient.invalidateQueries({ queryKey: ['learning-plans'] });
-              }} />
+              <div className="bg-white rounded-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create Learning Plan</DialogTitle>
+                </DialogHeader>
+                <LearningPlanForm onSuccess={() => {
+                  setShowForm(false);
+                  queryClient.invalidateQueries({ queryKey: ['learning-plans'] });
+                }} />
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -158,29 +160,31 @@ export default function LearningPlanManager() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Course to Plan</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-2">
-                    {availableCourses.map((course) => (
-                      <Card key={course.id} className="cursor-pointer hover:bg-gray-50">
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-sm">{course.title}</p>
-                              <Badge className="mt-1">{course.category}</Badge>
+                  <div className="bg-white rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Add Course to Plan</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      {availableCourses.map((course) => (
+                        <Card key={course.id} className="cursor-pointer hover:bg-gray-50">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium text-sm">{course.title}</p>
+                                <Badge className="mt-1">{course.category}</Badge>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => addCourseMutation.mutate(course.id)}
+                                disabled={addCourseMutation.isLoading}
+                              >
+                                Add
+                              </Button>
                             </div>
-                            <Button
-                              size="sm"
-                              onClick={() => addCourseMutation.mutate(course.id)}
-                              disabled={addCourseMutation.isLoading}
-                            >
-                              Add
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>

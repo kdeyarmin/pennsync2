@@ -370,6 +370,15 @@ css
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Force solid modal panels across the app */
+  [role="dialog"] {
+    background-image: none;
+  }
+
+  [role="dialog"] > div {
+    background-image: none;
+  }
+
   /* Prevent zoom on input focus (iOS) */
   input[type="text"],
   input[type="email"],

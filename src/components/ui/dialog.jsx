@@ -38,23 +38,21 @@ const DialogContent = React.forwardRef((props, ref) => (
         transform: 'translate(-50%, -50%)',
         zIndex: 10000,
         opacity: 1,
-        backgroundColor: '#ffffff',
-        backgroundImage: 'none',
-        borderRadius: '1rem',
-        boxShadow: '0 24px 80px rgba(15,23,42,0.22)',
         isolation: 'isolate'
       }}
       className={cn(
-        "grid w-[calc(100vw-1.5rem)] max-w-3xl gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] max-h-[90vh] sm:w-full sm:p-8",
+        "w-[calc(100vw-1rem)] max-w-3xl max-h-[92vh] overflow-visible bg-transparent border-0 p-0 shadow-none sm:w-full",
         props.className
       )}
       {...props}
     >
-      {props.children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full border border-slate-200 bg-white p-2 text-slate-500 opacity-100 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:pointer-events-none">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      <div className="relative grid gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 pt-14 pr-14 shadow-[0_24px_80px_rgba(15,23,42,0.22)] max-h-[92vh] sm:p-8 sm:pt-10 sm:pr-16">
+        {props.children}
+        <DialogPrimitive.Close className="absolute right-4 top-4 z-10 rounded-full border border-slate-200 bg-white p-2 text-slate-500 opacity-100 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:pointer-events-none">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </div>
     </DialogPrimitive.Content>
   </DialogPortal>
 ))

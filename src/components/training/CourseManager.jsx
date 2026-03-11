@@ -56,17 +56,19 @@ export default function CourseManager() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{selectedCourse ? 'Edit Course' : 'Create New Course'}</DialogTitle>
-            </DialogHeader>
-            <CourseForm
-              course={selectedCourse}
-              onSuccess={() => {
-                setShowForm(false);
-                setSelectedCourse(null);
-                queryClient.invalidateQueries({ queryKey: ['training-courses'] });
-              }}
-            />
+            <div className="bg-white rounded-2xl">
+              <DialogHeader>
+                <DialogTitle>{selectedCourse ? 'Edit Course' : 'Create New Course'}</DialogTitle>
+              </DialogHeader>
+              <CourseForm
+                course={selectedCourse}
+                onSuccess={() => {
+                  setShowForm(false);
+                  setSelectedCourse(null);
+                  queryClient.invalidateQueries({ queryKey: ['training-courses'] });
+                }}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
