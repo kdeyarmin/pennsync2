@@ -303,18 +303,18 @@ const sampleCourses = [
 
 const planTemplates = [
   {
-    name: '2026 Home Health Annual Mandatory Education',
+    name: '2026 Penn Home Health Annual Mandatory Education',
     business_line_scope: 'home_health',
-    description: 'Starter annual plan for home health staff.',
+    description: 'Starter annual plan for Penn Home Health staff.',
     courseTitles: [
       '2026 Home Health Annual: Infection Prevention and Control',
       '2026 Home Health Annual: Documentation Standards and Incident Reporting'
     ]
   },
   {
-    name: '2026 Hospice Annual Mandatory Education',
+    name: '2026 Penn Hospice Annual Mandatory Education',
     business_line_scope: 'hospice',
-    description: 'Starter annual plan for hospice staff.',
+    description: 'Starter annual plan for Penn Hospice staff.',
     courseTitles: [
       '2026 Hospice Annual: Hospice Philosophy and Goals of Care',
       '2026 Hospice Annual: Pain, Symptom Management, and End-of-Life Communication'

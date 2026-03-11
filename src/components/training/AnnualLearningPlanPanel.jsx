@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const STARTER_PLAN_TEMPLATES = [
-  { name: 'Home Health Annual Mandatory Education', business_line_scope: 'home_health', description: 'Required annual education bundle for home health staff.' },
-  { name: 'Hospice Annual Mandatory Education', business_line_scope: 'hospice', description: 'Required annual education bundle for hospice staff.' },
-  { name: 'Office Staff Annual Mandatory Education', business_line_scope: 'all', description: 'Required annual education bundle for office and administrative staff.' },
-  { name: 'New Hire Orientation', business_line_scope: 'all', description: 'Orientation bundle for newly hired team members.' },
+  { name: 'Penn Home Health Annual Mandatory Education', business_line_scope: 'home_health', description: 'Required annual education bundle for Penn Home Health staff.' },
+  { name: 'Penn Hospice Annual Mandatory Education', business_line_scope: 'hospice', description: 'Required annual education bundle for Penn Hospice staff.' },
+  { name: 'Penn Office Staff Annual Mandatory Education', business_line_scope: 'all', description: 'Required annual education bundle for Penn office and administrative staff.' },
+  { name: 'Penn New Hire Orientation', business_line_scope: 'all', description: 'Orientation bundle for newly hired Penn team members.' },
+  { name: 'Penn Clinical Staff Annual Competencies', business_line_scope: 'all', description: 'Annual competency bundle for Penn clinical staff.' },
+  { name: 'Penn Field Staff Safety Bundle', business_line_scope: 'all', description: 'Safety-focused annual bundle for Penn field staff.' },
 ];
 
 export default function AnnualLearningPlanPanel({ plans = [], courses = [], year, onRefresh }) {

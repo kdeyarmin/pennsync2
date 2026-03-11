@@ -267,6 +267,17 @@ Deno.serve(async (req) => {
     });
 
     if (certificate) {
+      await base44.asServiceRole.entities.TrainingAuditLog.create({
+        actor_id: assignment.assigned_to_user_id,
+        actor_name: user.full_name,
+        action: 'certificate_issued',
+        entity_type: 'TrainingCertificate',
+        entity_id: certificate.id,
+        after_json: { certificate_id: certificate.certificate_id, course_id: certificate.course_id, annual_cycle_year: certificate.annual_cycle_year || null },
+        reason: 'certificate issued',
+        severity: 'info'
+      });
+
       await base44.asServiceRole.entities.Notification.create({
         user_email: assignment.assigned_to_user_id,
         title: 'Certificate available',

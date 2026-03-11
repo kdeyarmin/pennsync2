@@ -161,7 +161,7 @@ export default function AnnualMandatoryEducationHub() {
     <div className="space-y-6">
       <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 text-white p-6 shadow-xl">
         <h1 className="text-3xl font-bold mb-2">Annual Mandatory Education</h1>
-        <p className="text-indigo-100">Build yearly required education bundles, assign annual plans, test competency, issue certificates, and track compliance for hospice and home health teams.</p>
+        <p className="text-indigo-100">Build yearly required education bundles for Penn Hospice, Penn Home Health, office staff, and leadership while tracking competency, certificates, and renewal compliance.</p>
       </div>
 
       <AnnualMandatoryStats stats={{ ...stats, annualCompliancePercentage: stats.totalAssigned ? Math.round((stats.passed / stats.totalAssigned) * 100) : 0 }} />
@@ -228,7 +228,7 @@ export default function AnnualMandatoryEducationHub() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => updateCourseStatus(course, 'published')}><CheckCircle2 className="w-4 h-4 mr-2" />Publish</Button>
-                  <Button variant="outline" onClick={() => duplicateCourse(course.id)}><Copy className="w-4 h-4 mr-2" />Duplicate</Button>
+                  <Button variant="outline" onClick={() => duplicateCourse(course.id)}><Copy className="w-4 h-4 mr-2" />Duplicate Prior Year</Button>
                   <Button variant="outline" onClick={() => updateCourseStatus(course, 'archived')}><Archive className="w-4 h-4 mr-2" />Archive</Button>
                 </div>
               </CardContent>
