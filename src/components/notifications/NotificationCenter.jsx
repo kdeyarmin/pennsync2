@@ -55,15 +55,16 @@ export default function NotificationCenter({ currentUser, onClose }) {
   });
 
   const { data: activeAlerts = [] } = useQuery({
-    queryKey: ['active-alerts-nc', currentUser?.email],
+    queryKey: ['active-alerts-nc', currentUser?.email, chartedVisits],
     queryFn: async () => {
+      const chartedPatientIds = new Set(chartedVisits.map(v => v.patient_id));
+      if (chartedPatientIds.size === 0) return [];
+
       const allAlerts = await base44.entities.PatientAlert.filter(
         { status: 'active' },
         '-created_date',
         50
       );
-      // Only return alerts for patients this clinician has charted on
-      const chartedPatientIds = new Set(chartedVisits.map(v => v.patient_id));
       return allAlerts.filter(a => chartedPatientIds.has(a.patient_id));
     },
     initialData: [],
@@ -243,22 +244,24 @@ export default function NotificationCenter({ currentUser, onClose }) {
                 </Badge>
               )}
             </CardTitle>
-            {unreadNotifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => markAllAsReadMutation.mutate()}
-                disabled={markAllAsReadMutation.isLoading}
-              >
-                <CheckCheck className="w-4 h-4 mr-1" />
-                Mark all read
-              </Button>
-            )}
-            {onClose && (
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="w-4 h-4" />
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {unreadNotifications.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  disabled={markAllAsReadMutation.isLoading}
+                >
+                  <CheckCheck className="w-4 h-4 mr-1" />
+                  Mark all read
+                </Button>
+              )}
+              {onClose && (
+                <Button variant="ghost" size="icon" onClick={onClose}>
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
 
