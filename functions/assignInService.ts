@@ -33,12 +33,14 @@ Deno.serve(async (req) => {
       const emailSet = new Set(userEmails);
       candidates = candidates.filter((candidate) => emailSet.has(candidate.email));
     } else {
-      if (filters.department) candidates = candidates.filter((candidate) => candidate.department === filters.department);
-      if (filters.job_title) candidates = candidates.filter((candidate) => candidate.job_title === filters.job_title);
-      if (filters.business_line) candidates = candidates.filter((candidate) => candidate.business_line === filters.business_line);
-      if (filters.location) candidates = candidates.filter((candidate) => candidate.location === filters.location);
-      if (filters.credential_type) candidates = candidates.filter((candidate) => candidate.credential_type === filters.credential_type);
-      if (filters.employment_type) candidates = candidates.filter((candidate) => candidate.employment_type === filters.employment_type);
+      if (filters.role && filters.role !== 'all') candidates = candidates.filter((candidate) => (candidate.job_title || candidate.credential_type || candidate.role) === filters.role);
+      if (filters.discipline && filters.discipline !== 'all') candidates = candidates.filter((candidate) => (candidate.discipline || candidate.credential_type) === filters.discipline);
+      if (filters.department && filters.department !== 'all') candidates = candidates.filter((candidate) => candidate.department === filters.department);
+      if (filters.job_title && filters.job_title !== 'all') candidates = candidates.filter((candidate) => candidate.job_title === filters.job_title);
+      if (filters.business_line && filters.business_line !== 'all') candidates = candidates.filter((candidate) => candidate.business_line === filters.business_line);
+      if (filters.location && filters.location !== 'all') candidates = candidates.filter((candidate) => candidate.location === filters.location);
+      if (filters.credential_type && filters.credential_type !== 'all') candidates = candidates.filter((candidate) => candidate.credential_type === filters.credential_type);
+      if (filters.employment_type && filters.employment_type !== 'all') candidates = candidates.filter((candidate) => candidate.employment_type === filters.employment_type);
     }
 
     const existingAssignments = await base44.asServiceRole.entities.TrainingAssignment.filter({ course_id: courseId }, '-created_date', 1000);
