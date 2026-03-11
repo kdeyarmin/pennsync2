@@ -123,14 +123,18 @@ Rules:
 Style and quality requirements:
 - Write for frontline healthcare staff, not executives, attorneys, or academics.
 - Use plain, practical, professional language at about an 8th-10th grade reading level.
-- Keep sentences short and clear.
-- Explain what staff should do, what to watch for, and what to report.
-- Include realistic home health, hospice, and field-based examples.
-- Prefer checklists, bullets, brief examples, and action steps over long lectures.
-- Avoid jargon, theory-heavy explanations, and repetitive filler.
+- Make the lesson easy to understand quickly during a busy workday.
+- Keep sentences short, direct, and action-oriented.
+- Use brief sections with clear headings.
+- Explain what staff should do, what to watch for, what to document, and what to report.
+- Include realistic home health, hospice, office, leadership, and field-based examples when relevant.
+- Prefer checklists, bullets, quick tips, short examples, and simple action steps over long lectures.
+- Avoid jargon, theory-heavy explanations, legalistic wording, academic tone, and repetitive filler.
+- Define any required clinical or compliance term in simple words before using it.
 - Make every section directly useful during real patient care or daily operations.
 - Make test questions practical and based on real decisions staff may face.
-- If a concept is complex, explain it simply before testing it.
+- If a concept is complex, break it into simple steps before testing it.
+- Keep the overall tone supportive, professional, and easy to scan.
 
 Always include a warning that AI-generated training should be reviewed by an admin before publishing.`;
 
