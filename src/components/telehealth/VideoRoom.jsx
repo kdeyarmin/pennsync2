@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff,
-  Monitor, Users, Loader2
+  Monitor, Users, Loader2, AlertTriangle
 } from "lucide-react";
+import NetworkMonitor from "./NetworkMonitor";
+import EnhancedVideoControls from "./EnhancedVideoControls";
 
 export default function VideoRoom({ roomName, identity, onDisconnect }) {
   const [room, setRoom] = useState(null);
@@ -14,9 +16,13 @@ export default function VideoRoom({ roomName, identity, onDisconnect }) {
   const [error, setError] = useState(null);
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
+  const [screenSharing, setScreenSharing] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
 
   const localVideoRef = useRef(null);
   const roomRef = useRef(null);
+  const screenTrackRef = useRef(null);
 
   const connectToRoom = useCallback(async () => {
     try {
@@ -35,6 +41,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect }) {
       roomRef.current = connectedRoom;
       setRoom(connectedRoom);
       setStatus("connected");
+      setSessionStartTime(new Date());
 
       // Attach local video
       connectedRoom.localParticipant.videoTracks.forEach(publication => {
@@ -82,8 +89,39 @@ export default function VideoRoom({ roomName, identity, onDisconnect }) {
   };
 
   const disconnect = () => {
+    if (screenTrackRef.current) {
+      screenTrackRef.current.stop();
+    }
     roomRef.current?.disconnect();
     onDisconnect && onDisconnect();
+  };
+
+  const toggleScreenShare = async () => {
+    try {
+      if (screenSharing) {
+        if (screenTrackRef.current) {
+          screenTrackRef.current.stop();
+          screenTrackRef.current = null;
+        }
+        setScreenSharing(false);
+      } else {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: 'always' }
+        });
+        const screenTrack = screenStream.getVideoTracks()[0];
+        screenTrackRef.current = screenTrack;
+        
+        await roomRef.current?.localParticipant.videoTracks[0].track.replaceTrack(screenTrack);
+        setScreenSharing(true);
+
+        screenTrack.onended = () => {
+          setScreenSharing(false);
+          screenTrackRef.current = null;
+        };
+      }
+    } catch (err) {
+      console.error('Screen share error:', err);
+    }
   };
 
   if (status === "connecting") {
@@ -104,10 +142,14 @@ export default function VideoRoom({ roomName, identity, onDisconnect }) {
     );
   }
 
+  const sessionDuration = sessionStartTime
+    ? Math.floor((new Date() - sessionStartTime) / 60000)
+    : 0;
+
   return (
     <div className="flex flex-col gap-4">
       {/* Status bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           <span className="text-sm font-medium text-green-700">Live</span>
@@ -116,11 +158,14 @@ export default function VideoRoom({ roomName, identity, onDisconnect }) {
             {participants.length + 1} participant{participants.length !== 0 ? "s" : ""}
           </Badge>
         </div>
-        <span className="text-sm text-gray-500 font-mono">{roomName}</span>
+        <div className="flex items-center gap-3">
+          <NetworkMonitor roomRef={roomRef} />
+          <span className="text-sm text-gray-500 font-mono">{sessionDuration} min</span>
+        </div>
       </div>
 
-      {/* Video grid */}
-      <div className={`grid gap-3 ${participants.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
+      {/* Video grid - responsive */}
+      <div className={`grid gap-2 sm:gap-3 ${participants.length > 0 ? "sm:grid-cols-2 grid-cols-1" : "grid-cols-1"}`}>
         {/* Local video */}
         <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
           <div ref={localVideoRef} className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover" />
@@ -149,32 +194,15 @@ export default function VideoRoom({ roomName, identity, onDisconnect }) {
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-4 py-3 bg-gray-900 rounded-xl">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleAudio}
-          className={`rounded-full h-12 w-12 ${audioMuted ? "bg-red-600 hover:bg-red-700 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}`}
-        >
-          {audioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleVideo}
-          className={`rounded-full h-12 w-12 ${videoMuted ? "bg-red-600 hover:bg-red-700 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}`}
-        >
-          {videoMuted ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={disconnect}
-          className="rounded-full h-14 w-14 bg-red-600 hover:bg-red-700 text-white"
-        >
-          <PhoneOff className="w-6 h-6" />
-        </Button>
-      </div>
+      <EnhancedVideoControls
+        audioMuted={audioMuted}
+        videoMuted={videoMuted}
+        onToggleAudio={toggleAudio}
+        onToggleVideo={toggleVideo}
+        onDisconnect={disconnect}
+        onToggleChat={() => setShowChat(!showChat)}
+        onToggleScreenShare={toggleScreenShare}
+      />
     </div>
   );
 }
