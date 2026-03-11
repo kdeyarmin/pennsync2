@@ -144,6 +144,7 @@ import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import LearningCenter from './pages/LearningCenter';
+import AITrainingGenerator from './pages/AITrainingGenerator';
 import __Layout from './Layout.jsx';
 
 
@@ -245,6 +246,7 @@ export const PAGES = {
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
     "LearningCenter": LearningCenter,
+    "AITrainingGenerator": AITrainingGenerator,
 }
 
 export const pagesConfig = {
