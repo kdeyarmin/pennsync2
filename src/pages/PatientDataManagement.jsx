@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import DuplicateScanner from "../components/patient/DuplicateScanner";
+import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,7 +77,8 @@ export default function PatientDataManagement() {
     queryKey: ['patients'],
     queryFn: async () => {
       try {
-        return await base44.entities.Patient.list();
+        const allPatients = await base44.entities.Patient.list('-created_date', 2000);
+        return allPatients.filter(patient => !patient.is_archived);
       } catch (err) {
         console.error('Failed to load patients:', err);
         return [];

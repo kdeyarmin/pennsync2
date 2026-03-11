@@ -72,7 +72,10 @@ export default function Patients() {
 
   const { data: patients, isLoading, error: patientsError } = useQuery({
     queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.list('-created_date'),
+    queryFn: async () => {
+      const allPatients = await base44.entities.Patient.list('-created_date', 2000);
+      return allPatients.filter(patient => !patient.is_archived);
+    },
     initialData: [],
   });
 
