@@ -243,24 +243,22 @@ export default function NotificationCenter({ currentUser, onClose }) {
                 </Badge>
               )}
             </CardTitle>
-            <div className="flex items-center gap-2">
-              {unreadNotifications.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => markAllAsReadMutation.mutate()}
-                  disabled={markAllAsReadMutation.isLoading}
-                >
-                  <CheckCheck className="w-4 h-4 mr-1" />
-                  Mark all read
-                </Button>
-              )}
-              {onClose && (
-                <Button variant="ghost" size="icon" onClick={onClose}>
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
+            {unreadNotifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllAsReadMutation.mutate()}
+                disabled={markAllAsReadMutation.isLoading}
+              >
+                <CheckCheck className="w-4 h-4 mr-1" />
+                Mark all read
+              </Button>
+            )}
+            {onClose && (
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </CardHeader>
 
