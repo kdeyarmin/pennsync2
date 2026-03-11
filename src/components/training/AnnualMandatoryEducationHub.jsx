@@ -23,7 +23,6 @@ const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "â€
 
 export default function AnnualMandatoryEducationHub() {
   const queryClient = useQueryClient();
-  const isAdminUser = currentUser?.role === 'admin' || currentUser?.account_type === 'agency_admin' || currentUser?.account_type === 'super_admin';
   const year = new Date().getFullYear();
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [selectedPlanId, setSelectedPlanId] = useState("");
