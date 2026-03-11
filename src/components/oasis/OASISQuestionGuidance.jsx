@@ -56,16 +56,16 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                       <h4 className="font-semibold text-sm text-gray-900 mb-2">
                         {scenario.title}
                       </h4>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {scenario.description}
+                      <p className="text-sm text-gray-900 mb-3">
+                       {scenario.description}
                       </p>
                       <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                        <p className="text-xs font-semibold text-indigo-700 mb-1">
-                          Recommended Answer:
-                        </p>
-                        <p className="text-sm text-indigo-900">
-                          {scenario.recommendedAnswer}
-                        </p>
+                       <p className="text-xs font-semibold text-indigo-900 mb-1">
+                         Recommended Answer:
+                       </p>
+                       <p className="text-sm font-medium text-indigo-950">
+                         {scenario.recommendedAnswer}
+                       </p>
                       </div>
                     </div>
                   </div>
@@ -80,7 +80,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                 <BookOpen className="w-4 h-4" />
                 Clinical Assessment Guidelines
               </h4>
-              <div className="space-y-2 text-sm text-blue-800">
+              <div className="space-y-2 text-sm text-gray-900">
                 {guidance.howToAnswer.map((tip, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -96,7 +96,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                   <AlertCircle className="w-4 h-4" />
                   Red Flags to Watch For
                 </h4>
-                <div className="space-y-2 text-sm text-red-800">
+                <div className="space-y-2 text-sm text-gray-900">
                   {guidance.redFlags.map((flag, idx) => (
                     <div key={idx} className="flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
@@ -113,7 +113,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
               <h4 className="font-semibold text-sm text-green-900 mb-3">
                 Documentation Best Practices
               </h4>
-              <ul className="space-y-2 text-sm text-green-800">
+              <ul className="space-y-2 text-sm text-gray-900">
                 {guidance.bestPractices.map((practice, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-green-600 font-bold">•</span>
@@ -128,7 +128,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
                 <h4 className="font-semibold text-sm text-amber-900 mb-3">
                   Medicare Compliance Tips
                 </h4>
-                <ul className="space-y-2 text-sm text-amber-800">
+                <ul className="space-y-2 text-sm text-gray-900">
                   {guidance.complianceTips.map((tip, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-amber-600 font-bold">•</span>
