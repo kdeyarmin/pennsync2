@@ -49,23 +49,23 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
 
           <TabsContent value="scenarios" className="mt-4 space-y-3">
             {guidance.scenarios.map((scenario, idx) => (
-              <Card key={idx} className="border-l-4" style={{ borderLeftColor: scenario.color || '#6366f1' }}>
+              <Card key={idx} className="border-l-4 bg-white" style={{ borderLeftColor: scenario.color || '#6366f1' }}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
                       <h4 className="font-semibold text-sm text-gray-900 mb-2">
                         {scenario.title}
                       </h4>
-                      <p className="text-sm text-gray-900 mb-3">
-                       {scenario.description}
+                      <p className="text-sm text-gray-900 font-normal mb-3">
+                        {scenario.description}
                       </p>
-                      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                       <p className="text-xs font-semibold text-indigo-900 mb-1">
-                         Recommended Answer:
-                       </p>
-                       <p className="text-sm font-medium text-indigo-950">
-                         {scenario.recommendedAnswer}
-                       </p>
+                      <div className="bg-white border-2 border-indigo-300 rounded-lg p-3">
+                        <p className="text-xs font-bold text-indigo-700 mb-1">
+                          Recommended Answer:
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {scenario.recommendedAnswer}
+                        </p>
                       </div>
                     </div>
                   </div>
