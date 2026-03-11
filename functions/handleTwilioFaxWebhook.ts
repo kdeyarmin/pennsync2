@@ -49,37 +49,30 @@ Deno.serve(async (req) => {
 
     console.log(`Updated FaxLog ${faxLog.id} to status: ${updateData.status}`);
 
-    // If delivered, send confirmation notification
-    if (status === 'delivered') {
-      try {
-        await base44.asServiceRole.entities.Notification.create({
-          user_email: faxLog.sent_by,
-          title: 'Fax Delivered',
-          message: `Fax to ${faxLog.to_number} (${faxLog.document_name}) delivered successfully in ${numPages} page(s).`,
-          type: 'fax_delivered',
-          related_entity: 'FaxLog',
-          related_entity_id: faxLog.id,
-          is_read: false
-        });
-      } catch (err) {
-        console.error('Failed to create delivery notification:', err);
-      }
-    }
+    // Send notifications based on status changes
+    await sendStatusNotification(base44, faxLog, status, numPages, updateData.failure_reason);
 
-    // If failed, create alert for user
-    if (status === 'failed') {
+    // Log status change in user activity
+    if (faxLog.sent_by) {
       try {
-        await base44.asServiceRole.entities.Notification.create({
+        await base44.asServiceRole.entities.UserActivity.create({
           user_email: faxLog.sent_by,
-          title: 'Fax Failed',
-          message: `Fax to ${faxLog.to_number} (${faxLog.document_name}) failed. ${updateData.failure_reason}. You can retry from the Fax Dashboard.`,
-          type: 'fax_failed',
-          related_entity: 'FaxLog',
-          related_entity_id: faxLog.id,
-          is_read: false
+          action: 'fax_status_updated',
+          entity_type: 'FaxLog',
+          entity_id: faxLog.id,
+          details: {
+            fax_sid: faxSid,
+            old_status: faxLog.status,
+            new_status: updateData.status,
+            to_number: faxLog.to_number,
+            document_name: faxLog.document_name,
+            pages: numPages,
+            error: updateData.failure_reason || null,
+          },
+          status: status === 'failed' ? 'failure' : 'success',
         });
       } catch (err) {
-        console.error('Failed to create failure notification:', err);
+        console.error('Failed to log user activity:', err);
       }
     }
 
@@ -100,4 +93,76 @@ function mapTwilioStatus(twilioStatus) {
     'canceled': 'failed'
   };
   return statusMap[twilioStatus] || 'sending';
+}
+
+async function sendStatusNotification(base44, faxLog, status, numPages, failureReason) {
+  if (!faxLog.sent_by) return;
+
+  const recipientName = faxLog.to_name || faxLog.to_number;
+  
+  try {
+    let notificationData = null;
+
+    switch (status) {
+      case 'delivered':
+        notificationData = {
+          user_email: faxLog.sent_by,
+          title: '✅ Fax Delivered Successfully',
+          message: `Your fax to ${recipientName} has been delivered successfully. Document: ${faxLog.document_name || 'Untitled'} (${numPages || faxLog.pages || 'N/A'} pages).`,
+          type: 'fax_delivered',
+          priority: 'normal',
+          related_entity: 'FaxLog',
+          related_entity_id: faxLog.id,
+          is_read: false,
+        };
+        break;
+
+      case 'failed':
+        notificationData = {
+          user_email: faxLog.sent_by,
+          title: '❌ Fax Delivery Failed',
+          message: `Your fax to ${recipientName} failed to deliver. Document: ${faxLog.document_name || 'Untitled'}. Reason: ${failureReason || 'Unknown error'}. You can retry from the Fax Dashboard.`,
+          type: 'fax_failed',
+          priority: 'high',
+          related_entity: 'FaxLog',
+          related_entity_id: faxLog.id,
+          is_read: false,
+        };
+        break;
+
+      case 'sending':
+      case 'processing':
+        notificationData = {
+          user_email: faxLog.sent_by,
+          title: '📤 Fax Sending in Progress',
+          message: `Your fax to ${recipientName} is currently being transmitted. Document: ${faxLog.document_name || 'Untitled'}.`,
+          type: 'fax_sending',
+          priority: 'low',
+          related_entity: 'FaxLog',
+          related_entity_id: faxLog.id,
+          is_read: false,
+        };
+        break;
+
+      case 'canceled':
+        notificationData = {
+          user_email: faxLog.sent_by,
+          title: '🚫 Fax Canceled',
+          message: `Your fax to ${recipientName} was canceled. Document: ${faxLog.document_name || 'Untitled'}.`,
+          type: 'fax_canceled',
+          priority: 'normal',
+          related_entity: 'FaxLog',
+          related_entity_id: faxLog.id,
+          is_read: false,
+        };
+        break;
+    }
+
+    if (notificationData) {
+      await base44.asServiceRole.entities.Notification.create(notificationData);
+      console.log(`Created ${status} notification for user: ${faxLog.sent_by}`);
+    }
+  } catch (err) {
+    console.error(`Failed to create ${status} notification:`, err);
+  }
 }
