@@ -136,6 +136,7 @@ import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import Help from './pages/Help';
 import PopulationHealthAnalytics from './pages/PopulationHealthAnalytics';
+import EducationLibrary from './pages/EducationLibrary';
 import __Layout from './Layout.jsx';
 
 
@@ -229,6 +230,7 @@ export const PAGES = {
     "VisitScribe": VisitScribe,
     "Help": Help,
     "PopulationHealthAnalytics": PopulationHealthAnalytics,
+    "EducationLibrary": EducationLibrary,
 }
 
 export const pagesConfig = {
