@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function AssignmentWizard({ users = [], onAssign }) {
   const [mode, setMode] = useState("filters");
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [filters, setFilters] = useState({ role: "all", department: "all", business_line: "all", location: "all" });
+  const [filters, setFilters] = useState({ role: "all", discipline: "all", department: "all", business_line: "all", location: "all" });
 
   const options = useMemo(() => ({
     roles: [...new Set(users.map((user) => user.job_title || user.credential_type || user.role).filter(Boolean))],
+    disciplines: [...new Set(users.map((user) => user.discipline || user.credential_type).filter(Boolean))],
     departments: [...new Set(users.map((user) => user.department).filter(Boolean))],
     businessLines: [...new Set(users.map((user) => user.business_line).filter(Boolean))],
     locations: [...new Set(users.map((user) => user.location).filter(Boolean))],
@@ -20,6 +21,7 @@ export default function AssignmentWizard({ users = [], onAssign }) {
   const filteredUsers = useMemo(() => users.filter((user) => {
     if (user.role === 'admin') return false;
     if (filters.role !== 'all' && (user.job_title || user.credential_type || user.role) !== filters.role) return false;
+    if (filters.discipline !== 'all' && (user.discipline || user.credential_type) !== filters.discipline) return false;
     if (filters.department !== 'all' && user.department !== filters.department) return false;
     if (filters.business_line !== 'all' && user.business_line !== filters.business_line) return false;
     if (filters.location !== 'all' && user.location !== filters.location) return false;
@@ -45,6 +47,7 @@ export default function AssignmentWizard({ users = [], onAssign }) {
 
           <div className="space-y-3">
             <Select value={filters.role} onValueChange={(value) => setFilters({ ...filters, role: value })}><SelectTrigger><SelectValue placeholder="Role" /></SelectTrigger><SelectContent><SelectItem value="all">All roles</SelectItem>{options.roles.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select>
+            <Select value={filters.discipline} onValueChange={(value) => setFilters({ ...filters, discipline: value })}><SelectTrigger><SelectValue placeholder="Discipline" /></SelectTrigger><SelectContent><SelectItem value="all">All disciplines</SelectItem>{options.disciplines.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select>
             <Select value={filters.department} onValueChange={(value) => setFilters({ ...filters, department: value })}><SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger><SelectContent><SelectItem value="all">All departments</SelectItem>{options.departments.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select>
             <Select value={filters.business_line} onValueChange={(value) => setFilters({ ...filters, business_line: value })}><SelectTrigger><SelectValue placeholder="Business line" /></SelectTrigger><SelectContent><SelectItem value="all">All business lines</SelectItem>{options.businessLines.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select>
             <Select value={filters.location} onValueChange={(value) => setFilters({ ...filters, location: value })}><SelectTrigger><SelectValue placeholder="Location" /></SelectTrigger><SelectContent><SelectItem value="all">All locations</SelectItem>{options.locations.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select>

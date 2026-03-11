@@ -151,7 +151,7 @@ Always include a warning that AI-generated training should be reviewed by an adm
       title: generated.course?.title || topic,
       short_description: generated.course?.short_description || '',
       description: generated.course?.description || '',
-      training_type: 'in_service',
+      training_type,
       annual_cycle_year: annual_cycle_year || undefined,
       category: normalizeCategory(training_category),
       business_line_scope: normalizeBusinessLine(business_line),
@@ -238,7 +238,8 @@ Always include a warning that AI-generated training should be reviewed by an adm
       entity_id: course.id,
       after_json: {
         title: course.title,
-        training_type: 'in_service',
+        training_type,
+        annual_cycle_year: annual_cycle_year || null,
         status: course.status,
         ai_generated: true
       },

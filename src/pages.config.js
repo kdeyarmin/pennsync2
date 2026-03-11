@@ -56,6 +56,7 @@ import AdminUserSetup from './pages/AdminUserSetup';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import AnnualMandatoryEducation from './pages/AnnualMandatoryEducation';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import CarePlanBuilder from './pages/CarePlanBuilder';
 import CarePlanManagement from './pages/CarePlanManagement';
@@ -94,6 +95,7 @@ import MedicareComplianceDashboard from './pages/MedicareComplianceDashboard';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
 import MedicationReconciliation from './pages/MedicationReconciliation';
 import Messages from './pages/Messages';
+import MyAnnualEducation from './pages/MyAnnualEducation';
 import MyTraining from './pages/MyTraining';
 import NotificationSettings from './pages/NotificationSettings';
 import NurseEducationVideos from './pages/NurseEducationVideos';
@@ -152,8 +154,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import AnnualMandatoryEducation from './pages/AnnualMandatoryEducation';
-import MyAnnualEducation from './pages/MyAnnualEducation';
+import AnnualEducationTranscript from './pages/AnnualEducationTranscript';
 import __Layout from './Layout.jsx';
 
 
@@ -167,6 +168,7 @@ export const PAGES = {
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
+    "AnnualMandatoryEducation": AnnualMandatoryEducation,
     "AutomaticCarePlans": AutomaticCarePlans,
     "CarePlanBuilder": CarePlanBuilder,
     "CarePlanManagement": CarePlanManagement,
@@ -205,6 +207,7 @@ export const PAGES = {
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
     "MedicationReconciliation": MedicationReconciliation,
     "Messages": Messages,
+    "MyAnnualEducation": MyAnnualEducation,
     "MyTraining": MyTraining,
     "NotificationSettings": NotificationSettings,
     "NurseEducationVideos": NurseEducationVideos,
@@ -263,8 +266,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "AnnualMandatoryEducation": AnnualMandatoryEducation,
-    "MyAnnualEducation": MyAnnualEducation,
+    "AnnualEducationTranscript": AnnualEducationTranscript,
 }
 
 export const pagesConfig = {
