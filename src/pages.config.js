@@ -135,6 +135,7 @@ import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import Help from './pages/Help';
+import PopulationHealthAnalytics from './pages/PopulationHealthAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -227,6 +228,7 @@ export const PAGES = {
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
     "Help": Help,
+    "PopulationHealthAnalytics": PopulationHealthAnalytics,
 }
 
 export const pagesConfig = {
