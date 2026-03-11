@@ -40,27 +40,34 @@ export default function MobileMenu({ open, onClose, navCategories, adminItems, i
           {isAdmin && (
             <>
               <div className="border-t border-gray-200 my-3" />
-              <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</p>
-              {adminItems.map((item) =>
-                item.action ? (
-                  <button key={item.name} onClick={() => { item.action(); onClose(); }}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 w-full"
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="flex items-center gap-2 flex-1">
-                      {item.name}
-                      {item.badge > 0 && <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>}
-                    </span>
-                  </button>
-                ) : (
-                  <Link key={item.page} to={createPageUrl(item.page)} onClick={onClose}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${isActive(item.page) ? "bg-indigo-600 text-white" : "text-gray-700 hover:bg-gray-100"}`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {item.name}
-                  </Link>
-                )
-              )}
+              {adminItems.map((category, catIndex) => (
+                <div key={catIndex}>
+                  {category.category && (
+                    <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase mt-3">{category.category}</p>
+                  )}
+                  {category.items.map((item) =>
+                    item.action ? (
+                      <button key={item.name} onClick={() => { item.action(); onClose(); }}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 w-full"
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="flex items-center gap-2 flex-1">
+                          {item.name}
+                          {item.badge > 0 && <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>}
+                        </span>
+                      </button>
+                    ) : (
+                      <Link key={item.page} to={createPageUrl(item.page)} onClick={onClose}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${isActive(item.page) ? "bg-indigo-600 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        {item.name}
+                      </Link>
+                    )
+                  )}
+                  {catIndex === 0 && <div className="border-t border-gray-200 my-2" />}
+                </div>
+              ))}
             </>
           )}
         </nav>
