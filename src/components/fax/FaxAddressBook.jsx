@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Upload, Search, Edit, Trash2, Building2, Phone, FileText } from "lucide-react";
 import { toast } from "sonner";
+import PhysicianSelector from '../physician/PhysicianSelector';
 
 export default function FaxAddressBook({ onSelectContact }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -207,6 +208,14 @@ export default function FaxAddressBook({ onSelectContact }) {
           </label>
         </Button>
       </div>
+
+      <PhysicianSelector onSelectPhysician={(physician) => {
+        onSelectContact?.({
+          name: `${physician.full_name}${physician.credentials ? ', ' + physician.credentials : ''}`,
+          organization: physician.practice_name || '',
+          fax_number: physician.fax_number
+        });
+      }} />
 
       <div className="grid gap-2 max-h-96 overflow-y-auto">
         {filteredContacts.map((contact) => (

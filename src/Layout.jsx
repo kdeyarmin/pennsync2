@@ -129,6 +129,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
         { name: "Send a Fax", icon: BookUser, page: "SendFax" },
         { name: "Fax Dashboard", icon: BarChart3, page: "FaxDashboard" },
+        { name: "Physicians", icon: Users, page: "PhysicianDirectory" },
         { name: "Telehealth", icon: Video, page: "Telehealth" },
       ],
     },
