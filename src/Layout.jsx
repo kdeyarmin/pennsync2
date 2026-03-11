@@ -38,9 +38,19 @@ export default function Layout({ children, currentPageName }) {
     return () => mq.removeEventListener('change', e => update(e.matches));
   }, []);
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, error: userError } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch (error) {
+        if (error.status === 403) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    retry: false,
   });
 
   useEffect(() => { window.scrollTo(0, 0); }, [currentPageName]);
