@@ -118,9 +118,9 @@ export default function Telehealth() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="w-full space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Video className="w-6 h-6 text-blue-600" />
@@ -128,13 +128,13 @@ export default function Telehealth() {
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Secure video visits with patients via Twilio</p>
         </div>
-        <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
           <Plus className="w-4 h-4" /> New Session
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="px-3 sm:px-4 md:px-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: "Total Sessions", value: stats.total, icon: Video, color: "text-blue-600" },
           { label: "Completed", value: stats.completed, icon: CheckCircle2, color: "text-green-600" },
@@ -155,7 +155,7 @@ export default function Telehealth() {
 
       {/* Active session */}
       {activeSession && !showDocumentation && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="px-3 sm:px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
             <Card className="border-green-400 bg-green-50">
               <CardContent className="p-4">
@@ -200,14 +200,17 @@ export default function Telehealth() {
 
       {/* Post-session documentation */}
       {showDocumentation && activeSession && (
-        <SessionDocumentation
+        <div className="px-3 sm:px-4 md:px-6">
+          <SessionDocumentation
           sessionId={activeSession.id}
-          onSave={handleSaveDocumentation}
-          initialData={activeSession}
-        />
+            onSave={handleSaveDocumentation}
+            initialData={activeSession}
+          />
+        </div>
       )}
 
       {/* Session lists */}
+      <div className="px-3 sm:px-4 md:px-6">
       <Tabs defaultValue="upcoming">
         <TabsList>
           <TabsTrigger value="upcoming">
@@ -240,6 +243,7 @@ export default function Telehealth() {
           ))}
         </TabsContent>
       </Tabs>
+      </div>
 
       {/* New Session Dialog */}
       <Dialog open={showNewSession} onOpenChange={setShowNewSession}>

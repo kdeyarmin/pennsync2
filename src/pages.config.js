@@ -146,6 +146,7 @@ import VisitScribe from './pages/VisitScribe';
 import LearningCenter from './pages/LearningCenter';
 import AITrainingGenerator from './pages/AITrainingGenerator';
 import LearningReports from './pages/LearningReports';
+import JoinTelehealth from './pages/JoinTelehealth';
 import __Layout from './Layout.jsx';
 
 
@@ -249,6 +250,7 @@ export const PAGES = {
     "LearningCenter": LearningCenter,
     "AITrainingGenerator": AITrainingGenerator,
     "LearningReports": LearningReports,
+    "JoinTelehealth": JoinTelehealth,
 }
 
 export const pagesConfig = {
