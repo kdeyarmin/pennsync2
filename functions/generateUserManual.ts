@@ -205,13 +205,30 @@ Deno.serve(async (req) => {
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text('• Sidebar (Desktop): Click on any menu item to navigate between features', 25, yPos);
-    yPos += 6;
-    doc.text('• Bottom Nav (Mobile): Tap icons for quick access to core functions', 25, yPos);
-    yPos += 6;
-    doc.text('• Breadcrumbs: Shows your current location and allows quick navigation back', 25, yPos);
-    yPos += 6;
-    doc.text('• Search: Use global search to quickly find patients, documents, or features', 25, yPos);
+    const navItems = [
+      'Sidebar (Desktop): Located on the left side of your screen. Click on any',
+      '  menu item to navigate between features like Patients, Smart Notes, Fax, etc.',
+      '',
+      'Bottom Nav (Mobile): On mobile devices, you\'ll see icons at the bottom for',
+      '  quick access to Dashboard, Patients, Messages, Smart Notes, and Menu.',
+      '',
+      'Breadcrumbs: At the top of each page, breadcrumb trail shows where you are',
+      '  and allows one-click navigation back to previous sections.',
+      '',
+      'Search: Global search bar helps you quickly find patients by name or MRN,',
+      '  locate documents, or jump to specific features.'
+    ];
+    
+    navItems.forEach(item => {
+      checkPageBreak();
+      if (item === '') {
+        yPos += 4;
+      } else {
+        const lines = doc.splitTextToSize(item, pageWidth - 50);
+        doc.text(lines, 25, yPos);
+        yPos += lines.length * 5;
+      }
+    });
     yPos += 12;
 
     // SECTION 2: PATIENT MANAGEMENT
@@ -307,20 +324,40 @@ Deno.serve(async (req) => {
     yPos += 8;
     
     const patientTabs = [
-      'Overview - AI-generated dashboard summary with quick actions',
-      'Vitals - Trend charts tracking vital signs over time',
-      'History - Complete medical history, medications, allergies',
-      'Clinical - Contact information, physician details, emergency contacts',
-      'Events - Timeline of all clinical events and changes',
-      'AI Tools - Advanced analysis including risk prediction, task generation',
-      'Care Plans - Active care plans with gap analysis',
-      'Documents - All uploaded documents, referral PDFs, discharge summaries'
+      'Overview Tab: Displays AI-generated dashboard summary showing patient status',
+      '  at a glance, plus quick action buttons for common tasks.',
+      '',
+      'Vitals Tab: Interactive trend charts tracking vital signs over time. Hover',
+      '  over data points to see specific values. Identifies concerning trends.',
+      '',
+      'History Tab: Complete medical history including all current medications,',
+      '  documented allergies (shown with warning if present), and past conditions.',
+      '',
+      'Clinical Tab: Contact information section with patient address and phone,',
+      '  emergency contact details, and assigned physician information.',
+      '',
+      'Events Tab: Chronological timeline showing all clinical events, medication',
+      '  changes, hospitalizations, and significant status updates.',
+      '',
+      'AI Tools Tab: Advanced analysis tools including risk prediction, automated',
+      '  task generation, deterioration alerts, and care coordination suggestions.',
+      '',
+      'Care Plans Tab: Shows all active care plans with problem/goal/intervention',
+      '  structure. Includes AI-powered gap analysis to identify missing interventions.',
+      '',
+      'Documents Tab: All uploaded documents organized by category. Includes referral',
+      '  PDFs, lab results, imaging reports, and auto-generated discharge summaries.'
     ];
-    
+
     patientTabs.forEach(tab => {
       checkPageBreak();
-      doc.text('• ' + tab, 30, yPos);
-      yPos += 6;
+      if (tab === '') {
+        yPos += 4;
+      } else {
+        const lines = doc.splitTextToSize(tab, pageWidth - 55);
+        doc.text(lines, 30, yPos);
+        yPos += lines.length * 5;
+      }
     });
 
     // SECTION 3: SMART NOTES & AI DOCUMENTATION
@@ -1038,17 +1075,23 @@ Deno.serve(async (req) => {
     yPos += 8;
     
     const complianceSteps = [
-      '• AI scans every saved visit note against Medicare requirements',
-      '• Identifies missing elements or weak documentation',
-      '• Provides specific suggestions for improvement',
-      '• Tracks your compliance rate over time',
-      '• Flags high-risk notes that may be denied during audits',
+      'How the AI Scans Your Notes:',
+      '  Every saved visit note is analyzed against Medicare requirements looking',
+      '  for skilled nursing language, medical necessity justification, homebound',
+      '  status documentation, patient response details, and teaching confirmation.',
       '',
-      'VIEWING YOUR SCORE:',
-      '• Overall compliance percentage shown prominently',
-      '• Breakdown by required element (Skilled Language: 95%, etc.)',
-      '• Trend chart showing improvement over time',
-      '• List of flagged notes requiring revision',
+      'What You See:',
+      '  - Overall compliance percentage displayed at top of dashboard',
+      '  - Breakdown showing score for each required element',
+      '  - Color-coded indicators (green = compliant, yellow = needs improvement,',
+      '    red = high risk for denial)',
+      '  - Trend chart showing your compliance rate over past 30/60/90 days',
+      '  - List of specific flagged notes with suggested improvements',
+      '',
+      'Taking Action:',
+      '  Click any flagged note to view AI suggestions for strengthening it.',
+      '  Common fixes include adding more specific skilled language, clarifying',
+      '  medical necessity, or documenting homebound status more explicitly.',
       '',
       'BEST PRACTICE: Check compliance dashboard weekly. Address flagged notes',
       'within 24 hours. Use AI suggestions to strengthen documentation before',
@@ -1059,7 +1102,7 @@ Deno.serve(async (req) => {
       checkPageBreak();
       if (step === '') {
         yPos += 4;
-      } else if (step.includes(':') && step.toUpperCase() === step) {
+      } else if (step.endsWith(':') && !step.startsWith(' ')) {
         doc.setFont('helvetica', 'bold');
         doc.text(step, 25, yPos);
         yPos += 8;
@@ -1073,8 +1116,9 @@ Deno.serve(async (req) => {
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...textGray);
       } else {
-        doc.text(step, 25, yPos);
-        yPos += 5;
+        const lines = doc.splitTextToSize(step, pageWidth - 50);
+        doc.text(lines, 25, yPos);
+        yPos += lines.length * 5;
       }
     });
 
@@ -1101,34 +1145,76 @@ Deno.serve(async (req) => {
     doc.setFontSize(10);
     
     const dailyTips = [
-      '1. Start each day by checking Dashboard alerts and messages',
-      '2. Use Visit Scribe to document visits immediately (voice recording)',
-      '3. Review AI-generated notes and enhance before saving',
-      '4. Complete OASIS assessments same-day using AI assistance',
-      '5. Check compliance dashboard at end of day',
-      '6. Favorite frequently accessed patients for quick access',
+      '1. Start Day: Open Dashboard and review alert notifications, pending tasks,',
+      '   and scheduled visits for the day.',
+      '',
+      '2. Document Visits: Use Visit Scribe voice recording feature immediately',
+      '   after each visit while details are fresh in your mind.',
+      '',
+      '3. Review AI Notes: Check AI-generated notes for accuracy and completeness',
+      '   before clicking Save. Edit any details that need refinement.',
+      '',
+      '4. OASIS Same-Day: Complete OASIS assessments same day as visit using the',
+      '   AI assistance tools to ensure all required items are addressed.',
+      '',
+      '5. End-of-Day Check: Review compliance dashboard to catch any flagged',
+      '   notes that need strengthening before submission.',
+      '',
+      '6. Use Favorites: Click star icon on frequently seen patients to pin them',
+      '   to top of your lists for quick access.',
       '',
       'Documentation Excellence:',
-      '✓ Always select patient before documenting - enables AI personalization',
-      '✓ Include objective measurements (vitals, pain scales, percentages)',
-      '✓ Document patient response to interventions',
-      '✓ Use clinical library phrases for consistency',
-      '✓ Let AI expand your brief notes into compliant narratives',
-      '✓ Review AI suggestions but trust your clinical judgment',
       '',
-      'Time-Saving Tips:',
-      '⚡ Use voice recording for visits instead of typing',
-      '⚡ Create care plan templates for common diagnoses',
-      '⚡ Set up fax templates for recurring recipients',
-      '⚡ Leverage AI-generated follow-up tasks',
-      '⚡ Use batch operations when documenting multiple patients',
+      '  > Always select patient before documenting - this enables AI to pull in',
+      '    patient-specific history and personalize suggestions.',
       '',
-      'Quality Assurance:',
-      '🎯 Review compliance scores weekly',
-      '🎯 Address flagged notes within 24 hours',
-      '🎯 Verify AI-generated OASIS responses match your assessment',
-      '🎯 Keep care plans updated based on visit findings',
-      '🎯 Document homebound status in every skilled visit note'
+      '  > Include objective measurements wherever possible: blood pressure readings,',
+      '    pain scale numbers, percentage of task completion, wound measurements.',
+      '',
+      '  > Document patient response to your interventions - did they understand',
+      '    teaching? Did symptoms improve? This shows medical necessity.',
+      '',
+      '  > Use clinical library phrases for consistency across your documentation.',
+      '',
+      '  > Let AI expand your brief bullet points into full Medicare-compliant',
+      '    narratives with proper skilled terminology.',
+      '',
+      '  > Review AI suggestions carefully, but always trust your clinical judgment',
+      '    as the expert who actually assessed the patient.',
+      '',
+      'Time-Saving Strategies:',
+      '',
+      '  > Voice Recording: Record visits instead of typing - saves 5-10 minutes',
+      '    per visit. AI handles transcription and formatting.',
+      '',
+      '  > Care Plan Templates: Create templates for common diagnoses (CHF, diabetes,',
+      '    wound care) and reuse with one-click adaptation.',
+      '',
+      '  > Fax Templates: Save frequently used fax configurations (hospitals, PCPs)',
+      '    to send documents in seconds without re-entering recipient info.',
+      '',
+      '  > AI Follow-Up Tasks: Let AI generate task lists from visit notes instead',
+      '    of manually creating each task.',
+      '',
+      '  > Batch Operations: When updating multiple patient records, use bulk',
+      '    actions to apply changes across your caseload efficiently.',
+      '',
+      'Quality Assurance Checklist:',
+      '',
+      '  > Weekly Compliance Review: Check your compliance scores every Monday.',
+      '    Aim for 95%+ on all required Medicare elements.',
+      '',
+      '  > 24-Hour Flag Response: Address any flagged notes within 24 hours while',
+      '    visit details are still fresh.',
+      '',
+      '  > OASIS Verification: Always verify AI-generated OASIS responses match',
+      '    your actual clinical assessment. AI suggests but you decide.',
+      '',
+      '  > Care Plan Currency: Update care plans whenever visit findings indicate',
+      '    new problems or changes in patient status.',
+      '',
+      '  > Homebound Documentation: Every skilled visit note must clearly document',
+      '    why patient is homebound per Medicare requirements.'
     ];
     
     dailyTips.forEach(tip => {
