@@ -10,7 +10,9 @@ Deno.serve(async (req) => {
     const certificates = (await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-issued_at', 300)).filter((certificate) => certificate.expiration_date);
     const activeAssignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 500);
 
+    let processedCount = 0;
     for (const certificate of certificates) {
+      if (processedCount >= 25) break;
       if (!certificate.expiration_date) continue;
       if (certificate.expiration_date > todayIso) continue;
 
