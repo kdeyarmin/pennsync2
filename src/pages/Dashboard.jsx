@@ -25,6 +25,7 @@ const HighRiskPatientsWidget    = lazy(() => import("../components/dashboard/Hig
 const PendingReferralsWidget    = lazy(() => import("../components/referral/PendingReferralsWidget"));
 const RealTimePatientAlerts     = lazy(() => import("../components/dashboard/RealTimePatientAlerts"));
 const TopTemplatesWidget        = lazy(() => import("../components/clinical/TopTemplatesWidget"));
+const HospitalizationRiskWidget = lazy(() => import("../components/dashboard/HospitalizationRiskWidget"));
 
 
 export default function Dashboard() {
@@ -272,6 +273,11 @@ export default function Dashboard() {
 
 
       <Suspense fallback={null}>
+        {/* Hospitalization Risk Monitor */}
+        <div className="mb-6">
+          <HospitalizationRiskWidget autoAnalyze={false} />
+        </div>
+
         {/* High-Risk Patients Alert */}
         <div className="mb-6">
           <HighRiskPatientsWidget />
