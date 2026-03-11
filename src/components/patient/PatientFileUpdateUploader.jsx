@@ -106,7 +106,7 @@ export default function PatientFileUpdateUploader() {
     },
     {
       key: "matchedExisting",
-      label: "Already in system",
+      label: reportType === "discharge_report" ? "Matched in system" : "Already in system",
       value: results?.matchedExisting || 0,
       className: "bg-amber-50 text-amber-700",
       icon: CheckCircle2,
