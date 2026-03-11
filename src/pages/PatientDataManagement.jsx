@@ -620,210 +620,21 @@ export default function PatientDataManagement() {
   );
 }
 
-// Import Patients Component - extracted from ImportPatients.jsx
+// Import Patients Component
 function ImportPatientsTab() {
-  const [file, setFile] = useState(null);
-  const [autoImporting, setAutoImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
-  const [importResults, setImportResults] = useState(null);
-  const queryClient = useQueryClient();
-
-  const handleAutoImport = async (selectedFile) => {
-    if (!selectedFile) return;
-
-    setAutoImporting(true);
-    setImportProgress(0);
-    setImportResults(null);
-
-    try {
-      const text = await selectedFile.text();
-      const response = await base44.functions.invoke('autoImportPatients', { fileContent: text });
-      const data = response.data || response;
-      
-      if (data.success) {
-        setImportResults(data.results);
-        queryClient.invalidateQueries({ queryKey: ['patients'] });
-        setImportProgress(100);
-      } else {
-        alert('Import failed: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Auto import error:', error);
-      alert('Auto import failed: ' + (error.response?.data?.error || error.message));
-    }
-
-    setAutoImporting(false);
-  };
-
-  const downloadTemplate = () => {
-    const headers = [
-      'first_name', 'last_name', 'middle_name', 'date_of_birth', 'medical_record_number',
-      'phone', 'email', 'address', 'payor',
-      'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
-      'physician_name', 'physician_phone', 'physician_email',
-      'primary_diagnosis', 'allergies',
-      'admission_date', 'care_type', 'status'
-    ];
-    const sampleRow = [
-      'John', 'Doe', 'A', '1950-05-20', '12345',
-      '555-123-4567', 'john.doe@email.com', '123 Main St, City, PA 12345', 'Medicare',
-      'Jane Doe', '555-987-6543', 'Spouse',
-      'Dr. Smith', '555-111-2222', 'dr.smith@clinic.com',
-      'Congestive Heart Failure', 'NKDA',
-      '2024-01-15', 'home_health', 'active'
-    ];
-    const csv = headers.join(',') + '\n' + sampleRow.join(',') + '\n';
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'patient_import_template.csv';
-    a.click();
-  };
-
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <div>
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 mb-2">
           <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-          <span className="truncate">Import Patients</span>
+          <span className="truncate">Patient roster import</span>
         </h2>
         <p className="text-xs sm:text-sm md:text-base text-gray-600">
-          Upload a CSV file to import multiple patient records at once
+          Use the current census file to add only new patients, or use the discharged report to safely archive patients who have been discharged.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card>
-          <CardHeader className="p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-base sm:text-lg">Get Started</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <p className="text-xs sm:text-sm text-gray-600 mb-4">
-              Download our CSV template to ensure your data is formatted correctly
-            </p>
-            <Button onClick={downloadTemplate} variant="outline" className="w-full min-h-[44px]">
-              <FileText className="w-4 h-4 mr-2" />
-              Download CSV Template
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
-          <CardHeader className="p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-              <Upload className="w-5 h-5 text-green-600" />
-              Quick Import
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <p className="text-xs sm:text-sm text-gray-600 mb-4">
-              Upload your CSV file and automatically import all patients
-            </p>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleAutoImport(file);
-              }}
-              className="hidden"
-              id="auto-import"
-              disabled={autoImporting}
-            />
-            <label htmlFor="auto-import" className="block">
-              <Button 
-                className="w-full bg-green-600 hover:bg-green-700 min-h-[44px]" 
-                disabled={autoImporting}
-                asChild
-              >
-                <span>
-                  {autoImporting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                      Importing...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload & Import
-                    </>
-                  )}
-                </span>
-              </Button>
-            </label>
-          </CardContent>
-        </Card>
-      </div>
-
-      {autoImporting && (
-        <Card className="mb-4 sm:mb-6">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Importing patients...</span>
-              <span className="text-sm text-gray-600">{importProgress}%</span>
-            </div>
-            <Progress value={importProgress} className="h-2" />
-          </CardContent>
-        </Card>
-      )}
-
-      {importResults && (
-        <Card className="border-green-300 border-2">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-lg sm:text-xl flex items-center gap-2 sm:gap-3 text-green-900">
-              <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0" />
-              <span className="truncate">Import Completed!</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <Card className="bg-green-50 border-green-200 border-2">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-green-600 text-xs sm:text-sm font-medium mb-1 truncate">Processed</p>
-                      <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-700">{importResults.success}</p>
-                    </div>
-                    <Users className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-green-500 flex-shrink-0" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {importResults.failed > 0 && (
-                <Card className="bg-red-50 border-red-200 border-2">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-red-600 text-xs sm:text-sm font-medium mb-1 truncate">Failed</p>
-                        <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-700">{importResults.failed}</p>
-                      </div>
-                      <AlertTriangle className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-red-500 flex-shrink-0" />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="mt-4 sm:mt-6">
-        <CardContent className="p-4 sm:p-6 text-center text-gray-500">
-          <p className="text-xs sm:text-sm">
-            For advanced import options with manual column mapping and validation, use the full Import Patients feature.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// Reusable import component
-const ImportPatientsTabContent = () => {
-  return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8">
-      <p className="text-gray-600 text-center py-8">Import functionality placeholder</p>
+      <PatientFileUpdateUploader />
     </div>
   );
 }
