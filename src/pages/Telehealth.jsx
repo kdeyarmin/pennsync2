@@ -17,6 +17,7 @@ import VideoRoom from "../components/telehealth/VideoRoom";
 import SessionCard from "../components/telehealth/SessionCard";
 import SessionDocumentation from "../components/telehealth/SessionDocumentation";
 import TelehealthChat from "../components/telehealth/TelehealthChat";
+import RealtimeVitalMonitor from "../components/telehealth/RealtimeVitalMonitor";
 
 const visitTypes = [
   { value: "routine_followup", label: "Routine Follow-up" },
@@ -156,7 +157,7 @@ export default function Telehealth() {
       {/* Active session */}
       {activeSession && !showDocumentation && (
         <div className="px-3 sm:px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-4">
             <Card className="border-green-400 bg-green-50">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -186,6 +187,10 @@ export default function Telehealth() {
                 />
               </CardContent>
             </Card>
+            <RealtimeVitalMonitor 
+              sessionId={activeSession.id}
+              patientId={activeSession.patient_id}
+            />
           </div>
           {showChat && (
             <div className="lg:col-span-1">

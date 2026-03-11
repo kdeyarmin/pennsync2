@@ -1,0 +1,249 @@
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertTriangle, Heart, Thermometer, Wind, TrendingDown, TrendingUp, Clock } from "lucide-react";
+
+const VITAL_THRESHOLDS = {
+  heart_rate: { min: 60, max: 100, unit: "bpm" },
+  blood_pressure_systolic: { min: 90, max: 140, unit: "mmHg" },
+  blood_pressure_diastolic: { min: 60, max: 90, unit: "mmHg" },
+  temperature: { min: 97, max: 99, unit: "°F" },
+  respiratory_rate: { min: 12, max: 20, unit: "breaths/min" },
+  oxygen_saturation: { min: 95, max: 100, unit: "%" },
+};
+
+const VITAL_ICONS = {
+  heart_rate: Heart,
+  blood_pressure_systolic: AlertTriangle,
+  blood_pressure_diastolic: AlertTriangle,
+  temperature: Thermometer,
+  respiratory_rate: Wind,
+  oxygen_saturation: Wind,
+};
+
+export default function RealtimeVitalMonitor({ sessionId, patientId }) {
+  const [vitals, setVitals] = useState({
+    heart_rate: null,
+    blood_pressure_systolic: null,
+    blood_pressure_diastolic: null,
+    temperature: null,
+    respiratory_rate: null,
+    oxygen_saturation: null,
+  });
+
+  const [manualInput, setManualInput] = useState({});
+  const [lastUpdate, setLastUpdate] = useState(null);
+
+  // Fetch agency settings for custom thresholds
+  const { data: agencySettings = {} } = useQuery({
+    queryKey: ['agency-settings'],
+    queryFn: () => base44.entities.AgencySettings.list('-created_date', 1),
+    initialData: [],
+  });
+
+  // Fetch recent vital readings
+  useQuery({
+    queryKey: ['vital-readings', patientId],
+    queryFn: () => base44.entities.VitalSignsForm?.filter?.({ patient_id: patientId }, '-created_date', 5) || Promise.resolve([]),
+    onSuccess: (data) => {
+      if (data?.length > 0) {
+        const latest = data[0];
+        setVitals(prev => ({
+          ...prev,
+          heart_rate: latest.heart_rate || prev.heart_rate,
+          blood_pressure_systolic: latest.systolic || prev.blood_pressure_systolic,
+          blood_pressure_diastolic: latest.diastolic || prev.blood_pressure_diastolic,
+          temperature: latest.temperature || prev.temperature,
+          respiratory_rate: latest.respiratory_rate || prev.respiratory_rate,
+          oxygen_saturation: latest.oxygen_saturation || prev.oxygen_saturation,
+        }));
+        setLastUpdate(new Date(latest.created_date));
+      }
+    },
+    refetchInterval: 15000,
+    enabled: !!patientId,
+  });
+
+  const handleInputChange = (field, value) => {
+    setManualInput(prev => ({ ...prev, [field]: parseFloat(value) || null }));
+  };
+
+  const handleRecordVital = async (field) => {
+    if (manualInput[field] === null) return;
+
+    const vitalData = {
+      patient_id: patientId,
+      [field]: manualInput[field],
+      recorded_at: new Date().toISOString(),
+    };
+
+    if (field === 'blood_pressure_systolic' && manualInput['blood_pressure_diastolic']) {
+      vitalData.blood_pressure_diastolic = manualInput['blood_pressure_diastolic'];
+    }
+
+    try {
+      await base44.entities.VitalSignsForm.create(vitalData);
+      setVitals(prev => ({ ...prev, [field]: manualInput[field] }));
+      setManualInput(prev => ({ ...prev, [field]: null }));
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error recording vital:', error);
+    }
+  };
+
+  const isOutOfRange = (field, value) => {
+    if (value === null) return false;
+    const threshold = VITAL_THRESHOLDS[field];
+    return value < threshold.min || value > threshold.max;
+  };
+
+  const getStatusColor = (field, value) => {
+    if (value === null) return 'bg-gray-100 text-gray-700';
+    return isOutOfRange(field, value) ? 'bg-red-100 text-red-800 border-red-300' : 'bg-green-100 text-green-800 border-green-300';
+  };
+
+  const getAlertActions = (field, value) => {
+    if (!isOutOfRange(field, value)) return null;
+
+    const actions = {
+      heart_rate: {
+        high: ['Check for pain, anxiety, or fever', 'Assess hydration status', 'Review medications for stimulants'],
+        low: ['Check for hypotension', 'Assess for bradycardia symptoms', 'Consider cardiac monitoring'],
+      },
+      blood_pressure_systolic: {
+        high: ['Assess for headache/symptoms', 'Review recent activity', 'Consider medication adjustment', 'Monitor for preeclampsia risk'],
+        low: ['Check for dizziness/weakness', 'Ensure adequate hydration', 'Assess orthostatic changes'],
+      },
+      temperature: {
+        high: ['Assess for fever signs', 'Check for infection', 'Encourage fluid intake', 'Consider antipyretic'],
+        low: ['Check room temperature', 'Assess for hypothermia risk', 'Ensure adequate clothing/blankets'],
+      },
+      oxygen_saturation: {
+        low: ['Check oxygen equipment', 'Assess respiratory effort', 'Review for shortness of breath', 'Consider physician notification'],
+      },
+      respiratory_rate: {
+        high: ['Assess respiratory distress', 'Check for pain or anxiety', 'Review for infection signs'],
+        low: ['Assess alertness', 'Check for respiratory depression', 'Monitor for medication effects'],
+      },
+    };
+
+    const direction = value > VITAL_THRESHOLDS[field].max ? 'high' : 'low';
+    return actions[field]?.[direction] || [];
+  };
+
+  const criticalAlerts = Object.entries(vitals)
+    .filter(([field, value]) => value !== null && isOutOfRange(field, value))
+    .map(([field, value]) => ({ field, value }));
+
+  return (
+    <div className="space-y-4">
+      {/* Critical Alerts */}
+      {criticalAlerts.length > 0 && (
+        <Card className="border-red-300 bg-red-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="w-5 h-5" />
+              Vital Sign Alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {criticalAlerts.map(({ field, value }) => (
+              <div key={field} className="bg-white border border-red-200 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-gray-900 capitalize">
+                    {field.replace(/_/g, ' ')}: {value} {VITAL_THRESHOLDS[field].unit}
+                  </p>
+                  <Badge className="bg-red-100 text-red-800">Out of Range</Badge>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                  <p className="text-xs font-semibold text-blue-900 mb-1">Suggested Actions:</p>
+                  <ul className="text-xs text-blue-800 space-y-0.5">
+                    {getAlertActions(field, value).map((action, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5">
+                        <span className="text-blue-600 mt-0.5">•</span>
+                        <span>{action}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Vital Signs Grid */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Patient Vitals</CardTitle>
+            {lastUpdate && (
+              <span className="text-xs text-gray-600 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Last update: {lastUpdate.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(VITAL_THRESHOLDS).map(([field, threshold]) => {
+              const value = vitals[field];
+              const Icon = VITAL_ICONS[field];
+
+              return (
+                <div key={field} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5 capitalize">
+                      <Icon className="w-4 h-4 text-gray-600" />
+                      {field.replace(/_/g, ' ')}
+                    </label>
+                    {value !== null && (
+                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(field, value)}`}>
+                        {isOutOfRange(field, value) ? (
+                          <span className="flex items-center gap-1">
+                            {value > threshold.max ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {value}
+                          </span>
+                        ) : value}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder={`Range: ${threshold.min}-${threshold.max}`}
+                      value={manualInput[field] ?? ''}
+                      onChange={(e) => handleInputChange(field, e.target.value)}
+                      className="text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleRecordVital(field)}
+                      disabled={manualInput[field] === null || manualInput[field] === undefined}
+                      className="whitespace-nowrap"
+                    >
+                      Record
+                    </Button>
+                  </div>
+
+                  {value !== null && (
+                    <div className="text-xs text-gray-600">
+                      Normal: {threshold.min}-{threshold.max} {threshold.unit}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
