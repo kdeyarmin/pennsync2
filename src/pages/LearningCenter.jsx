@@ -129,12 +129,14 @@ export default function LearningCenter() {
               My Annual Education
             </Button>
           </Link>
-          <Link to={createPageUrl('AnnualMandatoryEducation')}>
-            <Button variant="outline">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Annual Builder
-            </Button>
-          </Link>
+          {isEducatorOrAdmin && (
+            <Link to={createPageUrl('AnnualMandatoryEducation')}>
+              <Button variant="outline">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Penn Annual Builder
+              </Button>
+            </Link>
+          )}
           <Link to={createPageUrl('TrainingReports')}>
             <Button variant="outline">
               <BarChart3 className="w-4 h-4 mr-2" />

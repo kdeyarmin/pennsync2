@@ -160,7 +160,7 @@ export default function AnnualMandatoryEducationHub() {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">Annual Mandatory Education</h1>
+        <h1 className="text-3xl font-bold mb-2">Penn Annual Education & Competencies</h1>
         <p className="text-indigo-100">Build yearly required education bundles for Penn Hospice, Penn Home Health, office staff, and leadership while tracking competency, certificates, and renewal compliance.</p>
       </div>
 
