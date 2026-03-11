@@ -34,13 +34,13 @@ const SelectContent = React.forwardRef((props, ref) => (
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-200 bg-white text-gray-950 shadow-md animate-in fade-in-80",
+        "relative z-[9999] max-h-96 min-w-[8rem] overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-900 shadow-xl animate-in fade-in-80",
         props.className
       )}
       position={props.position || "popper"}
       {...props}
     >
-      <SelectPrimitive.Viewport className="p-1">
+      <SelectPrimitive.Viewport className="p-1 bg-white">
         {props.children}
       </SelectPrimitive.Viewport>
     </SelectPrimitive.Content>
@@ -61,14 +61,14 @@ const SelectItem = React.forwardRef((props, ref) => (
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-gray-100 focus:text-gray-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-pointer select-none items-center rounded-md py-2.5 pl-8 pr-2 text-sm bg-white text-gray-900 outline-none focus:bg-blue-50 focus:text-blue-900 hover:bg-gray-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
       props.className
     )}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
+        <Check className="h-4 w-4 text-blue-600" />
       </SelectPrimitive.ItemIndicator>
     </span>
 
