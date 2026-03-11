@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut, ChevronLeft,
-  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle
+  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle, AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -132,6 +132,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
         { name: "Plan Builder", icon: Target, page: "CarePlanBuilder" },
         { name: "OASIS Assessment", icon: Brain, page: "SmartOASISAssessment" },
+        { name: "Incident Reports", icon: AlertTriangle, page: "IncidentReporting" },
       ],
     },
     {

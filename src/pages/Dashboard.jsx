@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertCircle, RefreshCw } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertCircle, RefreshCw, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
@@ -236,13 +236,14 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Action Buttons */}
-      <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-4 sm:mb-6">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {[
-          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,    bg: "bg-blue-50",   border: "border-blue-200 hover:border-blue-400",   icon: "text-blue-600"   },
-          { page: "SendFax",            label: "Send Fax",          Icon: Send,        bg: "bg-indigo-50", border: "border-indigo-200 hover:border-indigo-400", icon: "text-indigo-600" },
-          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,bg: "bg-green-50",  border: "border-green-200 hover:border-green-400",  icon: "text-green-600"  },
-          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,        bg: "bg-purple-50", border: "border-purple-200 hover:border-purple-400", icon: "text-purple-600" },
-          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,         bg: "bg-orange-50", border: "border-orange-200 hover:border-orange-400", icon: "text-orange-600" },
+          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      bg: "bg-blue-50",   border: "border-blue-200 hover:border-blue-400",   icon: "text-blue-600"   },
+          { page: "SendFax",            label: "Send Fax",          Icon: Send,          bg: "bg-indigo-50", border: "border-indigo-200 hover:border-indigo-400", icon: "text-indigo-600" },
+          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  bg: "bg-green-50",  border: "border-green-200 hover:border-green-400",  icon: "text-green-600"  },
+          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          bg: "bg-purple-50", border: "border-purple-200 hover:border-purple-400", icon: "text-purple-600" },
+          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           bg: "bg-orange-50", border: "border-orange-200 hover:border-orange-400", icon: "text-orange-600" },
+          { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, bg: "bg-red-50",    border: "border-red-200 hover:border-red-400",      icon: "text-red-600"    },
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (
