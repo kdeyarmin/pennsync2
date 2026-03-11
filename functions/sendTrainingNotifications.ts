@@ -3,117 +3,72 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (user?.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized' }, { status: 403 });
-    }
-
     const today = new Date();
     const notificationsSent = [];
 
-    // Get all active assignments
-    const assignments = await base44.asServiceRole.entities.TrainingAssignment.filter({
-      status: { $in: ['assigned', 'in_progress'] }
-    });
+    const assignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 1000);
 
-    for (const assignment of assignments) {
+    for (const assignment of assignments.filter((item) => ['assigned', 'in_progress'].includes(item.status))) {
+      if (!assignment.due_date || !assignment.assigned_to_user_id) continue;
       const dueDate = new Date(assignment.due_date);
       const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
 
-      // Send reminders at 14, 7, 3, 1 days before due
-      const shouldSendReminder = [14, 7, 3, 1].includes(daysUntilDue);
-      
-      if (shouldSendReminder && assignment.assigned_to_user_id) {
+      if ([14, 7, 3, 1].includes(daysUntilDue)) {
         const notification = await base44.asServiceRole.entities.Notification.create({
           user_email: assignment.assigned_to_user_id,
-          title: `Training Due in ${daysUntilDue} Day${daysUntilDue > 1 ? 's' : ''}`,
-          message: `Your training "${assignment.course_title}" is due on ${dueDate.toLocaleDateString()}. Please complete it to stay compliant.`,
-          type: 'task_due_soon',
+          title: `Training due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}`,
+          message: `Your assigned in-service "${assignment.course_title}" is due on ${dueDate.toLocaleDateString()}.`,
+          type: 'training_due',
           priority: daysUntilDue <= 3 ? 'high' : 'medium',
-          action_url: `/TrainingCoursePlayer?assignment=${assignment.id}`,
-          action_label: 'Start Training',
-          metadata: {
-            assignment_id: assignment.id,
-            course_id: assignment.course_id,
-            days_until_due: daysUntilDue
-          }
+          action_url: '/MyTraining',
+          action_label: 'Open training',
+          metadata: { assignment_id: assignment.id, course_id: assignment.course_id, days_until_due: daysUntilDue }
         });
-
-        notificationsSent.push(notification);
-
-        // Update last reminder date
+        notificationsSent.push(notification.id);
         await base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
-          last_reminder_date: today.toISOString().split('T')[0],
+          last_reminder_date: today.toISOString().slice(0, 10),
           reminder_sent: true
         });
       }
 
-      // Send overdue notifications
       if (daysUntilDue < 0 && assignment.status !== 'overdue') {
         const notification = await base44.asServiceRole.entities.Notification.create({
           user_email: assignment.assigned_to_user_id,
-          title: 'Training Overdue',
-          message: `Your training "${assignment.course_title}" was due on ${dueDate.toLocaleDateString()}. Please complete it immediately.`,
+          title: 'Training overdue',
+          message: `Your assigned in-service "${assignment.course_title}" is overdue. Please complete it immediately.`,
           type: 'compliance_alert',
           priority: 'critical',
-          action_url: `/TrainingCoursePlayer?assignment=${assignment.id}`,
-          action_label: 'Complete Now',
-          metadata: {
-            assignment_id: assignment.id,
-            course_id: assignment.course_id,
-            days_overdue: Math.abs(daysUntilDue)
-          }
+          action_url: '/MyTraining',
+          action_label: 'Complete now',
+          metadata: { assignment_id: assignment.id, course_id: assignment.course_id }
         });
-
-        notificationsSent.push(notification);
-
-        // Update assignment status
-        await base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, {
-          status: 'overdue'
-        });
+        notificationsSent.push(notification.id);
+        await base44.asServiceRole.entities.TrainingAssignment.update(assignment.id, { status: 'overdue' });
       }
     }
 
-    // Check certificate expirations
-    const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({
-      revoked: false,
-      expiration_date: { $ne: null }
-    });
-
-    for (const cert of certificates) {
-      const expDate = new Date(cert.expiration_date);
-      const daysUntilExpiration = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-
-      // Send reminders at 14, 7, 3, 1 days before expiration
-      if ([14, 7, 3, 1].includes(daysUntilExpiration)) {
+    const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-issued_at', 1000);
+    for (const certificate of certificates) {
+      if (!certificate.expiration_date) continue;
+      const expiration = new Date(certificate.expiration_date);
+      const daysUntilExpiration = Math.ceil((expiration - today) / (1000 * 60 * 60 * 24));
+      if ([30, 14, 7, 3, 1].includes(daysUntilExpiration)) {
         const notification = await base44.asServiceRole.entities.Notification.create({
-          user_email: cert.user_id,
-          title: `Certificate Expiring in ${daysUntilExpiration} Day${daysUntilExpiration > 1 ? 's' : ''}`,
-          message: `Your certificate for "${cert.course_title}" will expire on ${expDate.toLocaleDateString()}. You may need to retake this course.`,
+          user_email: certificate.user_id,
+          title: `Certificate renewal due in ${daysUntilExpiration} day${daysUntilExpiration > 1 ? 's' : ''}`,
+          message: `Your certificate for "${certificate.course_title}" expires on ${expiration.toLocaleDateString()}.`,
           type: 'compliance_alert',
           priority: daysUntilExpiration <= 3 ? 'high' : 'medium',
-          action_url: `/MyCertificates`,
-          action_label: 'View Certificate',
-          metadata: {
-            certificate_id: cert.id,
-            course_id: cert.course_id,
-            days_until_expiration: daysUntilExpiration
-          }
+          action_url: '/MyTraining',
+          action_label: 'View transcript',
+          metadata: { certificate_id: certificate.id, course_id: certificate.course_id }
         });
-
-        notificationsSent.push(notification);
+        notificationsSent.push(notification.id);
       }
     }
 
-    return Response.json({
-      success: true,
-      notifications_sent: notificationsSent.length,
-      timestamp: new Date().toISOString()
-    });
-
+    return Response.json({ success: true, notifications_sent: notificationsSent.length });
   } catch (error) {
-    console.error('Notification sending failed:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
