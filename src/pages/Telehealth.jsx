@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Video, Plus, Calendar, Users, Clock, CheckCircle2 } from "lucide-react";
+import { Video, Plus, Calendar, Users, Clock, CheckCircle2, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import VideoRoom from "../components/telehealth/VideoRoom";
