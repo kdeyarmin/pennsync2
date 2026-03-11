@@ -76,10 +76,15 @@ export default function AnnualLearningPlanPanel({ plans = [], courses = [], year
   const duplicatePlan = async () => {
     if (!selectedPlan) return;
     const created = await base44.entities.LearningPlan.create({
-      ...selectedPlan,
       name: `${selectedPlan.name} (Copy)`,
-      year: year,
-      active: true
+      description: selectedPlan.description,
+      business_line_scope: selectedPlan.business_line_scope,
+      year,
+      plan_type: 'annual',
+      active: true,
+      auto_enroll: selectedPlan.auto_enroll || false,
+      auto_enroll_criteria: selectedPlan.auto_enroll_criteria || {},
+      total_courses: selectedPlan.total_courses || 0
     });
     const items = await base44.entities.LearningPlanCourse.filter({ plan_id: selectedPlan.id }, 'order_index', 200);
     await Promise.all(items.map((item, index) => base44.entities.LearningPlanCourse.create({

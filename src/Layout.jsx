@@ -166,6 +166,7 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
         { name: "Training", icon: GraduationCap, page: "StaffTrainingHub" },
+        { name: "Annual Education", icon: GraduationCap, page: "MyAnnualEducation" },
       ],
     },
     {

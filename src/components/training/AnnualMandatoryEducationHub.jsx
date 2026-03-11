@@ -92,7 +92,7 @@ export default function AnnualMandatoryEducationHub() {
   };
 
   const createManualDraft = async () => {
-    await base44.entities.TrainingCourse.create({
+    const created = await base44.entities.TrainingCourse.create({
       ...manualDraft,
       training_type: 'annual_mandatory',
       annual_cycle_year: year,
@@ -105,6 +105,16 @@ export default function AnnualMandatoryEducationHub() {
       recurrence_rule: 'annual',
       short_description: manualDraft.description,
       test_settings_json: { show_correct_answers_after_completion: false }
+    });
+    await base44.entities.TrainingAuditLog.create({
+      actor_id: currentUser?.email,
+      actor_name: currentUser?.full_name,
+      action: 'course_created',
+      entity_type: 'TrainingCourse',
+      entity_id: created.id,
+      after_json: { title: created.title, training_type: 'annual_mandatory', annual_cycle_year: year, status: 'draft' },
+      reason: 'created',
+      severity: 'info'
     });
     queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
     setManualDraft({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
@@ -129,6 +139,16 @@ export default function AnnualMandatoryEducationHub() {
 
   const updateCourseStatus = async (course, status) => {
     await base44.entities.TrainingCourse.update(course.id, { status, archived_status: status === 'archived', published_by: status === 'published' ? currentUser?.email : course.published_by, published_date: status === 'published' ? new Date().toISOString() : course.published_date });
+    await base44.entities.TrainingAuditLog.create({
+      actor_id: currentUser?.email,
+      actor_name: currentUser?.full_name,
+      action: status === 'published' ? 'course_published' : 'course_archived',
+      entity_type: 'TrainingCourse',
+      entity_id: course.id,
+      after_json: { status, annual_cycle_year: course.annual_cycle_year || year },
+      reason: status === 'published' ? 'published' : 'archived',
+      severity: 'info'
+    });
     queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
   };
 
