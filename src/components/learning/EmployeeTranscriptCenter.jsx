@@ -1,250 +1,78 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Printer, AlertCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Award, Printer } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
 export default function EmployeeTranscriptCenter() {
-  const [selectedEmployee, setSelectedEmployee] = useState('');
-  const [sortOrder, setSortOrder] = useState('newest');
-  const [certificateSelection, setCertificateSelection] = useState({});
-
-  const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
-    queryFn: () => base44.entities.User.list('full_name', 500),
+  const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
+  const { data: certificates = [] } = useQuery({
+    queryKey: ["employee-transcript-certificates", currentUser?.email],
+    queryFn: () => base44.entities.TrainingCertificate.filter({ user_id: currentUser?.email }, '-issued_at', 300),
+    enabled: !!currentUser?.email,
     initialData: []
   });
 
-  const { data: certificates = [] } = useQuery({
-    queryKey: ['employee-certificates', selectedEmployee],
-    queryFn: () => selectedEmployee
-      ? base44.entities.TrainingCertificate.filter({ user_id: selectedEmployee, revoked: false }, '-issued_at')
-      : [],
-    initialData: [],
-    enabled: !!selectedEmployee
-  });
-
-  const sortedCertificates = [...certificates].sort((a, b) => {
-    const dateA = new Date(a.issued_at);
-    const dateB = new Date(b.issued_at);
-    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
-  });
-
-  const employee = employees.find(e => e.email === selectedEmployee);
-
-  const handleGenerateTranscriptPDF = async () => {
-    if (!selectedEmployee) return;
-    try {
-      const response = await base44.functions.invoke('generateLearningTranscriptPDF', {
-        employeeId: selectedEmployee,
-        businessLine: employee?.business_line || 'all'
-      });
-      // Download logic
-      window.open(response.data.url, '_blank');
-    } catch (error) {
-      console.error('Failed to generate transcript:', error);
-    }
+  const createPdfUrl = async (certificate) => {
+    const response = await generateTrainingCertificate({
+      moduleName: certificate.course_title,
+      completionDate: certificate.completion_date || certificate.issued_at,
+      score: certificate.score
+    });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    return window.URL.createObjectURL(blob);
   };
 
-  const handleGenerateCertificatePacket = async () => {
-    if (!selectedEmployee) return;
-    const certIds = Object.keys(certificateSelection).filter(k => certificateSelection[k]);
-    try {
-      const response = await base44.functions.invoke('generateAndCacheCertificatePacket', {
-        employeeId: selectedEmployee,
-        certificateIds: certIds.length > 0 ? certIds : undefined
-      });
-      
-      if (response.download_url) {
-        // Download the PDF
-        const link = document.createElement('a');
-        link.href = response.download_url;
-        link.download = `certificate_packet_${selectedEmployee}_${new Date().getTime()}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) {
-      console.error('Failed to generate certificate packet:', error);
-    }
+  const downloadCertificate = async (certificate) => {
+    const url = await createPdfUrl(certificate);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${certificate.course_title.replace(/\s+/g, '_')}_certificate.pdf`;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
   };
 
-  const toggleCertificateSelection = (certId) => {
-    setCertificateSelection(prev => ({
-      ...prev,
-      [certId]: !prev[certId]
-    }));
+  const printCertificate = async (certificate) => {
+    const url = await createPdfUrl(certificate);
+    const printWindow = window.open(url, '_blank');
+    setTimeout(() => printWindow?.print(), 600);
   };
-
-  const selectedCount = Object.values(certificateSelection).filter(Boolean).length;
 
   return (
-    <div className="space-y-6">
-      {/* Employee Selector */}
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-indigo-700 text-white p-6 shadow-xl">
+        <h1 className="text-3xl font-bold mb-2">Employee Transcript</h1>
+        <p className="text-indigo-100">Chronological certificate and completion history for assigned in-services.</p>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Select Employee</CardTitle>
+          <CardTitle>Certificate history</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-            <SelectTrigger>
-              <SelectValue placeholder="Search and select employee..." />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.map(emp => (
-                <SelectItem key={emp.email} value={emp.email}>
-                  {emp.full_name} ({emp.email})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      {selectedEmployee && employee && (
-        <>
-          {/* Transcript Section */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+        <CardContent className="space-y-4">
+          {certificates.map((certificate) => (
+            <div key={certificate.id} className="rounded-2xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white">
               <div>
-                <CardTitle>Transcript</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  {employee.full_name} • {employee.business_line}
-                </p>
+                <div className="flex items-center gap-2 mb-1">
+                  <Award className="w-5 h-5 text-amber-500" />
+                  <h2 className="font-semibold text-slate-900">{certificate.course_title}</h2>
+                </div>
+                <p className="text-sm text-slate-500">Completed {formatDate(certificate.completion_date || certificate.issued_at)} • Score {certificate.score}%</p>
+                <p className="text-sm text-slate-500">Certificate ID: {certificate.certificate_id}</p>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGenerateTranscriptPDF}
-                  className="gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  Print PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                </Button>
+                <Button variant="outline" onClick={() => printCertificate(certificate)}><Printer className="w-4 h-4 mr-2" />Print</Button>
+                <Button onClick={() => downloadCertificate(certificate)}>Download PDF</Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              {certificates.length === 0 ? (
-                <div className="py-8 text-center text-gray-500">
-                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p>No certificates found for this employee</p>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-4 flex gap-2 items-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
-                    >
-                      Sort: {sortOrder === 'newest' ? 'Newest First' : 'Oldest First'}
-                    </Button>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Completion Date</TableHead>
-                        <TableHead>Course</TableHead>
-                        <TableHead>Learning Plan</TableHead>
-                        <TableHead>Score</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Certificate Code</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedCertificates.map(cert => (
-                        <TableRow key={cert.id}>
-                          <TableCell>{new Date(cert.issued_at).toLocaleDateString()}</TableCell>
-                          <TableCell>{cert.course_title}</TableCell>
-                          <TableCell>-</TableCell>
-                          <TableCell>{cert.score}%</TableCell>
-                          <TableCell>
-                            <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">{cert.certificate_id}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Certificates Packet Section */}
-          {certificates.length > 0 && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Certificate Packet ({selectedCount} selected)</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {certificates.length} total certificates available • Cached for 24 hours
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGenerateCertificatePacket}
-                    disabled={selectedCount === 0}
-                    className="gap-2"
-                  >
-                    <Printer className="w-4 h-4" />
-                    Print Selected
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleGenerateCertificatePacket}
-                    className="gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download All
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {sortedCertificates.map(cert => (
-                    <div
-                      key={cert.id}
-                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={certificateSelection[cert.id] || false}
-                        onChange={() => toggleCertificateSelection(cert.id)}
-                        className="rounded"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{cert.course_title}</p>
-                        <p className="text-sm text-gray-600">
-                          Issued {new Date(cert.issued_at).toLocaleDateString()}
-                          {cert.expiration_date && ` • Expires ${new Date(cert.expiration_date).toLocaleDateString()}`}
-                        </p>
-                      </div>
-                      <Badge variant="outline">{cert.certificate_id}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
+            </div>
+          ))}
+          {certificates.length === 0 && <div className="text-center text-slate-500 py-10">No certificates available yet.</div>}
+        </CardContent>
+      </Card>
     </div>
   );
 }

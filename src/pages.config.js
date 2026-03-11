@@ -151,6 +151,7 @@ import VisitScribe from './pages/VisitScribe';
 import MyTraining from './pages/MyTraining';
 import TrainingCoursePlayer from './pages/TrainingCoursePlayer';
 import AIComplianceInServices from './pages/AIComplianceInServices';
+import EmployeeTranscript from './pages/EmployeeTranscript';
 import __Layout from './Layout.jsx';
 
 
@@ -259,6 +260,7 @@ export const PAGES = {
     "MyTraining": MyTraining,
     "TrainingCoursePlayer": TrainingCoursePlayer,
     "AIComplianceInServices": AIComplianceInServices,
+    "EmployeeTranscript": EmployeeTranscript,
 }
 
 export const pagesConfig = {
