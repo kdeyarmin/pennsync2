@@ -137,6 +137,7 @@ import VisitScribe from './pages/VisitScribe';
 import Help from './pages/Help';
 import PopulationHealthAnalytics from './pages/PopulationHealthAnalytics';
 import EducationLibrary from './pages/EducationLibrary';
+import DischargeSummaries from './pages/DischargeSummaries';
 import __Layout from './Layout.jsx';
 
 
@@ -231,6 +232,7 @@ export const PAGES = {
     "Help": Help,
     "PopulationHealthAnalytics": PopulationHealthAnalytics,
     "EducationLibrary": EducationLibrary,
+    "DischargeSummaries": DischargeSummaries,
 }
 
 export const pagesConfig = {
