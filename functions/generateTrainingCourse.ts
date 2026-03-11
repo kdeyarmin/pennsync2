@@ -118,7 +118,18 @@ Rules:
 - Include acknowledgement language: ${include_acknowledgement ? 'yes' : 'no'}
 - Custom instructions: ${custom_instructions || 'none'}
 
-Write in plain professional language, avoid fluff, and make the test aligned to the lesson content.
+Style and quality requirements:
+- Write for frontline healthcare staff, not executives, attorneys, or academics.
+- Use plain, practical, professional language at about an 8th-10th grade reading level.
+- Keep sentences short and clear.
+- Explain what staff should do, what to watch for, and what to report.
+- Include realistic home health, hospice, and field-based examples.
+- Prefer checklists, bullets, brief examples, and action steps over long lectures.
+- Avoid jargon, theory-heavy explanations, and repetitive filler.
+- Make every section directly useful during real patient care or daily operations.
+- Make test questions practical and based on real decisions staff may face.
+- If a concept is complex, explain it simply before testing it.
+
 Always include a warning that AI-generated training should be reviewed by an admin before publishing.`;
 
     const completion = await openai.chat.completions.create({
