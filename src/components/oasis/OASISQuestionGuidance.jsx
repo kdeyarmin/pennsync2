@@ -19,7 +19,7 @@ export default function OASISQuestionGuidance({ questionId, questionLabel, isOpe
             <DialogTitle className="text-lg font-bold text-gray-900 pr-8">
               {questionLabel}
             </DialogTitle>
-            <p className="text-sm text-gray-500 mt-1">{guidance.description}</p>
+            <p className="text-sm text-gray-900 font-medium mt-1">{guidance.description}</p>
           </div>
           <Button
             variant="ghost"
