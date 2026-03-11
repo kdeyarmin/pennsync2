@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Users } from "lucide-react";
 import CourseManager from "../components/training/CourseManager";
 import LearningPlanManager from "../components/training/LearningPlanManager";
+import AIComplianceInServicesHub from "../components/training/AIComplianceInServicesHub";
 
 export default function TrainingManagement() {
   const [currentUser, setCurrentUser] = React.useState(null);
@@ -33,6 +34,7 @@ export default function TrainingManagement() {
           <TabsTrigger value="courses">Courses</TabsTrigger>
           <TabsTrigger value="learning-plans">Learning Plans</TabsTrigger>
           <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
+          <TabsTrigger value="ai-inservices">AI Compliance In-Services</TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses">
@@ -45,6 +47,10 @@ export default function TrainingManagement() {
 
         <TabsContent value="enrollments">
           <EnrollmentManager />
+        </TabsContent>
+
+        <TabsContent value="ai-inservices">
+          <AIComplianceInServicesHub />
         </TabsContent>
       </Tabs>
     </div>

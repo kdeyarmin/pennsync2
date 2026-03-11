@@ -93,10 +93,10 @@ export default function LearningCenter() {
         <div className="flex items-center gap-2">
           {isEducatorOrAdmin && (
             <>
-              <Link to={createPageUrl('AITrainingGenerator')}>
+              <Link to={createPageUrl('AIComplianceInServices')}>
                 <Button className="bg-gradient-to-r from-purple-600 to-indigo-600">
                   <Sparkles className="w-4 h-4 mr-2" />
-                  AI Course Generator
+                  AI Compliance In-Services
                 </Button>
               </Link>
               <Link to={createPageUrl('CourseApprovalQueue')}>
@@ -241,7 +241,7 @@ export default function LearningCenter() {
             )}
             <Link to={createPageUrl('MyTraining')}>
               <Button variant="outline" className="w-full">
-                View All Assignments
+                View All In-Services
               </Button>
             </Link>
           </CardContent>
