@@ -142,6 +142,7 @@ import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import OfflineDocumentation from './pages/OfflineDocumentation';
+import OfflineVisitDocumentation from './pages/OfflineVisitDocumentation';
 import __Layout from './Layout.jsx';
 
 
@@ -241,6 +242,7 @@ export const PAGES = {
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
     "OfflineDocumentation": OfflineDocumentation,
+    "OfflineVisitDocumentation": OfflineVisitDocumentation,
 }
 
 export const pagesConfig = {

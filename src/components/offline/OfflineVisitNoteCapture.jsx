@@ -21,7 +21,7 @@ import {
   Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
-import OfflineSyncService from './OfflineSyncService';
+import { OfflineStorageManager } from './OfflineSyncService';
 
 export default function OfflineVisitNoteCapture({ patient, onComplete }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -93,20 +93,12 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
 
     try {
       // Save to offline queue
-      const queueItem = {
-        entity: 'Visit',
-        operation: 'create',
-        data: {
-          ...visitData,
-          status: 'completed',
-          offline_created: !isOnline,
-          captured_at: new Date().toISOString()
-        },
-        timestamp: Date.now(),
-        localId: `offline_visit_${Date.now()}`
-      };
-
-      OfflineSyncService.addToQueue(queueItem);
+      const savedId = OfflineStorageManager.saveToQueue('visit', {
+        ...visitData,
+        status: 'completed',
+        offline_created: !isOnline,
+        captured_at: new Date().toISOString()
+      });
 
       toast.success(
         isOnline 
