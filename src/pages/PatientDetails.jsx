@@ -70,6 +70,7 @@ import DocumentUploader from "../components/documents/DocumentUploader";
 import DocumentList from "../components/documents/DocumentList";
 import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashboard";
 import MedicationBottleScanner from "../components/smartNote/MedicationBottleScanner";
+import CarePlanProposalReviewer from "../components/carePlan/CarePlanProposalReviewer";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -809,6 +810,8 @@ export default function PatientDetails() {
 
         {/* Care Plans Tab */}
         <TabsContent value="care" className="space-y-6">
+          <CarePlanProposalReviewer patientId={patientId} />
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <AICarePlanSuggestions 
               patient={patient} 

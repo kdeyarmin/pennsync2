@@ -26,6 +26,7 @@ const PendingReferralsWidget    = lazy(() => import("../components/referral/Pend
 const RealTimePatientAlerts     = lazy(() => import("../components/dashboard/RealTimePatientAlerts"));
 const TopTemplatesWidget        = lazy(() => import("../components/clinical/TopTemplatesWidget"));
 const HospitalizationRiskWidget = lazy(() => import("../components/dashboard/HospitalizationRiskWidget"));
+const CarePlanProposalReviewer = lazy(() => import("../components/carePlan/CarePlanProposalReviewer"));
 
 
 export default function Dashboard() {
@@ -273,6 +274,11 @@ export default function Dashboard() {
 
 
       <Suspense fallback={null}>
+        {/* AI Care Plan Proposals - Nurse Review */}
+        <div className="mb-6">
+          <CarePlanProposalReviewer compact={true} />
+        </div>
+
         {/* Hospitalization Risk Monitor */}
         <div className="mb-6">
           <HospitalizationRiskWidget autoAnalyze={false} />
