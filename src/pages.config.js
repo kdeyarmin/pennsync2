@@ -140,6 +140,7 @@ import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
 import FaxLogsDashboard from './pages/FaxLogsDashboard';
+import PhysicianDirectory from './pages/PhysicianDirectory';
 import __Layout from './Layout.jsx';
 
 
@@ -237,6 +238,7 @@ export const PAGES = {
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
     "FaxLogsDashboard": FaxLogsDashboard,
+    "PhysicianDirectory": PhysicianDirectory,
 }
 
 export const pagesConfig = {
