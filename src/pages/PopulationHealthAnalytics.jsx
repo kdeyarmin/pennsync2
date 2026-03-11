@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   TrendingUp, TrendingDown, AlertTriangle, Users, Activity,
   RefreshCw, Download, Filter, Calendar, MapPin, User,
-  Thermometer, Droplet, Heart, Brain, Clock, ChevronRight
+  Thermometer, Droplet, Heart, Brain, Clock, ChevronRight, CheckCircle2
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 

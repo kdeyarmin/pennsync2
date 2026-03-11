@@ -163,6 +163,7 @@ export default function Layout({ children, currentPageName }) {
   const adminItems = useMemo(() => [
     { name: "Dashboard", icon: BarChart3, page: "AdminDashboard" },
     { name: "Reports", icon: BarChart3, page: "Reports" },
+    { name: "Population Health", icon: Users, page: "PopulationHealthAnalytics" },
     { name: "Users", icon: Users, page: "UserManagement" },
     { name: "Training", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Compliance", icon: Shield, page: "ComplianceRegulatory" },
