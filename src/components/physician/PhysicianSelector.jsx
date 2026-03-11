@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { UserPlus } from 'lucide-react';
 import PhysicianDirectory from './PhysicianDirectory';
 
 export default function PhysicianSelector({ onSelectPhysician }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleSelect = (physician) => {
     if (onSelectPhysician) {
