@@ -3,9 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { patient_id, nurse_email } = await req.json();
+    const payload = await req.json();
+    
+    // Extract from entity automation payload
+    const patient_id = payload.data?.patient_id;
+    const nurse_email = payload.data?.created_by;
 
     if (!patient_id || !nurse_email) {
+      console.error('Missing patient_id or nurse_email from Visit:', payload);
       return Response.json({ error: 'patient_id and nurse_email are required' }, { status: 400 });
     }
 
