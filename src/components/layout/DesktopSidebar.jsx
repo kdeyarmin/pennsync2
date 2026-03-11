@@ -95,32 +95,39 @@ export default function DesktopSidebar({
         {isAdmin && (
           <>
             <div className="border-t border-gray-200 my-3" />
-            {!collapsed && <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</p>}
-            {adminItems.map((item) =>
-              item.action ? (
-                <button key={item.name} onClick={item.action}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 w-full relative"
-                  title={collapsed ? item.name : undefined}
-                >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && (
-                    <span className="flex items-center gap-2 flex-1">
-                      {item.name}
-                      {item.badge > 0 && <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>}
-                    </span>
-                  )}
-                  {collapsed && item.badge > 0 && <div className="absolute right-1 top-1 w-2 h-2 bg-red-600 rounded-full" />}
-                </button>
-              ) : (
-                <Link key={item.page} to={createPageUrl(item.page)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.page) ? "bg-indigo-600 text-white" : "text-gray-700 hover:bg-gray-100"}`}
-                  title={collapsed ? item.name : undefined}
-                >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span>{item.name}</span>}
-                </Link>
-              )
-            )}
+            {adminItems.map((category, catIndex) => (
+              <div key={catIndex}>
+                {category.category && !collapsed && (
+                  <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase mt-3">{category.category}</p>
+                )}
+                {category.items.map((item) =>
+                  item.action ? (
+                    <button key={item.name} onClick={item.action}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 w-full relative"
+                      title={collapsed ? item.name : undefined}
+                    >
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      {!collapsed && (
+                        <span className="flex items-center gap-2 flex-1">
+                          {item.name}
+                          {item.badge > 0 && <Badge className="bg-red-600 text-white ml-auto">{item.badge}</Badge>}
+                        </span>
+                      )}
+                      {collapsed && item.badge > 0 && <div className="absolute right-1 top-1 w-2 h-2 bg-red-600 rounded-full" />}
+                    </button>
+                  ) : (
+                    <Link key={item.page} to={createPageUrl(item.page)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.page) ? "bg-indigo-600 text-white" : "text-gray-700 hover:bg-gray-100"}`}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      {!collapsed && <span>{item.name}</span>}
+                    </Link>
+                  )
+                )}
+                {catIndex === 0 && <div className="border-t border-gray-200 my-3" />}
+              </div>
+            ))}
           </>
         )}
       </nav>
