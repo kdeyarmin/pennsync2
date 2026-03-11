@@ -14,6 +14,7 @@ import { INTERVENTIONS_LIBRARY } from "@/components/carePlan/InterventionLibrary
 import InterventionLibrary from "@/components/carePlan/InterventionLibrary";
 import CarePlanCanvas from "@/components/carePlan/CarePlanCanvas";
 import InterventionDetailPanel from "@/components/carePlan/InterventionDetailPanel";
+import AICarePlanAnalyzer from "@/components/carePlan/AICarePlanAnalyzer";
 
 function findLibraryItem(id) {
   for (const cat of INTERVENTIONS_LIBRARY) {
@@ -33,6 +34,9 @@ export default function CarePlanBuilder() {
   const [saved, setSaved] = useState(false);
   const [patientSearch, setPatientSearch] = useState("");
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  const [careType, setCareType] = useState("home_health");
+  const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
+  const [assessmentData, setAssessmentData] = useState(null);
 
   const { data: patients = [] } = useQuery({
     queryKey: ["patients-list"],
@@ -230,8 +234,24 @@ export default function CarePlanBuilder() {
           </span>
         </div>
 
+        {/* Care Type Selector */}
+        <div className="relative">
+          <select
+            value={careType}
+            onChange={(e) => setCareType(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors bg-white"
+          >
+            <option value="home_health">Home Health</option>
+            <option value="hospice">Hospice</option>
+          </select>
+        </div>
+
         {/* Actions */}
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowAIAnalyzer(!showAIAnalyzer)} className="gap-1">
+            <Sparkles className="w-3.5 h-3.5" />
+            AI Analyzer
+          </Button>
           <Button variant="outline" size="sm" onClick={handleClear} disabled={planItems.length === 0}>
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
             Clear
@@ -247,6 +267,22 @@ export default function CarePlanBuilder() {
           </Button>
         </div>
       </div>
+
+      {/* AI Analyzer Panel */}
+      {showAIAnalyzer && (
+        <div className="flex-shrink-0 w-96 border-l border-gray-200 bg-white overflow-y-auto p-4">
+          <AICarePlanAnalyzer
+            patientId={selectedPatientId}
+            patientName={selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : ""}
+            diagnosis={selectedPatient?.primary_diagnosis}
+            careType={careType}
+            assessmentData={assessmentData}
+            onInterventionsGenerated={(interventions, schedule) => {
+              toast.success(`Generated ${interventions.length} interventions with ${schedule.routine_frequency} visit schedule`);
+            }}
+          />
+        </div>
+      )}
 
       {/* 3-panel layout */}
       <div className="flex-1 flex overflow-hidden" onClick={() => showPatientDropdown && setShowPatientDropdown(false)}>
