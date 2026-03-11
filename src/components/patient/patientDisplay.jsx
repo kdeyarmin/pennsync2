@@ -7,13 +7,23 @@ const parseCommaName = (value) => {
   if (!raw.includes(",")) return null;
 
   const [lastName, remainder = ""] = raw.split(",");
-  const nameBits = remainder.trim().split(/\s+/).filter(Boolean);
-  if (!cleanPart(lastName) || nameBits.length === 0) return null;
+  const cleanedLast = cleanPart(lastName);
+  const cleanedRemainder = cleanPart(remainder);
+  const nameBits = cleanedRemainder.split(/\s+/).filter(Boolean);
+  if (!cleanedLast || nameBits.length === 0) return null;
+
+  if (PAYER_NOISE_REGEX.test(cleanedRemainder)) {
+    return {
+      first: cleanedLast,
+      middle: "",
+      last: "",
+    };
+  }
 
   return {
     first: cleanPart(nameBits[0]),
     middle: cleanPart(nameBits.slice(1).join(" ")),
-    last: cleanPart(lastName),
+    last: cleanedLast,
   };
 };
 
