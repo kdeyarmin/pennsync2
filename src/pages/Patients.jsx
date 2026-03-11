@@ -25,7 +25,7 @@ import BulkPatientActions from "../components/patient/BulkPatientActions";
 import PatientMergeDialog from "../components/patient/PatientMergeDialog";
 import PaginatedPatientList from "../components/patient/PaginatedPatientList";
 import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
-import FavoriteButton from "../components/navigation/FavoriteButton";
+import PatientsPageHeader from "../components/patient/PatientsPageHeader";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import PatientCardSkeleton from "../components/loading/PatientCardSkeleton";
 import SwipeablePatientCard from "../components/mobile/SwipeablePatientCard";
@@ -300,25 +300,14 @@ export default function Patients() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Patient Management</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Manage your patient roster</p>
-          </div>
-          <FavoriteButton type="page" id="Patients" name="Patients" />
-        </div>
-        <Button
-          onClick={() => {
-            setEditingPatient(null);
-            setShowForm(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto min-h-[44px]"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          <span>Add Patient</span>
-        </Button>
-      </div>
+      <PatientsPageHeader
+        patientCount={patients.length}
+        activeCount={patients.filter(patient => patient.status === 'active').length}
+        onAdd={() => {
+          setEditingPatient(null);
+          setShowForm(true);
+        }}
+      />
 
       {showForm && (
         <PatientForm
@@ -334,14 +323,19 @@ export default function Patients() {
         />
       )}
 
-      {/* Patient File Update Uploader */}
-      <PatientFileUpdateUploader />
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Roster tools</h2>
+            <p className="text-sm text-slate-500">Import census files, review duplicates, and refine the active patient list.</p>
+          </div>
+        </div>
 
-      {/* Duplicate Detection Alert */}
-      <DuplicatePatientManager />
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.9fr)] gap-4 mb-4">
+          <PatientFileUpdateUploader />
+          <DuplicatePatientManager />
+        </div>
 
-      {/* Advanced Filters */}
-      <div className="mb-4">
         <AdvancedPatientFilters 
           onFilterChange={setFilters}
           activeFilters={filters}
@@ -446,6 +440,7 @@ export default function Patients() {
             <PaginatedPatientList
               patients={filteredPatients}
               showCheckboxes={true}
+              showSearch={false}
               selectedPatients={selectedPatients.map(p => p.id)}
               onSelectionChange={(ids) => {
                 const selected = filteredPatients.filter(p => ids.includes(p.id));
