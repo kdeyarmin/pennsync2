@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User, Phone, MapPin, ChevronRight, Calendar } from "lucide-react";
+import { getPatientDisplayName } from "@/components/patient/patientDisplay";
 
 export default function SwipeablePatientCard({ 
   patient, 
@@ -98,7 +99,7 @@ export default function SwipeablePatientCard({
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-bold text-gray-900 truncate">
-                {patient.first_name} {patient.last_name}
+                {getPatientDisplayName(patient)}
               </h3>
               <div className="flex items-center gap-2 flex-wrap">
                 {age && <Badge variant="outline" className="text-xs">{age} yrs</Badge>}

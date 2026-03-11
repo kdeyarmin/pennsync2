@@ -20,13 +20,15 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { getPatientDisplayName, getPatientInitials } from "@/components/patient/patientDisplay";
 
 export default function PaginatedPatientList({ 
   patients = [], 
   onPatientSelect,
   showCheckboxes = false,
   selectedPatients = [],
-  onSelectionChange 
+  onSelectionChange,
+  showSearch = true
 }) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,43 +80,47 @@ export default function PaginatedPatientList({
   return (
     <div className="space-y-4">
       {/* Search and Controls */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search patients by name or MRN..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-9"
-          />
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        {showSearch ? (
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search patients by name or MRN..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9"
+            />
+          </div>
+        ) : <div className="flex-1" />}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name (A-Z)</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="created">Recently Added</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={String(itemsPerPage)} onValueChange={(v) => {
+            setItemsPerPage(Number(v));
+            setCurrentPage(1);
+          }}>
+            <SelectTrigger className="w-full sm:w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10 per page</SelectItem>
+              <SelectItem value="20">20 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+              <SelectItem value="100">100 per page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="name">Name (A-Z)</SelectItem>
-            <SelectItem value="status">Status</SelectItem>
-            <SelectItem value="created">Recently Added</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={String(itemsPerPage)} onValueChange={(v) => {
-          setItemsPerPage(Number(v));
-          setCurrentPage(1);
-        }}>
-          <SelectTrigger className="w-full sm:w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10 per page</SelectItem>
-            <SelectItem value="20">20 per page</SelectItem>
-            <SelectItem value="50">50 per page</SelectItem>
-            <SelectItem value="100">100 per page</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Results Summary */}
@@ -149,11 +155,11 @@ export default function PaginatedPatientList({
               )}
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                  {patient.first_name?.[0]}{patient.last_name?.[0]}
+                  {getPatientInitials(patient)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 truncate">
-                    {patient.first_name} {patient.last_name}
+                    {getPatientDisplayName(patient)}
                   </h3>
                   {patient.medical_record_number && (
                     <p className="text-xs text-gray-500">MRN: {patient.medical_record_number}</p>
