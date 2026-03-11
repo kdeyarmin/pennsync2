@@ -32,10 +32,21 @@ Deno.serve(async (req) => {
       candidates = candidates.filter((candidate) => emailSet.has(candidate.email));
     } else {
       if (filters.role && filters.role !== 'all') candidates = candidates.filter((candidate) => (candidate.job_title || candidate.credential_type || candidate.role) === filters.role);
+      if (filters.discipline && filters.discipline !== 'all') candidates = candidates.filter((candidate) => (candidate.discipline || candidate.credential_type) === filters.discipline);
       if (filters.department && filters.department !== 'all') candidates = candidates.filter((candidate) => candidate.department === filters.department);
       if (filters.business_line && filters.business_line !== 'all') candidates = candidates.filter((candidate) => candidate.business_line === filters.business_line);
       if (filters.location && filters.location !== 'all') candidates = candidates.filter((candidate) => candidate.location === filters.location);
     }
+
+    await base44.asServiceRole.entities.TrainingAuditLog.create({
+      actor_id: user.email,
+      actor_name: user.full_name,
+      action: 'assignment_created',
+      entity_type: 'LearningPlan',
+      entity_id: plan.id,
+      after_json: { plan_name: plan.name, filters, settings, user_count: candidates.length },
+      severity: 'info'
+    });
 
     for (const candidate of candidates) {
       const [existingEnrollment] = await base44.asServiceRole.entities.PlanEnrollment.filter({ plan_id: planId, user_id: candidate.email });

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import AdminComplianceStats from "@/components/training/AdminComplianceStats";
+import AnnualMandatoryStats from "@/components/training/AnnualMandatoryStats";
 import RetakeSettingsPanel from "@/components/training/RetakeSettingsPanel";
 import AssignmentWizard from "@/components/training/AssignmentWizard";
 import AnnualEducationTemplateLibrary from "@/components/training/AnnualEducationTemplateLibrary";

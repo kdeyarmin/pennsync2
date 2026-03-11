@@ -163,6 +163,7 @@ export default function MyAnnualEducationDashboard() {
         </TabsContent>
 
         <TabsContent value="transcript" className="space-y-4">
+          <div className="flex justify-end"><Link to={createPageUrl('AnnualEducationTranscript')}><Button variant="outline">Open full annual transcript</Button></Link></div>
           {certificates.map((certificate) => (
             <Card key={certificate.id}>
               <CardContent className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
