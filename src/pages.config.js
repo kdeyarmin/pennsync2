@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AITrainingGenerator from './pages/AITrainingGenerator';
 import About from './pages/About';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTrainingAnalytics from './pages/AdminTrainingAnalytics';
@@ -81,6 +82,9 @@ import FaxLogsDashboard from './pages/FaxLogsDashboard';
 import Features from './pages/Features';
 import Help from './pages/Help';
 import Home from './pages/Home';
+import JoinTelehealth from './pages/JoinTelehealth';
+import LearningCenter from './pages/LearningCenter';
+import LearningReports from './pages/LearningReports';
 import ManageNewFeatures from './pages/ManageNewFeatures';
 import MedicalScribe from './pages/MedicalScribe';
 import MedicareComplianceDashboard from './pages/MedicareComplianceDashboard';
@@ -143,14 +147,11 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import LearningCenter from './pages/LearningCenter';
-import AITrainingGenerator from './pages/AITrainingGenerator';
-import LearningReports from './pages/LearningReports';
-import JoinTelehealth from './pages/JoinTelehealth';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AITrainingGenerator": AITrainingGenerator,
     "About": About,
     "AdminDashboard": AdminDashboard,
     "AdminTrainingAnalytics": AdminTrainingAnalytics,
@@ -185,6 +186,9 @@ export const PAGES = {
     "Features": Features,
     "Help": Help,
     "Home": Home,
+    "JoinTelehealth": JoinTelehealth,
+    "LearningCenter": LearningCenter,
+    "LearningReports": LearningReports,
     "ManageNewFeatures": ManageNewFeatures,
     "MedicalScribe": MedicalScribe,
     "MedicareComplianceDashboard": MedicareComplianceDashboard,
@@ -247,10 +251,6 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "LearningCenter": LearningCenter,
-    "AITrainingGenerator": AITrainingGenerator,
-    "LearningReports": LearningReports,
-    "JoinTelehealth": JoinTelehealth,
 }
 
 export const pagesConfig = {
