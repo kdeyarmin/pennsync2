@@ -144,7 +144,7 @@ export default function AnnualMandatoryEducationHub() {
         <p className="text-indigo-100">Build yearly required education bundles, assign annual plans, test competency, issue certificates, and track compliance for hospice and home health teams.</p>
       </div>
 
-      <AdminComplianceStats stats={stats} />
+      <AnnualMandatoryStats stats={{ ...stats, annualCompliancePercentage: stats.totalAssigned ? Math.round((stats.passed / stats.totalAssigned) * 100) : 0 }} />
 
       <Tabs defaultValue="builder" className="space-y-6">
         <TabsList>
@@ -247,7 +247,7 @@ export default function AnnualMandatoryEducationHub() {
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-6">
-          <AdminComplianceStats stats={stats} />
+          <AnnualMandatoryStats stats={{ ...stats, annualCompliancePercentage: stats.totalAssigned ? Math.round((stats.passed / stats.totalAssigned) * 100) : 0 }} />
           <Card>
             <CardHeader><CardTitle>Annual compliance snapshot</CardTitle></CardHeader>
             <CardContent className="space-y-3">

@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { courseId, dueDate, userEmails = [], filters = {}, settings = {} } = await req.json();
+    const { courseId, dueDate, userEmails = [], filters = {}, settings = {}, annualCycleYear = null } = await req.json();
     if (!courseId || !dueDate) {
       return Response.json({ error: 'courseId and dueDate are required' }, { status: 400 });
     }
@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
         assigned_by: user.email,
         assigned_date: new Date().toISOString(),
         due_date: dueDate,
+        annual_cycle_year: annualCycleYear || course.annual_cycle_year || null,
         priority: settings.priority || 'high',
         status: 'assigned',
         required: settings.required !== false,

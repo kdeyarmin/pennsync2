@@ -115,6 +115,18 @@ export default function LearningCenter() {
               </Button>
             </Link>
           )}
+          <Link to={createPageUrl('MyAnnualEducation')}>
+            <Button variant="outline">
+              <GraduationCap className="w-4 h-4 mr-2" />
+              My Annual Education
+            </Button>
+          </Link>
+          <Link to={createPageUrl('AnnualMandatoryEducation')}>
+            <Button variant="outline">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Annual Builder
+            </Button>
+          </Link>
           <Link to={createPageUrl('TrainingReports')}>
             <Button variant="outline">
               <BarChart3 className="w-4 h-4 mr-2" />
