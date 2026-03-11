@@ -84,6 +84,7 @@ import ManageNewFeatures from './pages/ManageNewFeatures';
 import MedicalScribe from './pages/MedicalScribe';
 import MedicareComplianceDashboard from './pages/MedicareComplianceDashboard';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
+import MedicationReconciliation from './pages/MedicationReconciliation';
 import Messages from './pages/Messages';
 import NotificationSettings from './pages/NotificationSettings';
 import NurseEducationVideos from './pages/NurseEducationVideos';
@@ -138,7 +139,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import MedicationReconciliation from './pages/MedicationReconciliation';
+import FaxLogsDashboard from './pages/FaxLogsDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -180,6 +181,7 @@ export const PAGES = {
     "MedicalScribe": MedicalScribe,
     "MedicareComplianceDashboard": MedicareComplianceDashboard,
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
+    "MedicationReconciliation": MedicationReconciliation,
     "Messages": Messages,
     "NotificationSettings": NotificationSettings,
     "NurseEducationVideos": NurseEducationVideos,
@@ -234,7 +236,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "MedicationReconciliation": MedicationReconciliation,
+    "FaxLogsDashboard": FaxLogsDashboard,
 }
 
 export const pagesConfig = {
