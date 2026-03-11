@@ -135,55 +135,79 @@ export default function Layout({ children, currentPageName }) {
       ],
     },
     {
+      category: "Documentation & Notes",
+      items: [
+        { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
+        { name: "Visit Scribe", icon: Mic, page: "VisitScribe" },
+        { name: "Documents", icon: FileText, page: "DocumentHub" },
+        { name: "Referrals", icon: FileText, page: "ReferralIntake" },
+      ],
+    },
+    {
+      category: "Education & Resources",
+      items: [
+        { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
+        { name: "Patient Education", icon: BookOpen, page: "PatientEducationHub" },
+        { name: "Guidelines", icon: Shield, page: "MedicareGuidelinesLibrary" },
+      ],
+    },
+    {
       category: "Communication",
       items: [
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
-        { name: "Send a Fax", icon: BookUser, page: "SendFax" },
-        { name: "Fax Dashboard", icon: BarChart3, page: "FaxDashboard" },
+        { name: "Fax", icon: BookUser, page: "SendFax" },
         { name: "Physicians", icon: Users, page: "PhysicianDirectory" },
         { name: "Telehealth", icon: Video, page: "Telehealth" },
       ],
     },
     {
-      category: "Documentation",
-      items: [
-        { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
-        { name: "Visit Scribe", icon: Mic, page: "VisitScribe" },
-        { name: "Documents", icon: FileText, page: "DocumentHub" },
-        { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
-        { name: "Referrals", icon: FileText, page: "ReferralIntake" },
-        { name: "Patient Education", icon: BookOpen, page: "PatientEducationHub" },
-        { name: "Offline", icon: WifiOff, page: "OfflineMode" },
-      ],
-    },
-    {
-      category: "Quality & Compliance",
+      category: "Compliance & Training",
       items: [
         { name: "Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
-        { name: "My Training", icon: GraduationCap, page: "StaffTrainingHub" },
-        { name: "Guidelines", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
+        { name: "Training", icon: GraduationCap, page: "StaffTrainingHub" },
       ],
     },
     {
-      category: "Support",
+      category: "Tools",
       items: [
+        { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Help & Manual", icon: HelpCircle, page: "Help" },
       ],
     },
   ], [unreadMessageCount]);
 
   const adminItems = useMemo(() => [
-    { name: "Dashboard", icon: BarChart3, page: "AdminDashboard" },
-    { name: "Reports", icon: BarChart3, page: "Reports" },
-    { name: "Population Health", icon: Users, page: "PopulationHealthAnalytics" },
-    { name: "Users", icon: Users, page: "UserManagement" },
-    { name: "Training Manager", icon: GraduationCap, page: "TrainingManagement" },
-    { name: "Compliance", icon: Shield, page: "ComplianceRegulatory" },
-    { name: "Clinical", icon: ClipboardList, page: "ClinicalPathwayManager" },
-    { name: "Data", icon: Users, page: "PatientDataManagement" },
-    { name: "Security", icon: Shield, page: "SecurityCompliance" },
-    { name: "Alerts", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
-    { name: "Settings", icon: Settings, page: "UserSettings" },
+    { category: "Admin Overview", items: [{ name: "Admin Dashboard", icon: BarChart3, page: "AdminDashboard" }] },
+    { 
+      category: "Manage", 
+      items: [
+        { name: "Users", icon: Users, page: "UserManagement" },
+        { name: "Training Manager", icon: GraduationCap, page: "TrainingManagement" },
+        { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
+      ] 
+    },
+    { 
+      category: "Monitor & Analytics", 
+      items: [
+        { name: "Reports", icon: BarChart3, page: "Reports" },
+        { name: "Population Health", icon: Users, page: "PopulationHealthAnalytics" },
+        { name: "Alerts", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
+      ] 
+    },
+    { 
+      category: "Compliance & Security", 
+      items: [
+        { name: "Compliance", icon: Shield, page: "ComplianceRegulatory" },
+        { name: "Security", icon: Shield, page: "SecurityCompliance" },
+      ] 
+    },
+    { 
+      category: "Configuration", 
+      items: [
+        { name: "Data Management", icon: Users, page: "PatientDataManagement" },
+        { name: "Settings", icon: Settings, page: "UserSettings" },
+      ] 
+    },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [totalNotificationCount, isAdmin]);
 
