@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut, ChevronLeft,
-  BookOpen, WifiOff, Mail, Mic, BookUser, Video
+  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -150,6 +150,12 @@ export default function Layout({ children, currentPageName }) {
         { name: "Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
         { name: "Training", icon: GraduationCap, page: "StaffTrainingHub" },
         { name: "Guidelines", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
+      ],
+    },
+    {
+      category: "Support",
+      items: [
+        { name: "Help & Manual", icon: HelpCircle, page: "Help" },
       ],
     },
   ], [unreadMessageCount]);
