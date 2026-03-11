@@ -68,10 +68,12 @@ Deno.serve(async (req) => {
         renewal_frequency: settings.renewalFrequency || course.recurrence_rule || 'none',
         renewal_due_date: settings.renewalDueDate || null,
         attestation_required: settings.attestationRequired ?? course.requires_attestation ?? false,
-        notes: settings.notes || '',
         remediation_message: settings.remediationMessage || 'Please review the lesson content and complete a retake.',
         progress_percentage: 0,
-        notes: JSON.stringify({ show_correct_answers: !!settings.showCorrectAnswers }),
+        notes: JSON.stringify({
+          admin_notes: settings.notes || '',
+          show_correct_answers: !!settings.showCorrectAnswers
+        }),
         archived_status: false
       }));
 

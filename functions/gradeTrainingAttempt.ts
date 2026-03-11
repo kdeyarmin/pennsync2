@@ -19,6 +19,15 @@ const gradeObjectiveQuestion = (question, answer) => {
   return normalizeValue(answer) === normalizeValue(correct);
 };
 
+const parseAssignmentNotes = (value) => {
+  if (!value) return {};
+  try {
+    return JSON.parse(value);
+  } catch {
+    return {};
+  }
+};
+
 const gradeSubjectiveQuestions = async (subjectiveQuestions) => {
   if (subjectiveQuestions.length === 0) return [];
 
@@ -66,7 +75,7 @@ Deno.serve(async (req) => {
     const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: assignment.course_id });
     const questions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: assignment.course_id }, 'order_index', 500);
     const attempts = await base44.asServiceRole.entities.TrainingAttempt.filter({ assignment_id: assignmentId, user_id: assignment.assigned_to_user_id }, '-created_date', 100);
-    const assignmentNotes = assignment.notes ? JSON.parse(assignment.notes) : {};
+    const assignmentNotes = parseAssignmentNotes(assignment.notes);
 
     if (assignment.max_attempts && attempts.length >= assignment.max_attempts) {
       return Response.json({ error: 'Maximum attempts reached for this in-service' }, { status: 400 });
