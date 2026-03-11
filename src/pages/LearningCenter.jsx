@@ -84,7 +84,7 @@ export default function LearningCenter() {
             <GraduationCap className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Penn Hospice Learning Center</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Penn Learning Center</h1>
             <p className="text-gray-600">Your professional development hub</p>
           </div>
         </div>
