@@ -65,6 +65,7 @@ import ComplianceDashboard from './pages/ComplianceDashboard';
 import ComplianceRegulatory from './pages/ComplianceRegulatory';
 import CustomizableDashboard from './pages/CustomizableDashboard';
 import Dashboard from './pages/Dashboard';
+import DischargeSummaries from './pages/DischargeSummaries';
 import DocumentHub from './pages/DocumentHub';
 import DocumentIngestion from './pages/DocumentIngestion';
 import DocumentManagement from './pages/DocumentManagement';
@@ -72,10 +73,12 @@ import DocumentSignatures from './pages/DocumentSignatures';
 import DocumentVisit from './pages/DocumentVisit';
 import DocumentationTraining from './pages/DocumentationTraining';
 import DuplicatePatients from './pages/DuplicatePatients';
+import EducationLibrary from './pages/EducationLibrary';
 import FaxAddressBook from './pages/FaxAddressBook';
 import FaxContacts from './pages/FaxContacts';
 import FaxDashboard from './pages/FaxDashboard';
 import Features from './pages/Features';
+import Help from './pages/Help';
 import Home from './pages/Home';
 import ManageNewFeatures from './pages/ManageNewFeatures';
 import MedicalScribe from './pages/MedicalScribe';
@@ -107,6 +110,7 @@ import PatientEducationHub from './pages/PatientEducationHub';
 import PatientEducationPortal from './pages/PatientEducationPortal';
 import PatientRecordDashboard from './pages/PatientRecordDashboard';
 import Patients from './pages/Patients';
+import PopulationHealthAnalytics from './pages/PopulationHealthAnalytics';
 import PredictiveAnalytics from './pages/PredictiveAnalytics';
 import RealTimeComplianceDashboard from './pages/RealTimeComplianceDashboard';
 import ReferralAdmissionNote from './pages/ReferralAdmissionNote';
@@ -134,10 +138,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import Help from './pages/Help';
-import PopulationHealthAnalytics from './pages/PopulationHealthAnalytics';
-import EducationLibrary from './pages/EducationLibrary';
-import DischargeSummaries from './pages/DischargeSummaries';
+import MedicationReconciliation from './pages/MedicationReconciliation';
 import __Layout from './Layout.jsx';
 
 
@@ -160,6 +161,7 @@ export const PAGES = {
     "ComplianceRegulatory": ComplianceRegulatory,
     "CustomizableDashboard": CustomizableDashboard,
     "Dashboard": Dashboard,
+    "DischargeSummaries": DischargeSummaries,
     "DocumentHub": DocumentHub,
     "DocumentIngestion": DocumentIngestion,
     "DocumentManagement": DocumentManagement,
@@ -167,10 +169,12 @@ export const PAGES = {
     "DocumentVisit": DocumentVisit,
     "DocumentationTraining": DocumentationTraining,
     "DuplicatePatients": DuplicatePatients,
+    "EducationLibrary": EducationLibrary,
     "FaxAddressBook": FaxAddressBook,
     "FaxContacts": FaxContacts,
     "FaxDashboard": FaxDashboard,
     "Features": Features,
+    "Help": Help,
     "Home": Home,
     "ManageNewFeatures": ManageNewFeatures,
     "MedicalScribe": MedicalScribe,
@@ -202,6 +206,7 @@ export const PAGES = {
     "PatientEducationPortal": PatientEducationPortal,
     "PatientRecordDashboard": PatientRecordDashboard,
     "Patients": Patients,
+    "PopulationHealthAnalytics": PopulationHealthAnalytics,
     "PredictiveAnalytics": PredictiveAnalytics,
     "RealTimeComplianceDashboard": RealTimeComplianceDashboard,
     "ReferralAdmissionNote": ReferralAdmissionNote,
@@ -229,10 +234,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "Help": Help,
-    "PopulationHealthAnalytics": PopulationHealthAnalytics,
-    "EducationLibrary": EducationLibrary,
-    "DischargeSummaries": DischargeSummaries,
+    "MedicationReconciliation": MedicationReconciliation,
 }
 
 export const pagesConfig = {
