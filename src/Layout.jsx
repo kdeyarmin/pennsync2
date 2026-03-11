@@ -160,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Quality & Compliance",
       items: [
         { name: "Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
-        { name: "Training", icon: GraduationCap, page: "StaffTrainingHub" },
+        { name: "My Training", icon: GraduationCap, page: "StaffTrainingHub" },
         { name: "Guidelines", icon: BookOpen, page: "MedicareGuidelinesLibrary" },
       ],
     },
@@ -177,7 +177,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Reports", icon: BarChart3, page: "Reports" },
     { name: "Population Health", icon: Users, page: "PopulationHealthAnalytics" },
     { name: "Users", icon: Users, page: "UserManagement" },
-    { name: "Training", icon: GraduationCap, page: "TrainingManagement" },
+    { name: "Training Manager", icon: GraduationCap, page: "TrainingManagement" },
     { name: "Compliance", icon: Shield, page: "ComplianceRegulatory" },
     { name: "Clinical", icon: ClipboardList, page: "ClinicalPathwayManager" },
     { name: "Data", icon: Users, page: "PatientDataManagement" },
