@@ -7,8 +7,8 @@ Deno.serve(async (req) => {
     const todayIso = today.toISOString().slice(0, 10);
     const createdAssignments = [];
 
-    const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-issued_at', 1000);
-    const activeAssignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 1000);
+    const certificates = (await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-issued_at', 300)).filter((certificate) => certificate.expiration_date);
+    const activeAssignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 500);
 
     for (const certificate of certificates) {
       if (!certificate.expiration_date) continue;
