@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AIComplianceInServices from './pages/AIComplianceInServices';
 import AITrainingGenerator from './pages/AITrainingGenerator';
 import About from './pages/About';
 import AdminDashboard from './pages/AdminDashboard';
@@ -75,6 +76,7 @@ import DocumentVisit from './pages/DocumentVisit';
 import DocumentationTraining from './pages/DocumentationTraining';
 import DuplicatePatients from './pages/DuplicatePatients';
 import EducationLibrary from './pages/EducationLibrary';
+import EmployeeTranscript from './pages/EmployeeTranscript';
 import FaxAddressBook from './pages/FaxAddressBook';
 import FaxContacts from './pages/FaxContacts';
 import FaxDashboard from './pages/FaxDashboard';
@@ -92,6 +94,7 @@ import MedicareComplianceDashboard from './pages/MedicareComplianceDashboard';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
 import MedicationReconciliation from './pages/MedicationReconciliation';
 import Messages from './pages/Messages';
+import MyTraining from './pages/MyTraining';
 import NotificationSettings from './pages/NotificationSettings';
 import NurseEducationVideos from './pages/NurseEducationVideos';
 import NursePerformanceDashboard from './pages/NursePerformanceDashboard';
@@ -141,6 +144,7 @@ import SystemJobMonitor from './pages/SystemJobMonitor';
 import SystemMonitoring from './pages/SystemMonitoring';
 import Telehealth from './pages/Telehealth';
 import TemplateLibrary from './pages/TemplateLibrary';
+import TrainingCoursePlayer from './pages/TrainingCoursePlayer';
 import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
 import UserActivityReport from './pages/UserActivityReport';
@@ -148,14 +152,13 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import MyTraining from './pages/MyTraining';
-import TrainingCoursePlayer from './pages/TrainingCoursePlayer';
-import AIComplianceInServices from './pages/AIComplianceInServices';
-import EmployeeTranscript from './pages/EmployeeTranscript';
+import AnnualMandatoryEducation from './pages/AnnualMandatoryEducation';
+import MyAnnualEducation from './pages/MyAnnualEducation';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIComplianceInServices": AIComplianceInServices,
     "AITrainingGenerator": AITrainingGenerator,
     "About": About,
     "AdminDashboard": AdminDashboard,
@@ -184,6 +187,7 @@ export const PAGES = {
     "DocumentationTraining": DocumentationTraining,
     "DuplicatePatients": DuplicatePatients,
     "EducationLibrary": EducationLibrary,
+    "EmployeeTranscript": EmployeeTranscript,
     "FaxAddressBook": FaxAddressBook,
     "FaxContacts": FaxContacts,
     "FaxDashboard": FaxDashboard,
@@ -201,6 +205,7 @@ export const PAGES = {
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
     "MedicationReconciliation": MedicationReconciliation,
     "Messages": Messages,
+    "MyTraining": MyTraining,
     "NotificationSettings": NotificationSettings,
     "NurseEducationVideos": NurseEducationVideos,
     "NursePerformanceDashboard": NursePerformanceDashboard,
@@ -250,6 +255,7 @@ export const PAGES = {
     "SystemMonitoring": SystemMonitoring,
     "Telehealth": Telehealth,
     "TemplateLibrary": TemplateLibrary,
+    "TrainingCoursePlayer": TrainingCoursePlayer,
     "TrainingManagement": TrainingManagement,
     "UserActivityLog": UserActivityLog,
     "UserActivityReport": UserActivityReport,
@@ -257,10 +263,8 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "MyTraining": MyTraining,
-    "TrainingCoursePlayer": TrainingCoursePlayer,
-    "AIComplianceInServices": AIComplianceInServices,
-    "EmployeeTranscript": EmployeeTranscript,
+    "AnnualMandatoryEducation": AnnualMandatoryEducation,
+    "MyAnnualEducation": MyAnnualEducation,
 }
 
 export const pagesConfig = {

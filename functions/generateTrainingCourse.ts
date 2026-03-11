@@ -39,7 +39,9 @@ Deno.serve(async (req) => {
       include_references = true,
       include_acknowledgement = true,
       custom_instructions = '',
-      status = 'draft'
+      status = 'draft',
+      training_type = 'in_service',
+      annual_cycle_year = null
     } = await req.json();
 
     if (!topic) {
@@ -150,6 +152,7 @@ Always include a warning that AI-generated training should be reviewed by an adm
       short_description: generated.course?.short_description || '',
       description: generated.course?.description || '',
       training_type: 'in_service',
+      annual_cycle_year: annual_cycle_year || undefined,
       category: normalizeCategory(training_category),
       business_line_scope: normalizeBusinessLine(business_line),
       employee_audience: audience_roles.join(', '),
