@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TriangleAlert } from "lucide-react";
+import { AlertTriangle, Clock } from "lucide-react";
 
 const severityClasses = {
   low: "bg-emerald-100 text-emerald-800",
@@ -37,7 +37,7 @@ export default function IncidentRecentList({ incidents = [] }) {
               </div>
               {incident.alert_triggered && (
                 <div className="flex items-center gap-2 text-xs text-red-700">
-                  <TriangleAlert className="w-3 h-3" />
+                  <AlertTriangle className="w-3 h-3" />
                   Immediate admin alert sent
                 </div>
               )}

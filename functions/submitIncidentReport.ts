@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     });
 
     if (payload.immediate_alert) {
-      const users = await base44.asServiceRole.entities.User.list(200);
+      const users = await base44.asServiceRole.entities.User.list('-created_date', 200);
       const adminUsers = users.filter((candidate) => candidate.role === 'admin');
 
       if (adminUsers.length > 0) {

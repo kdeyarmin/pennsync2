@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Camera, Send, Siren, TriangleAlert } from "lucide-react";
+import { AlertTriangle, Camera, Send } from "lucide-react";
 import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 import IncidentPhotoCapture from "@/components/incident/IncidentPhotoCapture";
 
@@ -107,13 +107,13 @@ export default function IncidentForm({ patients = [], currentUser, onSubmitted }
     <Card className="shadow-lg border-red-100">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Siren className="w-5 h-5 text-red-600" />
+          <AlertTriangle className="w-5 h-5 text-red-600" />
           Real-time incident reporting
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         <Alert className="border-red-200 bg-red-50">
-          <TriangleAlert className="w-4 h-4 text-red-600" />
+          <AlertTriangle className="w-4 h-4 text-red-600" />
           <AlertDescription className="text-red-900">
             High-severity submissions trigger immediate alerts for the clinical admin team.
           </AlertDescription>

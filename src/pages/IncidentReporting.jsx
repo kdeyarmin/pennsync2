@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ShieldAlert } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import IncidentForm from "@/components/incident/IncidentForm";
 import IncidentRecentList from "@/components/incident/IncidentRecentList";
 
@@ -32,7 +32,7 @@ export default function IncidentReporting() {
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="rounded-3xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-6 text-white shadow-xl">
         <div className="flex items-center gap-3 mb-3">
-          <ShieldAlert className="w-8 h-8" />
+          <AlertTriangle className="w-8 h-8" />
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Incident reporting</h1>
             <p className="text-sm sm:text-base text-red-50">Capture wound photos, report safety events in real time, and notify clinical admins immediately.</p>
