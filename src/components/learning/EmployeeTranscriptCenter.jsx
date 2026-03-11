@@ -55,11 +55,20 @@ export default function EmployeeTranscriptCenter() {
     if (!selectedEmployee) return;
     const certIds = Object.keys(certificateSelection).filter(k => certificateSelection[k]);
     try {
-      const response = await base44.functions.invoke('generateCertificatePacketPDF', {
+      const response = await base44.functions.invoke('generateAndCacheCertificatePacket', {
         employeeId: selectedEmployee,
         certificateIds: certIds.length > 0 ? certIds : undefined
       });
-      window.open(response.data.url, '_blank');
+      
+      if (response.download_url) {
+        // Download the PDF
+        const link = document.createElement('a');
+        link.href = response.download_url;
+        link.download = `certificate_packet_${selectedEmployee}_${new Date().getTime()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (error) {
       console.error('Failed to generate certificate packet:', error);
     }
@@ -183,7 +192,7 @@ export default function EmployeeTranscriptCenter() {
                 <div>
                   <CardTitle>Certificate Packet ({selectedCount} selected)</CardTitle>
                   <p className="text-sm text-gray-600 mt-1">
-                    {certificates.length} total certificates available
+                    {certificates.length} total certificates available • Cached for 24 hours
                   </p>
                 </div>
                 <div className="flex gap-2">
