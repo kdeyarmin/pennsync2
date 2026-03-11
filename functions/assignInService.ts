@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
         notes: settings.notes || '',
         remediation_message: settings.remediationMessage || 'Please review the lesson content and complete a retake.',
         progress_percentage: 0,
+        notes: JSON.stringify({ show_correct_answers: !!settings.showCorrectAnswers }),
         archived_status: false
       }));
 

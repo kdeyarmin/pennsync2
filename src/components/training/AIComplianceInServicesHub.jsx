@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Send, Copy, Archive, CheckCircle2, BarChart3 } from "lucide-react";
+import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
@@ -13,10 +13,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AdminComplianceStats from "@/components/training/AdminComplianceStats";
+import TemplateLibraryPanel from "@/components/training/TemplateLibraryPanel";
+import AssignmentWizard from "@/components/training/AssignmentWizard";
+import RetakeSettingsPanel from "@/components/training/RetakeSettingsPanel";
+
+const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
 export default function AIComplianceInServicesHub() {
   const queryClient = useQueryClient();
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [generator, setGenerator] = useState({
@@ -42,29 +47,61 @@ export default function AIComplianceInServicesHub() {
     maxAttempts: 3,
     waitingPeriodHours: 24,
     regenerateTestOnRetake: true,
+    showCorrectAnswers: false,
     attestationRequired: true,
     required: true,
     priority: 'high',
     remediationMessage: 'Please review the lesson content and complete a new retake.'
   });
+  const [pendingAssignmentPayload, setPendingAssignmentPayload] = useState(null);
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const { data: users = [] } = useQuery({ queryKey: ["learning-users"], queryFn: () => base44.entities.User.list('-created_date', 500), initialData: [] });
   const { data: courses = [] } = useQuery({ queryKey: ["in-service-courses"], queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 300), initialData: [] });
-  const { data: assignments = [] } = useQuery({ queryKey: ["in-service-assignments"], queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 500), initialData: [] });
+  const { data: assignments = [] } = useQuery({ queryKey: ["in-service-assignments"], queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 1000), initialData: [] });
   const { data: certificates = [] } = useQuery({ queryKey: ["in-service-certificates"], queryFn: () => base44.entities.TrainingCertificate.list('-issued_at', 500), initialData: [] });
+  const { data: templates = [] } = useQuery({ queryKey: ["training-templates"], queryFn: () => base44.entities.TrainingTemplate.list('-created_date', 100), initialData: [] });
+  const { data: planEnrollments = [] } = useQuery({ queryKey: ["plan-enrollments-admin"], queryFn: () => base44.entities.PlanEnrollment.list('-enrolled_at', 300), initialData: [] });
 
   const inServices = useMemo(() => courses.filter((course) => course.training_type === 'in_service' || course.ai_generated), [courses]);
+  const now = new Date();
+  const dueSoonCount = assignments.filter((assignment) => {
+    if (!assignment.due_date || ['completed', 'failed', 'locked'].includes(assignment.status)) return false;
+    const diff = Math.ceil((new Date(assignment.due_date) - now) / (1000 * 60 * 60 * 24));
+    return diff >= 0 && diff <= 7;
+  }).length;
+  const averageScore = Math.round((assignments.filter((assignment) => typeof assignment.score_percentage === 'number').reduce((sum, assignment) => sum + assignment.score_percentage, 0) / Math.max(assignments.filter((assignment) => typeof assignment.score_percentage === 'number').length, 1)) || 0);
   const reportStats = {
-    total: assignments.length,
-    completed: assignments.filter((assignment) => assignment.status === 'completed').length,
+    totalAssigned: assignments.length,
+    dueSoon: dueSoonCount,
     overdue: assignments.filter((assignment) => assignment.status === 'overdue').length,
+    completed: assignments.filter((assignment) => assignment.status === 'completed').length,
+    passed: assignments.filter((assignment) => assignment.pass_fail_result === 'passed').length,
     failed: assignments.filter((assignment) => assignment.pass_fail_result === 'failed').length,
-    certificates: certificates.length,
+    averageScore,
   };
 
-  const toggleUser = (email) => {
-    setSelectedUsers((prev) => prev.includes(email) ? prev.filter((item) => item !== email) : [...prev, email]);
+  const createAuditLog = async (action, entityId, afterJson, reason = "") => {
+    await base44.entities.TrainingAuditLog.create({
+      actor_id: currentUser?.email,
+      actor_name: currentUser?.full_name,
+      action,
+      entity_type: 'TrainingCourse',
+      entity_id: entityId,
+      after_json: afterJson,
+      reason,
+      severity: 'info'
+    });
+  };
+
+  const useTemplate = (template) => {
+    setGenerator((prev) => ({
+      ...prev,
+      topic: template.topic,
+      training_category: template.training_category,
+      purpose_of_training: template.purpose_of_training,
+      audience_roles: template.audience_roles,
+    }));
   };
 
   const runAIGeneration = async () => {
@@ -72,8 +109,20 @@ export default function AIComplianceInServicesHub() {
     queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
   };
 
+  const savePromptAsTemplate = async () => {
+    await base44.entities.TrainingTemplate.create({
+      name: generator.topic || 'Custom template',
+      description: generator.purpose_of_training,
+      training_category: generator.training_category,
+      business_line: generator.business_line,
+      prompt_json: generator,
+      active: true
+    });
+    queryClient.invalidateQueries({ queryKey: ["training-templates"] });
+  };
+
   const createManualDraft = async () => {
-    await base44.entities.TrainingCourse.create({
+    const created = await base44.entities.TrainingCourse.create({
       ...manualDraft,
       training_type: 'in_service',
       status: 'draft',
@@ -82,20 +131,24 @@ export default function AIComplianceInServicesHub() {
       ai_generated: false,
       requires_attestation: true,
       enable_certificate: true,
-      short_description: manualDraft.description
+      short_description: manualDraft.description,
+      test_settings_json: { show_correct_answers_after_completion: false }
     });
+    await createAuditLog('course_created', created.id, { title: created.title, status: 'draft' }, 'created');
     setManualDraft({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
     queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
   };
 
-  const assignSelected = async () => {
+  const confirmAssignment = async () => {
+    if (!pendingAssignmentPayload) return;
     await assignInService({
       courseId: selectedCourseId,
       dueDate,
-      userEmails: selectedUsers,
+      userEmails: pendingAssignmentPayload.userEmails,
+      filters: pendingAssignmentPayload.filters,
       settings: assignmentSettings
     });
-    setSelectedUsers([]);
+    setPendingAssignmentPayload(null);
     queryClient.invalidateQueries({ queryKey: ["in-service-assignments"] });
   };
 
@@ -106,6 +159,7 @@ export default function AIComplianceInServicesHub() {
       published_date: status === 'published' ? new Date().toISOString() : course.published_date,
       archived_status: status === 'archived'
     });
+    await createAuditLog(status === 'published' ? 'course_published' : 'course_archived', course.id, { status }, status === 'published' ? 'published' : 'archived');
     queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
   };
 
@@ -118,14 +172,17 @@ export default function AIComplianceInServicesHub() {
     <div className="space-y-6">
       <div className="rounded-3xl bg-gradient-to-r from-indigo-700 to-purple-700 text-white p-6 shadow-xl">
         <h1 className="text-3xl font-bold mb-2">AI Compliance In-Services</h1>
-        <p className="text-indigo-100">Generate AI-powered in-services, assign them to employees, and track compliance inside your existing learning center.</p>
+        <p className="text-indigo-100">AI-powered in-services, competency testing, certificates, learning plan tracking, and compliance reporting inside your current learning center.</p>
       </div>
+
+      <AdminComplianceStats stats={reportStats} />
 
       <Tabs defaultValue="builder" className="space-y-6">
         <TabsList>
           <TabsTrigger value="builder">AI Builder</TabsTrigger>
+          <TabsTrigger value="templates">Template Library</TabsTrigger>
           <TabsTrigger value="library">In-Service Library</TabsTrigger>
-          <TabsTrigger value="assignments">Assignments</TabsTrigger>
+          <TabsTrigger value="assignments">Assignment Wizard</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
           <TabsTrigger value="plans">Learning Plans</TabsTrigger>
         </TabsList>
@@ -160,12 +217,15 @@ export default function AIComplianceInServicesHub() {
                   </label>
                 ))}
               </div>
-              <Button className="w-full" onClick={runAIGeneration}>Generate AI in-service</Button>
+              <div className="flex gap-3">
+                <Button className="flex-1" onClick={runAIGeneration}>Generate AI in-service</Button>
+                <Button variant="outline" onClick={savePromptAsTemplate}>Save prompt as template</Button>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Manual draft</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><PlusCircle className="w-5 h-5 text-indigo-600" />Manual in-service draft</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <Input placeholder="In-service title" value={manualDraft.title} onChange={(e) => setManualDraft({ ...manualDraft, title: e.target.value })} />
               <Textarea placeholder="Description" value={manualDraft.description} onChange={(e) => setManualDraft({ ...manualDraft, description: e.target.value })} />
@@ -179,6 +239,27 @@ export default function AIComplianceInServicesHub() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="templates" className="space-y-6">
+          <TemplateLibraryPanel onUseTemplate={useTemplate} />
+          {templates.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>Saved prompt templates</CardTitle></CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {templates.map((template) => (
+                  <div key={template.id} className="rounded-2xl border p-4 bg-white shadow-sm">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <h3 className="font-semibold text-slate-900">{template.name}</h3>
+                      <Badge variant="outline">{template.training_category}</Badge>
+                    </div>
+                    <p className="text-sm text-slate-500 mb-3">{template.description}</p>
+                    <Button variant="outline" className="w-full" onClick={() => setGenerator(template.prompt_json)}>Load saved template</Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         <TabsContent value="library" className="space-y-4">
           {inServices.map((course) => (
             <Card key={course.id}>
@@ -187,6 +268,7 @@ export default function AIComplianceInServicesHub() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="font-semibold text-slate-900">{course.title}</h2>
                     <Badge variant="outline">{course.category}</Badge>
+                    <Badge variant="outline">{course.business_line_scope}</Badge>
                     <Badge className={course.status === 'published' ? 'bg-green-100 text-green-800' : course.status === 'archived' ? 'bg-slate-100 text-slate-800' : 'bg-amber-100 text-amber-800'}>{course.status}</Badge>
                     {course.ai_generated && <Badge className="bg-purple-100 text-purple-800">AI generated</Badge>}
                   </div>
@@ -200,72 +282,49 @@ export default function AIComplianceInServicesHub() {
               </CardContent>
             </Card>
           ))}
+          {inServices.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No in-services created yet.</CardContent></Card>}
         </TabsContent>
 
-        <TabsContent value="assignments" className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
-          <Card>
-            <CardHeader><CardTitle>Assignment settings</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <Select value={selectedCourseId} onValueChange={setSelectedCourseId}><SelectTrigger><SelectValue placeholder="Select in-service" /></SelectTrigger><SelectContent>{inServices.map((course) => <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>)}</SelectContent></Select>
-              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input type="number" placeholder="Passing score" value={assignmentSettings.passingScoreRequired} onChange={(e) => setAssignmentSettings({ ...assignmentSettings, passingScoreRequired: Number(e.target.value) })} />
-                <Input type="number" placeholder="Max attempts" value={assignmentSettings.maxAttempts} onChange={(e) => setAssignmentSettings({ ...assignmentSettings, maxAttempts: Number(e.target.value) })} />
-                <Input type="number" placeholder="Retake wait (hrs)" value={assignmentSettings.waitingPeriodHours} onChange={(e) => setAssignmentSettings({ ...assignmentSettings, waitingPeriodHours: Number(e.target.value) })} />
-                <Select value={assignmentSettings.priority} onValueChange={(value) => setAssignmentSettings({ ...assignmentSettings, priority: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select>
-              </div>
-              <Textarea placeholder="Remediation message" value={assignmentSettings.remediationMessage} onChange={(e) => setAssignmentSettings({ ...assignmentSettings, remediationMessage: e.target.value })} />
-              <div className="space-y-2 text-sm">
-                {[
-                  ['required', 'Required assignment'],
-                  ['attestationRequired', 'Require acknowledgement'],
-                  ['regenerateTestOnRetake', 'New randomized retake version'],
-                ].map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2"><Checkbox checked={assignmentSettings[key]} onCheckedChange={(checked) => setAssignmentSettings({ ...assignmentSettings, [key]: !!checked })} /><span>{label}</span></label>
-                ))}
-              </div>
-              <Button className="w-full" disabled={!selectedCourseId || !dueDate || selectedUsers.length === 0} onClick={assignSelected}><Send className="w-4 h-4 mr-2" />Assign selected employees</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Select employees</CardTitle></CardHeader>
-            <CardContent className="space-y-3 max-h-[700px] overflow-y-auto">
-              {users.filter((candidate) => candidate.role !== 'admin').map((candidate) => (
-                <label key={candidate.email} className="flex items-start gap-3 rounded-xl border p-3">
-                  <Checkbox checked={selectedUsers.includes(candidate.email)} onCheckedChange={() => toggleUser(candidate.email)} />
-                  <div>
-                    <p className="font-medium text-slate-900">{candidate.full_name || candidate.email}</p>
-                    <p className="text-sm text-slate-500">{candidate.department || 'No department'} • {candidate.job_title || candidate.credential_type || 'Employee'}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {candidate.business_line && <Badge variant="outline">{candidate.business_line}</Badge>}
-                      {candidate.location && <Badge variant="outline">{candidate.location}</Badge>}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </CardContent>
-          </Card>
+        <TabsContent value="assignments" className="space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
+            <Card>
+              <CardHeader><CardTitle>Course & due date</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <Select value={selectedCourseId} onValueChange={setSelectedCourseId}><SelectTrigger><SelectValue placeholder="Select in-service" /></SelectTrigger><SelectContent>{inServices.map((course) => <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>)}</SelectContent></Select>
+                <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </CardContent>
+            </Card>
+            <RetakeSettingsPanel settings={assignmentSettings} onChange={setAssignmentSettings} />
+          </div>
+          <AssignmentWizard users={users} onAssign={setPendingAssignmentPayload} />
+          {pendingAssignmentPayload && (
+            <Card>
+              <CardContent className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold text-slate-900">Assignment ready</h3>
+                  <p className="text-sm text-slate-500">Course will be assigned using the current wizard selection and retake settings.</p>
+                </div>
+                <Button disabled={!selectedCourseId || !dueDate} onClick={confirmAssignment}><Send className="w-4 h-4 mr-2" />Create assignments</Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            {[['Total Assigned', reportStats.total], ['Completed', reportStats.completed], ['Overdue', reportStats.overdue], ['Failed', reportStats.failed], ['Certificates', reportStats.certificates]].map(([label, value]) => (
-              <Card key={label}><CardContent className="p-5"><p className="text-sm text-slate-500">{label}</p><p className="text-3xl font-bold text-slate-900">{value}</p></CardContent></Card>
-            ))}
-          </div>
+          <AdminComplianceStats stats={reportStats} />
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" />Assignment compliance snapshot</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {assignments.slice(0, 20).map((assignment) => (
+              {assignments.slice(0, 25).map((assignment) => (
                 <div key={assignment.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 rounded-xl border p-3">
                   <div>
                     <p className="font-medium text-slate-900">{assignment.course_title}</p>
-                    <p className="text-sm text-slate-500">{assignment.assigned_to_user_id}</p>
+                    <p className="text-sm text-slate-500">{assignment.assigned_to_user_id} • Due {formatDate(assignment.due_date)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{assignment.status}</Badge>
                     <Badge className={assignment.pass_fail_result === 'passed' ? 'bg-green-100 text-green-800' : assignment.pass_fail_result === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>{assignment.pass_fail_result || 'pending'}</Badge>
+                    <Badge variant="outline">{assignment.score_percentage ?? '—'}%</Badge>
                   </div>
                 </div>
               ))}
@@ -273,13 +332,26 @@ export default function AIComplianceInServicesHub() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="plans">
-          <Card>
-            <CardHeader><CardTitle>Learning Plans</CardTitle></CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-500">Use the existing Learning Plans tab in Training Management to bundle in-services into annual or role-based education plans.</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="plans" className="space-y-4">
+          {planEnrollments.map((enrollment) => {
+            const overdue = enrollment.status === 'overdue' || (enrollment.due_date && new Date(enrollment.due_date) < now && enrollment.status !== 'completed');
+            return (
+              <Card key={enrollment.id}>
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-slate-900">{enrollment.plan_name}</h3>
+                      <p className="text-sm text-slate-500">{enrollment.user_name} • Due {formatDate(enrollment.due_date)}</p>
+                    </div>
+                    <Badge className={overdue ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>{overdue ? 'overdue' : enrollment.status}</Badge>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className="bg-indigo-600 h-full rounded-full" style={{ width: `${enrollment.progress_percentage || 0}%` }} /></div>
+                  <p className="text-sm text-slate-500">{enrollment.courses_completed}/{enrollment.courses_total} completed • {enrollment.progress_percentage || 0}% progress</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+          {planEnrollments.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No learning plan progress records yet.</CardContent></Card>}
         </TabsContent>
       </Tabs>
     </div>

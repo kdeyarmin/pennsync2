@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
     const [course] = await base44.asServiceRole.entities.TrainingCourse.filter({ id: assignment.course_id });
     const questions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: assignment.course_id }, 'order_index', 500);
     const attempts = await base44.asServiceRole.entities.TrainingAttempt.filter({ assignment_id: assignmentId, user_id: assignment.assigned_to_user_id }, '-created_date', 100);
+    const assignmentNotes = assignment.notes ? JSON.parse(assignment.notes) : {};
 
     if (assignment.max_attempts && attempts.length >= assignment.max_attempts) {
       return Response.json({ error: 'Maximum attempts reached for this in-service' }, { status: 400 });
@@ -248,9 +249,10 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.TrainingAuditLog.create({
       actor_id: assignment.assigned_to_user_id,
       actor_name: user.full_name,
-      action: passed ? 'certificate_issued' : 'assignment_modified',
+      action: 'assignment_modified',
       entity_type: 'TrainingAssignment',
       entity_id: assignmentId,
+      reason: attemptNumber > 1 ? 'retaken' : (passed ? 'completed' : 'failed'),
       after_json: { score, passed, attempt_number: attemptNumber, certificate_id: certificate?.certificate_id || null },
       severity: passed ? 'info' : 'warning'
     });
@@ -294,6 +296,8 @@ Deno.serve(async (req) => {
       certificate,
       retake_required: !passed && !maxAttemptsReached,
       locked: !!maxAttemptsReached,
+      show_correct_answers: !!assignmentNotes.show_correct_answers,
+      graded_answers: !!assignmentNotes.show_correct_answers ? questionResults : [],
       remediation_message: !passed ? (assignment.remediation_message || 'Review the lesson content and retry.') : ''
     });
   } catch (error) {
