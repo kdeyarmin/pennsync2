@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import EnrollmentSummaryDashboard from '../components/learning/EnrollmentSummaryDashboard';
+import EmployeeTranscriptCenter from '../components/learning/EmployeeTranscriptCenter';
+import CourseRosterReport from '../components/learning/CourseRosterReport';
 
 const BUSINESS_LINES = [
   { value: 'home_health', label: 'Home Health' },
@@ -79,21 +82,15 @@ export default function LearningReports() {
         </TabsList>
 
         <TabsContent value="summary">
-          <div className="text-center py-12">
-            <p className="text-gray-600">Enrollment & Completion Summary Dashboard coming soon</p>
-          </div>
+          <EnrollmentSummaryDashboard />
         </TabsContent>
 
         <TabsContent value="transcript">
-          <div className="text-center py-12">
-            <p className="text-gray-600">Employee Transcript & Certificate Packet coming soon</p>
-          </div>
+          <EmployeeTranscriptCenter />
         </TabsContent>
 
         <TabsContent value="roster">
-          <div className="text-center py-12">
-            <p className="text-gray-600">Course Roster Report coming soon</p>
-          </div>
+          <CourseRosterReport />
         </TabsContent>
 
         <TabsContent value="plan-compliance">
