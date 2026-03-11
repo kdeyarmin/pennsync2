@@ -56,6 +56,7 @@ import AdminUserSetup from './pages/AdminUserSetup';
 import AgencyAnalytics from './pages/AgencyAnalytics';
 import AgencySettings from './pages/AgencySettings';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import AnnualEducationTranscript from './pages/AnnualEducationTranscript';
 import AnnualMandatoryEducation from './pages/AnnualMandatoryEducation';
 import AutomaticCarePlans from './pages/AutomaticCarePlans';
 import CarePlanBuilder from './pages/CarePlanBuilder';
@@ -154,7 +155,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import AnnualEducationTranscript from './pages/AnnualEducationTranscript';
+import ManagerSkillGapDashboard from './pages/ManagerSkillGapDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -168,6 +169,7 @@ export const PAGES = {
     "AgencyAnalytics": AgencyAnalytics,
     "AgencySettings": AgencySettings,
     "AnalyticsDashboard": AnalyticsDashboard,
+    "AnnualEducationTranscript": AnnualEducationTranscript,
     "AnnualMandatoryEducation": AnnualMandatoryEducation,
     "AutomaticCarePlans": AutomaticCarePlans,
     "CarePlanBuilder": CarePlanBuilder,
@@ -266,7 +268,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "AnnualEducationTranscript": AnnualEducationTranscript,
+    "ManagerSkillGapDashboard": ManagerSkillGapDashboard,
 }
 
 export const pagesConfig = {

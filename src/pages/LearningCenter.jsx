@@ -108,12 +108,20 @@ export default function LearningCenter() {
             </>
           )}
           {isSupervisor && (
-            <Link to={createPageUrl('TeamTrainingDashboard')}>
-              <Button variant="outline">
-                <Users className="w-4 h-4 mr-2" />
-                Team Dashboard
-              </Button>
-            </Link>
+            <>
+              <Link to={createPageUrl('TeamTrainingDashboard')}>
+                <Button variant="outline">
+                  <Users className="w-4 h-4 mr-2" />
+                  Team Dashboard
+                </Button>
+              </Link>
+              <Link to={createPageUrl('ManagerSkillGapDashboard')}>
+                <Button variant="outline">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Skill Gap Dashboard
+                </Button>
+              </Link>
+            </>
           )}
           <Link to={createPageUrl('MyAnnualEducation')}>
             <Button variant="outline">
