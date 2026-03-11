@@ -37,7 +37,12 @@ const DialogContent = React.forwardRef((props, ref) => (
         top: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: 10000,
-        opacity: 1
+        opacity: 1,
+        backgroundColor: '#ffffff',
+        backgroundImage: 'none',
+        borderRadius: '1rem',
+        boxShadow: '0 24px 80px rgba(15,23,42,0.22)',
+        isolation: 'isolate'
       }}
       className={cn(
         "grid w-[calc(100vw-1.5rem)] max-w-3xl gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] max-h-[90vh] sm:w-full sm:p-8",
