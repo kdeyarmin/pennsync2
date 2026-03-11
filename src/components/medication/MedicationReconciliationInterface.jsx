@@ -15,6 +15,7 @@ import {
   Pill, Upload, Loader2, AlertTriangle, CheckCircle, 
   X, FileText, Download, Send, Eye, Edit
 } from 'lucide-react';
+import DrugInteractionAlert from './DrugInteractionAlert';
 
 export default function MedicationReconciliationInterface({ patientId, onClose, onComplete }) {
   const queryClient = useQueryClient();
@@ -266,6 +267,18 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
                 </div>
               </CardContent>
             </Card>
+
+            {/* Drug Interaction Check */}
+            {reconciliation && (reconciliation.current_medications?.length > 0 || reconciliation.extracted_discharge_medications?.length > 0) && (
+              <DrugInteractionAlert
+                medications={[
+                  ...(reconciliation.current_medications || []),
+                  ...(reconciliation.extracted_discharge_medications || [])
+                ]}
+                patientId={patientId}
+                autoCheck={true}
+              />
+            )}
 
             <Tabs defaultValue="discrepancies">
               <TabsList className="grid w-full grid-cols-3">
