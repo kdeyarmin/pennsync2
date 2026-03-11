@@ -5,18 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2,
-  Loader2, AlertCircle, Brain, Activity, ShieldAlert
+  Loader2, AlertCircle, Brain, Activity, ShieldAlert, Lightbulb
 } from "lucide-react";
 import { toast } from "sonner";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
 import OASISComplianceWarnings, { getComplianceIssues } from "@/components/oasis/OASISComplianceWarnings";
+import OASISQuestionGuidance from "@/components/oasis/OASISQuestionGuidance";
 import { OASIS_SECTIONS } from "@/components/oasis/oasisQuestions";
 import { INTERVENTIONS_LIBRARY } from "@/components/carePlan/InterventionLibrary";
 import { AssessmentSkeleton } from "@/components/ui/PageSkeleton";
 
 // ─── Question field ───────────────────────────────────────────────────────────
-function QuestionField({ question, value, onChange }) {
+function QuestionField({ question, value, onChange, onShowGuidance }) {
   const numVal = value !== undefined && value !== "" ? parseInt(value, 10) : undefined;
   const showAlert = question.alert && numVal !== undefined && numVal >= question.alert.threshold;
 
@@ -59,7 +60,7 @@ function QuestionField({ question, value, onChange }) {
 }
 
 // ─── Section card ─────────────────────────────────────────────────────────────
-function SectionCard({ section, answers, onChange }) {
+function SectionCard({ section, answers, onChange, onShowGuidance }) {
   const [open, setOpen] = useState(true);
   const answeredCount = section.questions.filter(q => answers[q.id] !== undefined && answers[q.id] !== "").length;
 
@@ -81,10 +82,20 @@ function SectionCard({ section, answers, onChange }) {
           {section.questions.map(q => (
             <div key={q.id} className="px-4 py-4">
               <div className="mb-2">
-                <p className="text-sm font-semibold text-gray-800">{q.label}</p>
-                <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{q.description}</p>
+                <button
+                  onClick={() => onShowGuidance(q.id, q.label)}
+                  className="text-left w-full hover:bg-indigo-50 -mx-2 px-2 py-1 rounded-lg transition-colors group"
+                >
+                  <p className="text-sm font-semibold text-gray-800 group-hover:text-indigo-700 flex items-center gap-2">
+                    {q.label}
+                    <Lightbulb className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-500" />
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5 leading-relaxed group-hover:text-indigo-600">
+                    {q.description} • Click for real-world scenarios & guidance
+                  </p>
+                </button>
               </div>
-              <QuestionField question={q} value={answers[q.id]} onChange={onChange} />
+              <QuestionField question={q} value={answers[q.id]} onChange={onChange} onShowGuidance={onShowGuidance} />
             </div>
           ))}
         </div>
@@ -181,6 +192,8 @@ export default function SmartOASISAssessment() {
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [saving, setSaving] = useState(false);
   const [addedToCarePlan, setAddedToCarePlan] = useState([]);
+  const [guidanceOpen, setGuidanceOpen] = useState(false);
+  const [currentGuidance, setCurrentGuidance] = useState({ questionId: null, questionLabel: "" });
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery({
     queryKey: ["patients-list"],
@@ -197,6 +210,11 @@ export default function SmartOASISAssessment() {
 
   const handleAnswer = useCallback((questionId, value) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
+  }, []);
+
+  const handleShowGuidance = useCallback((questionId, questionLabel) => {
+    setCurrentGuidance({ questionId, questionLabel });
+    setGuidanceOpen(true);
   }, []);
 
   const suggestions = useMemo(() => evaluateOASIS(answers), [answers]);
@@ -311,7 +329,13 @@ export default function SmartOASISAssessment() {
         {/* Left — OASIS Questions */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {OASIS_SECTIONS.map(section => (
-            <SectionCard key={section.id} section={section} answers={answers} onChange={handleAnswer} />
+            <SectionCard 
+              key={section.id} 
+              section={section} 
+              answers={answers} 
+              onChange={handleAnswer}
+              onShowGuidance={handleShowGuidance}
+            />
           ))}
         </div>
 
@@ -323,6 +347,14 @@ export default function SmartOASISAssessment() {
           addedIds={addedToCarePlan}
         />
       </div>
+
+      {/* Question Guidance Dialog */}
+      <OASISQuestionGuidance
+        questionId={currentGuidance.questionId}
+        questionLabel={currentGuidance.questionLabel}
+        isOpen={guidanceOpen}
+        onClose={() => setGuidanceOpen(false)}
+      />
     </div>
   );
 }
