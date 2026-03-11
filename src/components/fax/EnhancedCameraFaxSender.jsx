@@ -24,7 +24,13 @@ export default function EnhancedCameraFaxSender() {
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        } 
+      });
       setStream(mediaStream);
       if (videoRef.current) videoRef.current.srcObject = mediaStream;
     } catch (error) {
@@ -143,8 +149,8 @@ export default function EnhancedCameraFaxSender() {
 
         {stream && (
           <div className="space-y-3">
-            <div className="rounded-lg overflow-hidden bg-black">
-              <video ref={videoRef} autoPlay playsInline className="w-full" />
+            <div className="rounded-lg overflow-hidden bg-black aspect-video">
+              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             </div>
             <div className="flex gap-2">
               <Button onClick={capturePhoto} className="flex-1">
