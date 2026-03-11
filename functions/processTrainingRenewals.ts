@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
         action_label: 'Open training',
         metadata: { assignment_id: newAssignment.id, course_id: certificate.course_id }
       });
+      processedCount++;
     }
 
     return Response.json({ success: true, renewal_assignments_created: createdAssignments.length });
