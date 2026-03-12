@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,14 +7,12 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   AlertTriangle,
-  TrendingDown,
   Clock,
   Target,
   ChevronRight,
   RefreshCw,
   Activity,
-  Heart,
-  Pill
+  Heart
 } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";
 

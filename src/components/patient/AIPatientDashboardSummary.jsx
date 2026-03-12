@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ import {
   RefreshCw,
   Loader2
 } from "lucide-react";
-import { isValid, parseISO } from "date-fns";
+import { isValid } from "date-fns";
 
 export default function AIPatientDashboardSummary({ 
   patient, 

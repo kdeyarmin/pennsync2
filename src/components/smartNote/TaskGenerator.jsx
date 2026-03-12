@@ -27,8 +27,7 @@ import {
   X,
   Users,
   User,
-  ClipboardCheck,
-  Zap
+  ClipboardCheck
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 

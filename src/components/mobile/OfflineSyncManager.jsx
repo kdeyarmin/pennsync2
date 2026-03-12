@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +12,8 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Loader2,
-  Database,
   Wifi,
   WifiOff,
-  Clock,
   FileText,
   XCircle,
   RefreshCw,

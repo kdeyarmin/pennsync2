@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default function SuccessAnimation({ show, message, duration = 2000, onComplete }) {
   const [visible, setVisible] = useState(false);

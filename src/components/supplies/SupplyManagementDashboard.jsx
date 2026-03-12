@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Package, AlertTriangle, TrendingDown, CheckCircle2,
-  Plus, Edit2, Trash2, Eye, EyeOff, Loader2
+  Package, AlertTriangle, CheckCircle2,
+  Plus, Edit2, Trash2, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 

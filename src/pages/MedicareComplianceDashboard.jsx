@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,14 +19,12 @@ import {
 } from "@/components/ui/tabs";
 import {
   Shield,
-  TrendingUp,
   TrendingDown,
   AlertTriangle,
   Users,
   FileText,
   Calendar,
   BarChart3,
-  Download,
   Sparkles
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";

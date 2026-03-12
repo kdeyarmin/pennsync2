@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +11,7 @@ import {
   Target,
   Star,
   Flame,
-  Award,
-  TrendingUp
+  Award
 } from "lucide-react";
 import confetti from 'canvas-confetti';
 
@@ -27,6 +26,14 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
   const [timeLeft, setTimeLeft] = useState(30);
   const [isComplete, setIsComplete] = useState(false);
 
+  useEffect(() => {
+    if (!questions || questions.length === 0) return;
+    if (!showFeedback && !isComplete && timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft, showFeedback, isComplete, questions]);
+
   // Safety check for questions
   if (!questions || questions.length === 0) {
     return (
@@ -37,13 +44,6 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
       </Card>
     );
   }
-
-  useEffect(() => {
-    if (!showFeedback && !isComplete && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [timeLeft, showFeedback, isComplete]);
 
   const handleAnswerSelect = (answerIndex) => {
     setSelectedAnswer(answerIndex);

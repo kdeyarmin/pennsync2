@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Clock, AlertCircle, Mail, Download, Send, Eye, FileText } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, Mail, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SignatureTracker({ patientId = null }) {

@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { todayEastern } from './timezone';
 
 export const useNoteManagement = () => {
   const [roughNote, setRoughNote] = useState("");

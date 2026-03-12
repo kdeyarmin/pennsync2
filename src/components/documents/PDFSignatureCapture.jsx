@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";

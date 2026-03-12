@@ -1,17 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   RadarChart,
   PolarGrid,
@@ -21,14 +14,10 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  Target,
   BookOpen,
   Loader2,
-  RefreshCw,
-  Award,
-  Sparkles
+  RefreshCw
 } from "lucide-react";
 
 export default function NurseFeedbackAggregator({ nurseEmail, onTrainingRecommendations }) {

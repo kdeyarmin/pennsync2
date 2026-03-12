@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -11,7 +10,6 @@ import {
   TrendingUp,
   FileText
 } from "lucide-react";
-import { SEVERITY } from "../utils/patientValidation";
 
 export default function ValidationSummary({ validationErrors, validRecords, totalRows }) {
   // Categorize errors by severity

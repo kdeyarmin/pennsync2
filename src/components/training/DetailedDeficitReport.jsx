@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,6 @@ import {
   AlertTriangle,
   Target,
   BarChart3,
-  Calendar,
-  User,
   FileText,
   Brain,
   CheckCircle2,

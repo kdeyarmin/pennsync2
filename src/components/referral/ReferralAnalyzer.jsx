@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertTriangle,
-  Clock,
   MapPin,
   User,
   Calendar,
-  CheckCircle2,
   XCircle,
   AlertCircle,
   TrendingUp,
   Brain
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function ReferralAnalyzer({ referralData, onAnalysisComplete }) {
   const [analysis, setAnalysis] = useState(null);

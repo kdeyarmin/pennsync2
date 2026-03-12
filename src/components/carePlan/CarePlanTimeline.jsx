@@ -1,8 +1,6 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { format, differenceInDays, parseISO, isAfter, isBefore, isToday } from "date-fns";
+import { format, differenceInDays, parseISO, isAfter } from "date-fns";
 import {
   Target,
   CheckCircle2,

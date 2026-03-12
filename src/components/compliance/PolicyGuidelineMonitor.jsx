@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import {
   BookOpen,
   Bell,
   RefreshCw,
-  ExternalLink,
   Calendar,
   AlertTriangle,
   CheckCircle2,
@@ -18,7 +17,7 @@ import {
   ChevronUp,
   Sparkles
 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 
 export default function PolicyGuidelineMonitor({ nurseEmail, onTrainingRecommended }) {
   const [isLoading, setIsLoading] = useState(false);

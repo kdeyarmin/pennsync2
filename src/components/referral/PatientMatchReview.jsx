@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import ConfidenceBadge, { ConfidenceProgressBar } from "@/components/ui/confidence-badge";
-import { AlertCircle, CheckCircle2, User, XCircle, Phone, MapPin, Calendar, FileText, ArrowRight } from "lucide-react";
+import { AlertCircle, CheckCircle2, User, XCircle, Phone, MapPin, Calendar, FileText } from "lucide-react";
 
 export default function PatientMatchReview({ referral, onConfirmMatch, onCreateNew, onClose }) {
   const [selectedMatch, setSelectedMatch] = useState(null);

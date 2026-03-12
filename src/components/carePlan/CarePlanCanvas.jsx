@@ -1,8 +1,6 @@
-import React from "react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
-import { GripVertical, X, CheckCircle2, AlertCircle, Info, Link } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { getCategoryForItem, INTERVENTIONS_LIBRARY } from "./InterventionLibrary";
+import { GripVertical, X, CheckCircle2, Info, Link } from "lucide-react";
+import { getCategoryForItem } from "./InterventionLibrary";
 
 const GOALS = [
   { id: "goal-1", label: "Wound Healing", color: "bg-rose-100 border-rose-300 text-rose-700" },

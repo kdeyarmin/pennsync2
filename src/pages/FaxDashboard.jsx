@@ -1,4 +1,3 @@
-import React from 'react';
 import FaxDashboard from '../components/fax/FaxDashboard';
 
 export default function FaxDashboardPage() {

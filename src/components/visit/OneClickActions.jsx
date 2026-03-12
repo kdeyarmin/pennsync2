@@ -1,7 +1,6 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Calendar, Package, FileText, Send } from "lucide-react";
+import { AlertTriangle, Calendar, Package, FileText } from "lucide-react";
 
 export default function OneClickActions({ 
   patient, 

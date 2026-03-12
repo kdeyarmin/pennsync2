@@ -1,9 +1,7 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Settings, GripHorizontal } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Plus, Trash2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import FieldConfigPanel from "./FieldConfigPanel";
 

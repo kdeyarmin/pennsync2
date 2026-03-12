@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Monitor, MessageSquare } from 'lucide-react';
-import { Tooltip } from '@radix-ui/react-tooltip';
 
 export default function EnhancedVideoControls({
   audioMuted,

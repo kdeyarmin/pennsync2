@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,8 +20,7 @@ import {
   Loader2,
   CheckCircle2,
   Plus,
-  Trash2,
-  Sparkles
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import AIAuditReportAssistant from "./AIAuditReportAssistant";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Copy, Loader2, CheckCircle2, AlertCircle, FileText, TrendingUp } from "lucide-react";
+import { Sparkles, Copy, Loader2, CheckCircle2, AlertCircle, FileText } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AIDraftSOAPNote({ patientId, visitType = "routine_visit", onUseNote }) {

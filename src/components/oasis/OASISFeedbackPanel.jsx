@@ -1,9 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -23,8 +21,6 @@ import {
   X,
   Edit3,
   Star,
-  ThumbsUp,
-  ThumbsDown,
   MessageSquare,
   Loader2
 } from "lucide-react";

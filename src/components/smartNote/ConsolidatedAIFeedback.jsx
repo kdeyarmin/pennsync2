@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Brain, 
   AlertTriangle, 
-  CheckCircle2, 
-  FileText,
+  CheckCircle2,
   TrendingUp,
   Loader2,
-  Lightbulb,
   CheckSquare
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";

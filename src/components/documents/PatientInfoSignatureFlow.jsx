@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PDFSignatureCapture from "./PDFSignatureCapture";
-import { User, FileText, ArrowRight, Loader2 } from "lucide-react";
+import { User, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PatientInfoSignatureFlow({ 

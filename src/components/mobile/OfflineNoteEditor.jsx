@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, WifiOff, CheckCircle2, Edit3, Wifi } from "lucide-react";
+import { Save, WifiOff, CheckCircle2, Edit3 } from "lucide-react";
 
 export default function OfflineNoteEditor({ patientId, onSaveOffline }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);

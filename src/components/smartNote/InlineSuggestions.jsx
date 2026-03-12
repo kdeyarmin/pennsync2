@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Sparkles,
   Check,
-  X,
-  ChevronRight
+  X
 } from "lucide-react";
 
 export default function InlineSuggestions({

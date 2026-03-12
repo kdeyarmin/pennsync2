@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileText, Plus, Edit, Copy, Eye, Trash2, History, Search, Filter, Grid3x3, List } from "lucide-react";
+import { FileText, Plus, Edit, Copy, Trash2, History, Search, Filter, Grid3x3, List } from "lucide-react";
 import { toast } from "sonner";
 
 const CATEGORIES = ["consent", "assessment", "care_plan", "discharge", "admission", "other"];

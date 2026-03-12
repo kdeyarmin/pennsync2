@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertTriangle, Loader2, ArrowRight } from "lucide-react";
 import DocumentIngestionUploader from "../documents/DocumentIngestionUploader";
 

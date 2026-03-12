@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+
 import {
   Dialog,
   DialogContent,
@@ -31,15 +26,11 @@ import {
   ThumbsUp,
   ThumbsDown,
   RefreshCw,
-  User,
   Navigation,
   Zap,
-  TrendingUp,
-  ChevronRight,
-  MessageSquare,
-  Star
+  MessageSquare
 } from "lucide-react";
-import { format, addDays, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 export default function AIScheduleOptimizer({ nurseEmail, selectedDate }) {
   const [optimizedSchedule, setOptimizedSchedule] = useState(null);

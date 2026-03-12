@@ -9,8 +9,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   FileText,
   AlertTriangle,
-  CheckCircle,
-  XCircle,
   Brain,
   RefreshCw,
   Shield,

@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -17,20 +16,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Download,
   FileText,
-  Filter,
-  Calendar,
-  Users,
-  AlertTriangle,
-  CheckCircle2,
   Loader2,
   Eye
 } from "lucide-react";
-import { format, parseISO, isWithinInterval } from "date-fns";
+import { parseISO, isWithinInterval } from "date-fns";
 
 export default function CustomReportGenerator({ 
   audits = [], 

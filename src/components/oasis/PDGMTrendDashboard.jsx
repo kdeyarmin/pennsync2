@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,7 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
-import { TrendingUp, Filter, Download, Calendar, DollarSign, Users, Activity, Loader2, AlertTriangle, Play, RotateCcw } from "lucide-react";
+import { TrendingUp, Filter, Download, DollarSign, Activity, Loader2, AlertTriangle, Play } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";

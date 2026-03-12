@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -12,8 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
-  FileText, Loader2, CheckCircle, AlertTriangle, 
-  Edit, Send, Sparkles, PenTool, Download, Eye
+  FileText, Loader2, CheckCircle, Sparkles, PenTool, Download, Eye
 } from 'lucide-react';
 
 import DigitalSignaturePad from './DigitalSignaturePad';

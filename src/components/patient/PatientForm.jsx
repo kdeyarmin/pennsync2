@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { X, Save, AlertCircle, AlertTriangle, Info } from "lucide-react";
-import { isValidEmail, isValidPhone, sanitizeObject, handleSecureError, logSecurityEvent } from "../utils/security";
+import { sanitizeObject, handleSecureError, logSecurityEvent } from "../utils/security";
 import { validatePatient, formatPhoneNumber, SEVERITY } from "../utils/patientValidation";
 import ValidationOverrideDialog from "./ValidationOverrideDialog";
 import OCRDocumentExtractor from "./OCRDocumentExtractor";

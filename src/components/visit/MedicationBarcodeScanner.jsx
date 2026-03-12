@@ -1,10 +1,9 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,10 +19,8 @@ import {
   X,
   CheckCircle2,
   AlertTriangle,
-  Pill,
   Plus,
-  RefreshCw,
-  Edit
+  RefreshCw
 } from "lucide-react";
 
 export default function MedicationBarcodeScanner({ onMedicationScanned }) {

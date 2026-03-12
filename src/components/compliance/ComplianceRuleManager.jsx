@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,9 +34,7 @@ import {
   Edit,
   Trash2,
   Shield,
-  FileText,
   AlertTriangle,
-  CheckCircle2,
   Search,
   Loader2
 } from "lucide-react";

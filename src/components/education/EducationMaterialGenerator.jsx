@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -17,7 +16,6 @@ import {
   Brain,
   Loader2,
   Search,
-  FileText,
   Copy,
   Printer,
   CheckCircle2,
@@ -240,11 +238,20 @@ Return JSON:
 
   const handlePrint = () => {
     if (generatedContent) {
+      const escapeHtml = (str) => {
+        if (str == null) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      };
       const printWindow = window.open('', '_blank');
       printWindow.document.write(`
         <html>
           <head>
-            <title>${generatedContent.title}</title>
+            <title>${escapeHtml(generatedContent.title)}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
               h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 10px; }
@@ -257,33 +264,33 @@ Return JSON:
             </style>
           </head>
           <body>
-            <h1>${generatedContent.title}</h1>
-            <p>${generatedContent.introduction}</p>
+            <h1>${escapeHtml(generatedContent.title)}</h1>
+            <p>${escapeHtml(generatedContent.introduction)}</p>
             
             <h2>Key Points to Remember</h2>
             <ul>
-              ${generatedContent.key_points?.map(kp => `<li><strong>${kp.point}</strong><br>${kp.explanation}</li>`).join('') || ''}
+              ${generatedContent.key_points?.map(kp => `<li><strong>${escapeHtml(kp.point)}</strong><br>${escapeHtml(kp.explanation)}</li>`).join('') || ''}
             </ul>
             
             <div class="warning">
               <h2>⚠️ Warning Signs</h2>
               <ul>
-                ${generatedContent.warning_signs?.map(ws => `<li><strong>${ws.sign}</strong> - ${ws.action}</li>`).join('') || ''}
+                ${generatedContent.warning_signs?.map(ws => `<li><strong>${escapeHtml(ws.sign)}</strong> - ${escapeHtml(ws.action)}</li>`).join('') || ''}
               </ul>
             </div>
             
             <div class="call">
               <h2>📞 Call Your Nurse or Doctor If:</h2>
               <ul>
-                ${generatedContent.when_to_call?.map(item => `<li>${item}</li>`).join('') || ''}
+                ${generatedContent.when_to_call?.map(item => `<li>${escapeHtml(item)}</li>`).join('') || ''}
               </ul>
             </div>
             
             <h2>Self-Care Tips</h2>
-            ${generatedContent.self_care_tips?.map(tip => `<div class="tip"><strong>${tip.tip}</strong><br>${tip.how_to}</div>`).join('') || ''}
+            ${generatedContent.self_care_tips?.map(tip => `<div class="tip"><strong>${escapeHtml(tip.tip)}</strong><br>${escapeHtml(tip.how_to)}</div>`).join('') || ''}
             
             <h2>Summary</h2>
-            <p><strong>${generatedContent.summary}</strong></p>
+            <p><strong>${escapeHtml(generatedContent.summary)}</strong></p>
           </body>
         </html>
       `);

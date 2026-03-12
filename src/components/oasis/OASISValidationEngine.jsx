@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, CheckCircle2, XCircle, Info, Lightbulb } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
 
 // CMS Validation Rules
 const CMS_VALIDATION_RULES = {

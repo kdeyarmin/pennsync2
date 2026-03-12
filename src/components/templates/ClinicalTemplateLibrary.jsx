@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,22 +10,18 @@ import {
   FileText,
   Heart,
   Wind,
-  Thermometer,
   Activity,
   Stethoscope,
   ClipboardList,
   UserPlus,
   RefreshCw,
   LogOut,
-  Calendar,
-  Pill,
   Brain,
   Bone,
   Droplets,
   Eye,
   Scissors,
-  Home,
-  Star
+  Home
 } from "lucide-react";
 
 // Template definitions

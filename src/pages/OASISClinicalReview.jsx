@@ -1,4 +1,3 @@
-import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,6 @@ import { ArrowLeft, Stethoscope, Activity } from "lucide-react";
 import AIPathwayRecommender from "../components/oasis/AIPathwayRecommender";
 import ClinicalPathwayTrigger from "../components/oasis/ClinicalPathwayTrigger";
 import OASISTaskGenerator from "../components/oasis/OASISTaskGenerator";
-import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
 import WorkflowExecutionEngine from "../components/oasis/WorkflowExecutionEngine";
 import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
 

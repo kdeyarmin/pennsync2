@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, CheckCircle2, Copy, Send, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";

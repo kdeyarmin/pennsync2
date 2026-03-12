@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Accordion,
@@ -32,7 +31,6 @@ import {
   Lightbulb,
   ChevronRight,
   Settings,
-  Download,
   FileJson,
   FileDown,
   FileSpreadsheet,
@@ -42,16 +40,8 @@ import {
 import PDGMAnalyticsDashboard from "./PDGMAnalyticsDashboard";
 import PDGMScenarioModeler from "./PDGMScenarioModeler";
 import AIGroupAssignmentValidator from "./AIGroupAssignmentValidator";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+
 
 // CMS PDGM Clinical Groups
 const CLINICAL_GROUPS = {

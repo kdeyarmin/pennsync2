@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, TrendingDown, Activity, Phone, Ambulance, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, TrendingDown, Phone, CheckCircle2 } from "lucide-react";
 import { logActivity, ActivityActions } from "../utils/activityLogger";
 
 export default function RealTimeDeteriorationPredictor({

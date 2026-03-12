@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { BookOpen, Plus, ExternalLink, Sparkles } from "lucide-react";
+import { BookOpen, Plus, ExternalLink } from "lucide-react";
 import { retrieveRelevantGuidelines } from "../smartNote/GuidelineContextRetriever";
 
 export default function InlineGuidelineSuggester({

@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Brain, TrendingUp, AlertTriangle, FileText, Target, Loader2 } from "lucide-react";
+import { Sparkles, Brain, AlertTriangle, Target, Loader2 } from "lucide-react";
 
 export default function AITrainingRecommendationEngine({ nurseEmail, onAssignTraining }) {
   const [recommendations, setRecommendations] = useState(null);

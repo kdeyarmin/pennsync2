@@ -1,25 +1,16 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   AlertTriangle,
-  Clock,
   FileText,
   Shield,
   TrendingUp,
   Calendar,
-  User,
-  ChevronRight,
   Bell,
   CheckCircle2,
-  XCircle,
-  RefreshCw
+  XCircle
 } from "lucide-react";
 import { format, differenceInDays, addDays } from "date-fns";
 

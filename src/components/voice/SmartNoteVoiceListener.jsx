@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Mic,
   MicOff,
-  Loader2,
-  CheckCircle2,
-  Volume2,
-  Command
+  CheckCircle2
 } from "lucide-react";
 
 // Voice command patterns for Smart Note Assistant

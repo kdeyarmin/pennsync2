@@ -13,11 +13,9 @@ import {
   Pill,
   Activity,
   CheckCircle,
-  XCircle,
   RefreshCw,
   Shield,
-  Zap,
-  Clock
+  Zap
 } from "lucide-react";
 
 export default function AIPatientRiskAssessor({ patientId, autoAnalyze = false }) {

@@ -1,12 +1,11 @@
-import React, { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertCircle, RefreshCw, AlertTriangle } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
-import CareScopeBadge from "../components/profile/CareScopeBadge";
 import CareScopeSelector from "../components/profile/CareScopeSelector";
 import PullToRefresh from "../components/mobile/PullToRefresh";
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,14 +71,26 @@ export default function PDFSearchInterface() {
   };
 
   const highlightText = (text, terms) => {
-    if (!terms || terms.length === 0) return text;
-    
-    let highlighted = text;
+    if (!text) return '';
+    // Escape HTML entities first to prevent XSS from snippet content
+    const escapeHtml = (str) =>
+      str.replace(/&/g, '&amp;')
+         .replace(/</g, '&lt;')
+         .replace(/>/g, '&gt;')
+         .replace(/"/g, '&quot;')
+         .replace(/'/g, '&#39;');
+
+    let highlighted = escapeHtml(text);
+    if (!terms || terms.length === 0) return highlighted;
+
     terms.forEach(term => {
-      const regex = new RegExp(`(${term})`, 'gi');
-      highlighted = highlighted.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
+      // Escape regex metacharacters in the search term
+      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedHtmlTerm = escapeHtml(term);
+      const regex = new RegExp(`(${escapedTerm})`, 'gi');
+      highlighted = highlighted.replace(regex, `<mark class="bg-yellow-200">${escapedHtmlTerm}</mark>`);
     });
-    
+
     return highlighted;
   };
 

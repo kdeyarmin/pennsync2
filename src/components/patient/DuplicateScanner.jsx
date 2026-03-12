@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,7 +9,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { 
-  Users, 
   Loader2, 
   CheckCircle2, 
   AlertTriangle,
@@ -17,9 +16,7 @@ import {
   Shield,
   Settings,
   Zap,
-  Database,
-  RefreshCw,
-  FileText
+  Database
 } from "lucide-react";
 import { toast } from "sonner";
 

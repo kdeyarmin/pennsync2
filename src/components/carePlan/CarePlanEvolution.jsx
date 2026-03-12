@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,8 +15,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
-  Target,
-  Clock,
   Activity,
   ChevronDown,
   ChevronUp

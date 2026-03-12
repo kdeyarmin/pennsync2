@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+
+
 import {
   ShieldCheck,
   AlertTriangle,
@@ -35,8 +31,6 @@ import {
   BookOpen,
   MessageSquare,
   Upload,
-  FileText,
-  Loader2,
   Download,
   Copy,
   Eye,
@@ -51,7 +45,6 @@ import {
   Brain,
   Footprints,
   Hand,
-  Utensils,
   Stethoscope,
   ClipboardList
 } from "lucide-react";

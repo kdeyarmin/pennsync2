@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Brain, AlertTriangle, CheckCircle, TrendingUp, FileText, Loader2, Sparkles } from "lucide-react";
+import { Brain, AlertTriangle, TrendingUp, FileText, Loader2, Sparkles } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { analyzeDocument } from "@/functions/analyzeDocument";

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Sparkles, Copy, CheckCircle2, Edit3, Save, Loader2, Eye } from "lucide-react";
+import { Sparkles, Copy, CheckCircle2, Edit3, Save, Eye } from "lucide-react";
 import AIFieldIndicator from "@/components/ui/ai-field-indicator";
 import ProgressFeedback from "@/components/ui/progress-feedback";
 import RealTimeDocumentationReviewer from "../documentation/RealTimeDocumentationReviewer";

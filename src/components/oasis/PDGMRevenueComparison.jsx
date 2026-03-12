@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DollarSign,
@@ -13,7 +11,6 @@ import {
   Loader2,
   FileDown,
   ArrowRight,
-  CheckCircle2,
   Info,
   ChevronDown,
   ChevronUp,
@@ -30,7 +27,7 @@ import {
 } from "lucide-react";
 import { calculatePDGM } from "@/functions/calculatePDGM";
 import { generatePDGMComparisonPDF } from "@/functions/generatePDGMComparisonPDF";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import PDGMWhatIfBuilder from "./PDGMWhatIfBuilder";
 import TopOptimizationOpportunities from "./TopOptimizationOpportunities";
 import debounce from "lodash/debounce";

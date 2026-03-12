@@ -1,7 +1,7 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Award, BookOpen, CheckCircle2, Clock, RefreshCcw, TriangleAlert } from "lucide-react";
+import { Award, BookOpen, CheckCircle2, RefreshCcw, TriangleAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";

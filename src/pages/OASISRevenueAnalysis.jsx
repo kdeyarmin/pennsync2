@@ -1,10 +1,9 @@
-import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
+import { ArrowLeft, TrendingUp } from "lucide-react";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
 import EnhancedPDGMCaseMixAnalyzer from "../components/oasis/EnhancedPDGMCaseMixAnalyzer";
 import AutomatedPDGMNavigator from "../components/oasis/AutomatedPDGMNavigator";

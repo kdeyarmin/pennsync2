@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,12 @@ import {
   CheckCircle2,
   TrendingDown,
   DollarSign,
-  FileText,
   Lightbulb,
   ArrowRight,
   Loader2,
   Shield
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function AIDataValidationEngine({
   oasisData,

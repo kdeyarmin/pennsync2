@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertTriangle, TrendingUp, Users, Activity, Brain, Loader2 } from "lucide-react";
+import { AlertTriangle, TrendingUp, Users, Brain, Loader2 } from "lucide-react";
 import { differenceInDays } from "date-fns";
 
 export default function PredictiveReadmissionModel({ patients, visits, incidents }) {

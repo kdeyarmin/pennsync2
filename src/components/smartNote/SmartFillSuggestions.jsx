@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Plus, Loader2, Lightbulb } from "lucide-react";
+import { Plus, Loader2, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function SmartFillSuggestions({

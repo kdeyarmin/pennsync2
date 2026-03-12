@@ -1,13 +1,10 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, 
-  Sparkles, 
-  CheckCircle2,
-  ArrowRight,
-  BarChart3
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import {
   BarChart,

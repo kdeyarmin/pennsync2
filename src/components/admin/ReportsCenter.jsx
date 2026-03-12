@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,19 +19,14 @@ import {
   Users,
   Activity,
   FileText,
-  Calendar,
-  Clock,
   Target,
   Award,
-  AlertTriangle,
   Loader2,
-  PieChart,
   LineChart
 } from "lucide-react";
 import { BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { format, subDays, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
+import { format, subDays, differenceInDays } from "date-fns";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
-import { calculateNurseStats } from "@/components/utils/statsCalculator";
 import { useQuery } from "@tanstack/react-query";
 
 export default function ReportsCenter({ users: allUsers, patients: allPatients, visits, incidents }) {

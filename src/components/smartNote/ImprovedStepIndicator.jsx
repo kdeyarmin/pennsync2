@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, Circle, User, Activity, FileText, Sparkles, ClipboardCheck } from "lucide-react";
+import { CheckCircle2, User, Activity, FileText, Sparkles, ClipboardCheck } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,

@@ -11,11 +11,9 @@ import {
   AlertTriangle, 
   Calendar,
   FileText,
-  Activity,
   TrendingUp,
   Loader2
 } from "lucide-react";
-import { format, isValid } from "date-fns";
 
 export function buildComprehensiveContext(patient, visits, carePlans, incidents, medications, alerts) {
   const context = {

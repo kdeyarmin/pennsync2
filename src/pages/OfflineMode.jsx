@@ -1,16 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WifiOff, Wifi, Users, FileText, Database } from "lucide-react";
 import OfflinePatientSelector from "../components/mobile/OfflinePatientSelector";
 import OfflineSyncManager from "../components/mobile/OfflineSyncManager";
-import OfflineNoteEditor from "../components/mobile/OfflineNoteEditor";
 import OfflineTaskManager from "../components/mobile/OfflineTaskManager";
-import offlineStorage from "../components/mobile/OfflineStorage";
 
 export default function OfflineMode() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
