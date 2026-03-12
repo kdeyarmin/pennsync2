@@ -4,27 +4,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatEastern, todayEastern } from "../components/utils/timezone";
-import CareScopeSelector from "../components/profile/CareScopeSelector";
-import PullToRefresh from "../components/mobile/PullToRefresh";
+import { formatEastern, todayEastern } from "@/components/utils/timezone";
+import CareScopeSelector from "@/components/profile/CareScopeSelector";
+import PullToRefresh from "@/components/mobile/PullToRefresh";
 
 
 // Critical above-the-fold — eager loaded
-import SmartRouteOptimizer from "../components/scheduling/SmartRouteOptimizer";
-import ProactiveClinicalSupport from "../components/clinical/ProactiveClinicalSupport";
-import NewFeaturesBanner from "../components/dashboard/NewFeaturesBanner";
-import AnnouncementsWidget from "../components/dashboard/AnnouncementsWidget";
-import DashboardSkeleton from "../components/loading/DashboardSkeleton";
+import SmartRouteOptimizer from "@/components/scheduling/SmartRouteOptimizer";
+import ProactiveClinicalSupport from "@/components/clinical/ProactiveClinicalSupport";
+import NewFeaturesBanner from "@/components/dashboard/NewFeaturesBanner";
+import AnnouncementsWidget from "@/components/dashboard/AnnouncementsWidget";
+import DashboardSkeleton from "@/components/loading/DashboardSkeleton";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
 
 // Non-critical below-the-fold — lazy loaded
-const HighRiskPatientsWidget    = lazy(() => import("../components/dashboard/HighRiskPatientsWidget"));
-const PendingReferralsWidget    = lazy(() => import("../components/referral/PendingReferralsWidget"));
-const RealTimePatientAlerts     = lazy(() => import("../components/dashboard/RealTimePatientAlerts"));
-const TopTemplatesWidget        = lazy(() => import("../components/clinical/TopTemplatesWidget"));
-const HospitalizationRiskWidget = lazy(() => import("../components/dashboard/HospitalizationRiskWidget"));
-const CarePlanProposalReviewer = lazy(() => import("../components/carePlan/CarePlanProposalReviewer"));
+const HighRiskPatientsWidget    = lazy(() => import("@/components/dashboard/HighRiskPatientsWidget"));
+const PendingReferralsWidget    = lazy(() => import("@/components/referral/PendingReferralsWidget"));
+const RealTimePatientAlerts     = lazy(() => import("@/components/dashboard/RealTimePatientAlerts"));
+const TopTemplatesWidget        = lazy(() => import("@/components/clinical/TopTemplatesWidget"));
+const HospitalizationRiskWidget = lazy(() => import("@/components/dashboard/HospitalizationRiskWidget"));
+const CarePlanProposalReviewer = lazy(() => import("@/components/carePlan/CarePlanProposalReviewer"));
 
 
 export default function Dashboard() {
