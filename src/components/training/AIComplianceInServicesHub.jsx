@@ -170,72 +170,122 @@ export default function AIComplianceInServicesHub() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-indigo-700 to-purple-700 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">AI Compliance In-Services</h1>
-        <p className="text-indigo-100">AI-powered in-services, competency testing, certificates, learning plan tracking, and compliance reporting inside your current learning center.</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-indigo-700 to-purple-700 text-white p-4 sm:p-6 shadow-xl">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">AI Compliance In-Services</h1>
+        <p className="text-sm sm:text-base text-indigo-100">AI-powered in-services, competency testing, certificates, learning plan tracking, and compliance reporting inside your current learning center.</p>
       </div>
 
       <AdminComplianceStats stats={reportStats} />
 
-      <Tabs defaultValue="builder" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="builder">AI Builder</TabsTrigger>
-          <TabsTrigger value="templates">Template Library</TabsTrigger>
-          <TabsTrigger value="library">In-Service Library</TabsTrigger>
-          <TabsTrigger value="assignments">Assignment Wizard</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="plans">Learning Plans</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="builder" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="builder" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">AI Builder</TabsTrigger>
+            <TabsTrigger value="templates" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Templates</TabsTrigger>
+            <TabsTrigger value="library" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Library</TabsTrigger>
+            <TabsTrigger value="assignments" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Assign</TabsTrigger>
+            <TabsTrigger value="reports" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Reports</TabsTrigger>
+            <TabsTrigger value="plans" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Plans</TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="builder" className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-purple-600" />AI In-Service Generator</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <Input placeholder="Topic" value={generator.topic} onChange={(e) => setGenerator({ ...generator, topic: e.target.value })} />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select value={generator.training_category} onValueChange={(value) => setGenerator({ ...generator, training_category: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compliance">Compliance</SelectItem><SelectItem value="clinical">Clinical</SelectItem><SelectItem value="safety">Safety</SelectItem><SelectItem value="documentation">Documentation</SelectItem><SelectItem value="hospice">Hospice</SelectItem><SelectItem value="home_health">Home Health</SelectItem></SelectContent></Select>
-                <Select value={generator.business_line} onValueChange={(value) => setGenerator({ ...generator, business_line: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="home_health">Home Health</SelectItem><SelectItem value="hospice">Hospice</SelectItem></SelectContent></Select>
+        <TabsContent value="builder" className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          <Card className="shadow-lg">
+            <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-indigo-50"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><Sparkles className="w-5 h-5 text-purple-600" />AI In-Service Generator</CardTitle></CardHeader>
+            <CardContent className="space-y-4 p-4 sm:p-6">
+              <div>
+                <label className="text-sm font-semibold mb-2 block text-gray-700">Topic *</label>
+                <Input placeholder="e.g., HIPAA Privacy Updates 2026" value={generator.topic} onChange={(e) => setGenerator({ ...generator, topic: e.target.value })} className="h-11" />
               </div>
-              <Textarea placeholder="Purpose of training" value={generator.purpose_of_training} onChange={(e) => setGenerator({ ...generator, purpose_of_training: e.target.value })} />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Input type="number" placeholder="Lesson length" value={generator.lesson_length} onChange={(e) => setGenerator({ ...generator, lesson_length: Number(e.target.value) })} />
-                <Input type="number" placeholder="Question count" value={generator.question_count} onChange={(e) => setGenerator({ ...generator, question_count: Number(e.target.value) })} />
-                <Input placeholder="Audience" value={generator.audience_roles.join(', ')} onChange={(e) => setGenerator({ ...generator, audience_roles: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Category</label>
+                  <Select value={generator.training_category} onValueChange={(value) => setGenerator({ ...generator, training_category: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compliance">Compliance</SelectItem><SelectItem value="clinical">Clinical</SelectItem><SelectItem value="safety">Safety</SelectItem><SelectItem value="documentation">Documentation</SelectItem><SelectItem value="hospice">Hospice</SelectItem><SelectItem value="home_health">Home Health</SelectItem></SelectContent></Select>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Business Line</label>
+                  <Select value={generator.business_line} onValueChange={(value) => setGenerator({ ...generator, business_line: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="home_health">Home Health</SelectItem><SelectItem value="hospice">Hospice</SelectItem></SelectContent></Select>
+                </div>
               </div>
-              <Textarea placeholder="Custom instructions" value={generator.custom_instructions} onChange={(e) => setGenerator({ ...generator, custom_instructions: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {[
-                  ['include_case_scenarios', 'Case scenarios'],
-                  ['include_key_takeaways', 'Key takeaways'],
-                  ['include_policy_section', 'Policy section'],
-                  ['include_references', 'References'],
-                  ['include_acknowledgement', 'Acknowledgement'],
-                ].map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2 rounded-xl border p-3">
-                    <Checkbox checked={generator[key]} onCheckedChange={(checked) => setGenerator({ ...generator, [key]: !!checked })} />
-                    <span>{label}</span>
-                  </label>
-                ))}
+              <div>
+                <label className="text-sm font-semibold mb-2 block text-gray-700">Purpose of Training</label>
+                <Textarea placeholder="What is the goal of this training?" value={generator.purpose_of_training} onChange={(e) => setGenerator({ ...generator, purpose_of_training: e.target.value })} rows={3} />
               </div>
-              <div className="flex gap-3">
-                <Button className="flex-1" onClick={runAIGeneration}>Generate AI in-service</Button>
-                <Button variant="outline" onClick={savePromptAsTemplate}>Save prompt as template</Button>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Lesson (min)</label>
+                  <Input type="number" placeholder="30" value={generator.lesson_length} onChange={(e) => setGenerator({ ...generator, lesson_length: Number(e.target.value) })} className="h-11" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Questions</label>
+                  <Input type="number" placeholder="10" value={generator.question_count} onChange={(e) => setGenerator({ ...generator, question_count: Number(e.target.value) })} className="h-11" />
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Audience</label>
+                  <Input placeholder="RN, LPN, office" value={generator.audience_roles.join(', ')} onChange={(e) => setGenerator({ ...generator, audience_roles: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="h-11" />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-semibold mb-2 block text-gray-700">Custom Instructions (Optional)</label>
+                <Textarea placeholder="Any specific requirements or focus areas..." value={generator.custom_instructions} onChange={(e) => setGenerator({ ...generator, custom_instructions: e.target.value })} rows={3} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Content Options</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
+                  {[
+                    ['include_case_scenarios', 'Case scenarios'],
+                    ['include_key_takeaways', 'Key takeaways'],
+                    ['include_policy_section', 'Policy section'],
+                    ['include_references', 'References'],
+                    ['include_acknowledgement', 'Acknowledgement'],
+                  ].map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 rounded-xl border p-3 hover:bg-gray-50 cursor-pointer min-h-[48px]">
+                      <Checkbox checked={generator[key]} onCheckedChange={(checked) => setGenerator({ ...generator, [key]: !!checked })} className="w-5 h-5" />
+                      <span className="font-medium">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+                <Button className="flex-1 bg-purple-600 hover:bg-purple-700 min-h-[48px] text-base font-semibold" onClick={runAIGeneration}>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate AI In-Service
+                </Button>
+                <Button variant="outline" onClick={savePromptAsTemplate} className="min-h-[48px] sm:min-w-[180px]">Save as Template</Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><PlusCircle className="w-5 h-5 text-indigo-600" />Manual in-service draft</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <Input placeholder="In-service title" value={manualDraft.title} onChange={(e) => setManualDraft({ ...manualDraft, title: e.target.value })} />
-              <Textarea placeholder="Description" value={manualDraft.description} onChange={(e) => setManualDraft({ ...manualDraft, description: e.target.value })} />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Select value={manualDraft.category} onValueChange={(value) => setManualDraft({ ...manualDraft, category: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compliance">Compliance</SelectItem><SelectItem value="clinical">Clinical</SelectItem><SelectItem value="safety">Safety</SelectItem><SelectItem value="documentation">Documentation</SelectItem></SelectContent></Select>
-                <Select value={manualDraft.business_line_scope} onValueChange={(value) => setManualDraft({ ...manualDraft, business_line_scope: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="home_health">Home Health</SelectItem><SelectItem value="hospice">Hospice</SelectItem></SelectContent></Select>
-                <Input type="number" value={manualDraft.passing_score} onChange={(e) => setManualDraft({ ...manualDraft, passing_score: Number(e.target.value) })} />
+          <Card className="shadow-lg">
+            <CardHeader className="border-b bg-gradient-to-r from-indigo-50 to-blue-50"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><PlusCircle className="w-5 h-5 text-indigo-600" />Manual In-Service Draft</CardTitle></CardHeader>
+            <CardContent className="space-y-4 p-4 sm:p-6">
+              <div>
+                <label className="text-sm font-semibold mb-2 block text-gray-700">Title *</label>
+                <Input placeholder="In-service title" value={manualDraft.title} onChange={(e) => setManualDraft({ ...manualDraft, title: e.target.value })} className="h-11" />
               </div>
-              <Button variant="outline" className="w-full" onClick={createManualDraft}>Create draft</Button>
+              <div>
+                <label className="text-sm font-semibold mb-2 block text-gray-700">Description</label>
+                <Textarea placeholder="Brief description of the in-service" value={manualDraft.description} onChange={(e) => setManualDraft({ ...manualDraft, description: e.target.value })} rows={3} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Category</label>
+                  <Select value={manualDraft.category} onValueChange={(value) => setManualDraft({ ...manualDraft, category: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compliance">Compliance</SelectItem><SelectItem value="clinical">Clinical</SelectItem><SelectItem value="safety">Safety</SelectItem><SelectItem value="documentation">Documentation</SelectItem></SelectContent></Select>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Business Line</label>
+                  <Select value={manualDraft.business_line_scope} onValueChange={(value) => setManualDraft({ ...manualDraft, business_line_scope: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="home_health">Home Health</SelectItem><SelectItem value="hospice">Hospice</SelectItem></SelectContent></Select>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Passing %</label>
+                  <Input type="number" placeholder="80" value={manualDraft.passing_score} onChange={(e) => setManualDraft({ ...manualDraft, passing_score: Number(e.target.value) })} className="h-11" />
+                </div>
+              </div>
+              <Button variant="outline" className="w-full min-h-[48px] border-2 border-dashed hover:border-indigo-400 hover:bg-indigo-50" onClick={createManualDraft}>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Create Draft In-Service
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -261,74 +311,92 @@ export default function AIComplianceInServicesHub() {
           )}
         </TabsContent>
 
-        <TabsContent value="library" className="space-y-4">
+        <TabsContent value="library" className="space-y-3 sm:space-y-4">
           {inServices.map((course) => (
-            <Card key={course.id}>
-              <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="font-semibold text-slate-900">{course.title}</h2>
-                    <Badge variant="outline">{course.category}</Badge>
-                    <Badge variant="outline">{course.business_line_scope}</Badge>
-                    <Badge className={course.status === 'published' ? 'bg-green-100 text-green-800' : course.status === 'archived' ? 'bg-slate-100 text-slate-800' : 'bg-amber-100 text-amber-800'}>{course.status}</Badge>
-                    {course.ai_generated && <Badge className="bg-purple-100 text-purple-800">AI generated</Badge>}
+            <Card key={course.id} className="shadow-md hover:shadow-lg transition-all">
+              <CardContent className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <h2 className="font-semibold text-base sm:text-lg text-slate-900">{course.title}</h2>
+                    <Badge variant="outline" className="text-xs">{course.category}</Badge>
+                    <Badge variant="outline" className="text-xs">{course.business_line_scope}</Badge>
+                    <Badge className={`text-xs ${course.status === 'published' ? 'bg-green-100 text-green-800' : course.status === 'archived' ? 'bg-slate-100 text-slate-800' : 'bg-amber-100 text-amber-800'}`}>{course.status}</Badge>
+                    {course.ai_generated && <Badge className="bg-purple-100 text-purple-800 text-xs">AI</Badge>}
                   </div>
-                  <p className="text-sm text-slate-500 mt-1">{course.short_description || course.description}</p>
+                  <p className="text-xs sm:text-sm text-slate-500 line-clamp-2">{course.short_description || course.description}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={() => updateCourseStatus(course, 'published')}><CheckCircle2 className="w-4 h-4 mr-2" />Publish</Button>
-                  <Button variant="outline" onClick={() => duplicateCourse(course.id)}><Copy className="w-4 h-4 mr-2" />Duplicate</Button>
-                  <Button variant="outline" onClick={() => updateCourseStatus(course, 'archived')}><Archive className="w-4 h-4 mr-2" />Archive</Button>
+                <div className="flex flex-wrap gap-2 lg:flex-nowrap">
+                  <Button variant="outline" onClick={() => updateCourseStatus(course, 'published')} className="flex-1 lg:flex-none min-h-[44px]" size="sm">
+                    <CheckCircle2 className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Publish</span>
+                  </Button>
+                  <Button variant="outline" onClick={() => duplicateCourse(course.id)} className="flex-1 lg:flex-none min-h-[44px]" size="sm">
+                    <Copy className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Duplicate</span>
+                  </Button>
+                  <Button variant="outline" onClick={() => updateCourseStatus(course, 'archived')} className="flex-1 lg:flex-none min-h-[44px]" size="sm">
+                    <Archive className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Archive</span>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
-          {inServices.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No in-services created yet.</CardContent></Card>}
+          {inServices.length === 0 && <Card><CardContent className="p-8 sm:p-10 text-center text-slate-500">No in-services created yet. Use the AI Builder or create a manual draft.</CardContent></Card>}
           {selectedCourseId && inServices.find((course) => course.id === selectedCourseId) && (
             <TrainingAttachmentManager course={inServices.find((course) => course.id === selectedCourseId)} />
           )}
         </TabsContent>
 
-        <TabsContent value="assignments" className="space-y-6">
-          <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
-            <Card>
-              <CardHeader><CardTitle>Course & due date</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <Select value={selectedCourseId} onValueChange={setSelectedCourseId}><SelectTrigger><SelectValue placeholder="Select in-service" /></SelectTrigger><SelectContent>{inServices.map((course) => <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>)}</SelectContent></Select>
-                <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+        <TabsContent value="assignments" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-4 sm:gap-6">
+            <Card className="shadow-lg">
+              <CardHeader className="border-b"><CardTitle className="text-base sm:text-lg">Course & Due Date</CardTitle></CardHeader>
+              <CardContent className="space-y-4 p-4 sm:p-6">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Select In-Service *</label>
+                  <Select value={selectedCourseId} onValueChange={setSelectedCourseId}><SelectTrigger className="h-11"><SelectValue placeholder="Select in-service" /></SelectTrigger><SelectContent>{inServices.filter(c => c.status === 'published').map((course) => <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>)}</SelectContent></Select>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Due Date *</label>
+                  <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-11" />
+                </div>
               </CardContent>
             </Card>
             <RetakeSettingsPanel settings={assignmentSettings} onChange={setAssignmentSettings} />
           </div>
           <AssignmentWizard users={users} onAssign={setPendingAssignmentPayload} />
           {pendingAssignmentPayload && (
-            <Card>
-              <CardContent className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold text-slate-900">Assignment ready</h3>
-                  <p className="text-sm text-slate-500">Course will be assigned using the current wizard selection and retake settings.</p>
+            <Card className="border-2 border-green-200 bg-green-50 shadow-lg">
+              <CardContent className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-green-900 text-base sm:text-lg">Assignment Ready</h3>
+                  <p className="text-sm text-green-700">Course will be assigned using the current wizard selection and retake settings.</p>
                 </div>
-                <Button disabled={!selectedCourseId || !dueDate} onClick={confirmAssignment}><Send className="w-4 h-4 mr-2" />Create assignments</Button>
+                <Button disabled={!selectedCourseId || !dueDate} onClick={confirmAssignment} className="bg-green-600 hover:bg-green-700 min-h-[48px] w-full md:w-auto">
+                  <Send className="w-4 h-4 mr-2" />
+                  Create Assignments
+                </Button>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        <TabsContent value="reports" className="space-y-6">
+        <TabsContent value="reports" className="space-y-4 sm:space-y-6">
           <AdminComplianceStats stats={reportStats} />
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" />Assignment compliance snapshot</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
+          <Card className="shadow-lg">
+            <CardHeader className="border-b"><CardTitle className="flex items-center gap-2 text-lg sm:text-xl"><BarChart3 className="w-5 h-5 text-indigo-600" />Assignment Compliance Snapshot</CardTitle></CardHeader>
+            <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6">
               {assignments.slice(0, 25).map((assignment) => (
-                <div key={assignment.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 rounded-xl border p-3">
-                  <div>
-                    <p className="font-medium text-slate-900">{assignment.course_title}</p>
-                    <p className="text-sm text-slate-500">{assignment.assigned_to_user_id} • Due {formatDate(assignment.due_date)}</p>
+                <div key={assignment.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-xl border p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm sm:text-base text-slate-900 truncate">{assignment.course_title}</p>
+                    <p className="text-xs sm:text-sm text-slate-500 truncate">{assignment.assigned_to_user_id} • Due {formatDate(assignment.due_date)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{assignment.status}</Badge>
-                    <Badge className={assignment.pass_fail_result === 'passed' ? 'bg-green-100 text-green-800' : assignment.pass_fail_result === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>{assignment.pass_fail_result || 'pending'}</Badge>
-                    <Badge variant="outline">{assignment.score_percentage ?? '—'}%</Badge>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="text-xs">{assignment.status}</Badge>
+                    <Badge className={`text-xs ${assignment.pass_fail_result === 'passed' ? 'bg-green-100 text-green-800' : assignment.pass_fail_result === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>{assignment.pass_fail_result || 'pending'}</Badge>
+                    <Badge variant="outline" className="text-xs font-semibold">{assignment.score_percentage ?? '—'}%</Badge>
                   </div>
                 </div>
               ))}
@@ -336,26 +404,28 @@ export default function AIComplianceInServicesHub() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="plans" className="space-y-4">
+        <TabsContent value="plans" className="space-y-3 sm:space-y-4">
           {planEnrollments.map((enrollment) => {
             const overdue = enrollment.status === 'overdue' || (enrollment.due_date && new Date(enrollment.due_date) < now && enrollment.status !== 'completed');
             return (
-              <Card key={enrollment.id}>
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{enrollment.plan_name}</h3>
-                      <p className="text-sm text-slate-500">{enrollment.user_name} • Due {formatDate(enrollment.due_date)}</p>
+              <Card key={enrollment.id} className="shadow-md">
+                <CardContent className="p-4 sm:p-5 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base sm:text-lg text-slate-900 truncate">{enrollment.plan_name}</h3>
+                      <p className="text-xs sm:text-sm text-slate-500">{enrollment.user_name} • Due {formatDate(enrollment.due_date)}</p>
                     </div>
-                    <Badge className={overdue ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>{overdue ? 'overdue' : enrollment.status}</Badge>
+                    <Badge className={`text-xs ${overdue ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>{overdue ? 'overdue' : enrollment.status}</Badge>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className="bg-indigo-600 h-full rounded-full" style={{ width: `${enrollment.progress_percentage || 0}%` }} /></div>
-                  <p className="text-sm text-slate-500">{enrollment.courses_completed}/{enrollment.courses_total} completed • {enrollment.progress_percentage || 0}% progress</p>
+                  <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div className="bg-indigo-600 h-full rounded-full transition-all duration-500" style={{ width: `${enrollment.progress_percentage || 0}%` }} />
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 font-medium">{enrollment.courses_completed}/{enrollment.courses_total} completed • {enrollment.progress_percentage || 0}% progress</p>
                 </CardContent>
               </Card>
             );
           })}
-          {planEnrollments.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No learning plan progress records yet.</CardContent></Card>}
+          {planEnrollments.length === 0 && <Card><CardContent className="p-8 sm:p-10 text-center text-slate-500 text-sm sm:text-base">No learning plan progress records yet.</CardContent></Card>}
         </TabsContent>
       </Tabs>
     </div>
