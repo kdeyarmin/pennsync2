@@ -71,6 +71,7 @@ import DocumentList from "../components/documents/DocumentList";
 import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashboard";
 import MedicationBottleScanner from "../components/smartNote/MedicationBottleScanner";
 import CarePlanProposalReviewer from "../components/carePlan/CarePlanProposalReviewer";
+import PatientTelehealthPanel from "../components/telehealth/PatientTelehealthPanel";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -388,6 +389,7 @@ export default function PatientDetails() {
               { value: "events",        label: "Events"    },
               { value: "ai-tools",      label: "AI Tools"  },
               { value: "care",          label: "Care Plans"},
+              { value: "telehealth",    label: "Telehealth"},
               { value: "documents",     label: "Docs"      },
             ].map(({ value, label }) => (
               <TabsTrigger key={value} value={value} className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] min-w-[72px] text-xs sm:text-sm whitespace-nowrap">
@@ -871,6 +873,10 @@ export default function PatientDetails() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="telehealth" className="space-y-6">
+          <PatientTelehealthPanel patient={patient} currentUser={currentUser} />
         </TabsContent>
 
         {/* Documents Tab */}

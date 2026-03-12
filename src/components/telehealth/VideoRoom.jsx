@@ -9,7 +9,7 @@ import {
 import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";
 
-export default function VideoRoom({ roomName, identity, onDisconnect }) {
+export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange }) {
   const [room, setRoom] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [status, setStatus] = useState("connecting"); // connecting | connected | error
@@ -19,6 +19,11 @@ export default function VideoRoom({ roomName, identity, onDisconnect }) {
   const [screenSharing, setScreenSharing] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+
+  useEffect(() => {
+    const participantNames = [identity, ...participants.map((participant) => participant.identity)].filter(Boolean);
+    onParticipantListChange?.([...new Set(participantNames)]);
+  }, [participants, identity, onParticipantListChange]);
 
   const localVideoRef = useRef(null);
   const roomRef = useRef(null);
