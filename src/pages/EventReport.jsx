@@ -22,6 +22,7 @@ export default function EventReport() {
     date_of_event: "",
     time_of_event: "",
     event_type: "",
+    event_type_id: "",
     location_of_event: "",
     medications: "",
     diagnosis: "",
@@ -29,18 +30,21 @@ export default function EventReport() {
     follow_up_action: "",
     submitted_by: "",
     submitter_title: "",
+    state_reportable: "",
   });
 
   const eventTypes = [
-    "Fall",
-    "Medication Error",
-    "Equipment Failure",
-    "Documentation Error",
-    "Patient Injury",
-    "Adverse Reaction",
-    "Security Incident",
-    "Infection Control Breach",
-    "Other"
+    { id: "HE", description: "Complaint of Patient/Resident Abuse, Confirmed or Not" },
+    { id: "HA", description: "Death Due To Injury, Suicide, or Unusual Circumstances While a Patient/Resident" },
+    { id: "HB", description: "Death Due to Malnutrition, Dehydration or Sepsis" },
+    { id: "HC", description: "Death Due to a Medication Error or Adverse Reaction to Medication" },
+    { id: "IW", description: "Health Department Reportable Diseases" },
+    { id: "IQ", description: "Misappropriation of Patient/Resident Property" },
+    { id: "18", description: "Other" },
+    { id: "02", description: "Patient/Resident Neglect" },
+    { id: "HF", description: "Rape" },
+    { id: "IE", description: "Transfer/Admission to Hospital Because of Injury/Accident" },
+    { id: "HQ", description: "Unlicensed Practice of a Regulated Professional" },
   ];
 
   const handleChange = (field, value) => {
@@ -51,7 +55,7 @@ export default function EventReport() {
     const required = [
       'patient_id', 'date_of_event', 'time_of_event', 'event_type',
       'location_of_event', 'factual_description', 'follow_up_action',
-      'submitted_by', 'submitter_title'
+      'submitted_by', 'submitter_title', 'state_reportable'
     ];
     
     for (const field of required) {
@@ -92,14 +96,41 @@ export default function EventReport() {
     setIsSubmitting(true);
     
     try {
+      // Create incident record
+      const incidentData = {
+        patient_id: formData.patient_id,
+        patient_name: formData.patient_id, // Will be populated from patient lookup if needed
+        incident_type: "other",
+        incident_name: formData.event_type,
+        incident_date: formData.date_of_event,
+        incident_time: formData.time_of_event,
+        severity: "medium",
+        details: {
+          event_type_id: formData.event_type_id,
+          location: formData.location_of_event,
+          medications: formData.medications,
+          diagnosis: formData.diagnosis,
+          submitter: formData.submitted_by,
+          submitter_title: formData.submitter_title,
+          state_reportable: formData.state_reportable,
+        },
+        report: `Event Type: ${formData.event_type}\n\nFactual Description:\n${formData.factual_description}\n\nFollow-up Action:\n${formData.follow_up_action}`,
+        status: "reported",
+      };
+
+      const incident = await base44.entities.Incident.create(incidentData);
+
       // Generate PDF
       const pdfResponse = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate an Event Report PDF document with the following information:
 
+Event Report ID: ${incident.id}
 Patient ID: ${formData.patient_id}
 Date of Event: ${formData.date_of_event}
 Time of Event: ${formData.time_of_event}
+Event Type ID: ${formData.event_type_id}
 Event Type: ${formData.event_type}
+State Reportable: ${formData.state_reportable}
 Location of Event: ${formData.location_of_event}
 Name and Frequency of Medication(s): ${formData.medications || 'N/A'}
 Diagnosis of Resident/Patient: ${formData.diagnosis || 'N/A'}
@@ -119,14 +150,17 @@ Format this as a professional medical event report document.`,
       for (const admin of adminUsers) {
         await base44.integrations.Core.SendEmail({
           to: admin.email,
-          subject: `Event Report Submitted - Patient ${formData.patient_id}`,
+          subject: `Event Report ${incident.id} Submitted - Patient ${formData.patient_id}`,
           body: `
 A new Event Report has been submitted:
 
+Event Report ID: ${incident.id}
 Patient ID: ${formData.patient_id}
 Date of Event: ${formData.date_of_event}
 Time of Event: ${formData.time_of_event}
+Event Type ID: ${formData.event_type_id}
 Event Type: ${formData.event_type}
+State Reportable: ${formData.state_reportable}
 Location: ${formData.location_of_event}
 Submitted By: ${formData.submitted_by} (${formData.submitter_title})
 
@@ -136,12 +170,12 @@ ${formData.factual_description}
 Follow-up Action:
 ${formData.follow_up_action}
 
-Please review this report in the system.
+Please review this report in the Incident Reporting system.
           `
         });
       }
       
-      toast.success("Event Report submitted successfully! PDF generated and administrators notified.");
+      toast.success(`Event Report ${incident.id} submitted successfully! PDF generated and administrators notified.`);
       
       // Reset form
       setFormData({
@@ -149,6 +183,7 @@ Please review this report in the system.
         date_of_event: "",
         time_of_event: "",
         event_type: "",
+        event_type_id: "",
         location_of_event: "",
         medications: "",
         diagnosis: "",
@@ -156,6 +191,7 @@ Please review this report in the system.
         follow_up_action: "",
         submitted_by: "",
         submitter_title: "",
+        state_reportable: "",
       });
       
     } catch (error) {
@@ -173,6 +209,7 @@ Please review this report in the system.
         date_of_event: "",
         time_of_event: "",
         event_type: "",
+        event_type_id: "",
         location_of_event: "",
         medications: "",
         diagnosis: "",
@@ -180,6 +217,7 @@ Please review this report in the system.
         follow_up_action: "",
         submitted_by: "",
         submitter_title: "",
+        state_reportable: "",
       });
     }
   };
@@ -244,8 +282,12 @@ Please review this report in the system.
                 </p>
               </div>
               <Select
-                value={formData.event_type}
-                onValueChange={(value) => handleChange('event_type', value)}
+                value={formData.event_type_id}
+                onValueChange={(value) => {
+                  const selectedType = eventTypes.find(t => t.id === value);
+                  handleChange('event_type_id', value);
+                  handleChange('event_type', selectedType ? `${selectedType.id} - ${selectedType.description}` : '');
+                }}
                 required
               >
                 <SelectTrigger>
@@ -253,8 +295,28 @@ Please review this report in the system.
                 </SelectTrigger>
                 <SelectContent>
                   {eventTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.id} - {type.description}
+                    </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* State Reportable */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <Label className="text-red-600">*Is this State Reportable?</Label>
+              <Select
+                value={formData.state_reportable}
+                onValueChange={(value) => handleChange('state_reportable', value)}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
                 </SelectContent>
               </Select>
             </div>
