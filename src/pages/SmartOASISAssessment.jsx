@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   ChevronDown, ChevronUp, Users, Search, Save, CheckCircle2,
-  Loader2, AlertCircle, Brain, Activity, ShieldAlert, Lightbulb
+  Loader2, AlertCircle, AlertTriangle, Brain, Activity, ShieldAlert, Lightbulb
 } from "lucide-react";
 import { toast } from "sonner";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
@@ -187,6 +187,10 @@ function RightPanel({ suggestions, complianceIssues, reasoningIssues, onAddToCar
 
         <TabsContent value="compliance" className="flex-1 overflow-y-auto mt-0 data-[state=inactive]:hidden">
           <OASISComplianceWarnings issues={complianceIssues} />
+        </TabsContent>
+
+        <TabsContent value="reasoning" className="flex-1 overflow-y-auto mt-0 data-[state=inactive]:hidden">
+          <OASISClinicalReasoningEngine issues={reasoningIssues} />
         </TabsContent>
       </Tabs>
     </div>
