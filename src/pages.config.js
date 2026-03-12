@@ -91,6 +91,7 @@ import JoinTelehealth from './pages/JoinTelehealth';
 import LearningCenter from './pages/LearningCenter';
 import LearningReports from './pages/LearningReports';
 import ManageNewFeatures from './pages/ManageNewFeatures';
+import ManagerSkillGapDashboard from './pages/ManagerSkillGapDashboard';
 import MedicalScribe from './pages/MedicalScribe';
 import MedicareComplianceDashboard from './pages/MedicareComplianceDashboard';
 import MedicareGuidelinesLibrary from './pages/MedicareGuidelinesLibrary';
@@ -155,7 +156,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import ManagerSkillGapDashboard from './pages/ManagerSkillGapDashboard';
+import ClinicalSkillsChecklist from './pages/ClinicalSkillsChecklist';
 import __Layout from './Layout.jsx';
 
 
@@ -204,6 +205,7 @@ export const PAGES = {
     "LearningCenter": LearningCenter,
     "LearningReports": LearningReports,
     "ManageNewFeatures": ManageNewFeatures,
+    "ManagerSkillGapDashboard": ManagerSkillGapDashboard,
     "MedicalScribe": MedicalScribe,
     "MedicareComplianceDashboard": MedicareComplianceDashboard,
     "MedicareGuidelinesLibrary": MedicareGuidelinesLibrary,
@@ -268,7 +270,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "ManagerSkillGapDashboard": ManagerSkillGapDashboard,
+    "ClinicalSkillsChecklist": ClinicalSkillsChecklist,
 }
 
 export const pagesConfig = {

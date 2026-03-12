@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut, ChevronLeft,
-  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle, AlertTriangle
+  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -167,6 +167,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
         { name: "Training", icon: GraduationCap, page: "StaffTrainingHub" },
         { name: "Annual Education", icon: GraduationCap, page: "MyAnnualEducation" },
+        { name: "Skills Checklists", icon: CheckCircle2, page: "ClinicalSkillsChecklist" },
       ],
     },
     {

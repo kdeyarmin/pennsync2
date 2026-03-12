@@ -121,6 +121,12 @@ export default function LearningCenter() {
                   Skill Gap Dashboard
                 </Button>
               </Link>
+              <Link to={createPageUrl('ClinicalSkillsChecklist')}>
+                <Button variant="outline">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Skills Checklists
+                </Button>
+              </Link>
             </>
           )}
           <Link to={createPageUrl('MyAnnualEducation')}>
