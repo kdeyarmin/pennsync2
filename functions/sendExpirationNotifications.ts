@@ -1,0 +1,125 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    
+    // Get today's date and 30 days from now
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(today);
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
+
+    // Fetch all training assignments expiring in 30 days
+    const assignments = await base44.asServiceRole.entities.TrainingAssignment.filter({
+      status: 'completed'
+    }, '-due_date', 500);
+
+    // Fetch all personnel credentials expiring in 30 days
+    const credentials = await base44.asServiceRole.entities.PersonnelCredential.filter({
+      status: 'approved'
+    }, '-expiration_date', 500);
+
+    const notifications = [];
+    const adminNotifications = [];
+
+    // Process training assignments with renewal dates
+    for (const assignment of assignments) {
+      if (!assignment.renewal_due_date) continue;
+      
+      const renewalDate = new Date(assignment.renewal_due_date);
+      const daysUntilExpiration = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
+      
+      if (daysUntilExpiration === 30 || daysUntilExpiration === 14 || daysUntilExpiration === 7 || daysUntilExpiration === 3) {
+        // Create notification for employee
+        notifications.push({
+          user_email: assignment.assigned_to_user_id,
+          type: 'expiration_warning',
+          title: `Training Renewal Due Soon: ${assignment.course_title}`,
+          message: `Your ${assignment.course_title} certification expires in ${daysUntilExpiration} days. Please complete the renewal training.`,
+          link: '/MyTraining',
+          priority: daysUntilExpiration <= 7 ? 'high' : 'medium',
+          is_read: false,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        });
+
+        // Create admin notification
+        adminNotifications.push({
+          type: 'training_expiration',
+          user_id: assignment.assigned_to_user_id,
+          course_title: assignment.course_title,
+          days_until_expiration: daysUntilExpiration,
+          renewal_due_date: assignment.renewal_due_date
+        });
+      }
+    }
+
+    // Process personnel credentials
+    for (const credential of credentials) {
+      if (!credential.expiration_date) continue;
+      
+      const expirationDate = new Date(credential.expiration_date);
+      const daysUntilExpiration = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+      
+      if (daysUntilExpiration === 30 || daysUntilExpiration === 14 || daysUntilExpiration === 7 || daysUntilExpiration === 3) {
+        // Create notification for employee
+        notifications.push({
+          user_email: credential.user_id,
+          type: 'credential_expiration',
+          title: `Credential Expiring Soon: ${credential.title}`,
+          message: `Your ${credential.title} expires in ${daysUntilExpiration} days. Please upload a renewed document.`,
+          link: '/PersonnelFile',
+          priority: daysUntilExpiration <= 7 ? 'high' : 'medium',
+          is_read: false,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        });
+
+        // Create admin notification
+        adminNotifications.push({
+          type: 'credential_expiration',
+          user_id: credential.user_id,
+          user_name: credential.user_name,
+          credential_title: credential.title,
+          days_until_expiration: daysUntilExpiration,
+          expiration_date: credential.expiration_date
+        });
+      }
+    }
+
+    // Bulk create employee notifications
+    if (notifications.length > 0) {
+      await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
+    }
+
+    // Create consolidated admin notification
+    if (adminNotifications.length > 0) {
+      const adminUsers = await base44.asServiceRole.entities.User.filter({ role: 'admin' }, '', 100);
+      
+      for (const admin of adminUsers) {
+        await base44.asServiceRole.entities.Notification.create({
+          user_email: admin.email,
+          type: 'admin_expiration_summary',
+          title: `${adminNotifications.length} Upcoming Expirations`,
+          message: `There are ${adminNotifications.length} training certifications or credentials expiring soon.`,
+          link: '/AdminDashboard',
+          priority: 'medium',
+          is_read: false,
+          metadata: { expirations: adminNotifications },
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        });
+      }
+    }
+
+    return Response.json({
+      success: true,
+      employee_notifications: notifications.length,
+      admin_notifications: adminNotifications.length,
+      total_expirations: adminNotifications.length
+    });
+
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
