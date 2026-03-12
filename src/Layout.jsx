@@ -157,7 +157,7 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
         { name: "Fax", icon: BookUser, page: "SendFax" },
-        { name: "Physicians", icon: Users, page: "PhysicianDirectory" },
+        { name: "Providers", icon: Users, page: "PhysicianDirectory" },
         { name: "Telehealth", icon: Video, page: "Telehealth" },
       ],
     },

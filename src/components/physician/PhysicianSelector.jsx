@@ -18,13 +18,13 @@ export default function PhysicianSelector({ onSelectPhysician }) {
     <>
       <Button variant="outline" onClick={() => setOpen(true)} size="sm">
         <UserPlus className="w-4 h-4 mr-1" />
-        Select from Physician Directory
+        Select from Provider Directory
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Select Physician</DialogTitle>
+            <DialogTitle>Select Provider</DialogTitle>
           </DialogHeader>
           <PhysicianDirectory mode="selector" onSelectPhysician={handleSelect} />
         </DialogContent>

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import PhysicianForm from './PhysicianForm';
+import ProviderCsvImport from './ProviderCsvImport';
 
 export default function PhysicianDirectory({ onSelectPhysician, mode = 'directory' }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +33,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
     mutationFn: (id) => base44.entities.Physician.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['physicians'] });
-      toast.success('Physician removed from directory');
+      toast.success('Provider removed from directory');
     },
   });
 
@@ -72,22 +73,20 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
   };
 
   const getSpecialtyLabel = (specialty) => {
-    return specialty?.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'N/A';
+    return specialty
+      ? specialty.replace(/_/g, ' ').split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      : 'N/A';
   };
 
-  const specialties = [
-    'primary_care', 'cardiology', 'endocrinology', 'pulmonology', 
-    'nephrology', 'neurology', 'orthopedics', 'psychiatry',
-    'gastroenterology', 'oncology', 'dermatology', 'rheumatology',
-    'infectious_disease', 'physical_medicine', 'pain_management',
-    'wound_care', 'palliative_care', 'hospice', 'other'
-  ];
+  const specialties = useMemo(() => (
+    Array.from(new Set(physicians.map((item) => item.specialty).filter(Boolean))).sort()
+  ), [physicians]);
 
   if (isLoading) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center text-gray-500">Loading physician directory...</div>
+          <div className="text-center text-gray-500">Loading provider directory...</div>
         </CardContent>
       </Card>
     );
@@ -97,16 +96,19 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-indigo-600" />
-              Physician Directory
+              Provider Directory
             </CardTitle>
             {mode === 'directory' && (
-              <Button onClick={() => { setEditingPhysician(null); setShowForm(true); }} size="sm">
-                <Plus className="w-4 h-4 mr-1" />
-                Add Physician
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                <ProviderCsvImport onImported={() => queryClient.invalidateQueries({ queryKey: ['physicians'] })} />
+                <Button onClick={() => { setEditingPhysician(null); setShowForm(true); }} size="sm">
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Provider
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -116,7 +118,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
-                placeholder="Search by name, practice, specialty, or tags..."
+                placeholder="Search by provider, practice, specialty, or tags..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -144,7 +146,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
             {filteredPhysicians.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <UserPlus className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No physicians found</p>
+                <p>No providers found</p>
               </div>
             ) : (
               filteredPhysicians.map((physician) => (
@@ -204,7 +206,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                               variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm('Remove this physician from the directory?')) {
+                                if (confirm('Remove this provider from the directory?')) {
                                   deletePhysicianMutation.mutate(physician.id);
                                 }
                               }}
@@ -266,7 +268,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
           </div>
 
           <div className="text-sm text-gray-500 text-center pt-2">
-            {filteredPhysicians.length} physician{filteredPhysicians.length !== 1 ? 's' : ''} found
+            {filteredPhysicians.length} provider{filteredPhysicians.length !== 1 ? 's' : ''} found
           </div>
         </CardContent>
       </Card>
@@ -276,7 +278,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingPhysician ? 'Edit Physician' : 'Add New Physician'}
+              {editingPhysician ? 'Edit Provider' : 'Add New Provider'}
             </DialogTitle>
           </DialogHeader>
           <PhysicianForm

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Upload, Search, Edit, Trash2, Building2, Phone, FileText } from "lucide-react";
 import { toast } from "sonner";
 import PhysicianSelector from '../physician/PhysicianSelector';
+import ProviderCsvImport from '../physician/ProviderCsvImport';
 
 export default function FaxAddressBook({ onSelectContact }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -200,20 +201,24 @@ export default function FaxAddressBook({ onSelectContact }) {
             </form>
           </DialogContent>
         </Dialog>
+        <ProviderCsvImport onImported={() => {
+          queryClient.invalidateQueries(['fax-contacts']);
+          queryClient.invalidateQueries({ queryKey: ['physicians'] });
+        }} />
         <Button variant="outline" asChild className="h-11 rounded-xl border-slate-300 bg-white">
           <label className="cursor-pointer">
             <Upload className="w-4 h-4 mr-2" />
-            Upload CSV
+            Upload Contacts CSV
             <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
           </label>
         </Button>
       </div>
 
-      <PhysicianSelector onSelectPhysician={(physician) => {
+      <PhysicianSelector onSelectPhysician={(provider) => {
         onSelectContact?.({
-          name: `${physician.full_name}${physician.credentials ? ', ' + physician.credentials : ''}`,
-          organization: physician.practice_name || '',
-          fax_number: physician.fax_number
+          name: `${provider.full_name}${provider.credentials ? ', ' + provider.credentials : ''}`,
+          organization: provider.practice_name || '',
+          fax_number: provider.fax_number
         });
       }} />
 
@@ -271,7 +276,7 @@ export default function FaxAddressBook({ onSelectContact }) {
         ))}
         {filteredContacts.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-slate-500">
-            <p className="text-sm leading-relaxed break-words">No contacts found. Add your first contact or upload a CSV file.</p>
+            <p className="text-sm leading-relaxed break-words">No contacts found. Add your first contact, import a provider CSV, or upload a contacts CSV file.</p>
           </div>
         )}
       </div>

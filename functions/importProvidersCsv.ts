@@ -61,10 +61,11 @@ function formatProviderName(rawName) {
   return titleCase(name);
 }
 
-async function processInChunks(items, handler, chunkSize = 25) {
+async function processInChunks(items, handler, chunkSize = 3) {
   for (let i = 0; i < items.length; i += chunkSize) {
     const chunk = items.slice(i, i + chunkSize);
     await Promise.all(chunk.map(handler));
+    await new Promise((resolve) => setTimeout(resolve, 150));
   }
 }
 

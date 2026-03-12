@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -45,9 +44,9 @@ export default function PhysicianForm({ physician, onClose }) {
       return base44.entities.Physician.create(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['physicians'] });
-      toast.success(physician ? 'Physician updated' : 'Physician added to directory');
-      onClose();
+    queryClient.invalidateQueries({ queryKey: ['physicians'] });
+    toast.success(physician ? 'Provider updated' : 'Provider added to directory');
+    onClose();
     },
     onError: (error) => {
       toast.error('Failed to save: ' + error.message);
@@ -57,7 +56,7 @@ export default function PhysicianForm({ physician, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.full_name.trim()) {
-      return toast.error('Physician name is required');
+      return toast.error('Provider name is required');
     }
     saveMutation.mutate(formData);
   };
@@ -79,28 +78,6 @@ export default function PhysicianForm({ physician, onClose }) {
     }));
   };
 
-  const specialties = [
-    { value: 'primary_care', label: 'Primary Care' },
-    { value: 'cardiology', label: 'Cardiology' },
-    { value: 'endocrinology', label: 'Endocrinology' },
-    { value: 'pulmonology', label: 'Pulmonology' },
-    { value: 'nephrology', label: 'Nephrology' },
-    { value: 'neurology', label: 'Neurology' },
-    { value: 'orthopedics', label: 'Orthopedics' },
-    { value: 'psychiatry', label: 'Psychiatry' },
-    { value: 'gastroenterology', label: 'Gastroenterology' },
-    { value: 'oncology', label: 'Oncology' },
-    { value: 'dermatology', label: 'Dermatology' },
-    { value: 'rheumatology', label: 'Rheumatology' },
-    { value: 'infectious_disease', label: 'Infectious Disease' },
-    { value: 'physical_medicine', label: 'Physical Medicine' },
-    { value: 'pain_management', label: 'Pain Management' },
-    { value: 'wound_care', label: 'Wound Care' },
-    { value: 'palliative_care', label: 'Palliative Care' },
-    { value: 'hospice', label: 'Hospice' },
-    { value: 'other', label: 'Other' },
-  ];
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -109,7 +86,7 @@ export default function PhysicianForm({ physician, onClose }) {
           <Input
             value={formData.full_name}
             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-            placeholder="Dr. John Smith"
+            placeholder="Jane Smith"
           />
         </div>
         <div className="col-span-2 sm:col-span-1">
@@ -124,19 +101,12 @@ export default function PhysicianForm({ physician, onClose }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label>Specialty *</Label>
-          <Select value={formData.specialty} onValueChange={(value) => setFormData({ ...formData, specialty: value })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {specialties.map(spec => (
-                <SelectItem key={spec.value} value={spec.value}>
-                  {spec.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Specialty</Label>
+          <Input
+            value={formData.specialty}
+            onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+            placeholder="Family Medicine, General Surgery, Cardiology"
+          />
         </div>
         <div>
           <Label>Subspecialty</Label>
@@ -149,7 +119,7 @@ export default function PhysicianForm({ physician, onClose }) {
       </div>
 
       <div>
-        <Label>Practice/Hospital Name</Label>
+        <Label>Practice / Organization</Label>
         <Input
           value={formData.practice_name}
           onChange={(e) => setFormData({ ...formData, practice_name: e.target.value })}
@@ -219,7 +189,7 @@ export default function PhysicianForm({ physician, onClose }) {
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            placeholder="doctor@example.com"
+            placeholder="provider@example.com"
           />
         </div>
         <div>
@@ -304,7 +274,7 @@ export default function PhysicianForm({ physician, onClose }) {
         <Textarea
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          placeholder="Additional notes about this physician..."
+          placeholder="Additional notes about this provider..."
           rows={3}
         />
       </div>
@@ -315,7 +285,7 @@ export default function PhysicianForm({ physician, onClose }) {
         </Button>
         <Button type="submit" disabled={saveMutation.isPending}>
           {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          {physician ? 'Update' : 'Add'} Physician
+          {physician ? 'Update' : 'Add'} Provider
         </Button>
       </div>
     </form>
