@@ -17,6 +17,7 @@ import AdminComplianceStats from "@/components/training/AdminComplianceStats";
 import TemplateLibraryPanel from "@/components/training/TemplateLibraryPanel";
 import AssignmentWizard from "@/components/training/AssignmentWizard";
 import RetakeSettingsPanel from "@/components/training/RetakeSettingsPanel";
+import TrainingAttachmentManager from "@/components/training/TrainingAttachmentManager";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -283,6 +284,9 @@ export default function AIComplianceInServicesHub() {
             </Card>
           ))}
           {inServices.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No in-services created yet.</CardContent></Card>}
+          {selectedCourseId && inServices.find((course) => course.id === selectedCourseId) && (
+            <TrainingAttachmentManager course={inServices.find((course) => course.id === selectedCourseId)} />
+          )}
         </TabsContent>
 
         <TabsContent value="assignments" className="space-y-6">

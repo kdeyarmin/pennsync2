@@ -26,6 +26,7 @@ export default function TrainingCoursePlayer() {
   const [attestationAccepted, setAttestationAccepted] = useState(false);
   const [signedName, setSignedName] = useState('');
   const [result, setResult] = useState(null);
+  const [proofFiles, setProofFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const startedAt = useMemo(() => new Date().toISOString(), []);
 
@@ -53,6 +54,18 @@ export default function TrainingCoursePlayer() {
 
   const submitAttempt = async () => {
     setSubmitting(true);
+    let externalProofUrls = [];
+    let externalProofNames = [];
+    if (proofFiles.length > 0) {
+      const uploaded = await Promise.all(proofFiles.map(async (file) => ({ name: file.name, url: (await base44.integrations.Core.UploadFile({ file })).file_url })));
+      externalProofUrls = uploaded.map((item) => item.url);
+      externalProofNames = uploaded.map((item) => item.name);
+      await base44.entities.TrainingAssignment.update(assignmentId, {
+        external_proof_urls: externalProofUrls,
+        external_proof_names: externalProofNames,
+        external_proof_submitted_at: new Date().toISOString(),
+      });
+    }
     const response = await gradeTrainingAttempt({
       assignmentId,
       responses: randomizedQuestions.map((question) => ({ questionId: question.id, answer: answers[question.id] })),
@@ -82,11 +95,11 @@ export default function TrainingCoursePlayer() {
         </CardContent>
       </Card>
 
-      {step === 'objectives' && <Card><CardHeader><CardTitle>Learning objectives</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-slate-600">{course.short_description || course.description}</p><ul className="list-disc pl-5 space-y-2 text-slate-700">{(course.learning_objectives || []).map((objective, index) => <li key={index}>{objective}</li>)}</ul><Button onClick={() => setStep('content')}>Start in-service <ChevronRight className="w-4 h-4 ml-2" /></Button></CardContent></Card>}
+      {step === 'objectives' && <Card><CardHeader><CardTitle>Learning objectives</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-slate-600">{course.short_description || course.description}</p><ul className="list-disc pl-5 space-y-2 text-slate-700">{(course.learning_objectives || []).map((objective, index) => <li key={index}>{objective}</li>)}</ul>{(course.attachment_urls || []).length > 0 && <div className="rounded-xl border bg-slate-50 p-4"><p className="font-medium text-slate-900 mb-2">Attached resources</p><div className="flex flex-wrap gap-2">{(course.attachment_urls || []).map((url, index) => <a key={index} href={url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">{course.attachment_names?.[index] || `Resource ${index + 1}`}</a>)}</div></div>}<Button onClick={() => setStep('content')}>Start in-service <ChevronRight className="w-4 h-4 ml-2" /></Button></CardContent></Card>}
 
-      {step === 'content' && <div className="space-y-4">{(modules.length > 0 ? modules : [{ id: 'fallback', title: 'Lesson Content', type: 'lesson', content_json: { intro: course.description, sections: [], case_scenarios: [], key_takeaways: [] } }]).map((module) => <div key={module.id} className="space-y-3"><TrainingModuleViewer module={module} /><div className="flex justify-end"><Button variant={completedModules.includes(module.id) ? 'outline' : 'default'} onClick={() => completeModule(module.id)}>{completedModules.includes(module.id) ? 'Completed' : 'Mark module complete'}</Button></div></div>)}</div>}
+      {step === 'content' && <div className="space-y-4">{(modules.length > 0 ? modules : [{ id: 'fallback', title: 'Lesson Content', type: 'lesson', content_json: { intro: course.description, sections: [], case_scenarios: [], key_takeaways: [] }, attachment_urls: [], attachment_names: [] }]).map((module) => <div key={module.id} className="space-y-3"><TrainingModuleViewer module={module} />{(module.attachment_urls || []).length > 0 && <div className="rounded-xl border bg-slate-50 p-4"><p className="font-medium text-slate-900 mb-2">Lesson attachments</p><div className="flex flex-wrap gap-2">{(module.attachment_urls || []).map((url, index) => <a key={index} href={url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">{module.attachment_names?.[index] || `Lesson File ${index + 1}`}</a>)}</div></div>}<div className="flex justify-end"><Button variant={completedModules.includes(module.id) ? 'outline' : 'default'} onClick={() => completeModule(module.id)}>{completedModules.includes(module.id) ? 'Completed' : 'Mark module complete'}</Button></div></div>)}</div>}
 
-      {step === 'attestation' && <Card><CardHeader><CardTitle>Acknowledgement / Attestation</CardTitle></CardHeader><CardContent className="space-y-4"><Alert><AlertDescription>{course.attestation_text || 'I have reviewed and understand this training and agree to follow agency policy.'}</AlertDescription></Alert><div className="flex items-start gap-3"><Checkbox checked={attestationAccepted} onCheckedChange={(checked) => setAttestationAccepted(!!checked)} /><Label>I have reviewed and understand this training.</Label></div><div className="space-y-2"><Label>Type your full name</Label><Input value={signedName} onChange={(event) => setSignedName(event.target.value)} placeholder={currentUser?.full_name || 'Your name'} /></div><Button disabled={!attestationAccepted || !signedName} onClick={() => setStep('test')}>Proceed to final test</Button></CardContent></Card>}
+      {step === 'attestation' && <Card><CardHeader><CardTitle>Acknowledgement / Attestation</CardTitle></CardHeader><CardContent className="space-y-4"><Alert><AlertDescription>{course.attestation_text || 'I have reviewed and understand this training and agree to follow agency policy.'}</AlertDescription></Alert><div className="flex items-start gap-3"><Checkbox checked={attestationAccepted} onCheckedChange={(checked) => setAttestationAccepted(!!checked)} /><Label>I have reviewed and understand this training.</Label></div><div className="space-y-2"><Label>Type your full name</Label><Input value={signedName} onChange={(event) => setSignedName(event.target.value)} placeholder={currentUser?.full_name || 'Your name'} /></div><div className="space-y-2"><Label>Upload proof of external certification (optional)</Label><input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(event) => setResult((prev) => ({ ...(prev || {}), proofFiles: Array.from(event.target.files || []) }))} className="block w-full text-sm" /></div><Button disabled={!attestationAccepted || !signedName} onClick={() => setStep('test')}>Proceed to final test</Button></CardContent></Card>}
 
       {step === 'test' && <div className="space-y-4"><Alert className="border-amber-200 bg-amber-50"><AlertTriangle className="w-4 h-4 text-amber-600" /><AlertDescription className="text-amber-900">You must answer every question before submitting.</AlertDescription></Alert>{randomizedQuestions.map((question, index) => <TrainingQuestionRenderer key={question.id} question={question} index={index} value={answers[question.id]} onChange={(answer) => setAnswers((prev) => ({ ...prev, [question.id]: answer }))} />)}<Button className="w-full" disabled={submitting || Object.keys(answers).length !== randomizedQuestions.length} onClick={submitAttempt}>{submitting ? 'Submitting...' : 'Submit competency test'}</Button></div>}
 

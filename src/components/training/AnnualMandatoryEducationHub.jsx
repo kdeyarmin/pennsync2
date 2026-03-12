@@ -18,6 +18,7 @@ import RetakeSettingsPanel from "@/components/training/RetakeSettingsPanel";
 import AssignmentWizard from "@/components/training/AssignmentWizard";
 import AnnualEducationTemplateLibrary from "@/components/training/AnnualEducationTemplateLibrary";
 import AnnualLearningPlanPanel from "@/components/training/AnnualLearningPlanPanel";
+import TrainingAttachmentManager from "@/components/training/TrainingAttachmentManager";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -219,6 +220,7 @@ export default function AnnualMandatoryEducationHub() {
         <TabsContent value="templates"><AnnualEducationTemplateLibrary onUseTemplate={useTemplate} /></TabsContent>
 
         <TabsContent value="library" className="space-y-4">
+          <div className="rounded-xl border bg-blue-50 p-4 text-sm text-blue-900">Select a module in the assignment target area below, then use the attachment manager here to add external policy PDFs, regulatory documents, or images to the course or a specific lesson.</div>
           {annualCourses.map((course) => (
             <Card key={course.id}>
               <CardContent className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -239,6 +241,9 @@ export default function AnnualMandatoryEducationHub() {
               </CardContent>
             </Card>
           ))}
+          {selectedCourseId && annualCourses.find((course) => course.id === selectedCourseId) && (
+            <TrainingAttachmentManager course={annualCourses.find((course) => course.id === selectedCourseId)} />
+          )}
         </TabsContent>
 
         <TabsContent value="assignments" className="space-y-6">
