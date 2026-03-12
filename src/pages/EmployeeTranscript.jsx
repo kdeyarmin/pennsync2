@@ -1,6 +1,6 @@
 import React from "react";
-import EmployeeTranscriptPage from "@/pages/EmployeeTranscript";
+import EmployeeTranscriptCenter from "@/components/learning/EmployeeTranscriptCenter";
 
 export default function EmployeeTranscript() {
-  return <EmployeeTranscriptPage />;
+  return <EmployeeTranscriptCenter />;
 }

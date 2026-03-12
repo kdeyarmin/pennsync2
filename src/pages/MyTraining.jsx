@@ -1,6 +1,6 @@
 import React from "react";
-import MyTrainingPage from "@/pages/MyTraining";
+import MyTrainingDashboard from "@/components/training/MyTrainingDashboard";
 
 export default function MyTraining() {
-  return <MyTrainingPage />;
+  return <MyTrainingDashboard />;
 }

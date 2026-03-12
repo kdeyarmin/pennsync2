@@ -1,6 +1,6 @@
 import React from "react";
-import AnnualMandatoryEducationPage from "@/pages/AnnualMandatoryEducation";
+import AnnualMandatoryEducationHub from "@/components/training/AnnualMandatoryEducationHub";
 
 export default function AnnualMandatoryEducation() {
-  return <AnnualMandatoryEducationPage />;
+  return <AnnualMandatoryEducationHub />;
 }
