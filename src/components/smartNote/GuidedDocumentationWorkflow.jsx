@@ -1,8 +1,7 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, AlertTriangle, FileText, Stethoscope, ClipboardList } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ClipboardList } from "lucide-react";
 
 export default function GuidedDocumentationWorkflow({ visitType, diagnosis, careType }) {
   const getWorkflowSteps = () => {

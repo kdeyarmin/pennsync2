@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,12 +71,22 @@ export default function PatientEducationPanel({ patientId }) {
     }
   };
 
+  const escapeHtml = (str) => {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
   const handlePrintMaterial = (material) => {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
         <head>
-          <title>${material.title}</title>
+          <title>${escapeHtml(material.title)}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
             h1 { color: #1e40af; margin-bottom: 20px; }
@@ -88,21 +98,21 @@ export default function PatientEducationPanel({ patientId }) {
           </style>
         </head>
         <body>
-          <h1>${material.title}</h1>
-          <p>${material.content.split('\n\n').join('</p><p>')}</p>
+          <h1>${escapeHtml(material.title)}</h1>
+          <p>${escapeHtml(material.content).split('\n\n').join('</p><p>')}</p>
           ${material.key_points?.length > 0 ? `
             <h2>Key Points</h2>
-            <ul>${material.key_points.map(p => `<li>${p}</li>`).join('')}</ul>
+            <ul>${material.key_points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
           ` : ''}
           ${material.when_to_call?.length > 0 ? `
             <div class="warning">
               <h2>When to Call Your Healthcare Provider</h2>
-              <ul>${material.when_to_call.map(w => `<li>${w}</li>`).join('')}</ul>
+              <ul>${material.when_to_call.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>
             </div>
           ` : ''}
           ${material.additional_resources ? `
             <h2>Additional Resources</h2>
-            <p>${material.additional_resources}</p>
+            <p>${escapeHtml(material.additional_resources)}</p>
           ` : ''}
         </body>
       </html>

@@ -9,7 +9,6 @@ import {
   Shield,
   Copy,
   CheckCircle2,
-  Circle,
   ArrowRight,
   Lightbulb
 } from "lucide-react";

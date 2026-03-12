@@ -1,7 +1,5 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   Brain, 
   Sparkles, 
@@ -9,9 +7,7 @@ import {
   ClipboardList, 
   RotateCcw,
   ArrowRight,
-  Lightbulb,
-  BookOpen,
-  Link as LinkIcon
+  Lightbulb
 } from "lucide-react";
 import ClinicalGuidelinesAssistant from "./ClinicalGuidelinesAssistant";
 import OASISItemLinker from "./OASISItemLinker";

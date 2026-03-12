@@ -1,4 +1,3 @@
-import React from "react";
 import { AlertTriangle, Brain, CheckCircle2 } from "lucide-react";
 
 const REASONING_RULES = [

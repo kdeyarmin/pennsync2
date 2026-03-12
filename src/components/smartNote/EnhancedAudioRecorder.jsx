@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Play, Download, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mic, MicOff, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { enhanceTranscription } from "../utils/medicalDictionary";
 import DictationSectionMapper from "./DictationSectionMapper";
 

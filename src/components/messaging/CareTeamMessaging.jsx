@@ -16,7 +16,6 @@ import {
   AlertTriangle,
   Clock,
   FileText,
-  TrendingUp,
   ChevronDown,
   ChevronUp,
   Lightbulb

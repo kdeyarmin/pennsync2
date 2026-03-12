@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Smartphone, FileText, History, Search, Upload, BookTemplate, Layers } from "lucide-react";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";

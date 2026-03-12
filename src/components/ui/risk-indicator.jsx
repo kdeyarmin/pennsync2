@@ -1,6 +1,5 @@
-import React from "react";
 import { cn } from "@/lib/utils";
-import { AlertCircle, AlertTriangle, Info, CheckCircle } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
 
 export default function RiskIndicator({ level = "low", score, label, showIcon = true, size = "md" }) {
   const configs = {

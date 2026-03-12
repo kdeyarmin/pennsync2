@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -155,12 +155,22 @@ Return JSON:
 
   const handlePrint = () => {
     if (!summary) return;
+
+    const escapeHtml = (str) => {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
     
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
         <head>
-          <title>Next Steps - ${summary.patient_name}</title>
+          <title>Next Steps - ${escapeHtml(summary.patient_name)}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; font-size: 14px; }
             h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; font-size: 24px; }
@@ -177,46 +187,46 @@ Return JSON:
         </head>
         <body>
           <h1>📋 Your Next Steps</h1>
-          <p><strong>Patient:</strong> ${summary.patient_name} | <strong>Date:</strong> ${summary.summary_date} | <strong>Focus:</strong> ${summary.condition_focus}</p>
+          <p><strong>Patient:</strong> ${escapeHtml(summary.patient_name)} | <strong>Date:</strong> ${escapeHtml(summary.summary_date)} | <strong>Focus:</strong> ${escapeHtml(summary.condition_focus)}</p>
           
           <div class="section">
             <h2>✅ Do This First</h2>
             <ul class="checklist">
-              ${summary.immediate_next_steps?.map(step => `<li><strong>${step.action}</strong> - ${step.when}<br><small>${step.how}</small></li>`).join('') || ''}
+              ${summary.immediate_next_steps?.map(step => `<li><strong>${escapeHtml(step.action)}</strong> - ${escapeHtml(step.when)}<br><small>${escapeHtml(step.how)}</small></li>`).join('') || ''}
             </ul>
           </div>
           
           <div class="section">
             <h2>📅 Daily Checklist</h2>
             <ul class="checklist">
-              ${summary.daily_checklist?.map(item => `<li><strong>${item.item}</strong> (${item.time_of_day})<br><small>${item.details}</small></li>`).join('') || ''}
+              ${summary.daily_checklist?.map(item => `<li><strong>${escapeHtml(item.item)}</strong> (${escapeHtml(item.time_of_day)})<br><small>${escapeHtml(item.details)}</small></li>`).join('') || ''}
             </ul>
           </div>
           
           <div class="warning">
             <h2>⚠️ Watch For These Signs</h2>
             <ul>
-              ${summary.warning_signs_to_watch?.map(sign => `<li><strong>${sign.sign}</strong> → ${sign.what_to_do}</li>`).join('') || ''}
+              ${summary.warning_signs_to_watch?.map(sign => `<li><strong>${escapeHtml(sign.sign)}</strong> → ${escapeHtml(sign.what_to_do)}</li>`).join('') || ''}
             </ul>
           </div>
           
           <div class="section">
             <h2>📞 Call Your Nurse If:</h2>
-            <ul>${summary.call_nurse_if?.map(item => `<li>${item}</li>`).join('') || ''}</ul>
+            <ul>${summary.call_nurse_if?.map(item => `<li>${escapeHtml(item)}</li>`).join('') || ''}</ul>
           </div>
           
           <div class="emergency">
             <h2>🚨 Call 911 If:</h2>
-            <ul>${summary.call_911_if?.map(item => `<li><strong>${item}</strong></li>`).join('') || ''}</ul>
+            <ul>${summary.call_911_if?.map(item => `<li><strong>${escapeHtml(item)}</strong></li>`).join('') || ''}</ul>
           </div>
           
           <div class="section">
             <h2>💊 Medication Reminders</h2>
-            <ul>${summary.medication_reminders?.map(med => `<li><strong>${med.medication}:</strong> ${med.reminder}<br><small>Tip: ${med.tip}</small></li>`).join('') || ''}</ul>
+            <ul>${summary.medication_reminders?.map(med => `<li><strong>${escapeHtml(med.medication)}:</strong> ${escapeHtml(med.reminder)}<br><small>Tip: ${escapeHtml(med.tip)}</small></li>`).join('') || ''}</ul>
           </div>
           
           <div class="encouragement">
-            <p>💚 ${summary.encouragement_message}</p>
+            <p>💚 ${escapeHtml(summary.encouragement_message)}</p>
           </div>
         </body>
       </html>

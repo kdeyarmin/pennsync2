@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,8 +28,6 @@ import {
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -42,7 +40,7 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
-import { format, subDays } from "date-fns";
+import { subDays } from "date-fns";
 
 export default function AIStaffPerformanceAnalytics({ timeRange = 30, autoAnalyze = false }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);

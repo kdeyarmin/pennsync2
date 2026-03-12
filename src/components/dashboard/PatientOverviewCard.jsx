@@ -1,17 +1,13 @@
-import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  User,
   Phone,
   Calendar,
   FileText,
   AlertCircle,
-  ClipboardList,
   ChevronRight,
-  Heart,
-  Activity
+  Heart
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";

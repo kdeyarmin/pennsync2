@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,8 +26,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  ExternalLink,
-  BookOpen,
   FileText,
   Settings,
   Eye,
@@ -38,7 +36,7 @@ import {
   ChevronUp,
   Calendar
 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 
 export default function RegulatoryMonitor({ isAdmin = false }) {
   const queryClient = useQueryClient();

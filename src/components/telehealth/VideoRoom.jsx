@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createTelehealthToken } from "@/functions/createTelehealthToken";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Mic, MicOff, Video, VideoOff, PhoneOff,
-  Monitor, Users, Loader2, AlertTriangle
+import { VideoOff, Users, Loader2
 } from "lucide-react";
 import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";

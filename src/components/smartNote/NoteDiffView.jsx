@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { GitCompare, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 // Simple word-level diff — marks added words in green, removed in red
 function computeDiff(original, enhanced) {

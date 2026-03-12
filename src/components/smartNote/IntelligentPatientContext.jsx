@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   User,
   Heart,
-  Pill,
   AlertTriangle,
   Activity,
   Clock,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   FileText,
   Lightbulb,
   ChevronDown,
@@ -22,8 +18,7 @@ import {
   History,
   Target,
   Loader2,
-  Copy,
-  CheckCircle2
+  Copy
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 

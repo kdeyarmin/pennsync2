@@ -1,4 +1,3 @@
-import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

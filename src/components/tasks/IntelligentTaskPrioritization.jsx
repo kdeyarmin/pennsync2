@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,13 +16,11 @@ import {
   RefreshCw,
   Zap,
   Target,
-  ArrowUp,
-  ArrowDown,
   UserPlus,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
-import { format, isToday, isTomorrow, isPast } from "date-fns";
+import { format } from "date-fns";
 
 export default function IntelligentTaskPrioritization({ 
   nurseEmail,

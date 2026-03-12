@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,6 @@ import {
   CheckCircle2,
   Plus,
   Sparkles,
-  AlertCircle,
   FileText
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";

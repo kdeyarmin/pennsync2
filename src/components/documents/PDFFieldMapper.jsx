@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Move, Type } from "lucide-react";
+import { Plus, Trash2, Type } from "lucide-react";
 import { toast } from "sonner";
 
 const FIELD_TYPES = [

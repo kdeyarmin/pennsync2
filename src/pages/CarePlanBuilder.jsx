@@ -1,10 +1,9 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Save, RotateCcw, FileText, CheckSquare, Users,
   Sparkles, ChevronDown, Loader2, CheckCircle2, Search

@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, BarChart3, Target, Users } from "lucide-react";
 

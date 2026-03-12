@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -23,16 +21,10 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import {
-  GraduationCap,
-  Users,
-  TrendingUp,
   Award,
-  Target,
-  BookOpen,
   AlertCircle,
   CheckCircle2,
-  Clock,
-  Brain
+  Clock
 } from "lucide-react";
 
 export default function AdminTrainingAnalytics() {

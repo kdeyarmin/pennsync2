@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,9 +14,7 @@ import {
   Loader2, 
   FileAudio, 
   CheckCircle2,
-  Edit3,
   Copy,
-  AlertCircle,
   Stethoscope
 } from "lucide-react";
 import { trackScribeUsage, trackAISuggestion } from "../utils/performanceTracking";

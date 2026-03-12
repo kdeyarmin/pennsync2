@@ -1,10 +1,9 @@
-import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Shield, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import OASISValidationPanel from "../components/oasis/OASISValidationPanel";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
 import AIAuditRiskPredictor from "../components/oasis/AIAuditRiskPredictor";

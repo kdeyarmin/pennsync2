@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertTriangle,
@@ -22,7 +21,6 @@ import {
   CheckCircle2,
   XCircle,
   ChevronRight,
-  Bell,
   User,
   TrendingDown,
   Heart,
@@ -30,7 +28,7 @@ import {
   Clock,
   Zap
 } from "lucide-react";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 
 export default function ProactiveRiskAnalyzer({ users = [] }) {
   const queryClient = useQueryClient();

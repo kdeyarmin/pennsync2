@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,12 +18,10 @@ import {
   TrendingUp,
   Calendar,
   User,
-  ChevronRight,
   Bell,
   CheckCircle2,
   XCircle,
   RefreshCw,
-  Filter,
   Search,
   Download,
   BarChart3,
@@ -31,7 +29,7 @@ import {
   Sparkles,
   ExternalLink
 } from "lucide-react";
-import { format, differenceInDays, addDays, subDays } from "date-fns";
+import { format, differenceInDays, addDays } from "date-fns";
 
 import PolicyGuidelineMonitor from "../components/compliance/PolicyGuidelineMonitor";
 import AutomatedComplianceReporting from "../components/compliance/AutomatedComplianceReporting";

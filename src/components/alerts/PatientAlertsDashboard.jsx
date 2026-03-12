@@ -42,12 +42,9 @@ import {
   Users,
   Zap,
   Eye,
-  Send,
   X,
-  Filter,
   Search,
-  FileText,
-  Calendar
+  FileText
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";

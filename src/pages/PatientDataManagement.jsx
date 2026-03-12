@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import DuplicateScanner from "../components/patient/DuplicateScanner";
 import PatientFileUpdateUploader from "../components/patient/PatientFileUpdateUploader";
 import { base44 } from "@/api/base44Client";
@@ -39,10 +39,8 @@ import {
 import {
   Users,
   Search,
-  Filter,
   AlertTriangle,
   Activity,
-  Calendar,
   MoreVertical,
   Flag,
   TrendingUp,
@@ -52,7 +50,6 @@ import {
   FileText,
   Bell,
   CheckCircle2,
-  XCircle,
   Clock,
   Upload,
   Database

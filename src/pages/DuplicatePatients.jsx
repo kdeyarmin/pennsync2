@@ -1,18 +1,16 @@
-import React, { useState, useMemo } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Users,
   AlertTriangle,
   CheckCircle2,
   Loader2,
   UserX,
-  RefreshCw,
   Search
 } from "lucide-react";
 

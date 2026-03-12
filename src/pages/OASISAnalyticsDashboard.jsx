@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +14,6 @@ import {
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -40,15 +38,13 @@ import {
   Calendar,
   FileText,
   Activity,
-  ArrowUpRight,
-  ArrowDownRight,
   Minus,
   BarChart3,
   PieChart as PieChartIcon,
   Download,
   Filter
 } from "lucide-react";
-import { format, subDays, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { format, subDays } from "date-fns";
 
 export default function OASISAnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("30");

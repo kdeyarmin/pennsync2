@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,13 +26,9 @@ import {
   Save,
   Trash2,
   Play,
-  CheckCircle2,
-  DollarSign,
   TrendingUp,
   TrendingDown,
   Loader2,
-  Plus,
-  Copy,
   FileCheck,
   Sliders,
   BarChart3

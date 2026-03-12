@@ -1,12 +1,11 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  CheckCircle, AlertCircle, Clock, RefreshCw, Eye, Download,
-  Filter, Search, ArrowUpRight, ArrowDownLeft, Calendar
+  CheckCircle, AlertCircle, Clock, RefreshCw, Eye, Download, Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';

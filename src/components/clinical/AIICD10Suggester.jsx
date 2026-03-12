@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Plus, CheckCircle2, FileText } from "lucide-react";
+import { Loader2, Search, CheckCircle2, FileText } from "lucide-react";
 
 export default function AIICD10Suggester({ onCodesSelected }) {
   const [searchQuery, setSearchQuery] = useState("");

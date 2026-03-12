@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Heart, ChevronDown, ChevronUp, Phone, ClipboardList, Activity, Pill, TrendingUp } from "lucide-react";

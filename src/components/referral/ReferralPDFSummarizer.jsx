@@ -23,7 +23,6 @@ import {
   Brain
 } from "lucide-react";
 import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
-import AIAdmissionDocumentationAssistant from "../clinical/AIAdmissionDocumentationAssistant";
 import AIAdmissionNoteGenerator from "./AIAdmissionNoteGenerator";
 import AICarePlanSuggestionEngine from "./AICarePlanSuggestionEngine";
 import {

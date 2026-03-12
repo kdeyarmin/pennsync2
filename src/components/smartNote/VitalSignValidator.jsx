@@ -1,5 +1,4 @@
-import React from "react";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 // Patterns to extract vitals from free text
 const extractVitals = (text) => {

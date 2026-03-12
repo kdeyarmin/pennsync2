@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
   Pill, Upload, Loader2, AlertTriangle, CheckCircle, 
-  X, FileText, Download, Send, Eye, Edit
+  X, FileText, Download, Send, Eye
 } from 'lucide-react';
 import DrugInteractionAlert from './DrugInteractionAlert';
 

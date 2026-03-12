@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   GraduationCap,
   Target,
   Award,
   TrendingUp,
-  BookOpen,
   CheckCircle2,
   AlertCircle,
   Brain,
@@ -23,7 +20,6 @@ import {
 import InteractiveDocumentationScenarios from "../components/training/InteractiveDocumentationScenarios";
 import AIComplianceQuizGenerator from "../components/training/AIComplianceQuizGenerator";
 import NurseLearningDashboard from "../components/training/NurseLearningDashboard";
-import PersonalizedTrainingRecommender from "../components/training/PersonalizedTrainingRecommender";
 import DetailedDeficitReport from "../components/training/DetailedDeficitReport";
 import OnboardingTracker from "../components/training/OnboardingTracker";
 import TrainingModuleViewer from "../components/training/TrainingModuleViewer";

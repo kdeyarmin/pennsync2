@@ -1,8 +1,6 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,26 +22,20 @@ import {
   ResponsiveContainer,
   Legend,
   AreaChart,
-  Area,
-  ScatterChart,
-  Scatter,
-  ZAxis
+  Area
 } from "recharts";
 import {
   TrendingUp,
   TrendingDown,
   Users,
   AlertTriangle,
-  Award,
   Calendar,
-  Download,
-  Filter,
   BarChart3,
   Target,
   BookOpen,
   Zap
 } from "lucide-react";
-import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
+import { format, subMonths, parseISO, isWithinInterval } from "date-fns";
 
 export default function AdvancedComplianceAnalytics({ 
   audits = [], 

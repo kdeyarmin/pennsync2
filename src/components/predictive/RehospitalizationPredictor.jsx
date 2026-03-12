@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,7 @@ import {
   AlertTriangle,
   Activity,
   Loader2,
-  RefreshCw,
-  CheckCircle2,
-  ArrowRight,
-  Heart,
-  Stethoscope,
-  ClipboardList
+  RefreshCw
 } from "lucide-react";
 import {
   LineChart,
@@ -23,9 +18,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar
+  ResponsiveContainer
 } from "recharts";
 
 export default function RehospitalizationPredictor({ 

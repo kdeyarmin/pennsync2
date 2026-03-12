@@ -1,5 +1,4 @@
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
-import { format as dateFnsFormat } from 'date-fns';
 
 const EASTERN_TIMEZONE = 'America/New_York';
 

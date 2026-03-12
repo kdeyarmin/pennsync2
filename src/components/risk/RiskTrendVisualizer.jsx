@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -7,11 +6,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export default function RiskTrendVisualizer({ trends }) {
   if (!trends || Object.keys(trends).length === 0) {

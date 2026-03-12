@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,19 +15,13 @@ import {
   Brain,
   RefreshCw,
   ChevronRight,
-  Heart,
-  Thermometer,
-  Wind,
-  Droplets,
   TrendingUp,
   TrendingDown,
   Minus,
   User,
-  FileText,
   Stethoscope,
   Ambulance,
-  Calendar,
-  Phone
+  Calendar
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";

@@ -1,7 +1,6 @@
-import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp,
@@ -9,11 +8,9 @@ import {
   Users,
   FileText,
   ClipboardCheck,
-  DollarSign,
   AlertTriangle,
   CheckCircle2
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 
 export default function KPIDashboard({ dateRange }) {
   const { data: referrals = [] } = useQuery({

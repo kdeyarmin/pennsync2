@@ -1,4 +1,3 @@
-import React from "react";
 import PDFSearchInterface from "../components/documents/PDFSearchInterface";
 
 export default function PDFSearch() {

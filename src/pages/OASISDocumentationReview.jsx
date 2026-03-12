@@ -1,10 +1,9 @@
-import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import OASISDocumentationQualityScorer from "../components/oasis/OASISDocumentationQualityScorer";
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import AIDocumentationGenerator from "../components/oasis/AIDocumentationGenerator";

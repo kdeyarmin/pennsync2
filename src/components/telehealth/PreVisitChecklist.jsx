@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { CheckCircle, AlertCircle, Wifi, Mic, Video, Eye } from 'lucide-react';
 
 export default function PreVisitChecklist({ onReadyChange, isNurse = false }) {

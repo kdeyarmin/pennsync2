@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +11,7 @@ import {
   BookOpen,
   Loader2,
   CheckCircle2,
-  Sparkles,
-  Target,
-  Calendar
+  Sparkles
 } from "lucide-react";
 import { format } from "date-fns";
 

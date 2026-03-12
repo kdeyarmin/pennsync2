@@ -1,11 +1,10 @@
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle2, Clock, AlertCircle, Award, TrendingUp, Users, Calendar } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, Award, TrendingUp, Users } from "lucide-react";
 import { format } from "date-fns";
 
 export default function CompletionTracker({ moduleId, moduleTitle }) {

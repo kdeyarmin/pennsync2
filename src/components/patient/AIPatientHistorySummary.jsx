@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
 import {
   Brain,
   Loader2,
@@ -19,17 +18,13 @@ import {
   TrendingDown,
   Minus,
   Calendar,
-  Pill,
   FileText,
-  Heart,
-  Stethoscope,
   ChevronDown,
   ChevronUp,
   Plus,
-  History,
-  Shield
+  History
 } from "lucide-react";
-import { format, differenceInDays, isValid, parseISO } from "date-fns";
+import { format, differenceInDays, isValid } from "date-fns";
 import PatientRiskStratification from "./PatientRiskStratification";
 
 export default function AIPatientHistorySummary({

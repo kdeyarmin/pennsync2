@@ -1,4 +1,3 @@
-import React from 'react';
 import PhysicianDirectory from '../components/physician/PhysicianDirectory';
 
 export default function PhysicianDirectoryPage() {

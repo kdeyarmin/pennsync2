@@ -1,6 +1,5 @@
-import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { User, AlertTriangle, Heart, Pill } from "lucide-react";
+import { User, AlertTriangle, Heart } from "lucide-react";
 
 export default function PersistentPatientHeader({ patient, vitalSigns, carePlansCount }) {
   if (!patient) return null;

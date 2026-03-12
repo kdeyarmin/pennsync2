@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Users, Play, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import { Users, Play, CheckCircle2, ArrowRight } from "lucide-react";
 
 const SCENARIOS = [
   {

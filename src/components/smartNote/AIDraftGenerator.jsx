@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, FileText, Wand2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Wand2, CheckCircle2 } from "lucide-react";
 
 export default function AIDraftGenerator({ 
   visitType, 

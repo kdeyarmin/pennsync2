@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Wifi, WifiOff, Cloud, CloudOff, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Wifi, WifiOff, Cloud, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import offlineStorage from "./OfflineStorage";
 
 export default function OfflineIndicator() {

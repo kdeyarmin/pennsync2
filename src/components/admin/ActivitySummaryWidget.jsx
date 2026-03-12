@@ -1,4 +1,3 @@
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,13 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Users,
   Mail,
-  Edit,
-  Trash2,
-  Lock,
   FileText,
-  Activity,
-  AlertTriangle,
-  Clock
+  AlertTriangle
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 

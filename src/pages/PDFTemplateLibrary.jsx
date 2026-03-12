@@ -1,4 +1,3 @@
-import React from "react";
 import PDFTemplateManager from "../components/documents/PDFTemplateManager";
 
 export default function PDFTemplateLibrary() {

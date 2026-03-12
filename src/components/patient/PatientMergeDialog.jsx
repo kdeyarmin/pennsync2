@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,12 +16,10 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { 
   ArrowRight, 
-  User, 
   Phone, 
   Mail, 
   MapPin, 
-  Calendar, 
-  FileText,
+  Calendar,
   AlertTriangle,
   CheckCircle2,
   GitMerge

@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Mic, Save, Clock, User, Sparkles, FileText, CheckCircle2, Download, Mail, AlertCircle, MessageSquare, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Mic, Save, Clock, User, Sparkles, FileText, CheckCircle2, Download, Mail, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import AudioRecorder from "../components/visit/AudioRecorder";
 import VitalSignsForm from "../components/visit/VitalSignsForm";
 import TemplateGenerator from "../components/visit/TemplateGenerator";
-import AIStructuredNoteGenerator from "../components/visit/AIStructuredNoteGenerator";
-import RealTimeDocumentationAssistant from "../components/visit/RealTimeDocumentationAssistant";
 import VitalSignsComparison from "../components/visit/VitalSignsComparison";
 import ClinicalDecisionSupport from "../components/visit/ClinicalDecisionSupport";
 import CarePlanProgress from "../components/visit/CarePlanProgress";
@@ -71,7 +68,6 @@ import {
 
 import {
   trackAISuggestion,
-  trackDocumentationActivity,
   trackTemplateUsage,
   trackVoiceCommand,
   trackVisitCompletion

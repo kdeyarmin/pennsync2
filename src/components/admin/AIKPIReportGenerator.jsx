@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,16 +17,12 @@ import {
   TrendingUp, 
   TrendingDown,
   Activity,
-  Users,
-  FileText,
   AlertTriangle,
   CheckCircle2,
-  Download,
   Loader2,
   Brain,
   Lightbulb
 } from "lucide-react";
-import { formatEastern } from "../utils/timezone";
 
 export default function AIKPIReportGenerator() {
   const [timeframe, setTimeframe] = useState("30");

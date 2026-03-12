@@ -1,4 +1,3 @@
-import React from "react";
 import { CheckCircle2, Circle, ChevronRight } from "lucide-react";
 
 const steps = [

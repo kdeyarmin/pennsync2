@@ -11,10 +11,8 @@ import {
   Settings,
   Shield,
   Bell,
-  Mail,
   Globe,
   CheckCircle2,
-  AlertTriangle,
   Info
 } from "lucide-react";
 import { toast } from "sonner";

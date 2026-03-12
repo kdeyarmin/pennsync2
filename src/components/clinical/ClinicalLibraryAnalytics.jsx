@@ -1,10 +1,9 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, Users, Calendar } from "lucide-react";
-import { format, subDays, parseISO } from "date-fns";
 
 export default function ClinicalLibraryAnalytics() {
   const { data: templates = [] } = useQuery({

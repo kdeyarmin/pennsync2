@@ -1,9 +1,8 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Target, TrendingUp, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
+import { Target, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";

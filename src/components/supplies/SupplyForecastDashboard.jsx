@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  TrendingUp, TrendingDown, Calendar, AlertTriangle,
-  Loader2, Search, ChevronRight, RefreshCw, Package
+  TrendingUp, TrendingDown, AlertTriangle,
+  Loader2, Search, RefreshCw, Package
 } from "lucide-react";
 import { toast } from "sonner";
 

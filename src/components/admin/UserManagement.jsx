@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,20 +33,17 @@ import {
 import {
   UserPlus,
   Edit,
-  Trash2,
   Mail,
-  Phone,
   Shield,
   Search,
   CheckCircle2,
   XCircle,
-  Users,
   Loader2,
   Clock,
   Download
 } from "lucide-react";
 import { format } from "date-fns";
-import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
+import { logActivity } from "@/components/utils/activityLogger";
 
 export default function UserManagement({ users, currentUser }) {
   const queryClient = useQueryClient();
