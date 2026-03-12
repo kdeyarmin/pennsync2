@@ -208,7 +208,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Settings", icon: Settings, page: "UserSettings" },
       ] 
     },
-   
+
   ], [totalNotificationCount, isAdmin]);
 
   const handleLogout = useCallback(async () => {
@@ -221,7 +221,7 @@ export default function Layout({ children, currentPageName }) {
       });
     } catch {}
     base44.auth.logout();
-   
+
   }, [currentUser?.email]);
 
   const isActive = useCallback((pageName) => currentPageName === pageName, [currentPageName]);
@@ -295,7 +295,7 @@ export default function Layout({ children, currentPageName }) {
         <MobileBottomNav isActive={isActive} unreadMessageCount={unreadMessageCount} />
 
         <OfflineIndicator />
-        
+
         {/* Floating Sync Status */}
         <div className="fixed bottom-20 md:bottom-4 right-4 z-40 max-w-sm">
           <OfflineSyncService />
