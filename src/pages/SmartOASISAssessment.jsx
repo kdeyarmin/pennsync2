@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { evaluateOASIS, computeCareScope } from "@/components/oasis/oasisScoringEngine";
 import OASISSuggestionPanel from "@/components/oasis/OASISSuggestionPanel";
 import OASISComplianceWarnings, { getComplianceIssues } from "@/components/oasis/OASISComplianceWarnings";
+import OASISClinicalReasoningEngine, { getClinicalReasoningIssues } from "@/components/oasis/OASISClinicalReasoningEngine";
 import OASISQuestionGuidance from "@/components/oasis/OASISQuestionGuidance";
 import { OASIS_SECTIONS } from "@/components/oasis/oasisQuestions";
 import { INTERVENTIONS_LIBRARY } from "@/components/carePlan/InterventionLibrary";
@@ -150,8 +151,9 @@ function PatientPicker({ patients, selectedPatientId, onSelect }) {
 }
 
 // ─── Right Panel (tabbed: Recommendations | Compliance) ──────────────────────
-function RightPanel({ suggestions, complianceIssues, onAddToCarePlan, addedIds }) {
+function RightPanel({ suggestions, complianceIssues, reasoningIssues, onAddToCarePlan, addedIds }) {
   const criticalCount = complianceIssues.filter(r => r.severity === "critical").length;
+  const reasoningCount = reasoningIssues.length;
 
   return (
     <div className="w-80 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col overflow-hidden">
@@ -164,6 +166,12 @@ function RightPanel({ suggestions, complianceIssues, onAddToCarePlan, addedIds }
             <ShieldAlert className="w-3.5 h-3.5 mr-1.5" /> Compliance
             {criticalCount > 0 && (
               <span className="ml-1 bg-red-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{criticalCount}</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="reasoning" className="flex-1 rounded-none py-2.5 text-xs font-semibold data-[state=active]:border-b-2 data-[state=active]:border-amber-500 data-[state=active]:text-amber-700 relative">
+            <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Logic Check
+            {reasoningCount > 0 && (
+              <span className="ml-1 bg-amber-500 text-white text-[10px] rounded-full px-1.5 py-0.5">{reasoningCount}</span>
             )}
           </TabsTrigger>
         </TabsList>
@@ -220,6 +228,7 @@ export default function SmartOASISAssessment() {
   const suggestions = useMemo(() => evaluateOASIS(answers), [answers]);
   const careScope = useMemo(() => computeCareScope(answers), [answers]);
   const complianceIssues = useMemo(() => getComplianceIssues(answers), [answers]);
+  const reasoningIssues = useMemo(() => getClinicalReasoningIssues(answers), [answers]);
 
   const answeredTotal = Object.values(answers).filter(v => v !== "" && v !== undefined).length;
   const totalQuestions = OASIS_SECTIONS.reduce((sum, s) => sum + s.questions.length, 0);
@@ -310,6 +319,14 @@ export default function SmartOASISAssessment() {
         )}
 
         <div className="ml-auto flex items-center gap-3">
+          {reasoningIssues.length > 0 && (
+            <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-xs font-semibold text-amber-700">
+                {reasoningIssues.length} logic check{reasoningIssues.length > 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
           {/* Progress bar */}
           <div className="hidden sm:flex items-center gap-2">
             <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -343,6 +360,7 @@ export default function SmartOASISAssessment() {
         <RightPanel
           suggestions={suggestions}
           complianceIssues={complianceIssues}
+          reasoningIssues={reasoningIssues}
           onAddToCarePlan={handleAddToCarePlan}
           addedIds={addedToCarePlan}
         />
