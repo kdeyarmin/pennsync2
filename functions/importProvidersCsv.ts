@@ -103,7 +103,6 @@ Deno.serve(async (req) => {
     };
 
     const existingProviders = await base44.asServiceRole.entities.Physician.list('-updated_date', 5000);
-    const existingFaxContacts = await base44.asServiceRole.entities.FaxContact.list('-updated_date', 5000);
 
     const providerMap = new Map();
     for (const provider of existingProviders) {
@@ -111,18 +110,9 @@ Deno.serve(async (req) => {
       if (key) providerMap.set(key, provider);
     }
 
-    const faxContactMap = new Map();
-    for (const contact of existingFaxContacts) {
-      const key = `${cleanValue(contact.name).toLowerCase()}|${cleanPhone(contact.fax_number)}`;
-      if (key) faxContactMap.set(key, contact);
-    }
-
     const providerCreates = [];
     const providerUpdates = [];
-    const faxCreates = [];
-    const faxUpdates = [];
     const seenProviderKeys = new Set();
-    const seenContactKeys = new Set();
     let skippedRows = 0;
 
     for (const row of rows) {
@@ -171,35 +161,15 @@ Deno.serve(async (req) => {
         providerCreates.push(providerPayload);
       }
 
-      const contactPayload = {
-        name: `${full_name}${credentials ? `, ${credentials}` : ''}`,
-        organization: practice_name || getCell(row, 'company') || '',
-        fax_number,
-        notes: specialty ? `Imported provider • ${specialty}` : 'Imported provider'
-      };
-      const contactKey = `${contactPayload.name.toLowerCase()}|${fax_number}`;
-      if (!seenContactKeys.has(contactKey)) {
-        seenContactKeys.add(contactKey);
-        const existingContact = faxContactMap.get(contactKey);
-        if (existingContact) {
-          faxUpdates.push({ id: existingContact.id, data: contactPayload });
-        } else {
-          faxCreates.push(contactPayload);
-        }
-      }
     }
 
     await processInChunks(providerCreates, (item) => base44.asServiceRole.entities.Physician.create(item));
     await processInChunks(providerUpdates, (item) => base44.asServiceRole.entities.Physician.update(item.id, item.data));
-    await processInChunks(faxCreates, (item) => base44.asServiceRole.entities.FaxContact.create(item));
-    await processInChunks(faxUpdates, (item) => base44.asServiceRole.entities.FaxContact.update(item.id, item.data));
 
     return Response.json({
       success: true,
       created_providers: providerCreates.length,
       updated_providers: providerUpdates.length,
-      created_fax_contacts: faxCreates.length,
-      updated_fax_contacts: faxUpdates.length,
       skipped_rows: skippedRows
     });
   } catch (error) {

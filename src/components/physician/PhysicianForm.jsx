@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,7 +15,7 @@ export default function PhysicianForm({ physician, onClose }) {
   const [formData, setFormData] = useState({
     full_name: physician?.full_name || '',
     credentials: physician?.credentials || '',
-    specialty: physician?.specialty || 'primary_care',
+    specialty: physician?.specialty || '',
     subspecialty: physician?.subspecialty || '',
     practice_name: physician?.practice_name || '',
     office_address: physician?.office_address || '',
