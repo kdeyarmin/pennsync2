@@ -53,6 +53,7 @@ import AnnualEducationTranscript from '@/pages/AnnualEducationTranscript';
 import ManagerSkillGapDashboard from '@/pages/ManagerSkillGapDashboard';
 import ClinicalSkillsChecklist from '@/pages/ClinicalSkillsChecklist';
 import TrainingCoursePlayer from '@/pages/TrainingCoursePlayer';
+import EventReport from '@/pages/EventReport';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -127,6 +128,7 @@ const AuthenticatedApp = () => {
       <Route path="/ManagerSkillGapDashboard" element={<LayoutWrapper currentPageName="ManagerSkillGapDashboard"><ManagerSkillGapDashboard /></LayoutWrapper>} />
       <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
       <Route path="/TrainingCoursePlayer" element={<LayoutWrapper currentPageName="TrainingCoursePlayer"><TrainingCoursePlayer /></LayoutWrapper>} />
+      <Route path="/EventReport" element={<LayoutWrapper currentPageName="EventReport"><EventReport /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
