@@ -16,7 +16,7 @@ export default function DesktopSidebar({
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-3 border-b border-gray-200">
         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
-          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/52cac091f_20170AA9-BB95-4BA4-B4E7-793615312CC4.png" alt="Penn Sync Logo" className="w-8 h-8 rounded-lg flex-shrink-0" />
+          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ee80d98929370f9e8f2932/02eed9872_pennsynclogoupdated.png" alt="Penn Sync Logo" className="w-8 h-8 rounded-lg flex-shrink-0" />
           {!collapsed && <span className="font-bold text-lg text-gray-900">Penn Sync</span>}
         </Link>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleCollapse}>
