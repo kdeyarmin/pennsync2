@@ -1,6 +1,6 @@
 import React from "react";
-import AIComplianceInServicesHub from "@/components/training/AIComplianceInServicesHub";
+import AIComplianceInServicesPage from "@/pages/AIComplianceInServices";
 
 export default function AIComplianceInServices() {
-  return <AIComplianceInServicesHub />;
+  return <AIComplianceInServicesPage />;
 }

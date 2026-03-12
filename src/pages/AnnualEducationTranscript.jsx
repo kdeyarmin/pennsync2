@@ -1,6 +1,6 @@
 import React from "react";
-import AnnualTranscriptCenter from "@/components/learning/AnnualTranscriptCenter";
+import AnnualEducationTranscriptPage from "@/pages/AnnualEducationTranscript";
 
 export default function AnnualEducationTranscript() {
-  return <AnnualTranscriptCenter />;
+  return <AnnualEducationTranscriptPage />;
 }
