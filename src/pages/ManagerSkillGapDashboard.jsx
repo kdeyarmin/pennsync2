@@ -20,7 +20,6 @@ export default function ManagerSkillGapDashboard() {
   const teamMembers = useMemo(() => {
     if (!currentUser) return [];
     if (currentUser.account_type === "super_admin") return users.filter((user) => user.email && user.role !== "admin");
-
     return users.filter((user) => {
       if (!user.email || user.role === "admin") return false;
       if (currentUser.account_type === "agency_admin" && currentUser.agency_name) return user.agency_name === currentUser.agency_name;
@@ -36,14 +35,7 @@ export default function ManagerSkillGapDashboard() {
     const teamAssignments = assignments.filter((assignment) => teamEmails.has(assignment.assigned_to_user_id));
     const teamAttempts = attempts.filter((attempt) => teamEmails.has(attempt.user_id));
     const courseMap = Object.fromEntries(courses.map((course) => [course.id, course]));
-
-    const stats = {
-      teamSize: teamMembers.length,
-      attemptCount: teamAttempts.length,
-      averageScore: Math.round((teamAttempts.reduce((sum, attempt) => sum + (attempt.score || 0), 0) / Math.max(teamAttempts.length, 1)) || 0),
-      followUpCount: 0,
-    };
-
+    const stats = { teamSize: teamMembers.length, attemptCount: teamAttempts.length, averageScore: Math.round((teamAttempts.reduce((sum, attempt) => sum + (attempt.score || 0), 0) / Math.max(teamAttempts.length, 1)) || 0), followUpCount: 0 };
     const peopleMap = new Map();
     const areaMap = new Map();
     const missedMap = new Map();
@@ -52,17 +44,10 @@ export default function ManagerSkillGapDashboard() {
       const member = teamMembers.find((user) => user.email === attempt.user_id);
       const course = courseMap[attempt.course_id] || {};
       const category = course.category || "general";
-      const personEntry = peopleMap.get(attempt.user_id) || {
-        email: attempt.user_id,
-        name: member?.full_name || attempt.user_id,
-        roleLabel: member?.job_title || member?.credential_type || member?.department || "Employee",
-        scores: [],
-        failedAttempts: 0,
-      };
+      const personEntry = peopleMap.get(attempt.user_id) || { email: attempt.user_id, name: member?.full_name || attempt.user_id, roleLabel: member?.job_title || member?.credential_type || member?.department || "Employee", scores: [], failedAttempts: 0 };
       personEntry.scores.push(attempt.score || 0);
       if (attempt.pass_fail_result === "failed" || attempt.passed === false) personEntry.failedAttempts += 1;
       peopleMap.set(attempt.user_id, personEntry);
-
       const areaEntry = areaMap.get(category) || { name: category, scores: [], failed: 0, attemptCount: 0, courses: new Set(), topIssue: "" };
       areaEntry.scores.push(attempt.score || 0);
       areaEntry.attemptCount += 1;
@@ -81,33 +66,14 @@ export default function ManagerSkillGapDashboard() {
       areaMap.set(category, areaEntry);
     });
 
-    const people = [...peopleMap.values()].map((person) => ({
-      ...person,
-      averageScore: Math.round(person.scores.reduce((sum, score) => sum + score, 0) / Math.max(person.scores.length, 1)),
-    })).filter((person) => person.averageScore < 80 || person.failedAttempts > 0).sort((a, b) => a.averageScore - b.averageScore);
-
+    const people = [...peopleMap.values()].map((person) => ({ ...person, averageScore: Math.round(person.scores.reduce((sum, score) => sum + score, 0) / Math.max(person.scores.length, 1)) })).filter((person) => person.averageScore < 80 || person.failedAttempts > 0).sort((a, b) => a.averageScore - b.averageScore);
     stats.followUpCount = people.length;
-
-    const areas = [...areaMap.values()].map((area) => ({
-      name: area.name,
-      averageScore: Math.round(area.scores.reduce((sum, score) => sum + score, 0) / Math.max(area.scores.length, 1)),
-      failureRate: Math.round((area.failed / Math.max(area.attemptCount, 1)) * 100),
-      attemptCount: area.attemptCount,
-      courseCount: area.courses.size,
-      topIssue: area.topIssue,
-    })).sort((a, b) => a.averageScore - b.averageScore);
-
-    const missedTopics = [...missedMap.values()].map((topic) => ({
-      ...topic,
-      missRate: Math.min(100, Math.round((topic.missCount / Math.max(topic.seen, 1)) * 100)),
-    })).sort((a, b) => b.missCount - a.missCount).slice(0, 10);
-
+    const areas = [...areaMap.values()].map((area) => ({ name: area.name, averageScore: Math.round(area.scores.reduce((sum, score) => sum + score, 0) / Math.max(area.scores.length, 1)), failureRate: Math.round((area.failed / Math.max(area.attemptCount, 1)) * 100), attemptCount: area.attemptCount, courseCount: area.courses.size, topIssue: area.topIssue })).sort((a, b) => a.averageScore - b.averageScore);
+    const missedTopics = [...missedMap.values()].map((topic) => ({ ...topic, missRate: Math.min(100, Math.round((topic.missCount / Math.max(topic.seen, 1)) * 100)) })).sort((a, b) => b.missCount - a.missCount).slice(0, 10);
     return { stats, areas, people, missedTopics, assignmentCount: teamAssignments.length };
   }, [teamMembers, assignments, attempts, courses]);
 
-  if (currentUser && !isManager(currentUser)) {
-    return <div className="max-w-3xl mx-auto p-6 text-slate-600">This dashboard is available to managers, supervisors, and admins only.</div>;
-  }
+  if (currentUser && !isManager(currentUser)) return <div className="max-w-3xl mx-auto p-6 text-slate-600">This dashboard is available to managers, supervisors, and admins only.</div>;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -115,12 +81,9 @@ export default function ManagerSkillGapDashboard() {
         <h1 className="text-3xl font-bold mb-2">Team Skill Gap Dashboard</h1>
         <p className="text-indigo-100">Identify team-wide clinical and operational skill gaps based on competency test performance and failed attempts.</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link to={createPageUrl('AIComplianceInServices')} className="inline-flex items-center rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20">
-            <Sparkles className="w-4 h-4 mr-2" /> Open AI Compliance In-Services
-          </Link>
+          <Link to={createPageUrl('AIComplianceInServices')} className="inline-flex items-center rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20"><Sparkles className="w-4 h-4 mr-2" /> Open AI Compliance In-Services</Link>
         </div>
       </div>
-
       <ManagerSkillGapSummary stats={analysis.stats} />
       <ManagerSkillGapAreas areas={analysis.areas} />
       <ManagerSkillGapPeople people={analysis.people} missedTopics={analysis.missedTopics} />
