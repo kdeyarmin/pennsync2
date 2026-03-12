@@ -4,58 +4,61 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const today = new Date();
-    const todayIso = today.toISOString().slice(0, 10);
-    const dueAssignments = await base44.asServiceRole.entities.TrainingAssignment.filter({ renewal_due_date: todayIso }, '-updated_date', 100);
-    const activeAssignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 500);
+    const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-expiration_date', 500);
+    const assignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 1000);
     let renewalAssignmentsCreated = 0;
 
-    for (const assignment of dueAssignments) {
-      const existingRenewal = activeAssignments.find((item) =>
-        item.course_id === assignment.course_id &&
-        item.assigned_to_user_id === assignment.assigned_to_user_id &&
-        item.id !== assignment.id &&
-        ['assigned', 'in_progress', 'overdue', 'failed'].includes(item.status)
-      );
+    for (const certificate of certificates) {
+      if (!certificate.expiration_date || certificate.annual_cycle_year) continue;
+      const expiration = new Date(`${certificate.expiration_date}T00:00:00Z`);
+      const daysUntilExpiration = Math.ceil((expiration.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntilExpiration !== 30) continue;
 
+      const existingRenewal = assignments.find((assignment) =>
+        assignment.course_id === certificate.course_id &&
+        assignment.assigned_to_user_id === certificate.user_id &&
+        ['assigned', 'in_progress', 'overdue', 'failed', 'locked'].includes(assignment.status) &&
+        assignment.id !== certificate.assignment_id
+      );
       if (existingRenewal) continue;
 
-      const dueDate = new Date(today);
-      dueDate.setDate(dueDate.getDate() + 14);
-
       const newAssignment = await base44.asServiceRole.entities.TrainingAssignment.create({
-        course_id: assignment.course_id,
-        course_title: assignment.course_title,
-        assigned_to_user_id: assignment.assigned_to_user_id,
-        assigned_to_role: assignment.assigned_to_role,
-        assigned_to_department: assignment.assigned_to_department,
-        assigned_to_location: assignment.assigned_to_location,
-        assigned_to_business_line: assignment.assigned_to_business_line,
+        course_id: certificate.course_id,
+        course_title: certificate.course_title,
+        assigned_to_user_id: certificate.user_id,
         assigned_by: 'system-renewal',
         assigned_date: today.toISOString(),
-        due_date: dueDate.toISOString().slice(0, 10),
-        priority: assignment.priority || 'high',
+        due_date: certificate.expiration_date,
+        priority: 'high',
         status: 'assigned',
-        required: assignment.required !== false,
-        passing_score_required: assignment.passing_score_required || 80,
-        max_attempts: assignment.max_attempts,
-        waiting_period_hours: assignment.waiting_period_hours || 0,
-        regenerate_test_on_retake: assignment.regenerate_test_on_retake !== false,
-        renewal_frequency: assignment.renewal_frequency || 'renewal',
-        attestation_required: assignment.attestation_required || false,
-        remediation_message: assignment.remediation_message || 'Please complete the renewal in-service.',
+        required: true,
+        passing_score_required: 80,
+        waiting_period_hours: 0,
+        regenerate_test_on_retake: true,
+        retake_required: false,
+        renewal_frequency: 'annual',
+        renewal_due_date: certificate.expiration_date,
+        attestation_required: false,
+        remediation_message: 'Please complete this renewal training before your certificate expires.',
         progress_percentage: 0,
-        notes: 'Automatically reassigned for renewal.'
+        notes: 'Automatically assigned 30 days before certificate expiration.',
+        archived_status: false
       });
 
       await base44.asServiceRole.entities.Notification.create({
-        user_email: assignment.assigned_to_user_id,
+        user_email: certificate.user_id,
         title: 'Renewal training assigned',
-        message: `A renewal in-service for "${assignment.course_title}" has been assigned to you.`,
+        message: `Your renewal assignment for "${certificate.course_title}" has been assigned and is due by ${new Date(certificate.expiration_date).toLocaleDateString()}.`,
         type: 'training_due',
         priority: 'high',
         action_url: '/MyTraining',
         action_label: 'Open training',
-        metadata: { assignment_id: newAssignment.id, course_id: assignment.course_id }
+        metadata: {
+          assignment_id: newAssignment.id,
+          course_id: certificate.course_id,
+          certificate_id: certificate.id,
+          renewal_trigger: '30_days_before_expiration'
+        }
       });
 
       renewalAssignmentsCreated++;

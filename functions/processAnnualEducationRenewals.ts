@@ -4,47 +4,65 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const today = new Date();
-    const nextYear = today.getFullYear() + 1;
-    const assignments = await base44.asServiceRole.entities.TrainingAssignment.list('-updated_date', 1000);
+    const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-expiration_date', 500);
+    const assignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 1000);
     let created = 0;
 
-    for (const assignment of assignments) {
-      if (assignment.annual_cycle_year !== today.getFullYear()) continue;
-      if (!assignment.renewal_due_date || assignment.renewal_due_date > today.toISOString().slice(0, 10)) continue;
-      const existing = assignments.find((item) => item.course_id === assignment.course_id && item.assigned_to_user_id === assignment.assigned_to_user_id && item.annual_cycle_year === nextYear);
+    for (const certificate of certificates) {
+      if (!certificate.expiration_date || !certificate.annual_cycle_year) continue;
+      const expiration = new Date(`${certificate.expiration_date}T00:00:00Z`);
+      const daysUntilExpiration = Math.ceil((expiration.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntilExpiration !== 30) continue;
+
+      const nextCycleYear = (certificate.annual_cycle_year || today.getUTCFullYear()) + 1;
+      const existing = assignments.find((assignment) =>
+        assignment.course_id === certificate.course_id &&
+        assignment.assigned_to_user_id === certificate.user_id &&
+        assignment.annual_cycle_year === nextCycleYear
+      );
       if (existing) continue;
 
-      const dueDate = new Date(today);
-      dueDate.setDate(dueDate.getDate() + 14);
-
-      await base44.asServiceRole.entities.TrainingAssignment.create({
-        ...assignment,
+      const newAssignment = await base44.asServiceRole.entities.TrainingAssignment.create({
+        course_id: certificate.course_id,
+        course_title: certificate.course_title,
+        assigned_to_user_id: certificate.user_id,
+        assigned_by: 'system-annual-renewal',
         assigned_date: today.toISOString(),
-        due_date: dueDate.toISOString().slice(0, 10),
-        annual_cycle_year: nextYear,
+        due_date: certificate.expiration_date,
+        annual_cycle_year: nextCycleYear,
+        priority: 'high',
         status: 'assigned',
-        progress_percentage: 0,
-        latest_attempt_number: 0,
-        score_percentage: null,
-        pass_fail_result: 'pending',
-        completion_date: null,
-        certificate_id: null,
+        required: true,
+        passing_score_required: 80,
+        waiting_period_hours: 0,
+        regenerate_test_on_retake: true,
         retake_required: false,
-        started_date: null,
-        last_accessed: null,
-        renewal_due_date: dueDate.toISOString().slice(0, 10)
+        renewal_frequency: 'annual',
+        renewal_due_date: certificate.expiration_date,
+        attestation_required: false,
+        remediation_message: 'Please complete this annual renewal education before your certificate expires.',
+        progress_percentage: 0,
+        notes: 'Automatically assigned 30 days before annual certificate expiration.',
+        archived_status: false
       });
 
       await base44.asServiceRole.entities.Notification.create({
-        user_email: assignment.assigned_to_user_id,
-        title: 'Next annual education assigned',
-        message: `Your ${nextYear} annual mandatory education for "${assignment.course_title}" has been assigned.`,
+        user_email: certificate.user_id,
+        title: 'Annual renewal education assigned',
+        message: `Your ${nextCycleYear} renewal assignment for "${certificate.course_title}" has been assigned and is due by ${new Date(certificate.expiration_date).toLocaleDateString()}.`,
         type: 'training_due',
         priority: 'high',
         action_url: '/MyAnnualEducation',
         action_label: 'Open annual education',
-        metadata: { course_id: assignment.course_id, annual_cycle_year: nextYear }
+        metadata: {
+          assignment_id: newAssignment.id,
+          course_id: certificate.course_id,
+          certificate_id: certificate.id,
+          annual_cycle_year: nextCycleYear,
+          renewal_trigger: '30_days_before_expiration'
+        }
       });
+
       created++;
     }
 
