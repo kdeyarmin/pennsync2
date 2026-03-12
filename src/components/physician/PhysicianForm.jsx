@@ -81,133 +81,146 @@ export default function PhysicianForm({ physician, onClose }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2 sm:col-span-1">
-          <Label>Full Name *</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="col-span-1 sm:col-span-1">
+          <Label className="text-sm font-semibold">Full Name *</Label>
           <Input
             value={formData.full_name}
             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
             placeholder="Jane Smith"
+            className="h-11 mt-1"
           />
         </div>
-        <div className="col-span-2 sm:col-span-1">
-          <Label>Credentials</Label>
+        <div className="col-span-1 sm:col-span-1">
+          <Label className="text-sm font-semibold">Credentials</Label>
           <Input
             value={formData.credentials}
             onChange={(e) => setFormData({ ...formData, credentials: e.target.value })}
             placeholder="MD, DO, NP, PA"
+            className="h-11 mt-1"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Specialty</Label>
+          <Label className="text-sm font-semibold">Specialty</Label>
           <Input
             value={formData.specialty}
             onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-            placeholder="Family Medicine, General Surgery, Cardiology"
+            placeholder="Family Medicine, Cardiology"
+            className="h-11 mt-1"
           />
         </div>
         <div>
-          <Label>Subspecialty</Label>
+          <Label className="text-sm font-semibold">Subspecialty</Label>
           <Input
             value={formData.subspecialty}
             onChange={(e) => setFormData({ ...formData, subspecialty: e.target.value })}
             placeholder="e.g., Interventional Cardiology"
+            className="h-11 mt-1"
           />
         </div>
       </div>
 
       <div>
-        <Label>Practice / Organization</Label>
+        <Label className="text-sm font-semibold">Practice / Organization</Label>
         <Input
           value={formData.practice_name}
           onChange={(e) => setFormData({ ...formData, practice_name: e.target.value })}
           placeholder="City Medical Group"
+          className="h-11 mt-1"
         />
       </div>
 
       <div>
-        <Label>Office Address</Label>
+        <Label className="text-sm font-semibold">Office Address</Label>
         <Input
           value={formData.office_address}
           onChange={(e) => setFormData({ ...formData, office_address: e.target.value })}
           placeholder="123 Main Street"
+          className="h-11 mt-1"
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <Label>City</Label>
+          <Label className="text-sm font-semibold">City</Label>
           <Input
             value={formData.office_city}
             onChange={(e) => setFormData({ ...formData, office_city: e.target.value })}
+            className="h-11 mt-1"
           />
         </div>
         <div>
-          <Label>State</Label>
+          <Label className="text-sm font-semibold">State</Label>
           <Input
             value={formData.office_state}
             onChange={(e) => setFormData({ ...formData, office_state: e.target.value })}
             placeholder="CA"
+            className="h-11 mt-1"
           />
         </div>
         <div>
-          <Label>ZIP</Label>
+          <Label className="text-sm font-semibold">ZIP</Label>
           <Input
             value={formData.office_zip}
             onChange={(e) => setFormData({ ...formData, office_zip: e.target.value })}
+            className="h-11 mt-1"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Phone Number</Label>
+          <Label className="text-sm font-semibold">Phone Number</Label>
           <Input
             type="tel"
             value={formData.phone_number}
             onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
             placeholder="+1234567890"
+            className="h-11 mt-1"
           />
         </div>
         <div>
-          <Label>Fax Number</Label>
+          <Label className="text-sm font-semibold">Fax Number</Label>
           <Input
             type="tel"
             value={formData.fax_number}
             onChange={(e) => setFormData({ ...formData, fax_number: e.target.value })}
             placeholder="+1234567890"
+            className="h-11 mt-1"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Email</Label>
+          <Label className="text-sm font-semibold">Email</Label>
           <Input
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="provider@example.com"
+            className="h-11 mt-1"
           />
         </div>
         <div>
-          <Label>NPI Number</Label>
+          <Label className="text-sm font-semibold">NPI Number</Label>
           <Input
             value={formData.npi_number}
             onChange={(e) => setFormData({ ...formData, npi_number: e.target.value })}
             placeholder="1234567890"
+            className="h-11 mt-1"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Preferred Contact Method</Label>
+          <Label className="text-sm font-semibold">Preferred Contact Method</Label>
           <Select value={formData.preferred_contact_method} onValueChange={(value) => setFormData({ ...formData, preferred_contact_method: value })}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 mt-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -219,46 +232,48 @@ export default function PhysicianForm({ physician, onClose }) {
           </Select>
         </div>
         <div>
-          <Label>Office Hours</Label>
+          <Label className="text-sm font-semibold">Office Hours</Label>
           <Input
             value={formData.office_hours}
             onChange={(e) => setFormData({ ...formData, office_hours: e.target.value })}
             placeholder="Mon-Fri 9AM-5PM"
+            className="h-11 mt-1"
           />
         </div>
       </div>
 
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <label className="flex items-center gap-2 min-h-[44px]">
           <input
             type="checkbox"
             checked={formData.accepts_home_health}
             onChange={(e) => setFormData({ ...formData, accepts_home_health: e.target.checked })}
-            className="w-4 h-4"
+            className="w-5 h-5"
           />
-          <span className="text-sm">Accepts Home Health</span>
+          <span className="text-sm font-medium">Accepts Home Health</span>
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2 min-h-[44px]">
           <input
             type="checkbox"
             checked={formData.accepts_hospice}
             onChange={(e) => setFormData({ ...formData, accepts_hospice: e.target.checked })}
-            className="w-4 h-4"
+            className="w-5 h-5"
           />
-          <span className="text-sm">Accepts Hospice</span>
+          <span className="text-sm font-medium">Accepts Hospice</span>
         </label>
       </div>
 
       <div>
-        <Label>Tags</Label>
-        <div className="flex gap-2 mb-2">
+        <Label className="text-sm font-semibold">Tags</Label>
+        <div className="flex gap-2 mb-2 mt-1">
           <Input
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
             placeholder="Add tag (e.g., preferred, wound specialist)"
+            className="h-11"
           />
-          <Button type="button" onClick={addTag} variant="outline">Add</Button>
+          <Button type="button" onClick={addTag} variant="outline" className="min-h-[44px]">Add</Button>
         </div>
         <div className="flex flex-wrap gap-1">
           {formData.tags.map((tag, idx) => (
@@ -271,20 +286,21 @@ export default function PhysicianForm({ physician, onClose }) {
       </div>
 
       <div>
-        <Label>Notes</Label>
+        <Label className="text-sm font-semibold">Notes</Label>
         <Textarea
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes about this provider..."
           rows={3}
+          className="mt-1"
         />
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={onClose} className="min-h-[44px]">
           Cancel
         </Button>
-        <Button type="submit" disabled={saveMutation.isPending}>
+        <Button type="submit" disabled={saveMutation.isPending} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
           {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {physician ? 'Update' : 'Add'} Provider
         </Button>

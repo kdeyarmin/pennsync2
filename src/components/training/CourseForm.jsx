@@ -40,30 +40,32 @@ export default function CourseForm({ course, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label>Course Title *</Label>
+        <Label className="text-sm font-semibold">Course Title *</Label>
         <Input
           required
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="Enter course title"
+          className="h-11 mt-1"
         />
       </div>
 
       <div>
-        <Label>Description</Label>
+        <Label className="text-sm font-semibold">Description</Label>
         <Textarea
           value={formData.description || ''}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Course description"
           rows={3}
+          className="mt-1"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Category *</Label>
+          <Label className="text-sm font-semibold">Category *</Label>
           <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 mt-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -78,9 +80,9 @@ export default function CourseForm({ course, onSuccess }) {
         </div>
 
         <div>
-          <Label>Status *</Label>
+          <Label className="text-sm font-semibold">Status *</Label>
           <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 mt-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -93,19 +95,20 @@ export default function CourseForm({ course, onSuccess }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Estimated Minutes *</Label>
+          <Label className="text-sm font-semibold">Estimated Minutes *</Label>
           <Input
             type="number"
             required
             value={formData.estimated_minutes}
             onChange={(e) => setFormData({ ...formData, estimated_minutes: parseInt(e.target.value) })}
+            className="h-11 mt-1"
           />
         </div>
 
         <div>
-          <Label>Passing Score % *</Label>
+          <Label className="text-sm font-semibold">Passing Score % *</Label>
           <Input
             type="number"
             required
@@ -113,32 +116,35 @@ export default function CourseForm({ course, onSuccess }) {
             max="100"
             value={formData.passing_score}
             onChange={(e) => setFormData({ ...formData, passing_score: parseInt(e.target.value) })}
+            className="h-11 mt-1"
           />
         </div>
       </div>
 
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <label className="flex items-center gap-2 min-h-[44px]">
           <input
             type="checkbox"
             checked={formData.is_mandatory}
             onChange={(e) => setFormData({ ...formData, is_mandatory: e.target.checked })}
+            className="w-5 h-5"
           />
-          <span className="text-sm">Mandatory Course</span>
+          <span className="text-sm font-medium">Mandatory Course</span>
         </label>
 
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2 min-h-[44px]">
           <input
             type="checkbox"
             checked={formData.enable_certificate}
             onChange={(e) => setFormData({ ...formData, enable_certificate: e.target.checked })}
+            className="w-5 h-5"
           />
-          <span className="text-sm">Issue Certificate</span>
+          <span className="text-sm font-medium">Issue Certificate</span>
         </label>
       </div>
 
       <div className="flex gap-2 pt-4">
-        <Button type="submit" disabled={createMutation.isLoading}>
+        <Button type="submit" disabled={createMutation.isLoading} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
           {createMutation.isLoading ? 'Saving...' : course ? 'Update Course' : 'Create Course'}
         </Button>
       </div>

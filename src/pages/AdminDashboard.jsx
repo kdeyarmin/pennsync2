@@ -29,13 +29,14 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="overview">Dashboard Overview</TabsTrigger>
-          <TabsTrigger value="activity" className="flex items-center gap-2">
+        <TabsList className="mb-4 sm:mb-6 w-full grid grid-cols-2 gap-1 h-auto p-1">
+          <TabsTrigger value="overview" className="min-h-[44px]">Dashboard Overview</TabsTrigger>
+          <TabsTrigger value="activity" className="flex items-center gap-2 min-h-[44px]">
             <Activity className="h-4 w-4" />
-            User Activity
+            <span className="hidden sm:inline">User Activity</span>
+            <span className="sm:hidden">Activity</span>
           </TabsTrigger>
         </TabsList>
 

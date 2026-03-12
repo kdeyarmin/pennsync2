@@ -22,19 +22,21 @@ export default function TrainingManagement() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Training Management</h1>
-        <p className="text-gray-600">Manage courses, create learning plans, and assign training</p>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Training Management</h1>
+        <p className="text-sm sm:text-base text-gray-600">Manage courses, create learning plans, and assign training</p>
       </div>
 
-      <Tabs defaultValue="courses" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="learning-plans">Learning Plans</TabsTrigger>
-          <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-          <TabsTrigger value="ai-inservices">AI Compliance In-Services</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="courses" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="courses" className="min-h-[44px] px-4 text-sm whitespace-nowrap">Courses</TabsTrigger>
+            <TabsTrigger value="learning-plans" className="min-h-[44px] px-4 text-sm whitespace-nowrap">Learning Plans</TabsTrigger>
+            <TabsTrigger value="enrollments" className="min-h-[44px] px-4 text-sm whitespace-nowrap">Enrollments</TabsTrigger>
+            <TabsTrigger value="ai-inservices" className="min-h-[44px] px-4 text-sm whitespace-nowrap">AI In-Services</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="courses">
           <CourseManager />
@@ -76,17 +78,17 @@ function EnrollmentManager() {
   });
 
   return (
-    <div className="grid grid-cols-3 gap-6">
-      <div>
-        <h3 className="font-semibold mb-3">Learning Plans</h3>
-        <div className="space-y-2">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="lg:col-span-1">
+        <h3 className="font-semibold mb-3 text-base sm:text-lg">Learning Plans</h3>
+        <div className="space-y-2 max-h-[500px] overflow-y-auto">
           {plans.map((plan) => (
             <Card
               key={plan.id}
-              className={`cursor-pointer ${selectedPlan?.id === plan.id ? 'border-indigo-600 bg-indigo-50' : ''}`}
+              className={`cursor-pointer transition-all hover:shadow-md ${selectedPlan?.id === plan.id ? 'border-indigo-600 bg-indigo-50 border-2' : ''}`}
               onClick={() => setSelectedPlan(plan)}
             >
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <p className="font-medium text-sm">{plan.name}</p>
                 <p className="text-xs text-gray-600 mt-1">{plan.year}</p>
               </CardContent>
@@ -95,43 +97,43 @@ function EnrollmentManager() {
         </div>
       </div>
 
-      <div className="col-span-2">
+      <div className="lg:col-span-2">
         {selectedPlan ? (
           <Card>
             <CardHeader>
-              <CardTitle>{selectedPlan.name} - Enrollments</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">{selectedPlan.name} - Enrollments</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {enrollments.length > 0 ? (
                 <div className="space-y-3">
                   {enrollments.map((enrollment) => (
-                    <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{enrollment.user_name}</p>
-                        <p className="text-sm text-gray-600">{enrollment.user_id}</p>
+                    <div key={enrollment.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 border rounded-lg bg-gray-50">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm sm:text-base">{enrollment.user_name}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">{enrollment.user_id}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {enrollment.courses_completed}/{enrollment.courses_total} courses
+                          {enrollment.courses_completed}/{enrollment.courses_total} courses completed
                         </p>
                       </div>
-                      <div className="text-right">
-                        <Badge className={enrollment.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
+                      <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                        <Badge className={`text-xs ${enrollment.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                           {enrollment.status}
                         </Badge>
-                        <p className="text-sm text-gray-600 mt-1">{enrollment.progress_percentage}%</p>
+                        <p className="text-sm font-semibold text-gray-700">{enrollment.progress_percentage}%</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600">No enrollments yet</p>
+                <p className="text-center text-gray-600 py-8">No enrollments yet</p>
               )}
             </CardContent>
           </Card>
         ) : (
           <Card>
             <CardContent className="py-12 text-center">
-              <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-600">Select a learning plan to view enrollments</p>
+              <Users className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-gray-300" />
+              <p className="text-sm sm:text-base text-gray-600">Select a learning plan to view enrollments</p>
             </CardContent>
           </Card>
         )}

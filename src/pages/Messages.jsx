@@ -252,7 +252,7 @@ export default function Messages() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Thread List */}
-        <div className="lg:col-span-1 space-y-2 max-h-[600px] overflow-y-auto">
+        <div className="lg:col-span-1 space-y-2 sm:space-y-3 max-h-[600px] overflow-y-auto pr-1">
           {isLoading ? (
             <div className="text-center py-8 text-gray-500">Loading messages...</div>
           ) : filteredThreads.length === 0 ? (
@@ -266,12 +266,12 @@ export default function Messages() {
             filteredThreads.map(thread => (
               <Card
                 key={thread.threadId}
-                className={`cursor-pointer hover:shadow-md transition-all ${
-                  selectedThread?.threadId === thread.threadId ? 'border-blue-500 border-2' : ''
+                className={`cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all ${
+                  selectedThread?.threadId === thread.threadId ? 'border-indigo-500 border-2' : ''
                 } ${thread.unreadCount > 0 ? 'bg-blue-50' : ''}`}
                 onClick={() => handleThreadClick(thread)}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       {thread.unreadCount > 0 ? (
@@ -308,8 +308,8 @@ export default function Messages() {
         {/* Message Detail */}
         <div className="lg:col-span-2">
           {selectedThread ? (
-            <Card>
-              <CardHeader>
+            <Card className="shadow-lg">
+              <CardHeader className="border-b">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <CardTitle className="flex flex-wrap items-center gap-2 text-base sm:text-lg">
                   <span className="break-words">{selectedThread.subject}</span>
@@ -317,13 +317,13 @@ export default function Messages() {
                     {selectedThread.priority}
                   </Badge>
                 </CardTitle>
-                <Button size="sm" onClick={handleReply} disabled={!replyText.trim() || sendMessageMutation.isPending} className="min-h-[40px] w-full sm:w-auto">
+                <Button size="sm" onClick={handleReply} disabled={!replyText.trim() || sendMessageMutation.isPending} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px] w-full sm:w-auto">
                   <Reply className="w-4 h-4 mr-1" />
                   Send Reply
                 </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
                 {selectedThread.messages.map((msg, idx) => (
                   <Card key={msg.id} className={msg.sender_email === currentUser?.email ? 'bg-blue-50' : 'bg-gray-50'}>
                     <CardContent className="p-3 sm:p-4">
@@ -400,16 +400,16 @@ export default function Messages() {
       <Dialog open={showNewMessage} onOpenChange={setShowNewMessage}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>New Message</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">New Message</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Recipients *</label>
+              <label className="text-sm font-semibold mb-2 block">Recipients *</label>
               <Select
                 value={newMessage.recipients[0] || ""}
                 onValueChange={(value) => setNewMessage({...newMessage, recipients: [value]})}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select recipient" />
                 </SelectTrigger>
                 <SelectContent>
@@ -423,12 +423,12 @@ export default function Messages() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Related Patient (Optional)</label>
+              <label className="text-sm font-semibold mb-2 block">Related Patient (Optional)</label>
               <Select
                 value={newMessage.patient_id || ""}
                 onValueChange={(value) => setNewMessage({...newMessage, patient_id: value || null})}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
@@ -443,12 +443,12 @@ export default function Messages() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Priority</label>
+              <label className="text-sm font-semibold mb-2 block">Priority</label>
               <Select
                 value={newMessage.priority}
                 onValueChange={(value) => setNewMessage({...newMessage, priority: value})}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -460,16 +460,17 @@ export default function Messages() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Subject *</label>
+              <label className="text-sm font-semibold mb-2 block">Subject *</label>
               <Input
                 value={newMessage.subject}
                 onChange={(e) => setNewMessage({...newMessage, subject: e.target.value})}
                 placeholder="Enter subject"
+                className="h-11"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Message *</label>
+              <label className="text-sm font-semibold mb-2 block">Message *</label>
               <Textarea
                 value={newMessage.message_text}
                 onChange={(e) => setNewMessage({...newMessage, message_text: e.target.value})}

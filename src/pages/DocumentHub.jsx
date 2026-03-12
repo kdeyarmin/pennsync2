@@ -37,7 +37,7 @@ export default function DocumentHub() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Document Hub</h1>
@@ -50,7 +50,7 @@ export default function DocumentHub() {
             <>
               <Button 
                 onClick={() => setShowPackageCreator(true)}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Send for Signature
@@ -59,7 +59,7 @@ export default function DocumentHub() {
                 <Button 
                   onClick={() => setShowTemplateBuilder(true)}
                   variant="outline"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto min-h-[44px]"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Template
@@ -71,20 +71,20 @@ export default function DocumentHub() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="signatures" className="relative">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 gap-1 h-auto p-1">
+          <TabsTrigger value="signatures" className="relative min-h-[44px] text-sm">
             Signatures
             {stats.pending > 0 && (
-              <span className="absolute top-0 right-0 bg-yellow-500 text-white text-xs rounded-full px-2 py-0.5">
+              <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
                 {stats.pending}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="documents">
+          <TabsTrigger value="documents" className="min-h-[44px] text-sm">
             Documents
           </TabsTrigger>
           {currentUser?.role === 'admin' && (
-            <TabsTrigger value="templates">
+            <TabsTrigger value="templates" className="min-h-[44px] text-sm col-span-2 sm:col-span-1">
               Templates
             </TabsTrigger>
           )}
