@@ -9,6 +9,16 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import PersonnelFile from './pages/PersonnelFile';
+import MyTraining from './pages/MyTraining';
+import AIComplianceInServices from './pages/AIComplianceInServices';
+import MyAnnualEducation from './pages/MyAnnualEducation';
+import AnnualMandatoryEducation from './pages/AnnualMandatoryEducation';
+import EmployeeTranscript from './pages/EmployeeTranscript';
+import AnnualEducationTranscript from './pages/AnnualEducationTranscript';
+import ManagerSkillGapDashboard from './pages/ManagerSkillGapDashboard';
+import ClinicalSkillsChecklist from './pages/ClinicalSkillsChecklist';
+import TrainingCoursePlayer from './pages/TrainingCoursePlayer';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -60,6 +70,16 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/PersonnelFile" element={<LayoutWrapper currentPageName="PersonnelFile"><PersonnelFile /></LayoutWrapper>} />
+      <Route path="/MyTraining" element={<LayoutWrapper currentPageName="MyTraining"><MyTraining /></LayoutWrapper>} />
+      <Route path="/AIComplianceInServices" element={<LayoutWrapper currentPageName="AIComplianceInServices"><AIComplianceInServices /></LayoutWrapper>} />
+      <Route path="/MyAnnualEducation" element={<LayoutWrapper currentPageName="MyAnnualEducation"><MyAnnualEducation /></LayoutWrapper>} />
+      <Route path="/AnnualMandatoryEducation" element={<LayoutWrapper currentPageName="AnnualMandatoryEducation"><AnnualMandatoryEducation /></LayoutWrapper>} />
+      <Route path="/EmployeeTranscript" element={<LayoutWrapper currentPageName="EmployeeTranscript"><EmployeeTranscript /></LayoutWrapper>} />
+      <Route path="/AnnualEducationTranscript" element={<LayoutWrapper currentPageName="AnnualEducationTranscript"><AnnualEducationTranscript /></LayoutWrapper>} />
+      <Route path="/ManagerSkillGapDashboard" element={<LayoutWrapper currentPageName="ManagerSkillGapDashboard"><ManagerSkillGapDashboard /></LayoutWrapper>} />
+      <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
+      <Route path="/TrainingCoursePlayer" element={<LayoutWrapper currentPageName="TrainingCoursePlayer"><TrainingCoursePlayer /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
