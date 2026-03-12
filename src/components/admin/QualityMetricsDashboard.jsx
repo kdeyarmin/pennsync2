@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,25 +23,20 @@ import {
 } from "@/components/ui/table";
 import {
   TrendingUp,
-  TrendingDown,
   Activity,
   Users,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Target,
   BarChart3,
-  FileText,
   Heart,
   Ambulance,
-  Shield,
-  Award,
   Calendar,
   Download,
   Sparkles, // Added for AI Insights
   RefreshCw // Added for AI Insights loading
 } from "lucide-react";
-import { format, subDays, subMonths, differenceInMinutes, startOfMonth, endOfMonth } from "date-fns";
+import { format, subDays, differenceInMinutes } from "date-fns";
 
 export default function QualityMetricsDashboard() {
   const [timeRange, setTimeRange] = useState("30");

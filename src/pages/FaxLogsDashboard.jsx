@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileText, AlertCircle, CheckCircle2, Clock, 
-  RefreshCw, TrendingUp, Brain, Zap, Filter,
-  ChevronRight, Download, Search
+  RefreshCw, TrendingUp, Brain, Zap, Download, Search
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

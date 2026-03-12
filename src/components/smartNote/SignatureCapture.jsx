@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Check } from "lucide-react";
+import { Trash2, Check } from "lucide-react";
 
 export default function SignatureCapture({ onSignatureCapture, disabled = false }) {
   const canvasRef = useRef(null);

@@ -15,10 +15,7 @@ import {
   WifiOff,
   Wifi,
   Save,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Upload
+  Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { OfflineStorageManager } from './OfflineSyncService';

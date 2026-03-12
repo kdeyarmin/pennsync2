@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Brain, Loader2, Lightbulb, AlertCircle } from "lucide-react";
+import { Brain, Loader2, Lightbulb } from "lucide-react";
 
 export default function AIErrorInterpreter({ errors, onApplySuggestions }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);

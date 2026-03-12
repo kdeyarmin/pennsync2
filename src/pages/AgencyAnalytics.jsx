@@ -1,19 +1,16 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  BarChart3,
   Users,
   TrendingUp,
   Clock,
   FileText,
   Shield,
   DollarSign,
-  Activity,
-  Calendar,
   Download,
   AlertCircle,
   CheckCircle2

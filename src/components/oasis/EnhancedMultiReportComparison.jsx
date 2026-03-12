@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,19 +8,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DollarSign,
   TrendingUp,
-  TrendingDown,
-  ArrowRight,
   AlertTriangle,
   CheckCircle2,
   Info,
-  FileText,
   GitCompare,
   Loader2,
   Activity,
-  Stethoscope,
   BarChart3,
   Minus,
-  X,
   Star,
   Trophy
 } from "lucide-react";
@@ -28,7 +23,7 @@ import { calculatePDGM } from "@/functions/calculatePDGM";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, 
-  PolarRadiusAxis, Radar, LineChart, Line, Cell
+  PolarRadiusAxis, Radar, Cell
 } from 'recharts';
 
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];

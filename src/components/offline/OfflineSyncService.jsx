@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wifi, WifiOff, Upload, CheckCircle2, AlertCircle, Clock, RefreshCw } from 'lucide-react';
+import { Wifi, WifiOff, Upload, AlertCircle, Clock } from 'lucide-react';
 
 // Local storage keys
 const STORAGE_KEYS = {

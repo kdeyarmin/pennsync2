@@ -18,18 +18,12 @@ import {
   AlertTriangle,
   Bell,
   Activity,
-  TrendingDown,
-  TrendingUp,
   Heart,
   Wind,
   Droplet,
-  Thermometer,
-  Phone,
   CheckCircle2,
   Clock,
   Target,
-  Users,
-  Pill,
   AlertOctagon,
   BellRing,
   X,
@@ -37,7 +31,7 @@ import {
   Ambulance, // Added Ambulance icon
   Info // Added Info icon
 } from "lucide-react";
-import { differenceInDays, differenceInHours, parseISO, format } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 
 export default function EarlyWarningSystem({ patient, currentVisit, allVisits }) {
   const [alerts, setAlerts] = useState([]);

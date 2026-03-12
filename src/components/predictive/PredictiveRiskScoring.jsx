@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
 import {
   AlertTriangle,
   Activity,
@@ -13,15 +11,12 @@ import {
   TrendingDown,
   RefreshCw,
   ChevronRight,
-  Heart,
   Brain,
   Shield,
-  Clock,
   User,
-  FileText,
   Zap
 } from "lucide-react";
-import { format, differenceInDays, subDays } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 

@@ -1,4 +1,3 @@
-import React from "react";
 import { Home, Heart, Users } from "lucide-react";
 
 const CONFIG = {

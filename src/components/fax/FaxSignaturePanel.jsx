@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PenLine, Save, RotateCcw, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { PenLine, Save, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import SignaturePad from "./SignaturePad";
 import { toast } from "sonner";
 

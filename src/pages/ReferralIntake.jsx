@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -33,19 +32,12 @@ import {
 import {
   Upload,
   FileText,
-  Clock,
   CheckCircle2,
   AlertCircle,
   XCircle,
   Eye,
-  Edit,
-  Archive,
   User,
-  Calendar,
-  Filter,
-  Download,
   RefreshCw,
-  ChevronRight,
   Sparkles,
   ClipboardCheck,
   Target,
@@ -53,14 +45,13 @@ import {
   UserCheck
 } from "lucide-react";
 import { format } from "date-fns";
-import { formatEastern, todayEastern } from "@/components/utils/timezone";
+import { todayEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReferralPDFSummarizer from "../components/referral/ReferralPDFSummarizer";
 import PatientMatchReview from "../components/referral/PatientMatchReview";
 import AIReferralCarePlanGenerator from "../components/referral/AIReferralCarePlanGenerator";
 import PatientVerificationStep from "../components/referral/PatientVerificationStep";
-import MultiReferralDetector from "../components/referral/MultiReferralDetector";
 
 export default function ReferralIntake() {
   const queryClient = useQueryClient();
@@ -1550,7 +1541,6 @@ Actions available:
                 </label>
               </div>
             </div>
-            )}
           </div>
           
           <DialogFooter className="flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">

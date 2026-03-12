@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Download, Plus, Trash2, BarChart3, FileText, Calendar } from "lucide-react";
+import { Download, BarChart3, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
 export default function CustomReportBuilder({ patients, visits, incidents, users }) {

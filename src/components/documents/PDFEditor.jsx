@@ -1,18 +1,14 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as pdfjsLib from "pdfjs-dist";
 import { 
   Type, 
   Highlighter, 
   Pencil, 
-  Eraser, 
-  Save, 
-  Download,
+  Save,
   ChevronLeft,
   ChevronRight,
   Loader2,

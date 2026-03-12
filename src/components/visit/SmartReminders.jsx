@@ -1,9 +1,8 @@
-import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Calendar, AlertTriangle, FileText } from "lucide-react";
-import { differenceInDays, addDays, parseISO } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 
 export default function SmartReminders({ patient, visit, allVisits }) {
   const reminders = [];

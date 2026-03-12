@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +23,6 @@ import {
 import {
   Ambulance,
   AlertTriangle,
-  TrendingUp,
-  TrendingDown,
   Activity,
   Heart,
   Shield,
@@ -37,7 +35,7 @@ import {
   Lightbulb,
   Users
 } from "lucide-react";
-import { differenceInDays, parseISO, subDays, isValid } from "date-fns";
+import { differenceInDays, parseISO, isValid } from "date-fns";
 
 export default function HospitalReadmissionRisk({ patient }) {
   const [showInterventions, setShowInterventions] = useState(false);

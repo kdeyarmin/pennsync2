@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -24,38 +23,21 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  Area,
-  AreaChart
+  ResponsiveContainer
 } from "recharts";
 import {
-  TrendingUp,
-  TrendingDown,
   Clock,
-  CheckCircle2,
-  Zap,
-  Users,
-  FileText,
   Download,
-  Calendar,
-  Activity,
-  BarChart3,
   Target,
-  AlertCircle,
 } from "lucide-react";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { format, subDays } from "date-fns";
 
 import PerformanceMetricsCard from "../components/analytics/PerformanceMetricsCard";
-import ComplianceTrendsChart from "../components/analytics/ComplianceTrendsChart";
-import AIUtilizationChart from "../components/analytics/AIUtilizationChart";
 import UserPerformanceTable from "../components/analytics/UserPerformanceTable";
 
 export default function AnalyticsDashboard() {

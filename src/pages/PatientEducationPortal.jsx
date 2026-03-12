@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, CheckCircle2, Clock, AlertCircle, Loader2,
-  Download, Send, MessageSquare, Eye, EyeOff
+  BookOpen, CheckCircle2, Clock, Loader2, Send, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
 

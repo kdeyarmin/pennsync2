@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Folder, FolderOpen, ChevronRight, ChevronDown, Plus, Edit2, Trash2, FolderPlus, Palette } from "lucide-react";
+import { Folder, FolderOpen, ChevronRight, ChevronDown, Edit2, Trash2, FolderPlus, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function FolderTreeView({ 

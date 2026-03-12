@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,6 @@ import {
   CheckCircle2,
   DollarSign,
   Plus,
-  ChevronDown,
-  ChevronUp,
   Target
 } from "lucide-react";
 

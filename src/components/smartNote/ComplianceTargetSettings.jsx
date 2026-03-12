@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Target, Settings, CheckCircle2, AlertCircle } from "lucide-react";
+import { Target, Settings, AlertCircle } from "lucide-react";
 
 const PRESET_TARGETS = {
   standard: { value: 85, label: "Standard (85%)", description: "Medicare baseline compliance" },

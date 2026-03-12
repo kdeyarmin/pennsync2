@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Target,
@@ -10,7 +9,6 @@ import {
   ChevronUp,
   CheckCircle2,
   Edit2,
-  Save,
   TrendingUp,
   TrendingDown,
   Minus

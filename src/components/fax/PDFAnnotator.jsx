@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
   Pen, Type, Calendar, Eraser, Undo2, Trash2, CheckCircle,
-  ChevronLeft, ChevronRight, Loader2, Download, X, ZoomIn, ZoomOut
+  ChevronLeft, ChevronRight, Loader2, X, ZoomIn, ZoomOut
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -13,7 +13,7 @@ import * as pdfjsLib from "pdfjs-dist";
 
 // Use a CDN worker to avoid bundler issues
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const TOOLS = {
   PEN: "pen",
@@ -244,7 +244,7 @@ export default function PDFAnnotator({ pdfUrl, onAnnotatedReady, onClose }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const pdf = new jsPDF({ orientation: "portrait", unit: "px", hotfixes: ["px_scaling"] });
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px" });
       let firstPage = true;
 
       for (let p = 1; p <= numPages; p++) {

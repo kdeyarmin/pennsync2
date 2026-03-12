@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,11 +13,10 @@ import {
   Target,
   Calendar,
   RefreshCw,
-  CheckCircle2,
   AlertTriangle,
   Sparkles
 } from "lucide-react";
-import { format, addDays, differenceInDays, isValid } from "date-fns";
+import { isValid } from "date-fns";
 
 export default function CarePlanTimelinePredictor({ patient, carePlans }) {
   const [predictions, setPredictions] = useState(null);

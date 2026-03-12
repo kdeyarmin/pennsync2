@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Zap, CheckCircle2, XCircle, AlertTriangle, Play, Pause } from "lucide-react";
+import { Loader2, Zap, CheckCircle2, XCircle, AlertTriangle, Play } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function WorkflowExecutionEngine({ 

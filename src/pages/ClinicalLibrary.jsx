@@ -1,4 +1,3 @@
-import React from "react";
 import ClinicalLibraryManager from "../components/clinical/ClinicalLibraryManager";
 
 export default function ClinicalLibrary() {

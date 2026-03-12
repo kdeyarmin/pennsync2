@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { PenTool, CheckCircle2, Eye } from 'lucide-react';
 import SecureESignatureCapture from './SecureESignatureCapture';
 import SignatureAuditTrail from './SignatureAuditTrail';

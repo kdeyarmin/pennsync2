@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Loader2, Copy, CheckCircle2, ChevronDown, ChevronUp, FileText, User } from "lucide-react";
-import { format } from "date-fns";
 
 const SECTIONS = [
   { key: "chief_concern", label: "Chief Concern" },

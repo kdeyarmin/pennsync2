@@ -26,7 +26,6 @@ import {
   Edit, 
   Copy, 
   Eye,
-  Upload,
   Trash2,
   History,
   Settings

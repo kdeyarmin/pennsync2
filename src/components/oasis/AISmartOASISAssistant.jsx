@@ -13,9 +13,6 @@ import {
   Copy,
   ThumbsUp,
   ThumbsDown,
-  ChevronDown,
-  ChevronUp,
-  DollarSign,
   Target,
   Activity,
   ArrowRight

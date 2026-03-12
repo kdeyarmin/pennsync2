@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,24 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Area,
-  AreaChart
-} from "recharts";
+
+
 import {
   BarChart3,
   Download,
@@ -37,16 +21,11 @@ import {
   DollarSign,
   Calendar,
   Clock,
-  Brain,
-  Shield,
   AlertTriangle,
   Sparkles,
-  Send,
   Trash2,
   Play,
-  Pause,
-  Filter,
-  Activity
+  Pause
 } from "lucide-react";
 import ReferralVolumeReport from "../components/reports/ReferralVolumeReport";
 import PatientOutcomesReport from "../components/reports/PatientOutcomesReport";
@@ -54,7 +33,6 @@ import NursePerformanceReport from "../components/reports/NursePerformanceReport
 import OASISComplianceReport from "../components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "../components/reports/PDGMReimbursementReport";
 import KPIDashboard from "../components/reports/KPIDashboard";
-import { exportToPDF } from "../components/utils/pdfExporter";
 import { calculateStats } from "@/components/utils/statsCalculator";
 
 export default function Reports() {

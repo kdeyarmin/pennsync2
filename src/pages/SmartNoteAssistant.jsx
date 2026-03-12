@@ -1,32 +1,24 @@
-import React, { useState, useRef, useEffect, Suspense, lazy, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Sparkles, CheckCircle2, Copy, RotateCcw, Loader2, Mic, MicOff,
-  Shield, AlertTriangle, ArrowRight, Activity, Pill,
-  TrendingUp, Phone, ClipboardList, Heart, User, FileText,
-  MessageSquare, HelpCircle, ChevronDown, ChevronUp
+  Sparkles, CheckCircle2, Loader2,
+  Shield, ArrowRight, Pill,
+  TrendingUp, ClipboardList, User, FileText
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import { enhanceTranscription } from "../components/utils/medicalDictionary";
 import SmartNoteHeader from "../components/smartNote/SmartNoteHeader";
-import FindingsReviewPanel from "../components/smartNote/FindingsReviewPanel";
 import VisitSummaryGenerator from "../components/smartNote/VisitSummaryGenerator";
 import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
-import NoteDiffView from "../components/smartNote/NoteDiffView";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
-import SmartNotePDFExporterEnhanced from "../components/smartNote/SmartNotePDFExporterEnhanced";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
-import MedicalDictationHelper from "../components/smartNote/MedicalDictationHelper";
 import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
-import SignatureCapture from "../components/smartNote/SignatureCapture";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import AlertsPanel from "../components/smartNote/AlertsPanel";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";

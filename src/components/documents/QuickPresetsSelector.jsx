@@ -1,7 +1,6 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const QUICK_PRESETS = [
   {

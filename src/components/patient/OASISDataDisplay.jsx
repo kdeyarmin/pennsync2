@@ -1,8 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { FileText, Calendar, Activity, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 
 export default function OASISDataDisplay({ oasisData, compact = false }) {

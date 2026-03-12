@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +12,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Calendar,
-  FileText,
   Phone,
   Mail,
-  Copy,
-  MessageSquare
+  Copy
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 

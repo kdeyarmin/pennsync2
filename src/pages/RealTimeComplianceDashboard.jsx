@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Users,
-  FileText,
   BarChart3,
   Target,
   GraduationCap,
@@ -25,10 +24,8 @@ import {
   Brain,
   ClipboardList,
   Activity,
-  Calendar,
   Zap,
-  Download,
-  Search
+  Download
 } from "lucide-react";
 import GranularComplianceGapAnalyzer from "../components/compliance/GranularComplianceGapAnalyzer";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';

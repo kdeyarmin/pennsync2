@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +10,7 @@ import {
   UserCog, 
   Brain, 
   Loader2,
-  Send,
-  CheckCircle2,
-  Mail
+  Send
 } from "lucide-react";
 
 export default function AutomatedTaskAssigner({ 

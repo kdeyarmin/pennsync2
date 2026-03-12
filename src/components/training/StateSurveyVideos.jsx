@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Shield, Clock, PlayCircle, CheckCircle2, Clipboard, Download } from "lucide-react";
+import { Shield, Clock, CheckCircle2, Clipboard, Download } from "lucide-react";
 
 const stateSurveyVideos = [
   {
@@ -360,7 +360,6 @@ export default function StateSurveyVideos() {
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  onEnded={() => handleVideoComplete(video.id)}
                 />
               </div>
               

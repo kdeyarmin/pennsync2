@@ -1,12 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 
-import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
-  BarChart3, Settings, Brain, Target, Bell, LogOut, ChevronLeft,
+  BarChart3, Settings, Brain, Target, Bell, LogOut,
   BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +19,6 @@ import MobileMenu from "../components/layout/MobileMenu";
 import MobileBottomNav from "../components/layout/MobileBottomNav";
 import OfflineIndicator from "../components/mobile/OfflineIndicator";
 import OfflineSyncService from "../components/offline/OfflineSyncService";
-import FeedbackButton from "../components/feedback/FeedbackButton";
 import NotificationCenter from "../components/notifications/NotificationCenter";
 import SessionTimeoutManager from "../components/security/SessionTimeoutManager";
 import Breadcrumbs from "../components/navigation/Breadcrumbs";
@@ -211,7 +208,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Settings", icon: Settings, page: "UserSettings" },
       ] 
     },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   ], [totalNotificationCount, isAdmin]);
 
   const handleLogout = useCallback(async () => {
@@ -224,7 +221,7 @@ export default function Layout({ children, currentPageName }) {
       });
     } catch {}
     base44.auth.logout();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [currentUser?.email]);
 
   const isActive = useCallback((pageName) => currentPageName === pageName, [currentPageName]);

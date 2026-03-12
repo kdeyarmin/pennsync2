@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export const INTERVENTIONS_LIBRARY = [
   {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AICarePlanSuggestionEngine from "../components/carePlan/AICarePlanSuggestionEngine";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,8 @@ import {
   Search,
   TrendingUp,
   CheckCircle2,
-  XCircle,
-  Edit,
   Trash2,
   User,
-  Calendar,
   ArrowLeft,
   Sparkles
 } from "lucide-react";
@@ -34,7 +31,6 @@ import AutomatedTaskGenerator from "../components/carePlan/AutomatedTaskGenerato
 import CarePlanTimeline from "../components/carePlan/CarePlanTimeline";
 import AIEducationRecommender from "../components/carePlan/AIEducationRecommender";
 import EducationTracker from "../components/carePlan/EducationTracker";
-import AICarePlanGenerator from "../components/carePlan/AICarePlanGenerator";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import FavoriteButton from "../components/navigation/FavoriteButton";
 

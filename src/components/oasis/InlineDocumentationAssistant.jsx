@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Lightbulb, Copy, CheckCircle2, Sparkles } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, Sparkles } from "lucide-react";
 
 export default function InlineDocumentationAssistant({ 
   issue, 

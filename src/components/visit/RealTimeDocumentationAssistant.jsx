@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import {
   CheckCircle2, 
   Lightbulb, 
   TrendingUp,
-  XCircle,
   Loader2
 } from "lucide-react";
 import debounce from "lodash/debounce";

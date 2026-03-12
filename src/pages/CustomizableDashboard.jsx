@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,12 +7,8 @@ import InteractiveChart from "../components/charts/InteractiveChart";
 import { 
   Users, 
   FileText, 
-  TrendingUp, 
   AlertTriangle, 
-  ClipboardCheck,
-  Clock,
-  Activity,
-  Target
+  ClipboardCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { 
-  Package, 
-  Plus, 
-  Trash2,
+  Package,
   CheckSquare,
   Square,
   Send,
@@ -26,9 +23,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
-import QuickPresetsSelector from "./QuickPresetsSelector";
-import CustomPDFUploader from "./CustomPDFUploader";
-import PDFFieldMapper from "./PDFFieldMapper";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 

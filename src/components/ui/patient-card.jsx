@@ -1,8 +1,6 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { cn } from "@/lib/utils";
-import { User, Calendar, MapPin, Phone, AlertCircle } from "lucide-react";
+import { User, MapPin, Phone, AlertCircle } from "lucide-react";
 import { RiskDot } from "./risk-indicator";
 
 export default function PatientCard({ patient, showRisk = true, onClick }) {

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,15 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import {
   Mail,
-  MessageSquare,
   Users,
   Sparkles,
   Send,
   CheckCircle2,
   Plus,
   X,
-  Edit,
-  Eye,
   RefreshCw,
   Activity, // Added for 'Health Measurements'
   Pill, // Added for 'Medication Info'

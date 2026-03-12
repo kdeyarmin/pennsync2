@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  BookOpen, Download, Search, Video, MessageCircle, 
+  BookOpen, Download, Search, MessageCircle, 
   FileText, Lightbulb, Award, Sparkles, Users,
-  ClipboardList, Phone, Mail, ExternalLink
+  ClipboardList, Phone, Mail
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

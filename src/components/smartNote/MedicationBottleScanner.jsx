@@ -1,7 +1,6 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 

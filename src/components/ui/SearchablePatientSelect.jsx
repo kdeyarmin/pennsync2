@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Check, ChevronsUpDown, Search, Clock, Star, Plus } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Check, ChevronsUpDown, Clock, Star, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -24,7 +24,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 

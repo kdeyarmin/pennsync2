@@ -23,13 +23,11 @@ import {
   DollarSign,
   Target,
   Loader2,
-  TrendingDown,
   Activity,
   Info,
   TrendingUp,
   ClipboardCheck,
   Lightbulb,
-  Download,
   FileDown,
   FolderArchive,
   Workflow,
@@ -43,16 +41,10 @@ import {
 } from "lucide-react";
 import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+
 import BatchOASISAnalyzer from "../components/oasis/BatchOASISAnalyzer";
 import PDGMRevenueComparison from "../components/oasis/PDGMRevenueComparison";
-import PDGMMultiReportComparison from "../components/oasis/PDGMMultiReportComparison";
 import EnhancedMultiReportComparison from "../components/oasis/EnhancedMultiReportComparison";
 import KeyTakeawaysSummary from "../components/oasis/KeyTakeawaysSummary";
 import AuditRiskPredictor from "../components/oasis/AuditRiskPredictor";
@@ -83,8 +75,7 @@ import AutomaticDocumentReviewer from "../components/review/AutomaticDocumentRev
 import AIDocumentReviewer from "../components/oasis/AIDocumentReviewer";
 import OASISDataEntryAssistant from "../components/oasis/OASISDataEntryAssistant";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Users as UsersIcon, BarChart3 } from "lucide-react";
-import OASISAutomationEngine from "../components/oasis/OASISAutomationEngine";
+import { BarChart3 } from "lucide-react";
 import OASISAutomationSettings from "../components/oasis/OASISAutomationSettings";
 import OASISExecutiveSummary from "../components/oasis/OASISExecutiveSummary";
 import PDGMTrendDashboard from "../components/oasis/PDGMTrendDashboard";
@@ -93,7 +84,6 @@ import WorkflowMonitoringDashboard from "../components/oasis/WorkflowMonitoringD
 import OASISToPatientChartPusher from "../components/oasis/OASISToPatientChartPusher";
 import PredictiveOutcomesAnalyzer from "../components/oasis/PredictiveOutcomesAnalyzer";
 import VisitTypeComplianceChecker from "../components/compliance/VisitTypeComplianceChecker";
-import RealTimeDocumentationAI from "../components/smartNote/RealTimeDocumentationAI";
 import AIDataValidationEngine from "../components/oasis/AIDataValidationEngine";
 import ClinicalNoteToOASISMapper from "../components/oasis/ClinicalNoteToOASISMapper";
 import OASISDraftGenerator from "../components/oasis/OASISDraftGenerator";

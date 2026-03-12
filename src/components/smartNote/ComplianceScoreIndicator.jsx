@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { trackAISuggestion, categorizeAISuggestion } from "../training/SuggestionTracker";
@@ -21,7 +21,6 @@ import {
   Loader2,
   Lightbulb,
   X,
-  Ban,
   Copy,
   Check,
   Pencil,
