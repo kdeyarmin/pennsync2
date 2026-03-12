@@ -2,7 +2,6 @@ import { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatEastern, todayEastern } from "../components/utils/timezone";
@@ -246,7 +245,7 @@ export default function Dashboard() {
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (
-            <Link key={item.page} to={createPageUrl(item.page)}>
+            <Link key={item.page} to={`/${item.page}`}>
               <Card className={`hover:shadow-md transition-all cursor-pointer border-2 ${item.border} ${item.bg} active:scale-95 h-full`}>
                 <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-1.5 min-h-[80px] sm:min-h-[90px]">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white shadow-sm">
