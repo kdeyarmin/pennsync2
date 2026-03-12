@@ -56,11 +56,6 @@ export default function SearchablePatientSelect({
     } else if (patients?.data && Array.isArray(patients.data)) {
       patientArray = patients.data;
     }
-    
-    console.log('SearchablePatientSelect syncing patients:', {
-      incomingPatients: patientArray,
-      count: patientArray.length
-    });
     setLocalPatients(patientArray);
   }, [patients]);
 
@@ -149,13 +144,6 @@ export default function SearchablePatientSelect({
 
   // Filter and organize patients
   const { favoritesList, recentList, allPatientsList } = useMemo(() => {
-    console.log('SearchablePatientSelect organizing:', {
-      localPatientsCount: localPatients.length,
-      search,
-      favoritedCount: favoritedPatients.length,
-      recentCount: recentPatients.length
-    });
-
     const searchLower = search.toLowerCase().trim();
     const filtered = localPatients.filter(p => {
       if (!p) return false;
@@ -171,23 +159,15 @@ export default function SearchablePatientSelect({
     });
 
     const favorites = filtered.filter(p => favoritedPatients.includes(p.id));
-    const recent = recentPatients
-      .map(id => getPatient(id))
-      .filter(p => p && filtered.includes(p))
+    const recentIds = new Set(recentPatients);
+    const recent = filtered
+      .filter(p => recentIds.has(p.id) && !favoritedPatients.includes(p.id))
       .slice(0, 3);
     
-    // All patients excluding favorites and recent
+    const favoriteIds = new Set(favoritedPatients);
     const all = filtered.filter(p => 
-      !favoritedPatients.includes(p.id) && 
-      !recent.some(r => r?.id === p.id)
+      !favoriteIds.has(p.id) && !recentIds.has(p.id)
     );
-
-    console.log('SearchablePatientSelect organized:', {
-      favoritesList: favorites.length,
-      recentList: recent.length,
-      allPatientsList: all.length,
-      totalFiltered: filtered.length
-    });
 
     return {
       favoritesList: favorites,
