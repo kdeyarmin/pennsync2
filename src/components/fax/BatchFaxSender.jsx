@@ -151,12 +151,12 @@ export default function BatchFaxSender({ prefilledData }) {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6 space-y-5">
+    <Card className="shadow-lg">
+      <CardContent className="p-6 space-y-5">
 
         {/* Info banner */}
-        <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800">
-          <Layers className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-900">
+          <Layers className="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-600" />
           <span>Add multiple photos and PDFs — they'll be <strong>merged into one fax</strong>, saving transmission costs.</span>
         </div>
 
@@ -174,8 +174,7 @@ export default function BatchFaxSender({ prefilledData }) {
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             variant="outline"
-            className="w-full"
-            size="lg"
+            className="w-full h-12 border-2 border-dashed hover:border-indigo-400 hover:bg-indigo-50"
           >
             {isUploading
               ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -236,12 +235,13 @@ export default function BatchFaxSender({ prefilledData }) {
 
         {/* Recipient */}
         <div className="space-y-2">
-          <Label>Recipient Fax Number</Label>
+          <Label className="text-sm font-semibold text-gray-700">Recipient Fax Number</Label>
           <Input
             type="tel"
             placeholder="+1234567890"
             value={toNumber}
             onChange={(e) => setToNumber(e.target.value)}
+            className="h-11"
           />
           <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
         </div>
@@ -256,8 +256,7 @@ export default function BatchFaxSender({ prefilledData }) {
         <Button
           onClick={handleSend}
           disabled={files.length === 0 || isSending || !toNumber.trim()}
-          className="w-full"
-          size="lg"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-base font-semibold shadow-md"
         >
           {isSending
             ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />

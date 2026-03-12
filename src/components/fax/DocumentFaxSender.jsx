@@ -90,12 +90,12 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6 space-y-5">
+    <Card className="shadow-lg">
+      <CardContent className="p-6 space-y-5">
         <div className="space-y-2">
-          <Label>Select Document</Label>
+          <Label className="text-sm font-semibold text-gray-700">Select Document</Label>
           <Select value={selectedDocId} onValueChange={setSelectedDocId}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11">
               <SelectValue placeholder="Choose a PDF document" />
             </SelectTrigger>
             <SelectContent>
@@ -150,12 +150,13 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
         })()}
 
         <div className="space-y-2">
-          <Label>Recipient Fax Number</Label>
+          <Label className="text-sm font-semibold text-gray-700">Recipient Fax Number</Label>
           <Input
             type="tel"
             placeholder="+1234567890"
             value={toNumber}
             onChange={(e) => setToNumber(e.target.value)}
+            className="h-11"
           />
           <FaxAddressBook onSelectContact={(c) => setToNumber(c.fax_number)} />
         </div>
@@ -171,7 +172,7 @@ export default function DocumentFaxSender({ patientId, prefilledData }) {
           onCoverSheetReady={(url) => setCoverSheetUrl(url)}
         />
 
-        <Button onClick={handleSendFax} disabled={isSending || !selectedDocId || !toNumber.trim()} className="w-full" size="lg">
+        <Button onClick={handleSendFax} disabled={isSending || !selectedDocId || !toNumber.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-base font-semibold shadow-md">
           {isSending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
           {isSending ? "Sending..." : "Send Fax"}
         </Button>

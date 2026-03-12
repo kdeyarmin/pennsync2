@@ -136,7 +136,7 @@ export default function FaxAddressBook({ onSelectContact }) {
             placeholder="Search contacts..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-11"
           />
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
@@ -222,9 +222,9 @@ export default function FaxAddressBook({ onSelectContact }) {
         });
       }} />
 
-      <div className="grid gap-2 max-h-96 overflow-y-auto">
+      <div className="grid gap-3 max-h-96 overflow-y-auto pr-2">
         {filteredContacts.map((contact) => (
-          <Card key={contact.id} className="cursor-pointer border-slate-200 bg-white hover:-translate-y-0.5 hover:shadow-lg" onClick={() => onSelectContact?.(contact)}>
+          <Card key={contact.id} className="cursor-pointer border-slate-200 bg-white hover:-translate-y-0.5 hover:shadow-lg transition-all" onClick={() => onSelectContact?.(contact)}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

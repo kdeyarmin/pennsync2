@@ -31,7 +31,7 @@ export default function ProviderCsvImport({ onImported }) {
   return (
     <>
       <input ref={inputRef} type="file" accept=".csv" onChange={handleChange} className="hidden" />
-      <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={isImporting}>
+      <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={isImporting} className="min-h-[44px]">
         {isImporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
         {isImporting ? 'Importing...' : 'Import Provider CSV'}
       </Button>

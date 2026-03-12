@@ -93,25 +93,27 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className="shadow-lg">
+        <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-blue-50">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-indigo-600" />
-              Provider Directory
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                <UserPlus className="w-5 h-5 text-white" />
+              </div>
+              <span>Provider Directory</span>
             </CardTitle>
             {mode === 'directory' && (
               <div className="flex gap-2 flex-wrap">
                 <ProviderCsvImport onImported={() => queryClient.invalidateQueries({ queryKey: ['physicians'] })} />
-                <Button onClick={() => { setEditingPhysician(null); setShowForm(true); }} size="sm">
-                  <Plus className="w-4 h-4 mr-1" />
+                <Button onClick={() => { setEditingPhysician(null); setShowForm(true); }} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Provider
                 </Button>
               </div>
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-6">
           {/* Search & Filters */}
           <div className="space-y-3">
             <div className="relative">
@@ -120,12 +122,12 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                 placeholder="Search by provider, practice, specialty, or tags..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-11"
               />
             </div>
             <div className="flex gap-2">
               <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-11">
                   <SelectValue placeholder="Filter by specialty" />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,23 +143,24 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
           </div>
 
           {/* Results */}
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
+          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
             {filteredPhysicians.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <UserPlus className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No providers found</p>
+              <div className="text-center py-12 text-gray-500">
+                <UserPlus className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium text-gray-700">No providers found</p>
+                <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filters</p>
               </div>
             ) : (
               filteredPhysicians.map((physician) => (
                 <Card 
                   key={physician.id} 
-                  className={`hover:shadow-md transition-shadow ${
-                    mode === 'selector' ? 'cursor-pointer hover:border-indigo-300' : ''
+                  className={`hover:shadow-lg hover:-translate-y-0.5 transition-all ${
+                    mode === 'selector' ? 'cursor-pointer hover:border-indigo-400' : ''
                   }`}
                   onClick={() => mode === 'selector' && handleSelectPhysician(physician)}
                 >
-                  <CardContent className="pt-4">
-                    <div className="space-y-2">
+                  <CardContent className="p-5">
+                    <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -188,20 +191,21 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                           )}
                         </div>
                         {mode === 'directory' && (
-                          <div className="flex gap-1">
+                          <div className="flex gap-2">
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditingPhysician(physician);
                                 setShowForm(true);
                               }}
+                              className="h-9 w-9 hover:bg-indigo-50 hover:text-indigo-600"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -209,8 +213,9 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
                                   deletePhysicianMutation.mutate(physician.id);
                                 }
                               }}
+                              className="h-9 w-9 hover:bg-red-50 hover:text-red-600"
                             >
-                              <Trash2 className="w-4 h-4 text-red-600" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         )}
@@ -266,7 +271,7 @@ export default function PhysicianDirectory({ onSelectPhysician, mode = 'director
             )}
           </div>
 
-          <div className="text-sm text-gray-500 text-center pt-2">
+          <div className="text-sm text-gray-500 text-center pt-4 border-t">
             {filteredPhysicians.length} provider{filteredPhysicians.length !== 1 ? 's' : ''} found
           </div>
         </CardContent>
