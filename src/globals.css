@@ -451,23 +451,23 @@ css
 
   /* Modern table styles */
   .table-modern {
-    @apply w-full border-collapse bg-white rounded-xl overflow-hidden shadow-sm;
+    @apply w-full border-collapse bg-slate-800 rounded-xl overflow-hidden shadow-lg;
   }
 
   .table-modern thead {
-    @apply bg-slate-50 border-b border-slate-200;
+    @apply bg-slate-900 border-b border-slate-700;
   }
 
   .table-modern th {
-    @apply px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider;
+    @apply px-4 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider;
   }
 
   .table-modern td {
-    @apply px-4 py-3 text-sm text-slate-900 border-b border-slate-100;
+    @apply px-4 py-3 text-sm text-slate-100 border-b border-slate-700;
   }
 
   .table-modern tbody tr {
-    @apply hover:bg-slate-50 transition-colors duration-150;
+    @apply hover:bg-slate-700 transition-colors duration-150;
   }
 
   /* Micro-interactions */
