@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { Award, BookOpen, CheckCircle2, RefreshCcw, TriangleAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { generateTrainingCertificate } from "@/functions/generateTrainingCertificate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import CertificateDownloadButton from "./CertificateDownloadButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,24 +38,7 @@ export default function MyTrainingDashboard() {
     failed: assignments.filter((assignment) => assignment.pass_fail_result === 'failed').length,
   };
 
-  const downloadCertificate = async (certificate) => {
-    const response = await generateTrainingCertificate({ moduleName: certificate.course_title, completionDate: certificate.completion_date || certificate.issued_at, score: certificate.score });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${certificate.course_title.replace(/\s+/g, '_')}_certificate.pdf`;
-    anchor.click();
-    window.URL.revokeObjectURL(url);
-  };
 
-  const printCertificate = async (certificate) => {
-    const response = await generateTrainingCertificate({ moduleName: certificate.course_title, completionDate: certificate.completion_date || certificate.issued_at, score: certificate.score });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const printWindow = window.open(url, '_blank');
-    setTimeout(() => printWindow?.print(), 600);
-  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -104,11 +87,11 @@ export default function MyTrainingDashboard() {
                   <div className="flex items-center gap-2 mb-1"><Award className="w-5 h-5 text-amber-500" /><h3 className="font-semibold text-slate-900">{certificate.course_title}</h3></div>
                   <p className="text-sm text-slate-500">Completed {formatDate(certificate.completion_date || certificate.issued_at)} • Score {certificate.score}%</p>
                   <p className="text-sm text-slate-500">Certificate ID: {certificate.certificate_id}</p>
+                  {certificate.expiration_date && (
+                    <p className="text-sm text-slate-500">Valid until: {formatDate(certificate.expiration_date)}</p>
+                  )}
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Button variant="outline" onClick={() => printCertificate(certificate)}>Print</Button>
-                  <Button variant="outline" onClick={() => downloadCertificate(certificate)}>Download PDF</Button>
-                </div>
+                <CertificateDownloadButton certificate={certificate} />
               </CardContent>
             </Card>
           ))}
