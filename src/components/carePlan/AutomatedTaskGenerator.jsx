@@ -142,6 +142,9 @@ Return JSON:`,
 
     setIsCreating(true);
     try {
+      // Get current user
+      const currentUser = await base44.auth.me();
+      
       const createdTasks = [];
       for (const task of selected) {
         const dueDate = format(addDays(new Date(), task.suggested_due_days || 7), 'yyyy-MM-dd');
@@ -156,7 +159,8 @@ Return JSON:`,
           due_date: dueDate,
           due_timeframe: task.due_timeframe,
           source: 'care_plan',
-          ai_reason: task.rationale
+          ai_reason: task.rationale,
+          assigned_to: currentUser?.email
         });
         createdTasks.push(newTask);
       }
