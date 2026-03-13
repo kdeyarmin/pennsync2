@@ -21,6 +21,8 @@ const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
 export default function TrainingCoursePlayer() {
   const params = new URLSearchParams(window.location.search);
   const assignmentId = params.get('assignment');
+  const courseId = params.get('courseId');
+  const previewMode = params.get('preview') === 'true';
   const [step, setStep] = useState('objectives');
   const [completedModules, setCompletedModules] = useState([]);
   const [answers, setAnswers] = useState({});
@@ -32,17 +34,18 @@ export default function TrainingCoursePlayer() {
   const startedAt = useMemo(() => new Date().toISOString(), []);
 
   useEffect(() => {
-    if (assignmentId) startTrainingAssignment({ assignmentId });
-  }, [assignmentId]);
+    if (assignmentId && !previewMode) startTrainingAssignment({ assignmentId });
+  }, [assignmentId, previewMode]);
 
   const { data: currentUser } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
-  const { data: assignment } = useQuery({ queryKey: ['training-assignment', assignmentId], queryFn: async () => (await base44.entities.TrainingAssignment.filter({ id: assignmentId }))[0], enabled: !!assignmentId });
-  const { data: course } = useQuery({ queryKey: ['training-course', assignment?.course_id], queryFn: async () => (await base44.entities.TrainingCourse.filter({ id: assignment?.course_id }))[0], enabled: !!assignment?.course_id });
-  const { data: modules = [] } = useQuery({ queryKey: ['training-modules', assignment?.course_id], queryFn: () => base44.entities.TrainingModule.filter({ course_id: assignment?.course_id }, 'order_index', 100), enabled: !!assignment?.course_id, initialData: [] });
-  const { data: questions = [] } = useQuery({ queryKey: ['training-questions', assignment?.course_id], queryFn: () => base44.entities.TrainingQuestion.filter({ course_id: assignment?.course_id, active: true }, 'order_index', 200), enabled: !!assignment?.course_id, initialData: [] });
+  const { data: assignment } = useQuery({ queryKey: ['training-assignment', assignmentId], queryFn: async () => (await base44.entities.TrainingAssignment.filter({ id: assignmentId }))[0], enabled: !!assignmentId && !previewMode });
+  const { data: course } = useQuery({ queryKey: ['training-course', previewMode ? courseId : assignment?.course_id], queryFn: async () => (await base44.entities.TrainingCourse.filter({ id: previewMode ? courseId : assignment?.course_id }))[0], enabled: !!(previewMode ? courseId : assignment?.course_id) });
+  const { data: modules = [] } = useQuery({ queryKey: ['training-modules', previewMode ? courseId : assignment?.course_id], queryFn: () => base44.entities.TrainingModule.filter({ course_id: previewMode ? courseId : assignment?.course_id }, 'order_index', 100), enabled: !!(previewMode ? courseId : assignment?.course_id), initialData: [] });
+  const { data: questions = [] } = useQuery({ queryKey: ['training-questions', previewMode ? courseId : assignment?.course_id], queryFn: () => base44.entities.TrainingQuestion.filter({ course_id: previewMode ? courseId : assignment?.course_id, active: true }, 'order_index', 200), enabled: !!(previewMode ? courseId : assignment?.course_id), initialData: [] });
 
   const randomizedQuestions = useMemo(() => shuffle(questions).map((question) => ({ ...question, options_json: Array.isArray(question.options_json) ? shuffle(question.options_json) : question.options_json })), [questions]);
   const passingScore = assignment?.passing_score_required || course?.passing_score || 80;
+  const isAdmin = currentUser?.role === 'admin';
 
   const completeModule = (moduleId) => {
     if (completedModules.includes(moduleId)) return;
@@ -52,6 +55,10 @@ export default function TrainingCoursePlayer() {
   };
 
   const submitAttempt = async () => {
+    if (previewMode) {
+      alert('Preview mode: Submissions are disabled. This is for content review only.');
+      return;
+    }
     setSubmitting(true);
     if (proofFiles.length > 0) {
       const uploaded = await Promise.all(proofFiles.map(async (file) => ({ name: file.name, url: (await base44.integrations.Core.UploadFile({ file })).file_url })));
@@ -74,17 +81,26 @@ export default function TrainingCoursePlayer() {
     setSubmitting(false);
   };
 
-  if (!assignment || !course) return <div className="max-w-4xl mx-auto p-6 text-slate-500">Loading in-service...</div>;
+  if (!course) return <div className="max-w-4xl mx-auto p-6 text-slate-500">Loading course...</div>;
+  if (!previewMode && !assignment) return <div className="max-w-4xl mx-auto p-6 text-slate-500">Loading assignment...</div>;
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+      {previewMode && isAdmin && (
+        <Alert className="border-indigo-200 bg-indigo-50">
+          <AlertDescription className="text-indigo-900 font-medium">
+            🔍 Preview Mode - This is for content review only. No progress will be saved and submissions are disabled.
+          </AlertDescription>
+        </Alert>
+      )}
       <Card className="border-0 shadow-lg bg-gradient-to-r from-indigo-700 to-blue-700 text-white">
         <CardContent className="p-6">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">{assignment.course_title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">{previewMode ? course.title : assignment.course_title}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-indigo-100">
-            <span>Due {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : '—'}</span>
+            {!previewMode && <span>Due {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : '—'}</span>}
             <span>Passing score {passingScore}%</span>
-            <span>Attempt {assignment.latest_attempt_number + 1 || 1}</span>
+            {!previewMode && <span>Attempt {assignment.latest_attempt_number + 1 || 1}</span>}
+            {previewMode && <span className="bg-white/20 px-2 py-0.5 rounded">Preview Mode</span>}
           </div>
           <Progress value={step === 'objectives' ? 10 : step === 'content' ? 45 : step === 'attestation' ? 70 : step === 'test' ? 85 : 100} className="mt-4 h-2 bg-white/20" />
         </CardContent>
@@ -96,7 +112,7 @@ export default function TrainingCoursePlayer() {
 
       {step === 'attestation' && <Card><CardHeader><CardTitle>Acknowledgement / Attestation</CardTitle></CardHeader><CardContent className="space-y-4"><Alert><AlertDescription>{course.attestation_text || 'I have reviewed and understand this training and agree to follow agency policy.'}</AlertDescription></Alert><div className="flex items-start gap-3"><Checkbox checked={attestationAccepted} onCheckedChange={(checked) => setAttestationAccepted(!!checked)} /><Label>I have reviewed and understand this training.</Label></div><div className="space-y-2"><Label>Type your full name</Label><Input value={signedName} onChange={(event) => setSignedName(event.target.value)} placeholder={currentUser?.full_name || 'Your name'} /></div><div className="space-y-2"><Label>Upload proof of external certification (optional)</Label><input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(event) => setProofFiles(Array.from(event.target.files || []))} className="block w-full text-sm" /></div><Button disabled={!attestationAccepted || !signedName} onClick={() => setStep('test')}>Proceed to final test</Button></CardContent></Card>}
 
-      {step === 'test' && <div className="space-y-4"><Alert className="border-amber-200 bg-amber-50"><AlertTriangle className="w-4 h-4 text-amber-600" /><AlertDescription className="text-amber-900">You must answer every question before submitting.</AlertDescription></Alert>{randomizedQuestions.map((question, index) => <TrainingQuestionRenderer key={question.id} question={question} index={index} value={answers[question.id]} onChange={(answer) => setAnswers((prev) => ({ ...prev, [question.id]: answer }))} />)}<Button className="w-full" disabled={submitting || Object.keys(answers).length !== randomizedQuestions.length} onClick={submitAttempt}>{submitting ? 'Submitting...' : 'Submit competency test'}</Button></div>}
+      {step === 'test' && <div className="space-y-4"><Alert className="border-amber-200 bg-amber-50"><AlertTriangle className="w-4 h-4 text-amber-600" /><AlertDescription className="text-amber-900">{previewMode ? 'Preview mode: You can review questions but submissions are disabled.' : 'You must answer every question before submitting.'}</AlertDescription></Alert>{randomizedQuestions.map((question, index) => <TrainingQuestionRenderer key={question.id} question={question} index={index} value={answers[question.id]} onChange={(answer) => setAnswers((prev) => ({ ...prev, [question.id]: answer }))} />)}<Button className="w-full" disabled={previewMode || submitting || Object.keys(answers).length !== randomizedQuestions.length} onClick={submitAttempt}>{previewMode ? 'Preview Mode - Submission Disabled' : submitting ? 'Submitting...' : 'Submit competency test'}</Button></div>}
 
       {step === 'result' && result && <Card><CardContent className="p-6 space-y-4"><div className="flex items-center gap-3">{result.passed ? <CheckCircle2 className="w-8 h-8 text-green-600" /> : <RotateCcw className="w-8 h-8 text-red-600" />}<div><h2 className="text-2xl font-bold text-slate-900">{result.passed ? 'Passed' : 'Retake Required'}</h2><p className="text-slate-600">Score {result.score}% • Passing score {result.passing_score}%</p></div></div>{result.passed && result.certificate && <div className="rounded-xl bg-green-50 border border-green-200 p-4"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Award className="w-5 h-5 text-green-600" /><div><p className="font-semibold text-green-900">Certificate Issued</p><p className="text-sm text-green-700">Certificate ID: {result.certificate.certificate_id}</p></div></div><CertificateDownloadButton certificate={result.certificate} size="sm" variant="outline" /></div></div>}{!result.passed && <Alert><AlertDescription>{result.remediation_message}</AlertDescription></Alert>}{result.show_correct_answers && result.graded_answers?.length > 0 && <div className="space-y-3"><h3 className="font-semibold text-slate-900">Answer review</h3>{result.graded_answers.map((item, index) => <div key={index} className="rounded-xl border p-3 text-sm"><p className="font-medium text-slate-900 mb-1">{item.prompt}</p><p className="text-slate-600">Your answer: {JSON.stringify(item.answer)}</p><p className="text-slate-600">Points: {item.points_earned}/{item.points_possible}</p>{item.rationale && <p className="text-slate-500 mt-1">Rationale: {item.rationale}</p>}{item.ai_feedback && <p className="text-slate-500 mt-1">Feedback: {item.ai_feedback}</p>}</div>)}</div>}<div className="flex flex-wrap gap-3"><Button asChild variant="outline"><a href={createPageUrl('MyTraining')}>Back to My Training</a></Button>{!result.passed && !result.locked && <Button onClick={() => { setStep('content'); setAnswers({}); setResult(null); setCompletedModules([]); setAttestationAccepted(false); setSignedName(''); setProofFiles([]); }}>Review content and retake</Button>}</div></CardContent></Card>}
     </div>
