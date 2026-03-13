@@ -135,7 +135,7 @@ export default function SmartNoteAssistant() {
 
   // Restore saved patient context across tabs
   useEffect(() => {
-    const saved = localStorage.getItem(SAVED_PATIENT_KEY);
+    const saved = sessionStorage.getItem(SAVED_PATIENT_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -147,11 +147,11 @@ export default function SmartNoteAssistant() {
 
   // Persist patient context across tabs
   useEffect(() => {
-    localStorage.setItem(SAVED_PATIENT_KEY, JSON.stringify({ patientId, visitType }));
+    sessionStorage.setItem(SAVED_PATIENT_KEY, JSON.stringify({ patientId, visitType }));
   }, [patientId, visitType]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(DRAFT_KEY);
+    const saved = sessionStorage.getItem(DRAFT_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -162,28 +162,28 @@ export default function SmartNoteAssistant() {
 
   useEffect(() => {
     if (note.trim()) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId }));
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId }));
     }
   }, [note, visitType, patientId]);
 
-  // Save analysis state to localStorage for persistence
+  // Save analysis state to sessionStorage for persistence
   useEffect(() => {
     if (analysis && step >= 2) {
-      localStorage.setItem(ANALYSIS_KEY, JSON.stringify({ analysis, answers, selected: Array.from(selected) }));
+      sessionStorage.setItem(ANALYSIS_KEY, JSON.stringify({ analysis, answers, selected: Array.from(selected) }));
     }
   }, [analysis, answers, selected, step]);
 
-  // Save final note to localStorage
+  // Save final note to sessionStorage
   useEffect(() => {
     if (finalNote.trim()) {
-      localStorage.setItem("smart_note_final_v1", JSON.stringify({ finalNote, noteSections, timestamp: Date.now() }));
+      sessionStorage.setItem("smart_note_final_v1", JSON.stringify({ finalNote, noteSections, timestamp: Date.now() }));
     }
   }, [finalNote, noteSections]);
 
   useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
 
   const restoreDraft = () => {
-    const saved = localStorage.getItem(DRAFT_KEY);
+    const saved = sessionStorage.getItem(DRAFT_KEY);
     if (!saved) return;
     const parsed = JSON.parse(saved);
     setNote(parsed.note || "");
@@ -192,7 +192,7 @@ export default function SmartNoteAssistant() {
     setHasDraft(false);
     setDraftRestored(true);
   };
-  const dismissDraft = () => { localStorage.removeItem(DRAFT_KEY); setHasDraft(false); };
+  const dismissDraft = () => { sessionStorage.removeItem(DRAFT_KEY); setHasDraft(false); };
 
   const startDictation = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -492,9 +492,9 @@ Return ONLY the final note text.`
     setNote(""); setAnalysis(null); setAlerts([]); setSelected(new Set());
     setAnswers({}); setFinalNote(""); setStep(1); setNoteSections(null); setDraftRestored(false);
     setSignatureImage(null); setFollowUpTasks([]);
-    localStorage.removeItem(DRAFT_KEY);
-    localStorage.removeItem(ANALYSIS_KEY);
-    localStorage.removeItem("smart_note_final_v1");
+    sessionStorage.removeItem(DRAFT_KEY);
+    sessionStorage.removeItem(ANALYSIS_KEY);
+    sessionStorage.removeItem("smart_note_final_v1");
   };
 
   const parseNoteSections = (text) => {
