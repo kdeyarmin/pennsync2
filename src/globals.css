@@ -277,28 +277,28 @@ css
 
   /* Modern button styles */
   .btn-primary {
-    @apply bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 hover:shadow-md active:bg-indigo-800 active:scale-95 transition-all duration-200 shadow-sm min-h-[44px] flex items-center justify-center;
+    @apply bg-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-blue-700 hover:shadow-lg active:bg-blue-800 active:scale-95 transition-all duration-200 shadow-md min-h-[44px] flex items-center justify-center;
   }
 
   .btn-secondary {
-    @apply bg-gray-100 text-gray-900 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 hover:shadow-sm active:bg-gray-300 active:scale-95 transition-all duration-200;
+    @apply bg-slate-100 text-slate-900 px-4 py-2.5 rounded-lg font-semibold hover:bg-slate-200 hover:shadow-sm active:bg-slate-300 active:scale-95 transition-all duration-200;
   }
 
   .btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 hover:shadow-md active:bg-red-800 active:scale-95 transition-all duration-200 shadow-sm;
+    @apply bg-red-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-red-700 hover:shadow-lg active:bg-red-800 active:scale-95 transition-all duration-200 shadow-md;
   }
 
   .btn-ghost {
-    @apply text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 active:scale-95 transition-all duration-200;
+    @apply text-slate-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-slate-100 hover:shadow-sm active:bg-slate-200 active:scale-95 transition-all duration-200;
   }
 
   /* Modern input styles */
   .input-modern {
-    @apply border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-md transition-all duration-200 bg-white;
+    @apply border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 bg-white;
   }
 
   .input-elevated {
-    @apply border-gray-200 rounded-lg px-4 py-2.5 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:shadow-lg transition-all duration-200 bg-white;
+    @apply border-slate-200 rounded-lg px-4 py-2.5 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg transition-all duration-200 bg-white;
   }
 
   /* Touch-optimized for mobile and tablet */
