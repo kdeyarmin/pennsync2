@@ -197,7 +197,7 @@ export default function Dashboard() {
       <ProfileCompletenessAlert user={currentUser} />
 
       {/* Welcome Banner */}
-      <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-xl overflow-hidden`}>
+      <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-lg overflow-hidden`}>
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
