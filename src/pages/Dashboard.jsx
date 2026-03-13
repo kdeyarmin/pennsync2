@@ -18,7 +18,6 @@ import DashboardSkeleton from "@/components/loading/DashboardSkeleton";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
 import ProfileCompletenessAlert from "@/components/profile/ProfileCompletenessAlert";
-import OnboardingChecklist from "@/components/profile/OnboardingChecklist";
 
 // Non-critical below-the-fold — lazy loaded
 const HighRiskPatientsWidget    = lazy(() => import("@/components/dashboard/HighRiskPatientsWidget"));
@@ -122,12 +121,7 @@ export default function Dashboard() {
     enabled: !!currentUser?.email,
   });
 
-  const { data: myCredentials = [] } = useQuery({
-    queryKey: ['myCredentials', currentUser?.email],
-    queryFn: () => base44.entities.PersonnelCredential.filter({ user_id: currentUser.email }),
-    initialData: [],
-    enabled: !!currentUser?.email,
-  });
+
 
   // Handle errors gracefully with user feedback
   if (visitsError || patientsError) {
@@ -201,9 +195,6 @@ export default function Dashboard() {
       )}
       {/* Profile Completeness Alert */}
       <ProfileCompletenessAlert user={currentUser} />
-
-      {/* Onboarding Checklist */}
-      <OnboardingChecklist user={currentUser} credentials={myCredentials} />
 
       {/* Welcome Banner */}
       <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-xl overflow-hidden`}>
