@@ -66,6 +66,15 @@ export default function RealtimeFaxStatusTracker() {
 
   return (
     <div className="space-y-4">
+      {/* Notification Alert */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-3">
+        <Bell className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="text-sm">
+          <p className="font-medium text-blue-900">Smart Notifications Enabled</p>
+          <p className="text-xs text-blue-700 mt-0.5">You'll receive alerts when faxes are delivered or fail. Configure preferences in Settings.</p>
+        </div>
+      </div>
+
       {/* Summary Cards */}
       {total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
