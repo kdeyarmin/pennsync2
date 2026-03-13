@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, BookOpen } from "lucide-react";
+import { Plus, Edit2, Trash2, BookOpen, Eye } from "lucide-react";
 import CourseForm from "./CourseForm";
 import {
   Dialog,
@@ -97,6 +98,12 @@ export default function CourseManager() {
                   <p><span className="text-gray-600">Required:</span> {course.is_mandatory ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="flex gap-2">
+                  <Link to={`/TrainingCoursePlayer?courseId=${course.id}&preview=true`}>
+                    <Button variant="outline" size="sm">
+                      <Eye className="w-4 h-4 mr-1" />
+                      Preview
+                    </Button>
+                  </Link>
                   <Button
                     variant="outline"
                     size="sm"
