@@ -127,22 +127,20 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Patients", icon: Users, page: "Patients" },
         { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
-        { name: "Plan Builder", icon: Target, page: "CarePlanBuilder" },
         { name: "OASIS Assessment", icon: Brain, page: "SmartOASISAssessment" },
-        { name: "Incident Reports", icon: AlertTriangle, page: "IncidentReporting" },
+        { name: "Incidents", icon: AlertTriangle, page: "Incidents" },
       ],
     },
     {
-      category: "Documentation & Notes",
+      category: "Documentation",
       items: [
-        { name: "Smart Notes", icon: Brain, page: "SmartNoteAssistant" },
-        { name: "Visit Scribe", icon: Mic, page: "VisitScribe" },
+        { name: "Clinical Notes", icon: Brain, page: "ClinicalDocumentation" },
         { name: "Documents", icon: FileText, page: "DocumentHub" },
         { name: "Referrals", icon: FileText, page: "ReferralIntake" },
       ],
     },
     {
-      category: "Education & Resources",
+      category: "Resources",
       items: [
         { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
         { name: "Patient Education", icon: BookOpen, page: "PatientEducationHub" },
@@ -159,11 +157,9 @@ export default function Layout({ children, currentPageName }) {
       ],
     },
     {
-      category: "Compliance & Training",
+      category: "My Learning",
       items: [
-        { name: "Compliance", icon: Shield, page: "MedicareComplianceDashboard" },
-        { name: "Training", icon: GraduationCap, page: "StaffTrainingHub" },
-        { name: "Annual Education", icon: GraduationCap, page: "MyAnnualEducation" },
+        { name: "My Training", icon: GraduationCap, page: "MyLearning" },
         { name: "Skills Checklists", icon: CheckCircle2, page: "ClinicalSkillsChecklist" },
       ],
     },
@@ -171,42 +167,34 @@ export default function Layout({ children, currentPageName }) {
       category: "Tools",
       items: [
         { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
-        { name: "Help & Manual", icon: HelpCircle, page: "Help" },
+        { name: "Help", icon: HelpCircle, page: "Help" },
       ],
     },
   ], [unreadMessageCount]);
 
   const adminItems = useMemo(() => [
-    { category: "Admin Overview", items: [{ name: "Admin Dashboard", icon: BarChart3, page: "AdminDashboard" }] },
+    { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },
     { 
       category: "Manage", 
       items: [
         { name: "Users", icon: Users, page: "UserManagement" },
-        { name: "Training Manager", icon: GraduationCap, page: "TrainingManagement" },
+        { name: "Training Manager", icon: GraduationCap, page: "AdminTraining" },
         { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
       ] 
     },
     { 
-      category: "Monitor & Analytics", 
+      category: "Analytics", 
       items: [
-        { name: "Reports", icon: BarChart3, page: "Reports" },
-        { name: "Population Health", icon: Users, page: "PopulationHealthAnalytics" },
+        { name: "Reports & Analytics", icon: BarChart3, page: "ReportsAnalytics" },
+        { name: "Compliance Center", icon: Shield, page: "ComplianceCenter" },
         { name: "Alerts", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
-      ] 
-    },
-    { 
-      category: "Compliance & Security", 
-      items: [
-        { name: "Compliance", icon: Shield, page: "ComplianceRegulatory" },
-        { name: "Security", icon: Shield, page: "SecurityCompliance" },
       ] 
     },
     { 
       category: "Configuration", 
       items: [
         { name: "Data Management", icon: Users, page: "PatientDataManagement" },
-        { name: "Data Quality", icon: Database, page: "DataQualityMonitor" },
-        { name: "System Health", icon: Activity, page: "SystemHealthMonitor" },
+        { name: "Security", icon: Shield, page: "SecurityCompliance" },
         { name: "Settings", icon: Settings, page: "UserSettings" },
       ] 
     },
