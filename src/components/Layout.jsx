@@ -140,18 +140,18 @@ export default function Layout({ children, currentPageName }) {
       ],
     },
     {
-      category: "Resources",
-      items: [
-        { name: "Resource Library", icon: BookOpen, page: "ResourceLibrary" },
-      ],
-    },
-    {
       category: "Communication",
       items: [
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
         { name: "Fax", icon: BookUser, page: "SendFax" },
         { name: "Providers", icon: Users, page: "PhysicianDirectory" },
         { name: "Telehealth", icon: Video, page: "Telehealth" },
+      ],
+    },
+    {
+      category: "Resources",
+      items: [
+        { name: "Library", icon: BookOpen, page: "ResourceLibrary" },
       ],
     },
     {
