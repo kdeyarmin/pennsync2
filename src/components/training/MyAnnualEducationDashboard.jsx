@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import LearningPathProgress from "./LearningPathProgress";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
 
@@ -139,26 +140,13 @@ export default function MyAnnualEducationDashboard() {
         </TabsContent>
 
         <TabsContent value="plans" className="space-y-4">
-          {enrollments.map((enrollment) => {
-            const overdue = enrollment.status === 'overdue' || (enrollment.due_date && new Date(enrollment.due_date) < new Date() && enrollment.status !== 'completed');
-            return (
-              <Card key={enrollment.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-3">
-                    <CardTitle>{enrollment.plan_name}</CardTitle>
-                    <Badge className={overdue ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>{overdue ? 'overdue' : enrollment.status}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm text-slate-600">
-                    <span>{enrollment.courses_completed}/{enrollment.courses_total} completed</span>
-                    <span>Due {formatDate(enrollment.due_date)}</span>
-                  </div>
-                  <Progress value={enrollment.progress_percentage || 0} className="h-2" />
-                </CardContent>
-              </Card>
-            );
-          })}
+          {enrollments.map((enrollment) => (
+            <LearningPathProgress 
+              key={enrollment.id}
+              planId={enrollment.plan_id}
+              userId={currentUser?.email}
+            />
+          ))}
           {enrollments.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No annual learning plans assigned.</CardContent></Card>}
         </TabsContent>
 
