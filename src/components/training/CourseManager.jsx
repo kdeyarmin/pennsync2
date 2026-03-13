@@ -14,16 +14,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function CourseManager() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [businessLineFilter, setBusinessLineFilter] = useState('all');
   const queryClient = useQueryClient();
 
-  const { data: courses = [] } = useQuery({
+  const { data: allCourses = [] } = useQuery({
     queryKey: ['training-courses'],
     queryFn: () => base44.entities.TrainingCourse.list('-created_date', 100),
     initialData: [],
+  });
+
+  const courses = allCourses.filter(course => {
+    if (categoryFilter !== 'all' && course.category !== categoryFilter) return false;
+    if (statusFilter !== 'all' && course.status !== statusFilter) return false;
+    if (businessLineFilter !== 'all' && course.business_line_scope !== businessLineFilter) return false;
+    return true;
   });
 
   const deleteMutation = useMutation({
@@ -47,7 +64,7 @@ export default function CourseManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Training Courses</h2>
         <Dialog open={showForm} onOpenChange={setShowForm}>
           <DialogTrigger asChild>
@@ -73,6 +90,65 @@ export default function CourseManager() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Category</label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="compliance">Compliance</SelectItem>
+                  <SelectItem value="clinical">Clinical</SelectItem>
+                  <SelectItem value="safety">Safety</SelectItem>
+                  <SelectItem value="documentation">Documentation</SelectItem>
+                  <SelectItem value="hospice">Hospice</SelectItem>
+                  <SelectItem value="home_health">Home Health</SelectItem>
+                  <SelectItem value="dme">DME</SelectItem>
+                  <SelectItem value="onboarding">Onboarding</SelectItem>
+                  <SelectItem value="leadership">Leadership</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="pending_review">Pending Review</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Business Line</label>
+              <Select value={businessLineFilter} onValueChange={setBusinessLineFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Business Lines" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Business Lines</SelectItem>
+                  <SelectItem value="home_health">Home Health</SelectItem>
+                  <SelectItem value="hospice">Hospice</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="mt-3 text-sm text-gray-600">
+            Showing {courses.length} of {allCourses.length} courses
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {courses.length > 0 ? (
