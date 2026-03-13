@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2
+  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -205,8 +205,8 @@ export default function Layout({ children, currentPageName }) {
       category: "Configuration", 
       items: [
         { name: "Data Management", icon: Users, page: "PatientDataManagement" },
-        { name: "Data Quality", icon: Shield, page: "DataQualityMonitor" },
-        { name: "System Health", icon: Target, page: "SystemHealthMonitor" },
+        { name: "Data Quality", icon: Database, page: "DataQualityMonitor" },
+        { name: "System Health", icon: Activity, page: "SystemHealthMonitor" },
         { name: "Settings", icon: Settings, page: "UserSettings" },
       ] 
     },

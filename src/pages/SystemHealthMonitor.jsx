@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RefreshCw, CheckCircle2, XCircle, AlertTriangle, Activity } from "lucide-react";
 import { testAutomations } from "@/functions/testAutomations";
+import SystemHealthPanel from "@/components/admin/SystemHealthPanel";
 
 export default function SystemHealthMonitor() {
   const { data: currentUser } = useQuery({
@@ -38,7 +39,9 @@ export default function SystemHealthMonitor() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
+      <SystemHealthPanel />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">System Health Monitor</h1>
