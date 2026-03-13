@@ -57,6 +57,7 @@ import EventReport from '@/pages/EventReport';
 import ComplianceMonitoringDashboard from '@/pages/ComplianceMonitoringDashboard';
 import IncidentReportingModule from '@/pages/IncidentReportingModule';
 import DataQualityMonitor from '@/pages/DataQualityMonitor';
+import SystemHealthMonitor from '@/pages/SystemHealthMonitor';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -135,6 +136,7 @@ const AuthenticatedApp = () => {
       <Route path="/ComplianceMonitoringDashboard" element={<LayoutWrapper currentPageName="ComplianceMonitoringDashboard"><ComplianceMonitoringDashboard /></LayoutWrapper>} />
       <Route path="/IncidentReportingModule" element={<LayoutWrapper currentPageName="IncidentReportingModule"><IncidentReportingModule /></LayoutWrapper>} />
       <Route path="/DataQualityMonitor" element={<LayoutWrapper currentPageName="DataQualityMonitor"><DataQualityMonitor /></LayoutWrapper>} />
+      <Route path="/SystemHealthMonitor" element={<LayoutWrapper currentPageName="SystemHealthMonitor"><SystemHealthMonitor /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
