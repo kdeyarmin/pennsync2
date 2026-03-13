@@ -120,10 +120,12 @@ export default function Dashboard() {
     enabled: !!currentUser?.email,
   });
 
-  // Handle errors gracefully
+  // Handle errors gracefully with user feedback
   if (visitsError || patientsError) {
     console.error('Dashboard data loading error:', visitsError || patientsError);
   }
+
+  const hasDataError = visitsError || patientsError;
 
   const stats = useMemo(() => {
     if (!currentUser?.email) {
@@ -175,6 +177,19 @@ export default function Dashboard() {
   return (
     <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
     <div ref={containerRef} className="max-w-7xl mx-auto min-h-screen">
+      {hasDataError && (
+        <Card className="mb-4 border-red-300 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <div>
+                <p className="font-semibold text-red-900">Unable to load dashboard data</p>
+                <p className="text-sm text-red-700">Please check your connection and try again.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {/* Welcome Banner */}
       <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-xl overflow-hidden`}>
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
