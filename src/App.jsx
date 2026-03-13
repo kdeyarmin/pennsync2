@@ -54,6 +54,7 @@ import ManagerSkillGapDashboard from '@/pages/ManagerSkillGapDashboard';
 import ClinicalSkillsChecklist from '@/pages/ClinicalSkillsChecklist';
 import TrainingCoursePlayer from '@/pages/TrainingCoursePlayer';
 import EventReport from '@/pages/EventReport';
+import ComplianceMonitoringDashboard from '@/pages/ComplianceMonitoringDashboard';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -129,6 +130,7 @@ const AuthenticatedApp = () => {
       <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
       <Route path="/TrainingCoursePlayer" element={<LayoutWrapper currentPageName="TrainingCoursePlayer"><TrainingCoursePlayer /></LayoutWrapper>} />
       <Route path="/EventReport" element={<LayoutWrapper currentPageName="EventReport"><EventReport /></LayoutWrapper>} />
+      <Route path="/ComplianceMonitoringDashboard" element={<LayoutWrapper currentPageName="ComplianceMonitoringDashboard"><ComplianceMonitoringDashboard /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
