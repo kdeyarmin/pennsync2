@@ -238,15 +238,15 @@ css
 
   /* Risk indicators */
   .risk-low {
-    @apply text-green-700 bg-green-100 border-green-300;
+    @apply text-emerald-50 bg-emerald-700 border-emerald-600;
   }
 
   .risk-medium {
-    @apply text-yellow-700 bg-yellow-100 border-yellow-300;
+    @apply text-amber-50 bg-amber-700 border-amber-600;
   }
 
   .risk-high {
-    @apply text-red-700 bg-red-100 border-red-300;
+    @apply text-red-50 bg-red-700 border-red-600;
   }
 
   /* Status indicators */
