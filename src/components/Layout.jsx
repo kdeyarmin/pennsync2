@@ -142,9 +142,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Resources",
       items: [
-        { name: "Clinical Library", icon: BookOpen, page: "ClinicalLibrary" },
-        { name: "Patient Education", icon: BookOpen, page: "PatientEducationHub" },
-        { name: "Guidelines", icon: Shield, page: "MedicareGuidelinesLibrary" },
+        { name: "Resource Library", icon: BookOpen, page: "ResourceLibrary" },
       ],
     },
     {

@@ -27,9 +27,7 @@ import SmartOASISAssessment from '@/pages/SmartOASISAssessment';
 import SendFax from '@/pages/SendFax';
 import PhysicianDirectory from '@/pages/PhysicianDirectory';
 import Telehealth from '@/pages/Telehealth';
-import ClinicalLibrary from '@/pages/ClinicalLibrary';
-import PatientEducationHub from '@/pages/PatientEducationHub';
-import MedicareGuidelinesLibrary from '@/pages/MedicareGuidelinesLibrary';
+import ResourceLibrary from '@/pages/ResourceLibrary';
 import ComplianceCenter from '@/pages/ComplianceCenter';
 import Incidents from '@/pages/Incidents';
 import ReferralIntake from '@/pages/ReferralIntake';
@@ -91,9 +89,7 @@ const AuthenticatedApp = () => {
       <Route path="/SendFax" element={<LayoutWrapper currentPageName="SendFax"><SendFax /></LayoutWrapper>} />
       <Route path="/PhysicianDirectory" element={<LayoutWrapper currentPageName="PhysicianDirectory"><PhysicianDirectory /></LayoutWrapper>} />
       <Route path="/Telehealth" element={<LayoutWrapper currentPageName="Telehealth"><Telehealth /></LayoutWrapper>} />
-      <Route path="/ClinicalLibrary" element={<LayoutWrapper currentPageName="ClinicalLibrary"><ClinicalLibrary /></LayoutWrapper>} />
-      <Route path="/PatientEducationHub" element={<LayoutWrapper currentPageName="PatientEducationHub"><PatientEducationHub /></LayoutWrapper>} />
-      <Route path="/MedicareGuidelinesLibrary" element={<LayoutWrapper currentPageName="MedicareGuidelinesLibrary"><MedicareGuidelinesLibrary /></LayoutWrapper>} />
+      <Route path="/ResourceLibrary" element={<LayoutWrapper currentPageName="ResourceLibrary"><ResourceLibrary /></LayoutWrapper>} />
       <Route path="/ComplianceCenter" element={<LayoutWrapper currentPageName="ComplianceCenter"><ComplianceCenter /></LayoutWrapper>} />
       <Route path="/Incidents" element={<LayoutWrapper currentPageName="Incidents"><Incidents /></LayoutWrapper>} />
       <Route path="/ReferralIntake" element={<LayoutWrapper currentPageName="ReferralIntake"><ReferralIntake /></LayoutWrapper>} />
