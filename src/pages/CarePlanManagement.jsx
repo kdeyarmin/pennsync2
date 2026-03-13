@@ -63,7 +63,7 @@ export default function CarePlanManagement() {
   });
 
   // Log page visit
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentUser?.email) {
       logActivity(ActivityActions.PAGE_VISIT, {
         page: 'CarePlanManagement',
@@ -253,14 +253,16 @@ export default function CarePlanManagement() {
   const activePatients = Object.keys(groupedByPatient).length;
 
   // Care Plan Builder state
-  const [planItems, setPlanItems] = React.useState([]);
-  const [selectedItem, setSelectedItem] = React.useState(null);
-  const [linkedPathways, setLinkedPathways] = React.useState({});
-  const [planName, setPlanName] = React.useState("New Care Plan");
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-  const [careType, setCareType] = React.useState("home_health");
-  const [showAIAnalyzer, setShowAIAnalyzer] = React.useState(false);
+  const [planItems, setPlanItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [linkedPathways, setLinkedPathways] = useState({});
+  const [planName, setPlanName] = useState("New Care Plan");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [careType, setCareType] = useState("home_health");
+  const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
 
   function findLibraryItem(id) {
     for (const cat of INTERVENTIONS_LIBRARY) {
@@ -270,7 +272,7 @@ export default function CarePlanManagement() {
     return null;
   }
 
-  const onDragEnd = React.useCallback((result) => {
+  const onDragEnd = useCallback((result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
 
@@ -304,13 +306,13 @@ export default function CarePlanManagement() {
     }
   }, [planItems]);
 
-  const removeItem = React.useCallback((id) => {
+  const removeItem = useCallback((id) => {
     setPlanItems(prev => prev.filter(i => i.id !== id));
     setLinkedPathways(prev => { const n = { ...prev }; delete n[id]; return n; });
     setSelectedItem(prev => prev?.id === id ? null : prev);
   }, []);
 
-  const linkPathway = React.useCallback((itemId, pathway) => {
+  const linkPathway = useCallback((itemId, pathway) => {
     setLinkedPathways(prev => ({ ...prev, [itemId]: pathway }));
     toast.success(`Linked to: ${pathway}`);
   }, []);
@@ -493,9 +495,6 @@ export default function CarePlanManagement() {
         </div>
       </div>
     );
-
-  const [patientSearch, setPatientSearch] = useState("");
-  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
