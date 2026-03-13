@@ -63,7 +63,7 @@ export default function ProfileCompletenessAlert({ user }) {
           {validation.needsCredentials && (
             <div className={validation.missing.length > 0 ? "pt-3 border-t border-amber-200" : ""}>
               <p className="text-sm mb-2">Upload your license, certifications, and insurance</p>
-              <Link to="/PersonnelFile">
+              <Link to="/UserSettings">
                 <Button size="sm" variant="outline" className="gap-2 min-h-[40px]">
                   <FileText className="h-4 w-4" />
                   Upload Credentials <ArrowRight className="h-4 w-4" />

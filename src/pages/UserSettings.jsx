@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,8 +29,13 @@ import {
   Home,
   Users,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Shield
 } from "lucide-react";
+import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
+import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
+import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
+import AdminCredentialApproval from "@/components/personnel/AdminCredentialApproval";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,12 +48,16 @@ import {
 import CareScopeSelector from "../components/profile/CareScopeSelector";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
 
+const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
+
 export default function UserSettings() {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [showCredentialForm, setShowCredentialForm] = useState(false);
+  const [editingCredential, setEditingCredential] = useState(null);
   const [profileData, setProfileData] = useState({
     phone: '',
     credential_type: '',
@@ -78,6 +87,27 @@ export default function UserSettings() {
     },
     enabled: !!currentUser?.email,
   });
+
+  const { data: credentials = [] } = useQuery({
+    queryKey: ['personnel-credentials'],
+    queryFn: () => base44.entities.PersonnelCredential.list('-expiration_date', 500),
+    initialData: [],
+  });
+
+  const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
+
+  const myCredentials = useMemo(() => 
+    credentials.filter((item) => item.user_id === currentUser?.email), 
+    [credentials, currentUser]
+  );
+
+  const pendingApprovals = useMemo(() => {
+    if (!isAgencyAdmin(currentUser)) return [];
+    return credentials.filter((item) => 
+      item.status === 'pending_approval' && 
+      (!currentUser?.agency_name || item.agency_name === currentUser.agency_name)
+    );
+  }, [credentials, currentUser]);
 
   const [preferences, setPreferences] = useState({
     ai_verbosity: 'balanced',
@@ -194,9 +224,9 @@ export default function UserSettings() {
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
           <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
-          <span className="truncate">AI Settings & Preferences</span>
+          <span className="truncate">Settings & Profile</span>
         </h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2">Customize how AI assists you in documentation</p>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-2">Manage your profile, credentials, and AI preferences</p>
       </div>
 
       {saveSuccess && (
@@ -209,25 +239,30 @@ export default function UserSettings() {
       )}
 
       <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-4 gap-1 h-auto">
+        <TabsList className="grid w-full grid-cols-5 gap-1 h-auto">
           <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
             <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">My Role</span>
-            <span className="sm:hidden">Role</span>
+            <span className="hidden sm:inline">Profile</span>
+            <span className="sm:hidden">Profile</span>
           </TabsTrigger>
-          <TabsTrigger value="ai-behavior" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm col-span-1">
+          <TabsTrigger value="credentials" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+            <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Credentials</span>
+            <span className="sm:hidden">Creds</span>
+          </TabsTrigger>
+          <TabsTrigger value="ai-behavior" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
             <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">AI Behavior</span>
+            <span className="hidden sm:inline">AI</span>
             <span className="sm:hidden">AI</span>
           </TabsTrigger>
           <TabsTrigger value="features" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
             <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Features</span>
-            <span className="sm:hidden">Features</span>
+            <span className="sm:hidden">Feat</span>
           </TabsTrigger>
           <TabsTrigger value="documentation" className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
             <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Documentation</span>
+            <span className="hidden sm:inline">Docs</span>
             <span className="sm:hidden">Docs</span>
           </TabsTrigger>
         </TabsList>
@@ -352,6 +387,106 @@ export default function UserSettings() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Credentials Tab */}
+        <TabsContent value="credentials" className="space-y-6">
+          <Tabs defaultValue="my-credentials" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="my-credentials">My Credentials</TabsTrigger>
+              <TabsTrigger value="renewals">Renewals</TabsTrigger>
+              {isAgencyAdmin(currentUser) && (
+                <TabsTrigger value="approvals">
+                  Approvals {pendingApprovals.length > 0 && `(${pendingApprovals.length})`}
+                </TabsTrigger>
+              )}
+            </TabsList>
+
+            <TabsContent value="my-credentials" className="space-y-4">
+              <div className="flex justify-end">
+                <Button onClick={() => { setEditingCredential(null); setShowCredentialForm(!showCredentialForm); }}>
+                  {showCredentialForm ? 'Close Form' : 'Add License/Certification'}
+                </Button>
+              </div>
+
+              {showCredentialForm && currentUser && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{editingCredential ? 'Update Credential' : 'Add License, Certification, or Insurance'}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PersonnelCredentialForm 
+                      currentUser={currentUser} 
+                      existingItem={editingCredential} 
+                      onDone={() => { setShowCredentialForm(false); setEditingCredential(null); }} 
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="space-y-4">
+                {myCredentials.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-10 text-center text-gray-500">
+                      <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p>No credentials uploaded yet. Add your license, certifications, and insurance.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  myCredentials.map((item) => (
+                    <Card key={item.id}>
+                      <CardContent className="p-5 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                            <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                            <PersonnelStatusBadge status={item.status} />
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {item.item_type} • Expires {new Date(item.expiration_date).toLocaleDateString()}
+                          </p>
+                          {item.issuing_organization && (
+                            <p className="text-sm text-gray-500">{item.issuing_organization}</p>
+                          )}
+                          {item.credential_number && (
+                            <p className="text-sm text-gray-500">#{item.credential_number}</p>
+                          )}
+                          {item.uploaded_file_url && (
+                            <a href={item.uploaded_file_url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline hover:text-indigo-700 mt-2 inline-block">
+                              View Document
+                            </a>
+                          )}
+                          {item.rejection_reason && (
+                            <p className="text-sm text-red-600 mt-2 bg-red-50 p-2 rounded">
+                              <strong>Rejected:</strong> {item.rejection_reason}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => { setEditingCredential(item); setShowCredentialForm(true); }}
+                            className="min-h-[44px]"
+                          >
+                            Upload New Copy
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="renewals">
+              <CredentialRenewalPortal userId={currentUser?.email} />
+            </TabsContent>
+
+            {isAgencyAdmin(currentUser) && (
+              <TabsContent value="approvals">
+                <AdminCredentialApproval />
+              </TabsContent>
+            )}
+          </Tabs>
         </TabsContent>
 
         {/* AI Behavior Tab */}
