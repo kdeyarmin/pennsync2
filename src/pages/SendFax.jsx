@@ -43,6 +43,7 @@ export default function SendFax() {
                 { value: "documents",  Icon: FileText,      label: "Doc"       },
                 { value: "batch",      Icon: Layers,        label: "Batch"     },
                 { value: "templates",  Icon: BookTemplate,  label: "Templates" },
+                { value: "status",     Icon: Activity,      label: "Status"    },
                 { value: "search",     Icon: Search,        label: "Search"    },
                 { value: "history",    Icon: History,       label: "History"   },
               ].map(({ value, Icon, label }) => (
