@@ -30,6 +30,11 @@ import Telehealth from '@/pages/Telehealth';
 import ResourceLibrary from '@/pages/ResourceLibrary';
 import ComplianceCenter from '@/pages/ComplianceCenter';
 import Incidents from '@/pages/Incidents';
+import MyLearning from '@/pages/MyLearning';
+import AdminTraining from '@/pages/AdminTraining';
+import ClinicalDocumentation from '@/pages/ClinicalDocumentation';
+import AdminOperations from '@/pages/AdminOperations';
+import ReportsAnalytics from '@/pages/ReportsAnalytics';
 import ReferralIntake from '@/pages/ReferralIntake';
 import OfflineMode from '@/pages/OfflineMode';
 import Help from '@/pages/Help';
@@ -104,6 +109,7 @@ const AuthenticatedApp = () => {
       <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
       <Route path="/TrainingCoursePlayer" element={<LayoutWrapper currentPageName="TrainingCoursePlayer"><TrainingCoursePlayer /></LayoutWrapper>} />
       <Route path="/EventReport" element={<LayoutWrapper currentPageName="EventReport"><EventReport /></LayoutWrapper>} />
+      <Route path="/ResourceLibrary" element={<LayoutWrapper currentPageName="ResourceLibrary"><ResourceLibrary /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
