@@ -227,28 +227,28 @@ export default function Dashboard() {
       <AnnouncementsWidget />
 
       {/* Nurse Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-4 sm:p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 shadow-md">
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-blue-600 font-medium mb-1">Note Enhancements</p>
-                <p className="text-2xl sm:text-3xl font-bold text-blue-900">
+                <p className="text-xs sm:text-sm text-blue-700 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
+                <p className="text-3xl sm:text-4xl font-bold text-blue-900">
                   {noteConversions.length}
                 </p>
               </div>
-              <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-blue-400 flex-shrink-0" />
+              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-blue-400 flex-shrink-0 opacity-60" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-          <CardContent className="p-4 sm:p-6">
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 shadow-md">
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-green-600 font-medium mb-1">Time Saved</p>
-                <p className="text-2xl sm:text-3xl font-bold text-green-900">{stats.timeSavedDisplay}</p>
+                <p className="text-xs sm:text-sm text-emerald-700 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
+                <p className="text-3xl sm:text-4xl font-bold text-emerald-900">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-10 h-10 sm:w-12 sm:h-12 text-green-400 flex-shrink-0" />
+              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-emerald-400 flex-shrink-0 opacity-60" />
             </div>
           </CardContent>
         </Card>
