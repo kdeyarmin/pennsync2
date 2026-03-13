@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Users, FileText, PenTool, Settings, ArrowRight, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import SystemHealthMonitor from "./SystemHealthMonitor";
+import QuickHealthOverview from "./QuickHealthOverview";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
   <Card className="hover:shadow-md transition-shadow">
@@ -109,6 +109,9 @@ export default function AdminDashboardOverview() {
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
         <p className="text-gray-600 mt-1">System overview and administrative controls</p>
       </div>
+
+      {/* Quick Health Overview */}
+      <QuickHealthOverview />
 
       {/* System Health Monitoring */}
       <SystemHealthMonitor />
