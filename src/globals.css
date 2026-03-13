@@ -72,15 +72,15 @@ css
 /* Modern Card Styles */
 @layer components {
   .modern-card {
-    @apply bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300;
+    @apply bg-slate-800 rounded-xl border border-slate-700 shadow-md hover:shadow-lg transition-all duration-300;
   }
   
   .modern-card-elevated {
-    @apply bg-white rounded-xl border border-slate-200 shadow-md hover:shadow-lg transition-all duration-300;
+    @apply bg-slate-800 rounded-xl border border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300;
   }
   
   .modern-card-interactive {
-    @apply bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-98 transition-all duration-300 cursor-pointer;
+    @apply bg-slate-800 rounded-xl border border-slate-700 shadow-md hover:shadow-lg hover:-translate-y-1 active:scale-98 transition-all duration-300 cursor-pointer;
   }
   
   /* AI Feature Cards with Gradient */
