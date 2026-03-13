@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -18,7 +19,9 @@ import {
   ArrowLeft,
   Sparkles,
   Plus,
-  Edit
+  Edit,
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import {
@@ -51,7 +54,7 @@ export default function CarePlanManagement() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showAITools, setShowAITools] = useState(false);
   const [viewMode, setViewMode] = useState("list"); // "list" or "timeline"
-  const [showBuilder, setShowBuilder] = useState(false);
+  const [activeTab, setActiveTab] = useState("list");
   const [builderPatient, setBuilderPatient] = useState(null);
 
   const { data: currentUser } = useQuery({
@@ -341,7 +344,7 @@ export default function CarePlanManagement() {
       toast.success(`Care plan saved — ${planItems.length} interventions for ${builderPatient.first_name} ${builderPatient.last_name}`);
       setTimeout(() => {
         setSaved(false);
-        setShowBuilder(false);
+        setActiveTab("list");
         setPlanItems([]);
         setLinkedPathways({});
       }, 2000);
@@ -361,14 +364,9 @@ export default function CarePlanManagement() {
   const linkedCount = Object.keys(linkedPathways).length;
   const complianceCount = planItems.filter(i => i.complianceTag).length;
 
-  if (showBuilder) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex flex-wrap items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => setShowBuilder(false)}>
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back
-          </Button>
+  const BuilderTab = () => (
+    <div className="flex flex-col h-[calc(100vh-16rem)] overflow-hidden">
+      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Target className="w-5 h-5 text-indigo-600 flex-shrink-0" />
             <Input
@@ -378,9 +376,49 @@ export default function CarePlanManagement() {
             />
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <User className="w-4 h-4 text-gray-500" />
-            <span className="font-medium">{builderPatient?.first_name} {builderPatient?.last_name}</span>
+          <div className="relative">
+            <button
+              onClick={() => setShowPatientDropdown(!showPatientDropdown)}
+              className="flex items-center gap-2 text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
+            >
+              <User className="w-4 h-4 text-gray-500" />
+              <span className={builderPatient ? "text-gray-800 font-medium" : "text-gray-400"}>
+                {builderPatient ? `${builderPatient.first_name} ${builderPatient.last_name}` : "Select Patient"}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+            </button>
+
+            {showPatientDropdown && (
+              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+                <div className="p-2 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input
+                      value={patientSearch}
+                      onChange={e => setPatientSearch(e.target.value)}
+                      placeholder="Search patients..."
+                      className="w-full text-sm pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-indigo-400"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="max-h-48 overflow-y-auto py-1">
+                  {patients.filter(p => {
+                    const name = `${p.first_name} ${p.last_name}`.toLowerCase();
+                    return name.includes(patientSearch.toLowerCase());
+                  }).map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setBuilderPatient(p); setShowPatientDropdown(false); setPatientSearch(""); }}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition-colors ${builderPatient?.id === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-gray-700"}`}
+                    >
+                      <div className="font-medium">{p.first_name} {p.last_name}</div>
+                      {p.primary_diagnosis && <div className="text-xs text-gray-400 truncate">{p.primary_diagnosis}</div>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="hidden sm:flex items-center gap-3 text-xs text-gray-500 border-x border-gray-200 px-3">
@@ -455,7 +493,9 @@ export default function CarePlanManagement() {
         </div>
       </div>
     );
-  }
+
+  const [patientSearch, setPatientSearch] = useState("");
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -475,12 +515,26 @@ export default function CarePlanManagement() {
             <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Care Plan Management</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Manage and track patient care plans</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Care Plans</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block">Manage plans and build new interventions</p>
           </div>
-          <FavoriteButton type="page" id="CarePlanManagement" name="Care Plan Management" />
+          <FavoriteButton type="page" id="CarePlanManagement" name="Care Plans" />
         </div>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="list" className="gap-2">
+            <Target className="w-4 h-4" />
+            Active Plans
+          </TabsTrigger>
+          <TabsTrigger value="builder" className="gap-2">
+            <Plus className="w-4 h-4" />
+            Build Plan
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="space-y-4">
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
@@ -738,17 +792,17 @@ export default function CarePlanManagement() {
                     </div>
                     <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                     <Button
-                      size="sm"
-                      onClick={() => {
-                        setBuilderPatient(patient);
-                        setShowBuilder(true);
-                        setPlanItems([]);
-                      }}
-                      className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
+                     size="sm"
+                     onClick={() => {
+                       setBuilderPatient(patient);
+                       setActiveTab("builder");
+                       setPlanItems([]);
+                     }}
+                     className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
                     >
-                      <Plus className="w-4 h-4 mr-1" />
-                      <span className="hidden sm:inline">Build Plan</span>
-                      <span className="sm:hidden">Build</span>
+                     <Plus className="w-4 h-4 mr-1" />
+                     <span className="hidden sm:inline">Build Plan</span>
+                     <span className="sm:hidden">Build</span>
                     </Button>
                     <Button
                       size="sm"
@@ -846,6 +900,12 @@ export default function CarePlanManagement() {
           })
         )}
       </div>
+        </TabsContent>
+
+        <TabsContent value="builder">
+          <BuilderTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
