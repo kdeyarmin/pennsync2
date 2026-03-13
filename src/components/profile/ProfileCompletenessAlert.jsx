@@ -1,13 +1,11 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, ArrowRight, FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
 export default function ProfileCompletenessAlert({ user }) {
-  // Check for uploaded credentials
   const { data: credentials = [] } = useQuery({
     queryKey: ['myCredentials', user?.email],
     queryFn: () => user?.email ? base44.entities.PersonnelCredential.filter({ user_id: user.email }) : Promise.resolve([]),
@@ -28,7 +26,6 @@ export default function ProfileCompletenessAlert({ user }) {
       !user[field.key] || user[field.key] === ''
     );
 
-    // Check if user has at least one active credential
     const hasActiveCredential = credentials.some(c => c.status === 'approved' || c.status === 'pending_approval');
 
     return {
@@ -43,36 +40,27 @@ export default function ProfileCompletenessAlert({ user }) {
   }
 
   return (
-    <Alert className="border-amber-300 bg-amber-50 mb-4">
-      <AlertTriangle className="h-4 w-4 text-amber-600" />
-      <AlertDescription className="text-amber-800">
-        <div>
-          <p className="font-semibold mb-2">Complete Your Profile</p>
-          
-          {validation.missing.length > 0 && (
-            <div className="mb-3">
-              <p className="text-sm mb-2">Missing profile info: {validation.missing.join(', ')}</p>
-              <Link to="/UserSettings">
-                <Button size="sm" variant="outline" className="gap-2 min-h-[40px]">
-                  Update Profile <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          )}
-          
-          {validation.needsCredentials && (
-            <div className={validation.missing.length > 0 ? "pt-3 border-t border-amber-200" : ""}>
-              <p className="text-sm mb-2">Upload your license, certifications, and insurance</p>
-              <Link to="/UserSettings">
-                <Button size="sm" variant="outline" className="gap-2 min-h-[40px]">
-                  <FileText className="h-4 w-4" />
-                  Upload Credentials <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          )}
+    <div className="rounded-xl border border-amber-600 bg-amber-50 p-5 mb-6 shadow-sm">
+      <div className="flex gap-4">
+        <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-amber-900 mb-2">Complete Your Profile</h3>
+          <p className="text-sm text-amber-800 mb-3">
+            {validation.missing.length > 0 && validation.needsCredentials
+              ? `Missing profile info: ${validation.missing.join(', ')} • Upload your license, certifications, and insurance`
+              : validation.missing.length > 0
+              ? `Missing profile info: ${validation.missing.join(', ')}`
+              : "Upload your license, certifications, and insurance"}
+          </p>
+          <Link to="/UserSettings" className="inline-block">
+            <Button size="sm" className="gap-2 min-h-[40px] bg-amber-600 hover:bg-amber-700">
+              <FileText className="h-4 w-4" />
+              Update Profile & Upload Credentials
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
-      </AlertDescription>
-    </Alert>
+      </div>
+    </div>
   );
 }
