@@ -42,6 +42,10 @@ import ClinicalPathwayManager from '@/pages/ClinicalPathwayManager';
 import ClinicalSkillsChecklist from '@/pages/ClinicalSkillsChecklist';
 import TrainingCoursePlayer from '@/pages/TrainingCoursePlayer';
 import EventReport from '@/pages/EventReport';
+import SmartNoteAssistant from '@/pages/SmartNoteAssistant';
+import PatientEducationHub from '@/pages/PatientEducationHub';
+import VisitScribe from '@/pages/VisitScribe';
+import IncidentReporting from '@/pages/IncidentReporting';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
