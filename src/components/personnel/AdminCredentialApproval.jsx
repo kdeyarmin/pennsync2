@@ -19,7 +19,8 @@ import {
   FileText,
   ExternalLink,
   Clock,
-  User
+  User,
+  Award
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
