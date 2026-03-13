@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonnelCredentialForm from "@/components/personnel/PersonnelCredentialForm";
 import PersonnelStatusBadge from "@/components/personnel/PersonnelStatusBadge";
 import PersonnelApprovalsPanel from "@/components/personnel/PersonnelApprovalsPanel";
+import CredentialRenewalPortal from "@/components/personnel/CredentialRenewalPortal";
+import AdminCredentialApproval from "@/components/personnel/AdminCredentialApproval";
 
 const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
@@ -32,7 +34,8 @@ export default function PersonnelFile() {
       <Tabs defaultValue="my-file" className="space-y-6">
         <TabsList>
           <TabsTrigger value="my-file">My Personnel File</TabsTrigger>
-          {isAgencyAdmin(currentUser) && <TabsTrigger value="approvals">Agency Approvals</TabsTrigger>}
+          <TabsTrigger value="renewals">Renewals</TabsTrigger>
+          {isAgencyAdmin(currentUser) && <TabsTrigger value="approvals">Approvals ({pendingApprovals.length})</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="my-file" className="space-y-4">
@@ -78,14 +81,13 @@ export default function PersonnelFile() {
           </div>
         </TabsContent>
 
+        <TabsContent value="renewals">
+          <CredentialRenewalPortal userId={currentUser?.email} />
+        </TabsContent>
+
         {isAgencyAdmin(currentUser) && (
           <TabsContent value="approvals">
-            <Card>
-              <CardHeader><CardTitle>Pending personnel file approvals</CardTitle></CardHeader>
-              <CardContent>
-                <PersonnelApprovalsPanel items={pendingApprovals} currentUser={currentUser} />
-              </CardContent>
-            </Card>
+            <AdminCredentialApproval />
           </TabsContent>
         )}
       </Tabs>
