@@ -205,6 +205,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Configuration", 
       items: [
         { name: "Data Management", icon: Users, page: "PatientDataManagement" },
+        { name: "Data Quality", icon: Shield, page: "DataQualityMonitor" },
         { name: "Settings", icon: Settings, page: "UserSettings" },
       ] 
     },
