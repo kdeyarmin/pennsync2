@@ -75,6 +75,10 @@ export default function SendFax() {
             <FaxTemplateManager onApplyTemplate={handleApplyTemplate} />
           </TabsContent>
 
+          <TabsContent value="status" className="mt-4 sm:mt-6">
+            <RealtimeFaxStatusTracker />
+          </TabsContent>
+
           <TabsContent value="search" className="mt-4 sm:mt-6">
             <FaxSearchInterface onSelectFaxForAI={() => {}} />
           </TabsContent>
