@@ -49,11 +49,24 @@ export default function UserSettings() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [profileData, setProfileData] = useState({
+    phone: '',
+    credential_type: '',
+  });
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      setProfileData({
+        phone: currentUser.phone || '',
+        credential_type: currentUser.credential_type || '',
+      });
+    }
+  }, [currentUser]);
 
   const { data: existingConfig } = useQuery({
     queryKey: ['aiConfig', currentUser?.email],
@@ -107,6 +120,13 @@ export default function UserSettings() {
 
     setIsSaving(true);
     try {
+      // Update user profile
+      await base44.auth.updateMe({
+        phone: profileData.phone,
+        credential_type: profileData.credential_type,
+      });
+
+      // Update AI config
       const configData = {
         user_email: currentUser.email,
         user_name: currentUser.full_name,
@@ -120,6 +140,7 @@ export default function UserSettings() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['aiConfig', currentUser.email] });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
@@ -213,6 +234,55 @@ export default function UserSettings() {
 
         {/* Profile / Role Tab */}
         <TabsContent value="profile" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                Profile Information
+              </CardTitle>
+              <CardDescription>
+                Complete your profile information for compliance tracking
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="credential_type" className="text-sm font-medium">Credential Type *</Label>
+                <Select
+                  value={profileData.credential_type}
+                  onValueChange={(value) => setProfileData(prev => ({ ...prev, credential_type: value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select your credential" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="RN">RN - Registered Nurse</SelectItem>
+                    <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
+                    <SelectItem value="LVN">LVN - Licensed Vocational Nurse</SelectItem>
+                    <SelectItem value="NP">NP - Nurse Practitioner</SelectItem>
+                    <SelectItem value="CNS">CNS - Clinical Nurse Specialist</SelectItem>
+                    <SelectItem value="PT">PT - Physical Therapist</SelectItem>
+                    <SelectItem value="OT">OT - Occupational Therapist</SelectItem>
+                    <SelectItem value="ST">ST - Speech Therapist</SelectItem>
+                    <SelectItem value="MSW">MSW - Medical Social Worker</SelectItem>
+                    <SelectItem value="HHA">HHA - Home Health Aide</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
