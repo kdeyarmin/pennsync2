@@ -123,6 +123,11 @@ const calculateMatchScore = (p1, p2) => {
   const fullName1 = `${firstName1} ${lastName1}`;
   const fullName2 = `${firstName2} ${lastName2}`;
   
+  // Calculate name similarities first
+  const firstNameSimilarity = calculateSimilarity(firstName1, firstName2);
+  const lastNameSimilarity = calculateSimilarity(lastName1, lastName2);
+  const fullNameSimilarity = calculateSimilarity(fullName1, fullName2);
+  
   // Exact match
   if (fullName1 === fullName2) {
     score += 40;
@@ -135,7 +140,6 @@ const calculateMatchScore = (p1, p2) => {
   }
   // Fuzzy match on full name (lowered threshold to 80%)
   else {
-    const fullNameSimilarity = calculateSimilarity(fullName1, fullName2);
     if (fullNameSimilarity >= 90) {
       score += 35;
       matches.push('name_fuzzy_very_high');
@@ -148,8 +152,6 @@ const calculateMatchScore = (p1, p2) => {
     }
     
     // Check individual name components
-    const firstNameSimilarity = calculateSimilarity(firstName1, firstName2);
-    const lastNameSimilarity = calculateSimilarity(lastName1, lastName2);
     
     if (firstNameSimilarity >= 90 && lastNameSimilarity >= 90) {
       score += 30;
