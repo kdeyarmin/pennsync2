@@ -200,28 +200,23 @@ Deno.serve(async (req) => {
     let certificate = null;
     let expirationDate = null;
     if (passed && course?.enable_certificate) {
-      if (course.certificate_valid_months) {
-        const exp = new Date();
-        exp.setMonth(exp.getMonth() + Number(course.certificate_valid_months));
-        expirationDate = exp.toISOString().slice(0, 10);
+      // Issue certificate via dedicated function
+      try {
+        const certResult = await base44.asServiceRole.functions.invoke('issueCertificate', {
+          assignment_id: assignmentId,
+          user_id: assignment.assigned_to_user_id,
+          course_id: assignment.course_id,
+          score
+        });
+        
+        if (certResult.data?.certificate) {
+          certificate = certResult.data.certificate;
+          expirationDate = certificate.expiration_date;
+        }
+      } catch (certError) {
+        console.error('Certificate issuance failed:', certError);
+        // Continue without certificate rather than failing the grading
       }
-
-      certificate = await base44.asServiceRole.entities.TrainingCertificate.create({
-        user_id: assignment.assigned_to_user_id,
-        user_name: user.full_name,
-        assignment_id: assignmentId,
-        course_id: assignment.course_id,
-        course_title: assignment.course_title,
-        training_category: course?.category || '',
-        business_line: course?.business_line_scope || '',
-        certificate_id: `CERT-${Date.now().toString(36).toUpperCase()}`,
-        issued_at: submittedAt,
-        completion_date: submittedAt,
-        expiration_date: expirationDate,
-        score,
-        hours: course?.ceu_hours || null,
-        verification_hash: crypto.randomUUID()
-      });
     }
 
     const maxAttemptsReached = assignment.max_attempts && attemptNumber >= assignment.max_attempts && !passed;
