@@ -94,7 +94,7 @@ css
   
   /* Color Hierarchy Badges (retained critical only) */
   .badge-critical {
-    @apply bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-lg text-xs font-semibold;
+    @apply bg-red-700 text-red-50 border border-red-600 px-2.5 py-1 rounded-lg text-xs font-semibold shadow-md;
   }
   
   /* Smooth Transitions & Micro-interactions (retained smooth-transition) */
