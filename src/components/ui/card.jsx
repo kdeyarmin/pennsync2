@@ -7,7 +7,7 @@ function cn(...inputs) {
 const Card = React.forwardRef((props, ref) => (
   <div
     ref={ref}
-    className={cn("rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all duration-300", props.className)}
+    className={cn("rounded-xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-300", props.className)}
     {...props}
   />
 ))
