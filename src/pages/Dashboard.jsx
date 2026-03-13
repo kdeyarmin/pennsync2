@@ -17,6 +17,7 @@ import AnnouncementsWidget from "@/components/dashboard/AnnouncementsWidget";
 import DashboardSkeleton from "@/components/loading/DashboardSkeleton";
 import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 import { calculateNurseStats } from "@/components/utils/statsCalculator";
+import ProfileCompletenessAlert from "@/components/profile/ProfileCompletenessAlert";
 
 // Non-critical below-the-fold — lazy loaded
 const HighRiskPatientsWidget    = lazy(() => import("@/components/dashboard/HighRiskPatientsWidget"));
@@ -190,6 +191,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+      {/* Profile Completeness Alert */}
+      <ProfileCompletenessAlert user={currentUser} />
+
       {/* Welcome Banner */}
       <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-xl overflow-hidden`}>
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
