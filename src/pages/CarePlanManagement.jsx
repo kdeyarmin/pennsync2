@@ -16,7 +16,9 @@ import {
   Trash2,
   User,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Plus,
+  Edit
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import {
@@ -33,6 +35,13 @@ import AIEducationRecommender from "../components/carePlan/AIEducationRecommende
 import EducationTracker from "../components/carePlan/EducationTracker";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
 import FavoriteButton from "../components/navigation/FavoriteButton";
+import { DragDropContext } from "@hello-pangea/dnd";
+import { INTERVENTIONS_LIBRARY } from "@/components/carePlan/InterventionLibrary";
+import InterventionLibrary from "@/components/carePlan/InterventionLibrary";
+import CarePlanCanvas from "@/components/carePlan/CarePlanCanvas";
+import InterventionDetailPanel from "@/components/carePlan/InterventionDetailPanel";
+import AICarePlanAnalyzer from "@/components/carePlan/AICarePlanAnalyzer";
+import { toast } from "sonner";
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
@@ -42,6 +51,8 @@ export default function CarePlanManagement() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showAITools, setShowAITools] = useState(false);
   const [viewMode, setViewMode] = useState("list"); // "list" or "timeline"
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [builderPatient, setBuilderPatient] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -58,10 +69,24 @@ export default function CarePlanManagement() {
     }
   }, [currentUser?.email]);
 
-  // Fetch all patients
+  // Fetch only patients the user has charted on
+  const { data: myVisits = [] } = useQuery({
+    queryKey: ['myVisits'],
+    queryFn: () => currentUser ? base44.entities.Visit.filter({ created_by: currentUser.email }) : Promise.resolve([]),
+    enabled: !!currentUser,
+    initialData: [],
+  });
+
+  const myPatientIds = [...new Set(myVisits.map(v => v.patient_id))];
+
   const { data: patients = [] } = useQuery({
-    queryKey: ['allPatients'],
-    queryFn: () => base44.entities.Patient.list(),
+    queryKey: ['myPatients', myPatientIds],
+    queryFn: async () => {
+      if (myPatientIds.length === 0) return [];
+      const allPatients = await base44.entities.Patient.list();
+      return allPatients.filter(p => myPatientIds.includes(p.id));
+    },
+    enabled: myPatientIds.length > 0,
     initialData: [],
   });
 
@@ -223,6 +248,214 @@ export default function CarePlanManagement() {
   const activePlans = carePlans.filter(p => p.status === 'active').length;
   const metGoals = carePlans.filter(p => p.status === 'met').length;
   const activePatients = Object.keys(groupedByPatient).length;
+
+  // Care Plan Builder state
+  const [planItems, setPlanItems] = React.useState([]);
+  const [selectedItem, setSelectedItem] = React.useState(null);
+  const [linkedPathways, setLinkedPathways] = React.useState({});
+  const [planName, setPlanName] = React.useState("New Care Plan");
+  const [saving, setSaving] = React.useState(false);
+  const [saved, setSaved] = React.useState(false);
+  const [careType, setCareType] = React.useState("home_health");
+  const [showAIAnalyzer, setShowAIAnalyzer] = React.useState(false);
+
+  function findLibraryItem(id) {
+    for (const cat of INTERVENTIONS_LIBRARY) {
+      const found = cat.items.find(i => i.id === id);
+      if (found) return { ...found, categoryId: cat.id };
+    }
+    return null;
+  }
+
+  const onDragEnd = React.useCallback((result) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
+
+    if (source.droppableId.startsWith("library-") && destination.droppableId === "care-plan-canvas") {
+      const itemId = draggableId;
+      if (planItems.some(i => i.id === itemId)) {
+        toast.error("This intervention is already in the plan.");
+        return;
+      }
+      const item = findLibraryItem(itemId);
+      if (!item) return;
+
+      setPlanItems(prev => {
+        const next = [...prev];
+        next.splice(destination.index, 0, item);
+        return next;
+      });
+      return;
+    }
+
+    if (source.droppableId === "care-plan-canvas" && destination.droppableId === "care-plan-canvas") {
+      const realId = draggableId.replace(/^plan-/, "");
+      setPlanItems(prev => {
+        const next = [...prev];
+        const srcIdx = prev.findIndex(i => i.id === realId);
+        if (srcIdx === -1) return prev;
+        const [moved] = next.splice(srcIdx, 1);
+        next.splice(destination.index, 0, moved);
+        return next;
+      });
+    }
+  }, [planItems]);
+
+  const removeItem = React.useCallback((id) => {
+    setPlanItems(prev => prev.filter(i => i.id !== id));
+    setLinkedPathways(prev => { const n = { ...prev }; delete n[id]; return n; });
+    setSelectedItem(prev => prev?.id === id ? null : prev);
+  }, []);
+
+  const linkPathway = React.useCallback((itemId, pathway) => {
+    setLinkedPathways(prev => ({ ...prev, [itemId]: pathway }));
+    toast.success(`Linked to: ${pathway}`);
+  }, []);
+
+  const handleSaveBuilder = async () => {
+    if (!builderPatient) { toast.error("Please select a patient first."); return; }
+    if (planItems.length === 0) { toast.error("Add at least one intervention."); return; }
+
+    setSaving(true);
+    try {
+      const existingPlans = await base44.entities.CarePlan.filter({ patient_id: builderPatient.id });
+      const savePromises = planItems.map(item => {
+        const existingForItem = existingPlans.find(p => p.problem === item.name);
+        const data = {
+          patient_id: builderPatient.id,
+          problem: item.name,
+          goal: `Achieve and maintain ${item.name.toLowerCase()} goals as documented in the care plan.`,
+          interventions: [item.description, linkedPathways[item.id] ? `Clinical Pathway: ${linkedPathways[item.id]}` : null].filter(Boolean),
+          frequency: item.frequency,
+          status: "active",
+        };
+        if (existingForItem) {
+          return base44.entities.CarePlan.update(existingForItem.id, data);
+        }
+        return base44.entities.CarePlan.create(data);
+      });
+
+      await Promise.all(savePromises);
+      setSaved(true);
+      queryClient.invalidateQueries({ queryKey: ['allCarePlans'] });
+      toast.success(`Care plan saved — ${planItems.length} interventions for ${builderPatient.first_name} ${builderPatient.last_name}`);
+      setTimeout(() => {
+        setSaved(false);
+        setShowBuilder(false);
+        setPlanItems([]);
+        setLinkedPathways({});
+      }, 2000);
+    } catch (e) {
+      toast.error("Failed to save care plan.");
+    }
+    setSaving(false);
+  };
+
+  const handleClearBuilder = () => {
+    setPlanItems([]);
+    setLinkedPathways({});
+    setSelectedItem(null);
+    setSaved(false);
+  };
+
+  const linkedCount = Object.keys(linkedPathways).length;
+  const complianceCount = planItems.filter(i => i.complianceTag).length;
+
+  if (showBuilder) {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setShowBuilder(false)}>
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back
+          </Button>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Target className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+            <Input
+              value={planName}
+              onChange={e => setPlanName(e.target.value)}
+              className="h-8 text-sm font-semibold border-0 shadow-none px-0 bg-transparent focus-visible:ring-0 max-w-xs"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 text-sm">
+            <User className="w-4 h-4 text-gray-500" />
+            <span className="font-medium">{builderPatient?.first_name} {builderPatient?.last_name}</span>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-3 text-xs text-gray-500 border-x border-gray-200 px-3">
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
+              <span><strong className="text-gray-700">{planItems.length}</strong> interventions</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span><strong className="text-gray-700">{complianceCount}</strong> compliant</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              <span><strong className="text-gray-700">{linkedCount}</strong> linked</span>
+            </span>
+          </div>
+
+          <select
+            value={careType}
+            onChange={(e) => setCareType(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors bg-white"
+          >
+            <option value="home_health">Home Health</option>
+            <option value="hospice">Hospice</option>
+          </select>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowAIAnalyzer(!showAIAnalyzer)} className="gap-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleClearBuilder} disabled={planItems.length === 0}>
+              Clear
+            </Button>
+            <Button size="sm" onClick={handleSaveBuilder} disabled={saving || !builderPatient || planItems.length === 0}>
+              {saving ? "Saving..." : saved ? "Saved!" : "Save Plan"}
+            </Button>
+          </div>
+        </div>
+
+        {showAIAnalyzer && (
+          <div className="absolute right-0 top-14 bottom-0 w-96 border-l border-gray-200 bg-white overflow-y-auto p-4 z-10">
+            <AICarePlanAnalyzer
+              patientId={builderPatient?.id}
+              patientName={builderPatient ? `${builderPatient.first_name} ${builderPatient.last_name}` : ""}
+              diagnosis={builderPatient?.primary_diagnosis}
+              careType={careType}
+              onInterventionsGenerated={(interventions, schedule) => {
+                toast.success(`Generated ${interventions.length} interventions`);
+              }}
+            />
+          </div>
+        )}
+
+        <div className="flex-1 flex overflow-hidden">
+          <DragDropContext onDragEnd={onDragEnd}>
+            <InterventionLibrary />
+            <CarePlanCanvas
+              planItems={planItems}
+              onRemove={removeItem}
+              onSelectItem={setSelectedItem}
+              selectedItemId={selectedItem?.id}
+              linkedPathways={linkedPathways}
+            />
+          </DragDropContext>
+          <InterventionDetailPanel
+            item={selectedItem}
+            linkedPathway={selectedItem ? linkedPathways[selectedItem.id] : null}
+            onLinkPathway={linkPathway}
+            onClose={() => setSelectedItem(null)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -504,29 +737,42 @@ export default function CarePlanManagement() {
                       </div>
                     </div>
                     <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                     <Button
-                       size="sm"
-                       variant={selectedPatient?.id === patientId ? "default" : "outline"}
-                       onClick={() => {
-                         setSelectedPatient(patient);
-                         setShowAITools(true);
-                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                       }}
-                       className={`min-h-[44px] ${selectedPatient?.id === patientId ? "bg-purple-600 hover:bg-purple-700" : ""}`}
-                     >
-                       <Sparkles className="w-4 h-4 mr-1" />
-                       <span className="hidden sm:inline">AI Tools</span>
-                       <span className="sm:hidden">AI</span>
-                     </Button>
-                     <Button
-                       size="sm"
-                       onClick={() => navigate(`${createPageUrl("PatientDetails")}?patientId=${patientId}`)}
-                       variant="outline"
-                       className="min-h-[44px]"
-                     >
-                       <span className="hidden sm:inline">View Patient</span>
-                       <span className="sm:hidden">View</span>
-                     </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setBuilderPatient(patient);
+                        setShowBuilder(true);
+                        setPlanItems([]);
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">Build Plan</span>
+                      <span className="sm:hidden">Build</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedPatient?.id === patientId ? "default" : "outline"}
+                      onClick={() => {
+                        setSelectedPatient(patient);
+                        setShowAITools(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={`min-h-[44px] ${selectedPatient?.id === patientId ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                    >
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">AI Tools</span>
+                      <span className="sm:hidden">AI</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`${createPageUrl("PatientDetails")}?patientId=${patientId}`)}
+                      variant="outline"
+                      className="min-h-[44px]"
+                    >
+                      <span className="hidden sm:inline">View Patient</span>
+                      <span className="sm:hidden">View</span>
+                    </Button>
                     </div>
                   </div>
                 </CardHeader>
