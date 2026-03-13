@@ -228,27 +228,27 @@ export default function Dashboard() {
 
       {/* Nurse Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 shadow-md">
+        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-blue-700 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
-                <p className="text-3xl sm:text-4xl font-bold text-blue-900">
+                <p className="text-xs sm:text-sm text-slate-300 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
+                <p className="text-3xl sm:text-4xl font-bold text-white">
                   {noteConversions.length}
                 </p>
               </div>
-              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-blue-400 flex-shrink-0 opacity-60" />
+              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-slate-400 flex-shrink-0 opacity-70" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 shadow-md">
+        <Card className="bg-gradient-to-br from-blue-700 to-blue-600 border-blue-600 shadow-md">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-emerald-700 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
-                <p className="text-3xl sm:text-4xl font-bold text-emerald-900">{stats.timeSavedDisplay}</p>
+                <p className="text-xs sm:text-sm text-blue-200 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
+                <p className="text-3xl sm:text-4xl font-bold text-white">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-emerald-400 flex-shrink-0 opacity-60" />
+              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-blue-300 flex-shrink-0 opacity-70" />
             </div>
           </CardContent>
         </Card>
