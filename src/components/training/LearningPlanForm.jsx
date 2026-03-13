@@ -16,15 +16,16 @@ import {
 export default function LearningPlanForm({ plan, onSuccess }) {
   const currentYear = new Date().getFullYear();
 
-  const [formData, setFormData] = useState(plan || {
-    name: '',
-    description: '',
-    year: currentYear,
-    business_line_scope: 'all',
-    plan_type: 'annual',
-    start_date: '',
-    end_date: '',
-    active: true,
+  const [formData, setFormData] = useState({
+    name: plan?.name || '',
+    description: plan?.description || '',
+    year: plan?.year || currentYear,
+    business_line_scope: plan?.business_line_scope || 'all',
+    plan_type: plan?.plan_type || 'annual',
+    start_date: plan?.start_date || '',
+    end_date: plan?.end_date || '',
+    global_due_date: plan?.global_due_date || '',
+    active: plan?.active !== undefined ? plan.active : true,
   });
 
   const createMutation = useMutation({
@@ -131,6 +132,16 @@ export default function LearningPlanForm({ plan, onSuccess }) {
             onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
           />
         </div>
+      </div>
+
+      <div>
+        <Label>Global Due Date</Label>
+        <Input
+          type="date"
+          value={formData.global_due_date}
+          onChange={(e) => setFormData({ ...formData, global_due_date: e.target.value })}
+        />
+        <p className="text-xs text-gray-500 mt-1">Default due date for all courses in this plan</p>
       </div>
 
       <div className="flex gap-2 pt-4">
