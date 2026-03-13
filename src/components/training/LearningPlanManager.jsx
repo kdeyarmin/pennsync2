@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Target, X } from "lucide-react";
+import { Plus, Trash2, Target, X, Edit2 } from "lucide-react";
 import LearningPlanForm from "./LearningPlanForm";
 import {
   Dialog,
@@ -16,6 +16,7 @@ import {
 
 export default function LearningPlanManager() {
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [editingPlan, setEditingPlan] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showCourseDialog, setShowCourseDialog] = useState(false);
   const queryClient = useQueryClient();
@@ -79,21 +80,28 @@ export default function LearningPlanManager() {
       <div>
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-semibold">Learning Plans</h3>
-          <Dialog open={showForm} onOpenChange={setShowForm}>
+          <Dialog open={showForm} onOpenChange={(open) => {
+            setShowForm(open);
+            if (!open) setEditingPlan(null);
+          }}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" onClick={() => setEditingPlan(null)}>
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <div className="bg-white rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle>Create Learning Plan</DialogTitle>
+                  <DialogTitle>{editingPlan ? 'Edit Learning Plan' : 'Create Learning Plan'}</DialogTitle>
                 </DialogHeader>
-                <LearningPlanForm onSuccess={() => {
-                  setShowForm(false);
-                  queryClient.invalidateQueries({ queryKey: ['learning-plans'] });
-                }} />
+                <LearningPlanForm 
+                  plan={editingPlan}
+                  onSuccess={() => {
+                    setShowForm(false);
+                    setEditingPlan(null);
+                    queryClient.invalidateQueries({ queryKey: ['learning-plans'] });
+                  }} 
+                />
               </div>
             </DialogContent>
           </Dialog>
@@ -110,6 +118,17 @@ export default function LearningPlanManager() {
                 <p className="font-medium text-sm">{plan.name}</p>
                 <p className="text-xs text-gray-600 mt-1">{plan.year}</p>
                 <div className="flex gap-1 mt-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingPlan(plan);
+                      setShowForm(true);
+                    }}
+                  >
+                    <Edit2 className="w-3 h-3 text-indigo-600" />
+                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"
