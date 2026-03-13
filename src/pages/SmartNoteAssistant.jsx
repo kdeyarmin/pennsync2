@@ -383,7 +383,24 @@ Return ONLY the final note text.`
       if (patientId && currentUser?.email) {
         const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
         const noteText = typeof result === "string" ? result : JSON.stringify(result);
+        
+        // Update patient chart with enhanced notes
+        const currentPatient = await base44.entities.Patient.get(patientId);
+        const enhancedHistory = currentPatient.enhanced_notes_history || [];
+        enhancedHistory.push({
+          date: visitDate,
+          visit_type: visitType,
+          note: noteText,
+          compliance_score: analysisData.compliance_score,
+          created_by: currentUser.email,
+          created_at: new Date().toISOString()
+        });
+        
         await Promise.all([
+          base44.entities.Patient.update(patientId, {
+            enhanced_notes_history: enhancedHistory,
+            clinical_notes: noteText
+          }),
           base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: noteText.length, quality_score: analysisData.overall_score, rough_note_compliance: Math.max(0, analysisData.compliance_score - 20), enhanced_note_compliance: analysisData.compliance_score, compliance_improvement: 20 }),
           base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysisData.compliance_score, status: analysisData.compliance_score >= 90 ? "passed" : analysisData.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
         ]);
