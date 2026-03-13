@@ -1,94 +1,124 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, CheckCircle2, XCircle, Database } from "lucide-react";
-import { migrateExistingData } from "@/functions/migrateExistingData";
-import { calculateDataQualityScores } from "@/functions/calculateDataQualityScores";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Zap, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SystemHealthPanel() {
-  const { data: migrationStatus, isLoading: isMigrating, refetch: runMigration } = useQuery({
-    queryKey: ['data-migration'],
+  const queryClient = useQueryClient();
+
+  const { data: healthResults, isLoading } = useQuery({
+    queryKey: ['systemHealth'],
     queryFn: async () => {
-      const response = await migrateExistingData({});
-      return response.data;
+      const result = await base44.functions.invoke('testAutomations', {});
+      return result.data;
     },
-    enabled: false,
-    staleTime: Infinity,
+    refetchInterval: 300000, // Refresh every 5 minutes
   });
 
-  const { data: qualityUpdate, isLoading: isUpdating, refetch: runQualityUpdate } = useQuery({
-    queryKey: ['quality-update'],
-    queryFn: async () => {
-      const response = await calculateDataQualityScores({});
-      return response.data;
+  const runHealthCheckMutation = useMutation({
+    mutationFn: async () => {
+      return await base44.functions.invoke('testAutomations', {});
     },
-    enabled: false,
-    staleTime: Infinity,
+    onSuccess: (data) => {
+      queryClient.setQueryData(['systemHealth'], data.data);
+      toast.success('System health check completed');
+    },
+    onError: () => {
+      toast.error('Health check failed');
+    }
   });
+
+  if (!healthResults && !isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <Zap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">System Health Monitor</h3>
+          <p className="text-gray-600 mb-6">
+            Run automated tests to verify all critical functions are operating correctly
+          </p>
+          <Button onClick={() => runHealthCheckMutation.mutate()} disabled={runHealthCheckMutation.isPending}>
+            <Zap className="w-4 h-4 mr-2" />
+            Run Health Check
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isLoading || runHealthCheckMutation.isPending) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <Loader2 className="w-16 h-16 text-indigo-500 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600">Running system health checks...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const passedCount = healthResults?.functions?.filter(f => f.status === 'passed').length || 0;
+  const totalCount = healthResults?.functions?.length || 0;
+  const allPassed = passedCount === totalCount;
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Migration & Quality Tools</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-            <div>
-              <p className="font-semibold text-sm">Migrate Existing Data</p>
-              <p className="text-xs text-gray-600">Add quality scores and fix missing defaults</p>
-            </div>
-            <Button onClick={() => runMigration()} disabled={isMigrating} variant="outline">
-              <Database className={`h-4 w-4 mr-2 ${isMigrating ? 'animate-spin' : ''}`} />
-              {isMigrating ? 'Running...' : 'Run Migration'}
-            </Button>
-          </div>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">System Health Status</h2>
+          <p className="text-sm text-gray-600">Last checked: {healthResults?.timestamp ? new Date(healthResults.timestamp).toLocaleString() : 'Never'}</p>
+        </div>
+        <Button onClick={() => runHealthCheckMutation.mutate()} disabled={runHealthCheckMutation.isPending}>
+          <Zap className="w-4 h-4 mr-2" />
+          Run Check
+        </Button>
+      </div>
 
-          <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-            <div>
-              <p className="font-semibold text-sm">Recalculate Quality Scores</p>
-              <p className="text-xs text-gray-600">Update all entity completeness metrics</p>
-            </div>
-            <Button onClick={() => runQualityUpdate()} disabled={isUpdating} variant="outline">
-              <RefreshCw className={`h-4 w-4 mr-2 ${isUpdating ? 'animate-spin' : ''}`} />
-              {isUpdating ? 'Updating...' : 'Update Scores'}
-            </Button>
-          </div>
-
-          {migrationStatus && (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <p className="font-semibold text-sm">Migration Complete</p>
-              </div>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>Patients updated: {migrationStatus.summary?.patients_updated}</p>
-                <p>Visits updated: {migrationStatus.summary?.visits_updated}</p>
-                {migrationStatus.summary?.total_errors > 0 && (
-                  <p className="text-red-600">Errors: {migrationStatus.summary?.total_errors}</p>
-                )}
-              </div>
-            </div>
+      <Alert className={allPassed ? "bg-green-50 border-green-300" : "bg-red-50 border-red-300"}>
+        <AlertDescription className="flex items-center gap-2">
+          {allPassed ? (
+            <>
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <span className="text-green-800 font-semibold">All systems operational</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <span className="text-red-800 font-semibold">{totalCount - passedCount} function(s) failing</span>
+            </>
           )}
+        </AlertDescription>
+      </Alert>
 
-          {qualityUpdate && (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <p className="font-semibold text-sm">Quality Scores Updated</p>
+      <div className="space-y-3">
+        {healthResults?.functions?.map((func, idx) => (
+          <Card key={idx} className={func.status === 'passed' ? 'border-green-200' : 'border-red-200'}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-gray-900">{func.name}</h3>
+                    <Badge className={func.status === 'passed' ? 'bg-green-600' : 'bg-red-600'}>
+                      {func.status}
+                    </Badge>
+                  </div>
+                  {func.message && <p className="text-sm text-gray-600">{func.message}</p>}
+                  {func.error && (
+                    <pre className="text-xs text-red-600 bg-red-50 p-2 rounded mt-2 overflow-x-auto">
+                      {func.error}
+                    </pre>
+                  )}
+                </div>
               </div>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>Total records: {qualityUpdate.records_updated}</p>
-                <p>Patients: {qualityUpdate.patients_processed}</p>
-                <p>Visits: {qualityUpdate.visits_processed}</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
