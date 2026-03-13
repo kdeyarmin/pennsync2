@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, ChevronRight, RotateCcw } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronRight, RotateCcw, Award } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { gradeTrainingAttempt } from "@/functions/gradeTrainingAttempt";
@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import TrainingModuleViewer from "@/components/training/TrainingModuleViewer";
 import TrainingQuestionRenderer from "@/components/training/TrainingQuestionRenderer";
+import CertificateDownloadButton from "@/components/training/CertificateDownloadButton";
 
 const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
 
