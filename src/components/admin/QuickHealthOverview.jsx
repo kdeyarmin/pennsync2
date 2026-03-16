@@ -1,12 +1,9 @@
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, ArrowRight, CheckCircle2, Database, ClipboardCheck, Users } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Database } from "lucide-react";
 
 export default function QuickHealthOverview() {
   const { data: patients = [] } = useQuery({

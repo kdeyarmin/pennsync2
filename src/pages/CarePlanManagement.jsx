@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AICarePlanSuggestionEngine from "../components/carePlan/AICarePlanSuggestionEngine";
@@ -19,9 +19,7 @@ import {
   ArrowLeft,
   Sparkles,
   Plus,
-  Edit,
-  ChevronDown,
-  Loader2
+  ChevronDown
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import {

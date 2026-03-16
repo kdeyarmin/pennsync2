@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, Mic, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Database, Activity
+  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

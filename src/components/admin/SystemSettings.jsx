@@ -1,8 +1,6 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Settings, Info } from "lucide-react";
-import SystemSettings from "@/components/admin/SystemSettings";
 import AnnouncementManager from "@/components/admin/AnnouncementManager";
 import AIConfigurationManager from "@/components/admin/AIConfigurationManager";
 

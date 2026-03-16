@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,19 +24,16 @@ import {
 import {
   AlertTriangle,
   Camera,
-  Upload,
   Send,
   CheckCircle2,
   Clock,
   X,
   FileText,
   TrendingUp,
-  Users,
-  MapPin,
   Calendar as CalendarIcon
 } from "lucide-react";
 import { toast } from "sonner";
-import { format, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format, parseISO, subMonths } from "date-fns";
 
 export default function IncidentReportingModule() {
   const [showReportDialog, setShowReportDialog] = useState(false);
