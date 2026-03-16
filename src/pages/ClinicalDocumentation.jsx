@@ -3,10 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Mic, FileText, Zap } from "lucide-react";
+import { Sparkles, Mic, FileText } from "lucide-react";
 import SmartNoteAssistant from "@/pages/SmartNoteAssistant";
 import RealTimeDictationScribe from "@/components/visit/RealTimeDictationScribe";
-import { logActivity, ActivityActions } from "@/components/utils/activityLogger";
 
 export default function ClinicalDocumentation() {
   const [activeMethod, setActiveMethod] = useState("smart-notes");

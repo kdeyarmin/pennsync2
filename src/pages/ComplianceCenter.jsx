@@ -1,26 +1,21 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Shield, AlertTriangle, TrendingDown, Users, FileText, Calendar, BarChart3,
-  Sparkles, Clock, FileWarning, Award, Bell, Search, CheckCircle2, RefreshCw,
+  Shield, AlertTriangle, TrendingDown, Users, FileText, Calendar, BarChart3, Clock, Award, Bell, Search, CheckCircle2,
   BookOpen
 } from "lucide-react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import ComplianceReportGenerator from "@/components/compliance/ComplianceReportGenerator";
-import ProactiveComplianceMonitor from "@/components/compliance/ProactiveComplianceMonitor";
-import AdvancedComplianceRiskScoring from "@/components/compliance/AdvancedComplianceRiskScoring";
-import AITrainingModuleGenerator from "@/components/training/AITrainingModuleGenerator";
 import AIComplianceAssistant from "@/components/compliance/AIComplianceAssistant";
-import RealTimeComplianceDashboard from "@/pages/RealTimeComplianceDashboard";
 import RegulatoryCompliance from "@/pages/RegulatoryCompliance";
 
 export default function ComplianceCenter() {

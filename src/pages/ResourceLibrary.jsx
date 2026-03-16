@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Shield, GraduationCap } from "lucide-react";
 import ClinicalLibraryManager from "@/components/clinical/ClinicalLibraryManager";
 import GuidelineComplianceChecker from "@/components/guidelines/GuidelineComplianceChecker";
-import InlineGuidelineSuggester from "@/components/guidelines/InlineGuidelineSuggester";
 import GuidelineReferencePanel from "@/components/guidelines/GuidelineReferencePanel";
 import EducationLibrary from "@/components/education/EducationLibrary";
 
