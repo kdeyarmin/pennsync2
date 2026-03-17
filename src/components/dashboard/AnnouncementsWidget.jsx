@@ -29,8 +29,6 @@ export default function AnnouncementsWidget() {
     );
   }
 
-  console.log('Announcements to display:', announcements);
-
   if (announcements.length === 0) {
     return (
       <Card className="mb-6">
