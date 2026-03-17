@@ -1,6 +1,25 @@
 const isNode = typeof window === 'undefined';
 const memoryStorage = new Map();
 
+const memoryStorageAdapter = {
+	getItem: (key) => memoryStorage.get(key) ?? null,
+	setItem: (key, value) => memoryStorage.set(key, value),
+	removeItem: (key) => memoryStorage.delete(key),
+};
+
+const storage = (() => {
+	try {
+		if (typeof localStorage !== 'undefined') {
+			localStorage.setItem('__test__', '1');
+			localStorage.removeItem('__test__');
+			return localStorage;
+		}
+	} catch {}
+	return memoryStorageAdapter;
+})();
+
+const setStoredItem = (key, value) => storage.setItem(key, value);
+
 const toSnakeCase = (str) => {
 	return str.replace(/([A-Z])/g, '_$1').toLowerCase();
 };
