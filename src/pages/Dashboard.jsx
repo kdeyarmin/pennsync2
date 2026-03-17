@@ -179,7 +179,7 @@ export default function Dashboard() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
-    <div ref={containerRef} className="max-w-7xl mx-auto min-h-screen">
+    <div ref={containerRef} className="max-w-5xl mx-auto">
       {hasDataError && (
         <Card className="mb-4 border-red-300 bg-red-50">
           <CardContent className="p-4">
