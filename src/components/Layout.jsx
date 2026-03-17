@@ -185,7 +185,7 @@ export default function Layout({ children, currentPageName }) {
       items: [
         { name: "Reports & Analytics", icon: BarChart3, page: "ReportsAnalytics" },
         { name: "Compliance Center", icon: Shield, page: "ComplianceCenter" },
-        { name: "Alerts", icon: Bell, page: null, badge: totalNotificationCount, action: () => setNotificationCenterOpen(true) },
+        { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
       ] 
     },
     { 
