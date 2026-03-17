@@ -1,41 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
- * Legacy endpoint name retained for backward compatibility.
- * Handles Twilio fax status webhooks and applies retry scheduling/notifications.
+ * Legacy webhook endpoint kept for backward compatibility.
+ * This handler now processes Twilio fax webhook payloads.
  */
 const BACKOFF_MINUTES = [5, 15, 60];
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
     const payload = await parseWebhookPayload(req);
-
     const faxSid = payload.faxSid;
-    const mappedStatus = mapTwilioStatus(payload.status);
+    const status = payload.status;
 
-    if (!faxSid || !mappedStatus) {
+    if (!faxSid || !status) {
       return Response.json({ error: 'Invalid webhook payload. Missing fax SID or status.' }, { status: 400 });
     }
-
-    await base44.asServiceRole.entities.UserActivity.create({
-      user_email: 'system',
-      user_name: 'Twilio Webhook',
-      action: 'fax_webhook_received',
-      details: {
-        fax_sid: faxSid,
-        provider_status: payload.status,
-        status: mappedStatus,
-        to: payload.to,
-        from: payload.from,
-        pages: payload.numPages,
-        timestamp: new Date().toISOString()
-      },
-      page: 'webhook',
-      user_agent: req.headers.get('user-agent') || 'twilio'
-    }).catch((err) => {
-      console.error('Failed to log webhook activity:', err?.message || err);
-    });
 
     const faxLogs = await base44.asServiceRole.entities.FaxLog.filter({
       telnyx_fax_id: faxSid
@@ -46,59 +27,51 @@ Deno.serve(async (req) => {
     }
 
     const faxLog = faxLogs[0];
+    const mappedStatus = mapTwilioStatus(status);
+
     const updateData = {
       status: mappedStatus,
-      pages: payload.numPages || faxLog.pages
+      pages: payload.numPages || faxLog.pages,
+      failure_reason: null,
+      next_retry_at: null,
     };
 
     if (mappedStatus === 'failed') {
       const retryCount = faxLog.retry_count || 0;
-      const failureReason = payload.failureReason || 'Unknown error';
 
       if (retryCount < BACKOFF_MINUTES.length) {
         const delayMs = BACKOFF_MINUTES[retryCount] * 60 * 1000;
-        updateData.retry_count = retryCount + 1;
         updateData.next_retry_at = new Date(Date.now() + delayMs).toISOString();
-        updateData.failure_reason = failureReason;
+        updateData.retry_count = retryCount + 1;
       } else {
-        updateData.failure_reason = failureReason;
-        updateData.next_retry_at = null;
         updateData.final_failure_notified = false;
       }
-    } else if (mappedStatus === 'delivered') {
-      updateData.next_retry_at = null;
-      updateData.failure_reason = null;
+
+      updateData.failure_reason = payload.failureReason || 'Unknown error';
     }
 
     await base44.asServiceRole.entities.FaxLog.update(faxLog.id, updateData);
 
-    if (faxLog.sent_by && mappedStatus === 'delivered') {
-      const docName = faxLog.document_name || 'your document';
-      const recipient = faxLog.to_name ? `${faxLog.to_name} (${faxLog.to_number})` : faxLog.to_number;
-
-      await base44.asServiceRole.entities.Notification.create({
-        user_email: faxLog.sent_by,
-        title: '✅ Fax Delivered',
-        message: `"${docName}" was successfully delivered to ${recipient}`,
-        type: 'success',
-        is_read: false,
-        action_url: `/send-fax?fax_id=${faxLog.id}`
-      }).catch((err) => {
-        console.error('Failed to create delivery notification:', err?.message || err);
-      });
-
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: faxLog.sent_by,
-        subject: '✅ Fax Delivered Successfully',
-        body: `Your fax has been successfully delivered.\n\nDocument: ${docName}\nRecipient: ${recipient}\nPages: ${updateData.pages || 'N/A'}\nTime: ${new Date().toLocaleString()}\n\nNo further action is required.`
-      }).catch((err) => {
-        console.error('Failed to send delivery email:', err?.message || err);
-      });
-    }
+    await base44.asServiceRole.entities.UserActivity.create({
+      user_email: 'system',
+      user_name: 'Twilio Webhook',
+      action: 'fax_webhook_received',
+      details: {
+        fax_sid: faxSid,
+        status,
+        mapped_status: mappedStatus,
+        to: payload.to,
+        from: payload.from,
+        pages: payload.numPages,
+        timestamp: new Date().toISOString()
+      },
+      page: 'webhook',
+      user_agent: req.headers.get('user-agent') || 'twilio'
+    }).catch(() => {});
 
     return Response.json({
       success: true,
-      fax_sid: faxSid,
+      received: status,
       status: mappedStatus
     });
   } catch (error) {
@@ -139,7 +112,6 @@ function parseNumber(value) {
 }
 
 function mapTwilioStatus(twilioStatus) {
-  const normalizedStatus = typeof twilioStatus === 'string' ? twilioStatus.toLowerCase() : '';
   const statusMap = {
     queued: 'queued',
     processing: 'sending',
@@ -150,5 +122,5 @@ function mapTwilioStatus(twilioStatus) {
     canceled: 'failed'
   };
 
-  return statusMap[normalizedStatus] || null;
+  return statusMap[twilioStatus] || 'sending';
 }

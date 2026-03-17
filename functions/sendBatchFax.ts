@@ -39,6 +39,12 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (!file_url || !to_numbers || to_numbers.length === 0) {
+      return Response.json({
+        error: 'Missing required fields: file_url, to_numbers'
+      }, { status: 400 });
+    }
+
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioFromNumber = from_number || Deno.env.get('TWILIO_FAX_NUMBER');
@@ -80,16 +86,16 @@ Deno.serve(async (req) => {
           body: formBody.toString()
         });
 
-        const twilioData = await parseJsonSafe(twilioResponse);
+        const twilioData = await twilioResponse.json();
 
         if (twilioResponse.ok) {
           await base44.entities.FaxLog.update(faxLog.id, {
-            telnyx_fax_id: twilioData?.sid || null,
+            telnyx_fax_id: twilioData.sid,
             status: 'sending'
           });
-          results.push({ to_number, success: true, fax_id: twilioData?.sid || null });
+          results.push({ to_number, success: true, fax_id: twilioData.sid });
         } else {
-          const failureReason = twilioData?.message || twilioData?.error_message || 'Failed to send';
+          const failureReason = twilioData.message || twilioData.error_message || 'Failed to send';
           await base44.entities.FaxLog.update(faxLog.id, {
             status: 'failed',
             failure_reason: failureReason
@@ -116,11 +122,3 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
-
-async function parseJsonSafe(response) {
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}

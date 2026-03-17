@@ -28,45 +28,6 @@ const sanitizeServerUrl = (value) => {
 	}
 };
 
-const getStoredItem = (key) => {
-	if (isNode) {
-		return memoryStorage.get(key) ?? null;
-	}
-	try {
-		return window.localStorage.getItem(key);
-	} catch {
-		return memoryStorage.get(key) ?? null;
-	}
-};
-
-const setStoredItem = (key, value) => {
-	if (value === undefined || value === null) {
-		return;
-	}
-	const normalized = String(value);
-	if (isNode) {
-		memoryStorage.set(key, normalized);
-		return;
-	}
-	try {
-		window.localStorage.setItem(key, normalized);
-	} catch {
-		memoryStorage.set(key, normalized);
-	}
-};
-
-const removeStoredItem = (key) => {
-	memoryStorage.delete(key);
-	if (isNode) {
-		return;
-	}
-	try {
-		window.localStorage.removeItem(key);
-	} catch {
-		// no-op
-	}
-};
-
 const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false, sanitize = sanitizeValue } = {}) => {
 	if (isNode) {
 		return sanitize(defaultValue);
@@ -83,13 +44,13 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 		setStoredItem(storageKey, searchParam);
 		return searchParam;
 	}
-	const storedValue = sanitize(getStoredItem(storageKey));
+	const storedValue = sanitize(storage.getItem(storageKey));
 	if (storedValue) {
 		return storedValue;
 	}
 	const sanitizedDefault = sanitize(defaultValue);
 	if (sanitizedDefault !== undefined) {
-		setStoredItem(storageKey, sanitizedDefault);
+		storage.setItem(storageKey, sanitizedDefault);
 		return sanitizedDefault;
 	}
 	return null;
@@ -98,8 +59,8 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 const getAppParams = () => {
 	const currentUrl = isNode ? undefined : window.location.href;
 	if (getAppParamValue('clear_access_token') === 'true') {
-		removeStoredItem('base44_access_token');
-		removeStoredItem('token');
+		storage.removeItem('base44_access_token');
+		storage.removeItem('token');
 	}
 
 	const appId = getAppParamValue('app_id', { defaultValue: import.meta.env.VITE_BASE44_APP_ID });
