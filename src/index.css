@@ -152,6 +152,7 @@ button:focus-visible {
   * {
     @apply border-border outline-ring/50;
     box-sizing: border-box;
+    /* No global transition — applied per-component to avoid layout thrashing */
   }
 
   html {
