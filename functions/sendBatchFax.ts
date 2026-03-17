@@ -11,6 +11,16 @@ Deno.serve(async (req) => {
 
     const { file_url, to_numbers, from_number, document_name, patient_id, cover_page_details, priority, from_name } = await req.json();
 
+    const normalizedRecipients = Array.isArray(to_numbers)
+      ? to_numbers.map((num) => typeof num === 'string' ? num.trim() : '').filter(Boolean)
+      : [];
+
+    if (!file_url || normalizedRecipients.length === 0) {
+      return Response.json({
+        error: 'Missing required fields: file_url, to_numbers'
+      }, { status: 400 });
+    }
+
     // AI Priority Analysis
     let finalPriority = priority || 'normal';
 
@@ -19,7 +29,7 @@ Deno.serve(async (req) => {
         const analysisResult = await base44.functions.invoke('analyzeFaxPriority', {
           document_name,
           cover_page_details,
-          to_number: to_numbers[0],
+          to_number: normalizedRecipients[0],
           from_number,
           from_name
         });
@@ -46,7 +56,7 @@ Deno.serve(async (req) => {
     const results = [];
     const estimatedCostPerPage = 10;
 
-    for (const to_number of to_numbers) {
+    for (const to_number of normalizedRecipients) {
       try {
         const faxLog = await base44.entities.FaxLog.create({
           from_number: twilioFromNumber,
@@ -101,11 +111,11 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      message: `Sent ${successCount}/${to_numbers.length} faxes`,
+      message: `Sent ${successCount}/${normalizedRecipients.length} faxes`,
       results,
-      total: to_numbers.length,
+      total: normalizedRecipients.length,
       successful: successCount,
-      failed: to_numbers.length - successCount
+      failed: normalizedRecipients.length - successCount
     });
 
   } catch (error) {
