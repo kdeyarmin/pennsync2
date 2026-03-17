@@ -31,6 +31,12 @@ export default function MyTrainingDashboard() {
     return map;
   }, [attempts]);
 
+  // Sort: overdue first, then in_progress, then assigned, then completed
+  const sortedAssignments = useMemo(() => {
+    const order = { overdue: 0, in_progress: 1, assigned: 2, completed: 4, failed: 3 };
+    return [...assignments].sort((a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5));
+  }, [assignments]);
+
   const stats = {
     assigned: assignments.length,
     overdue: assignments.filter((assignment) => assignment.status === 'overdue').length,
@@ -62,10 +68,59 @@ export default function MyTrainingDashboard() {
         </TabsList>
 
         <TabsContent value="assignments" className="space-y-4">
-          {assignments.map((assignment) => {
+          {sortedAssignments.map((assignment) => {
             const course = courseMap[assignment.course_id] || {};
             const attemptsForAssignment = latestAttempts[assignment.id] || [];
-            return <Card key={assignment.id}><CardContent className="p-5"><div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4"><div className="space-y-2 min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold text-slate-900">{assignment.course_title}</h2><Badge variant="outline">{course.category || 'in-service'}</Badge><Badge className={assignment.pass_fail_result === 'passed' ? 'bg-green-100 text-green-800' : assignment.pass_fail_result === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>{assignment.status}</Badge>{assignment.status === 'overdue' && <Badge className="bg-red-100 text-red-800">overdue</Badge>}</div><p className="text-sm text-slate-500">{course.business_line_scope || 'all'} • {course.employee_audience || assignment.assigned_to_role || 'assigned audience'}</p><div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-slate-600"><div><span className="font-medium">Due:</span> {formatDate(assignment.due_date)}</div><div><span className="font-medium">Estimated:</span> {course.estimated_minutes || 0} min</div><div><span className="font-medium">Latest score:</span> {assignment.score_percentage ?? '—'}%</div><div><span className="font-medium">Attempts:</span> {assignment.latest_attempt_number || attemptsForAssignment.length || 0}</div><div><span className="font-medium">Passing score:</span> {assignment.passing_score_required || course.passing_score || 80}%</div><div><span className="font-medium">Renewal:</span> {formatDate(assignment.renewal_due_date)}</div></div><Progress value={assignment.progress_percentage || 0} className="h-2" /></div><div className="flex flex-col gap-2 lg:w-56"><Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${assignment.id}`}><Button className="w-full">{assignment.status === 'in_progress' ? 'Continue In-Service' : 'Open In-Service'}</Button></Link></div></div></CardContent></Card>;
+            const isOverdue = assignment.status === 'overdue';
+            const isPassed = assignment.pass_fail_result === 'passed';
+            const isFailed = assignment.pass_fail_result === 'failed';
+            const isInProgress = assignment.status === 'in_progress';
+
+            return (
+              <Card key={assignment.id} className={`border shadow-sm transition-all hover:shadow-md ${
+                isOverdue ? 'border-red-200 bg-red-50/30' :
+                isPassed ? 'border-emerald-200 bg-emerald-50/20' :
+                isInProgress ? 'border-blue-200 bg-blue-50/20' :
+                'border-slate-200'
+              }`}>
+                <CardContent className="p-5">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="space-y-2 min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-base font-bold text-slate-900">{assignment.course_title}</h2>
+                        <Badge variant="outline" className="text-xs">{course.category?.replace(/_/g,' ') || 'course'}</Badge>
+                        {isOverdue && <Badge className="bg-red-100 text-red-700 border-red-200">⚠ Overdue</Badge>}
+                        {isPassed && <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">✓ Passed</Badge>}
+                        {isFailed && <Badge className="bg-red-100 text-red-700">Retake Required</Badge>}
+                        {isInProgress && !isPassed && !isFailed && <Badge className="bg-blue-100 text-blue-700">In Progress</Badge>}
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-sm text-slate-600">
+                        <div><span className="text-slate-400">Due:</span> <span className="font-medium">{formatDate(assignment.due_date)}</span></div>
+                        <div><span className="text-slate-400">Time:</span> <span className="font-medium">{course.estimated_minutes || '—'} min</span></div>
+                        <div><span className="text-slate-400">Score:</span> <span className="font-medium">{assignment.score_percentage ?? '—'}%</span></div>
+                        <div><span className="text-slate-400">Attempts:</span> <span className="font-medium">{assignment.latest_attempt_number || attemptsForAssignment.length || 0}</span></div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Progress value={isPassed ? 100 : assignment.progress_percentage || 0} className={`h-1.5 flex-1 ${isPassed ? '[&>div]:bg-emerald-500' : ''}`} />
+                        <span className="text-xs text-slate-400 flex-shrink-0">{isPassed ? '100' : assignment.progress_percentage || 0}%</span>
+                      </div>
+                    </div>
+
+                    <Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${assignment.id}`} className="lg:w-48">
+                      <Button className={`w-full ${
+                        isPassed ? 'bg-slate-600 hover:bg-slate-700' :
+                        isOverdue ? 'bg-red-600 hover:bg-red-700' :
+                        ''
+                      }`}>
+                        {isPassed ? '✓ Review Course' : isInProgress ? '▶ Continue' : isFailed ? '↻ Retake' : '▶ Start Course'}
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            );
           })}
           {assignments.length === 0 && <Card><CardContent className="p-10 text-center text-slate-500">No in-services assigned yet.</CardContent></Card>}
         </TabsContent>
