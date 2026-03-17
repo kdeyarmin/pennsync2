@@ -46,6 +46,7 @@ import SmartNoteAssistant from '@/pages/SmartNoteAssistant';
 import PatientEducationHub from '@/pages/PatientEducationHub';
 import VisitScribe from '@/pages/VisitScribe';
 import IncidentReporting from '@/pages/IncidentReporting';
+import ClinicalChart from '@/pages/ClinicalChart';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
