@@ -151,8 +151,48 @@ button:focus-visible {
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
+
+  html {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    min-width: 320px;
+  }
+
+  /* Prevent zoom on input focus (iOS Safari) */
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
+
+  /* Global dialog responsiveness */
+  [role="dialog"] [data-radix-dialog-content],
+  .dialog-content {
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+
+  /* Responsive table wrapper — tables inside .table-responsive scroll horizontally */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure images never overflow their containers */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Prevent long words/URLs from breaking layouts on small screens */
+  p, li, td, th, span {
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 }
