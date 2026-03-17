@@ -19,9 +19,14 @@ export default function Help() {
     setDownloading(true);
     try {
       const response = await generateUserManual({});
+      const pdfData = response?.data ?? response;
+
+      if (!pdfData) {
+        throw new Error("No document data was returned.");
+      }
       
       // Create blob and download
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([pdfData], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -31,7 +36,8 @@ export default function Help() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      alert('Failed to download manual: ' + error.message);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      alert('Failed to download manual: ' + message);
     } finally {
       setDownloading(false);
     }
