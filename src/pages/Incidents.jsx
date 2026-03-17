@@ -84,7 +84,7 @@ export default function Incidents() {
                 </p>
               </div>
             </div>
-            <StateReportableForm currentUser={currentUser} />
+            <StateReportableForm patients={patients} currentUser={currentUser} />
           </div>
         </TabsContent>
 
