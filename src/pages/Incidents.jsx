@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import IncidentForm from "@/components/incident/IncidentForm";
+import StateReportableForm from "@/components/incident/StateReportableForm";
 import IncidentRecentList from "@/components/incident/IncidentRecentList";
 import GuidedIncidentReporting from "@/components/incident/GuidedIncidentReporting";
 
@@ -46,9 +47,10 @@ export default function Incidents() {
       </div>
 
       <Tabs defaultValue="report" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="report" className="min-h-[44px]">Report Incident</TabsTrigger>
           <TabsTrigger value="guided" className="min-h-[44px]">Guided Form</TabsTrigger>
+          <TabsTrigger value="state-reportable" className="min-h-[44px] text-red-600 data-[state=active]:bg-red-600 data-[state=active]:text-white">State Reportable</TabsTrigger>
           <TabsTrigger value="recent" className="min-h-[44px]">Recent Reports</TabsTrigger>
         </TabsList>
 
@@ -68,6 +70,22 @@ export default function Incidents() {
 
         <TabsContent value="guided">
           <GuidedIncidentReporting />
+        </TabsContent>
+
+        <TabsContent value="state-reportable">
+          <div className="max-w-3xl mx-auto">
+            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-red-800">State Reportable Event</p>
+                <p className="text-sm text-red-700 mt-0.5">
+                  This form is for events that must be reported to the state. All required fields must be completed before submission.
+                  Upon submission, agency administrators will be notified immediately.
+                </p>
+              </div>
+            </div>
+            <StateReportableForm patients={patients} currentUser={currentUser} />
+          </div>
         </TabsContent>
 
         <TabsContent value="recent">
