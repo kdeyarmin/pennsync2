@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Mic, FileText } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import SmartNoteAssistant from "@/pages/SmartNoteAssistant";
 import RealTimeDictationScribe from "@/components/visit/RealTimeDictationScribe";
 
@@ -28,18 +28,9 @@ export default function ClinicalDocumentation() {
       <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
         <Tabs value={activeMethod} onValueChange={setActiveMethod} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 gap-2">
-            <TabsTrigger value="smart-notes" className="min-h-[44px]">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Smart Notes
-            </TabsTrigger>
-            <TabsTrigger value="live-dictation" className="min-h-[44px]">
-              <Mic className="w-4 h-4 mr-2" />
-              Live Dictation
-            </TabsTrigger>
-            <TabsTrigger value="quick-guide" className="min-h-[44px]">
-              <FileText className="w-4 h-4 mr-2" />
-              Quick Guide
-            </TabsTrigger>
+            <TabsTrigger value="smart-notes" className="min-h-[44px] font-semibold">Smart Notes</TabsTrigger>
+            <TabsTrigger value="live-dictation" className="min-h-[44px] font-semibold">Live Dictation</TabsTrigger>
+            <TabsTrigger value="quick-guide" className="min-h-[44px] font-semibold">Quick Guide</TabsTrigger>
           </TabsList>
 
           <TabsContent value="smart-notes">
