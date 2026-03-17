@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
     // AI Priority Analysis
     let finalPriority = priority || 'normal';
-    
+
     if (!priority) {
       try {
         const analysisResult = await base44.functions.invoke('analyzeFaxPriority', {
@@ -29,25 +29,27 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (!file_url || !to_numbers || to_numbers.length === 0 || !from_number) {
-      return Response.json({ 
-        error: 'Missing required fields: file_url, to_numbers, from_number' 
+    if (!file_url || !to_numbers || to_numbers.length === 0) {
+      return Response.json({
+        error: 'Missing required fields: file_url, to_numbers'
       }, { status: 400 });
     }
 
-    const telnyxApiKey = Deno.env.get('TELNYX_API_KEY');
-    if (!telnyxApiKey) {
-      return Response.json({ error: 'Telnyx API key not configured' }, { status: 500 });
+    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioFromNumber = from_number || Deno.env.get('TWILIO_FAX_NUMBER');
+
+    if (!accountSid || !authToken || !twilioFromNumber) {
+      return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
     }
 
     const results = [];
-    const estimatedCostPerPage = 10; // 10 cents per page estimate
+    const estimatedCostPerPage = 10;
 
     for (const to_number of to_numbers) {
       try {
-        // Log the fax
         const faxLog = await base44.entities.FaxLog.create({
-          from_number,
+          from_number: twilioFromNumber,
           to_number,
           document_url: file_url,
           document_name: document_name || 'Batch Fax',
@@ -59,37 +61,36 @@ Deno.serve(async (req) => {
           estimated_cost: estimatedCostPerPage
         });
 
-        // Send fax
-        const telnyxResponse = await fetch('https://api.telnyx.com/v2/faxes', {
+        const formBody = new URLSearchParams();
+        formBody.append('From', twilioFromNumber);
+        formBody.append('To', to_number);
+        formBody.append('MediaUrl', file_url);
+        formBody.append('Quality', 'fine');
+
+        const twilioResponse = await fetch('https://fax.twilio.com/v1/Faxes', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${telnyxApiKey}`,
-            'Content-Type': 'application/json'
+            'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: JSON.stringify({
-            connection_id: Deno.env.get('TELNYX_CONNECTION_ID'),
-            media_url: file_url,
-            to: to_number,
-            from: from_number,
-            quality: 'high',
-            store_media: true
-          })
+          body: formBody.toString()
         });
 
-        const telnyxData = await telnyxResponse.json();
+        const twilioData = await twilioResponse.json();
 
-        if (telnyxResponse.ok) {
+        if (twilioResponse.ok) {
           await base44.entities.FaxLog.update(faxLog.id, {
-            telnyx_fax_id: telnyxData.data?.id,
+            telnyx_fax_id: twilioData.sid,
             status: 'sending'
           });
-          results.push({ to_number, success: true, fax_id: telnyxData.data?.id });
+          results.push({ to_number, success: true, fax_id: twilioData.sid });
         } else {
+          const failureReason = twilioData.message || twilioData.error_message || 'Failed to send';
           await base44.entities.FaxLog.update(faxLog.id, {
             status: 'failed',
-            failure_reason: telnyxData.errors?.[0]?.detail || 'Failed to send'
+            failure_reason: failureReason
           });
-          results.push({ to_number, success: false, error: telnyxData.errors?.[0]?.detail });
+          results.push({ to_number, success: false, error: failureReason });
         }
       } catch (error) {
         results.push({ to_number, success: false, error: error.message });

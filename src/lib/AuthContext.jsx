@@ -21,6 +21,16 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
+
+      if (!appParams.appId || !appParams.serverUrl) {
+        setAuthError({
+          type: 'configuration_error',
+          message: 'Missing app configuration. Set VITE_BASE44_APP_ID and VITE_BASE44_BACKEND_URL.'
+        });
+        setIsLoadingPublicSettings(false);
+        setIsLoadingAuth(false);
+        return;
+      }
       
       // First, check app public settings (with token if available)
       // This will tell us if auth is required, user not registered, etc.
