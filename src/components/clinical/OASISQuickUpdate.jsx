@@ -1,0 +1,159 @@
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Brain, CheckCircle2, Clock, FileText } from "lucide-react";
+import { toast } from "sonner";
+
+const FUNCTIONAL_OPTIONS = [
+  { value: "0", label: "0 – Independent" },
+  { value: "1", label: "1 – With supervision" },
+  { value: "2", label: "2 – With assistance" },
+  { value: "3", label: "3 – Dependent" },
+];
+
+const PAIN_OPTIONS = Array.from({ length: 11 }, (_, i) => ({ value: String(i), label: String(i) }));
+
+const QUICK_FIELDS = [
+  { key: "ambulation", label: "Ambulation (M1860)", options: FUNCTIONAL_OPTIONS },
+  { key: "bathing", label: "Bathing (M1830)", options: FUNCTIONAL_OPTIONS },
+  { key: "dressing_upper", label: "Dressing Upper (M1810)", options: FUNCTIONAL_OPTIONS },
+  { key: "transferring", label: "Transferring (M1850)", options: FUNCTIONAL_OPTIONS },
+  { key: "toileting", label: "Toileting (M1845)", options: FUNCTIONAL_OPTIONS },
+  { key: "pain_frequency", label: "Pain Frequency (M1242)", options: [
+    { value: "0", label: "0 – No pain" },
+    { value: "1", label: "1 – Less than daily" },
+    { value: "2", label: "2 – Daily, not constantly" },
+    { value: "3", label: "3 – All the time" },
+  ]},
+];
+
+export default function OASISQuickUpdate({ patient, currentUser }) {
+  const queryClient = useQueryClient();
+  const [values, setValues] = useState({});
+  const [clinicalNote, setClinicalNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const { data: recentAssessments = [] } = useQuery({
+    queryKey: ["oasis-assessments", patient?.id],
+    queryFn: () => base44.entities.OASISAssessment.filter({ patient_id: patient.id }, "-created_date", 5),
+    enabled: !!patient?.id,
+    initialData: [],
+  });
+
+  const handleSave = async () => {
+    if (!patient?.id) return;
+    setSaving(true);
+    await base44.entities.OASISAssessment.create({
+      patient_id: patient.id,
+      patient_name: `${patient.first_name} ${patient.last_name}`,
+      clinician_email: currentUser?.email,
+      clinician_name: currentUser?.full_name,
+      assessment_date: new Date().toISOString().split("T")[0],
+      functional_status: values,
+      clinical_note: clinicalNote,
+      status: "draft",
+      source: "quick_update",
+    });
+    toast.success("OASIS quick update saved as draft");
+    setValues({});
+    setClinicalNote("");
+    setSaving(false);
+    queryClient.invalidateQueries({ queryKey: ["oasis-assessments", patient?.id] });
+  };
+
+  const hasChanges = Object.keys(values).length > 0 || clinicalNote.trim().length > 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Recent assessments */}
+      {recentAssessments.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Clock className="w-4 h-4 text-slate-500" />
+              Recent Assessments
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentAssessments.map((a) => (
+              <div key={a.id} className="flex items-center justify-between text-sm rounded-lg border p-3 bg-slate-50">
+                <div>
+                  <span className="font-medium text-slate-800">
+                    {new Date(a.assessment_date || a.created_date).toLocaleDateString()}
+                  </span>
+                  <span className="text-slate-500 ml-2">by {a.clinician_name || "clinician"}</span>
+                  {a.clinical_note && <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{a.clinical_note}</p>}
+                </div>
+                <Badge className={a.status === "submitted" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}>
+                  {a.status}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick update form */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Brain className="w-4 h-4 text-indigo-500" />
+            OASIS Quick Update
+          </CardTitle>
+          <p className="text-xs text-slate-500">Update key functional status items and save as a draft for review.</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {QUICK_FIELDS.map(({ key, label, options }) => (
+              <div key={key}>
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 block">{label}</label>
+                <Select value={values[key] || ""} onValueChange={(v) => setValues((prev) => ({ ...prev, [key]: v }))}>
+                  <SelectTrigger className="h-10 text-sm">
+                    <SelectValue placeholder="Select…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {options.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Clinical Note</label>
+            <Textarea
+              rows={3}
+              placeholder="Add clinical observations or notes for this assessment…"
+              value={clinicalNote}
+              onChange={(e) => setClinicalNote(e.target.value)}
+              className="resize-none text-sm"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleSave}
+              disabled={saving || !hasChanges}
+              className="bg-indigo-600 hover:bg-indigo-700 min-h-[40px]"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {saving ? "Saving…" : "Save as Draft"}
+            </Button>
+            {hasChanges && (
+              <p className="text-xs text-amber-600 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Unsaved changes
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
