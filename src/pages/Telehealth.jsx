@@ -311,7 +311,7 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
           <SelectTrigger className="w-full h-11 border-gray-300 rounded-lg shadow-sm hover:border-gray-400">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             {visitTypes.map(t => (
               <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
             ))}
