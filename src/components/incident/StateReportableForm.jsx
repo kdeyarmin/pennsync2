@@ -10,23 +10,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle, Loader2, Send, Info } from "lucide-react";
 
 const EVENT_TYPES = [
-  "Abuse – Physical",
-  "Abuse – Emotional/Psychological",
-  "Abuse – Sexual",
-  "Abuse – Financial/Material Exploitation",
-  "Neglect – Active",
-  "Neglect – Passive",
-  "Neglect – Self-Neglect",
-  "Unexpected Death",
-  "Serious Injury / Unexpected Injury",
-  "Fall with Injury",
-  "Medication Error – Serious Harm",
-  "Elopement / Missing Patient",
-  "Fire / Disaster",
-  "Communicable Disease Outbreak",
-  "Pressure Injury – Stage 3 or 4 (New)",
-  "Restraint-Related Injury or Death",
-  "Other State Reportable Event",
+  "Complaint of patient abuse - confirmed or not",
+  "Death due to injury, suicide, or unusual circumstances",
+  "Death due to malnutrition, dehydration or sepsis",
+  "Death due to a medication error or adverse reaction to meds",
+  "Health Department Reportable Diseases",
+  "Misappropriation of patient property",
+  "Patient Neglect",
+  "Rape",
+  "Transfer or admission to hospital because of injury or accident",
 ];
 
 const REQUIRED_FIELDS = [
