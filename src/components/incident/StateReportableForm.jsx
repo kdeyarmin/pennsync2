@@ -64,6 +64,13 @@ export default function StateReportableForm({ currentUser }) {
     setTouched((prev) => ({ ...prev, [key]: true }));
   };
 
+  const isOver24Hours = () => {
+    if (!form.event_date) return false;
+    const eventDateTime = new Date(`${form.event_date}T${form.event_time || "00:00"}`);
+    const now = new Date();
+    return (now - eventDateTime) > 24 * 60 * 60 * 1000;
+  };
+
   const isFieldInvalid = (key) => {
     if (!REQUIRED_FIELDS.includes(key)) return false;
     return !form[key]?.trim();
@@ -383,11 +390,7 @@ Submitted On: ${new Date().toLocaleString()}
             </div>
           </div>
 
-          {/* Submitted By (read-only, auto-filled) */}
-          <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5 bg-gray-50">
-            <Label className="pt-2 font-medium text-sm text-gray-700">Submitted By:</Label>
-            <Input value={currentUser?.full_name || ""} readOnly className="bg-white text-gray-600 max-w-xs" />
-          </div>
+
 
         </div>
 
