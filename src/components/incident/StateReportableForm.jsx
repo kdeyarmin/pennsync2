@@ -278,6 +278,18 @@ Submitted On: ${new Date().toLocaleString()}
             </div>
           </div>
 
+          {/* 24-hour warning */}
+          {isOver24Hours() && (
+            <div className="p-5 bg-red-50 border-l-4 border-red-600">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-bold text-red-700 uppercase tracking-wide">
+                  ALL STATE REPORTABLES MUST BE DOCUMENTED IN THIS SYSTEM AS SOON AS POSSIBLE AND REPORTED TO THE DEPARTMENT OF HEALTH WITHIN 24 HOURS FOR COMPLIANCE
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Event Type */}
           <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-4 items-start p-5">
             <Label className="pt-2 font-medium text-sm text-gray-700">
