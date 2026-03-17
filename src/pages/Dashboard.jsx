@@ -143,7 +143,7 @@ export default function Dashboard() {
     });
   }, [visits, noteConversions, currentUser]);
 
-  const getGreeting = useMemo(() => {
+  const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
     if (hour < 18) return "Good Afternoon";
@@ -209,7 +209,7 @@ export default function Dashboard() {
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
-              {getGreeting}, {fullName}! 👋
+              {greeting}, {fullName}! 👋
             </h1>
             <p className="text-white text-xs sm:text-sm md:text-base drop-shadow-md">
               {formatEastern(new Date(), 'EEEE, MMMM d, yyyy') || new Date().toLocaleDateString()}
@@ -286,7 +286,7 @@ export default function Dashboard() {
           <SmartRouteOptimizer
             visits={visits.filter(v => v.status === 'scheduled')}
             patients={patients}
-            onOptimizedSchedule={(order) => console.log('Optimized:', order)}
+            onOptimizedSchedule={() => {}}
           />
         </div>
       )}
