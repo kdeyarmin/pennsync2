@@ -297,7 +297,7 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
           <SelectTrigger className="w-full h-11 border-gray-300 rounded-lg shadow-sm hover:border-gray-400">
             <SelectValue placeholder="Select patient..." />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             {patients.map(p => (
               <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
             ))}
