@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,12 +35,7 @@ function FieldError({ show, message }) {
   return <p className="text-red-600 text-xs mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{message}</p>;
 }
 
-export default function StateReportableForm({ currentUser }) {
-  const { data: patients = [] } = useQuery({
-    queryKey: ["state-reportable-patients"],
-    queryFn: () => base44.entities.Patient.list("-last_name", 500),
-    initialData: [],
-  });
+export default function StateReportableForm({ patients = [], currentUser }) {
   const [form, setForm] = useState({
     patient_id: "",
     event_date: "",
