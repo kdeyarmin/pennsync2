@@ -273,8 +273,8 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main className="flex-1 overflow-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100">
-          <div className="p-3 sm:p-4 md:p-5 lg:p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 w-0 md:w-auto">
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}
           </div>
