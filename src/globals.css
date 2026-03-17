@@ -4,9 +4,8 @@ css
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply transition-colors duration-200;
-  }
+  /* Removed global * transition — applying transitions to every element tanks paint/layout performance.
+     Transitions are applied per-component only where needed. */
   
   :root {
     --background: 0 0% 100%;
@@ -107,13 +106,13 @@ css
     @apply bg-gradient-to-r from-blue-700 to-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 active:scale-95;
   }
   
-  /* Animated Pulse for Loading (retained pulse-loader with its specific shimmer) */
+  /* Animated Pulse for Loading */
   .pulse-loader {
     @apply animate-pulse bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 bg-[length:200%_100%];
-    animation: shimmer 1.5s infinite;
+    animation: pulse-shimmer 1.5s infinite;
   }
   
-  @keyframes shimmer {
+  @keyframes pulse-shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
@@ -163,7 +162,7 @@ css
     to { opacity: 1; transform: scale(1); }
   }
   
-  @keyframes shimmer { /* New global shimmer animation */
+  @keyframes shimmer {
     0% { background-position: -1000px 0; }
     100% { background-position: 1000px 0; }
   }
