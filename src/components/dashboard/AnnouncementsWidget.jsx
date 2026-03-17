@@ -8,14 +8,9 @@ import { format } from "date-fns";
 export default function AnnouncementsWidget() {
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ['announcements'],
-    queryFn: async () => {
-      const result = await base44.entities.Announcement.filter({ is_active: true }, '-created_date');
-      console.log('Active announcements:', result);
-      return result || [];
-    },
-    initialData: [],
-    refetchOnMount: true,
-    refetchOnWindowFocus: false
+    queryFn: () => base44.entities.Announcement.filter({ is_active: true }, '-created_date'),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
