@@ -137,6 +137,7 @@ export const AuthProvider = ({ children }) => {
     // Don't redirect if we're already on login page to prevent loops
     if (window.location.pathname === '/login') return;
     base44.auth.redirectToLogin(window.location.href);
+  };
 
   return (
     <AuthContext.Provider value={{ 
