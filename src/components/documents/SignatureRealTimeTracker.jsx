@@ -10,6 +10,10 @@ export default function SignatureRealTimeTracker({ packageId, onSignatureUpdate 
     const setupSubscription = async () => {
       try {
         // Subscribe to all DocumentSignature changes
+        if (!base44.entities.DocumentSignature.subscribe) {
+          console.warn('DocumentSignature subscription not available');
+          return;
+        }
         unsubscribe = base44.entities.DocumentSignature.subscribe((event) => {
           if (event.type === 'update' && event.data) {
             const sig = event.data;
