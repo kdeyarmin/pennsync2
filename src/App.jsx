@@ -84,8 +84,45 @@ const AuthenticatedApp = () => {
       
       {/* Authenticated Routes */}
       <Route path="/" element={<Navigate to="/Dashboard" replace />} />
+      <Route path="/Dashboard" element={<LayoutWrapper currentPageName="Dashboard"><Dashboard /></LayoutWrapper>} />
+      <Route path="/Patients" element={<LayoutWrapper currentPageName="Patients"><Patients /></LayoutWrapper>} />
+      <Route path="/PatientDetails" element={<LayoutWrapper currentPageName="PatientDetails"><PatientDetails /></LayoutWrapper>} />
+      <Route path="/ClinicalDocumentation" element={<LayoutWrapper currentPageName="ClinicalDocumentation"><ClinicalDocumentation /></LayoutWrapper>} />
+      <Route path="/DocumentHub" element={<LayoutWrapper currentPageName="DocumentHub"><DocumentHub /></LayoutWrapper>} />
+      <Route path="/Messages" element={<LayoutWrapper currentPageName="Messages"><Messages /></LayoutWrapper>} />
+      <Route path="/AdminOperations" element={<LayoutWrapper currentPageName="AdminOperations"><AdminOperations /></LayoutWrapper>} />
+      <Route path="/UserManagement" element={<LayoutWrapper currentPageName="UserManagement"><UserManagement /></LayoutWrapper>} />
+      <Route path="/AdminTraining" element={<LayoutWrapper currentPageName="AdminTraining"><AdminTraining /></LayoutWrapper>} />
+      <Route path="/StaffTrainingHub" element={<LayoutWrapper currentPageName="StaffTrainingHub"><StaffTrainingHub /></LayoutWrapper>} />
+      <Route path="/CarePlanManagement" element={<LayoutWrapper currentPageName="CarePlanManagement"><CarePlanManagement /></LayoutWrapper>} />
+      <Route path="/SmartOASISAssessment" element={<LayoutWrapper currentPageName="SmartOASISAssessment"><SmartOASISAssessment /></LayoutWrapper>} />
+      <Route path="/SendFax" element={<LayoutWrapper currentPageName="SendFax"><SendFax /></LayoutWrapper>} />
+      <Route path="/PhysicianDirectory" element={<LayoutWrapper currentPageName="PhysicianDirectory"><PhysicianDirectory /></LayoutWrapper>} />
+      <Route path="/Telehealth" element={<LayoutWrapper currentPageName="Telehealth"><Telehealth /></LayoutWrapper>} />
+      <Route path="/ResourceLibrary" element={<LayoutWrapper currentPageName="ResourceLibrary"><ResourceLibrary /></LayoutWrapper>} />
+      <Route path="/ComplianceCenter" element={<LayoutWrapper currentPageName="ComplianceCenter"><ComplianceCenter /></LayoutWrapper>} />
+      <Route path="/Incidents" element={<LayoutWrapper currentPageName="Incidents"><Incidents /></LayoutWrapper>} />
+      <Route path="/ReferralIntake" element={<LayoutWrapper currentPageName="ReferralIntake"><ReferralIntake /></LayoutWrapper>} />
+      <Route path="/OfflineMode" element={<LayoutWrapper currentPageName="OfflineMode"><OfflineMode /></LayoutWrapper>} />
+      <Route path="/Help" element={<LayoutWrapper currentPageName="Help"><Help /></LayoutWrapper>} />
+      <Route path="/ReportsAnalytics" element={<LayoutWrapper currentPageName="ReportsAnalytics"><ReportsAnalytics /></LayoutWrapper>} />
+      <Route path="/SecurityCompliance" element={<LayoutWrapper currentPageName="SecurityCompliance"><SecurityCompliance /></LayoutWrapper>} />
+      <Route path="/PatientDataManagement" element={<LayoutWrapper currentPageName="PatientDataManagement"><PatientDataManagement /></LayoutWrapper>} />
+      <Route path="/UserSettings" element={<LayoutWrapper currentPageName="UserSettings"><UserSettings /></LayoutWrapper>} />
+      <Route path="/ClinicalPathwayManager" element={<LayoutWrapper currentPageName="ClinicalPathwayManager"><ClinicalPathwayManager /></LayoutWrapper>} />
+      <Route path="/MyLearning" element={<LayoutWrapper currentPageName="MyLearning"><MyLearning /></LayoutWrapper>} />
+      <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
+      <Route path="/TrainingCoursePlayer" element={<LayoutWrapper currentPageName="TrainingCoursePlayer"><TrainingCoursePlayer /></LayoutWrapper>} />
+      <Route path="/EventReport" element={<LayoutWrapper currentPageName="EventReport"><EventReport /></LayoutWrapper>} />
+      <Route path="/SmartNoteAssistant" element={<LayoutWrapper currentPageName="SmartNoteAssistant"><SmartNoteAssistant /></LayoutWrapper>} />
+      <Route path="/PatientEducationHub" element={<LayoutWrapper currentPageName="PatientEducationHub"><PatientEducationHub /></LayoutWrapper>} />
+      <Route path="/VisitScribe" element={<LayoutWrapper currentPageName="VisitScribe"><VisitScribe /></LayoutWrapper>} />
+      <Route path="/IncidentReporting" element={<LayoutWrapper currentPageName="IncidentReporting"><IncidentReporting /></LayoutWrapper>} />
+      <Route path="/ClinicalChart" element={<LayoutWrapper currentPageName="ClinicalChart"><ClinicalChart /></LayoutWrapper>} />
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
+  );
 };
-
 
 function App() {
 
