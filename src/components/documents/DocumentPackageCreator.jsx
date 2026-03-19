@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import DocumentVersionHistory from "./DocumentVersionHistory";
+import DocumentReplacementDialog from "./DocumentReplacementDialog";
 
 export default function DocumentPackageCreator({ open, onClose }) {
   const queryClient = useQueryClient();
@@ -135,6 +137,27 @@ export default function DocumentPackageCreator({ open, onClose }) {
         due_date: dueDate || null,
         sent_to_patient_at: new Date().toISOString()
       });
+
+      // Create version 1 record for each signature for audit trail
+      for (let i = 0; i < signatures.length; i++) {
+        const sig = signatures[i];
+        const selectedTemplate = templates.find(t => selectedDocuments[i] === t.id);
+        await base44.entities.DocumentVersion.create({
+          document_signature_id: sig.id,
+          package_id: pkg.id,
+          version_number: 1,
+          document_name: selectedTemplate?.template_name || 'Document',
+          document_type: selectedTemplate?.template_category || 'other',
+          pdf_url: sig.original_pdf_url,
+          uploaded_by: (await base44.auth.me()).email,
+          uploaded_at: new Date().toISOString(),
+          change_reason: 'Initial document upload',
+          is_current: true,
+          signature_status_at_version: 'pending'
+        }).catch(() => {
+          // Version tracking is optional, don't fail the whole operation
+        });
+      }
 
       // Send signature request if enabled
       if (sendForSignature && signerEmail && signerName) {
