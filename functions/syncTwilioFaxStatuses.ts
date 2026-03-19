@@ -26,11 +26,11 @@ Deno.serve(async (req) => {
     }
 
     // Find all faxes that are still pending or sending (not in final state)
-    // Reduced limit to 50 to avoid CPU time limits
+    // Batch process max 20 per run to stay within CPU limits
     const pendingStatuses = ['queued', 'sending'];
     const pendingFaxes = await base44.asServiceRole.entities.FaxLog.filter({
       status: { $in: pendingStatuses }
-    }, '-created_date', 50);
+    }, '-created_date', 20);
 
     console.log(`Found ${pendingFaxes.length} pending faxes to check`);
     
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
     // Check status of each pending fax with timeout safeguard
     const startTime = Date.now();
-    const maxDuration = 40000; // 40 seconds max to stay within CPU limits
+    const maxDuration = 35000; // 35 seconds max (strict buffer for CPU limits)
     
     for (const faxLog of pendingFaxes) {
       // Break early if approaching CPU time limit
@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
         console.warn(`Timeout approaching, stopping fax checks after ${results.checked} faxes`);
         break;
       }
+      
       if (!faxLog.telnyx_fax_id) {
         console.warn(`FaxLog ${faxLog.id} missing telnyx_fax_id (Twilio SID)`);
         continue;
@@ -115,8 +116,8 @@ Deno.serve(async (req) => {
             updateData.failure_reason
           );
 
-          // Log activity
-          if (faxLog.sent_by) {
+          // Log activity (skip to save CPU time)
+          if (faxLog.sent_by && false) {
             await base44.asServiceRole.entities.UserActivity.create({
               user_email: faxLog.sent_by,
               action: 'fax_status_sync',
@@ -129,7 +130,7 @@ Deno.serve(async (req) => {
                 to_number: faxLog.to_number,
               },
               status: twilioStatus === 'failed' ? 'failure' : 'success',
-            }).catch(() => {}); // Fail silently
+            }).catch(() => {});
           }
         }
 
