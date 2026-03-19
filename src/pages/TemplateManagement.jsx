@@ -1,0 +1,202 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+import { Loader2, Plus, Edit2, Trash2 } from 'lucide-react';
+
+export default function TemplateManagement() {
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    category: 'consent',
+    content: '',
+  });
+
+  // Fetch templates
+  const { data: templates = [], isLoading } = useQuery({
+    queryKey: ['templates'],
+    queryFn: async () => base44.entities.DocumentTemplate.list('-created_date', 100),
+  });
+
+  // Create/update template
+  const saveMutation = useMutation({
+    mutationFn: async (data) => {
+      if (editingTemplate) {
+        return base44.entities.DocumentTemplate.update(editingTemplate.id, data);
+      }
+      return base44.entities.DocumentTemplate.create(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      setShowForm(false);
+      setEditingTemplate(null);
+      setFormData({ name: '', description: '', category: 'consent', content: '' });
+    },
+  });
+
+  // Delete template
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.DocumentTemplate.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['templates'] }),
+  });
+
+  const handleSave = () => {
+    if (!formData.name || !formData.content) return;
+
+    // Extract placeholders from content
+    const placeholderMatches = formData.content.match(/{{(\w+)}}/g) || [];
+    const uniquePlaceholders = [...new Set(placeholderMatches.map((m) => m.slice(2, -2)))];
+    const placeholders = uniquePlaceholders.map((key) => ({
+      key,
+      label: key.replace(/_/g, ' ').toUpperCase(),
+      required: true,
+    }));
+
+    saveMutation.mutate({
+      ...formData,
+      placeholders,
+    });
+  };
+
+  const handleEdit = (template) => {
+    setEditingTemplate(template);
+    setFormData({
+      name: template.name,
+      description: template.description,
+      category: template.category,
+      content: template.content,
+    });
+    setShowForm(true);
+  };
+
+  const handleReset = () => {
+    setShowForm(false);
+    setEditingTemplate(null);
+    setFormData({ name: '', description: '', category: 'consent', content: '' });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Document Templates</h1>
+        <Button onClick={() => setShowForm(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> New Template
+        </Button>
+      </div>
+
+      {showForm && (
+        <Card className="p-6 space-y-4">
+          <h2 className="text-xl font-semibold">
+            {editingTemplate ? 'Edit Template' : 'Create New Template'}
+          </h2>
+          <Input
+            placeholder="Template Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+          <Input
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+          <select
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+          >
+            <option value="consent">Consent</option>
+            <option value="discharge">Discharge</option>
+            <option value="admission">Admission</option>
+            <option value="assessment">Assessment</option>
+            <option value="plan">Care Plan</option>
+            <option value="education">Education</option>
+            <option value="other">Other</option>
+          </select>
+          <Textarea
+            placeholder="Document Content (use {{placeholder_name}} for dynamic fields)"
+            value={formData.content}
+            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+            className="min-h-64"
+          />
+          <div className="text-sm text-slate-600">
+            <p className="font-semibold mb-2">Available Placeholders:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>{{patient_name}} - Full name</li>
+              <li>{{patient_first_name}}, {{patient_last_name}}</li>
+              <li>{{patient_date_of_birth}}, {{patient_email}}, {{patient_phone}}</li>
+              <li>{{patient_address}}, {{patient_medical_record_number}}</li>
+              <li>{{date}} (YYYY-MM-DD), {{today}} (formatted)</li>
+            </ul>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Save
+            </Button>
+            <Button variant="outline" onClick={handleReset}>
+              Cancel
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <div className="grid gap-4">
+        {templates.map((template) => (
+          <Card key={template.id} className="p-4">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">{template.name}</h3>
+                <p className="text-sm text-slate-600">{template.description}</p>
+                <div className="mt-2 flex gap-2">
+                  <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                    {template.category}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {template.placeholders?.length || 0} placeholders
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEdit(template)}
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteMutation.mutate(template.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {templates.length === 0 && !showForm && (
+        <Card className="p-8 text-center text-slate-500">
+          No templates yet. Create one to get started.
+        </Card>
+      )}
+    </div>
+  );
+}
