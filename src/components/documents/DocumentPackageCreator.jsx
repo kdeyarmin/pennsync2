@@ -319,7 +319,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
               </div>
               )}
 
-          {/* Manual Patient Information */}
+              {/* Manual Patient Information */}
           {!useExistingPatient && (
             <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
