@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,13 @@ import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
+import {
+  getDocumentDisplayName,
+  getNormalizedSignatureStatus,
+  getSignatureDueDate,
+  getSignatureSignedAt,
+  isSignatureOverdue,
+} from "@/components/signature/signatureUtils";
 
 export default function SignatureTracking({ stats = {} }) {
   const navigate = useNavigate();
@@ -48,9 +55,26 @@ export default function SignatureTracking({ stats = {} }) {
     initialData: []
   });
 
+  const normalizedSignatures = useMemo(() => allSignatures.map((signature) => ({
+    ...signature,
+    normalizedName: getDocumentDisplayName(signature),
+    normalizedStatus: getNormalizedSignatureStatus(signature),
+    normalizedDueDate: getSignatureDueDate(signature),
+    normalizedSignedAt: getSignatureSignedAt(signature),
+    isOverdue: isSignatureOverdue(signature),
+  })), [allSignatures]);
+
   const handleSignDocument = (sig) => {
-    const url = createPageUrl(`SignDocument?pdf_url=${encodeURIComponent(sig.original_pdf_url)}&signature_id=${sig.id}&patient_id=${sig.patient_id}`);
-    navigate(url);
+    const params = new URLSearchParams({
+      signature_id: sig.id,
+      patient_id: sig.patient_id,
+    });
+
+    if (sig.original_pdf_url || sig.document_url) {
+      params.set('pdf_url', sig.original_pdf_url || sig.document_url);
+    }
+
+    navigate(createPageUrl(`SignDocument?${params.toString()}`));
   };
 
   const handleSendReminder = async (sig) => {
@@ -64,20 +88,20 @@ export default function SignatureTracking({ stats = {} }) {
     }
   };
 
-  const isOverdue = (sig) => {
-    return sig.status === 'pending' && sig.due_date && new Date(sig.due_date) < new Date();
-  };
-
-  const filteredSignatures = allSignatures.filter(sig => {
+  const filteredSignatures = normalizedSignatures.filter((sig) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
-    const patient = patients.find(p => p.id === sig.patient_id);
+    const patient = patients.find((p) => p.id === sig.patient_id);
     const patientName = patient ? `${patient.first_name} ${patient.last_name}`.toLowerCase() : '';
-    return sig.document_name?.toLowerCase().includes(query) || patientName.includes(query);
+    return (
+      sig.normalizedName.toLowerCase().includes(query)
+      || patientName.includes(query)
+      || sig.document_type?.toLowerCase().includes(query)
+    );
   });
 
-  const pendingSignatures = filteredSignatures.filter(s => s.status === 'pending');
-  const signedSignatures = filteredSignatures.filter(s => s.status === 'signed');
+  const pendingSignatures = filteredSignatures.filter((signature) => signature.normalizedStatus !== 'signed');
+  const signedSignatures = filteredSignatures.filter((signature) => signature.normalizedStatus === 'signed');
 
   return (
     <div className="space-y-6">
@@ -86,7 +110,7 @@ export default function SignatureTracking({ stats = {} }) {
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{allSignatures.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{normalizedSignatures.length}</p>
               <p className="text-xs text-gray-600">Total</p>
             </div>
           </CardContent>
@@ -158,8 +182,8 @@ export default function SignatureTracking({ stats = {} }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {pendingSignatures.map(sig => {
-                const patient = patients.find(p => p.id === sig.patient_id);
+              {pendingSignatures.map((sig) => {
+                const patient = patients.find((p) => p.id === sig.patient_id);
                 const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown';
                 
                 return (
@@ -170,18 +194,18 @@ export default function SignatureTracking({ stats = {} }) {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <Clock className="w-5 h-5 text-yellow-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.document_name}</h4>
+                        <h4 className="font-medium text-gray-900 break-words">{sig.normalizedName}</h4>
                         <p className="text-sm text-gray-600">{patientName}</p>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
-                          {isOverdue(sig) && (
+                          {sig.isOverdue && (
                             <Badge className="bg-red-100 text-red-700">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               Overdue
                             </Badge>
                           )}
-                          {sig.due_date && (
+                          {sig.normalizedDueDate && (
                             <span className="text-xs text-gray-500">
-                              Due: {new Date(sig.due_date).toLocaleDateString()}
+                              Due: {new Date(sig.normalizedDueDate).toLocaleDateString()}
                             </span>
                           )}
                         </div>
@@ -226,8 +250,8 @@ export default function SignatureTracking({ stats = {} }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {signedSignatures.map(sig => {
-                const patient = patients.find(p => p.id === sig.patient_id);
+              {signedSignatures.map((sig) => {
+                const patient = patients.find((p) => p.id === sig.patient_id);
                 const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown';
                 
                 return (
@@ -238,20 +262,20 @@ export default function SignatureTracking({ stats = {} }) {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.document_name}</h4>
+                        <h4 className="font-medium text-gray-900 break-words">{sig.normalizedName}</h4>
                         <p className="text-sm text-gray-600">{patientName}</p>
-                        {sig.signed_at && (
+                        {sig.normalizedSignedAt && (
                           <span className="text-xs text-gray-500">
-                            Signed: {new Date(sig.signed_at).toLocaleDateString()}
+                            Signed: {new Date(sig.normalizedSignedAt).toLocaleDateString()}
                           </span>
                         )}
                       </div>
                     </div>
-                    {sig.signed_pdf_url && (
+                    {(sig.signed_pdf_url || sig.document_url || sig.original_pdf_url) && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(sig.signed_pdf_url, '_blank')}
+                        onClick={() => window.open(sig.signed_pdf_url || sig.document_url || sig.original_pdf_url, '_blank')}
                         className="w-full sm:w-auto"
                       >
                         <Eye className="w-4 h-4 mr-2" />

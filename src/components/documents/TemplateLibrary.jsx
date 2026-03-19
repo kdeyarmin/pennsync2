@@ -122,9 +122,13 @@ export default function TemplateLibrary() {
                 
                 <div className="text-xs text-gray-500 space-y-1">
                   <p>Version: {template.version}</p>
+                  <p>{template.is_packet ? `${template.document_count || template.packet_documents?.length || 1} documents in packet` : 'Single document template'}</p>
                   <p>Used {template.usage_count || 0} times</p>
                   {template.signature_fields?.length > 0 && (
                     <p>{template.signature_fields.length} signature field(s)</p>
+                  )}
+                  {template.carry_forward_fields?.length > 0 && (
+                    <p>{template.carry_forward_fields.length} patient carry-forward field(s)</p>
                   )}
                 </div>
 

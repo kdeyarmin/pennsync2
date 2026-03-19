@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,24 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Upload, Loader2, CheckCircle2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Upload,
+  Loader2,
+  CheckCircle2,
+  FileStack,
+  FileText,
+  Signature,
+  UserRound,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import VisualFieldEditor from "./VisualFieldEditor";
 
@@ -29,109 +42,197 @@ const TEMPLATE_CATEGORIES = [
   { value: 'care_plan', label: 'Care Plan' },
   { value: 'discharge', label: 'Discharge Summary' },
   { value: 'admission', label: 'Admission Form' },
-  { value: 'other', label: 'Other' }
+  { value: 'other', label: 'Other' },
 ];
 
+const createDocumentDefinition = (file, fileUrl, order) => ({
+  id: `${Date.now()}-${order}-${file.name}`,
+  order,
+  name: file.name.replace(/\.pdf$/i, ''),
+  fileName: file.name,
+  fileUrl,
+  fields: [],
+});
+
 export default function PDFTemplateBuilder({ open, onClose }) {
-  const [step, setStep] = useState('info'); // info, upload, fields, confirm
+  const [step, setStep] = useState('info');
   const [formData, setFormData] = useState({
     template_name: '',
     template_category: 'consent',
-    description: ''
+    description: '',
   });
-  const [pdfFile, setPdfFile] = useState(null);
-  const [pdfUrl, setPdfUrl] = useState('');
+  const [documents, setDocuments] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [fields, setFields] = useState([]);
-  const fileInputRef = React.useRef(null);
+  const [activeDocumentId, setActiveDocumentId] = useState(null);
+  const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
+
+  const activeDocument = useMemo(
+    () => documents.find((document) => document.id === activeDocumentId) || documents[0] || null,
+    [documents, activeDocumentId],
+  );
+
+  const normalizedDocuments = useMemo(() => documents.map((document, index) => {
+    const signatureFields = document.fields
+      .filter((field) => field.field_type === 'signature')
+      .map((field) => ({
+        field_name: field.field_name,
+        label: field.label,
+        role: field.role || 'patient',
+        required: field.required !== false,
+        position: field.position,
+        size: field.size,
+        document_id: document.id,
+        document_name: document.name,
+      }));
+
+    const fieldMappings = document.fields
+      .filter((field) => field.field_type !== 'signature')
+      .map((field) => ({
+        pdf_field_name: field.field_name,
+        data_source: field.data_source,
+        field_path: field.field_path,
+        label: field.label,
+        field_type: field.field_type,
+        default_value: field.default_value,
+        placeholder: field.placeholder,
+        required: field.required,
+        document_id: document.id,
+        document_name: document.name,
+        position: field.position,
+        size: field.size,
+      }));
+
+    const carryForwardFields = fieldMappings
+      .filter((field) => field.data_source === 'patient' && field.field_path)
+      .map((field) => ({
+        field_name: field.pdf_field_name,
+        patient_field: field.field_path,
+        label: field.label,
+        document_id: document.id,
+      }));
+
+    return {
+      ...document,
+      order: index + 1,
+      signatureFields,
+      fieldMappings,
+      carryForwardFields,
+    };
+  }), [documents]);
 
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData) => {
-      const signatureFields = fields.filter(f => f.field_type === 'signature');
-      const visualElements = fields.map((f, i) => ({
-        id: f.id,
-        type: f.field_type,
-        label: f.label,
-        position: f.position || { x: 50, y: 50 + (i * 40) },
-        size: f.size || { width: 200, height: 30 },
-        properties: {
-          required: f.required,
-          placeholder: f.placeholder,
-          defaultValue: f.default_value,
-          conditional: f.conditional
-        }
+      const packetDocuments = normalizedDocuments.map((document) => ({
+        document_id: document.id,
+        document_name: document.name,
+        original_file_name: document.fileName,
+        template_file_url: document.fileUrl,
+        order: document.order,
+        field_mappings: document.fieldMappings,
+        signature_fields: document.signatureFields,
+        carry_forward_fields: document.carryForwardFields,
+        visual_elements: document.fields.map((field) => ({
+          id: field.id,
+          type: field.field_type,
+          label: field.label,
+          position: field.position || { x: 50, y: 50 },
+          size: field.size || { width: 200, height: 30 },
+          properties: {
+            required: field.required,
+            placeholder: field.placeholder,
+            defaultValue: field.default_value,
+            conditional: field.conditional,
+            data_source: field.data_source,
+            field_path: field.field_path,
+          },
+        })),
       }));
 
       return base44.entities.PDFTemplate.create({
         template_name: templateData.template_name,
         template_category: templateData.template_category,
         description: templateData.description,
-        template_file_url: templateData.template_file_url,
+        template_file_url: packetDocuments[0]?.template_file_url || '',
+        is_packet: packetDocuments.length > 1,
+        document_count: packetDocuments.length,
+        packet_documents: packetDocuments,
         version: '1.0',
         is_active: true,
-        field_mappings: fields.filter(f => f.field_type !== 'signature').map(f => ({
-          pdf_field_name: f.field_name,
-          data_source: f.data_source,
-          field_path: f.field_path,
-          label: f.label,
-          field_type: f.field_type,
-          default_value: f.default_value,
-          format: f.field_type === 'date' ? 'MM/dd/yyyy' : undefined
-        })),
-        signature_fields: signatureFields.map(f => ({
-          field_name: f.field_name,
-          label: f.label,
-          role: f.role || 'patient',
-          required: f.required
-        })),
-        visual_elements: visualElements,
-        usage_count: 0
+        field_mappings: packetDocuments.flatMap((document) => document.field_mappings),
+        signature_fields: packetDocuments.flatMap((document) => document.signature_fields),
+        carry_forward_fields: packetDocuments.flatMap((document) => document.carry_forward_fields),
+        visual_elements: packetDocuments.flatMap((document) => document.visual_elements),
+        usage_count: 0,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pdfTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['pdf-templates'] });
       toast.success('Template created successfully!');
       resetForm();
       onClose();
     },
     onError: (error) => {
       toast.error(`Failed to create template: ${error.message}`);
-    }
+    },
   });
-
-  const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/pdf') {
-      toast.error('Please select a PDF file');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const uploadedFile = await base44.integrations.Core.UploadFile({ file });
-      setPdfUrl(uploadedFile.file_url);
-      setPdfFile(file);
-      setStep('confirm');
-    } catch (error) {
-      toast.error(`Upload failed: ${error.message}`);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const resetForm = () => {
     setFormData({
       template_name: '',
       template_category: 'consent',
-      description: ''
+      description: '',
     });
-    setPdfFile(null);
-    setPdfUrl('');
-    setFields([]);
+    setDocuments([]);
+    setActiveDocumentId(null);
     setStep('info');
+  };
+
+  const handleFileSelect = async (event) => {
+    const selectedFiles = Array.from(event.target.files || []).filter((file) => file.type === 'application/pdf');
+    if (selectedFiles.length === 0) {
+      toast.error('Please select one or more PDF files');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const uploadedDocuments = [];
+      for (const [index, file] of selectedFiles.entries()) {
+        const uploadedFile = await base44.integrations.Core.UploadFile({ file });
+        uploadedDocuments.push(createDocumentDefinition(file, uploadedFile.file_url, documents.length + index + 1));
+      }
+
+      const nextDocuments = [...documents, ...uploadedDocuments];
+      setDocuments(nextDocuments);
+      setActiveDocumentId((current) => current || nextDocuments[0]?.id || null);
+      setStep('fields');
+      toast.success(`${uploadedDocuments.length} PDF${uploadedDocuments.length > 1 ? 's' : ''} uploaded`);
+    } catch (error) {
+      toast.error(`Upload failed: ${error.message}`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const updateDocumentFields = (documentId, fields) => {
+    setDocuments((currentDocuments) => currentDocuments.map((document) => (
+      document.id === documentId ? { ...document, fields } : document
+    )));
+  };
+
+  const removeDocument = (documentId) => {
+    setDocuments((currentDocuments) => {
+      const nextDocuments = currentDocuments.filter((document) => document.id !== documentId);
+      if (activeDocumentId === documentId) {
+        setActiveDocumentId(nextDocuments[0]?.id || null);
+      }
+      return nextDocuments;
+    });
   };
 
   const handleCreate = () => {
@@ -139,15 +240,15 @@ export default function PDFTemplateBuilder({ open, onClose }) {
       toast.error('Please enter a template name');
       return;
     }
-    if (!pdfUrl) {
-      toast.error('Please upload a PDF file');
+    if (documents.length === 0) {
+      toast.error('Please upload at least one PDF document');
       return;
     }
-    createTemplateMutation.mutate({
-      ...formData,
-      template_file_url: pdfUrl
-    });
+    createTemplateMutation.mutate(formData);
   };
+
+  const totalSignatureFields = normalizedDocuments.reduce((total, document) => total + document.signatureFields.length, 0);
+  const totalCarryForwardFields = normalizedDocuments.reduce((total, document) => total + document.carryForwardFields.length, 0);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -156,213 +257,294 @@ export default function PDFTemplateBuilder({ open, onClose }) {
         onClose();
       }
     }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create PDF Template</DialogTitle>
+          <DialogTitle>Create E-Signature Template</DialogTitle>
           <DialogDescription>
-            Upload a PDF and configure it as a template for patient documents
+            Upload one PDF or a packet of PDFs, place every signature/data field visually, and define which patient details should carry forward automatically.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Step Indicator */}
+        <div className="space-y-5">
           <div className="flex gap-2">
-            <div className={`flex-1 h-1 rounded-full transition-colors ${step === 'info' || step === 'upload' || step === 'confirm' ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className={`flex-1 h-1 rounded-full transition-colors ${step === 'upload' || step === 'confirm' ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className={`flex-1 h-1 rounded-full transition-colors ${step === 'confirm' ? 'bg-blue-600' : 'bg-gray-200'}`} />
+            {[
+              { id: 'info', label: 'Template Info' },
+              { id: 'upload', label: 'Upload PDFs' },
+              { id: 'fields', label: 'Place Fields' },
+              { id: 'confirm', label: 'Review' },
+            ].map((item, index, allItems) => {
+              const currentIndex = allItems.findIndex((stepItem) => stepItem.id === step);
+              return (
+                <div key={item.id} className="flex-1">
+                  <div className={`h-1 rounded-full ${index <= currentIndex ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                  <p className="mt-1 text-xs text-gray-600">{item.label}</p>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Step 1: Template Info */}
           {step === 'info' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Template Name
-                </label>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label>Template Name</Label>
                 <Input
-                  placeholder="e.g., Admission Consent Form"
+                  placeholder="e.g., Admission Packet with Consents"
                   value={formData.template_name}
-                  onChange={(e) => setFormData({ ...formData, template_name: e.target.value })}
+                  onChange={(event) => setFormData((current) => ({ ...current, template_name: event.target.value }))}
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <Select value={formData.template_category} onValueChange={(value) => 
-                  setFormData({ ...formData, template_category: value })
-                }>
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select
+                  value={formData.template_category}
+                  onValueChange={(value) => setFormData((current) => ({ ...current, template_category: value }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TEMPLATE_CATEGORIES.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
+                    {TEMPLATE_CATEGORIES.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (Optional)
-                </label>
-                <Input
-                  placeholder="What is this template for?"
+              <div className="space-y-2">
+                <Label>Packet Type</Label>
+                <div className="rounded-md border p-3 text-sm text-gray-700 bg-slate-50">
+                  {documents.length > 1 ? 'Multi-document packet' : 'Single document template'}
+                </div>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Description</Label>
+                <Textarea
+                  placeholder="Describe the workflow, which forms are included, and who signs them."
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(event) => setFormData((current) => ({ ...current, description: event.target.value }))}
+                  rows={4}
                 />
               </div>
             </div>
           )}
 
-          {/* Step 2: Upload PDF */}
-           {step === 'upload' && (
-             <div className="space-y-4">
-               <div 
-                 className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
-                 onClick={() => fileInputRef.current?.click()}
-               >
-                 <div className="space-y-2">
-                   {uploading ? (
-                     <>
-                       <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
-                       <p className="text-sm text-gray-600">Uploading...</p>
-                     </>
-                   ) : pdfUrl ? (
-                     <>
-                       <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
-                       <p className="text-sm font-medium text-gray-700">{pdfFile?.name}</p>
-                       <p className="text-xs text-gray-500">Ready to configure fields</p>
-                     </>
-                   ) : (
-                     <>
-                       <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-                       <p className="text-sm font-medium text-gray-700">Click to upload PDF</p>
-                       <p className="text-xs text-gray-500">or drag and drop</p>
-                     </>
-                   )}
-                 </div>
-               </div>
-             </div>
-           )}
+          {step === 'upload' && (
+            <div className="space-y-4">
+              <div
+                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="space-y-2">
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
+                      <p className="text-sm text-gray-600">Uploading PDF files...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                      <p className="text-sm font-medium text-gray-700">Upload a document or packet of documents</p>
+                      <p className="text-xs text-gray-500">Select one PDF or multiple PDFs for a packet</p>
+                    </>
+                  )}
+                </div>
+              </div>
 
-           {/* Step 3: Configure Fields */}
-           {step === 'fields' && (
-             <VisualFieldEditor 
-               pdfUrl={pdfUrl}
-               initialFields={fields}
-               onFieldsChange={setFields}
-             />
-           )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
 
-          {/* Step 3: Confirm */}
-          {/* Step 4: Confirm */}
+              {documents.length > 0 && (
+                <div className="space-y-3">
+                  {documents.map((document, index) => (
+                    <Card key={document.id}>
+                      <CardContent className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {documents.length > 1 ? <FileStack className="w-5 h-5 text-indigo-600 shrink-0" /> : <FileText className="w-5 h-5 text-blue-600 shrink-0" />}
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{document.name}</p>
+                            <p className="text-xs text-gray-500">Document {index + 1} of {documents.length}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{document.fields.length} field(s)</Badge>
+                          <Button size="icon" variant="ghost" onClick={() => removeDocument(document.id)}>
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 'fields' && (
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Place signature and carry-forward fields</h3>
+                  <p className="text-sm text-gray-600">Choose a document, then add signature fields and any patient data that should carry forward automatically.</p>
+                </div>
+                {documents.length > 0 && (
+                  <Tabs value={activeDocument?.id} onValueChange={setActiveDocumentId} className="w-full lg:w-auto">
+                    <TabsList className="flex flex-wrap h-auto justify-start">
+                      {documents.map((document, index) => (
+                        <TabsTrigger key={document.id} value={document.id}>
+                          {documents.length > 1 ? `Doc ${index + 1}` : 'Document'}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                )}
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card className="md:col-span-1">
+                  <CardContent className="p-4 space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Current document</p>
+                      <p className="text-sm text-gray-600">{activeDocument?.name || 'None selected'}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-md border p-3">
+                        <div className="flex items-center gap-2 text-purple-700">
+                          <Signature className="w-4 h-4" />
+                          <span>Signatures</span>
+                        </div>
+                        <p className="mt-2 text-lg font-semibold">{activeDocument ? activeDocument.fields.filter((field) => field.field_type === 'signature').length : 0}</p>
+                      </div>
+                      <div className="rounded-md border p-3">
+                        <div className="flex items-center gap-2 text-blue-700">
+                          <UserRound className="w-4 h-4" />
+                          <span>Patient carry-forward</span>
+                        </div>
+                        <p className="mt-2 text-lg font-semibold">
+                          {activeDocument ? activeDocument.fields.filter((field) => field.data_source === 'patient' && field.field_type !== 'signature').length : 0}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-600">
+                      Tip: use <strong>Data Source = Patient Data</strong> for any field you want auto-carried forward from the patient record.
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="md:col-span-2">
+                  {activeDocument ? (
+                    <VisualFieldEditor
+                      pdfUrl={activeDocument.fileUrl}
+                      initialFields={activeDocument.fields}
+                      onFieldsChange={(fields) => updateDocumentFields(activeDocument.id, fields)}
+                    />
+                  ) : (
+                    <Card>
+                      <CardContent className="p-10 text-center text-gray-500">
+                        Upload at least one PDF to start placing fields.
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {step === 'confirm' && (
             <div className="space-y-4">
               <Card className="bg-green-50 border-green-200">
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="p-5 space-y-4">
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                     <div>
                       <p className="font-medium text-gray-900">{formData.template_name}</p>
-                      <p className="text-sm text-gray-600">{pdfFile?.name}</p>
-                      <div className="mt-2 inline-block">
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                          {TEMPLATE_CATEGORIES.find(c => c.value === formData.template_category)?.label}
-                        </span>
-                      </div>
+                      <p className="text-sm text-gray-600">{documents.length > 1 ? 'Packet template' : 'Single document template'} • {documents.length} PDF(s)</p>
                     </div>
                   </div>
-                  {formData.description && (
-                    <p className="text-sm text-gray-700 p-3 bg-white rounded border">
-                      {formData.description}
-                    </p>
-                  )}
-                  <div className="pt-3 border-t">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">Fields Configured: {fields.length}</p>
-                    <div className="space-y-1">
-                      {fields.map(f => (
-                        <p key={f.id} className="text-xs text-gray-600">• {f.label} ({f.field_type})</p>
-                      ))}
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-md border bg-white p-3">
+                      <p className="text-xs text-gray-500">Documents</p>
+                      <p className="text-lg font-semibold text-gray-900">{documents.length}</p>
+                    </div>
+                    <div className="rounded-md border bg-white p-3">
+                      <p className="text-xs text-gray-500">Signature fields</p>
+                      <p className="text-lg font-semibold text-gray-900">{totalSignatureFields}</p>
+                    </div>
+                    <div className="rounded-md border bg-white p-3">
+                      <p className="text-xs text-gray-500">Patient carry-forward fields</p>
+                      <p className="text-lg font-semibold text-gray-900">{totalCarryForwardFields}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
+              <div className="space-y-3">
+                {normalizedDocuments.map((document) => (
+                  <Card key={document.id}>
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-gray-900">{document.name}</p>
+                          <p className="text-xs text-gray-500">{document.fileName}</p>
+                        </div>
+                        <Badge variant="outline">{document.order}</Badge>
+                      </div>
+                      <div className="text-sm text-gray-600 flex flex-wrap gap-4">
+                        <span>{document.signatureFields.length} signature field(s)</span>
+                        <span>{document.fieldMappings.length} mapped field(s)</span>
+                        <span>{document.carryForwardFields.length} patient carry-forward field(s)</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         <DialogFooter className="gap-2">
-           {step === 'info' && (
-             <>
-               <Button variant="outline" onClick={onClose}>
-                 Cancel
-               </Button>
-               <Button onClick={() => setStep('upload')}>
-                 Next
-               </Button>
-             </>
-           )}
-           {step === 'upload' && (
-             <>
-               <Button variant="outline" onClick={() => setStep('info')}>
-                 Back
-               </Button>
-               <Button 
-                 onClick={() => fileInputRef.current?.click()}
-                 disabled={uploading}
-               >
-                 {uploading ? 'Uploading...' : pdfUrl ? 'PDF Uploaded ✓' : 'Select & Upload PDF'}
-               </Button>
-               {pdfUrl && (
-                 <Button onClick={() => setStep('fields')}>
-                   Configure Fields
-                 </Button>
-               )}
-               <input
-                 ref={fileInputRef}
-                 type="file"
-                 accept=".pdf"
-                 onChange={handleFileSelect}
-                 className="hidden"
-               />
-             </>
-           )}
-           {step === 'fields' && (
-             <>
-               <Button variant="outline" onClick={() => setStep('upload')}>
-                 Back
-               </Button>
-               <Button onClick={() => setStep('confirm')}>
-                 Review & Create
-               </Button>
-             </>
-           )}
-           {step === 'confirm' && (
-             <>
-               <Button variant="outline" onClick={() => setStep('fields')}>
-                 Edit Fields
-               </Button>
-               <Button 
-                 onClick={handleCreate}
-                 disabled={createTemplateMutation.isPending}
-               >
-                 {createTemplateMutation.isPending ? (
-                   <>
-                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                     Creating...
-                   </>
-                 ) : (
-                   'Create Template'
-                 )}
-               </Button>
-             </>
-           )}
-         </DialogFooter>
+          {step === 'info' && (
+            <>
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button onClick={() => setStep('upload')}>Next</Button>
+            </>
+          )}
+
+          {step === 'upload' && (
+            <>
+              <Button variant="outline" onClick={() => setStep('info')}>Back</Button>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                {uploading ? 'Uploading...' : 'Add PDF Files'}
+              </Button>
+              <Button onClick={() => setStep('fields')} disabled={documents.length === 0}>Configure Fields</Button>
+            </>
+          )}
+
+          {step === 'fields' && (
+            <>
+              <Button variant="outline" onClick={() => setStep('upload')}>Back</Button>
+              <Button onClick={() => setStep('confirm')} disabled={documents.length === 0}>Review & Create</Button>
+            </>
+          )}
+
+          {step === 'confirm' && (
+            <>
+              <Button variant="outline" onClick={() => setStep('fields')}>Edit Fields</Button>
+              <Button onClick={handleCreate} disabled={createTemplateMutation.isPending}>
+                {createTemplateMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : 'Create Template'}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
