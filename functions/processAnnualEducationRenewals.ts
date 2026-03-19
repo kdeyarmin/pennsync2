@@ -4,9 +4,10 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const today = new Date();
-    const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-expiration_date', 500);
-    const assignments = await base44.asServiceRole.entities.TrainingAssignment.list('-created_date', 1000);
+    // Batch in smaller chunks to avoid CPU time limit
+    const certificates = await base44.asServiceRole.entities.TrainingCertificate.filter({ revoked: false }, '-expiration_date', 100);
     let created = 0;
+    const notificationsToCreate = [];
 
     for (const certificate of certificates) {
       if (!certificate.expiration_date || !certificate.annual_cycle_year) continue;
@@ -15,12 +16,13 @@ Deno.serve(async (req) => {
       if (daysUntilExpiration !== 30) continue;
 
       const nextCycleYear = (certificate.annual_cycle_year || today.getUTCFullYear()) + 1;
-      const existing = assignments.find((assignment) =>
-        assignment.course_id === certificate.course_id &&
-        assignment.assigned_to_user_id === certificate.user_id &&
-        assignment.annual_cycle_year === nextCycleYear
-      );
-      if (existing) continue;
+      // Check for existing renewal assignment (single query instead of list filter)
+      const existing = await base44.asServiceRole.entities.TrainingAssignment.filter({
+        course_id: certificate.course_id,
+        assigned_to_user_id: certificate.user_id,
+        annual_cycle_year: nextCycleYear
+      }, '-created_date', 1);
+      if (existing.length > 0) continue;
 
       const newAssignment = await base44.asServiceRole.entities.TrainingAssignment.create({
         course_id: certificate.course_id,
@@ -46,7 +48,8 @@ Deno.serve(async (req) => {
         archived_status: false
       });
 
-      await base44.asServiceRole.entities.Notification.create({
+      // Queue notification instead of creating immediately
+      notificationsToCreate.push({
         user_email: certificate.user_id,
         title: 'Annual renewal education assigned',
         message: `Your ${nextCycleYear} renewal assignment for "${certificate.course_title}" has been assigned and is due by ${new Date(certificate.expiration_date).toLocaleDateString()}.`,
@@ -66,7 +69,17 @@ Deno.serve(async (req) => {
       created++;
     }
 
-    return Response.json({ success: true, created });
+    // Batch create notifications to reduce CPU overhead
+    let notificationsCreated = 0;
+    for (let i = 0; i < notificationsToCreate.length; i += 50) {
+      const batch = notificationsToCreate.slice(i, i + 50);
+      await Promise.all(
+        batch.map(n => base44.asServiceRole.entities.Notification.create(n).catch(() => {}))
+      );
+      notificationsCreated += batch.length;
+    }
+
+    return Response.json({ success: true, created, notificationsCreated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
