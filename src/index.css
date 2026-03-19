@@ -178,8 +178,10 @@ button:focus-visible {
     overflow-y: auto;
   }
 
-  /* Responsive table wrapper — tables inside .table-responsive scroll horizontally */
-  .table-responsive {
+  /* Prevent body scroll when dialog is open */
+  body[data-radix-dialog-open] {
+    overflow: hidden;
+  }
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
