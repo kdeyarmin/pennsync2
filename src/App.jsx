@@ -49,6 +49,7 @@ import VisitScribe from '@/pages/VisitScribe';
 import IncidentReporting from '@/pages/IncidentReporting';
 import ClinicalChart from '@/pages/ClinicalChart';
 import TemplateManagement from '@/pages/TemplateManagement';
+import DocumentAuditLogs from '@/pages/DocumentAuditLogs';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -121,6 +122,7 @@ const AuthenticatedApp = () => {
       <Route path="/IncidentReporting" element={<LayoutWrapper currentPageName="IncidentReporting"><IncidentReporting /></LayoutWrapper>} />
       <Route path="/ClinicalChart" element={<LayoutWrapper currentPageName="ClinicalChart"><ClinicalChart /></LayoutWrapper>} />
       <Route path="/TemplateManagement" element={<LayoutWrapper currentPageName="TemplateManagement"><TemplateManagement /></LayoutWrapper>} />
+      <Route path="/DocumentAuditLogs" element={<LayoutWrapper currentPageName="DocumentAuditLogs"><DocumentAuditLogs /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
