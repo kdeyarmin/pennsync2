@@ -312,11 +312,12 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 onValueChange={setSelectedPatient}
               />
               {patients.length === 0 && <p className="text-xs text-amber-600 mt-2">No patients found. Create one or check access permissions.</p>}
-                Patient data will auto-populate in documents 
+              <p className="text-xs text-gray-500 mt-1">
+                Patient data will auto-populate in documents
                 {patients.length > 0 && ` (${patients.length} patients available)`}
               </p>
-            </div>
-          )}
+              </div>
+              )}
 
           {/* Manual Patient Information */}
           {!useExistingPatient && (
