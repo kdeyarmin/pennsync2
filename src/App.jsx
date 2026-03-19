@@ -49,6 +49,8 @@ import VisitScribe from '@/pages/VisitScribe';
 import IncidentReporting from '@/pages/IncidentReporting';
 import ClinicalChart from '@/pages/ClinicalChart';
 import TemplateManagement from '@/pages/TemplateManagement';
+
+const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
