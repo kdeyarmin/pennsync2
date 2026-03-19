@@ -78,6 +78,7 @@ export default function VisitNoteSignatureWorkflow({ visitId, visitNote, onSigna
             documentType="visit_note"
             documentId={visitId}
             documentTitle={`Visit Note - ${visitNote?.patient_name || 'Patient'}`}
+            signatureRole="clinician"
             onSignatureComplete={handleSignatureComplete}
           />
         </DialogContent>

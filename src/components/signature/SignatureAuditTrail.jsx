@@ -3,18 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Shield, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Calendar, 
-  MapPin, 
+import {
+  Shield,
+  CheckCircle2,
+  AlertTriangle,
+  Calendar,
+  MapPin,
   Monitor,
   FileText,
-  Download
+  Download,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { verifySignatureIntegrity } from './signatureUtils';
 
 export default function SignatureAuditTrail({ documentId, documentType }) {
   const [signatures, setSignatures] = useState([]);
@@ -27,17 +28,16 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
 
   const loadSignatures = async () => {
     try {
-      const sigs = await base44.entities.DocumentSignature.filter({
+      const signatureResults = await base44.entities.DocumentSignature.filter({
         document_id: documentId,
-        document_type: documentType
+        document_type: documentType,
       }, '-created_date', 50);
-      
-      setSignatures(sigs);
-      
-      // Verify each signature
+
+      setSignatures(signatureResults);
+
       const results = {};
-      for (const sig of sigs) {
-        results[sig.id] = verifySignatureIntegrity(sig);
+      for (const signature of signatureResults) {
+        results[signature.id] = verifySignatureIntegrity(signature);
       }
       setVerificationResults(results);
     } catch (error) {
@@ -48,69 +48,38 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
     }
   };
 
-  const verifySignatureIntegrity = (signature) => {
-    // Recreate the signature record and generate hash
-    const signatureRecord = {
-      document_type: signature.document_type,
-      document_id: signature.document_id,
-      document_title: signature.document_title,
-      signature_data: signature.signature_data,
-      signed_by: signature.signed_by,
-      signed_by_name: signature.signed_by_name,
-      signed_by_credentials: signature.signed_by_credentials,
-      signed_date: signature.signed_date,
-      ip_address: signature.ip_address,
-      location_data: signature.location_data,
-      user_agent: signature.user_agent,
-      attestation_accepted: signature.attestation_accepted,
-      attestation_text: signature.attestation_text,
-      signature_method: signature.signature_method,
-      device_type: signature.device_type,
-    };
-
-    const str = JSON.stringify(signatureRecord);
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    const calculatedHash = Math.abs(hash).toString(16);
-
-    return {
-      isValid: calculatedHash === signature.signature_hash,
-      calculatedHash,
-      storedHash: signature.signature_hash
-    };
-  };
-
   const exportAuditTrail = async () => {
     try {
-      const auditData = signatures.map(sig => ({
-        signature_id: sig.id,
-        document_type: sig.document_type,
-        document_id: sig.document_id,
-        signed_by: sig.signed_by_name,
-        credentials: sig.signed_by_credentials,
-        signed_date: sig.signed_date,
-        ip_address: sig.ip_address,
-        location: sig.location_data ? `${sig.location_data.latitude}, ${sig.location_data.longitude}` : 'N/A',
-        device_type: sig.device_type,
-        verification_status: verificationResults[sig.id]?.isValid ? 'VALID' : 'TAMPERED',
-        signature_hash: sig.signature_hash
+      if (signatures.length === 0) {
+        toast.error('No audit trail data available to export');
+        return;
+      }
+
+      const auditData = signatures.map((signature) => ({
+        signature_id: signature.id,
+        document_type: signature.document_type,
+        document_id: signature.document_id,
+        signed_by: signature.signed_by_name,
+        credentials: signature.signed_by_credentials,
+        signed_date: signature.signed_date,
+        ip_address: signature.ip_address,
+        location: signature.location_data ? `${signature.location_data.latitude}, ${signature.location_data.longitude}` : 'N/A',
+        device_type: signature.device_type,
+        verification_status: verificationResults[signature.id]?.isValid ? 'VALID' : 'TAMPERED',
+        signature_hash: signature.signature_hash,
       }));
 
       const csvContent = [
         Object.keys(auditData[0]).join(','),
-        ...auditData.map(row => Object.values(row).join(','))
+        ...auditData.map((row) => Object.values(row).map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')),
       ].join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `signature_audit_trail_${documentId}_${Date.now()}.csv`;
-      a.click();
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `signature_audit_trail_${documentId}_${Date.now()}.csv`;
+      anchor.click();
       window.URL.revokeObjectURL(url);
 
       toast.success('Audit trail exported successfully');
@@ -161,7 +130,6 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
             return (
               <Card key={signature.id} className="border-2 border-gray-200">
                 <CardContent className="p-4 space-y-3">
-                  {/* Verification Status */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {verification?.isValid ? (
@@ -181,16 +149,14 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
                     </span>
                   </div>
 
-                  {/* Signature Preview */}
                   <div className="border rounded-lg p-2 bg-white">
-                    <img 
-                      src={signature.signature_data} 
-                      alt="Signature" 
+                    <img
+                      src={signature.signature_data}
+                      alt="Signature"
                       className="h-16 mx-auto"
                     />
                   </div>
 
-                  {/* Signer Info */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-start gap-2">
                       <FileText className="w-4 h-4 text-gray-500 mt-0.5" />
@@ -233,7 +199,6 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
                     )}
                   </div>
 
-                  {/* Cryptographic Hash */}
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="text-xs font-semibold text-gray-900 mb-1">Cryptographic Hash:</p>
                     <code className="text-xs text-gray-700 font-mono break-all">
@@ -241,7 +206,6 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
                     </code>
                   </div>
 
-                  {/* Tamper Warning */}
                   {!verification?.isValid && (
                     <Alert className="bg-red-50 border-red-300">
                       <AlertTriangle className="w-4 h-4 text-red-600" />
@@ -257,7 +221,6 @@ export default function SignatureAuditTrail({ documentId, documentType }) {
         </CardContent>
       </Card>
 
-      {/* Security Info */}
       <Alert className="bg-blue-50 border-blue-300">
         <Shield className="w-4 h-4 text-blue-600" />
         <AlertDescription className="text-sm text-blue-900">

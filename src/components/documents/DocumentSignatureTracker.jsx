@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { formatEastern } from "@/components/utils/timezone";
+import { getDocumentDisplayName, getNormalizedSignatureStatus, getSignatureDueDate, getSignatureSignedAt } from "@/components/signature/signatureUtils";
 import {
   Select,
   SelectContent,
@@ -28,7 +29,6 @@ import {
 
 export default function DocumentSignatureTracker({ patientId }) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -48,13 +48,6 @@ export default function DocumentSignatureTracker({ patientId }) {
     queryFn: () => base44.entities.Patient.list('last_name', 200),
     initialData: [],
     enabled: !patientId
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.DocumentSignature.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['document-signatures'] });
-    }
   });
 
   const getStatusIcon = (status) => {
@@ -87,28 +80,36 @@ export default function DocumentSignatureTracker({ patientId }) {
     return patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown';
   };
 
-  const filteredDocuments = documents.filter(doc => {
+  const normalizedDocuments = useMemo(() => documents.map((doc) => ({
+    ...doc,
+    normalizedName: getDocumentDisplayName(doc),
+    normalizedStatus: getNormalizedSignatureStatus(doc),
+    normalizedDueDate: getSignatureDueDate(doc),
+    normalizedSignedAt: getSignatureSignedAt(doc),
+  })), [documents]);
+
+  const filteredDocuments = normalizedDocuments.filter(doc => {
     const matchesSearch = 
-      doc.document_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.normalizedName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.document_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       getPatientName(doc.patient_id).toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || doc.normalizedStatus === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
-  const pendingCount = documents.filter(d => d.status === 'pending').length;
-  const signedCount = documents.filter(d => d.status === 'signed').length;
+  const pendingCount = normalizedDocuments.filter((doc) => doc.normalizedStatus !== 'signed').length;
+  const signedCount = normalizedDocuments.filter((doc) => doc.normalizedStatus === 'signed').length;
 
   const handleViewDocument = (doc) => {
-    if (doc.status === 'signed' && doc.signed_pdf_url) {
+    if (doc.normalizedStatus === 'signed' && doc.signed_pdf_url) {
       window.open(doc.signed_pdf_url, '_blank');
     } else {
       const params = new URLSearchParams({
         pdf_url: doc.original_pdf_url,
         patient_id: doc.patient_id,
-        document_type: doc.document_name
+        document_type: doc.normalizedName
       });
       navigate(createPageUrl(`SignDocument?${params.toString()}`));
     }
@@ -184,12 +185,12 @@ export default function DocumentSignatureTracker({ patientId }) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      {getStatusIcon(doc.status)}
+                      {getStatusIcon(doc.normalizedStatus)}
                       <h4 className="font-semibold text-gray-900 truncate">
-                        {doc.document_name}
+                        {doc.normalizedName}
                       </h4>
-                      <Badge className={getStatusBadge(doc.status)}>
-                        {doc.status}
+                      <Badge className={getStatusBadge(doc.normalizedStatus)}>
+                        {doc.normalizedStatus}
                       </Badge>
                     </div>
                     
@@ -203,15 +204,15 @@ export default function DocumentSignatureTracker({ patientId }) {
                       Created: {formatEastern(doc.created_date, 'MMM d, yyyy')}
                     </p>
 
-                    {doc.due_date && (
+                    {doc.normalizedDueDate && (
                       <p className="text-xs text-orange-600">
-                        Due: {formatEastern(doc.due_date, 'MMM d, yyyy')}
+                        Due: {formatEastern(doc.normalizedDueDate, 'MMM d, yyyy')}
                       </p>
                     )}
 
-                    {doc.signed_at && (
+                    {doc.normalizedSignedAt && (
                       <p className="text-xs text-green-600">
-                        Signed: {formatEastern(doc.signed_at, 'MMM d, yyyy h:mm a')}
+                        Signed: {formatEastern(doc.normalizedSignedAt, 'MMM d, yyyy h:mm a')}
                       </p>
                     )}
 
@@ -242,7 +243,7 @@ export default function DocumentSignatureTracker({ patientId }) {
                       onClick={() => handleViewDocument(doc)}
                     >
                       <Eye className="w-4 h-4 mr-1" />
-                      {doc.status === 'signed' ? 'View' : 'Sign'}
+                      {doc.normalizedStatus === 'signed' ? 'View' : 'Sign'}
                     </Button>
                   </div>
                 </div>
