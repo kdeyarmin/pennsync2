@@ -50,6 +50,7 @@ import IncidentReporting from '@/pages/IncidentReporting';
 import ClinicalChart from '@/pages/ClinicalChart';
 import TemplateManagement from '@/pages/TemplateManagement';
 import DocumentAuditLogs from '@/pages/DocumentAuditLogs';
+import BulkSignatureRequests from '@/pages/BulkSignatureRequests';
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -123,6 +124,7 @@ const AuthenticatedApp = () => {
       <Route path="/ClinicalChart" element={<LayoutWrapper currentPageName="ClinicalChart"><ClinicalChart /></LayoutWrapper>} />
       <Route path="/TemplateManagement" element={<LayoutWrapper currentPageName="TemplateManagement"><TemplateManagement /></LayoutWrapper>} />
       <Route path="/DocumentAuditLogs" element={<LayoutWrapper currentPageName="DocumentAuditLogs"><DocumentAuditLogs /></LayoutWrapper>} />
+      <Route path="/BulkSignatureRequests" element={<LayoutWrapper currentPageName="BulkSignatureRequests"><BulkSignatureRequests /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
