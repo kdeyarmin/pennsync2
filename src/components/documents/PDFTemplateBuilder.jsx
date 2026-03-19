@@ -170,8 +170,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
       queryClient.invalidateQueries({ queryKey: ['pdfTemplates'] });
       queryClient.invalidateQueries({ queryKey: ['pdf-templates'] });
       toast.success('Template created successfully!');
-      resetForm();
-      onClose();
+      handleClose();
     },
     onError: (error) => {
       toast.error(`Failed to create template: ${error.message}`);
@@ -253,8 +252,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       if (!isOpen) {
-        resetForm();
-        onClose();
+        handleClose();
       }
     }}>
       <DialogContent className="max-w-6xl max-h-[92vh] overflow-y-auto">
