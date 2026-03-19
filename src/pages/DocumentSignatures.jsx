@@ -1,24 +1,30 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  FileText, 
-  Clock, 
+import {
+  FileText,
+  Clock,
   CheckCircle2,
   AlertTriangle,
   Pen,
   Send,
   Eye,
-  Search
+  Search,
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import SearchablePatientSelect from "../components/ui/SearchablePatientSelect";
+import {
+  getDocumentDisplayName,
+  getNormalizedSignatureStatus,
+  getSignatureDueDate,
+  getSignatureSignedAt,
+} from "@/components/signature/signatureUtils";
 
 export default function DocumentSignatures() {
   const navigate = useNavigate();
@@ -34,29 +40,45 @@ export default function DocumentSignatures() {
     queryKey: ['all-signatures', selectedPatient],
     queryFn: () => {
       if (selectedPatient) {
-        return base44.entities.DocumentSignature.filter({ patient_id: selectedPatient });
+        return base44.entities.DocumentSignature.filter({ patient_id: selectedPatient }, '-created_date', 200);
       }
       return base44.entities.DocumentSignature.list('-created_date', 200);
     },
     initialData: [],
-    refetchInterval: 5000
+    refetchInterval: 5000,
   });
 
   const { data: patients = [] } = useQuery({
     queryKey: ['patients-list'],
     queryFn: () => base44.entities.Patient.list('-created_date', 500),
-    initialData: []
+    initialData: [],
   });
 
-  const handleSignDocument = (sig) => {
-    const url = createPageUrl(`SignDocument?pdf_url=${encodeURIComponent(sig.original_pdf_url)}&signature_id=${sig.id}&patient_id=${sig.patient_id}`);
-    navigate(url);
+  const normalizedSignatures = useMemo(() => allSignatures.map((signature) => ({
+    ...signature,
+    normalizedStatus: getNormalizedSignatureStatus(signature),
+    normalizedName: getDocumentDisplayName(signature),
+    normalizedDueDate: getSignatureDueDate(signature),
+    normalizedSignedAt: getSignatureSignedAt(signature),
+  })), [allSignatures]);
+
+  const handleSignDocument = (signature) => {
+    const params = new URLSearchParams({
+      signature_id: signature.id,
+      patient_id: signature.patient_id,
+    });
+
+    if (signature.original_pdf_url || signature.document_url) {
+      params.set('pdf_url', signature.original_pdf_url || signature.document_url);
+    }
+
+    navigate(createPageUrl(`SignDocument?${params.toString()}`));
   };
 
-  const handleSendReminder = async (sig) => {
+  const handleSendReminder = async (signature) => {
     try {
       await base44.functions.invoke('sendSignatureReminder', {
-        signature_id: sig.id
+        signature_id: signature.id,
       });
       toast.success("Reminder sent successfully!");
     } catch (error) {
@@ -64,26 +86,36 @@ export default function DocumentSignatures() {
     }
   };
 
-  const isOverdue = (sig) => {
-    return sig.status === 'pending' && sig.due_date && new Date(sig.due_date) < new Date();
-  };
+  const isOverdue = (signature) => (
+    signature.normalizedStatus !== 'signed'
+    && signature.normalizedDueDate
+    && new Date(signature.normalizedDueDate) < new Date()
+  );
 
-  const filteredSignatures = allSignatures.filter(sig => {
-    if (!searchQuery.trim()) return true;
+  const filteredSignatures = normalizedSignatures.filter((signature) => {
+    if (!searchQuery.trim()) {
+      return true;
+    }
+
     const query = searchQuery.toLowerCase();
-    const patient = patients.find(p => p.id === sig.patient_id);
+    const patient = patients.find((candidate) => candidate.id === signature.patient_id);
     const patientName = patient ? `${patient.first_name} ${patient.last_name}`.toLowerCase() : '';
-    return sig.document_name.toLowerCase().includes(query) || patientName.includes(query);
+
+    return (
+      signature.normalizedName.toLowerCase().includes(query)
+      || patientName.includes(query)
+      || signature.document_type?.toLowerCase().includes(query)
+    );
   });
 
-  const pendingSignatures = filteredSignatures.filter(s => s.status === 'pending');
-  const signedSignatures = filteredSignatures.filter(s => s.status === 'signed');
+  const pendingSignatures = filteredSignatures.filter((signature) => signature.normalizedStatus !== 'signed');
+  const signedSignatures = filteredSignatures.filter((signature) => signature.normalizedStatus === 'signed');
 
   const stats = {
-    total: allSignatures.length,
-    pending: allSignatures.filter(s => s.status === 'pending').length,
-    signed: allSignatures.filter(s => s.status === 'signed').length,
-    overdue: allSignatures.filter(s => isOverdue(s)).length
+    total: normalizedSignatures.length,
+    pending: normalizedSignatures.filter((signature) => signature.normalizedStatus !== 'signed').length,
+    signed: normalizedSignatures.filter((signature) => signature.normalizedStatus === 'signed').length,
+    overdue: normalizedSignatures.filter((signature) => isOverdue(signature)).length,
   };
 
   return (
@@ -107,43 +139,24 @@ export default function DocumentSignatures() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-xs text-gray-600">Total</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
-              <p className="text-xs text-gray-600">Pending</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.signed}</p>
-              <p className="text-xs text-gray-600">Signed</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.overdue}</p>
-              <p className="text-xs text-gray-600">Overdue</p>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { label: 'Total', value: stats.total, color: 'text-gray-900' },
+          { label: 'Pending', value: stats.pending, color: 'text-yellow-600' },
+          { label: 'Signed', value: stats.signed, color: 'text-green-600' },
+          { label: 'Overdue', value: stats.overdue, color: 'text-red-600' },
+        ].map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className={`text-xl sm:text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-xs text-gray-600">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -159,12 +172,12 @@ export default function DocumentSignatures() {
               <Input
                 placeholder="Search documents..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 className="pl-10"
               />
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => refetch()}
               className="w-full sm:w-auto"
             >
@@ -174,7 +187,6 @@ export default function DocumentSignatures() {
         </CardContent>
       </Card>
 
-      {/* Pending Signatures */}
       {pendingSignatures.length > 0 && (
         <Card>
           <CardHeader>
@@ -184,30 +196,30 @@ export default function DocumentSignatures() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {pendingSignatures.map(sig => {
-                const patient = patients.find(p => p.id === sig.patient_id);
+              {pendingSignatures.map((signature) => {
+                const patient = patients.find((candidate) => candidate.id === signature.patient_id);
                 const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown';
-                
+
                 return (
                   <div
-                    key={sig.id}
+                    key={signature.id}
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg hover:bg-yellow-50"
                   >
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <Clock className="w-5 h-5 text-yellow-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.document_name}</h4>
+                        <h4 className="font-medium text-gray-900 break-words">{signature.normalizedName}</h4>
                         <p className="text-sm text-gray-600">{patientName}</p>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
-                          {isOverdue(sig) && (
+                          {isOverdue(signature) && (
                             <Badge className="bg-red-100 text-red-700">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               Overdue
                             </Badge>
                           )}
-                          {sig.due_date && (
+                          {signature.normalizedDueDate && (
                             <span className="text-xs text-gray-500">
-                              Due: {new Date(sig.due_date).toLocaleDateString()}
+                              Due: {new Date(signature.normalizedDueDate).toLocaleDateString()}
                             </span>
                           )}
                         </div>
@@ -216,7 +228,7 @@ export default function DocumentSignatures() {
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         size="sm"
-                        onClick={() => handleSignDocument(sig)}
+                        onClick={() => handleSignDocument(signature)}
                         className="w-full sm:w-auto"
                       >
                         <Pen className="w-4 h-4 mr-2" />
@@ -226,7 +238,7 @@ export default function DocumentSignatures() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleSendReminder(sig)}
+                          onClick={() => handleSendReminder(signature)}
                           className="w-full sm:w-auto"
                         >
                           <Send className="w-4 h-4 mr-2" />
@@ -242,7 +254,6 @@ export default function DocumentSignatures() {
         </Card>
       )}
 
-      {/* Signed Documents */}
       {signedSignatures.length > 0 && (
         <Card>
           <CardHeader>
@@ -252,32 +263,32 @@ export default function DocumentSignatures() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {signedSignatures.map(sig => {
-                const patient = patients.find(p => p.id === sig.patient_id);
+              {signedSignatures.map((signature) => {
+                const patient = patients.find((candidate) => candidate.id === signature.patient_id);
                 const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown';
-                
+
                 return (
                   <div
-                    key={sig.id}
+                    key={signature.id}
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg hover:bg-green-50"
                   >
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 break-words">{sig.document_name}</h4>
+                        <h4 className="font-medium text-gray-900 break-words">{signature.normalizedName}</h4>
                         <p className="text-sm text-gray-600">{patientName}</p>
-                        {sig.signed_at && (
+                        {signature.normalizedSignedAt && (
                           <span className="text-xs text-gray-500">
-                            Signed: {new Date(sig.signed_at).toLocaleDateString()}
+                            Signed: {new Date(signature.normalizedSignedAt).toLocaleDateString()}
                           </span>
                         )}
                       </div>
                     </div>
-                    {sig.signed_pdf_url && (
+                    {(signature.signed_pdf_url || signature.document_url || signature.original_pdf_url) && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(sig.signed_pdf_url, '_blank')}
+                        onClick={() => window.open(signature.signed_pdf_url || signature.document_url || signature.original_pdf_url, '_blank')}
                         className="w-full sm:w-auto"
                       >
                         <Eye className="w-4 h-4 mr-2" />

@@ -42,17 +42,19 @@ Deno.serve(async (req) => {
         }
 
         // Send reminder
-        const dueText = sig.due_date 
-          ? `This document is due by ${new Date(sig.due_date).toLocaleDateString()}.`
+        const documentName = sig.document_name || sig.document_title || sig.document_type || 'Document';
+        const dueDate = sig.due_date || sig.expires_at;
+        const dueText = dueDate 
+          ? `This document is due by ${new Date(dueDate).toLocaleDateString()}.`
           : '';
 
-        const isOverdue = sig.due_date && new Date(sig.due_date) < new Date();
+        const isOverdue = dueDate && new Date(dueDate) < new Date();
 
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: patient.email,
           subject: isOverdue 
-            ? `URGENT: Overdue Document Signature - ${sig.document_name}`
-            : `Reminder: Document Signature Required - ${sig.document_name}`,
+            ? `URGENT: Overdue Document Signature - ${documentName}`
+            : `Reminder: Document Signature Required - ${documentName}`,
           body: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               ${isOverdue ? '<div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin-bottom: 20px;"><p style="margin: 0; color: #dc2626; font-weight: bold;">⚠️ OVERDUE DOCUMENT</p></div>' : ''}
@@ -60,7 +62,7 @@ Deno.serve(async (req) => {
               <p>Hello ${patient.first_name},</p>
               <p>${isOverdue ? 'This is an urgent reminder' : 'This is a reminder'} that you have a document pending signature:</p>
               <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin: 0 0 10px 0; color: #374151;">${sig.document_name}</h3>
+                <h3 style="margin: 0 0 10px 0; color: #374151;">${documentName}</h3>
                 <p style="margin: 0; color: #6b7280;">Status: <strong style="color: ${isOverdue ? '#dc2626' : '#f59e0b'};">${isOverdue ? 'OVERDUE' : 'Pending Signature'}</strong></p>
                 ${dueText ? `<p style="margin: 10px 0 0 0; color: #6b7280;">${dueText}</p>` : ''}
               </div>
@@ -76,13 +78,13 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Notification.create({
           user_email: patient.email,
           title: isOverdue ? 'OVERDUE: Document Signature Required' : 'Document Signature Reminder',
-          message: `${isOverdue ? 'OVERDUE - ' : ''}Please sign "${sig.document_name}"`,
+          message: `${isOverdue ? 'OVERDUE - ' : ''}Please sign "${documentName}"`,
           type: 'task_due_soon',
           priority: isOverdue ? 'critical' : 'medium',
           metadata: {
             signature_id: sig.id,
             patient_id: patient.id,
-            document_name: sig.document_name,
+            document_name: documentName,
             is_overdue: isOverdue
           }
         });
@@ -131,19 +133,21 @@ function shouldSendReminderLogic(signature) {
 
   // Send reminder if:
   // 1. Document is overdue
-  if (signature.due_date && new Date(signature.due_date) < now) {
+  const dueDate = signature.due_date || signature.expires_at;
+
+  if (dueDate && new Date(dueDate) < now) {
     return true;
   }
 
   // 2. Document is 3+ days old with no due date
-  if (!signature.due_date && daysOld >= 3) {
+  if (!dueDate && daysOld >= 3) {
     return true;
   }
 
   // 3. Document due within 24 hours
-  if (signature.due_date) {
-    const dueDate = new Date(signature.due_date);
-    const hoursUntilDue = (dueDate - now) / (1000 * 60 * 60);
+  if (dueDate) {
+    const deadline = new Date(dueDate);
+    const hoursUntilDue = (deadline - now) / (1000 * 60 * 60);
     if (hoursUntilDue <= 24 && hoursUntilDue > 0) {
       return true;
     }
