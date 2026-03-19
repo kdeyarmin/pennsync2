@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import SignatureCanvas from 'react-signature-canvas';
+import SignaturePadCanvas from '@/components/signature/SignaturePadCanvas';
 
 export default function SignerDocumentSigner({
   documentId,
@@ -18,7 +18,7 @@ export default function SignerDocumentSigner({
   const [isLoading, setIsLoading] = useState(false);
   const [documentUrl, setDocumentUrl] = useState(null);
   const [signatureName, setSignatureName] = useState(packageData.signerName);
-  const signaturePadRef = useRef(null);
+  const [signatureImage, setSignatureImage] = useState(null);
 
   const document = packageData.documents.find((d) => d.id === documentId);
 
@@ -34,12 +34,12 @@ export default function SignerDocumentSigner({
     }
   };
 
-  const handleClearSignature = () => {
-    signaturePadRef.current?.clear();
+  const handleSignatureCapture = (dataUrl) => {
+    setSignatureImage(dataUrl);
   };
 
   const handleSign = async () => {
-    if (!signaturePadRef.current?.getTrimmedCanvas().toDataURL('image/png')) {
+    if (!signatureImage) {
       toast.error('Please provide a signature');
       return;
     }
@@ -51,11 +51,6 @@ export default function SignerDocumentSigner({
 
     try {
       setIsLoading(true);
-
-      // Get signature image
-      const signatureImage = signaturePadRef.current
-        .getTrimmedCanvas()
-        .toDataURL('image/png');
 
       // Convert data URL to blob
       const response = await fetch(signatureImage);
@@ -138,24 +133,10 @@ export default function SignerDocumentSigner({
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Signature Pad */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 p-2">
-              <SignatureCanvas
-                ref={signaturePadRef}
-                canvasProps={{
-                  className: 'signature-canvas w-full h-32',
-                  style: { border: 'none', cursor: 'crosshair' },
-                }}
-              />
-            </div>
-
-            {/* Clear Button */}
-            <Button
-              variant="outline"
-              onClick={handleClearSignature}
-              className="w-full"
-            >
-              Clear Signature
-            </Button>
+            <SignaturePadCanvas
+              onSignatureCapture={handleSignatureCapture}
+              disabled={isLoading}
+            />
 
             {/* Name Input */}
             <div>
