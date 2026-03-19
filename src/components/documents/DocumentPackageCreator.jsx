@@ -67,6 +67,8 @@ export default function DocumentPackageCreator({ open, onClose }) {
   const onPatientCreated = () => {
     queryClient.invalidateQueries({ queryKey: ['patients-for-select'] });
   };
+
+  const createPackageMutation = useMutation({
     mutationFn: async (packageData) => {
       let patientId = selectedPatient;
       
@@ -148,18 +150,6 @@ export default function DocumentPackageCreator({ open, onClose }) {
       }
 
       return pkg;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['document-packages'] });
-      queryClient.invalidateQueries({ queryKey: ['document-signatures-dashboard'] });
-      toast.success("Document package created successfully!");
-      resetForm();
-      onClose();
-    },
-    onError: (error) => {
-      toast.error(`Failed to create package: ${error.message}`);
-    }
-  });
 
   const resetForm = () => {
     setUseExistingPatient(true);
