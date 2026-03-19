@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +8,12 @@ import { Eye, Download, FileText, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import DocumentVersionHistory from './DocumentVersionHistory';
 import DocumentReplacementDialog from './DocumentReplacementDialog';
+import SignatureRealTimeTracker from './SignatureRealTimeTracker';
 
 export default function DocumentPackageViewer({ packageId }) {
   const [replacingDocument, setReplacingDocument] = useState(null);
   const [replacementDialogOpen, setReplacementDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: pkg } = useQuery({
     queryKey: ['document-package', packageId],
@@ -31,6 +33,11 @@ export default function DocumentPackageViewer({ packageId }) {
     },
     enabled: !!pkg?.document_signatures,
   });
+
+  const handleSignatureUpdate = useCallback((updatedSignature) => {
+    queryClient.invalidateQueries({ queryKey: ['package-signatures', packageId] });
+    queryClient.invalidateQueries({ queryKey: ['document-package', packageId] });
+  }, [packageId, queryClient]);
 
   const handlePreview = (url) => {
     window.open(url, '_blank');
@@ -60,6 +67,7 @@ export default function DocumentPackageViewer({ packageId }) {
 
   return (
     <>
+      <SignatureRealTimeTracker packageId={packageId} onSignatureUpdate={handleSignatureUpdate} />
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Documents in Package</h3>
         
