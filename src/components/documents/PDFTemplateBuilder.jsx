@@ -121,12 +121,6 @@ export default function PDFTemplateBuilder({ open, onClose }) {
     };
   }), [documents]);
 
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
-
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData) => {
       const packetDocuments = normalizedDocuments.map((document) => ({
@@ -175,7 +169,6 @@ export default function PDFTemplateBuilder({ open, onClose }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pdfTemplates'] });
       queryClient.invalidateQueries({ queryKey: ['pdf-templates'] });
-      queryClient.invalidateQueries({ queryKey: ['pdf-templates-active'] });
       toast.success('Template created successfully!');
       handleClose();
     },
@@ -514,7 +507,7 @@ export default function PDFTemplateBuilder({ open, onClose }) {
         <DialogFooter className="gap-2">
           {step === 'info' && (
             <>
-              <Button variant="outline" onClick={handleClose}>Cancel</Button>
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
               <Button onClick={() => setStep('upload')}>Next</Button>
             </>
           )}

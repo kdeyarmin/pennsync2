@@ -52,23 +52,28 @@ export default function DocumentHub() {
         </div>
         <div className="flex flex-wrap gap-2">
           {activeTab === "signatures" && (
-            <Button 
-              onClick={() => setShowPackageCreator(true)}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Send for Signature
-            </Button>
-          )}
-          {currentUser?.role === 'admin' && ["signatures", "templates"].includes(activeTab) && (
-            <Button 
-              onClick={() => setShowTemplateBuilder(true)}
-              variant="outline"
-              className="w-full sm:w-auto min-h-[44px]"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Template
-            </Button>
+            <>
+              <Button 
+                onClick={() => setShowPackageCreator(true)}
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Send for Signature
+              </Button>
+              {currentUser?.role === 'admin' && (
+                <Button 
+                  onClick={() => {
+                    setActiveTab('templates');
+                    setShowTemplateBuilder(true);
+                  }}
+                  variant="outline"
+                  className="w-full sm:w-auto min-h-[44px]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Template
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
