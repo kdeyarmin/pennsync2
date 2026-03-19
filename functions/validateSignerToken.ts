@@ -1,0 +1,119 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+
+    const { token } = await req.json();
+
+    if (!token) {
+      return Response.json(
+        { error: 'Token is required' },
+        { status: 400 }
+      );
+    }
+
+    // Find token record
+    const tokenRecords = await base44.asServiceRole.entities.DocumentPackageToken.filter(
+      { token },
+      '-created_date',
+      1
+    );
+
+    if (!tokenRecords || tokenRecords.length === 0) {
+      return Response.json(
+        { error: 'Invalid or expired token', valid: false },
+        { status: 401 }
+      );
+    }
+
+    const tokenRecord = tokenRecords[0];
+
+    // Check if token is active
+    if (!tokenRecord.is_active) {
+      return Response.json(
+        { error: 'Token has been deactivated', valid: false },
+        { status: 401 }
+      );
+    }
+
+    // Check expiration
+    const now = new Date();
+    const expiresAt = new Date(tokenRecord.expires_at);
+
+    if (now > expiresAt) {
+      await base44.asServiceRole.entities.DocumentPackageToken.update(
+        tokenRecord.id,
+        { is_active: false }
+      );
+
+      return Response.json(
+        { error: 'Token has expired', valid: false },
+        { status: 401 }
+      );
+    }
+
+    // Get package details
+    const pkg = await base44.asServiceRole.entities.DocumentPackage.get(
+      tokenRecord.package_id
+    );
+
+    // Get signatures
+    const signatures = await Promise.all(
+      pkg.document_signatures.map((id) =>
+        base44.asServiceRole.entities.DocumentSignature.get(id).catch(
+          () => null
+        )
+      )
+    );
+
+    const validSignatures = signatures.filter((s) => s !== null);
+
+    // Update access tracking
+    const userAgent = req.headers.get('user-agent') || '';
+    const clientIp = req.headers.get('cf-connecting-ip') ||
+      req.headers.get('x-forwarded-for') || 'unknown';
+
+    const updatedIPs = tokenRecord.ip_addresses || [];
+    if (!updatedIPs.includes(clientIp)) {
+      updatedIPs.push(clientIp);
+    }
+
+    const updatedUAs = tokenRecord.user_agents || [];
+    if (!updatedUAs.includes(userAgent)) {
+      updatedUAs.push(userAgent);
+    }
+
+    await base44.asServiceRole.entities.DocumentPackageToken.update(
+      tokenRecord.id,
+      {
+        access_count: (tokenRecord.access_count || 0) + 1,
+        last_accessed_at: new Date().toISOString(),
+        ip_addresses: updatedIPs,
+        user_agents: updatedUAs,
+      }
+    );
+
+    return Response.json({
+      valid: true,
+      packageId: tokenRecord.package_id,
+      packageName: pkg.package_name,
+      signerName: tokenRecord.signer_name,
+      signerEmail: tokenRecord.signer_email,
+      dueDate: pkg.due_date,
+      packageStatus: pkg.status,
+      documents: validSignatures.map((sig) => ({
+        id: sig.id,
+        name: sig.document_name,
+        status: sig.status,
+        signedAt: sig.signed_at,
+      })),
+      expiresAt: tokenRecord.expires_at,
+    });
+  } catch (error) {
+    return Response.json(
+      { error: error.message, valid: false },
+      { status: 500 }
+    );
+  }
+});
