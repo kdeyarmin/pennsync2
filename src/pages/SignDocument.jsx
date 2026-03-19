@@ -55,11 +55,39 @@ export default function SignDocument() {
 
   const signatureSummary = useMemo(() => getSignerProgress(signatureRecord), [signatureRecord]);
 
+  const workingSigners = useMemo(() => {
+    if (Array.isArray(signatureRecord?.signers) && signatureRecord.signers.length > 0) {
+      return signatureRecord.signers;
+    }
+
+    if (Array.isArray(signatureRecord?.required_signatures) && signatureRecord.required_signatures.length > 0) {
+      return signatureRecord.required_signatures.map((signer, index) => ({
+        id: signer.signer_id || signer.id || `${index}`,
+        name: signer.name || signer.label || signer.role || `Signer ${index + 1}`,
+        email: signer.email || '',
+        role: signer.role || 'signer',
+        required: signer.is_required !== false,
+        signature: signer.signature || null,
+        signed_date: signer.signed_date || null,
+        signature_method: signer.signature_method || null,
+        order: signer.order || index + 1,
+      }));
+    }
+
+    return [];
+  }, [signatureRecord]);
+
+  const patientDisplay = patient || {
+    first_name: signatureRecord?.form_data?.first_name || 'Unknown',
+    last_name: signatureRecord?.form_data?.last_name || 'Patient',
+  };
+
+
   const isSignerLocallySigned = (signer) => Boolean(signatures[signer.id]);
   const isSignerAlreadySigned = (signer) => Boolean(signer.signature || signer.signed_date || signatures[signer.id]);
 
   const canSignSigner = (signerIndex) => {
-    const orderedSigners = Array.isArray(signatureRecord?.signers) ? signatureRecord.signers : [];
+    const orderedSigners = workingSigners;
     const priorRequiredSigners = orderedSigners.slice(0, signerIndex).filter((signer) => signer.required !== false);
 
     return priorRequiredSigners.every((signer) => isSignerAlreadySigned(signer));
@@ -76,7 +104,7 @@ export default function SignDocument() {
   };
 
   const handleSaveSignature = (dataUrl, method) => {
-    const signer = signatureRecord?.signers?.[currentSignerIndex];
+    const signer = workingSigners[currentSignerIndex];
     if (!signer) {
       return;
     }
@@ -95,12 +123,12 @@ export default function SignDocument() {
   };
 
   const handleSubmitAll = async () => {
-    if (!signatureRecord?.signers?.length) {
+    if (!workingSigners.length) {
       toast.error("No signers were found for this document");
       return;
     }
 
-    const updatedSigners = signatureRecord.signers.map((signer) => {
+    const updatedSigners = workingSigners.map((signer) => {
       const newSignature = signatures[signer.id];
       return {
         ...signer,
@@ -125,6 +153,17 @@ export default function SignDocument() {
       await updateSignatureMutation.mutateAsync({
         signatureData: {
           signers: updatedSigners,
+          required_signatures: updatedSigners.map((signer) => ({
+            signer_id: signer.id,
+            name: signer.name,
+            role: signer.role,
+            is_required: signer.required !== false,
+            is_signed: Boolean(signer.signature),
+            signed_date: signer.signed_date,
+            signature: signer.signature || null,
+            signature_method: signer.signature_method || null,
+            order: signer.order,
+          })),
           document_name: getDocumentDisplayName(signatureRecord),
           document_title: signatureRecord.document_title || getDocumentDisplayName(signatureRecord),
           status: "signed",
@@ -153,7 +192,7 @@ export default function SignDocument() {
     }
   };
 
-  if (!signatureRecord || !patient) {
+  if (!signatureRecord) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <Card>
@@ -175,7 +214,7 @@ export default function SignDocument() {
       return { label: "Signed", color: "bg-green-600" };
     }
 
-    if (!canSignSigner(signatureRecord.signers.findIndex((candidate) => candidate.id === signer.id))) {
+    if (!canSignSigner(workingSigners.findIndex((candidate) => candidate.id === signer.id))) {
       return { label: "Waiting", color: "bg-slate-500" };
     }
 
@@ -191,7 +230,7 @@ export default function SignDocument() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign Document</h1>
         <p className="text-gray-600">
-          {patient.first_name} {patient.last_name} • {getDocumentDisplayName(signatureRecord)}
+          {patientDisplay.first_name} {patientDisplay.last_name} • {getDocumentDisplayName(signatureRecord)}
         </p>
       </div>
 
@@ -257,7 +296,7 @@ export default function SignDocument() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {signatureRecord.signers.map((signer, index) => {
+            {workingSigners.map((signer, index) => {
               const status = getSignerStatus(signer);
               const localSignature = signatures[signer.id];
               const isSigned = isSignerAlreadySigned(signer);
@@ -345,13 +384,13 @@ export default function SignDocument() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {signatureRecord.signers[currentSignerIndex]?.name} - Please Sign
+                {workingSigners[currentSignerIndex]?.name} - Please Sign
               </DialogTitle>
             </DialogHeader>
             <SignatureCanvas
               onSave={handleSaveSignature}
               onCancel={() => setShowSignatureDialog(false)}
-              signerName={signatureRecord.signers[currentSignerIndex]?.name}
+              signerName={workingSigners[currentSignerIndex]?.name}
               isInitials={false}
             />
           </DialogContent>

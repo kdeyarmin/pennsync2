@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -8,6 +9,7 @@ import { Users, FileText, PenTool, Settings, ArrowRight, AlertCircle } from "luc
 import { format } from "date-fns";
 import SystemHealthMonitor from "./SystemHealthMonitor";
 import QuickHealthOverview from "./QuickHealthOverview";
+import { getDocumentDisplayName, getNormalizedSignatureStatus, getSignatureStatusLabel } from "@/components/signature/signatureUtils";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
   <Card className="hover:shadow-md transition-shadow">
@@ -37,23 +39,19 @@ export default function AdminDashboardOverview() {
   // Fetch recent documents
   const { data: recentDocuments = [] } = useQuery({
     queryKey: ['admin-documents'],
-    queryFn: () => base44.entities.DocumentSignature.list('-created_date', 10),
+    queryFn: () => base44.entities.DocumentSignature.list('-created_date', 50),
     initialData: [],
   });
 
-  // Fetch pending signatures
-  const { data: pendingSignatures = [] } = useQuery({
-    queryKey: ['admin-pending-sigs'],
-    queryFn: () => base44.entities.DocumentSignature.filter({ status: 'pending' }, '-created_date', 50),
-    initialData: [],
-  });
+  const normalizedRecentDocuments = useMemo(() => recentDocuments.map((doc) => ({
+    ...doc,
+    normalizedName: getDocumentDisplayName(doc),
+    normalizedStatus: getNormalizedSignatureStatus(doc),
+    normalizedStatusLabel: getSignatureStatusLabel(doc),
+  })), [recentDocuments]);
 
-  // Fetch in-progress signatures
-  const { data: inProgressSignatures = [] } = useQuery({
-    queryKey: ['admin-inprogress-sigs'],
-    queryFn: () => base44.entities.DocumentSignature.filter({ status: 'in_progress' }, '-created_date', 50),
-    initialData: [],
-  });
+  const pendingSignatures = normalizedRecentDocuments.filter((doc) => doc.normalizedStatus === 'pending');
+  const inProgressSignatures = normalizedRecentDocuments.filter((doc) => doc.normalizedStatus === 'in_progress');
 
   const totalUsers = users.length;
   const pendingRequests = pendingSignatures.length + inProgressSignatures.length;
@@ -102,6 +100,21 @@ export default function AdminDashboardOverview() {
     orange: "bg-orange-100 text-orange-600"
   };
 
+  const getStatusClasses = (status) => {
+    switch (status) {
+      case 'signed':
+        return 'bg-green-100 text-green-700';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-700';
+      case 'declined':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,8 +140,8 @@ export default function AdminDashboardOverview() {
         <StatCard
           icon={FileText}
           label="Recent Documents"
-          value={recentDocuments.length}
-          trend="Last 10 documents"
+          value={normalizedRecentDocuments.length}
+          trend="Last 50 documents"
         />
         <StatCard
           icon={PenTool}
@@ -177,7 +190,7 @@ export default function AdminDashboardOverview() {
       </Card>
 
       {/* Recent Documents */}
-      {recentDocuments.length > 0 && (
+      {normalizedRecentDocuments.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -187,22 +200,17 @@ export default function AdminDashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentDocuments.slice(0, 5).map((doc) => (
+              {normalizedRecentDocuments.slice(0, 5).map((doc) => (
                 <div key={doc.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-900">{doc.document_title}</p>
+                    <p className="font-medium text-gray-900">{doc.normalizedName}</p>
                     <p className="text-sm text-gray-600">{doc.document_type}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Created: {format(new Date(doc.created_date), 'MMM d, yyyy')}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    doc.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    doc.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                    doc.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {doc.status}
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusClasses(doc.normalizedStatus)}`}>
+                    {doc.normalizedStatusLabel}
                   </span>
                 </div>
               ))}
@@ -221,19 +229,19 @@ export default function AdminDashboardOverview() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 mb-4">
-              <p className="text-sm text-orange-900">
-                <strong>{pendingSignatures.length}</strong> documents awaiting signatures
-              </p>
-              <p className="text-sm text-orange-900">
-                <strong>{inProgressSignatures.length}</strong> documents in progress
-              </p>
+            <div className="space-y-3">
+              {[...pendingSignatures, ...inProgressSignatures].slice(0, 5).map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 bg-white/70 rounded-lg border border-orange-100">
+                  <div>
+                    <p className="font-medium text-gray-900">{doc.normalizedName}</p>
+                    <p className="text-sm text-gray-600">{doc.document_type || 'Document signature request'}</p>
+                  </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to={createPageUrl('DocumentSignatures')}>Review</Link>
+                  </Button>
+                </div>
+              ))}
             </div>
-            <Link to={createPageUrl("DocumentSignatures")}>
-              <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                Review Signature Requests
-              </Button>
-            </Link>
           </CardContent>
         </Card>
       )}
