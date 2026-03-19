@@ -150,8 +150,20 @@ export default function DocumentPackageCreator({ open, onClose }) {
       }
 
       return pkg;
+      },
+      onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document-packages'] });
+      queryClient.invalidateQueries({ queryKey: ['document-signatures-dashboard'] });
+      toast.success("Document package created successfully!");
+      resetForm();
+      onClose();
+      },
+      onError: (error) => {
+      toast.error(`Failed to create package: ${error.message}`);
+      }
+      });
 
-  const resetForm = () => {
+      const resetForm = () => {
     setUseExistingPatient(true);
     setSelectedPatient(null);
     setManualPatientInfo({
