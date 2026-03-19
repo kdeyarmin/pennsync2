@@ -58,10 +58,15 @@ export default function DocumentPackageCreator({ open, onClose }) {
     queryKey: ['patients-for-select'],
     queryFn: () => base44.entities.Patient.list('-created_date', 500),
     initialData: [],
-    enabled: open
+    enabled: open,
+    refetchOnMount: 'stale',
+    staleTime: 0
   });
 
-  const createPackageMutation = useMutation({
+  // Invalidate patient list when new patients are created
+  const onPatientCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ['patients-for-select'] });
+  };
     mutationFn: async (packageData) => {
       let patientId = selectedPatient;
       
@@ -306,7 +311,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 value={selectedPatient}
                 onValueChange={setSelectedPatient}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              {patients.length === 0 && <p className="text-xs text-amber-600 mt-2">No patients found. Create one or check access permissions.</p>}
                 Patient data will auto-populate in documents 
                 {patients.length > 0 && ` (${patients.length} patients available)`}
               </p>
