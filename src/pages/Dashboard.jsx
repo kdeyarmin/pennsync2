@@ -155,10 +155,10 @@ export default function Dashboard() {
 
   // Banner gradient based on care scope
   const bannerGradient = careScope === "hospice"
-    ? "from-purple-500 via-purple-600 to-purple-700"
+    ? "from-slate-800 via-slate-900 to-slate-950"
     : careScope === "both"
-    ? "from-indigo-500 via-blue-600 to-purple-600"
-    : "from-blue-500 via-blue-600 to-blue-700";
+    ? "from-slate-800 via-indigo-950 to-slate-950"
+    : "from-slate-800 via-blue-950 to-slate-950";
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -228,27 +228,27 @@ export default function Dashboard() {
 
       {/* Nurse Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
+        <Card className="bg-white border-slate-200 shadow-sm">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-slate-300 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
-                <p className="text-3xl sm:text-4xl font-bold text-white">
+                <p className="text-xs sm:text-sm text-slate-500 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
+                <p className="text-3xl sm:text-4xl font-bold text-slate-900">
                   {noteConversions.length}
                 </p>
               </div>
-              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-slate-400 flex-shrink-0 opacity-70" />
+              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-slate-300 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-700 to-blue-600 border-blue-600 shadow-md">
+        <Card className="bg-white border-slate-200 shadow-sm">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-blue-200 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
-                <p className="text-3xl sm:text-4xl font-bold text-white">{stats.timeSavedDisplay}</p>
+                <p className="text-xs sm:text-sm text-slate-500 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
+                <p className="text-3xl sm:text-4xl font-bold text-slate-900">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-blue-300 flex-shrink-0 opacity-70" />
+              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-blue-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
