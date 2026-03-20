@@ -68,7 +68,7 @@ export default function CourseForm({ course, onSuccess }) {
             <SelectTrigger className="h-11 mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent style={{ zIndex: 9999 }}>
               <SelectItem value="compliance">Compliance</SelectItem>
               <SelectItem value="clinical">Clinical</SelectItem>
               <SelectItem value="safety">Safety</SelectItem>
@@ -85,7 +85,7 @@ export default function CourseForm({ course, onSuccess }) {
             <SelectTrigger className="h-11 mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent style={{ zIndex: 9999 }}>
               <SelectItem value="draft">Draft</SelectItem>
               <SelectItem value="pending_review">Pending Review</SelectItem>
               <SelectItem value="published">Published</SelectItem>
