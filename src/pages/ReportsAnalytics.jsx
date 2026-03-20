@@ -180,8 +180,8 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
           {populationData && (
             <div className="space-y-6">
-              <Card className="border-2 border-blue-300 bg-blue-50">
-                <CardHeader>
+              <Card className="modern-card border-l-4 border-l-blue-600 bg-white shadow-md">
+                <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
                   <CardTitle>Executive Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -215,8 +215,8 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
               </Card>
 
               {populationData.urgent_actions?.length > 0 && (
-                <Card className="border-red-300 bg-red-50">
-                  <CardHeader>
+                <Card className="modern-card border-l-4 border-l-red-500 bg-white shadow-md">
+                  <CardHeader className="bg-red-50/50 border-b border-red-100 pb-4">
                     <CardTitle className="text-red-900">Urgent Actions Required</CardTitle>
                   </CardHeader>
                   <CardContent>
