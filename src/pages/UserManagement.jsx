@@ -441,7 +441,7 @@ export default function UserManagement() {
       </div>
 
       {/* Filters & Add User Button */}
-      <Card className="mb-4 sm:mb-6">
+      <Card className="mb-4 sm:mb-6 modern-card">
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center flex-1">
@@ -482,7 +482,7 @@ export default function UserManagement() {
             </div>
             <Button
               onClick={() => setShowUserSetupDialog(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto min-h-[44px]"
+              className="btn-primary w-full sm:w-auto"
             >
               <Users className="w-4 h-4 mr-2" />
               Add New User
@@ -632,7 +632,7 @@ export default function UserManagement() {
       )}
 
       {/* Users Table */}
-      <Card>
+      <Card className="modern-card">
         <CardHeader className="p-3 sm:p-4 md:p-6">
           <CardTitle className="flex items-center justify-between text-base sm:text-lg">
             <span>Users ({filteredUsers.length})</span>
