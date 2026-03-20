@@ -38,7 +38,7 @@ export default function CourseForm({ course, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in">
       <div>
         <Label className="text-sm font-semibold">Course Title *</Label>
         <Input
@@ -144,7 +144,7 @@ export default function CourseForm({ course, onSuccess }) {
       </div>
 
       <div className="flex gap-2 pt-4">
-        <Button type="submit" disabled={createMutation.isLoading} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
+        <Button type="submit" disabled={createMutation.isLoading} className="btn-primary w-full sm:w-auto">
           {createMutation.isLoading ? 'Saving...' : course ? 'Update Course' : 'Create Course'}
         </Button>
       </div>

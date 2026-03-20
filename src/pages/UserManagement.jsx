@@ -368,7 +368,7 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-2">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -383,7 +383,7 @@ export default function UserManagement() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card>
+        <Card className="modern-card">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
@@ -394,7 +394,7 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-purple-200">
+        <Card className="modern-card border-purple-200">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0" />
@@ -405,7 +405,7 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-blue-200">
+        <Card className="modern-card border-blue-200">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
@@ -416,7 +416,7 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-green-200">
+        <Card className="modern-card border-green-200">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
@@ -427,7 +427,7 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-red-200">
+        <Card className="modern-card border-red-200">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <UserX className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
