@@ -48,9 +48,9 @@ export default function MyTrainingDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">My Training</h1>
-        <p className="text-blue-100">Assigned in-services, due dates, scores, certificates, and learning plan progress in one place.</p>
+      <div className="rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 text-white p-5 sm:p-6 shadow-xl">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Training</h1>
+        <p className="text-sm sm:text-base text-blue-100">Assigned in-services, due dates, scores, certificates, and learning plan progress in one place.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -61,11 +61,13 @@ export default function MyTrainingDashboard() {
       </div>
 
       <Tabs defaultValue="assignments" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="assignments">Assigned In-Services</TabsTrigger>
-          <TabsTrigger value="plans">Learning Plans</TabsTrigger>
-          <TabsTrigger value="transcript">Transcript & Certificates</TabsTrigger>
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+        <TabsList className="inline-flex min-w-full gap-1 h-auto p-1">
+          <TabsTrigger value="assignments" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Assigned In-Services</TabsTrigger>
+          <TabsTrigger value="plans" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Learning Plans</TabsTrigger>
+          <TabsTrigger value="transcript" className="min-h-[44px] px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Transcript & Certificates</TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="assignments" className="space-y-4">
           {sortedAssignments.map((assignment) => {

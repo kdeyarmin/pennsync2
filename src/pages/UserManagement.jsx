@@ -801,7 +801,7 @@ export default function UserManagement() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent style={{ zIndex: 9999 }}>
                     <SelectItem value="user">Nurse</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
@@ -1066,7 +1066,7 @@ export default function UserManagement() {
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent style={{ zIndex: 9999 }}>
                   <SelectItem value="user">Nurse</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
@@ -1079,7 +1079,7 @@ export default function UserManagement() {
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select staff type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent style={{ zIndex: 9999 }}>
                   <SelectItem value={null}>None</SelectItem>
                   <SelectItem value="RN">RN</SelectItem>
                   <SelectItem value="LPN">LPN</SelectItem>

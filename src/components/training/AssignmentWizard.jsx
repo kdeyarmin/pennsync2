@@ -21,7 +21,7 @@ export default function AssignmentWizard({ users = [], onAssign }) {
   const toggle = (email) => setSelectedUsers((prev) => prev.includes(email) ? prev.filter((item) => item !== email) : [...prev, email]);
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] gap-6">
       <Card>
         <CardHeader><CardTitle>Assignment Wizard</CardTitle></CardHeader>
         <CardContent className="space-y-3">
