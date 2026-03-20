@@ -161,7 +161,7 @@ button:focus-visible {
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-slate-50 text-slate-900;
     overflow-x: hidden;
     min-width: 320px;
   }
