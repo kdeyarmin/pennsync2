@@ -96,10 +96,10 @@ export default function AdminDashboardOverview() {
   ];
 
   const colorMap = {
-    blue: "bg-blue-100 text-blue-600",
-    purple: "bg-purple-100 text-purple-600",
-    green: "bg-green-100 text-green-600",
-    orange: "bg-orange-100 text-orange-600"
+    blue: "bg-slate-100 text-blue-600 group-hover:bg-blue-50 transition-colors",
+    purple: "bg-slate-100 text-purple-600 group-hover:bg-purple-50 transition-colors",
+    green: "bg-slate-100 text-emerald-600 group-hover:bg-emerald-50 transition-colors",
+    orange: "bg-slate-100 text-orange-600 group-hover:bg-orange-50 transition-colors"
   };
 
   return (
@@ -213,7 +213,7 @@ export default function AdminDashboardOverview() {
 
       {/* Pending Signatures */}
       {pendingRequests > 0 && (
-        <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+        <Card className="modern-card border-orange-200 bg-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-orange-900">
               <AlertCircle className="w-5 h-5" />

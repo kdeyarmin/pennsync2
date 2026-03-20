@@ -335,9 +335,9 @@ export default function UserManagement() {
 
   const getRoleBadge = (role) => {
     const colors = {
-      admin: 'bg-purple-100 text-purple-800 border-purple-300',
-      user: 'bg-blue-100 text-blue-800 border-blue-300',
-      manager: 'bg-green-100 text-green-800 border-green-300'
+      admin: 'bg-slate-800 text-white border-slate-700 font-medium',
+      user: 'bg-slate-100 text-slate-700 border-slate-200',
+      manager: 'bg-slate-200 text-slate-800 border-slate-300 font-medium'
     };
     const labels = {
       admin: 'Admin',
@@ -493,24 +493,24 @@ export default function UserManagement() {
 
       {/* Pending Invitations */}
       {pendingInvitations.length > 0 && (
-        <Card className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
-          <CardHeader className="p-3 sm:p-4 md:p-6">
-            <CardTitle className="flex items-center justify-between text-base sm:text-lg">
+        <Card className="mb-4 sm:mb-6 modern-card border-slate-200 bg-white">
+          <CardHeader className="p-3 sm:p-4 md:p-6 border-b border-slate-100 bg-slate-50 rounded-t-xl">
+            <CardTitle className="flex items-center justify-between text-base sm:text-lg text-slate-800">
               <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-blue-600" />
+                <Mail className="w-5 h-5 text-slate-500" />
                 <span>Pending Invitations ({pendingInvitations.length})</span>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="space-y-2">
+            <div className="space-y-3">
               {pendingInvitations.map((invitation) => {
                 const expiresAt = new Date(invitation.expires_at);
                 const hoursUntilExpiry = (expiresAt - now) / (1000 * 60 * 60);
                 const isExpiringSoon = hoursUntilExpiry > 0 && hoursUntilExpiry <= 24;
                 
                 return (
-                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border border-blue-100">
+                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-gray-900">{invitation.full_name}</p>
@@ -568,20 +568,20 @@ export default function UserManagement() {
 
       {/* Expired Invitations */}
       {expiredInvitations.length > 0 && (
-        <Card className="mb-4 sm:mb-6 border-red-200 bg-red-50">
-          <CardHeader className="p-3 sm:p-4 md:p-6">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+        <Card className="mb-4 sm:mb-6 modern-card border-red-200 bg-white">
+          <CardHeader className="p-3 sm:p-4 md:p-6 border-b border-red-100 bg-red-50/50 rounded-t-xl">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-red-800">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
               <span>Expired Invitations ({expiredInvitations.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="space-y-2">
+            <div className="space-y-3">
               {expiredInvitations.map((invitation) => {
                 const expiresAt = new Date(invitation.expires_at);
                 
                 return (
-                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border border-red-100">
+                  <div key={invitation.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-red-200 transition-colors">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-gray-900">{invitation.full_name}</p>
