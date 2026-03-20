@@ -3,10 +3,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event, data } = await req.json();
+    const body = await req.json();
+    const { event, data } = body;
 
     // This is triggered when a DocumentSignature is updated
-    if (event.type !== 'update') {
+    if (!event || event.type !== 'update') {
       return Response.json({ success: true });
     }
 
