@@ -181,7 +181,7 @@ export default function Dashboard() {
     <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
     <div ref={containerRef} className="max-w-5xl mx-auto animate-fade-in">
       {hasDataError && (
-        <Card className="mb-4 border-red-300 bg-red-50">
+        <Card className="mb-4 border-red-200 bg-white">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -248,7 +248,7 @@ export default function Dashboard() {
                 <p className="text-xs sm:text-sm text-slate-500 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
                 <p className="text-3xl sm:text-4xl font-bold text-slate-900">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-blue-200 flex-shrink-0" />
+              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-slate-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -257,22 +257,22 @@ export default function Dashboard() {
       {/* Quick Action Buttons */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {[
-          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      bg: "bg-blue-50",   border: "border-blue-200 hover:border-blue-400",   icon: "text-blue-600"   },
-          { page: "SendFax",            label: "Send Fax",          Icon: Send,          bg: "bg-indigo-50", border: "border-indigo-200 hover:border-indigo-400", icon: "text-indigo-600" },
-          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  bg: "bg-green-50",  border: "border-green-200 hover:border-green-400",  icon: "text-green-600"  },
-          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          bg: "bg-purple-50", border: "border-purple-200 hover:border-purple-400", icon: "text-purple-600" },
-          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           bg: "bg-orange-50", border: "border-orange-200 hover:border-orange-400", icon: "text-orange-600" },
-          { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, bg: "bg-red-50",    border: "border-red-200 hover:border-red-400",      icon: "text-red-600"    },
+          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      iconClass: "text-slate-600 group-hover:text-blue-600"   },
+          { page: "SendFax",            label: "Send Fax",          Icon: Send,          iconClass: "text-slate-600 group-hover:text-indigo-600" },
+          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  iconClass: "text-slate-600 group-hover:text-emerald-600"  },
+          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          iconClass: "text-slate-600 group-hover:text-purple-600" },
+          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           iconClass: "text-slate-600 group-hover:text-orange-600" },
+          { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, iconClass: "text-slate-600 group-hover:text-red-600"    },
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (
-            <Link key={item.page} to={`/${item.page}`}>
-              <Card className={`card-interactive border-2 ${item.border} ${item.bg} h-full`}>
+            <Link key={item.page} to={`/${item.page}`} className="group">
+              <Card className="card-interactive h-full">
                 <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[90px]">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white shadow-sm transition-transform group-hover:scale-110">
-                    <ItemIcon className={`w-5 h-5 ${item.icon}`} />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-sm group-hover:border-slate-200 transition-all group-hover:scale-110">
+                    <ItemIcon className={`w-5 h-5 transition-colors ${item.iconClass}`} />
                   </div>
-                  <h3 className="font-semibold text-xs sm:text-sm text-slate-800 leading-tight">{item.label}</h3>
+                  <h3 className="font-semibold text-xs sm:text-sm text-slate-600 group-hover:text-slate-900 transition-colors leading-tight">{item.label}</h3>
                 </CardContent>
               </Card>
             </Link>
