@@ -32,7 +32,7 @@ export default function AdminOperations() {
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
           <Settings className="w-8 h-8 text-indigo-600" />

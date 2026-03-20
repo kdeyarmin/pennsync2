@@ -175,8 +175,8 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   
   return (
     <>
-      <Card className="mb-6 border-blue-200 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="mb-6 modern-card-elevated animate-fade-in border-slate-200">
+        <CardHeader className="bg-slate-50 border-b border-slate-100 rounded-t-xl">
           <CardTitle>{patient ? 'Edit Patient' : 'Add New Patient'}</CardTitle>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -428,11 +428,11 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
             />
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <CardFooter className="flex justify-end gap-3 pt-4 border-t border-slate-100 bg-slate-50/50 rounded-b-xl">
+          <Button type="button" className="btn-ghost text-slate-600" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+          <Button type="submit" className="btn-primary">
             <Save className="w-4 h-4 mr-2" />
             {patient ? 'Update Patient' : 'Add Patient'}
           </Button>

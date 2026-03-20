@@ -81,7 +81,7 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <div className="mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">

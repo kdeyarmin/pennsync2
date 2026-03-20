@@ -179,7 +179,7 @@ export default function Dashboard() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
-    <div ref={containerRef} className="max-w-5xl mx-auto">
+    <div ref={containerRef} className="max-w-5xl mx-auto animate-fade-in">
       {hasDataError && (
         <Card className="mb-4 border-red-300 bg-red-50">
           <CardContent className="p-4">
@@ -197,7 +197,7 @@ export default function Dashboard() {
       <ProfileCompletenessAlert user={currentUser} />
 
       {/* Welcome Banner */}
-      <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-lg overflow-hidden`}>
+      <Card className={`mb-4 sm:mb-6 bg-gradient-to-br ${bannerGradient} text-white border-none shadow-xl overflow-hidden rounded-2xl`}>
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -228,7 +228,7 @@ export default function Dashboard() {
 
       {/* Nurse Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card className="bg-white border-slate-200 shadow-sm">
+        <Card className="modern-card">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -241,7 +241,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border-slate-200 shadow-sm">
+        <Card className="modern-card">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -267,12 +267,12 @@ export default function Dashboard() {
           const ItemIcon = item.Icon;
           return (
             <Link key={item.page} to={`/${item.page}`}>
-              <Card className={`hover:shadow-md transition-all cursor-pointer border-2 ${item.border} ${item.bg} active:scale-95 h-full`}>
-                <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-1.5 min-h-[80px] sm:min-h-[90px]">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white shadow-sm">
+              <Card className={`card-interactive border-2 ${item.border} ${item.bg} h-full`}>
+                <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[90px]">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white shadow-sm transition-transform group-hover:scale-110">
                     <ItemIcon className={`w-5 h-5 ${item.icon}`} />
                   </div>
-                  <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight">{item.label}</h3>
+                  <h3 className="font-semibold text-xs sm:text-sm text-slate-800 leading-tight">{item.label}</h3>
                 </CardContent>
               </Card>
             </Link>
