@@ -63,7 +63,7 @@
   /* Non-content UI elements should not be selectable */
   button, a[href], nav, header, [role="button"], [role="tab"], [role="tablist"], 
   .sidebar, .mobile-header, .navigation {
-    @apply user-select-none;
+    @apply select-none;
   }
 }
 
@@ -142,7 +142,7 @@
 @layer utilities {
   /* Navigation and button selection prevention */
   nav, button, [role="button"], a[href], .touch-target {
-    @apply user-select-none;
+    @apply select-none;
   }
 
   /* Modern animations */
