@@ -79,7 +79,7 @@ export default function LearningPlanForm({ plan, onSuccess }) {
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent style={{ zIndex: 9999 }}>
               <SelectItem value="annual">Annual</SelectItem>
               <SelectItem value="quarterly">Quarterly</SelectItem>
               <SelectItem value="onboarding">Onboarding</SelectItem>
@@ -96,7 +96,7 @@ export default function LearningPlanForm({ plan, onSuccess }) {
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent style={{ zIndex: 9999 }}>
               <SelectItem value="home_health">Home Health</SelectItem>
               <SelectItem value="hospice">Hospice</SelectItem>
               <SelectItem value="all">All</SelectItem>

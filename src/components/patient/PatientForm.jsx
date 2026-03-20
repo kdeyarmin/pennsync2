@@ -354,7 +354,7 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
                 <SelectTrigger>
                   <SelectValue placeholder="Select care type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent style={{ zIndex: 9999 }}>
                   <SelectItem value="home_health">Home Health</SelectItem>
                   <SelectItem value="hospice">Hospice</SelectItem>
                 </SelectContent>
@@ -369,7 +369,7 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent style={{ zIndex: 9999 }}>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="discharged">Discharged</SelectItem>
                   <SelectItem value="hospitalized">Hospitalized</SelectItem>
