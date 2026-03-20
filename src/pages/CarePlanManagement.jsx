@@ -508,8 +508,8 @@ export default function CarePlanManagement() {
 
       <div className="mb-4 sm:mb-6 md:mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-            <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border border-slate-200 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+            <Target className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Care Plans</h1>
@@ -535,50 +535,50 @@ export default function CarePlanManagement() {
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-lg">
+        <Card className="modern-card border-l-4 border-l-blue-600 bg-white shadow-md">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1 truncate">Total Plans</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{totalPlans}</p>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium mb-1 truncate">Total Plans</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">{totalPlans}</p>
               </div>
-              <Target className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-200 flex-shrink-0" />
+              <Target className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-blue-500/20 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-none shadow-lg">
+        <Card className="modern-card border-l-4 border-l-emerald-500 bg-white shadow-md">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-green-100 text-xs sm:text-sm font-medium mb-1 truncate">Active Plans</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{activePlans}</p>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium mb-1 truncate">Active Plans</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">{activePlans}</p>
               </div>
-              <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-200 flex-shrink-0" />
+              <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-emerald-500/20 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-none shadow-lg">
+        <Card className="modern-card border-l-4 border-l-purple-500 bg-white shadow-md">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-purple-100 text-xs sm:text-sm font-medium mb-1 truncate">Goals Met</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{metGoals}</p>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium mb-1 truncate">Goals Met</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">{metGoals}</p>
               </div>
-              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-purple-200 flex-shrink-0" />
+              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-purple-500/20 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-none shadow-lg">
+        <Card className="modern-card border-l-4 border-l-orange-500 bg-white shadow-md">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-orange-100 text-xs sm:text-sm font-medium mb-1 truncate">Patients</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold">{activePatients}</p>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium mb-1 truncate">Patients</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">{activePatients}</p>
               </div>
-              <User className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-orange-200 flex-shrink-0" />
+              <User className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-orange-500/20 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -733,9 +733,9 @@ export default function CarePlanManagement() {
 
             return (
               <div key={patientId} className="space-y-3">
-                <div className="flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-blue-300">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
-                    <User className="w-6 h-6 text-white" />
+                <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
+                    <User className="w-6 h-6 text-slate-600" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-gray-900">
@@ -771,12 +771,12 @@ export default function CarePlanManagement() {
             if (!patient) return null;
 
             return (
-              <Card key={patientId} className="border-l-4 border-l-blue-500">
+              <Card key={patientId} className="modern-card border-l-4 border-l-blue-600 shadow-md">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
-                        <User className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
+                        <User className="w-6 h-6 text-slate-600" />
                       </div>
                       <div>
                         <h3 className="text-xl font-bold text-gray-900">
