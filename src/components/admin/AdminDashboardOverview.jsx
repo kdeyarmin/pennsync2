@@ -10,7 +10,7 @@ import SystemHealthMonitor from "./SystemHealthMonitor";
 import QuickHealthOverview from "./QuickHealthOverview";
 
 const StatCard = ({ icon: Icon, label, value, trend }) => (
-  <Card className="hover:shadow-md transition-shadow">
+  <Card className="modern-card-elevated">
     <CardContent className="p-6">
       <div className="flex items-start justify-between">
         <div>
@@ -139,7 +139,7 @@ export default function AdminDashboardOverview() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="modern-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
@@ -155,7 +155,7 @@ export default function AdminDashboardOverview() {
                 <Link
                   key={link.page}
                   to={createPageUrl(link.page)}
-                  className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all group"
+                  className="p-4 border border-slate-200 rounded-xl hover:border-blue-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-300 ease-out cursor-pointer group bg-white"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
@@ -178,7 +178,7 @@ export default function AdminDashboardOverview() {
 
       {/* Recent Documents */}
       {recentDocuments.length > 0 && (
-        <Card>
+        <Card className="modern-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
