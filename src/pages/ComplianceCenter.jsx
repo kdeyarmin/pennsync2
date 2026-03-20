@@ -313,7 +313,7 @@ export default function ComplianceCenter() {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
           <Shield className="w-8 h-8 text-indigo-600" />
@@ -344,10 +344,10 @@ export default function ComplianceCenter() {
 
         {/* Medicare Compliance Dashboard */}
         <TabsContent value="medicare" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 flex-1">
               <Select value={timeRange.toString()} onValueChange={(v) => setTimeRange(parseInt(v))}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -359,7 +359,7 @@ export default function ComplianceCenter() {
               </Select>
               {isAdmin && (
                 <Select value={selectedNurse} onValueChange={setSelectedNurse}>
-                  <SelectTrigger className="w-64">
+                  <SelectTrigger className="w-full sm:w-64">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -371,7 +371,7 @@ export default function ComplianceCenter() {
                 </Select>
               )}
             </div>
-            <Button onClick={async () => {
+            <Button className="w-full sm:w-auto" onClick={async () => {
               setIsGeneratingInsights(true);
               try {
                 const result = await base44.integrations.Core.InvokeLLM({

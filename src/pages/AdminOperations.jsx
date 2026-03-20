@@ -44,28 +44,30 @@ export default function AdminOperations() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1 h-auto p-1">
-          <TabsTrigger value="overview" className="min-h-[44px]">
-            <Activity className="h-4 w-4 mr-2" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="min-h-[44px]">
-            <Activity className="h-4 w-4 mr-2" />
-            User Activity
-          </TabsTrigger>
-          <TabsTrigger value="data-quality" className="min-h-[44px]">
-            <Database className="h-4 w-4 mr-2" />
-            Data Quality
-          </TabsTrigger>
-          <TabsTrigger value="system-health" className="min-h-[44px]">
-            <Zap className="h-4 w-4 mr-2" />
-            System Health
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="min-h-[44px]">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="inline-flex w-max min-w-full gap-1 h-auto p-1">
+            <TabsTrigger value="overview" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Activity className="h-4 w-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Activity className="h-4 w-4 mr-2" />
+              User Activity
+            </TabsTrigger>
+            <TabsTrigger value="data-quality" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Database className="h-4 w-4 mr-2" />
+              Data Quality
+            </TabsTrigger>
+            <TabsTrigger value="system-health" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Zap className="h-4 w-4 mr-2" />
+              System Health
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <AdminDashboardOverview />
