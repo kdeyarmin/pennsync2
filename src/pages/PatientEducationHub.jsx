@@ -412,10 +412,10 @@ export default function PatientEducationHub() {
 
       {/* Success Message */}
       {successMessage && (
-        <Card className="mb-4 sm:mb-6 border-green-200 bg-green-50">
+        <Card className="mb-4 sm:mb-6 modern-card border-emerald-200 bg-emerald-50/50">
           <CardContent className="p-3 sm:p-4 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <p className="text-green-800 font-medium">{successMessage}</p>
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <p className="text-emerald-800 font-medium">{successMessage}</p>
           </CardContent>
         </Card>
       )}
@@ -473,19 +473,19 @@ export default function PatientEducationHub() {
               return (
                 <Card
                   key={topic.id}
-                  className={`cursor-pointer transition-all hover:shadow-lg touch-target ${
-                    isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                  className={`modern-card-interactive cursor-pointer touch-target group ${
+                    isSelected ? 'border-blue-500 shadow-md ring-1 ring-blue-500' : ''
                   }`}
                   onClick={() => setSelectedTopic(topic)}
                 >
                   <CardContent className="p-3 sm:p-4 md:p-6">
                     <div className="flex items-start gap-3 sm:gap-4">
-                      <div className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${topic.color} shadow-md flex-shrink-0`}>
-                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      <div className={`p-2 sm:p-3 rounded-xl bg-slate-50 border border-slate-100 flex-shrink-0 transition-colors ${isSelected ? 'bg-blue-50 border-blue-100' : 'group-hover:bg-white'}`}>
+                        <Icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors ${isSelected ? 'text-blue-600' : 'text-slate-500 group-hover:text-blue-500'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-1">{topic.title}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">{topic.description}</p>
+                        <h3 className={`font-semibold text-sm sm:text-base mb-1 transition-colors ${isSelected ? 'text-blue-900' : 'text-slate-800 group-hover:text-blue-700'}`}>{topic.title}</h3>
+                        <p className="text-xs sm:text-sm text-slate-500">{topic.description}</p>
                         {isSelected && (
                           <Badge className="mt-2 bg-blue-600">Selected</Badge>
                         )}
