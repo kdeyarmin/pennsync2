@@ -20,7 +20,7 @@ export default function AdminOperations() {
   if (currentUser?.role !== 'admin') {
     return (
       <div className="p-8 max-w-2xl mx-auto">
-        <Card className="border-red-200 bg-red-50">
+        <Card className="modern-card border-l-4 border-l-red-500">
           <CardContent className="p-12 text-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
