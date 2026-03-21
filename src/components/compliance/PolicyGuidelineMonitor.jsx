@@ -27,12 +27,14 @@ export default function PolicyGuidelineMonitor({ nurseEmail, onTrainingRecommend
 
   useEffect(() => {
     // Load cached updates
-    const cached = localStorage.getItem('policy_updates_cache');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      setUpdates(parsed.updates);
-      setLastChecked(new Date(parsed.lastChecked));
-    }
+    try {
+      const cached = localStorage.getItem('policy_updates_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setUpdates(parsed.updates);
+        setLastChecked(new Date(parsed.lastChecked));
+      }
+    } catch {}
   }, []);
 
   const checkForUpdates = async () => {
@@ -151,10 +153,10 @@ Return JSON:
       setLastChecked(new Date());
 
       // Cache the results
-      localStorage.setItem('policy_updates_cache', JSON.stringify({
+      try { localStorage.setItem('policy_updates_cache', JSON.stringify({
         updates: result,
         lastChecked: new Date().toISOString()
-      }));
+      })); } catch {}
 
       // Trigger training recommendations for updates that need it
       const trainingNeeded = result.regulatory_updates?.filter(u => u.training_needed);

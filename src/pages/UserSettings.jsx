@@ -94,8 +94,6 @@ export default function UserSettings() {
     initialData: [],
   });
 
-  const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
-
   const myCredentials = useMemo(() => 
     credentials.filter((item) => item.user_id === currentUser?.email), 
     [credentials, currentUser]

@@ -688,9 +688,8 @@ Keep language simple and non-technical. Include specific button names and field 
 
   } catch (error) {
     console.error('Error generating user guide:', error);
-    return Response.json({ 
-      error: error.message,
-      stack: error.stack 
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

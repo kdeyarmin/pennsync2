@@ -20,8 +20,10 @@ import { createPageUrl } from "@/utils";
 export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
   const [expanded, setExpanded] = useState(!compact);
   const [acknowledgedUpdates, setAcknowledgedUpdates] = useState(() => {
-    const saved = localStorage.getItem(`acknowledged_updates_${nurseEmail}`);
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(`acknowledged_updates_${nurseEmail}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
   });
 
   const { data: updates = [] } = useQuery({
@@ -40,7 +42,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
   const handleAcknowledge = (updateId) => {
     const newAcknowledged = [...acknowledgedUpdates, updateId];
     setAcknowledgedUpdates(newAcknowledged);
-    localStorage.setItem(`acknowledged_updates_${nurseEmail}`, JSON.stringify(newAcknowledged));
+    try { localStorage.setItem(`acknowledged_updates_${nurseEmail}`, JSON.stringify(newAcknowledged)); } catch {}
   };
 
   const getImpactColor = (level) => {

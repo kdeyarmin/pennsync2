@@ -69,8 +69,8 @@ Return as JSON array. Be precise with dosages and frequencies.`;
         }
       });
 
-      extractedMeds = extraction.medications || [];
-      aiConfidence = extraction.confidence || 85;
+      extractedMeds = extraction?.medications || [];
+      aiConfidence = extraction?.confidence || 85;
     }
 
     // AI-powered discrepancy detection
@@ -132,7 +132,7 @@ Return JSON with discrepancies array.`;
       }
     });
 
-    const discrepancies = analysis.discrepancies || [];
+    const discrepancies = analysis?.discrepancies || [];
     
     // Add status to each discrepancy
     const discrepanciesWithStatus = discrepancies.map(d => ({

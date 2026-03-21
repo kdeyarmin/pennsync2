@@ -202,9 +202,8 @@ Be specific and evidence-based in your predictions.`;
 
   } catch (error) {
     console.error('Error predicting patient risks:', error);
-    return Response.json({ 
-      error: error.message,
-      stack: error.stack 
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

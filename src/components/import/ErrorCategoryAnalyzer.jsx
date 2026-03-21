@@ -74,7 +74,7 @@ export default function ErrorCategoryAnalyzer({ validationErrors, onSelectErrors
     const categories = {};
     
     validationErrors.forEach((error, idx) => {
-      error.errors.forEach(errorMsg => {
+      (error.errors || []).forEach(errorMsg => {
         const category = categorizeError(errorMsg);
         
         if (!categories[category]) {

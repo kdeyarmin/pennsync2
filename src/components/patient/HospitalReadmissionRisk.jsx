@@ -466,7 +466,7 @@ Return JSON format:
 
   return (
     <>
-      <Card className={`border-2 border-${riskAssessment.riskColor}-300`}>
+      <Card className={`border-2 ${{red: 'border-red-300', orange: 'border-orange-300', yellow: 'border-yellow-300', green: 'border-green-300'}[riskAssessment.riskColor] || 'border-gray-300'}`}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
