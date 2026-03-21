@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       },
       page: 'webhook',
       user_agent: req.headers.get('user-agent') || 'twilio'
-    }).catch(() => {});
+    }).catch((err) => console.error('Failed to log user activity:', err));
 
     return Response.json({
       success: true,

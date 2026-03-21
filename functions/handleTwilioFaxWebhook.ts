@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.FaxLog.update(faxLog.id, updateData);
 
     if (mappedStatus === 'delivered') {
-      await sendStatusNotification(base44, faxLog, mappedStatus, updateData.pages).catch(() => {});
+      await sendStatusNotification(base44, faxLog, mappedStatus, updateData.pages).catch((err) => console.error('Failed to send status notification:', err));
     }
 
     if (faxLog.sent_by) {
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
           error: updateData.failure_reason,
         },
         status: mappedStatus === 'failed' ? 'failure' : 'success',
-      }).catch(() => {});
+      }).catch((err) => console.error('Failed to log user activity:', err));
     }
 
     return Response.json({ success: true, status: mappedStatus });
