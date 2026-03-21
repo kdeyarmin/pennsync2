@@ -22,6 +22,7 @@ import OfflineSyncService from "@/components/offline/OfflineSyncService";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
+import CommandPalette from "@/components/navigation/CommandPalette";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -52,7 +53,7 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  useEffect(() => { window.scrollTo(0, 0); }, [currentPageName]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [currentPageName]);
 
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
@@ -243,6 +244,10 @@ export default function Layout({ children, currentPageName }) {
   return (
     <>
       <Toaster position="top-right" richColors closeButton />
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
+        Skip to content
+      </a>
+      <CommandPalette isAdmin={isAdmin} />
       <div className="min-h-screen flex">
         <DesktopSidebar
           collapsed={sidebarCollapsed}
@@ -274,7 +279,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gray-50 w-0 md:w-auto">
+        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gray-50 w-0 md:w-auto">
           <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}

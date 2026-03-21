@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Smartphone, FileText, History, Search, Upload, BookTemplate, Layers, Activity } from "lucide-react";
 import EnhancedCameraFaxSender from "../components/fax/EnhancedCameraFaxSender";
@@ -80,7 +81,9 @@ export default function SendFax() {
           </TabsContent>
 
           <TabsContent value="search" className="mt-4 sm:mt-6">
-            <FaxSearchInterface onSelectFaxForAI={() => {}} />
+            <FaxSearchInterface onSelectFaxForAI={(fax) => {
+              toast.info(`Fax selected for AI analysis: ${fax?.id || 'Unknown'}`);
+            }} />
           </TabsContent>
 
           <TabsContent value="history" className="mt-4 sm:mt-6">

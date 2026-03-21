@@ -3,7 +3,14 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, User, FileText } from "lucide-react";
+import { Plus, User, FileText, ArrowUpDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from 'date-fns';
 import { secureDelete, handleSecureError } from "../components/utils/security";
 import {
@@ -51,6 +58,7 @@ export default function Patients() {
   const [selectedPatients, setSelectedPatients] = useState([]);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
+  const [sortBy, setSortBy] = useState('newest');
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -175,7 +183,7 @@ export default function Patients() {
     },
     onError: async (error) => {
       setIsDeleting(false);
-      await handleSecureError(error, 'patient_delete', (msg) => alert(msg));
+      await handleSecureError(error, 'patient_delete', (msg) => toast.error(msg));
     }
   });
 
@@ -270,9 +278,32 @@ export default function Patients() {
     const matchesAfter = !filters.createdAfter || createdDate >= new Date(filters.createdAfter);
     const matchesBefore = !filters.createdBefore || createdDate <= new Date(filters.createdBefore);
 
-    return matchesSearch && matchesStatus && matchesDiagnosis && 
-           matchesAgeMin && matchesAgeMax && matchesVisits && 
+    return matchesSearch && matchesStatus && matchesDiagnosis &&
+           matchesAgeMin && matchesAgeMax && matchesVisits &&
            matchesCarePlans && matchesAfter && matchesBefore;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return (`${a.last_name} ${a.first_name}`).localeCompare(`${b.last_name} ${b.first_name}`);
+      case 'name-desc':
+        return (`${b.last_name} ${b.first_name}`).localeCompare(`${a.last_name} ${a.first_name}`);
+      case 'newest':
+        return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+      case 'oldest':
+        return new Date(a.created_date || 0) - new Date(b.created_date || 0);
+      case 'last-visit': {
+        const aVisit = allVisits.find(v => v.patient_id === a.id);
+        const bVisit = allVisits.find(v => v.patient_id === b.id);
+        return new Date(bVisit?.visit_date || 0) - new Date(aVisit?.visit_date || 0);
+      }
+      case 'most-visits': {
+        const aCount = allVisits.filter(v => v.patient_id === a.id).length;
+        const bCount = allVisits.filter(v => v.patient_id === b.id).length;
+        return bCount - aCount;
+      }
+      default:
+        return 0;
+    }
   });
 
   const togglePatientSelection = (patient) => {
@@ -337,6 +368,30 @@ export default function Patients() {
           onFilterChange={setFilters}
           activeFilters={filters}
         />
+      </div>
+
+      {/* Sort & Results Count */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-gray-500">
+          {filteredPatients.length} {filteredPatients.length === 1 ? 'patient' : 'patients'}
+          {filters.search && ` matching "${filters.search}"`}
+        </p>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px] h-8 text-xs">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="name-asc">Name A-Z</SelectItem>
+              <SelectItem value="name-desc">Name Z-A</SelectItem>
+              <SelectItem value="last-visit">Last Visit</SelectItem>
+              <SelectItem value="most-visits">Most Visits</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Bulk Actions Bar */}

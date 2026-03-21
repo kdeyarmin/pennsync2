@@ -2,8 +2,9 @@ import { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2 } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
@@ -51,7 +52,6 @@ export default function Dashboard() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Refetch all dashboard queries
       await Promise.all([
         queryClient.refetchQueries({ queryKey: ['todayVisits'] }),
         queryClient.refetchQueries({ queryKey: ['patients'] }),
@@ -59,8 +59,9 @@ export default function Dashboard() {
         queryClient.refetchQueries({ queryKey: ['recentIncidents'] }),
         queryClient.refetchQueries({ queryKey: ['myNoteConversions'] }),
       ]);
+      toast.success('Dashboard refreshed');
     } catch (error) {
-      console.error('Refresh failed:', error);
+      toast.error('Some data failed to refresh. Please try again.');
     } finally {
       setIsRefreshing(false);
     }
@@ -172,7 +173,10 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Welcome to Penn Sync!</h1>
           <p className="text-gray-500 mt-1">Let's set up your profile before we get started.</p>
         </div>
-        <CareScopeSelector currentUser={currentUser} onSaved={() => {}} />
+        <CareScopeSelector currentUser={currentUser} onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+          toast.success('Care scope saved! Loading your dashboard...');
+        }} />
       </div>
     );
   }
@@ -220,6 +224,16 @@ export default function Dashboard() {
 
 
 
+      {/* Quick Navigation Hint */}
+      <div className="mb-3 flex items-center justify-center">
+        <button
+          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5"
+        >
+          Press <kbd className="bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-mono">Ctrl+K</kbd> to quickly navigate anywhere
+        </button>
+      </div>
+
       {/* New Features Banner */}
       <NewFeaturesBanner />
 
@@ -227,28 +241,60 @@ export default function Dashboard() {
       <AnnouncementsWidget />
 
       {/* Nurse Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
-          <CardContent className="p-5 sm:p-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <Card className="bg-gradient-to-br from-emerald-600 to-emerald-500 border-emerald-500 shadow-md">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-slate-300 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
-                <p className="text-3xl sm:text-4xl font-bold text-white">
+                <p className="text-[10px] sm:text-xs text-emerald-100 font-semibold mb-1 uppercase tracking-wide">Today's Visits</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
+                  {visits.filter(v => v.status === 'scheduled').length}
+                </p>
+                <p className="text-[10px] sm:text-xs text-emerald-200 mt-0.5">
+                  {visits.filter(v => v.status === 'completed').length} completed
+                </p>
+              </div>
+              <Calendar className="w-9 h-9 sm:w-11 sm:h-11 text-emerald-300 flex-shrink-0 opacity-70" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-violet-600 to-violet-500 border-violet-500 shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] sm:text-xs text-violet-100 font-semibold mb-1 uppercase tracking-wide">Active Care Plans</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
+                  {carePlans.length}
+                </p>
+                <p className="text-[10px] sm:text-xs text-violet-200 mt-0.5">
+                  {patients.length} patients
+                </p>
+              </div>
+              <Target className="w-9 h-9 sm:w-11 sm:h-11 text-violet-300 flex-shrink-0 opacity-70" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] sm:text-xs text-slate-300 font-semibold mb-1 uppercase tracking-wide">Note Enhancements</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
                   {noteConversions.length}
                 </p>
               </div>
-              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-slate-400 flex-shrink-0 opacity-70" />
+              <FileText className="w-9 h-9 sm:w-11 sm:h-11 text-slate-400 flex-shrink-0 opacity-70" />
             </div>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-blue-700 to-blue-600 border-blue-600 shadow-md">
-          <CardContent className="p-5 sm:p-6">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-blue-200 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
-                <p className="text-3xl sm:text-4xl font-bold text-white">{stats.timeSavedDisplay}</p>
+                <p className="text-[10px] sm:text-xs text-blue-200 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-blue-300 flex-shrink-0 opacity-70" />
+              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-blue-300 flex-shrink-0 opacity-70" />
             </div>
           </CardContent>
         </Card>
@@ -286,7 +332,10 @@ export default function Dashboard() {
           <SmartRouteOptimizer
             visits={visits.filter(v => v.status === 'scheduled')}
             patients={patients}
-            onOptimizedSchedule={() => {}}
+            onOptimizedSchedule={() => {
+              toast.success('Route optimized! Your schedule has been updated.');
+              queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
+            }}
           />
         </div>
       )}

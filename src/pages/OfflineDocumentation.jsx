@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OfflineSyncService from '../components/offline/OfflineSyncService';
@@ -62,7 +63,9 @@ export default function OfflineDocumentation() {
             <CardContent>
               <OfflineVisitDocumentation
                 patientId={selectedPatientId || 'demo-patient-123'}
-                onSaved={() => {}}
+                onSaved={() => {
+                  toast.success('Visit documentation saved offline. It will sync when you reconnect.');
+                }}
               />
             </CardContent>
           </Card>
