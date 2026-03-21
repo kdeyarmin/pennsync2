@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
               related_entity: 'FaxLog',
               related_entity_id: fax.id,
               is_read: false
-            }).catch(() => {});
+            }).catch(err => console.error(`Failed to create notification for fax ${fax.id}:`, err.message));
           }
 
           updated++;

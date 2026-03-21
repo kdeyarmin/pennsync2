@@ -443,11 +443,11 @@ Deno.serve(async (req) => {
               ]);
 
               await Promise.all([
-                ...visits.map(v => base44.asServiceRole.entities.Visit.delete(v.id).catch(() => {})),
-                ...carePlans.map(cp => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch(() => {})),
-                ...alerts.map(a => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch(() => {})),
-                ...incidents.map(i => base44.asServiceRole.entities.Incident.delete(i.id).catch(() => {})),
-                ...tasks.map(t => base44.asServiceRole.entities.Task.delete(t.id).catch(() => {}))
+                ...visits.map(v => base44.asServiceRole.entities.Visit.delete(v.id).catch(err => console.error(`Failed to delete visit ${v.id}:`, err.message))),
+                ...carePlans.map(cp => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch(err => console.error(`Failed to delete care plan ${cp.id}:`, err.message))),
+                ...alerts.map(a => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch(err => console.error(`Failed to delete alert ${a.id}:`, err.message))),
+                ...incidents.map(i => base44.asServiceRole.entities.Incident.delete(i.id).catch(err => console.error(`Failed to delete incident ${i.id}:`, err.message))),
+                ...tasks.map(t => base44.asServiceRole.entities.Task.delete(t.id).catch(err => console.error(`Failed to delete task ${t.id}:`, err.message)))
               ]);
               
               await base44.asServiceRole.entities.Patient.delete(patient.id);
