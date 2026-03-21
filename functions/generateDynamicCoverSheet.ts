@@ -225,9 +225,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Cover sheet generation error:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString() 
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

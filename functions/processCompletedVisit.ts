@@ -196,9 +196,8 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
 
   } catch (error) {
     console.error('Process completed visit error:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });
