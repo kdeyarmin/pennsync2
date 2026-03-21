@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -92,6 +93,7 @@ export default function AutomaticCarePlans() {
       resetForm();
       setShowDialog(false);
     },
+    onError: () => toast.error('Failed to create trigger. Please try again.'),
   });
 
   // Update trigger mutation
@@ -103,6 +105,7 @@ export default function AutomaticCarePlans() {
       setShowDialog(false);
       setEditingTrigger(null);
     },
+    onError: () => toast.error('Failed to update trigger. Please try again.'),
   });
 
   // Delete trigger mutation
@@ -111,15 +114,17 @@ export default function AutomaticCarePlans() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['automaticCarePlanTriggers'] });
     },
+    onError: () => toast.error('Failed to delete trigger. Please try again.'),
   });
 
   // Toggle active status
   const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, isActive }) => 
+    mutationFn: ({ id, isActive }) =>
       base44.entities.AutomaticCarePlanTrigger.update(id, { is_active: isActive }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['automaticCarePlanTriggers'] });
     },
+    onError: () => toast.error('Failed to update trigger status.'),
   });
 
   const resetForm = () => {

@@ -794,7 +794,7 @@ export default function ComplianceDashboard() {
               {/* Policy & Guideline Monitor */}
               <PolicyGuidelineMonitor 
                 nurseEmail={currentUser?.email}
-                onTrainingRecommended={(topics) => console.log('Training recommended:', topics)}
+                onTrainingRecommended={() => {}}
               />
 
               {/* Automated Compliance Reporting */}

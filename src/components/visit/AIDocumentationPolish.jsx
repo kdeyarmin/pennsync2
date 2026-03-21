@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ export default function AIDocumentationPolish({ narrativeText, onPolishedTextGen
 
   const polishDocumentation = async () => {
     if (!narrativeText || narrativeText.trim().length < 50) {
-      alert("Please add more documentation before polishing.");
+      toast.error("Please add more documentation before polishing.");
       return;
     }
 
@@ -56,7 +57,7 @@ Generate the polished version now:`;
 
     } catch (error) {
       console.error("Error polishing documentation:", error);
-      alert("Error polishing documentation. Please try again.");
+      toast.error("Error polishing documentation. Please try again.");
     }
 
     setIsPolishing(false);

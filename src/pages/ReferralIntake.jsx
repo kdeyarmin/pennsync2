@@ -600,10 +600,6 @@ Actions available:
         // Match threshold: 60+ points = high confidence match
         if (bestMatch && bestMatch.score >= 60) {
           existingPatient = bestMatch.patient;
-          console.log(`Patient match found (Score: ${bestMatch.score})`);
-        } else if (bestMatch && bestMatch.score >= 40) {
-          // Possible match but not certain - log for review
-          console.warn(`Possible patient match (Score: ${bestMatch.score})`);
         }
       }
 
@@ -628,7 +624,6 @@ Actions available:
             // High confidence (90%+) - auto-match but allow review
             if (!existingPatient) {
               existingPatient = allPatients.find(p => p.id === matchAnalysis.best_match_id);
-              console.log(`🎯 High-confidence AI match: ${existingPatient.first_name} ${existingPatient.last_name} (${matchAnalysis.confidence_score}% confidence)`);
             }
           } else if (matchAnalysis.confidence_level === 'high' && matchAnalysis.best_match_id) {
             // Medium-high confidence (70-89%) - flag for quick review
@@ -641,15 +636,12 @@ Actions available:
               },
               ...(matchAnalysis.alternative_matches || [])
             ];
-            console.log(`⚠️ Medium-high confidence match - requires quick review (${matchAnalysis.confidence_score}%)`);
           } else if (matchAnalysis.confidence_level === 'medium' && matchAnalysis.alternative_matches?.length > 0) {
             // Medium confidence (50-69%) - show multiple options
             updates.requires_manual_review = true;
             updates.match_suggestions = matchAnalysis.alternative_matches;
-            console.log(`🔍 Multiple possible matches found - manual review needed`);
           } else if (matchAnalysis.confidence_level === 'low' || matchAnalysis.recommendation === 'create_new') {
             // Low confidence - likely new patient
-            console.log(`✨ No strong matches found - likely new patient`);
           }
         }
       }

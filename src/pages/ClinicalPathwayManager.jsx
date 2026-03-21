@@ -586,9 +586,7 @@ export default function ClinicalPathwayManager() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
                 <AIAssessmentDrafter
-                  onDraftComplete={(assessment) => {
-                    console.log("OASIS assessment generated:", assessment);
-                  }}
+                  onDraftComplete={() => {}}
                 />
               </div>
               <OASISUploadWidget />
@@ -597,17 +595,13 @@ export default function ClinicalPathwayManager() {
 
           <TabsContent value="icd10">
             <AIICD10Suggester
-              onCodesSelected={(codes) => {
-                console.log("ICD-10 codes selected:", codes);
-              }}
+              onCodesSelected={() => {}}
             />
           </TabsContent>
 
           <TabsContent value="careplan">
             <AICarePlanGenerator
-              onCarePlanGenerated={(plan) => {
-                console.log("Care plan generated:", plan);
-              }}
+              onCarePlanGenerated={() => {}}
             />
           </TabsContent>
         </Tabs>

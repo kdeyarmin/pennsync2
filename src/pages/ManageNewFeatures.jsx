@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ export default function ManageNewFeatures() {
       queryClient.invalidateQueries({ queryKey: ['newFeatures'] });
       handleCloseDialog();
     },
+    onError: () => toast.error('Failed to create feature. Please try again.'),
   });
 
   const updateFeatureMutation = useMutation({
@@ -59,6 +61,7 @@ export default function ManageNewFeatures() {
       queryClient.invalidateQueries({ queryKey: ['newFeatures'] });
       handleCloseDialog();
     },
+    onError: () => toast.error('Failed to update feature. Please try again.'),
   });
 
   const deleteFeatureMutation = useMutation({
@@ -66,6 +69,7 @@ export default function ManageNewFeatures() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newFeatures'] });
     },
+    onError: () => toast.error('Failed to delete feature. Please try again.'),
   });
 
   const handleOpenDialog = (feature = null) => {
