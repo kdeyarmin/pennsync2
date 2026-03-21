@@ -105,9 +105,8 @@ For each care plan provide:
 
   } catch (error) {
     console.error('Error generating care plans:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

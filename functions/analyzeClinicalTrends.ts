@@ -240,9 +240,8 @@ Provide actionable insights for clinicians.`,
 
   } catch (error) {
     console.error('Error analyzing clinical trends:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

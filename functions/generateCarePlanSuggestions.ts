@@ -146,9 +146,8 @@ Only suggest care plans that are not already covered by existing plans. Focus on
 
   } catch (error) {
     console.error('Error generating care plan suggestions:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

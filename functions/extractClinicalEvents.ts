@@ -178,9 +178,8 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
 
   } catch (error) {
     console.error('Error extracting clinical events:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

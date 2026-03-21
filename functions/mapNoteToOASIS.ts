@@ -321,7 +321,9 @@ Return JSON with detailed mapping results:`;
 
     return Response.json({
       success: true,
-      ...result
+      oasis_suggestions: result?.oasis_suggestions || [],
+      overall_summary: result?.overall_summary || {},
+      missing_critical_info: result?.missing_critical_info || []
     });
 
   } catch (error) {

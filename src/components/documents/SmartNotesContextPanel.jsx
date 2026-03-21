@@ -39,7 +39,7 @@ export default function SmartNotesContextPanel({ patientId, onInsertSnippet }) {
   };
 
   const extractKeySnippets = (noteText) => {
-    if (!noteText || noteText.length < 50) return [noteText];
+    if (!noteText || noteText.length < 50) return noteText ? [noteText] : [];
     
     // Split by common delimiters
     const sentences = noteText.split(/\.\s+/).filter(s => s.trim().length > 20);

@@ -261,7 +261,8 @@ Only flag events with actual issues. For each flagged event provide: event_id, i
 
   return Response.json({
     success: true,
-    ...result,
+    flagged_events: result?.flagged_events || [],
+    overall_summary: result?.overall_summary || '',
     total_events_analyzed: events.length
   });
 }
@@ -428,7 +429,15 @@ Provide actionable insights for clinicians.`,
       lab_events: labEvents.length
     },
     vitals_data: vitalsHistory,
-    ...result
+    vital_trends: result?.vital_trends || [],
+    symptom_patterns: result?.symptom_patterns || [],
+    medication_insights: result?.medication_insights || {},
+    risk_indicators: result?.risk_indicators || [],
+    positive_trends: result?.positive_trends || [],
+    comparative_insights: result?.comparative_insights || [],
+    predictive_analytics: result?.predictive_analytics || {},
+    overall_trajectory: result?.overall_trajectory || 'unknown',
+    priority_recommendations: result?.priority_recommendations || []
   });
 }
 
@@ -507,7 +516,9 @@ Only suggest NEW care plans not already covered.`,
   return Response.json({
     success: true,
     patient_name: `${patient.first_name} ${patient.last_name}`,
-    ...result
+    suggestions: result?.suggestions || [],
+    overall_assessment: result?.overall_assessment || '',
+    critical_gaps_identified: result?.critical_gaps_identified || []
   });
 }
 

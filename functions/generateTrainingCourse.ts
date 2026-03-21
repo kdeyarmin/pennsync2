@@ -149,7 +149,12 @@ Always include a warning that AI-generated training should be reviewed by an adm
       ]
     });
 
-    const generated = JSON.parse(completion.choices[0].message.content || '{}');
+    let generated;
+    try {
+      generated = JSON.parse(completion.choices[0].message.content || '{}');
+    } catch {
+      generated = {};
+    }
 
     const course = await base44.asServiceRole.entities.TrainingCourse.create({
       title: generated.course?.title || topic,

@@ -98,15 +98,15 @@ For each flagged event, provide:
 
     return Response.json({
       success: true,
-      ...result,
+      flagged_events: result?.flagged_events || [],
+      overall_summary: result?.overall_summary || '',
       total_events_analyzed: events.length
     });
 
   } catch (error) {
     console.error('Error analyzing clinical events:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });
