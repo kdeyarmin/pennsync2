@@ -92,7 +92,7 @@ export default function SearchablePatientSelect({
     ].slice(0, 5);
     
     setRecentPatients(updatedRecent);
-    localStorage.setItem(`recentPatients_${currentUserEmail}`, JSON.stringify(updatedRecent));
+    try { localStorage.setItem(`recentPatients_${currentUserEmail}`, JSON.stringify(updatedRecent)); } catch {}
   };
 
   // Toggle favorite
@@ -107,7 +107,7 @@ export default function SearchablePatientSelect({
       : [...favoritedPatients, patientId];
     
     setFavoritedPatients(updatedFavorites);
-    localStorage.setItem(`favoritedPatients_${currentUserEmail}`, JSON.stringify(updatedFavorites));
+    try { localStorage.setItem(`favoritedPatients_${currentUserEmail}`, JSON.stringify(updatedFavorites)); } catch {}
   };
 
   // Create new patient

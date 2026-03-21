@@ -53,17 +53,17 @@ class OfflineStorageManager {
     const index = queue.findIndex(item => item.id === id);
     if (index !== -1) {
       queue[index] = { ...queue[index], ...updates };
-      localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify(queue));
+      try { localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify(queue)); } catch {}
     }
   }
 
   static removeFromQueue(id) {
     const queue = this.getQueue().filter(item => item.id !== id);
-    localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify(queue));
+    try { localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify(queue)); } catch {}
   }
 
   static clearQueue() {
-    localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify([]));
+    try { localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify([])); } catch {}
   }
 
   static saveConflict(conflict) {
@@ -89,15 +89,15 @@ class OfflineStorageManager {
   }
 
   static clearConflicts() {
-    localStorage.setItem(STORAGE_KEYS.CONFLICT_LOG, JSON.stringify([]));
+    try { localStorage.setItem(STORAGE_KEYS.CONFLICT_LOG, JSON.stringify([])); } catch {}
   }
 
   static getLastSync() {
-    return localStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+    try { return localStorage.getItem(STORAGE_KEYS.LAST_SYNC); } catch { return null; }
   }
 
   static setLastSync() {
-    localStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString());
+    try { localStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()); } catch {}
   }
 }
 

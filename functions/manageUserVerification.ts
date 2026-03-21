@@ -55,11 +55,10 @@ Deno.serve(async (req) => {
         const result = await base44.auth.verifyOtp({ email, otpCode: otp });
         return Response.json({ success: true, action, result });
       } catch (error) {
+        console.error('Verify OTP error:', error);
         return Response.json({
-          error: String(error?.message || error),
-          status: error?.status || 500,
-          data: error?.data || null,
-          original: error?.originalError?.response?.data || null
+          error: String(error?.message || 'Verification failed'),
+          status: error?.status || 500
         }, { status: 500 });
       }
     }
@@ -67,6 +66,6 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('manageUserVerification error:', error);
-    return Response.json({ error: String(error?.message || error), details: JSON.stringify(error, Object.getOwnPropertyNames(error || {})) }, { status: 500 });
+    return Response.json({ error: String(error?.message || 'Verification failed') }, { status: 500 });
   }
 });
