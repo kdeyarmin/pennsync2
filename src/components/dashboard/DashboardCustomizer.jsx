@@ -156,9 +156,9 @@ export default function DashboardCustomizer({ currentUser, widgets, onUpdate }) 
                 </Button>
                 <Button 
                   onClick={handleSave}
-                  disabled={updatePreferencesMutation.isLoading}
+                  disabled={updatePreferencesMutation.isPending}
                 >
-                  {updatePreferencesMutation.isLoading ? 'Saving...' : 'Save Changes'}
+                  {updatePreferencesMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </div>

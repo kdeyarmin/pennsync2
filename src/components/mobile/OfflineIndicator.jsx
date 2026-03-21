@@ -78,7 +78,7 @@ export default function OfflineIndicator() {
     setIsSyncing(true);
     setSyncProgress(0);
     
-    const total = syncStatus.pending;
+    const total = syncStatus.pending || 1;
     let synced = 0;
 
     // Simulate progress updates

@@ -61,9 +61,10 @@ export default function OfflineNoteEditor({ patientId, onSaveOffline }) {
     };
 
     // Add to localStorage
-    const existingDrafts = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]');
+    let existingDrafts = [];
+    try { existingDrafts = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]'); } catch {}
     existingDrafts.push(draft);
-    localStorage.setItem('offline_visit_drafts', JSON.stringify(existingDrafts));
+    try { localStorage.setItem('offline_visit_drafts', JSON.stringify(existingDrafts)); } catch {}
 
     setSavedLocally(true);
     setTimeout(() => setSavedLocally(false), 3000);
