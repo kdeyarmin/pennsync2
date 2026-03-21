@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
           const userRecord = await base44.asServiceRole.entities.User.filter({ email: cred.user_id });
           
           if (userRecord && userRecord.length > 0) {
-            const userName = userRecord[0].full_name;
+            const userName = userRecord[0].full_name || cred.user_id;
             
             await base44.asServiceRole.integrations.Core.SendEmail({
               to: cred.user_id,

@@ -42,7 +42,7 @@ export default function TrainingProgressTracker({ userEmail, trainingProgress, p
   const downloadCertificate = async (completion) => {
     setIsDownloading(true);
     try {
-      const moduleMatch = completion.training_module_id.match(/documentation-(.+)/);
+      const moduleMatch = completion.training_module_id?.match(/documentation-(.+)/);
       const moduleName = moduleMatch ? moduleMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Documentation Training';
       
       const response = await base44.functions.invoke('generateTrainingCertificate', {

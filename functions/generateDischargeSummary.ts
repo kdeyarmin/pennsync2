@@ -160,8 +160,8 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
       functional_status: {
         at_admission: 'See admission assessment',
         at_discharge: 'Patient improved overall functional status',
-        improvement_areas: carePlans
-          .filter(cp => cp.status === 'met')
+        improvement_areas: (carePlans || [])
+          .filter(cp => cp && cp.status === 'met' && cp.problem)
           .map(cp => cp.problem)
       },
       patient_education_provided: educationMaterials.map(e => ({

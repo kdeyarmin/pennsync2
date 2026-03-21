@@ -125,7 +125,7 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
   const completeMutation = useMutation({
     mutationFn: async () => {
       // Build final reconciled medication list
-      const reconciled = reconciliation.extracted_discharge_medications.map(med => ({
+      const reconciled = (reconciliation.extracted_discharge_medications || []).map(med => ({
         medication_name: med.medication_name,
         dosage: med.dosage,
         frequency: med.frequency,

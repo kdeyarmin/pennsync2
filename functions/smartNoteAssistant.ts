@@ -505,8 +505,14 @@ async function fullDocumentation(base44, user, params) {
 
   if (audio_url && !roughNote) {
     const transcribeResult = await transcribeAudio(base44, user, { audio_url, patient_id });
-    const transcribeData = await transcribeResult.json();
-    
+    let transcribeData;
+    try {
+      transcribeData = await transcribeResult.json();
+    } catch (parseError) {
+      console.error('Failed to parse transcription response:', parseError);
+      return Response.json({ error: 'Failed to process audio transcription' }, { status: 500 });
+    }
+
     if (!transcribeData.success) {
       return transcribeResult;
     }

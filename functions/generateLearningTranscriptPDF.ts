@@ -117,7 +117,13 @@ Deno.serve(async (req) => {
     doc.setFontSize(8);
     doc.setTextColor(120, 120, 120);
     doc.text('Internal Use Only', pageWidth / 2, pageHeight - 10, { align: 'center' });
-    doc.text(`Page 1 of 1`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+    }
 
     const pdfBytes = doc.output('arraybuffer');
 

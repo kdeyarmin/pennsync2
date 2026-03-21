@@ -160,7 +160,7 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: ['document-signatures'] });
+      queryClient.invalidateQueries({ queryKey: ['document-signatures', patient?.id] });
       toast.success("Document sent for signatures!");
       setStep("tracking");
     } catch (error) {

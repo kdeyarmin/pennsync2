@@ -171,10 +171,10 @@ Return JSON: {
       });
 
       // Match with actual contacts
-      suggestedContacts = contactResult.suggested_contacts.map(suggested => {
-        const match = allContacts.find(c => 
-          c.fax_number === suggested.fax_number || 
-          c.name.toLowerCase().includes(suggested.name.toLowerCase())
+      suggestedContacts = (contactResult?.suggested_contacts || []).map(suggested => {
+        const match = allContacts.find(c =>
+          c.fax_number === suggested.fax_number ||
+          c.name?.toLowerCase().includes(suggested.name?.toLowerCase())
         );
         return {
           ...suggested,
