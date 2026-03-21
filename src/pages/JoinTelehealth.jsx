@@ -18,8 +18,10 @@ export default function JoinTelehealth() {
 
   useEffect(() => {
     // Try to get name from localStorage or session
-    const savedName = sessionStorage.getItem('telehealthName');
-    if (savedName) setName(savedName);
+    try {
+      const savedName = sessionStorage.getItem('telehealthName');
+      if (savedName) setName(savedName);
+    } catch {}
   }, []);
 
   const handleJoin = (e) => {
@@ -32,7 +34,7 @@ export default function JoinTelehealth() {
       setError('Please complete the pre-visit checklist');
       return;
     }
-    sessionStorage.setItem('telehealthName', name);
+    try { sessionStorage.setItem('telehealthName', name); } catch {}
     setError(null);
     setJoined(true);
   };
@@ -65,7 +67,7 @@ export default function JoinTelehealth() {
             roomName={roomName}
             identity={name}
             onDisconnect={() => {
-              sessionStorage.removeItem('telehealthName');
+              try { sessionStorage.removeItem('telehealthName'); } catch {}
               setJoined(false);
               setName('');
               setPreCheckComplete(false);

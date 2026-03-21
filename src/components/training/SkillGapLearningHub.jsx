@@ -38,8 +38,10 @@ export default function SkillGapLearningHub({ nurseEmail }) {
 
   // Get stored skill gaps from localStorage (set by NoteReviewEngine)
   const [storedGaps, setStoredGaps] = useState(() => {
-    const stored = localStorage.getItem(`skill_gaps_${nurseEmail}`);
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem(`skill_gaps_${nurseEmail}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
   });
 
   const completedModules = progressRecords.filter(p => p.status === 'completed');
@@ -64,7 +66,7 @@ export default function SkillGapLearningHub({ nurseEmail }) {
     // Update stored gaps
     const updatedGaps = storedGaps.filter(g => g.area !== result.skill_area);
     setStoredGaps(updatedGaps);
-    localStorage.setItem(`skill_gaps_${nurseEmail}`, JSON.stringify(updatedGaps));
+    try { localStorage.setItem(`skill_gaps_${nurseEmail}`, JSON.stringify(updatedGaps)); } catch {}
   };
 
   const getStatusColor = (status) => {

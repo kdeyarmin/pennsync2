@@ -25,23 +25,28 @@ export default function PersonalizedSkillBuilder({ userEmail }) {
 
   // Load from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(`skill_progress_${userEmail}`);
-    if (stored) {
-      setCompletedModules(JSON.parse(stored));
-    }
-    
-    const storedAnalysis = localStorage.getItem(`skill_analysis_${userEmail}`);
-    if (storedAnalysis) {
-      setSkillAnalysis(JSON.parse(storedAnalysis));
-    }
+    try {
+      const stored = localStorage.getItem(`skill_progress_${userEmail}`);
+      if (stored) {
+        setCompletedModules(JSON.parse(stored));
+      }
+
+      const storedAnalysis = localStorage.getItem(`skill_analysis_${userEmail}`);
+      if (storedAnalysis) {
+        setSkillAnalysis(JSON.parse(storedAnalysis));
+      }
+    } catch {}
   }, [userEmail]);
 
   const analyzeDocumentationPatterns = async () => {
     setIsLoading(true);
     try {
       // Get user's recent documentation scores from localStorage
-      const storedScores = localStorage.getItem(`doc_scores_${userEmail}`);
-      const scores = storedScores ? JSON.parse(storedScores) : [];
+      let scores = [];
+      try {
+        const storedScores = localStorage.getItem(`doc_scores_${userEmail}`);
+        scores = storedScores ? JSON.parse(storedScores) : [];
+      } catch {}
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `You are a clinical documentation educator. Analyze this nurse's documentation patterns and suggest personalized skill-building modules.
@@ -96,7 +101,7 @@ Return JSON:
       });
 
       setSkillAnalysis(result);
-      localStorage.setItem(`skill_analysis_${userEmail}`, JSON.stringify(result));
+      try { localStorage.setItem(`skill_analysis_${userEmail}`, JSON.stringify(result)); } catch {}
 
     } catch (error) {
       console.error("Error analyzing skills:", error);
@@ -107,7 +112,7 @@ Return JSON:
   const markModuleComplete = (moduleTitle) => {
     const updated = [...completedModules, moduleTitle];
     setCompletedModules(updated);
-    localStorage.setItem(`skill_progress_${userEmail}`, JSON.stringify(updated));
+    try { localStorage.setItem(`skill_progress_${userEmail}`, JSON.stringify(updated)); } catch {}
   };
 
   const getCategoryColor = (category) => {

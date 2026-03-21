@@ -45,10 +45,10 @@ export default function OfflineVisitDocumentation({ patientId, visitId, existing
 
   const handleAutoSave = () => {
     if (!isOnline && formData.nurse_notes) {
-      localStorage.setItem(`visit_draft_${formData.visit_id}`, JSON.stringify({
+      try { localStorage.setItem(`visit_draft_${formData.visit_id}`, JSON.stringify({
         ...formData,
         lastSaved: new Date().toISOString()
-      }));
+      })); } catch {}
       setLastSaved(new Date());
     }
   };
