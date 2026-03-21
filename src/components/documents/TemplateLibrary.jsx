@@ -40,6 +40,7 @@ export default function TemplateLibrary() {
     mutationFn: (templateId) => base44.entities.PDFTemplate.delete(templateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pdfTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['pdf-templates-active'] });
       toast.success('Template deleted successfully');
       setShowDeleteDialog(false);
       setSelectedTemplate(null);
@@ -58,6 +59,7 @@ export default function TemplateLibrary() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pdfTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['pdf-templates-active'] });
       toast.success('Template status updated');
     },
     onError: (error) => {
