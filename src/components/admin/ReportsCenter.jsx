@@ -184,7 +184,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                 type: 'table',
                 headers: ['Visit Type', 'Count', 'Revenue/Visit', 'Total Revenue'],
                 rows: finData.visitTypes.map(vt => [
-                  vt.type.replace(/_/g, ' '),
+                  (vt.type || '').replace(/_/g, ' '),
                   vt.count,
                   `$${vt.count > 0 ? Math.round(vt.revenue / vt.count) : 0}`,
                   `$${vt.revenue}`
@@ -369,7 +369,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       visitTypeData[type] = (visitTypeData[type] || 0) + 1;
     });
     const visitTypeChart = Object.entries(visitTypeData).map(([type, count]) => ({
-      type: type.replace(/_/g, ' '),
+      type: (type || '').replace(/_/g, ' '),
       count
     }));
 
@@ -485,7 +485,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     
     Object.entries(visitTypes).forEach(([type, count]) => {
       const revenue = count * (revenuePerType[type] || 160);
-      content += `${type.replace(/_/g, ' ')},${count},$${revenuePerType[type] || 160},$${revenue}\n`;
+      content += `${(type || '').replace(/_/g, ' ')},${count},$${revenuePerType[type] || 160},$${revenue}\n`;
     });
     
     content += `\nTOTAL ESTIMATED REVENUE,$${totalRevenue}\n\n`;
@@ -847,7 +847,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     
     data.visitTypes.forEach(vt => {
       const revenuePerVisit = vt.count > 0 ? Math.round(vt.revenue / vt.count) : 0;
-      content += `${vt.type.replace(/_/g, ' ')},${vt.count},$${revenuePerVisit},$${vt.revenue}\n`;
+      content += `${(vt.type || '').replace(/_/g, ' ')},${vt.count},$${revenuePerVisit},$${vt.revenue}\n`;
     });
 
     content += `\nTOTAL REVENUE,$${data.totalRevenue}\n`;
@@ -1152,7 +1152,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                         outerRadius={90}
                         labelLine={true}
                         label={(entry) => {
-                          const name = entry.type.replace(/_/g, ' ');
+                          const name = (entry.type || '').replace(/_/g, ' ');
                           const percent = ((entry.revenue / reportPreview.totalRevenue) * 100).toFixed(0);
                           return `${name} (${percent}%)`;
                         }}

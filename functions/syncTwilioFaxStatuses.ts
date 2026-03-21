@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
                 to_number: faxLog.to_number,
               },
               status: twilioStatus === 'failed' ? 'failure' : 'success',
-            }).catch(() => {}); // Fail silently
+            }).catch((err) => console.error('Failed to send fax status notification:', err));
           }
         }
 

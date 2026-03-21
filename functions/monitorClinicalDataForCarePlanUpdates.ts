@@ -248,7 +248,7 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
               priority: finding.severity === 'critical' ? 'urgent' : 'normal',
               link: `/PatientDetails?id=${pt.id}`,
               is_read: false
-            }).catch(() => {});
+            }).catch((err) => console.error('Failed to create notification:', err));
           }
 
           // Create patient alert for critical findings
@@ -262,7 +262,7 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
               recommended_action: finding.proposed_intervention,
               status: 'active',
               created_by: 'AI Care Monitor'
-            }).catch(() => {});
+            }).catch((err) => console.error('Failed to create care plan alert:', err));
           }
         }
       }
