@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Stethoscope, ClipboardList, AlertTriangle, Activity, Brain, Heart } from "lucide-react";
+import { Search, Stethoscope, ClipboardList, AlertTriangle, Activity } from "lucide-react";
 
 const SCALES = [
   {

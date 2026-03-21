@@ -102,7 +102,14 @@ Deno.serve(async (req) => {
         ]
       });
 
-      const generated = JSON.parse(completion.choices[0].message.content || '{}');
+      let generated;
+      try {
+        generated = JSON.parse(completion.choices[0].message.content || '{}');
+      } catch (e) {
+        console.error(`Failed to parse AI response for course ${course.id}:`, e);
+        results.push({ id: course.id, title: course.title, status: 'error', error: 'Invalid AI response' });
+        continue;
+      }
 
       const existingModules = await base44.asServiceRole.entities.TrainingModule.filter({ course_id: course.id }, 'order_index', 100);
       const existingQuestions = await base44.asServiceRole.entities.TrainingQuestion.filter({ course_id: course.id }, 'order_index', 200);

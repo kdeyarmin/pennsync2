@@ -19,7 +19,12 @@ export default function OfflineNoteEditor({ patientId, onSaveOffline }) {
   });
   const [savedLocally, setSavedLocally] = useState(false);
 
-  const cachedPatients = JSON.parse(localStorage.getItem('offline_patient_data') || '[]');
+  let cachedPatients = [];
+  try {
+    cachedPatients = JSON.parse(localStorage.getItem('offline_patient_data') || '[]');
+  } catch (e) {
+    console.warn('Failed to parse cached patient data:', e);
+  }
   const patient = cachedPatients.find(c => c.patient.id === patientId)?.patient;
 
   useEffect(() => {

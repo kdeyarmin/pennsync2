@@ -86,7 +86,7 @@ export default function PredictiveAnalytics() {
               <SelectValue placeholder="Select Patient" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={null}>All Patients</SelectItem>
+              <SelectItem value="all">All Patients</SelectItem>
               {patients.map(p => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.first_name} {p.last_name}

@@ -64,7 +64,7 @@ export default function AdvancedPredictiveAnalytics({ patientId, autoAnalyze = f
     if (autoAnalyze && patient && !predictions && !isAnalyzing) {
       performPredictiveAnalysis();
     }
-  }, [autoAnalyze, patient]);
+  }, [autoAnalyze, patient, predictions, isAnalyzing]);
 
   const performPredictiveAnalysis = async () => {
     if (!patient) return;
