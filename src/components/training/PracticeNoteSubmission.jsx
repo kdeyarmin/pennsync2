@@ -300,7 +300,7 @@ Return JSON with:
                     {feedback.weaknesses.map((weakness, idx) => (
                       <Card key={idx} className="bg-orange-50 border-orange-200">
                         <CardContent className="p-4 space-y-2">
-                          <Badge className="bg-orange-600">{weakness.category.replace(/_/g, ' ')}</Badge>
+                          <Badge className="bg-orange-600">{(weakness.category || '').replace(/_/g, ' ')}</Badge>
                           <p className="text-sm font-medium text-gray-900">{weakness.issue}</p>
                           <div className="bg-white p-3 rounded border border-orange-200">
                             <p className="text-xs font-medium text-gray-700 mb-1">💡 Suggestion:</p>

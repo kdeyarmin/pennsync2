@@ -227,7 +227,7 @@ Return JSON:
                     <AccordionTrigger className="px-4 py-3 hover:no-underline">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={getCategoryColor(suggestion.category)}>
-                          {suggestion.category.replace('_', ' ')}
+                          {(suggestion.category || '').replace('_', ' ')}
                         </Badge>
                         {suggestion.m_item && (
                           <Badge variant="outline" className="font-mono text-xs">

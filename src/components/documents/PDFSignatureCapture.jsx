@@ -249,7 +249,7 @@ export default function PDFSignatureCapture({
                 <Input
                   id={`${field.name}_name`}
                   type="text"
-                  placeholder={`Enter ${field.role.toLowerCase()} name`}
+                  placeholder={`Enter ${(field.role || '').toLowerCase()} name`}
                   value={formData[`${field.name}_name`] || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, [`${field.name}_name`]: e.target.value }))}
                   className="text-base"

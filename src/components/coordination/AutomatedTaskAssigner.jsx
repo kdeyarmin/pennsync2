@@ -95,7 +95,7 @@ Focus on tasks that require specialized expertise or coordination.`,
         // Find appropriate assignee
         const roleMatch = users.find(u => 
           u.role === 'admin' || 
-          u.full_name?.toLowerCase().includes(task.assignee_role.toLowerCase())
+          u.full_name?.toLowerCase().includes((task.assignee_role || '').toLowerCase())
         );
 
         const timeframeMap = {
