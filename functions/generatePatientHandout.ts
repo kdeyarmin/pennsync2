@@ -2607,12 +2607,9 @@ Deno.serve(async (req) => {
       console.error('Fallback PDF generation also failed:', fallbackError);
     }
     
-    return Response.json({ 
+    return Response.json({
       error: error.message || 'Unknown error occurred',
-      details: `Error at stage: ${diagnostics.stage}. ${diagnostics.failedSection ? `Failed section: ${diagnostics.failedSection}` : ''}`,
-      stage: diagnostics.stage,
-      diagnostics: diagnostics,
-      type: error.name
+      stage: diagnostics.stage
     }, { status: 500 });
   }
 });
