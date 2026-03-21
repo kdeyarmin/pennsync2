@@ -74,6 +74,7 @@ export default function Messages() {
   const markAsReadMutation = useMutation({
     mutationFn: async (messageId) => {
       const message = messages.find(m => m.id === messageId);
+      if (!message || !currentUser?.email) return;
       const readBy = message.read_by || [];
       if (!readBy.includes(currentUser.email)) {
         await base44.entities.Message.update(messageId, {

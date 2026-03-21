@@ -53,7 +53,7 @@ CURRENT VISIT DATA:`;
       // Add vital signs context
       if (Object.keys(vitalSigns).length > 0) {
         prompt += `\nVital Signs Today:`;
-        if (vitalSigns.blood_pressure_systolic) {
+        if (vitalSigns.blood_pressure_systolic && vitalSigns.blood_pressure_diastolic) {
           prompt += `\n- BP: ${vitalSigns.blood_pressure_systolic}/${vitalSigns.blood_pressure_diastolic}`;
         }
         if (vitalSigns.heart_rate) prompt += `\n- HR: ${vitalSigns.heart_rate}`;

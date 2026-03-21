@@ -36,7 +36,7 @@ export default function PaginatedPatientList({
   const filteredAndSortedPatients = useMemo(() => {
     let filtered = patients.filter(p => {
       const searchLower = search.toLowerCase();
-      const fullName = `${p.first_name} ${p.last_name}`.toLowerCase();
+      const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
       const mrn = p.medical_record_number?.toLowerCase() || '';
       return fullName.includes(searchLower) || mrn.includes(searchLower);
     });
