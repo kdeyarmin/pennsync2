@@ -71,7 +71,11 @@ export default function AnnualMandatoryEducationHub() {
   const annualCourses = useMemo(() => courses.filter((course) => course.training_type === 'annual_mandatory' || course.annual_cycle_year === year), [courses, year]);
   const annualAssignments = useMemo(() => assignments.filter((assignment) => assignment.annual_cycle_year === year), [assignments, year]);
   const annualCertificates = useMemo(() => certificates.filter((certificate) => certificate.annual_cycle_year === year), [certificates, year]);
-  const dueSoon = annualAssignments.filter((assignment) => assignment.due_date && (new Date(assignment.due_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7 && assignment.status !== 'completed' && assignment.status !== 'overdue').length;
+  const dueSoon = annualAssignments.filter((assignment) => {
+    if (!assignment.due_date || assignment.status === 'completed' || assignment.status === 'overdue') return false;
+    const daysUntilDue = (new Date(assignment.due_date) - new Date()) / (1000 * 60 * 60 * 24);
+    return daysUntilDue >= 0 && daysUntilDue <= 7;
+  }).length;
   const averageScore = Math.round((annualAssignments.filter((assignment) => typeof assignment.score_percentage === 'number').reduce((sum, assignment) => sum + assignment.score_percentage, 0) / Math.max(annualAssignments.filter((assignment) => typeof assignment.score_percentage === 'number').length, 1)) || 0);
   const stats = {
     totalAssigned: annualAssignments.length,

@@ -51,9 +51,11 @@ export default function OfflineIndicator() {
       updateStatus();
     };
 
+    let syncResultTimer;
     const handleSyncComplete = (event) => {
       setLastSyncResult(event.detail);
-      setTimeout(() => setLastSyncResult(null), 5000);
+      clearTimeout(syncResultTimer);
+      syncResultTimer = setTimeout(() => setLastSyncResult(null), 5000);
     };
 
     window.addEventListener('online', handleOnline);
@@ -71,6 +73,7 @@ export default function OfflineIndicator() {
       window.removeEventListener('offline-change-added', handleChangeAdded);
       window.removeEventListener('offline-sync-complete', handleSyncComplete);
       clearInterval(interval);
+      clearTimeout(syncResultTimer);
     };
   }, []);
 

@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Fetch all patients
-    const allPatients = await base44.asServiceRole.entities.Patient.list();
+    // Fetch patients in bounded batches
+    const allPatients = await base44.asServiceRole.entities.Patient.list(5000);
 
     // Filter patients without first_name
     const patientsToDelete = allPatients.filter(p => !p.first_name || p.first_name.trim() === '');
