@@ -86,22 +86,25 @@ const parseDateComponents = (dateStr) => {
   if (!dateStr) return null;
   const cleaned = dateStr.replace(/\D/g, '');
   
-  // Try YYYYMMDD format
+  // Try 8-digit formats (YYYYMMDD or MMDDYYYY)
   if (cleaned.length === 8) {
-    return {
-      year: cleaned.substring(0, 4),
-      month: cleaned.substring(4, 6),
-      day: cleaned.substring(6, 8)
-    };
-  }
-  
-  // Try MMDDYYYY format
-  if (cleaned.length === 8) {
-    return {
-      year: cleaned.substring(4, 8),
-      month: cleaned.substring(0, 2),
-      day: cleaned.substring(2, 4)
-    };
+    // Check if first 4 digits look like a year (19xx or 20xx)
+    const first4 = parseInt(cleaned.substring(0, 4));
+    if (first4 >= 1900 && first4 <= 2100) {
+      // YYYYMMDD format
+      return {
+        year: cleaned.substring(0, 4),
+        month: cleaned.substring(4, 6),
+        day: cleaned.substring(6, 8)
+      };
+    } else {
+      // MMDDYYYY format
+      return {
+        year: cleaned.substring(4, 8),
+        month: cleaned.substring(0, 2),
+        day: cleaned.substring(2, 4)
+      };
+    }
   }
   
   return null;

@@ -45,7 +45,13 @@ ${JSON.stringify(subjectiveQuestions)}`;
     ]
   });
 
-  const parsed = JSON.parse(completion.choices[0].message.content || '{"evaluations":[]}');
+  let parsed;
+  try {
+    parsed = JSON.parse(completion.choices[0].message.content || '{"evaluations":[]}');
+  } catch (e) {
+    console.error('Failed to parse AI grading response:', e);
+    return [];
+  }
   return parsed.evaluations || [];
 };
 

@@ -142,8 +142,6 @@ export default function Support() {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
-  let faqIndex = 0;
-
   return (
     <div className="max-w-4xl mx-auto">
       {/* Hero Section */}
@@ -216,21 +214,21 @@ export default function Support() {
               </h3>
               <div className="space-y-2 mb-6">
                 {category.items.map((item, itemIndex) => {
-                  const currentIndex = faqIndex++;
+                  const faqId = `${catIndex}-${itemIndex}`;
                   return (
                     <Card key={itemIndex} className="border-gray-200">
                       <button
-                        onClick={() => handleFAQToggle(currentIndex)}
+                        onClick={() => handleFAQToggle(faqId)}
                         className="w-full text-left p-4 hover:bg-gray-50 transition-colors flex items-start justify-between gap-4"
                       >
                         <span className="font-semibold text-gray-900">{item.question}</span>
-                        {openFAQ === currentIndex ? (
+                        {openFAQ === faqId ? (
                           <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
                         ) : (
                           <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
                         )}
                       </button>
-                      {openFAQ === currentIndex && (
+                      {openFAQ === faqId && (
                         <div className="px-4 pb-4 pt-0 text-gray-700 border-t border-gray-200">
                           {item.answer}
                         </div>

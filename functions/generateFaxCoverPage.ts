@@ -107,7 +107,14 @@ Generate a professional cover sheet with a HIPAA confidentiality disclaimer. Ret
 
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const coverData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    let coverData = {};
+    if (jsonMatch) {
+      try {
+        coverData = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        console.error('Failed to parse cover page JSON from AI response:', e);
+      }
+    }
 
     return Response.json({ success: true, cover_page_data: coverData });
 

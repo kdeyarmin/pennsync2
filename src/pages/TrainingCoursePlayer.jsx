@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, CheckCircle2, RotateCcw, Award, ChevronRight, ChevronLeft,
-  BookOpen, Clock, Star, Lock, Unlock, FileText, Send, Eye, RefreshCw, Home,
+  BookOpen, Clock, Star, FileText, Send, Eye, RefreshCw, Home,
   Check, Target, AlertCircle
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";

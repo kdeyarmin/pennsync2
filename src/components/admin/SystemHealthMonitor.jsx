@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,7 +103,7 @@ export default function SystemHealthMonitor() {
     refetchInterval: autoRefresh ? 30000 : false,
   });
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     setPrevMetrics(metrics);
     const today = new Date();
     const recentVisits = visits.filter(v => {
@@ -136,17 +136,17 @@ export default function SystemHealthMonitor() {
     if (newMetrics.uptime < 99) newAlerts.push({ level: "critical", title: "Uptime Below Threshold", message: `System uptime at ${newMetrics.uptime}% — investigate immediately.` });
     setAlerts(newAlerts);
     setDismissed([]);
-  };
+  }, [visits, users, incidents, metrics, notificationsEnabled]);
 
   useEffect(() => {
     refresh();
-  }, [visits.length, users.length]);
+  }, [refresh]);
 
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(refresh, 30000);
     return () => clearInterval(interval);
-  }, [autoRefresh, visits, users, incidents]);
+  }, [autoRefresh, refresh]);
 
   const getStatus = (key, value) => {
     const m = METRICS.find(m => m.key === key);
