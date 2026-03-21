@@ -40,7 +40,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
   const generatePreview = () => {
     const endDate = todayEastern();
-    const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
+    const startDate = format(subDays(new Date(), parseInt(dateRange, 10)), 'yyyy-MM-dd');
 
     const filteredVisits = visits.filter(v => 
       v.visit_date >= startDate && v.visit_date <= endDate
@@ -78,7 +78,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     
     try {
       const endDate = todayEastern();
-      const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
+      const startDate = format(subDays(new Date(), parseInt(dateRange, 10)), 'yyyy-MM-dd');
 
       if (exportFormat === 'pdf') {
         // Generate PDF using utility
@@ -317,7 +317,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   // Helper functions for PDF data
   const generateProductivityReportData = (visits, allUsers) => {
     const endDate = todayEastern();
-    const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
+    const startDate = format(subDays(new Date(), parseInt(dateRange, 10)), 'yyyy-MM-dd');
     
     // Filter all note enhancements by date range FIRST
     const filteredEnhancements = allNoteEnhancements.filter(nc => {
@@ -347,7 +347,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     const totalTimeSaved = parseFloat((totalTimeSavedMinutes / 60).toFixed(1));
     
     // Generate daily enhancement data for chart
-    const days = parseInt(dateRange);
+    const days = parseInt(dateRange, 10);
     const dailyEnhancements = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
@@ -745,7 +745,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         completed: completed.length,
         completionRate: nurseVisits.length > 0 ? Math.round((completed.length / nurseVisits.length) * 100) : 0,
         docQuality: completed.length > 0 ? Math.round((withCompleteDoc.length / completed.length) * 100) : 0,
-        avgVisitsPerDay: Math.round(nurseVisits.length / parseInt(dateRange))
+        avgVisitsPerDay: Math.round(nurseVisits.length / parseInt(dateRange, 10))
       };
     }).sort((a, b) => b.completionRate - a.completionRate);
   };
@@ -783,7 +783,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   const generateTrendAnalysisData = (visitsData, incidentsData) => {
-    const days = parseInt(dateRange);
+    const days = parseInt(dateRange, 10);
     const trends = [];
 
     for (let i = days - 1; i >= 0; i--) {

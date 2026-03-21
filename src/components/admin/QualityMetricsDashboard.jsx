@@ -47,7 +47,7 @@ export default function QualityMetricsDashboard() {
   // Calculate date range
   const getDateRange = () => {
     const today = new Date();
-    const daysAgo = parseInt(timeRange);
+    const daysAgo = parseInt(timeRange, 10);
     return {
       start: format(subDays(today, daysAgo), 'yyyy-MM-dd'),
       end: format(today, 'yyyy-MM-dd')
