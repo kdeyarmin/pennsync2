@@ -30,6 +30,7 @@ import {
   User
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -37,6 +38,7 @@ export default function Messages() {
   const queryClient = useQueryClient();
   const [selectedThread, setSelectedThread] = useState(null);
   const [showNewMessage, setShowNewMessage] = useState(false);
+  const [visibleThreadCount, setVisibleThreadCount] = useState(20);
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterRead, setFilterRead] = useState("all");
   const [replyText, setReplyText] = useState("");
@@ -157,7 +159,7 @@ export default function Messages() {
 
   const handleSendMessage = () => {
     if (!newMessage.message_text || newMessage.recipients.length === 0) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -264,7 +266,8 @@ export default function Messages() {
               </CardContent>
             </Card>
           ) : (
-            filteredThreads.map(thread => (
+            <>
+            {filteredThreads.slice(0, visibleThreadCount).map(thread => (
               <Card
                 key={thread.threadId}
                 className={`cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all ${
@@ -302,7 +305,13 @@ export default function Messages() {
                   </p>
                 </CardContent>
               </Card>
-            ))
+            ))}
+            {filteredThreads.length > visibleThreadCount && (
+              <Button variant="outline" className="w-full" onClick={() => setVisibleThreadCount(c => c + 20)}>
+                Load more ({filteredThreads.length - visibleThreadCount} remaining)
+              </Button>
+            )}
+            </>
           )}
         </div>
 
