@@ -229,7 +229,13 @@ Provide actionable insights for clinicians.`,
         lab_events: labEvents.length
       },
       vitals_data: vitalsHistory,
-      ...result
+      vital_trends: result?.vital_trends || [],
+      symptom_patterns: result?.symptom_patterns || [],
+      medication_insights: result?.medication_insights || {},
+      risk_indicators: result?.risk_indicators || [],
+      positive_trends: result?.positive_trends || [],
+      overall_trajectory: result?.overall_trajectory || 'unknown',
+      priority_recommendations: result?.priority_recommendations || []
     });
 
   } catch (error) {

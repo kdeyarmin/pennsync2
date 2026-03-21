@@ -201,7 +201,13 @@ Return comprehensive JSON analysis:`;
       success: true,
       patient_id: patientId,
       analysis_date: new Date().toISOString(),
-      ...result
+      clinical_alerts: result?.clinical_alerts || [],
+      trend_analysis: result?.trend_analysis || {},
+      care_plan_deviations: result?.care_plan_deviations || [],
+      medication_concerns: result?.medication_concerns || [],
+      predictive_insights: result?.predictive_insights || {},
+      overall_risk_score: result?.overall_risk_score || 0,
+      risk_level: result?.risk_level || 'unknown'
     });
 
   } catch (error) {

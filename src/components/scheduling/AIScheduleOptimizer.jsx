@@ -89,7 +89,7 @@ export default function AIScheduleOptimizer({ nurseEmail, selectedDate }) {
           patient_address: patient?.address || 'Unknown location',
           patient_diagnosis: patient?.primary_diagnosis,
           patient_care_type: patient?.care_type,
-          patient_acuity: determineAcuity(patient, v)
+          patient_acuity: patient ? determineAcuity(patient, v) : 5
         };
       });
 

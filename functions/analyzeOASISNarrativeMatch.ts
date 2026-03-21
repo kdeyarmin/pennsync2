@@ -163,14 +163,14 @@ Return JSON with detailed findings:`,
         m_items: documentData.all_m_items || [],
         narratives: documentData.all_narratives || []
       },
-      audit_flags: matchAnalysis.mismatches?.filter(m => 
-        m.severity === 'critical' || m.severity === 'high'
-      ).map(m => ({
-        flag_type: 'narrative_mismatch',
-        m_item: m.m_item_code,
-        description: m.explanation,
-        action_required: m.recommended_fix
-      })) || []
+      audit_flags: (matchAnalysis.mismatches || [])
+        .filter(m => m && (m.severity === 'critical' || m.severity === 'high'))
+        .map(m => ({
+          flag_type: 'narrative_mismatch',
+          m_item: m.m_item_code || 'UNKNOWN',
+          description: m.explanation || 'No explanation provided',
+          action_required: m.recommended_fix || 'Manual review required'
+        }))
     };
 
     return Response.json({
