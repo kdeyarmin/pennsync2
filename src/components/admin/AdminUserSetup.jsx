@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,6 +41,11 @@ export default function AdminUserSetup() {
   const [isLoading, setIsLoading] = useState(false);
   const [setupSuccess, setSetupSuccess] = useState(false);
   const [createdUser, setCreatedUser] = useState(null);
+  const successTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (successTimerRef.current) clearTimeout(successTimerRef.current); };
+  }, []);
 
   const handleGenerate = () => {
     const pwd = generateTemporaryPassword();
@@ -90,7 +95,7 @@ export default function AdminUserSetup() {
       toast.success(`User ${formData.full_name} created and welcome email sent!`);
 
       // Auto-reset success message after 10 seconds
-      setTimeout(() => setSetupSuccess(false), 10000);
+      successTimerRef.current = setTimeout(() => setSetupSuccess(false), 10000);
     } catch (error) {
       console.error('User setup error:', error);
       toast.error(error.message || "Failed to create user account");

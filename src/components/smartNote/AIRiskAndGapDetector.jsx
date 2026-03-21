@@ -405,17 +405,21 @@ Return JSON:
                              onInsertText(risk.suggested_documentation);
 
                              // Track gap suggestion
-                             const user = await base44.auth.me();
-                             if (user?.email) {
-                               trackAISuggestion({
-                                 nurseEmail: user.email,
-                                 suggestionType: categorizeAISuggestion(risk.title),
-                                 suggestionText: `Risk/Gap: ${risk.title}`,
-                                 context: risk.suggested_documentation,
-                                 source: 'risk_detector',
-                                 elementName: risk.risk_type,
-                                 noteSnippet: risk.evidence
-                               });
+                             try {
+                               const user = await base44.auth.me();
+                               if (user?.email) {
+                                 trackAISuggestion({
+                                   nurseEmail: user.email,
+                                   suggestionType: categorizeAISuggestion(risk.title),
+                                   suggestionText: `Risk/Gap: ${risk.title}`,
+                                   context: risk.suggested_documentation,
+                                   source: 'risk_detector',
+                                   elementName: risk.risk_type,
+                                   noteSnippet: risk.evidence
+                                 });
+                               }
+                             } catch (err) {
+                               console.error('Failed to track suggestion:', err);
                              }
                            }}
                          >
@@ -465,17 +469,21 @@ Return JSON:
                            onInsertText(gap.suggested_text);
 
                            // Track care gap suggestion
-                           const user = await base44.auth.me();
-                           if (user?.email) {
-                             trackAISuggestion({
-                               nurseEmail: user.email,
-                               suggestionType: categorizeAISuggestion(gap.gap_type),
-                               suggestionText: `Care gap: ${gap.description}`,
-                               context: gap.suggested_text,
-                               source: 'risk_detector',
-                               elementName: gap.gap_type,
-                               noteSnippet: gap.suggested_action
-                             });
+                           try {
+                             const user = await base44.auth.me();
+                             if (user?.email) {
+                               trackAISuggestion({
+                                 nurseEmail: user.email,
+                                 suggestionType: categorizeAISuggestion(gap.gap_type),
+                                 suggestionText: `Care gap: ${gap.description}`,
+                                 context: gap.suggested_text,
+                                 source: 'risk_detector',
+                                 elementName: gap.gap_type,
+                                 noteSnippet: gap.suggested_action
+                               });
+                             }
+                           } catch (err) {
+                             console.error('Failed to track suggestion:', err);
                            }
                          }}
                        >

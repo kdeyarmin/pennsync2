@@ -45,6 +45,7 @@ import {
   UserCheck
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { todayEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -76,6 +77,8 @@ export default function ReferralIntake() {
   const [extractedFormData, setExtractedFormData] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const REFERRALS_PER_PAGE = 15;
   const [processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
 
   const { data: currentUser } = useQuery({
@@ -101,7 +104,7 @@ export default function ReferralIntake() {
 
     const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff'];
     if (!validTypes.includes(file.type)) {
-      alert('Please upload a PDF, PNG, JPG, or TIFF file');
+      toast.error('Please upload a PDF, PNG, JPG, or TIFF file');
       return;
     }
 
@@ -241,7 +244,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload file. Please try again.');
+      toast.error('Failed to upload file. Please try again.');
     }
     setIsUploading(false);
   };
@@ -281,10 +284,10 @@ Return comprehensive structured data for intelligent form pre-population and car
       setUploadDialogOpen(false);
 
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
+      toast.success(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
     } catch (error) {
       console.error('Error processing multiple referrals:', error);
-      alert('Failed to create referrals. Please try again.');
+      toast.error('Failed to create referrals. Please try again.');
     } finally {
       setProcessingMultipleReferrals(false);
     }
@@ -292,7 +295,7 @@ Return comprehensive structured data for intelligent form pre-population and car
 
   const handleCreateReferral = async () => {
     if (!uploadedFile) {
-      alert('Please upload a referral document first');
+      toast.error('Please upload a referral document first');
       return;
     }
 
@@ -354,7 +357,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error creating referral:', error);
-      alert('Failed to create referral. Please try again.');
+      toast.error('Failed to create referral. Please try again.');
     }
     setIsUploading(false);
   };
@@ -365,7 +368,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Failed to update status');
+      toast.error('Failed to update status');
     }
   };
 
@@ -421,10 +424,10 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       
-      alert(`Referral assigned to ${nurse?.full_name || nurseEmail}. Secure message sent.`);
+      toast.success(`Referral assigned to ${nurse?.full_name || nurseEmail}. Secure message sent.`);
     } catch (error) {
       console.error('Error assigning nurse:', error);
-      alert('Failed to assign nurse');
+      toast.error('Failed to assign nurse');
     }
   };
 
@@ -858,7 +861,7 @@ Actions available:
       }
       
       if (automationSummary.length > 0) {
-        alert(`Referral processed successfully!\n\nAI Automation Results:\n${automationSummary.join('\n')}`);
+        toast.success(`Referral processed successfully! AI Automation: ${automationSummary.join(', ')}`);
       }
       
       setProcessingReferralId(null);
@@ -873,7 +876,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error updating referral:', error);
-      alert('Failed to process referral. Please try again.');
+      toast.error('Failed to process referral. Please try again.');
     }
   };
 
@@ -891,7 +894,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error confirming match:', error);
-      alert('Failed to confirm match');
+      toast.error('Failed to confirm match');
     }
   };
 
@@ -903,10 +906,10 @@ Actions available:
     try {
       await base44.entities.Referral.delete(referralId);
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert('Referral deleted successfully');
+      toast.success('Referral deleted successfully');
     } catch (error) {
       console.error('Error deleting referral:', error);
-      alert('Failed to delete referral');
+      toast.error('Failed to delete referral');
     }
   };
 
@@ -922,10 +925,10 @@ Actions available:
         rejected_by: currentUser?.email
       });
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert('Referral rejected');
+      toast.success('Referral rejected');
     } catch (error) {
       console.error('Error rejecting referral:', error);
-      alert('Failed to reject referral');
+      toast.error('Failed to reject referral');
     }
   };
 
@@ -977,7 +980,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error creating new patient:', error);
-      alert('Failed to create new patient');
+      toast.error('Failed to create new patient');
     }
   };
 
@@ -986,6 +989,12 @@ Actions available:
     const priorityMatch = priorityFilter === 'all' || r.priority === priorityFilter;
     return statusMatch && priorityMatch;
   });
+
+  const totalPages = Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE);
+  const paginatedReferrals = filteredReferrals.slice(
+    (currentPage - 1) * REFERRALS_PER_PAGE,
+    currentPage * REFERRALS_PER_PAGE
+  );
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -1135,7 +1144,7 @@ Actions available:
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredReferrals.map((referral) => (
+                  {paginatedReferrals.map((referral) => (
                     <TableRow key={referral.id}>
                       <TableCell className="text-xs sm:text-sm font-medium">
                         {referral.patient_id ? (
@@ -1317,6 +1326,17 @@ Actions available:
                   ))}
                 </TableBody>
               </Table>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <span className="text-sm text-gray-500">
+                    Showing {(currentPage - 1) * REFERRALS_PER_PAGE + 1}-{Math.min(currentPage * REFERRALS_PER_PAGE, filteredReferrals.length)} of {filteredReferrals.length}
+                  </span>
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Previous</Button>
+                    <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -1595,7 +1615,7 @@ Actions available:
                   patientId={referrals.find(r => r.id === processingReferralId)?.patient_id}
                   onCarePlansSaved={() => {
                     queryClient.invalidateQueries({ queryKey: ['referrals'] });
-                    alert('Care plans saved successfully!');
+                    toast.success('Care plans saved successfully!');
                   }}
                 />
               )}

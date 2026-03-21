@@ -2,7 +2,7 @@ import { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
@@ -303,7 +303,7 @@ export default function Dashboard() {
 
 
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="flex items-center justify-center py-12 text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" />Loading...</div>}>
         {/* AI Care Plan Proposals - Nurse Review */}
         <div className="mb-6">
           <CarePlanProposalReviewer compact={true} />

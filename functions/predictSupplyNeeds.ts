@@ -16,8 +16,8 @@ Deno.serve(async (req) => {
     }
 
     // Get patient data
-    const patient = await base44.asServiceRole.entities.Patient.list();
-    const patientData = patient.find(p => p.id === patientId);
+    const patientResults = await base44.asServiceRole.entities.Patient.filter({ id: patientId });
+    const patientData = patientResults[0];
 
     if (!patientData) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });

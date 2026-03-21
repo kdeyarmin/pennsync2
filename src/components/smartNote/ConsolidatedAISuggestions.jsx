@@ -530,16 +530,20 @@ Return comprehensive JSON with all categories.`,
                           <Button
                             size="sm"
                             onClick={async () => {
-                              await onCreateTask({
-                                title: task.title,
-                                description: task.description,
-                                type: task.type?.toLowerCase() || 'other',
-                                priority: task.priority?.toLowerCase() || 'medium',
-                                due_timeframe: mapTimeframe(task.timeframe),
-                                source: 'ai_generated',
-                                ai_reason: task.rationale
-                              });
-                              setAppliedTasks(prev => new Set([...prev, idx]));
+                              try {
+                                await onCreateTask({
+                                  title: task.title,
+                                  description: task.description,
+                                  type: task.type?.toLowerCase() || 'other',
+                                  priority: task.priority?.toLowerCase() || 'medium',
+                                  due_timeframe: mapTimeframe(task.timeframe),
+                                  source: 'ai_generated',
+                                  ai_reason: task.rationale
+                                });
+                                setAppliedTasks(prev => new Set([...prev, idx]));
+                              } catch (err) {
+                                console.error('Failed to create task:', err);
+                              }
                             }}
                             className="h-7 flex-shrink-0"
                           >
@@ -588,14 +592,18 @@ Return comprehensive JSON with all categories.`,
                           <Button
                             size="sm"
                             onClick={async () => {
-                              await onCreateCarePlan({
-                                problem: plan.problem,
-                                goal: plan.goal,
-                                interventions: plan.interventions,
-                                status: 'active',
-                                target_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-                              });
-                              setAppliedGoals(prev => new Set([...prev, idx]));
+                              try {
+                                await onCreateCarePlan({
+                                  problem: plan.problem,
+                                  goal: plan.goal,
+                                  interventions: plan.interventions,
+                                  status: 'active',
+                                  target_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                                });
+                                setAppliedGoals(prev => new Set([...prev, idx]));
+                              } catch (err) {
+                                console.error('Failed to create care plan:', err);
+                              }
                             }}
                             className="h-7 flex-shrink-0"
                           >

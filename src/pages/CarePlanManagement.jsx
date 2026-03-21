@@ -227,10 +227,10 @@ export default function CarePlanManagement() {
         page: 'CarePlanManagement'
       });
       
-      alert('Care plan created successfully with education materials!');
+      toast.success('Care plan created successfully with education materials!');
     } catch (error) {
       console.error('Error creating care plan:', error);
-      alert('Failed to create care plan. Please try again.');
+      toast.error('Failed to create care plan. Please try again.');
     }
   };
 
@@ -675,7 +675,7 @@ export default function CarePlanManagement() {
                 });
               } catch (error) {
                 console.error('Error creating care plan:', error);
-                alert('Failed to create care plan. Please try again.');
+                toast.error('Failed to create care plan. Please try again.');
               }
             }}
             autoGenerate={true}
@@ -693,7 +693,7 @@ export default function CarePlanManagement() {
               carePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
               onTasksGenerated={() => {
                 queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
-                alert('Tasks created successfully!');
+                toast.success('Tasks created successfully!');
               }}
             />
           </div>

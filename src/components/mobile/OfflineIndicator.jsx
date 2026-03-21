@@ -92,11 +92,12 @@ export default function OfflineIndicator() {
 
     try {
       const result = await offlineStorage.syncPendingData();
-      clearInterval(progressInterval);
       setSyncProgress(100);
       setLastSyncResult(result);
     } catch (error) {
       console.error('Sync error:', error);
+    } finally {
+      clearInterval(progressInterval);
     }
 
     setIsSyncing(false);
