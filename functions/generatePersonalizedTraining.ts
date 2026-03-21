@@ -160,9 +160,8 @@ Make content specific, practical, and immediately applicable to home health nurs
 
   } catch (error) {
     console.error('Error generating training:', error);
-    return Response.json({ 
-      error: error.message,
-      stack: error.stack 
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

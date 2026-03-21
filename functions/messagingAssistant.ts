@@ -103,7 +103,10 @@ Suggest: relevant patient info, recent changes/concerns, care plan updates, safe
   return Response.json({
     success: true,
     patient_name: `${patient.first_name} ${patient.last_name}`,
-    ...result
+    suggested_info: result?.suggested_info || [],
+    quick_facts: result?.quick_facts || [],
+    safety_alerts: result?.safety_alerts || [],
+    suggested_actions: result?.suggested_actions || []
   });
 }
 
@@ -165,6 +168,10 @@ Provide: brief summary (2-3 sentences), key points, decisions made, action items
     success: true,
     thread_id,
     message_count: messages.length,
-    ...result
+    summary: result?.summary || '',
+    key_points: result?.key_points || [],
+    decisions_made: result?.decisions_made || [],
+    action_items: result?.action_items || [],
+    open_questions: result?.open_questions || []
   });
 }

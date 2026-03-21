@@ -92,14 +92,15 @@ Suggest:
     return Response.json({
       success: true,
       patient_name: `${patient.first_name} ${patient.last_name}`,
-      ...result
+      suggested_messages: result?.suggested_messages || [],
+      context_summary: result?.context_summary || '',
+      communication_tips: result?.communication_tips || []
     });
 
   } catch (error) {
     console.error('Error generating suggestions:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

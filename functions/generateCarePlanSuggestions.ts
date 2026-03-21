@@ -139,7 +139,9 @@ Only suggest care plans that are not already covered by existing plans. Focus on
     return Response.json({
       success: true,
       patient_name: `${patient.first_name} ${patient.last_name}`,
-      ...result
+      suggestions: result?.suggestions || [],
+      overall_assessment: result?.overall_assessment || '',
+      critical_gaps_identified: result?.critical_gaps_identified || []
     });
 
   } catch (error) {

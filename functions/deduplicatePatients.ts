@@ -503,9 +503,8 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Deduplication error:', error);
-    return Response.json({ 
+    return Response.json({
       error: error.message,
-      stack: error.stack,
       details: 'Check function logs for more information'
     }, { status: 500 });
   }

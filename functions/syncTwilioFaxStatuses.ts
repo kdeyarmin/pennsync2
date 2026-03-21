@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
     
     // Verify admin access for background jobs
     const user = await base44.auth.me();
-    if (user?.role !== 'admin') {
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 

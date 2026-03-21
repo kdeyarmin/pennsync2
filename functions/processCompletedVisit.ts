@@ -142,15 +142,16 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
     });
 
     // Update visit with enhanced narrative
+    const narrativeText = typeof narrativeResponse === 'string' ? narrativeResponse : JSON.stringify(narrativeResponse);
     const updatedVisit = await base44.entities.Visit.update(visit_id, {
-      nurse_notes: narrativeResponse,
-      ai_tags: extractTags(narrativeResponse),
+      nurse_notes: narrativeText,
+      ai_tags: extractTags(narrativeText),
       status: 'completed'
     });
 
     // Create follow-up tasks
     const createdTasks = [];
-    if (tasksResponse.tasks && tasksResponse.tasks.length > 0) {
+    if (tasksResponse?.tasks && tasksResponse.tasks.length > 0) {
       for (const task of tasksResponse.tasks) {
         const createdTask = await base44.entities.Task.create({
           patient_id: visit.patient_id,
@@ -190,7 +191,7 @@ Only suggest tasks that are clinically necessary. If no follow-up is needed, ret
       visit: updatedVisit,
       tasks_created: createdTasks.length,
       tasks: createdTasks,
-      narrative_length: narrativeResponse.length
+      narrative_length: narrativeText.length
     });
 
   } catch (error) {

@@ -77,14 +77,15 @@ Rank all diagnoses from highest to lowest reimbursement potential.`,
 
     return Response.json({
       success: true,
-      ...result
+      ranked_diagnoses: result?.ranked_diagnoses || [],
+      recommended_primary: result?.recommended_primary || '',
+      pdgm_optimization_tips: result?.pdgm_optimization_tips || []
     });
 
   } catch (error) {
     console.error('Error ranking diagnoses:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

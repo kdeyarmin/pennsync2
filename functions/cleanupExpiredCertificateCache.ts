@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
 
     // Only admins can run cleanup
-    if (user?.account_type !== 'super_admin' && user?.role !== 'admin') {
+    if (!user || (user.account_type !== 'super_admin' && user.role !== 'admin')) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 

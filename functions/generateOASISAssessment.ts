@@ -126,14 +126,16 @@ Write everything clearly and completely - no truncated text.`,
     return Response.json({
       success: true,
       visit_type: visit_type || 'Start of Care',
-      ...result
+      oasis_responses: result?.oasis_responses || [],
+      recommendations: result?.recommendations || [],
+      estimated_pdgm_group: result?.estimated_pdgm_group || '',
+      clinical_summary: result?.clinical_summary || ''
     });
 
   } catch (error) {
     console.error('Error generating OASIS assessment:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

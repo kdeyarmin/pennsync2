@@ -284,9 +284,8 @@ Identify if ANY care plan updates are warranted. Be conservative but proactive.`
 
   } catch (error) {
     console.error('Clinical monitoring error:', error);
-    return Response.json({ 
-      error: error.message,
-      stack: error.stack 
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });
