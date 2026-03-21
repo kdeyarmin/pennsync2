@@ -638,12 +638,13 @@ Return JSON:
 
       // Save skill gaps to localStorage for Learning Hub
       if (result.skill_gaps?.length > 0) {
-        const existingGaps = JSON.parse(localStorage.getItem(`skill_gaps_${nurseEmail}`) || '[]');
+        let existingGaps = [];
+        try { existingGaps = JSON.parse(localStorage.getItem(`skill_gaps_${nurseEmail}`) || '[]'); } catch {}
         const newGaps = result.skill_gaps.filter(
           gap => !existingGaps.some(eg => eg.area === gap.area)
         );
         const allGaps = [...existingGaps, ...newGaps];
-        localStorage.setItem(`skill_gaps_${nurseEmail}`, JSON.stringify(allGaps));
+        try { localStorage.setItem(`skill_gaps_${nurseEmail}`, JSON.stringify(allGaps)); } catch {}
         
         if (onTrainingRecommended) {
           onTrainingRecommended(result.skill_gaps);
