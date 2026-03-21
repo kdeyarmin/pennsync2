@@ -241,8 +241,6 @@ export default function PatientEducationHub() {
     };
     
     try {
-      console.log('Requesting PDF generation with diagnostics:', diagnostics);
-      
       const payload = {
         condition: selectedTopic.id,
         patientName: selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : null,
@@ -251,14 +249,8 @@ export default function PatientEducationHub() {
         customNotes: customNotes || null,
         styleOptions: styleOptions
       };
-      
-      console.log('Sending payload:', payload);
-      
-      const response = await base44.functions.invoke('generatePatientHandout', payload);
 
-      console.log('Raw response:', response);
-      console.log('Response type:', typeof response);
-      console.log('Response keys:', response ? Object.keys(response) : 'null');
+      const response = await base44.functions.invoke('generatePatientHandout', payload);
 
       // Handle axios response wrapper - check multiple levels
       let data = response;
@@ -268,41 +260,24 @@ export default function PatientEducationHub() {
       if (data?.data) {
         data = data.data;
       }
-      
-      console.log('Extracted data:', data);
-      console.log('Data type:', typeof data);
-      console.log('Data keys:', data ? Object.keys(data) : 'null');
-      console.log('Data.success:', data?.success);
-      console.log('Data.pdf exists:', !!data?.pdf);
-      console.log('Data.error:', data?.error);
 
       if (data?.error) {
-        console.error('Backend error:', data.error, data.details);
         throw new Error(`Backend error: ${data.error}${data.details ? '\n\n' + data.details : ''}`);
       }
 
       if (!data || !data.pdf) {
-        console.error('Invalid response structure:', data);
-        console.error('Data.pdf exists:', !!data?.pdf);
-        console.error('Data.success:', data?.success);
-        throw new Error(`Invalid response from handout generator. Got: ${JSON.stringify(data || {}).substring(0, 200)}`);
+        throw new Error(`Invalid response from handout generator.`);
       }
 
-      console.log('PDF data length:', data.pdf.length);
-      
       // Decode base64 PDF and download
       try {
         const binaryString = atob(data.pdf);
-        console.log('Decoded binary length:', binaryString.length);
-        
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        
+
         const blob = new Blob([bytes], { type: 'application/pdf' });
-        console.log('Blob created, size:', blob.size);
-        
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -311,10 +286,7 @@ export default function PatientEducationHub() {
         a.click();
         window.URL.revokeObjectURL(url);
         a.remove();
-        
-        console.log('Download triggered successfully');
       } catch (decodeError) {
-        console.error('Error decoding/downloading PDF:', decodeError);
         throw new Error(`Failed to process PDF: ${decodeError.message}`);
       }
 
