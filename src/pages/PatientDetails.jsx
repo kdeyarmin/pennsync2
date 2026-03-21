@@ -651,7 +651,7 @@ export default function PatientDetails() {
                                     {visit.visit_date && isValid(new Date(visit.visit_date)) ? format(new Date(visit.visit_date), 'MMM d, yyyy') : 'Invalid date'}
                                   </p>
                                   <Badge variant="outline" className="text-xs mt-1">
-                                    {visit.visit_type.replace(/_/g, ' ')}
+                                    {(visit.visit_type || '').replace(/_/g, ' ')}
                                   </Badge>
                                 </div>
                                 <Button
@@ -838,7 +838,7 @@ export default function PatientDetails() {
                               plan.status === 'revised' ? 'bg-yellow-500' :
                               'bg-blue-500'
                             }>
-                              {plan.status.replace('_', ' ')}
+                              {(plan.status || '').replace('_', ' ')}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">{sanitizeInput(plan.goal)}</p>

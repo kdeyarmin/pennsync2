@@ -185,9 +185,8 @@ Format it as a cohesive, professional clinical note.`;
       console.error('Failed to log error:', logErr);
     }
 
-    return Response.json({ 
-      error: error.message,
-      details: error.stack 
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

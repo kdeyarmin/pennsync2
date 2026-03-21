@@ -623,11 +623,11 @@ Please review this incident in the Incident Reporting Dashboard.`
                         {incident.severity}
                       </Badge>
                       <Badge className={getStatusColor(incident.status)}>
-                        {incident.status.replace(/_/g, ' ')}
+                        {(incident.status || '').replace(/_/g, ' ')}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600 mb-1">
-                      {incident.incident_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {(incident.incident_type || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </p>
                     <p className="text-sm text-gray-700">{incident.report}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
