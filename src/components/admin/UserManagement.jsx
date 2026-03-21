@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { logActivity } from "@/components/utils/activityLogger";
+import { toast } from "sonner";
 
 export default function UserManagement({ users, currentUser }) {
   const queryClient = useQueryClient();
@@ -78,10 +79,10 @@ export default function UserManagement({ users, currentUser }) {
       
       setShowEditDialog(false);
       setEditingUser(null);
-      alert('User updated successfully');
+      toast.success('User updated successfully');
     },
     onError: (error) => {
-      alert('Failed to update user: ' + error.message);
+      toast.error('Failed to update user: ' + error.message);
     }
   });
 
@@ -99,7 +100,7 @@ export default function UserManagement({ users, currentUser }) {
         page: 'UserManagement'
       });
       
-      alert(`Invitation sent successfully to ${inviteData.email}!\n\nThe user will receive an email with instructions to create their account.\n\nInvitation expires in 7 days.`);
+      toast.success(`Invitation sent to ${inviteData.email}. The user will receive an email with instructions. Invitation expires in 7 days.`);
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
       queryClient.invalidateQueries({ queryKey: ['userInvitations'] });
       setShowInviteDialog(false);
@@ -114,13 +115,13 @@ export default function UserManagement({ users, currentUser }) {
     },
     onError: (error) => {
       console.error('Failed to send invitation:', error);
-      alert('Failed to send invitation: ' + error.message);
+      toast.error('Failed to send invitation: ' + error.message);
     }
   });
 
   const handleCreateUser = () => {
     if (!inviteData.email || !inviteData.full_name) {
-      alert('Please enter email and full name');
+      toast.error('Please enter email and full name');
       return;
     }
     createUserMutation.mutate(inviteData);
@@ -196,7 +197,7 @@ export default function UserManagement({ users, currentUser }) {
       a.remove();
     } catch (error) {
       console.error('Error downloading roster:', error);
-      alert('Failed to generate roster PDF');
+      toast.error('Failed to generate roster PDF');
     }
     setIsDownloadingRoster(false);
   };

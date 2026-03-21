@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -154,7 +155,7 @@ Generate the family update now:`;
 
     } catch (error) {
       console.error("Error generating summary:", error);
-      alert("Error generating summary. Please try again.");
+      toast.error("Error generating summary. Please try again.");
     }
     
     setIsGenerating(false);
@@ -163,12 +164,12 @@ Generate the family update now:`;
   // Send to family members
   const sendToFamily = async () => {
     if (recipients.length === 0) {
-      alert("Please add at least one recipient");
+      toast.error("Please add at least one recipient");
       return;
     }
 
     if (!summary) {
-      alert("Please generate a summary first");
+      toast.error("Please generate a summary first");
       return;
     }
 
@@ -201,7 +202,7 @@ Generate the family update now:`;
         family_update_text: summary
       });
 
-      alert(`Family update sent successfully to ${recipients.length} recipient(s)!`);
+      toast.success(`Family update sent successfully to ${recipients.length} recipient(s)!`);
       setShowDialog(false);
       
       // Reset form
@@ -210,7 +211,7 @@ Generate the family update now:`;
 
     } catch (error) {
       console.error("Error sending updates:", error);
-      alert("Error sending updates. Please try again.");
+      toast.error("Error sending updates. Please try again.");
     }
     
     setIsSending(false);

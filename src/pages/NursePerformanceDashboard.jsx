@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -118,7 +119,8 @@ export default function NursePerformanceDashboard() {
       queryClient.invalidateQueries({ queryKey: ['nurseGoals'] });
       setShowGoalDialog(false);
       setEditingGoal(null);
-    }
+    },
+    onError: () => toast.error('Failed to create goal. Please try again.'),
   });
 
   const updateGoalMutation = useMutation({
@@ -127,12 +129,14 @@ export default function NursePerformanceDashboard() {
       queryClient.invalidateQueries({ queryKey: ['nurseGoals'] });
       setShowGoalDialog(false);
       setEditingGoal(null);
-    }
+    },
+    onError: () => toast.error('Failed to update goal. Please try again.'),
   });
 
   const deleteGoalMutation = useMutation({
     mutationFn: (id) => base44.entities.NurseGoal.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nurseGoals'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nurseGoals'] }),
+    onError: () => toast.error('Failed to delete goal. Please try again.'),
   });
 
   const getScoreColor = (score) => {
