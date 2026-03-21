@@ -46,6 +46,16 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { todayEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -79,6 +89,8 @@ export default function ReferralIntake() {
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const REFERRALS_PER_PAGE = 15;
+  const [referralToDelete, setReferralToDelete] = useState(null);
+  const [referralToReject, setReferralToReject] = useState(null);
   const [processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
 
   const { data: currentUser } = useQuery({
@@ -899,10 +911,6 @@ Actions available:
   };
 
   const handleDeleteReferral = async (referralId) => {
-    if (!confirm('Are you sure you want to delete this referral? This action cannot be undone.')) {
-      return;
-    }
-    
     try {
       await base44.entities.Referral.delete(referralId);
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
@@ -914,9 +922,6 @@ Actions available:
   };
 
   const handleRejectReferral = async (referralId) => {
-    if (!confirm('Are you sure you want to reject this referral?')) {
-      return;
-    }
     
     try {
       await base44.entities.Referral.update(referralId, { 
@@ -1304,7 +1309,7 @@ Actions available:
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleRejectReferral(referral.id)}
+                              onClick={() => setReferralToReject(referral)}
                               className="text-orange-600 hover:bg-orange-50 min-h-[36px] text-xs flex-1"
                             >
                               <XCircle className="w-4 h-4 mr-1" />
@@ -1313,7 +1318,7 @@ Actions available:
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDeleteReferral(referral.id)}
+                              onClick={() => setReferralToDelete(referral)}
                               className="text-red-600 hover:bg-red-50 min-h-[36px] text-xs flex-1"
                             >
                               <Trash2 className="w-4 h-4 mr-1" />
@@ -1664,6 +1669,51 @@ Actions available:
         </Dialog>
       )}
 
+      <AlertDialog open={!!referralToDelete} onOpenChange={(open) => { if (!open) setReferralToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Referral</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the referral for {referralToDelete?.patient_name || 'this patient'}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                handleDeleteReferral(referralToDelete.id);
+                setReferralToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!referralToReject} onOpenChange={(open) => { if (!open) setReferralToReject(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Referral</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject the referral for {referralToReject?.patient_name || 'this patient'}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                handleRejectReferral(referralToReject.id);
+                setReferralToReject(null);
+              }}
+            >
+              Reject
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

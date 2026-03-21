@@ -303,6 +303,7 @@ export default function FaxContactsPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
+                      aria-label="Edit contact"
                       onClick={() => handleEdit(contact)}
                     >
                       <Edit2 className="w-4 h-4" />
@@ -311,6 +312,7 @@ export default function FaxContactsPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-red-600 hover:text-red-700"
+                      aria-label="Delete contact"
                       onClick={() => setContactToDelete(contact)}
                     >
                       <Trash2 className="w-4 h-4" />
