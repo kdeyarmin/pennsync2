@@ -46,6 +46,16 @@ import AICarePlanGenerator from "../components/clinical/AICarePlanGenerator";
 import AIPathwayGenerator from "../components/clinical/AIPathwayGenerator";
 import AIPathwayUpdater from "../components/clinical/AIPathwayUpdater";
 import OASISUploadWidget from "../components/oasis/OASISUploadWidget";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ClinicalPathwayManager() {
   const queryClient = useQueryClient();
@@ -53,6 +63,7 @@ export default function ClinicalPathwayManager() {
   const [editingPathway, setEditingPathway] = useState(null);
   const [activeTab, setActiveTab] = useState("pathways");
   const [selectedPathwayForUpdate, setSelectedPathwayForUpdate] = useState(null);
+  const [pathwayToDelete, setPathwayToDelete] = useState(null);
 
   const { data: pathways = [], isLoading } = useQuery({
     queryKey: ['clinicalPathways'],
@@ -526,7 +537,7 @@ export default function ClinicalPathwayManager() {
                    <Button
                      variant="outline"
                      size="sm"
-                     onClick={() => deleteMutation.mutate(pathway.id)}
+                     onClick={() => setPathwayToDelete(pathway)}
                      disabled={deleteMutation.isPending}
                      className="text-red-600 hover:bg-red-50 min-h-[44px]"
                    >
@@ -601,6 +612,29 @@ export default function ClinicalPathwayManager() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AlertDialog open={!!pathwayToDelete} onOpenChange={(open) => { if (!open) setPathwayToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Clinical Pathway</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{pathwayToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                deleteMutation.mutate(pathwayToDelete.id);
+                setPathwayToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

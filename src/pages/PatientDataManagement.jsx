@@ -528,7 +528,7 @@ export default function PatientDataManagement() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="min-h-[44px] w-10">
+                          <Button variant="ghost" size="icon" aria-label="More actions" className="min-h-[44px] w-10">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>

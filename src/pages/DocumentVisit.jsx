@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -371,7 +372,7 @@ export default function DocumentVisit() {
 
   const handleExportPDF = async () => {
     if (!patient || !visit) {
-      alert("Patient or visit data not available for export.");
+      toast.error("Patient or visit data not available for export.");
       return;
     }
     try {
@@ -401,13 +402,13 @@ export default function DocumentVisit() {
       window.URL.revokeObjectURL(url);
       a.remove();
     } catch (error) {
-      await handleSecureError(error, 'visit_export', (msg) => alert(msg));
+      await handleSecureError(error, 'visit_export', (msg) => toast.error(msg));
     }
   };
 
   const handleEmailSummary = async () => {
     if (!patient || !visit) {
-      alert("Patient or visit data not available for email.");
+      toast.error("Patient or visit data not available for email.");
       return;
     }
     try {
@@ -446,9 +447,9 @@ For questions, please contact your care team.`;
         patient_id: patient.id
       });
 
-      alert("Visit summary sent successfully!");
+      toast.success("Visit summary sent successfully!");
     } catch (error) {
-      await handleSecureError(error, 'visit_email', (msg) => alert(msg));
+      await handleSecureError(error, 'visit_email', (msg) => toast.error(msg));
     }
   };
 
@@ -691,7 +692,7 @@ Generate the complete template now:`;
 
     } catch (error) {
       console.error("Error generating template:", error);
-      alert("Error generating template. Please try again.");
+      toast.error("Error generating template. Please try again.");
       await logSecurityEvent('TEMPLATE_GENERATION_ERROR', { visit_id: visitId, error: error.message });
     }
     setIsGeneratingTemplate(false);
@@ -704,7 +705,7 @@ Generate the complete template now:`;
     });
     
     if (!validation.valid) {
-      alert(`File validation failed: ${validation.error}`);
+      toast.error(`File validation failed: ${validation.error}`);
       await logSecurityEvent('FILE_UPLOAD_VALIDATION_FAILED', { 
         visit_id: visitId,
         file_name: audioFile.name,
@@ -803,14 +804,14 @@ Generate the complete clinical narrative based on the audio and context:`;
 
     } catch (error) {
       if (error.message.includes('Rate limit')) {
-        alert("Too many AI requests. Please wait a moment and try again.");
+        toast.error("Too many AI requests. Please wait a moment and try again.");
         await logSecurityEvent('AI_RATE_LIMIT_HIT', { 
           visit_id: visitId,
           error: error.message 
         });
       } else {
         console.error("Error processing audio:", error);
-        alert("Error processing audio. Please try again.");
+        toast.error("Error processing audio. Please try again.");
         await logSecurityEvent('AUDIO_PROCESSING_ERROR', { 
           visit_id: visitId,
           error: error.message 
@@ -935,7 +936,7 @@ Generate the complete clinical narrative based on the audio and context:`;
       // Save offline if no connection
       if (isOffline) {
         offlineStorage.saveUpdate(visitId, visitData);
-        alert("Visit saved offline. Will sync when connection is restored.");
+        toast.info("Visit saved offline. Will sync when connection is restored.");
         navigate(createPageUrl("Dashboard"));
         return;
       }
@@ -972,10 +973,10 @@ Generate the complete clinical narrative based on the audio and context:`;
         vital_signs_count: Object.keys(vitalSigns).length
       });
 
-      alert("Visit documentation saved successfully!");
+      toast.success("Visit documentation saved successfully!");
       navigate(createPageUrl("Dashboard"));
     } catch (error) {
-      await handleSecureError(error, 'visit_save', (msg) => alert(msg));
+      await handleSecureError(error, 'visit_save', (msg) => toast.error(msg));
     }
   };
 
@@ -1112,9 +1113,9 @@ Generate the complete clinical narrative based on the audio and context:`;
               <OneClickActions
                 patient={patient}
                 visit={visit}
-                onScheduleFollowUp={() => alert('Schedule follow-up feature coming soon')}
-                onMarkUrgent={() => alert('Urgent flag set - office will be notified')}
-                onRequestSupplies={() => alert('Supply request sent to office')}
+                onScheduleFollowUp={() => toast.info('Schedule follow-up feature coming soon')}
+                onMarkUrgent={() => toast.success('Urgent flag set - office will be notified')}
+                onRequestSupplies={() => toast.success('Supply request sent to office')}
               />
 
               <QuickIncidentReporting 
@@ -1347,7 +1348,7 @@ Generate the complete clinical narrative based on the audio and context:`;
                 documentType="visit_document"
                 onScanComplete={(doc) => {
                   setScannedDocuments(prev => [...prev, doc]);
-                  alert("Document scanned and attached to visit!");
+                  toast.success("Document scanned and attached to visit!");
                 }}
               />
 

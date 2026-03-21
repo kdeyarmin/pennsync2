@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, BookOpen, ShieldAlert } from "lucide-react";
+import { Shield, BookOpen, ShieldAlert, Loader2 } from "lucide-react";
 import RealTimeComplianceDashboard from "./RealTimeComplianceDashboard";
 import RegulatoryCompliance from "./RegulatoryCompliance";
 
@@ -19,8 +19,8 @@ export default function ComplianceRegulatory() {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <Card>
-          <CardContent className="p-12 text-center text-gray-500">
-            Loading...
+          <CardContent className="p-12 text-center text-gray-400 flex items-center justify-center">
+            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading...
           </CardContent>
         </Card>
       </div>

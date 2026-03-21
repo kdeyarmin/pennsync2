@@ -161,6 +161,7 @@ export default function ManageNewFeatures() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Edit feature"
                       onClick={() => handleOpenDialog(feature)}
                     >
                       <Edit className="w-4 h-4" />
@@ -168,6 +169,7 @@ export default function ManageNewFeatures() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Delete feature"
                       onClick={() => {
                         if (confirm('Are you sure you want to delete this feature?')) {
                           deleteFeatureMutation.mutate(feature.id);

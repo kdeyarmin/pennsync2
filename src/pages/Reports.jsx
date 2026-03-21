@@ -34,6 +34,17 @@ import OASISComplianceReport from "../components/reports/OASISComplianceReport";
 import PDGMReimbursementReport from "../components/reports/PDGMReimbursementReport";
 import KPIDashboard from "../components/reports/KPIDashboard";
 import { calculateStats } from "@/components/utils/statsCalculator";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Reports() {
   const [dateRange, setDateRange] = useState({
@@ -42,6 +53,7 @@ export default function Reports() {
   });
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [generating, setGenerating] = useState(false);
+  const [scheduleToDelete, setScheduleToDelete] = useState(null);
   const [newSchedule, setNewSchedule] = useState({
     name: '',
     report_type: 'comprehensive_report',
@@ -149,7 +161,7 @@ export default function Reports() {
       return response.data;
     },
     onSuccess: () => {
-      alert('Report generated and downloaded successfully!');
+      toast.success('Report generated and downloaded successfully!');
     }
   });
 
@@ -196,7 +208,7 @@ export default function Reports() {
         recipients: '',
         include_ai_insights: true
       });
-      alert('Report schedule created successfully!');
+      toast.success('Report schedule created successfully!');
     }
   });
 
@@ -603,11 +615,7 @@ export default function Reports() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              if (confirm('Delete this scheduled report?')) {
-                                deleteScheduleMutation.mutate(task.id);
-                              }
-                            }}
+                            onClick={() => setScheduleToDelete(task)}
                           >
                             <Trash2 className="w-4 h-4 text-red-600" />
                           </Button>
@@ -621,6 +629,29 @@ export default function Reports() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AlertDialog open={!!scheduleToDelete} onOpenChange={(open) => { if (!open) setScheduleToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Scheduled Report</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this scheduled report? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                deleteScheduleMutation.mutate(scheduleToDelete.id);
+                setScheduleToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

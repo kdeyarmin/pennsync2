@@ -46,6 +46,16 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
@@ -54,6 +64,7 @@ export default function NursePerformanceDashboard() {
   const [dateRange, setDateRange] = useState('30');
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
+  const [goalToDelete, setGoalToDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -641,10 +652,10 @@ export default function NursePerformanceDashboard() {
                               <p className="text-sm text-gray-600 mt-1">{goal.description}</p>
                             </div>
                             <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => { setEditingGoal(goal); setShowGoalDialog(true); }}>
+                              <Button variant="ghost" size="icon" aria-label="Edit goal" onClick={() => { setEditingGoal(goal); setShowGoalDialog(true); }}>
                                 <Edit2 className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteGoalMutation.mutate(goal.id)}>
+                              <Button variant="ghost" size="icon" aria-label="Delete goal" onClick={() => setGoalToDelete(goal)}>
                                 <Trash2 className="w-4 h-4 text-red-600" />
                               </Button>
                             </div>
@@ -1129,6 +1140,29 @@ export default function NursePerformanceDashboard() {
           </Dialog>
         </>
       )}
+
+      <AlertDialog open={!!goalToDelete} onOpenChange={(open) => { if (!open) setGoalToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Goal</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{goalToDelete?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                deleteGoalMutation.mutate(goalToDelete.id);
+                setGoalToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

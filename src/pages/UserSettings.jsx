@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -173,7 +174,7 @@ export default function UserSettings() {
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Failed to save preferences. Please try again.');
+      toast.error('Failed to save preferences. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -211,7 +212,7 @@ export default function UserSettings() {
       await base44.auth.logout();
     } catch (error) {
       console.error('Error deleting account:', error);
-      alert('Failed to delete account. Please contact support.');
+      toast.error('Failed to delete account. Please contact support.');
     } finally {
       setIsDeleting(false);
     }
