@@ -440,7 +440,7 @@ export default function AnnouncementManager() {
                           onChange={(e) => {
                             const [hours, minutes] = e.target.value.split(':');
                             const newDate = new Date(formData.scheduled_for);
-                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
                             setFormData({...formData, scheduled_for: newDate});
                           }}
                           className="mt-1"
@@ -493,7 +493,7 @@ export default function AnnouncementManager() {
                           onChange={(e) => {
                             const [hours, minutes] = e.target.value.split(':');
                             const newDate = new Date(formData.expires_at);
-                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
                             setFormData({...formData, expires_at: newDate});
                           }}
                           className="mt-1"
