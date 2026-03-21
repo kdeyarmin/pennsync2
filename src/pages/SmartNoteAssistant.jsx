@@ -405,9 +405,9 @@ Return ONLY the final note text.`
           base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysisData.compliance_score, status: analysisData.compliance_score >= 90 ? "passed" : analysisData.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
         ]);
         // Auto-generate follow-up tasks from the finalized note
-        generateTasksFromNote(noteText, visit.id);
+        await generateTasksFromNote(noteText, visit.id);
         // Auto-analyze supply usage from visit notes
-        analyzeSupplyUsage(noteText, visit.id);
+        await analyzeSupplyUsage(noteText, visit.id);
         logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysisData.overall_score });
       }
     } catch (err) {

@@ -585,10 +585,10 @@ Actions available:
         // Match threshold: 60+ points = high confidence match
         if (bestMatch && bestMatch.score >= 60) {
           existingPatient = bestMatch.patient;
-          console.log(`Patient match found: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score}, Reasons: ${bestMatch.reasons.join(', ')})`);
+          console.log(`Patient match found (Score: ${bestMatch.score})`);
         } else if (bestMatch && bestMatch.score >= 40) {
           // Possible match but not certain - log for review
-          console.warn(`Possible patient match: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score})`);
+          console.warn(`Possible patient match (Score: ${bestMatch.score})`);
         }
       }
 
