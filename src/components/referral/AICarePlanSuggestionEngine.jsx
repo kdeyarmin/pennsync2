@@ -392,7 +392,7 @@ Generate care plans prioritized by clinical importance. Focus on what requires S
                           <p className="text-xs font-semibold text-yellow-900">Clinical Review Required</p>
                         </div>
                         <ul className="space-y-1 ml-6">
-                          {plan.clinical_review_flags.map((flag, i) => (
+                          {(plan.clinical_review_flags || []).map((flag, i) => (
                             <li key={i} className="text-xs text-yellow-800">• {flag}</li>
                           ))}
                         </ul>

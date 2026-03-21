@@ -284,7 +284,8 @@ class OfflineStorage {
   }
 
   storeConflict(localData, serverData) {
-    const conflicts = JSON.parse(localStorage.getItem('offline_conflicts') || '[]');
+    let conflicts = [];
+    try { conflicts = JSON.parse(localStorage.getItem('offline_conflicts') || '[]'); } catch {}
     conflicts.push({
       id: Date.now().toString(),
       localData,
