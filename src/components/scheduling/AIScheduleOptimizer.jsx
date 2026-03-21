@@ -40,6 +40,7 @@ export default function AIScheduleOptimizer({ nurseEmail, selectedDate }) {
   const [feedbackVisit, setFeedbackVisit] = useState(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackRating, setFeedbackRating] = useState(null);
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [appliedSchedule, setAppliedSchedule] = useState(false);
 
   const dateToUse = selectedDate || format(new Date(), 'yyyy-MM-dd');
@@ -249,6 +250,7 @@ Return JSON:
       return;
     }
 
+    setSubmittingFeedback(true);
     try {
       await base44.entities.ScheduleFeedback.create({
         visit_id: feedbackVisit?.visit_id,
@@ -266,6 +268,8 @@ Return JSON:
       // If entity doesn't exist, just close dialog
       setShowFeedbackDialog(false);
       console.log("Feedback noted (entity may not exist yet)");
+    } finally {
+      setSubmittingFeedback(false);
     }
   };
 
@@ -519,8 +523,8 @@ Return JSON:
             <Button variant="outline" onClick={() => setShowFeedbackDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={submitFeedback} className="bg-indigo-600 hover:bg-indigo-700">
-              Submit Feedback
+            <Button onClick={submitFeedback} disabled={submittingFeedback} className="bg-indigo-600 hover:bg-indigo-700">
+              {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
             </Button>
           </DialogFooter>
         </DialogContent>

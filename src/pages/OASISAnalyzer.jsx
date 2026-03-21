@@ -501,14 +501,14 @@ export default function OASISAnalyzer() {
         const bestMatch = matchedPatients[0];
         if (bestMatch && bestMatch.confidence >= 85) {
           setSelectedPatientId(bestMatch.patient.id);
-          console.log(`Auto-matched patient with ${bestMatch.confidence}% confidence:`, bestMatch.patient.first_name, bestMatch.patient.last_name);
-          
+          console.log(`Auto-matched patient with ${bestMatch.confidence}% confidence`);
+
           // Auto-save to patient chart
           setTimeout(() => {
             handleSaveToPatient(bestMatch.patient.id);
           }, 500);
         } else if (bestMatch) {
-          console.log(`Best match (${bestMatch.confidence}% confidence):`, bestMatch.patient.first_name, bestMatch.patient.last_name, '- awaiting manual confirmation');
+          console.log(`Best match (${bestMatch.confidence}% confidence) - awaiting manual confirmation`);
         }
       }
     }
