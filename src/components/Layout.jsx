@@ -31,9 +31,10 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const update = (isDark) => document.documentElement.classList.toggle('dark', isDark);
+    const handler = (e) => update(e.matches);
     update(mq.matches);
-    mq.addEventListener('change', e => update(e.matches));
-    return () => mq.removeEventListener('change', e => update(e.matches));
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, []);
 
   const { data: currentUser, error: userError } = useQuery({
