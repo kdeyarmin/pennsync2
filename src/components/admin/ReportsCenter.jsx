@@ -186,7 +186,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                 rows: finData.visitTypes.map(vt => [
                   vt.type.replace(/_/g, ' '),
                   vt.count,
-                  `$${Math.round(vt.revenue / vt.count)}`,
+                  `$${vt.count > 0 ? Math.round(vt.revenue / vt.count) : 0}`,
                   `$${vt.revenue}`
                 ])
               },
