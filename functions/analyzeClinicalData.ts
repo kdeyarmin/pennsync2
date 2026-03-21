@@ -78,11 +78,8 @@ Be thorough - extract ALL clinically significant events, not just major ones.`,
           }
         });
         
-        return Response.json({ events: eventsResponse.events || [] });
+        return Response.json({ events: eventsResponse?.events || [] });
       }
-      
-      case 'extract_events':
-        return await extractEvents(base44, params);
       
       case 'analyze_events':
         return await analyzeEvents(base44, params);
