@@ -191,7 +191,7 @@ export default function PatientEducationPanel({ patientId }) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge className={`${categoryColor} text-white text-xs`}>
-                          {material.category.replace('_', ' ')}
+                          {(material.category || '').replace('_', ' ')}
                         </Badge>
                       </div>
                       <h4 className="font-semibold text-sm text-gray-900">{material.title}</h4>

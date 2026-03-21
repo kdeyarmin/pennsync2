@@ -306,7 +306,7 @@ Return as JSON with the following structure:
                   {analysis.data_gaps.map((gap, idx) => (
                     <div key={idx} className={`p-3 rounded-lg border ${getSeverityColor(gap.severity)}`}>
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <span className="font-semibold text-sm capitalize">{gap.category.replace(/_/g, ' ')}</span>
+                        <span className="font-semibold text-sm capitalize">{(gap.category || '').replace(/_/g, ' ')}</span>
                         <Badge variant="outline" className="text-xs">
                           {gap.severity}
                         </Badge>

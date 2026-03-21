@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,10 @@ export default function DocumentUploader({ patientId, onUploadComplete, open, on
   });
 
   const [selectedPatientId, setSelectedPatientId] = useState(patientId || "");
+
+  useEffect(() => {
+    if (patientId) setSelectedPatientId(patientId);
+  }, [patientId]);
 
   const uploadMutation = useMutation({
     mutationFn: async (data) => {
