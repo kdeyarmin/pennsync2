@@ -41,7 +41,9 @@ Deno.serve(async (req) => {
       custom_instructions = '',
       status = 'draft',
       training_type = 'in_service',
-      annual_cycle_year = null
+      annual_cycle_year = null,
+      skill_level = 'intermediate',
+      num_modules = 0,
     } = await req.json();
 
     if (!topic) {
@@ -50,167 +52,221 @@ Deno.serve(async (req) => {
 
     const audienceLabel = audience_roles.length > 0 ? audience_roles.join(', ') : 'all employees';
     const questionTypeLabel = question_types.join(', ');
+    const moduleCount = num_modules > 0 ? num_modules : (lesson_length >= 60 ? 3 : lesson_length >= 40 ? 2 : 1);
 
-    const prompt = `You are an expert instructional designer and healthcare educator building a training course for employees in hospice, home health, palliative care, and administrative/clinical departments.
+    // ──────────────────────────────────────────────────────
+    // PHASE 1: Generate course outline for structural quality
+    // ──────────────────────────────────────────────────────
+    const outlinePrompt = `You are a senior instructional designer specializing in healthcare workforce education. Design a course outline for the following training.
 
-INSTRUCTIONAL DESIGN REQUIREMENTS:
-Follow evidence-based instructional design principles:
-1. ADDIE model: Analyze the audience, Design around clear objectives, Develop practical content, plan for Implementation, and build in Evaluation through assessment.
-2. Bloom's Taxonomy: Create learning objectives AND assessment questions at multiple cognitive levels:
-   - Remember: Recall facts and basic concepts
-   - Understand: Explain ideas or concepts
-   - Apply: Use information in new situations
-   - Analyze: Draw connections among ideas
-   - Evaluate: Justify a decision or course of action
-3. Gagné's Nine Events of Instruction: Structure each module to: gain attention, inform objectives, stimulate recall of prior learning, present content, provide guidance, elicit performance, provide feedback, assess performance, enhance retention.
-4. Constructive Alignment: Every learning objective MUST have at least one assessment question that directly tests it. Map each question to a specific objective.
+Topic: ${topic}
+Category: ${training_category}
+Business line: ${business_line}
+Target audience: ${audienceLabel}
+Skill level: ${skill_level}
+Purpose: ${purpose_of_training || 'Ensure staff competency and regulatory compliance'}
+Lesson duration: ${lesson_length} minutes across ${moduleCount} module(s)
+Question count: ${question_count} assessment questions
 
-Create a complete in-service package as strict JSON with this shape:
+Return JSON only:
+{
+  "title": "Clear, professional course title",
+  "short_description": "1-2 sentence summary for catalog display",
+  "learning_objectives": ["4-6 measurable objectives using Bloom's action verbs — at least 2 at Apply level or higher"],
+  "modules": [
+    {
+      "title": "Module title",
+      "focus": "What this module specifically covers",
+      "key_topics": ["topic1", "topic2"],
+      "estimated_minutes": 15
+    }
+  ],
+  "assessment_blueprint": [
+    {
+      "objective_index": 0,
+      "bloom_level": "apply",
+      "question_type": "scenario_based",
+      "topic_focus": "What the question should test"
+    }
+  ],
+  "prerequisite_knowledge": ["What learners should already know"],
+  "real_world_relevance": "Why this training matters RIGHT NOW for this audience"
+}
+
+Design principles:
+- Each module should have a clear, distinct purpose — no overlap
+- Scaffold from foundational knowledge to complex application
+- Assessment blueprint must cover EVERY learning objective at least once
+- Distribute question types: ${questionTypeLabel}
+- Distribute difficulty: 30% easy, 40% medium, 30% hard
+- Make the "real_world_relevance" compelling — connect to actual incidents, regulatory changes, or common audit findings in ${business_line === 'all' ? 'home health and hospice' : business_line}`;
+
+    const outlineCompletion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.3,
+      max_tokens: 3000,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: 'You are a senior healthcare instructional designer. Return valid JSON only.' },
+        { role: 'user', content: outlinePrompt }
+      ]
+    });
+
+    let outline;
+    try {
+      outline = JSON.parse(outlineCompletion.choices[0].message.content || '{}');
+    } catch {
+      outline = { title: topic, learning_objectives: [], modules: [{ title: topic, focus: topic, key_topics: [topic], estimated_minutes: lesson_length }], assessment_blueprint: [] };
+    }
+
+    // ──────────────────────────────────────────────────────
+    // PHASE 2: Generate full course content using outline
+    // ──────────────────────────────────────────────────────
+    const contentPrompt = `You are building a complete healthcare training course. Use the approved outline below to generate rich, engaging content.
+
+APPROVED OUTLINE:
+${JSON.stringify(outline, null, 2)}
+
+PARAMETERS:
+- Skill level: ${skill_level}
+- Reading level: ${reading_level}
+- Include case scenarios: ${include_case_scenarios}
+- Include key takeaways: ${include_key_takeaways}
+- Include policy/regulatory content: ${include_policy_section}
+- Include references: ${include_references}
+- Include acknowledgement: ${include_acknowledgement}
+- Assessment question count: ${question_count}
+- Question types: ${questionTypeLabel}
+- Custom instructions: ${custom_instructions || 'none'}
+
+Generate the complete course as strict JSON with this EXACT structure:
 {
   "course": {
-    "title": "",
-    "short_description": "",
-    "description": "",
-    "learning_objectives": [""],
+    "title": "${outline.title || topic}",
+    "short_description": "${outline.short_description || ''}",
+    "description": "Comprehensive 3-4 sentence description including who should take this, what they will learn, and why it matters",
+    "learning_objectives": ${JSON.stringify(outline.learning_objectives || [])},
     "recommended_passing_score": 80,
-    "certificate_wording": "",
-    "attestation_text": "",
-    "warnings": [""]
+    "certificate_wording": "This certifies that the above-named employee has successfully completed [course title] and demonstrated competency in the covered material.",
+    "attestation_text": "I confirm that I have carefully reviewed all course materials, understand the content presented, and commit to applying these practices in my daily work.",
+    "warnings": ["This course was generated with AI assistance and should be reviewed by a subject matter expert before publishing."],
+    "prerequisite_knowledge": ${JSON.stringify(outline.prerequisite_knowledge || [])},
+    "real_world_relevance": "${outline.real_world_relevance || ''}"
   },
   "modules": [
     {
-      "title": "",
+      "title": "Module title from outline",
       "type": "lesson",
       "content": {
-        "intro": "",
+        "intro": "A compelling opening hook — start with a brief real-world scenario, a startling statistic, or a question that makes the reader think. Connect to their daily work immediately.",
         "sections": [
           {
-            "heading": "",
-            "body": "",
-            "bullets": [""],
-            "example": ""
+            "heading": "Clear, descriptive heading",
+            "body": "Core teaching content — concise paragraphs explaining the concept. Every paragraph must answer: what should staff DO with this information?",
+            "bullets": ["Action-oriented bullet points for key facts, steps, or requirements"],
+            "example": "A specific, realistic workplace example showing this concept in practice",
+            "pro_tip": "An insider tip from experienced practitioners — something you'd tell a colleague, not write in a policy manual",
+            "warning": "A critical safety or compliance warning if applicable (omit if not relevant to this section)",
+            "steps": ["Step-by-step procedure if this section involves a process (omit if not applicable)"],
+            "do_dont": {
+              "do": ["Correct practices"],
+              "dont": ["Common mistakes to avoid"]
+            },
+            "mnemonic": "A memory aid if helpful for this concept (omit if forced)"
           }
         ],
         "case_scenarios": [
           {
-            "title": "",
-            "situation": "",
-            "guidance": "",
-            "discussion_questions": [""]
+            "title": "Scenario title",
+            "patient_context": "Brief patient background — age, diagnosis, relevant history (for clinical topics) or workplace context (for admin topics)",
+            "situation": "Detailed situation description — what is happening, what the employee observes, what decision they face",
+            "challenge": "The specific question or decision point the learner must consider",
+            "guidance": "The correct approach with explanation of WHY, referencing specific policies or best practices",
+            "what_could_go_wrong": "Consequences of the wrong approach — make it concrete and relatable",
+            "discussion_questions": ["Thought-provoking questions that extend learning beyond the scenario"]
           }
         ],
-        "key_takeaways": [""],
-        "check_your_understanding": [""]
+        "key_takeaways": ["Actionable, memorable takeaways — each should be something staff can immediately apply"],
+        "check_your_understanding": ["Quick self-check questions (not graded) that help learners verify their comprehension before moving on"],
+        "clinical_pearl": "One memorable clinical or compliance insight that experienced practitioners wish they had learned earlier (optional — omit if not applicable)",
+        "summary": "2-3 sentence recap of the module's most important points — what to remember above all else"
       }
     }
   ],
   "questions": [
     {
       "type": "mcq|multi_select|true_false|short_answer|matching|scenario_based",
-      "prompt": "",
-      "options": [{"value":"A","label":""}],
+      "prompt": "Clear, unambiguous question stem. For scenario-based: include a detailed clinical/workplace situation first.",
+      "options": [{"value":"A","label":"Option text"}],
       "correct_answer": {},
-      "rationale": "",
-      "rubric": "",
+      "rationale": "MUST explain: (1) why the correct answer is right, (2) why each wrong answer is wrong, (3) the real-world consequence of choosing incorrectly",
+      "rubric": "For short_answer/scenario_based: specific criteria for full credit (3 points), partial credit (1-2 points), and zero credit",
       "difficulty": "easy|medium|hard",
       "bloom_level": "remember|understand|apply|analyze|evaluate",
-      "mapped_objective_index": 0
+      "mapped_objective_index": 0,
+      "clinical_context": "Brief context connecting this question to real practice (shown after answering)"
     }
   ],
   "references": [
-    {"title":"","url":"","note":""}
+    {"title":"Source title","url":"","note":"How this source relates to the training content"}
   ]
 }
 
-TOPIC AND PARAMETERS:
-- Topic: ${topic}
-- Training category: ${training_category}
-- Business line: ${business_line}
-- Audience: ${audienceLabel}
-- Purpose: ${purpose_of_training || 'General professional development and compliance'}
-- Reading level: ${reading_level}
-- Lesson length: ${lesson_length} minutes
-- Number of test questions: ${question_count}
-- Question types to include: ${questionTypeLabel}
-- Include case scenarios: ${include_case_scenarios ? 'yes — include 2-3 realistic case scenarios per module with discussion questions' : 'no'}
-- Include key takeaways: ${include_key_takeaways ? 'yes — 4-6 actionable takeaways per module' : 'no'}
-- Include policy section: ${include_policy_section ? 'yes' : 'no'}
-- Include references: ${include_references ? 'yes — cite specific regulations, guidelines, or best practice sources' : 'no'}
-- Include acknowledgement language: ${include_acknowledgement ? 'yes' : 'no'}
-- Custom instructions: ${custom_instructions || 'none'}
+CONTENT CREATION RULES:
 
-CONTENT QUALITY REQUIREMENTS:
-1. LEARNING OBJECTIVES: Write 4-6 measurable objectives using action verbs from Bloom's Taxonomy (identify, explain, apply, analyze, evaluate, demonstrate). Each objective must be specific, measurable, and achievable within the lesson timeframe.
+1. SECTIONS — Make every section rich and multi-dimensional:
+   - "body": Core teaching content. Write as if explaining to a competent colleague who is new to this specific topic. Be concrete, not abstract.
+   - "bullets": Reserve for lists of requirements, steps, or facts that benefit from scannable format.
+   - "example": ALWAYS include a specific, named example. Not "a patient" but "Mrs. Johnson, a 78-year-old with CHF who lives alone." Make examples feel real.
+   - "pro_tip": Include when you have genuine practical wisdom to share. These should feel like advice from a mentor.
+   - "warning": Include ONLY for genuine safety/compliance risks. When included, be specific about what can go wrong.
+   - "steps": Include when the section teaches a procedure or process. Number each step clearly.
+   - "do_dont": Include when there are common mistakes worth contrasting. Keep to 2-4 items per side.
+   - "mnemonic": Include only when genuinely helpful for recall. Don't force mnemonics.
 
-2. MODULE STRUCTURE:
-   - Open each module with a compelling hook: a real-world scenario, surprising statistic, or thought-provoking question that connects to the learner's daily work.
-   - "Check Your Understanding" prompts between sections to reinforce learning before the final assessment.
-   - Build from foundational concepts to complex application — scaffold the difficulty.
-   - Every section must answer: "What should staff DO differently after reading this?"
+2. CASE SCENARIOS — These are the most valuable learning tool:
+   - Include "patient_context" with enough detail to feel like a real clinical encounter
+   - The "challenge" should present a genuine dilemma, not an obvious choice
+   - "what_could_go_wrong" should be specific and sobering — connect to real consequences (denied claims, patient harm, survey deficiencies)
+   - "discussion_questions" should push higher-order thinking: "What would you do differently if..." or "How would this change if the patient also had..."
 
-3. CASE SCENARIOS: Each scenario must:
-   - Present a realistic, specific patient/workplace situation (not generic)
-   - Include clinical details relevant to the audience (vital signs, medications, diagnoses when appropriate)
-   - Pose a genuine decision point where the learner must choose a course of action
-   - Include discussion questions that push critical thinking
-   - Provide clear guidance that references specific policies, regulations, or best practices
+3. ASSESSMENT — Quality over quantity:
+   - Scenario-based questions should present complete clinical vignettes (3-5 sentences of context)
+   - MCQ distractors must be plausible — each wrong answer should represent a real mistake someone might make
+   - "clinical_context" after each question connects the assessment back to why this matters in practice
+   - Short answer rubrics must be specific: "Full credit requires mentioning X, Y, and Z. Partial credit if..."
+   - At least ${Math.max(2, Math.round(question_count * 0.3))} questions should be at Apply/Analyze/Evaluate level
 
-4. ASSESSMENT QUESTIONS — THIS IS CRITICAL:
-   - Distribute questions across ALL Bloom's levels — at least 20% should be Apply/Analyze/Evaluate level
-   - Each question MUST map to a specific learning objective (use mapped_objective_index)
-   - Include scenario-based questions that present realistic clinical situations requiring critical thinking
-   - For MCQ: Write 4 plausible options. All distractors must be realistic wrong answers, not obviously false.
-   - For scenario_based: Present a detailed situation with enough context for the learner to make an informed decision
-   - For short_answer: Provide a detailed rubric with specific criteria for full credit, partial credit, and zero credit
-   - For matching: Create pairs that test genuine understanding, not just vocabulary recall
-   - Difficulty distribution: 30% easy (Remember/Understand), 40% medium (Apply/Analyze), 30% hard (Evaluate/Create)
-   - Every rationale must explain WHY the correct answer is right AND why each wrong answer is wrong
-   - Test practical application over rote memorization
+4. WRITING QUALITY:
+   - Write for ${audienceLabel} in ${business_line === 'all' ? 'home health and hospice' : business_line} settings
+   - Reading level: ${reading_level} (8th-10th grade)
+   - Use "you" and "your" to address the learner directly
+   - Prefer active voice and concrete language
+   - When referencing regulations, explain what they mean in plain language
+   - Avoid: jargon without definition, passive constructions, filler phrases, academic tone
+   - Every section must pass the "So what?" test — the learner should understand why this matters to THEM`;
 
-5. WRITING STYLE:
-   - Write for frontline healthcare staff, not executives, attorneys, or academics.
-   - Use plain, practical, professional language at about an 8th-10th grade reading level.
-   - Make the lesson easy to understand during a busy workday.
-   - Keep sentences short, direct, and action-oriented.
-   - Use brief sections with clear headings.
-   - Explain what staff should do, what to watch for, what to document, and what to report.
-   - Include realistic home health, hospice, office, leadership, and field-based examples.
-   - Prefer checklists, bullets, quick tips, short examples, and simple action steps over long lectures.
-   - Avoid jargon, theory-heavy explanations, legalistic wording, academic tone, and repetitive filler.
-   - Define any required clinical or compliance term in simple words before using it.
-   - Make every section directly useful during real patient care or daily operations.
-   - If a concept is complex, break it into simple steps before testing it.
-
-6. QUALITY CHECKS:
-   - Ensure no two questions test the exact same concept in the same way
-   - Verify all answer options are grammatically consistent with the question stem
-   - Confirm correct answers are factually accurate for healthcare compliance
-   - Double-check that scenario details are clinically realistic
-   - Ensure the total content is appropriate for the ${lesson_length}-minute timeframe
-
-Always include a warning that AI-generated training should be reviewed by a subject matter expert before publishing.`;
-
-    const completion = await openai.chat.completions.create({
+    const contentCompletion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      temperature: 0.35,
-      max_tokens: 12000,
+      temperature: 0.4,
+      max_tokens: 16000,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You are a certified instructional designer and healthcare compliance educator. You create evidence-based training materials following ADDIE methodology and Bloom\'s Taxonomy. Return valid JSON only.' },
-        { role: 'user', content: prompt }
+        { role: 'system', content: 'You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. Return valid JSON only.' },
+        { role: 'user', content: contentPrompt }
       ]
     });
 
     let generated;
     try {
-      generated = JSON.parse(completion.choices[0].message.content || '{}');
+      generated = JSON.parse(contentCompletion.choices[0].message.content || '{}');
     } catch {
       generated = {};
     }
 
     const course = await base44.asServiceRole.entities.TrainingCourse.create({
-      title: generated.course?.title || topic,
-      short_description: generated.course?.short_description || '',
+      title: generated.course?.title || outline.title || topic,
+      short_description: generated.course?.short_description || outline.short_description || '',
       description: generated.course?.description || '',
       training_type,
       annual_cycle_year: annual_cycle_year || undefined,
@@ -223,7 +279,7 @@ Always include a warning that AI-generated training should be reviewed by a subj
       estimated_minutes: Number(lesson_length) || 30,
       status,
       created_by: user.email,
-      learning_objectives: generated.course?.learning_objectives || [],
+      learning_objectives: generated.course?.learning_objectives || outline.learning_objectives || [],
       passing_score: generated.course?.recommended_passing_score || 80,
       ai_generated: true,
       needs_sme_review: true,
@@ -249,7 +305,10 @@ Always include a warning that AI-generated training should be reviewed by a subj
         include_policy_section,
         include_references,
         include_acknowledgement,
-        custom_instructions
+        custom_instructions,
+        skill_level,
+        num_modules: moduleCount,
+        generation_method: 'two_pass',
       },
       retake_settings_json: {
         passing_threshold: generated.course?.recommended_passing_score || 80,
@@ -287,7 +346,7 @@ Always include a warning that AI-generated training should be reviewed by a subj
         rubric: question.rubric || '',
         difficulty: question.difficulty || 'medium',
         order_index: index,
-        points: 1
+        points: question.type === 'scenario_based' || question.type === 'short_answer' ? 2 : 1
       });
     }
 
@@ -302,7 +361,10 @@ Always include a warning that AI-generated training should be reviewed by a subj
         training_type,
         annual_cycle_year: annual_cycle_year || null,
         status: course.status,
-        ai_generated: true
+        ai_generated: true,
+        generation_method: 'two_pass',
+        outline_modules: outline.modules?.length || 0,
+        questions_generated: (generated.questions || []).length
       },
       severity: 'info'
     });

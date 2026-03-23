@@ -40,7 +40,9 @@ export default function AIComplianceInServicesHub() {
     include_policy_section: true,
     include_references: true,
     include_acknowledgement: true,
-    custom_instructions: ""
+    custom_instructions: "",
+    skill_level: "intermediate",
+    num_modules: 0,
   });
   const [manualDraft, setManualDraft] = useState({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
   const [assignmentSettings, setAssignmentSettings] = useState({
@@ -57,6 +59,7 @@ export default function AIComplianceInServicesHub() {
   const [pendingAssignmentPayload, setPendingAssignmentPayload] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
+  const [generateSuccess, setGenerateSuccess] = useState(null);
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const { data: users = [] } = useQuery({ queryKey: ["learning-users"], queryFn: () => base44.entities.User.list('-created_date', 500), initialData: [] });
@@ -110,9 +113,11 @@ export default function AIComplianceInServicesHub() {
   const runAIGeneration = async () => {
     setGenerating(true);
     setGenerateError("");
+    setGenerateSuccess(null);
     try {
-      await generateTrainingCourse(generator);
+      const result = await generateTrainingCourse(generator);
       queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+      setGenerateSuccess(result?.data || result);
     } catch (err) {
       setGenerateError(err?.message || "AI generation failed. Please try again.");
     } finally {
@@ -224,16 +229,30 @@ export default function AIComplianceInServicesHub() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <label className="text-sm font-semibold mb-2 block text-gray-700">Lesson (min)</label>
-                  <Input type="number" placeholder="30" value={generator.lesson_length} onChange={(e) => setGenerator({ ...generator, lesson_length: Number(e.target.value) })} className="h-11" />
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Duration (min)</label>
+                  <Input type="number" min="10" max="120" placeholder="30" value={generator.lesson_length} onChange={(e) => setGenerator({ ...generator, lesson_length: Number(e.target.value) })} className="h-11" />
                 </div>
                 <div>
                   <label className="text-sm font-semibold mb-2 block text-gray-700">Questions</label>
-                  <Input type="number" placeholder="10" value={generator.question_count} onChange={(e) => setGenerator({ ...generator, question_count: Number(e.target.value) })} className="h-11" />
+                  <Input type="number" min="5" max="30" placeholder="10" value={generator.question_count} onChange={(e) => setGenerator({ ...generator, question_count: Number(e.target.value) })} className="h-11" />
                 </div>
-                <div className="col-span-2 sm:col-span-1">
+                <div>
                   <label className="text-sm font-semibold mb-2 block text-gray-700">Audience</label>
                   <Input placeholder="RN, LPN, office" value={generator.audience_roles.join(', ')} onChange={(e) => setGenerator({ ...generator, audience_roles: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} className="h-11" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Skill Level</label>
+                  <Select value={generator.skill_level} onValueChange={(value) => setGenerator({ ...generator, skill_level: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="beginner">Beginner — New to topic</SelectItem><SelectItem value="intermediate">Intermediate — Some familiarity</SelectItem><SelectItem value="advanced">Advanced — Experienced staff</SelectItem></SelectContent></Select>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Modules</label>
+                  <Select value={String(generator.num_modules)} onValueChange={(value) => setGenerator({ ...generator, num_modules: Number(value) })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="0">Auto (based on duration)</SelectItem><SelectItem value="1">1 Module</SelectItem><SelectItem value="2">2 Modules</SelectItem><SelectItem value="3">3 Modules</SelectItem><SelectItem value="4">4 Modules</SelectItem></SelectContent></Select>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-gray-700">Reading Level</label>
+                  <Select value={generator.reading_level} onValueChange={(value) => setGenerator({ ...generator, reading_level: value })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="plain professional">Plain Professional (8th-10th grade)</SelectItem><SelectItem value="simple">Simple (6th-8th grade)</SelectItem><SelectItem value="clinical professional">Clinical Professional</SelectItem></SelectContent></Select>
                 </div>
               </div>
               <div>
@@ -304,6 +323,18 @@ export default function AIComplianceInServicesHub() {
                 </Button>
                 <Button variant="outline" onClick={savePromptAsTemplate} disabled={generating} className="min-h-[48px] sm:min-w-[180px]">Save as Template</Button>
               </div>
+              {generateSuccess && (
+                <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <p className="font-semibold text-emerald-900">Course Generated Successfully</p>
+                  </div>
+                  <p className="text-sm text-emerald-700">
+                    &ldquo;{generateSuccess.title || 'New course'}&rdquo; has been created as a draft. Review it in the Library tab, then publish when ready.
+                  </p>
+                  <p className="text-xs text-emerald-600">Two-pass AI generation: outline planned first, then full content created from the approved structure.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
