@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap } from "lucide-react";
+import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2 } from "lucide-react";
 import CourseManager from "@/components/training/CourseManager";
 import LearningPlanManager from "@/components/training/LearningPlanManager";
 import AIComplianceInServicesHub from "@/components/training/AIComplianceInServicesHub";
@@ -13,26 +14,36 @@ import ManagerSkillGapSummary from "@/components/training/ManagerSkillGapSummary
 import ManagerSkillGapAreas from "@/components/training/ManagerSkillGapAreas";
 import ManagerSkillGapPeople from "@/components/training/ManagerSkillGapPeople";
 
-const isManager = (user) => 
-  user?.role === "admin" || 
-  user?.account_type === "agency_admin" || 
-  user?.account_type === "super_admin" || 
-  user?.training_role === "supervisor" || 
+const isManager = (user) =>
+  user?.role === "admin" ||
+  user?.account_type === "agency_admin" ||
+  user?.account_type === "super_admin" ||
+  user?.training_role === "supervisor" ||
   /manager|director|supervisor|lead/i.test(user?.job_title || "");
 
 export default function AdminTraining() {
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [currentUser, setCurrentUser] = React.useState(null);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  React.useEffect(() => {
-    base44.auth.me().then((user) => {
-      setCurrentUser(user);
-      if (user?.role !== 'admin' && !isManager(user)) {
-        window.location.href = '/';
-      }
-    });
-  }, []);
+  const { data: currentUser, isLoading: userLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  // Redirect non-managers after user loads
+  if (!userLoading && currentUser && currentUser.role !== 'admin' && !isManager(currentUser)) {
+    navigate('/', { replace: true });
+    return null;
+  }
+
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
 
   const { data: users = [] } = useQuery({ 
     queryKey: ["skill-gap-users"], 

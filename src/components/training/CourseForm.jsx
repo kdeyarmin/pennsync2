@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,6 +32,9 @@ export default function CourseForm({ course, onSuccess }) {
       ? base44.entities.TrainingCourse.update(course.id, formData)
       : base44.entities.TrainingCourse.create(formData),
     onSuccess,
+    onError: (error) => {
+      console.error('Course save error:', error);
+    },
   });
 
   const handleSubmit = (e) => {
@@ -101,8 +106,10 @@ export default function CourseForm({ course, onSuccess }) {
           <Input
             type="number"
             required
+            min="1"
+            max="600"
             value={formData.estimated_minutes}
-            onChange={(e) => setFormData({ ...formData, estimated_minutes: parseInt(e.target.value) })}
+            onChange={(e) => setFormData({ ...formData, estimated_minutes: Math.max(1, parseInt(e.target.value) || 1) })}
             className="h-11 mt-1"
           />
         </div>
@@ -143,9 +150,22 @@ export default function CourseForm({ course, onSuccess }) {
         </label>
       </div>
 
+      {createMutation.isError && (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertCircle className="w-4 h-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            Failed to save course. Please check your inputs and try again.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex gap-2 pt-4">
-        <Button type="submit" disabled={createMutation.isLoading} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
-          {createMutation.isLoading ? 'Saving...' : course ? 'Update Course' : 'Create Course'}
+        <Button type="submit" disabled={createMutation.isPending} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
+          {createMutation.isPending ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+          ) : (
+            course ? 'Update Course' : 'Create Course'
+          )}
         </Button>
       </div>
     </form>
