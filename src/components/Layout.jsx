@@ -158,7 +158,8 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "My Learning",
       items: [
-        { name: "My Training", icon: GraduationCap, page: "MyLearning" },
+        { name: "Learning Center", icon: GraduationCap, page: "LearningCenter" },
+        { name: "My Courses", icon: BookOpen, page: "MyLearning" },
         { name: "Skills Checklists", icon: CheckCircle2, page: "ClinicalSkillsChecklist" },
       ],
     },
