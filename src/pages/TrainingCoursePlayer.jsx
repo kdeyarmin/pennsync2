@@ -23,7 +23,15 @@ import TrainingQuestionRenderer from "@/components/training/TrainingQuestionRend
 import CertificateDownloadButton from "@/components/training/CertificateDownloadButton";
 import CourseStepIndicator from "@/components/training/CourseStepIndicator";
 
-const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
+// Fisher-Yates shuffle for unbiased randomization
+const shuffle = (items) => {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
 
 const STEP_PROGRESS = {
   objectives: 5, content: 40, attestation: 75, test: 80, result: 100,
@@ -70,7 +78,8 @@ export default function TrainingCoursePlayer() {
   // Elapsed time tracker
   useEffect(() => {
     if (step === "result") return;
-    const interval = setInterval(() => setElapsed(Date.now() - startTime), 30000);
+    setElapsed(Date.now() - startTime);
+    const interval = setInterval(() => setElapsed(Date.now() - startTime), 10000);
     return () => clearInterval(interval);
   }, [startTime, step]);
 
@@ -149,42 +158,47 @@ export default function TrainingCoursePlayer() {
     goToNextModule();
   };
 
+  const [submitError, setSubmitError] = useState("");
+
   const submitAttempt = async () => {
-    if (previewMode) {
-      alert("Preview mode: Submissions are disabled.");
-      return;
-    }
+    if (previewMode) return;
     setSubmitting(true);
-    if (proofFiles.length > 0) {
-      const uploaded = await Promise.all(
-        proofFiles.map(async (file) => ({
-          name: file.name,
-          url: (await base44.integrations.Core.UploadFile({ file })).file_url,
-        }))
-      );
-      await base44.entities.TrainingAssignment.update(assignmentId, {
-        external_proof_urls: uploaded.map((i) => i.url),
-        external_proof_names: uploaded.map((i) => i.name),
-        external_proof_submitted_at: new Date().toISOString(),
+    setSubmitError("");
+    try {
+      if (proofFiles.length > 0) {
+        const uploaded = await Promise.all(
+          proofFiles.map(async (file) => ({
+            name: file.name,
+            url: (await base44.integrations.Core.UploadFile({ file })).file_url,
+          }))
+        );
+        await base44.entities.TrainingAssignment.update(assignmentId, {
+          external_proof_urls: uploaded.map((i) => i.url),
+          external_proof_names: uploaded.map((i) => i.name),
+          external_proof_submitted_at: new Date().toISOString(),
+        });
+      }
+      const timeSpentMinutes = Math.round((Date.now() - startTime) / 60000);
+      const response = await gradeTrainingAttempt({
+        assignmentId,
+        responses: randomizedQuestions.map((q) => ({ questionId: q.id, answer: answers[q.id] })),
+        attestation: {
+          acknowledged: attestationAccepted,
+          signedName,
+          statement: course?.attestation_text,
+          deviceMetadata: { userAgent: navigator.userAgent },
+        },
+        startedAt,
+        timeSpentMinutes,
+        randomizedQuestionOrder: randomizedQuestions.map((q) => q.id),
       });
+      setResult(response.data || response);
+      setStep("result");
+    } catch (err) {
+      setSubmitError(err?.message || "Failed to submit quiz. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    const timeSpentMinutes = Math.round((Date.now() - startTime) / 60000);
-    const response = await gradeTrainingAttempt({
-      assignmentId,
-      responses: randomizedQuestions.map((q) => ({ questionId: q.id, answer: answers[q.id] })),
-      attestation: {
-        acknowledged: attestationAccepted,
-        signedName,
-        statement: course?.attestation_text,
-        deviceMetadata: { userAgent: navigator.userAgent },
-      },
-      startedAt,
-      timeSpentMinutes,
-      randomizedQuestionOrder: randomizedQuestions.map((q) => q.id),
-    });
-    setResult(response.data || response);
-    setStep("result");
-    setSubmitting(false);
   };
 
   if (!course) {
@@ -537,8 +551,16 @@ export default function TrainingCoursePlayer() {
             ))}
           </div>
 
+          {/* Submit error */}
+          {submitError && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <AlertDescription className="text-red-800">{submitError}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Submit button */}
-          <div className="sticky bottom-4 z-10">
+          <div className="sticky bottom-3 sm:bottom-4 z-10">
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-4 flex flex-col sm:flex-row items-center gap-3">
               <div className="flex-1 text-sm text-slate-600">
                 {answeredCount < totalQuestions
@@ -574,7 +596,7 @@ export default function TrainingCoursePlayer() {
               ) : (
                 <RotateCcw className="w-16 h-16 mx-auto opacity-90" />
               )}
-              <h2 className="text-3xl font-extrabold">{result.passed ? "You Passed! 🎉" : "Not Quite Yet"}</h2>
+              <h2 className="text-3xl font-extrabold">{result.passed ? "Congratulations — You Passed!" : "Not Quite Yet"}</h2>
               <p className="text-lg opacity-90">
                 Score: <strong>{result.score}%</strong> &nbsp;•&nbsp; Passing: {result.passing_score}%
               </p>
@@ -628,7 +650,11 @@ export default function TrainingCoursePlayer() {
                         {item.points_earned}/{item.points_possible} pts
                       </Badge>
                     </div>
-                    <p className="text-slate-600">Your answer: <span className="font-medium">{JSON.stringify(item.answer)}</span></p>
+                    <p className="text-slate-600">Your answer: <span className="font-medium">{
+                      Array.isArray(item.answer) ? item.answer.join(', ')
+                      : typeof item.answer === 'object' && item.answer !== null ? Object.entries(item.answer).map(([k, v]) => `${k} → ${v}`).join(', ')
+                      : String(item.answer ?? '—')
+                    }</span></p>
                     {item.rationale && <p className="text-slate-500 mt-1">Rationale: {item.rationale}</p>}
                     {item.ai_feedback && <p className="text-slate-500 mt-1 italic">{item.ai_feedback}</p>}
                   </div>

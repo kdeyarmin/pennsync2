@@ -23,11 +23,14 @@ const TYPE_LABEL = {
 };
 
 export default function TrainingQuestionRenderer({ question, index, value, onChange }) {
-  const answer = value ?? (question.type === "multi_select" ? [] : question.type === "matching" ? {} : "");
+  const answer = value === undefined
+    ? (question.type === "multi_select" ? [] : question.type === "matching" ? {} : "")
+    : value;
   const isAnswered = (() => {
     if (question.type === "multi_select") return Array.isArray(answer) && answer.length > 0;
-    if (question.type === "matching") return Object.keys(answer).length > 0;
+    if (question.type === "matching") return typeof answer === "object" && answer !== null && Object.keys(answer).length > 0;
     if (question.type === "short_answer" || question.type === "scenario_based") return typeof answer === "string" && answer.trim().length > 0;
+    if (question.type === "true_false") return answer === true || answer === false;
     return answer !== "" && answer !== undefined && answer !== null;
   })();
 
@@ -162,7 +165,8 @@ export default function TrainingQuestionRenderer({ question, index, value, onCha
               value={typeof answer === "string" ? answer : ""}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Enter your response here..."
-              className="resize-none"
+              className="resize-y min-h-[120px]"
+              aria-label={`Answer for question ${index + 1}`}
             />
             {typeof answer === "string" && (
               <p className="text-xs text-slate-400 text-right">{answer.trim().split(/\s+/).filter(Boolean).length} words</p>

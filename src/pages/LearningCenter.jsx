@@ -35,8 +35,12 @@ import CertificateDownloadButton from '@/components/training/CertificateDownload
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : '—';
 const daysUntil = (date) => {
   if (!date) return Infinity;
-  const diff = new Date(date) - new Date();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const target = new Date(date);
+  const now = new Date();
+  // Compare dates only, ignoring time to avoid timezone edge cases
+  target.setHours(23, 59, 59, 999);
+  now.setHours(0, 0, 0, 0);
+  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
 };
 
 export default function LearningCenter() {
@@ -217,7 +221,7 @@ export default function LearningCenter() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
           { label: 'Active Courses', value: activeAssignments.length, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
           { label: 'Overdue', value: overdueAssignments.length, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },

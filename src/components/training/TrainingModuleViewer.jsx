@@ -15,8 +15,8 @@ function ReadingTime({ content }) {
   return <span className="text-xs text-slate-400">~{minutes} min read</span>;
 }
 
-function Section({ section, index, onViewed }) {
-  const [open, setOpen] = useState(true);
+function Section({ section, index, onViewed, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
   const sectionRef = useRef(null);
 
   useEffect(() => {
@@ -35,8 +35,9 @@ function Section({ section, index, onViewed }) {
   return (
     <div ref={sectionRef} className="border border-slate-100 rounded-xl overflow-hidden">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+        className="w-full flex items-center justify-between px-4 py-3.5 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
       >
         <span className="font-semibold text-slate-800 text-sm flex items-center gap-2">
           <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
@@ -226,7 +227,13 @@ export default function TrainingModuleViewer({ module }) {
         {sections.length > 0 && (
           <div className="space-y-2">
             {sections.map((section, i) => (
-              <Section key={i} section={section} index={i} onViewed={handleSectionViewed} />
+              <Section
+                key={i}
+                section={section}
+                index={i}
+                onViewed={handleSectionViewed}
+                defaultOpen={sections.length <= 4 || i === 0}
+              />
             ))}
           </div>
         )}
