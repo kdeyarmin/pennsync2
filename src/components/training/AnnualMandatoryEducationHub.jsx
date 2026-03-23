@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, CheckCircle2, Copy, Send, Sparkles } from "lucide-react";
+import { Archive, CheckCircle2, Copy, Send, Sparkles, Loader2, BarChart3, Shield } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
@@ -39,7 +39,7 @@ export default function AnnualMandatoryEducationHub() {
     reading_level: "plain professional",
     lesson_length: 30,
     question_count: 10,
-    question_types: ["mcq", "true_false"],
+    question_types: ["mcq", "true_false", "scenario_based"],
     include_case_scenarios: true,
     include_key_takeaways: true,
     include_policy_section: true,
@@ -48,6 +48,7 @@ export default function AnnualMandatoryEducationHub() {
     custom_instructions: "Keep it practical for frontline healthcare staff."
   });
   const [manualDraft, setManualDraft] = useState({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
+  const [generating, setGenerating] = useState(false);
   const [retakeSettings, setRetakeSettings] = useState({
     passingScoreRequired: 80,
     maxAttempts: 3,
@@ -94,6 +95,9 @@ export default function AnnualMandatoryEducationHub() {
       training_category: template.training_category,
       business_line: template.business_line,
       audience_roles: template.audience_roles,
+      lesson_length: template.lesson_length || template.typical_duration || prev.lesson_length,
+      purpose_of_training: template.purpose_of_training || prev.purpose_of_training,
+      custom_instructions: template.custom_instructions || prev.custom_instructions,
     }));
   };
 
@@ -127,8 +131,13 @@ export default function AnnualMandatoryEducationHub() {
   };
 
   const generateAnnualModule = async () => {
-    await generateTrainingCourse({ ...generator, training_type: 'annual_mandatory', annual_cycle_year: year, status: 'draft' });
-    queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
+    setGenerating(true);
+    try {
+      await generateTrainingCourse({ ...generator, training_type: 'annual_mandatory', annual_cycle_year: year, status: 'draft' });
+      queryClient.invalidateQueries({ queryKey: ["annual-courses"] });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const confirmModuleAssignment = async () => {
@@ -202,7 +211,9 @@ export default function AnnualMandatoryEducationHub() {
                 <Input placeholder="Audience" value={generator.audience_roles.join(', ')} onChange={(e) => setGenerator({ ...generator, audience_roles: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) })} />
               </div>
               <Textarea placeholder="Optional custom instructions" value={generator.custom_instructions} onChange={(e) => setGenerator({ ...generator, custom_instructions: e.target.value })} />
-              <Button className="w-full" onClick={generateAnnualModule}>Generate annual education module</Button>
+              <Button className="w-full" onClick={generateAnnualModule} disabled={generating || !generator.topic.trim()}>
+                {generating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</> : <>Generate annual education module</>}
+              </Button>
             </CardContent>
           </Card>
 
@@ -282,21 +293,68 @@ export default function AnnualMandatoryEducationHub() {
 
         <TabsContent value="reports" className="space-y-6">
           <AnnualMandatoryStats stats={{ ...stats, annualCompliancePercentage: stats.totalAssigned ? Math.round((stats.passed / stats.totalAssigned) * 100) : 0 }} />
+
+          {/* Compliance by Category */}
           <Card>
-            <CardHeader><CardTitle>Annual compliance snapshot</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-indigo-600" />
+                Compliance by Regulatory Category
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {(() => {
+                  const catStats = {};
+                  annualCourses.forEach(course => {
+                    const cat = course.category || 'compliance';
+                    if (!catStats[cat]) catStats[cat] = { total: 0, completed: 0, category: cat };
+                    const courseAssignments = annualAssignments.filter(a => a.course_id === course.id);
+                    catStats[cat].total += courseAssignments.length;
+                    catStats[cat].completed += courseAssignments.filter(a => a.pass_fail_result === 'passed').length;
+                  });
+                  return Object.values(catStats).map(cs => (
+                    <div key={cs.category} className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
+                      <Badge variant="outline" className="capitalize w-28 justify-center">{cs.category.replace(/_/g, ' ')}</Badge>
+                      <div className="flex-1">
+                        <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                          <div className="bg-indigo-600 h-full rounded-full transition-all" style={{ width: `${cs.total > 0 ? (cs.completed / cs.total) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold text-slate-700 w-20 text-right">
+                        {cs.completed}/{cs.total} ({cs.total > 0 ? Math.round((cs.completed / cs.total) * 100) : 0}%)
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Assignment Details */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" />Annual Compliance Snapshot</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {annualAssignments.slice(0, 25).map((assignment) => (
-                <div key={assignment.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 rounded-xl border p-3">
-                  <div>
-                    <p className="font-medium text-slate-900">{assignment.course_title}</p>
-                    <p className="text-sm text-slate-500">{assignment.assigned_to_user_id} • Due {formatDate(assignment.due_date)}</p>
+              {annualAssignments.length === 0 ? (
+                <p className="text-center text-slate-500 py-8">No annual assignments created for {year} yet.</p>
+              ) : (
+                annualAssignments.slice(0, 30).map((assignment) => (
+                  <div key={assignment.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 rounded-xl border p-3 hover:bg-slate-50 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-900 truncate">{assignment.course_title}</p>
+                      <p className="text-sm text-slate-500">{assignment.assigned_to_user_id} &middot; Due {formatDate(assignment.due_date)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={
+                        assignment.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
+                        assignment.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }>{assignment.status}</Badge>
+                      <Badge variant="outline">{assignment.score_percentage != null ? `${assignment.score_percentage}%` : '—'}</Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{assignment.status}</Badge>
-                    <Badge variant="outline">{assignment.score_percentage ?? '—'}%</Badge>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
