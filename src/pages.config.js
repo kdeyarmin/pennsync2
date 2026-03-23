@@ -142,7 +142,6 @@ import SendFax from './pages/SendFax';
 import SignDocument from './pages/SignDocument';
 import SmartNoteAssistant from './pages/SmartNoteAssistant';
 import SmartOASISAssessment from './pages/SmartOASISAssessment';
-import StaffTrainingHub from './pages/StaffTrainingHub';
 import Support from './pages/Support';
 import SystemJobMonitor from './pages/SystemJobMonitor';
 import SystemMonitoring from './pages/SystemMonitoring';
@@ -256,7 +255,6 @@ export const PAGES = {
     "SignDocument": SignDocument,
     "SmartNoteAssistant": SmartNoteAssistant,
     "SmartOASISAssessment": SmartOASISAssessment,
-    "StaffTrainingHub": StaffTrainingHub,
     "Support": Support,
     "SystemJobMonitor": SystemJobMonitor,
     "SystemMonitoring": SystemMonitoring,
