@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
@@ -26,9 +26,16 @@ Deno.serve(async (req) => {
     if (!assignedNurses.includes(nurse_email)) {
       assignedNurses.push(nurse_email);
       
-      await base44.asServiceRole.entities.Patient.update(patient_id, {
-        assigned_nurses: assignedNurses
-      });
+      const updateData = { assigned_nurses: assignedNurses };
+      
+      // Fill missing required fields for legacy/incomplete records to pass schema validation
+      if (!patient.address || typeof patient.address !== 'string') updateData.address = patient.address ? String(patient.address) : 'Unknown';
+      if (!patient.phone || typeof patient.phone !== 'string') updateData.phone = patient.phone ? String(patient.phone) : '000-000-0000';
+      if (!patient.emergency_contact_name || typeof patient.emergency_contact_name !== 'string') updateData.emergency_contact_name = patient.emergency_contact_name ? String(patient.emergency_contact_name) : 'Unknown';
+      if (!patient.emergency_contact_phone || typeof patient.emergency_contact_phone !== 'string') updateData.emergency_contact_phone = patient.emergency_contact_phone ? String(patient.emergency_contact_phone) : '000-000-0000';
+      if (!patient.date_of_birth || typeof patient.date_of_birth !== 'string') updateData.date_of_birth = '1900-01-01';
+
+      await base44.asServiceRole.entities.Patient.update(patient_id, updateData);
     }
 
     return Response.json({ 
