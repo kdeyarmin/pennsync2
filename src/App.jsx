@@ -39,7 +39,7 @@ import SecurityCompliance from '@/pages/SecurityCompliance';
 import PatientDataManagement from '@/pages/PatientDataManagement';
 import UserSettings from '@/pages/UserSettings';
 import ClinicalPathwayManager from '@/pages/ClinicalPathwayManager';
-import ClinicalSkillsChecklist from '@/pages/ClinicalSkillsChecklist';
+
 import TrainingCoursePlayer from '@/pages/TrainingCoursePlayer';
 import EventReport from '@/pages/EventReport';
 import SmartNoteAssistant from '@/pages/SmartNoteAssistant';
@@ -113,7 +113,7 @@ const AuthenticatedApp = () => {
       <Route path="/UserSettings" element={<LayoutWrapper currentPageName="UserSettings"><UserSettings /></LayoutWrapper>} />
       <Route path="/ClinicalPathwayManager" element={<LayoutWrapper currentPageName="ClinicalPathwayManager"><ClinicalPathwayManager /></LayoutWrapper>} />
       <Route path="/MyLearning" element={<LayoutWrapper currentPageName="MyLearning"><MyLearning /></LayoutWrapper>} />
-      <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
+
       <Route path="/TrainingCoursePlayer" element={<LayoutWrapper currentPageName="TrainingCoursePlayer"><TrainingCoursePlayer /></LayoutWrapper>} />
       <Route path="/EventReport" element={<LayoutWrapper currentPageName="EventReport"><EventReport /></LayoutWrapper>} />
       <Route path="/SmartNoteAssistant" element={<LayoutWrapper currentPageName="SmartNoteAssistant"><SmartNoteAssistant /></LayoutWrapper>} />
