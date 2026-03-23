@@ -336,7 +336,10 @@ export default function UserSettings() {
               )}
               <CareScopeSelector
                 currentUser={currentUser}
-                onSaved={() => {}}
+                onSaved={() => {
+                  queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+                  toast.success('Care scope updated successfully');
+                }}
               />
             </CardContent>
           </Card>

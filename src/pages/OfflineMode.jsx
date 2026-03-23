@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -112,7 +113,9 @@ export default function OfflineMode() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-6">
           <OfflineSyncManager />
-          <OfflinePatientSelector onCacheComplete={() => {}} />
+          <OfflinePatientSelector onCacheComplete={() => {
+            toast.success('Patient data cached for offline use');
+          }} />
         </div>
 
         <div className="space-y-4 sm:space-y-6">
