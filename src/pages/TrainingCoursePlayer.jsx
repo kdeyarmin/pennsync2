@@ -352,6 +352,47 @@ export default function TrainingCoursePlayer() {
               </div>
             )}
 
+            {/* Real-world relevance */}
+            {course.real_world_relevance && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Why This Matters Right Now</p>
+                <p className="text-sm text-amber-900">{course.real_world_relevance}</p>
+              </div>
+            )}
+
+            {/* Regulatory crosswalk */}
+            {(course.regulatory_crosswalk_json || []).length > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="font-semibold text-slate-800 mb-2 text-sm">Regulatory Requirements Addressed</p>
+                <div className="space-y-2">
+                  {course.regulatory_crosswalk_json.map((reg, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <Badge variant="outline" className="text-xs flex-shrink-0 mt-0.5">{reg.regulation}</Badge>
+                      <span className="text-slate-600">{reg.title}{reg.how_this_course_addresses_it ? ` — ${reg.how_this_course_addresses_it}` : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Competency skills */}
+            {(course.competency_skills_json || []).length > 0 && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="font-semibold text-emerald-800 mb-2 text-sm">Skills You Will Demonstrate</p>
+                <div className="space-y-2">
+                  {course.competency_skills_json.map((skill, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-emerald-900 font-medium">{skill.skill}</span>
+                        {skill.criteria && <span className="text-emerald-700"> — {skill.criteria}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Button size="lg" className="w-full sm:w-auto" onClick={() => setStep("content")}>
               Start Course <ChevronRight className="w-4 h-4 ml-1" />
             </Button>

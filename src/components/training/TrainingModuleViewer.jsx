@@ -157,6 +157,14 @@ function Section({ section, index, onViewed, defaultOpen = true }) {
               </div>
             </div>
           )}
+
+          {/* Regulation reference */}
+          {section.regulation_ref && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-600">
+              <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" />
+              <span><strong>Regulatory Reference:</strong> {section.regulation_ref}</span>
+            </div>
+          )}
         </div>
       )}
     </div>

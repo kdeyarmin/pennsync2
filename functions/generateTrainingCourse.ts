@@ -139,7 +139,9 @@ PARAMETERS:
 - Question types: ${questionTypeLabel}
 - Custom instructions: ${custom_instructions || 'none'}
 
-Generate the complete course as strict JSON with this EXACT structure:
+Generate the complete course as strict JSON with this EXACT structure.
+This follows a Relias-style learning model: pre-assessment to identify gaps, focused micro-segments, inline knowledge checks, regulatory crosswalks, post-assessment, and spaced retention questions.
+
 {
   "course": {
     "title": "${outline.title || topic}",
@@ -151,12 +153,37 @@ Generate the complete course as strict JSON with this EXACT structure:
     "attestation_text": "I confirm that I have carefully reviewed all course materials, understand the content presented, and commit to applying these practices in my daily work.",
     "warnings": ["This course was generated with AI assistance and should be reviewed by a subject matter expert before publishing."],
     "prerequisite_knowledge": ${JSON.stringify(outline.prerequisite_knowledge || [])},
-    "real_world_relevance": "${outline.real_world_relevance || ''}"
+    "real_world_relevance": "${outline.real_world_relevance || ''}",
+    "regulatory_crosswalk": [
+      {
+        "regulation": "The specific regulation code (e.g., 42 CFR 484.60, OSHA 1910.1030, HIPAA 164.502)",
+        "title": "Plain-language name of the regulation",
+        "how_this_course_addresses_it": "Brief explanation of how this course satisfies or relates to this requirement"
+      }
+    ],
+    "competency_skills": [
+      {
+        "skill": "Observable, measurable skill that a supervisor could validate after course completion",
+        "validation_method": "return_demonstration|verbal_attestation|documentation_review|direct_observation",
+        "criteria": "Specific criteria for demonstrating competency in this skill"
+      }
+    ]
   },
+  "pre_assessment": [
+    {
+      "type": "mcq|true_false",
+      "prompt": "A screening question testing baseline knowledge of this topic. If the learner can answer all pre-assessment questions correctly, they may already have competency.",
+      "options": [{"value":"A","label":"Option text"}],
+      "correct_answer": {},
+      "mapped_objective_index": 0,
+      "difficulty": "medium"
+    }
+  ],
   "modules": [
     {
       "title": "Module title from outline",
       "type": "lesson",
+      "estimated_minutes": 10,
       "content": {
         "intro": "A compelling opening hook — start with a brief real-world scenario, a startling statistic, or a question that makes the reader think. Connect to their daily work immediately.",
         "sections": [
@@ -164,7 +191,7 @@ Generate the complete course as strict JSON with this EXACT structure:
             "heading": "Clear, descriptive heading",
             "body": "Core teaching content — concise paragraphs explaining the concept. Every paragraph must answer: what should staff DO with this information?",
             "bullets": ["Action-oriented bullet points for key facts, steps, or requirements"],
-            "example": "A specific, realistic workplace example showing this concept in practice",
+            "example": "A specific, realistic workplace example showing this concept in practice. Use a named individual: 'Maria, a home health aide visiting a 82-year-old patient with diabetes...'",
             "pro_tip": "An insider tip from experienced practitioners — something you'd tell a colleague, not write in a policy manual",
             "warning": "A critical safety or compliance warning if applicable (omit if not relevant to this section)",
             "steps": ["Step-by-step procedure if this section involves a process (omit if not applicable)"],
@@ -172,7 +199,8 @@ Generate the complete course as strict JSON with this EXACT structure:
               "do": ["Correct practices"],
               "dont": ["Common mistakes to avoid"]
             },
-            "mnemonic": "A memory aid if helpful for this concept (omit if forced)"
+            "mnemonic": "A memory aid if helpful for this concept (omit if forced)",
+            "regulation_ref": "If this section relates to a specific regulation, cite it here (e.g., 'CMS CoP §484.60(a)') — omit if not applicable"
           }
         ],
         "case_scenarios": [
@@ -207,10 +235,51 @@ Generate the complete course as strict JSON with this EXACT structure:
       "clinical_context": "Brief context connecting this question to real practice (shown after answering)"
     }
   ],
+  "brain_sparks": [
+    {
+      "prompt": "A concise multiple-choice retention question sent AFTER course completion to reinforce key knowledge. Focus on the most critical, safety-relevant, or commonly forgotten concept from the course.",
+      "options": [{"value":"A","label":"Option text"}],
+      "correct_answer": "A",
+      "rationale": "Brief explanation of why this is correct and why remembering it matters",
+      "day_offset": 2,
+      "linked_module_index": 0
+    }
+  ],
   "references": [
     {"title":"Source title","url":"","note":"How this source relates to the training content"}
   ]
 }
+
+RELIAS-STYLE COURSE DESIGN PRINCIPLES:
+
+A. PRE-ASSESSMENT (test-out capability):
+   - Generate ${Math.max(3, Math.round(question_count * 0.4))} pre-assessment questions covering the core learning objectives
+   - Use only MCQ and true/false for pre-assessment (quick to complete)
+   - Each question maps to a learning objective so the system can identify which modules to skip
+   - If a learner scores 100% on pre-assessment, they can test out of the content and proceed directly to the post-test
+
+B. MICROLEARNING SEGMENTS:
+   - Each section should be a self-contained micro-segment completable in 3-5 minutes
+   - Include a clear "estimated_minutes" per module
+   - Break complex topics into bite-sized chunks — each section covers ONE concept
+   - Staff should be able to pause after any section and resume later without losing context
+
+C. REGULATORY CROSSWALK:
+   - Map the course to specific CMS Conditions of Participation, OSHA standards, HIPAA requirements, or state regulations as applicable
+   - Include the regulation code AND a plain-language explanation
+   - The "regulation_ref" field in sections links specific content to specific regulations
+
+D. COMPETENCY SKILLS:
+   - Define 2-4 observable, measurable skills that a supervisor can validate after course completion
+   - Each skill needs a validation method (direct observation, documentation review, verbal attestation, or return demonstration)
+   - Skills should be specific enough that a supervisor knows exactly what to look for
+
+E. BRAIN SPARKS (spaced retention):
+   - Generate 6 retention questions to be delivered post-course at spaced intervals
+   - Schedule: days 2, 4, 6 (first batch) and days 30, 32, 34 (second batch) — use day_offset field
+   - Each BrainSpark focuses on the single most important concept from its linked module
+   - Questions should be quick (MCQ only) and focused on safety-critical or commonly forgotten material
+   - Include a brief rationale that reinforces the key concept
 
 CONTENT CREATION RULES:
 
@@ -290,6 +359,10 @@ CONTENT CREATION RULES:
       include_case_scenarios,
       include_key_takeaways,
       references_json: generated.references || [],
+      pre_assessment_json: generated.pre_assessment || [],
+      brain_sparks_json: generated.brain_sparks || [],
+      competency_skills_json: generated.course?.competency_skills || [],
+      regulatory_crosswalk_json: generated.course?.regulatory_crosswalk || [],
       ai_prompt_json: {
         topic,
         training_category,

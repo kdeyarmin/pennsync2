@@ -324,7 +324,7 @@ export default function AIComplianceInServicesHub() {
                 <Button variant="outline" onClick={savePromptAsTemplate} disabled={generating} className="min-h-[48px] sm:min-w-[180px]">Save as Template</Button>
               </div>
               {generateSuccess && (
-                <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-4 space-y-2">
+                <div className="rounded-xl border-2 border-emerald-300 bg-emerald-50 p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     <p className="font-semibold text-emerald-900">Course Generated Successfully</p>
@@ -332,7 +332,25 @@ export default function AIComplianceInServicesHub() {
                   <p className="text-sm text-emerald-700">
                     &ldquo;{generateSuccess.title || 'New course'}&rdquo; has been created as a draft. Review it in the Library tab, then publish when ready.
                   </p>
-                  <p className="text-xs text-emerald-600">Two-pass AI generation: outline planned first, then full content created from the approved structure.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="bg-white rounded-lg p-2 text-center border border-emerald-200">
+                      <p className="font-bold text-emerald-800">Pre-Assessment</p>
+                      <p className="text-emerald-600">Test-out enabled</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 text-center border border-emerald-200">
+                      <p className="font-bold text-emerald-800">BrainSparks</p>
+                      <p className="text-emerald-600">6 retention Qs</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 text-center border border-emerald-200">
+                      <p className="font-bold text-emerald-800">Competencies</p>
+                      <p className="text-emerald-600">Skills mapped</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 text-center border border-emerald-200">
+                      <p className="font-bold text-emerald-800">Regulatory</p>
+                      <p className="text-emerald-600">Crosswalk included</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-emerald-600">Relias-style two-pass AI generation with pre-assessment, spaced retention, competency mapping, and regulatory crosswalk.</p>
                 </div>
               )}
             </CardContent>
