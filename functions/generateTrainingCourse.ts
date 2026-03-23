@@ -44,6 +44,9 @@ Deno.serve(async (req) => {
       annual_cycle_year = null,
       skill_level = 'intermediate',
       num_modules = 0,
+      generate_videos = false,
+      video_avatar_id = '',
+      video_voice_id = '',
     } = await req.json();
 
     if (!topic) {
@@ -442,7 +445,41 @@ CONTENT CREATION RULES:
       severity: 'info'
     });
 
-    return Response.json({ success: true, course_id: course.id, title: course.title, status: course.status });
+    // ──────────────────────────────────────────────────────
+    // PHASE 3 (optional): Generate presenter videos via HeyGen
+    // ──────────────────────────────────────────────────────
+    let video_generation_status = 'skipped';
+    if (generate_videos) {
+      try {
+        const HEYGEN_API_KEY = Deno.env.get('HEYGEN_API_KEY') || '';
+        if (!HEYGEN_API_KEY) {
+          video_generation_status = 'skipped_no_api_key';
+        } else {
+          // Kick off video generation for the course (async — will poll internally)
+          const videoFnUrl = new URL(req.url);
+          videoFnUrl.pathname = videoFnUrl.pathname.replace('generateTrainingCourse', 'generateTrainingVideo');
+
+          const videoReq = new Request(videoFnUrl.toString(), {
+            method: 'POST',
+            headers: req.headers,
+            body: JSON.stringify({
+              course_id: course.id,
+              avatar_id: video_avatar_id || undefined,
+              voice_id: video_voice_id || undefined,
+            }),
+          });
+
+          // Fire and forget — video generation can take minutes per module
+          // The generateTrainingVideo function will update modules as videos complete
+          fetch(videoReq).catch(() => {});
+          video_generation_status = 'generating';
+        }
+      } catch {
+        video_generation_status = 'error';
+      }
+    }
+
+    return Response.json({ success: true, course_id: course.id, title: course.title, status: course.status, video_generation_status });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
