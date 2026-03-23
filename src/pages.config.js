@@ -156,7 +156,7 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
-import ClinicalSkillsChecklist from './pages/ClinicalSkillsChecklist';
+
 import __Layout from './Layout.jsx';
 
 
@@ -270,7 +270,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
-    "ClinicalSkillsChecklist": ClinicalSkillsChecklist,
+
 }
 
 export const pagesConfig = {
