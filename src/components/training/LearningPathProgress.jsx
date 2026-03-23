@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Calendar, CheckCircle2, Clock, AlertCircle, Award, BookOpen } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, AlertCircle, Award, BookOpen, Loader2 } from 'lucide-react';
 
 export default function LearningPathProgress({ planId, userId }) {
     const { data: plan } = useQuery({
@@ -44,7 +45,11 @@ export default function LearningPathProgress({ planId, userId }) {
         initialData: []
     });
 
-    if (!plan) return null;
+    if (!plan) return (
+        <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+        </div>
+    );
 
     const totalCourses = planCourses.length;
     const completedAssignments = assignments.filter(a => a.status === 'completed');
@@ -218,7 +223,7 @@ export default function LearningPathProgress({ planId, userId }) {
                                                     </div>
                                                 )}
                                             </div>
-                                            <Link to={`/TrainingCoursePlayer?assignment=${assignment.id}`}>
+                                            <Link to={`${createPageUrl('TrainingCoursePlayer')}?assignment=${assignment.id}`}>
                                                 <Button size="sm" variant={assignment.status === 'completed' ? 'outline' : 'default'}>
                                                     {assignment.status === 'completed' ? 'Review' : assignment.status === 'in_progress' ? 'Continue' : 'Start'}
                                                 </Button>
