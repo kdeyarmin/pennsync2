@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import {
   Search, Shield, Heart, AlertTriangle, FileText, Users,
   Stethoscope, ShieldCheck, Flame, Bug, Scale, Lock,
-  Baby, Siren, Pill, HandHeart, Building, ChevronDown, ChevronUp
+  Baby, Siren, Pill, HandHeart, Building, ChevronDown, ChevronUp,
+  BarChart3
 } from "lucide-react";
 
 // ───────────────────────────────────────────────────────────
@@ -35,10 +36,10 @@ const REGULATORY_CATEGORIES = [
         required_for: "All clinical and non-clinical staff",
       },
       {
-        name: "Bloodborne Pathogen Exposure Control",
-        topic: "OSHA Bloodborne Pathogens Standard compliance including exposure control plan, hepatitis B vaccination, post-exposure procedures, sharps safety, and proper disposal of regulated waste in home settings",
-        regulation: "29 CFR §1910.1030",
-        regulation_detail: "OSHA Bloodborne Pathogen Standard",
+        name: "Infection Control: Tuberculosis, HIV and Hepatitis",
+        topic: "Tuberculosis (TB), HIV/AIDS, and Hepatitis B/C transmission routes, signs and symptoms, screening and testing requirements for healthcare workers, post-exposure prophylaxis procedures, patient care precautions for TB-positive patients, bloodborne pathogen exposure protocols, confidentiality requirements for communicable disease status, and documentation of exposures and follow-up",
+        regulation: "29 CFR §1910.1030 / CDC Guidelines",
+        regulation_detail: "OSHA Bloodborne Pathogen Standard & CDC Communicable Disease Guidelines",
         training_category: "safety",
         business_line: "all",
         audience_roles: ["clinical staff"],
@@ -336,6 +337,237 @@ const REGULATORY_CATEGORIES = [
         frequency: "Annual",
         typical_duration: 30,
         required_for: "All clinical staff",
+      },
+    ]
+  },
+  {
+    id: "qapi",
+    name: "Quality Assessment & Performance Improvement",
+    icon: BarChart3,
+    color: "bg-sky-100 text-sky-800 border-sky-200",
+    iconColor: "text-sky-600",
+    templates: [
+      {
+        name: "QAPI Program Participation & Quality Improvement",
+        topic: "Quality Assessment and Performance Improvement program fundamentals, data-driven quality improvement methods, root cause analysis, performance indicator tracking, incident reporting and follow-up, staff role in QAPI, patient outcome monitoring, and agency-specific QAPI initiatives for home health and hospice",
+        regulation: "42 CFR §484.65 / §418.58",
+        regulation_detail: "CMS CoP — Quality Assessment and Performance Improvement (QAPI)",
+        training_category: "compliance",
+        business_line: "all",
+        audience_roles: ["all staff"],
+        frequency: "Annual",
+        typical_duration: 20,
+        required_for: "All staff involved in care delivery",
+      },
+    ]
+  },
+  {
+    id: "tb_awareness",
+    name: "Tuberculosis Screening & Awareness",
+    icon: Stethoscope,
+    color: "bg-gray-100 text-gray-800 border-gray-200",
+    iconColor: "text-gray-600",
+    templates: [
+      {
+        name: "Tuberculosis (TB) Screening & Infection Control",
+        topic: "Tuberculosis transmission, signs and symptoms, TB screening and testing procedures, latent TB vs active TB, respiratory precautions, N95 respirator fit testing, reporting requirements for suspected TB cases, and TB risk assessment in home health and hospice patient populations",
+        regulation: "OSHA General Duty Clause §5(a)(1) / CDC Guidelines",
+        regulation_detail: "OSHA General Duty Clause & CDC TB Screening Guidelines for Healthcare Workers",
+        training_category: "safety",
+        business_line: "all",
+        audience_roles: ["clinical staff"],
+        frequency: "Annual",
+        typical_duration: 15,
+        required_for: "All clinical and direct care staff",
+      },
+    ]
+  },
+  {
+    id: "pa_child_abuse",
+    name: "PA Child Abuse Recognition (Act 31)",
+    icon: Baby,
+    color: "bg-rose-100 text-rose-800 border-rose-200",
+    iconColor: "text-rose-600",
+    templates: [
+      {
+        name: "PA Act 31 — Child Abuse Recognition & Reporting",
+        topic: "Pennsylvania Act 31 mandated reporter training, recognizing signs of child abuse and neglect (physical abuse, sexual abuse, emotional abuse, neglect), mandatory reporting obligations under the Child Protective Services Law, ChildLine reporting procedures (1-800-932-0313), documentation requirements, immunity protections for reporters, and penalties for failure to report",
+        regulation: "PA Act 31 of 2014 / 23 P.S. §6311",
+        regulation_detail: "Pennsylvania Child Protective Services Law — Mandated Reporter Training",
+        training_category: "compliance",
+        business_line: "all",
+        audience_roles: ["RN", "LPN", "PT", "OT", "SLP", "MSW", "licensed staff"],
+        frequency: "Biennial (2 hours at license renewal)",
+        typical_duration: 120,
+        required_for: "All PA licensed healthcare professionals",
+      },
+    ]
+  },
+  {
+    id: "workplace_violence",
+    name: "Workplace Violence Prevention",
+    icon: Users,
+    color: "bg-amber-100 text-amber-800 border-amber-200",
+    iconColor: "text-amber-600",
+    templates: [
+      {
+        name: "Workplace Violence Prevention & Personal Safety",
+        topic: "Workplace violence risk factors in home health and hospice settings, personal safety during home visits, de-escalation techniques, recognizing warning signs, safe exit strategies, lone worker safety protocols, incident reporting and post-incident support, domestic violence awareness during patient visits, and agency workplace violence prevention plan",
+        regulation: "OSHA General Duty Clause §5(a)(1) / TJC Standards",
+        regulation_detail: "OSHA Workplace Violence Prevention & Joint Commission HR Standards",
+        training_category: "safety",
+        business_line: "all",
+        audience_roles: ["all staff"],
+        frequency: "Annual",
+        typical_duration: 25,
+        required_for: "All staff, especially field clinicians",
+      },
+    ]
+  },
+  {
+    id: "ethics",
+    name: "Ethics & Ethical Decision-Making",
+    icon: Scale,
+    color: "bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200",
+    iconColor: "text-fuchsia-600",
+    templates: [
+      {
+        name: "Ethics in Healthcare — Ethical Decision-Making",
+        topic: "Healthcare ethical principles (autonomy, beneficence, non-maleficence, justice), ethical dilemmas in home health and hospice care, end-of-life ethical decisions, informed consent challenges, boundary issues in the home setting, social media and professional boundaries, conflicts of interest, ethical reporting channels, and the agency ethics committee process",
+        regulation: "ACHC HSP Standards / TJC RI Standards",
+        regulation_detail: "ACHC & Joint Commission — Ethical Conduct & Decision-Making",
+        training_category: "compliance",
+        business_line: "all",
+        audience_roles: ["all staff"],
+        frequency: "Annual",
+        typical_duration: 20,
+        required_for: "All staff",
+      },
+    ]
+  },
+  {
+    id: "body_mechanics",
+    name: "Body Mechanics & Safe Patient Handling",
+    icon: Users,
+    color: "bg-lime-100 text-lime-800 border-lime-200",
+    iconColor: "text-lime-600",
+    templates: [
+      {
+        name: "Body Mechanics in Home Care and Hospice",
+        topic: "Proper body mechanics for patient transfers, repositioning, and lifting in the home setting, ergonomic principles for clinicians working without hospital equipment, safe patient handling techniques for home health and hospice staff, injury prevention strategies, use of gait belts and assistive devices, back injury prevention, and when to request additional help or equipment",
+        regulation: "OSHA General Duty Clause §5(a)(1) / Ergonomics Guidelines",
+        regulation_detail: "OSHA Ergonomic Guidelines for Healthcare & General Duty Clause",
+        training_category: "safety",
+        business_line: "all",
+        audience_roles: ["clinical staff", "home health aide", "hospice aide"],
+        frequency: "Annual",
+        typical_duration: 20,
+        required_for: "All staff performing patient care activities",
+      },
+    ]
+  },
+  {
+    id: "professional_boundaries",
+    name: "Professional Boundaries",
+    icon: Shield,
+    color: "bg-zinc-100 text-zinc-800 border-zinc-200",
+    iconColor: "text-zinc-600",
+    templates: [
+      {
+        name: "Professional Boundaries in Home Care and Hospice",
+        topic: "Maintaining professional boundaries in the home setting, recognizing boundary crossings vs. boundary violations, appropriate vs. inappropriate relationships with patients and families, gift policies, social media boundaries with patients, dual relationships in small communities, self-disclosure guidelines, managing personal feelings in end-of-life care, and reporting boundary concerns",
+        regulation: "State Licensing Board Standards / Accreditation Standards",
+        regulation_detail: "Professional Licensing Board Standards & Accreditation Requirements",
+        training_category: "compliance",
+        business_line: "all",
+        audience_roles: ["all staff"],
+        frequency: "Annual",
+        typical_duration: 20,
+        required_for: "All patient-facing staff",
+      },
+    ]
+  },
+  {
+    id: "driving_safety",
+    name: "Driving Safety",
+    icon: Siren,
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    iconColor: "text-blue-600",
+    templates: [
+      {
+        name: "Driving Safety in Home Care and Hospice",
+        topic: "Safe driving practices for home health and hospice field staff, distracted driving prevention, cell phone and navigation policies, adverse weather driving, vehicle maintenance and inspection, documentation of mileage and incidents, road rage and aggressive driver response, fatigue management for staff driving between visits, and reporting motor vehicle accidents",
+        regulation: "OSHA General Duty Clause / Agency Fleet Safety Policy",
+        regulation_detail: "OSHA General Duty Clause & Agency Vehicle Safety Program",
+        training_category: "safety",
+        business_line: "all",
+        audience_roles: ["clinical staff", "all field staff"],
+        frequency: "Annual",
+        typical_duration: 15,
+        required_for: "All staff who drive for work",
+      },
+    ]
+  },
+  {
+    id: "safety_home_setting",
+    name: "General Safety in Home Settings",
+    icon: AlertTriangle,
+    color: "bg-amber-100 text-amber-800 border-amber-200",
+    iconColor: "text-amber-600",
+    templates: [
+      {
+        name: "Safety in Home Care, Hospice and Home Health",
+        topic: "Comprehensive safety awareness for staff working in patient homes, home safety assessment procedures, fall prevention in the home, environmental hazards (clutter, pets, pests, unsanitary conditions), personal safety strategies for home visitors, safe medication storage assessment, electrical and oxygen safety in the home, and documentation of safety concerns and interventions",
+        regulation: "42 CFR §484.60 / §418.52 / OSHA General Duty Clause",
+        regulation_detail: "CMS CoP Care Planning & OSHA General Duty Clause",
+        training_category: "safety",
+        business_line: "all",
+        audience_roles: ["all field staff"],
+        frequency: "Annual",
+        typical_duration: 25,
+        required_for: "All staff performing home visits",
+      },
+    ]
+  },
+  {
+    id: "universal_precautions",
+    name: "Universal/Standard Precautions",
+    icon: ShieldCheck,
+    color: "bg-red-100 text-red-800 border-red-200",
+    iconColor: "text-red-600",
+    templates: [
+      {
+        name: "Universal Precautions & Standard Precautions",
+        topic: "Universal and standard precautions for all patient encounters, proper hand hygiene techniques (handwashing and hand sanitizer), appropriate PPE selection and donning/doffing procedures, sharps safety and disposal in the home, handling and transport of specimens, cleaning and disinfection of reusable equipment between patients, respiratory hygiene and cough etiquette, and safe injection practices",
+        regulation: "29 CFR §1910.1030 / CDC Standard Precautions",
+        regulation_detail: "OSHA Bloodborne Pathogen Standard & CDC Standard Precautions Guidelines",
+        training_category: "safety",
+        business_line: "all",
+        audience_roles: ["all clinical staff"],
+        frequency: "Annual (often in-person competency)",
+        typical_duration: 30,
+        required_for: "All clinical and direct care staff",
+      },
+    ]
+  },
+  {
+    id: "sexual_harassment",
+    name: "Sexual Harassment Prevention",
+    icon: ShieldCheck,
+    color: "bg-stone-100 text-stone-800 border-stone-200",
+    iconColor: "text-stone-600",
+    templates: [
+      {
+        name: "Sexual Harassment Prevention & Reporting",
+        topic: "Definition and examples of sexual harassment (quid pro quo and hostile work environment), recognizing harassment in the workplace and during home visits, agency anti-harassment policy, reporting procedures and investigation process, retaliation protections, bystander intervention techniques, and supervisor responsibilities in preventing and responding to harassment complaints",
+        regulation: "Title VII / PA Human Relations Act",
+        regulation_detail: "Title VII of the Civil Rights Act & Pennsylvania Human Relations Act",
+        training_category: "compliance",
+        business_line: "all",
+        audience_roles: ["all staff"],
+        frequency: "Annual",
+        typical_duration: 30,
+        required_for: "All staff",
       },
     ]
   },
