@@ -9,6 +9,9 @@ Deno.serve(async (req) => {
     const items = await base44.asServiceRole.entities.PersonnelCredential.list('-expiration_date', 1000);
     const users = await base44.asServiceRole.entities.User.list('-created_date', 400);
     let notificationsSent = 0;
+    const notificationsToCreate = [];
+    const updates = [];
+    const emailPromises = [];
 
     for (const item of items) {
       if (!item.expiration_date || !item.user_id) continue;
@@ -17,7 +20,7 @@ Deno.serve(async (req) => {
       const sentOffsets = Array.isArray(item.reminder_offsets_sent) ? item.reminder_offsets_sent : [];
 
       if (daysUntilExpiration < 0 && item.status !== 'expired') {
-        await base44.asServiceRole.entities.PersonnelCredential.update(item.id, { status: 'expired' });
+        updates.push(base44.asServiceRole.entities.PersonnelCredential.update(item.id, { status: 'expired' }));
       }
 
       if (!reminderOffsets.includes(daysUntilExpiration) || sentOffsets.includes(daysUntilExpiration)) continue;
@@ -25,7 +28,7 @@ Deno.serve(async (req) => {
       const employee = users.find((user) => user.email === item.user_id);
       const agencyAdmins = users.filter((user) => user.account_type === 'agency_admin' && (!employee?.agency_name || user.agency_name === employee.agency_name));
 
-      await base44.asServiceRole.entities.Notification.create({
+      notificationsToCreate.push({
         user_email: item.user_id,
         title: `${item.title} expires in ${daysUntilExpiration} days`,
         message: `Your ${item.item_type} "${item.title}" expires on ${new Date(item.expiration_date).toLocaleDateString()}. Please upload a renewed copy to your personnel file.`,
@@ -36,15 +39,17 @@ Deno.serve(async (req) => {
         metadata: { personnel_credential_id: item.id, days_until_expiration: daysUntilExpiration }
       });
 
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: item.user_id,
-        subject: `${item.title} expires in ${daysUntilExpiration} days`,
-        body: `Your ${item.item_type} "${item.title}" expires on ${new Date(item.expiration_date).toLocaleDateString()}. Please upload a renewed copy to your personnel file for approval.`,
-        from_name: 'Penn Sync HR'
-      });
+      emailPromises.push(() => 
+        base44.asServiceRole.integrations.Core.SendEmail({
+          to: item.user_id,
+          subject: `${item.title} expires in ${daysUntilExpiration} days`,
+          body: `Your ${item.item_type} "${item.title}" expires on ${new Date(item.expiration_date).toLocaleDateString()}. Please upload a renewed copy to your personnel file for approval.`,
+          from_name: 'Penn Sync HR'
+        }).catch(err => console.error("Email failed:", err.message))
+      );
 
       for (const manager of agencyAdmins) {
-        await base44.asServiceRole.entities.Notification.create({
+        notificationsToCreate.push({
           user_email: manager.email,
           title: `Employee personnel file item expires in ${daysUntilExpiration} days`,
           message: `${item.user_name || item.user_id} has a ${item.item_type} item (${item.title}) expiring on ${new Date(item.expiration_date).toLocaleDateString()}.`,
@@ -55,19 +60,36 @@ Deno.serve(async (req) => {
           metadata: { personnel_credential_id: item.id, employee_email: item.user_id, days_until_expiration: daysUntilExpiration }
         });
 
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: manager.email,
-          subject: `Personnel file expiration reminder: ${item.user_name || item.user_id}`,
-          body: `${item.user_name || item.user_id} has a ${item.item_type} item (${item.title}) expiring on ${new Date(item.expiration_date).toLocaleDateString()}.`,
-          from_name: 'Penn Sync HR'
-        });
+        emailPromises.push(() => 
+          base44.asServiceRole.integrations.Core.SendEmail({
+            to: manager.email,
+            subject: `Personnel file expiration reminder: ${item.user_name || item.user_id}`,
+            body: `${item.user_name || item.user_id} has a ${item.item_type} item (${item.title}) expiring on ${new Date(item.expiration_date).toLocaleDateString()}.`,
+            from_name: 'Penn Sync HR'
+          }).catch(err => console.error("Manager email failed:", err.message))
+        );
       }
 
-      await base44.asServiceRole.entities.PersonnelCredential.update(item.id, {
-        reminder_offsets_sent: [...sentOffsets, daysUntilExpiration],
-        last_reminder_sent_at: new Date().toISOString()
-      });
+      updates.push(
+        base44.asServiceRole.entities.PersonnelCredential.update(item.id, {
+          reminder_offsets_sent: [...sentOffsets, daysUntilExpiration],
+          last_reminder_sent_at: new Date().toISOString()
+        })
+      );
       notificationsSent++;
+    }
+
+    if (notificationsToCreate.length > 0) {
+      await base44.asServiceRole.entities.Notification.bulkCreate(notificationsToCreate);
+    }
+    
+    // Process updates concurrently
+    await Promise.all(updates);
+
+    // Process emails in chunks to respect rate limits and save time
+    for (let i = 0; i < emailPromises.length; i += 10) {
+      const chunk = emailPromises.slice(i, i + 10);
+      await Promise.all(chunk.map(fn => fn()));
     }
 
     return Response.json({ success: true, notifications_sent: notificationsSent });
