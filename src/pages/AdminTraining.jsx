@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -24,55 +24,47 @@ const isManager = (user) =>
 export default function AdminTraining() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  // Redirect non-managers after user loads
-  if (!userLoading && currentUser && currentUser.role !== 'admin' && !isManager(currentUser)) {
-    navigate('/', { replace: true });
-    return null;
-  }
+  const hasAccess = !userLoading && currentUser && (currentUser.role === 'admin' || isManager(currentUser));
 
-  if (userLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
-
-  const { data: users = [] } = useQuery({ 
-    queryKey: ["skill-gap-users"], 
-    queryFn: () => base44.entities.User.list('-created_date', 500), 
-    initialData: [] 
+  const { data: users = [] } = useQuery({
+    queryKey: ["skill-gap-users"],
+    queryFn: () => base44.entities.User.list('-created_date', 500),
+    initialData: [],
+    enabled: hasAccess,
   });
 
-  const { data: assignments = [] } = useQuery({ 
-    queryKey: ["skill-gap-assignments"], 
-    queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 1000), 
-    initialData: [] 
+  const { data: assignments = [] } = useQuery({
+    queryKey: ["skill-gap-assignments"],
+    queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 1000),
+    initialData: [],
+    enabled: hasAccess,
   });
 
-  const { data: attempts = [] } = useQuery({ 
-    queryKey: ["skill-gap-attempts"], 
-    queryFn: () => base44.entities.TrainingAttempt.list('-submitted_at', 1000), 
-    initialData: [] 
+  const { data: attempts = [] } = useQuery({
+    queryKey: ["skill-gap-attempts"],
+    queryFn: () => base44.entities.TrainingAttempt.list('-submitted_at', 1000),
+    initialData: [],
+    enabled: hasAccess,
   });
 
-  const { data: courses = [] } = useQuery({ 
-    queryKey: ["skill-gap-courses"], 
-    queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 500), 
-    initialData: [] 
+  const { data: courses = [] } = useQuery({
+    queryKey: ["skill-gap-courses"],
+    queryFn: () => base44.entities.TrainingCourse.list('-updated_date', 500),
+    initialData: [],
+    enabled: hasAccess,
   });
 
   const { data: plans = [] } = useQuery({
     queryKey: ['learning-plans'],
     queryFn: () => base44.entities.LearningPlan.list('-created_date', 50),
     initialData: [],
+    enabled: hasAccess,
   });
 
   const { data: enrollments = [] } = useQuery({
@@ -179,6 +171,20 @@ export default function AdminTraining() {
 
     return { stats, areas, people, missedTopics, assignmentCount: teamAssignments.length };
   }, [teamMembers, assignments, attempts, courses]);
+
+  // Auth guards — placed after all hooks to satisfy Rules of Hooks
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    navigate('/', { replace: true });
+    return null;
+  }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">

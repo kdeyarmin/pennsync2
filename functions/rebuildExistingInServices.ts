@@ -92,12 +92,12 @@ Deno.serve(async (req) => {
 
     for (const course of targets) {
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         temperature: 0.4,
-        max_tokens: 7000,
+        max_tokens: 10000,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: 'You create practical healthcare in-service training as valid JSON only.' },
+          { role: 'system', content: 'You are a healthcare education specialist. You create practical, evidence-based in-service training content mapped to CMS, OSHA, and HIPAA regulations. Return valid JSON only.' },
           { role: 'user', content: buildPrompt(course) }
         ]
       });

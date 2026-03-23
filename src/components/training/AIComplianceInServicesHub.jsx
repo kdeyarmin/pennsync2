@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles, Loader2, AlertCircle, Video } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
@@ -43,6 +43,7 @@ export default function AIComplianceInServicesHub() {
     custom_instructions: "",
     skill_level: "intermediate",
     num_modules: 0,
+    generate_videos: false,
   });
   const [manualDraft, setManualDraft] = useState({ title: "", description: "", category: "compliance", business_line_scope: "all", passing_score: 80 });
   const [assignmentSettings, setAssignmentSettings] = useState({
@@ -303,6 +304,20 @@ export default function AIComplianceInServicesHub() {
                   ))}
                 </div>
               </div>
+              {/* AI Presenter Video Toggle */}
+              <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3 sm:p-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={generator.generate_videos} onCheckedChange={(checked) => setGenerator({ ...generator, generate_videos: !!checked })} className="w-5 h-5" />
+                  <Video className="w-4 h-4 text-purple-600" />
+                  <span className="font-medium text-sm">Generate AI presenter videos</span>
+                </label>
+                {generator.generate_videos && (
+                  <p className="text-xs text-purple-700 mt-2 ml-7">
+                    An AI avatar will narrate each module. Videos generate in the background (2-5 min per module).
+                  </p>
+                )}
+              </div>
+
               {generateError && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -350,6 +365,12 @@ export default function AIComplianceInServicesHub() {
                       <p className="text-emerald-600">Crosswalk included</p>
                     </div>
                   </div>
+                  {generateSuccess.video_generation_status === 'generating' && (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-xs">
+                      <Video className="w-4 h-4 animate-pulse" />
+                      <span className="font-medium">AI presenter videos are generating in the background. They will appear on each module when ready.</span>
+                    </div>
+                  )}
                   <p className="text-xs text-emerald-600">Relias-style two-pass AI generation with pre-assessment, spaced retention, competency mapping, and regulatory crosswalk.</p>
                 </div>
               )}

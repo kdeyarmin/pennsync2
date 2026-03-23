@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Search, Shield, Heart, AlertTriangle, FileText, Users,
-  Stethoscope, ShieldCheck, Flame, Bug, Scale, Lock,
+  Stethoscope, ShieldCheck, Bug, Scale, Lock,
   Baby, Siren, Pill, HandHeart, Building, ChevronDown, ChevronUp,
   BarChart3
 } from "lucide-react";

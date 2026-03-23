@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sparkles, BookOpen, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Sparkles, BookOpen, AlertTriangle, CheckCircle2, Loader2, Video } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -23,7 +23,8 @@ export default function AITrainingGenerator() {
     skill_level: 'intermediate',
     time_length_minutes: 30,
     policy_ids: [],
-    include_competency: true
+    include_competency: true,
+    generate_videos: false
   });
   const [generatedCourse, setGeneratedCourse] = useState(null);
 
@@ -237,6 +238,26 @@ export default function AITrainingGenerator() {
             </label>
           </div>
 
+          {/* AI Presenter Video */}
+          <div className="space-y-2 rounded-xl border border-purple-200 bg-purple-50/50 p-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="generate_videos"
+                checked={formData.generate_videos}
+                onCheckedChange={(checked) => setFormData({ ...formData, generate_videos: checked })}
+              />
+              <label htmlFor="generate_videos" className="text-sm cursor-pointer font-medium flex items-center gap-2">
+                <Video className="w-4 h-4 text-purple-600" />
+                Generate AI presenter videos for each module
+              </label>
+            </div>
+            {formData.generate_videos && (
+              <p className="text-xs text-purple-700 ml-6">
+                An AI avatar will narrate each module's key content. Videos are generated in the background after course creation and typically take 2-5 minutes per module.
+              </p>
+            )}
+          </div>
+
           {/* Generate Button */}
           <Button
             onClick={handleGenerate}
@@ -275,6 +296,12 @@ export default function AITrainingGenerator() {
               {generatedCourse.needs_sme_review && (
                 <Badge className="bg-orange-500 ml-2">SME Review Required</Badge>
               )}
+              {generatedCourse.video_generation_status === 'generating' && (
+                <Badge className="bg-purple-500 ml-2">
+                  <Video className="w-3 h-3 mr-1 inline" />
+                  Videos Generating...
+                </Badge>
+              )}
             </div>
 
             {generatedCourse.risk_flags && generatedCourse.risk_flags.length > 0 && (
@@ -311,7 +338,8 @@ export default function AITrainingGenerator() {
                     skill_level: 'intermediate',
                     time_length_minutes: 30,
                     policy_ids: [],
-                    include_competency: true
+                    include_competency: true,
+                    generate_videos: false
                   });
                 }}
               >

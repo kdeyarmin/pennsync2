@@ -44,6 +44,9 @@ Deno.serve(async (req) => {
       annual_cycle_year = null,
       skill_level = 'intermediate',
       num_modules = 0,
+      generate_videos = false,
+      video_avatar_id = '',
+      video_voice_id = '',
     } = await req.json();
 
     if (!topic) {
@@ -102,12 +105,12 @@ Design principles:
 - Make the "real_world_relevance" compelling — connect to actual incidents, regulatory changes, or common audit findings in ${business_line === 'all' ? 'home health and hospice' : business_line}`;
 
     const outlineCompletion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       temperature: 0.3,
-      max_tokens: 3000,
+      max_tokens: 4000,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You are a senior healthcare instructional designer. Return valid JSON only.' },
+        { role: 'system', content: 'You are a senior healthcare instructional designer with expertise in ADDIE methodology, Bloom\'s Taxonomy, and CMS regulatory compliance for home health and hospice. Return valid JSON only.' },
         { role: 'user', content: outlinePrompt }
       ]
     });
@@ -316,12 +319,12 @@ CONTENT CREATION RULES:
    - Every section must pass the "So what?" test — the learner should understand why this matters to THEM`;
 
     const contentCompletion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       temperature: 0.4,
       max_tokens: 16000,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. Return valid JSON only.' },
+        { role: 'system', content: 'You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. You have deep expertise in CMS Conditions of Participation, OSHA standards, and state healthcare regulations. Return valid JSON only.' },
         { role: 'user', content: contentPrompt }
       ]
     });
@@ -442,7 +445,41 @@ CONTENT CREATION RULES:
       severity: 'info'
     });
 
-    return Response.json({ success: true, course_id: course.id, title: course.title, status: course.status });
+    // ──────────────────────────────────────────────────────
+    // PHASE 3 (optional): Generate presenter videos via HeyGen
+    // ──────────────────────────────────────────────────────
+    let video_generation_status = 'skipped';
+    if (generate_videos) {
+      try {
+        const HEYGEN_API_KEY = Deno.env.get('HEYGEN_API_KEY') || '';
+        if (!HEYGEN_API_KEY) {
+          video_generation_status = 'skipped_no_api_key';
+        } else {
+          // Kick off video generation for the course (async — will poll internally)
+          const videoFnUrl = new URL(req.url);
+          videoFnUrl.pathname = videoFnUrl.pathname.replace('generateTrainingCourse', 'generateTrainingVideo');
+
+          const videoReq = new Request(videoFnUrl.toString(), {
+            method: 'POST',
+            headers: req.headers,
+            body: JSON.stringify({
+              course_id: course.id,
+              avatar_id: video_avatar_id || undefined,
+              voice_id: video_voice_id || undefined,
+            }),
+          });
+
+          // Fire and forget — video generation can take minutes per module
+          // The generateTrainingVideo function will update modules as videos complete
+          fetch(videoReq).catch(() => {});
+          video_generation_status = 'generating';
+        }
+      } catch {
+        video_generation_status = 'error';
+      }
+    }
+
+    return Response.json({ success: true, course_id: course.id, title: course.title, status: course.status, video_generation_status });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
