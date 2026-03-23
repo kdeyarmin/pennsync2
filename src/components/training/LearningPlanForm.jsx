@@ -145,8 +145,8 @@ export default function LearningPlanForm({ plan, onSuccess }) {
       </div>
 
       <div className="flex gap-2 pt-4">
-        <Button type="submit" disabled={createMutation.isLoading}>
-          {createMutation.isLoading ? 'Saving...' : plan ? 'Update Plan' : 'Create Plan'}
+        <Button type="submit" disabled={createMutation.isPending}>
+          {createMutation.isPending ? 'Saving...' : plan ? 'Update Plan' : 'Create Plan'}
         </Button>
       </div>
     </form>

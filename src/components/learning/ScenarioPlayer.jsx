@@ -145,7 +145,15 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
             Correct decisions: {decisions.filter(d => d.isCorrect).length} / {decisions.length}
           </p>
 
-          <Button onClick={() => window.location.reload()} className="w-full">
+          <Button onClick={() => {
+            setCurrentNodeId('node-start');
+            setDecisions([]);
+            setFeedback('');
+            setShowFeedback(false);
+            setScenarioComplete(false);
+            setScore(null);
+            setPassed(null);
+          }} className="w-full">
             <RotateCcw className="w-4 h-4 mr-2" />
             Try Again
           </Button>
@@ -168,7 +176,7 @@ export default function ScenarioPlayer({ scenario, attemptId, onComplete }) {
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm text-gray-600 mb-1">Progress</p>
-          <Progress value={(decisions.length / 5) * 100} className="h-2" />
+          <Progress value={scenario.totalNodes ? (decisions.length / scenario.totalNodes) * 100 : Math.min(decisions.length * 20, 100)} className="h-2" />
         </div>
         <Badge className="ml-4">{decisions.length} decisions</Badge>
       </div>

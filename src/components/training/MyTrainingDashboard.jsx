@@ -206,7 +206,7 @@ export default function MyTrainingDashboard({ filterByType }) {
                             {isInProgress && !isPassed && !isFailed && <Badge className="bg-blue-100 text-blue-700">In Progress</Badge>}
                           </div>
 
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-sm text-slate-600">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                             <div><span className="text-slate-400">Due:</span> <span className="font-medium">{formatDate(assignment.due_date)}</span></div>
                             <div><span className="text-slate-400">Time:</span> <span className="font-medium">{course.estimated_minutes || '—'} min</span></div>
                             <div><span className="text-slate-400">Score:</span> <span className="font-medium">{assignment.score_percentage != null ? `${assignment.score_percentage}%` : '—'}</span></div>

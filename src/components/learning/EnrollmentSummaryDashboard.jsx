@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { TrendingUp, Users, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import ReportFilters from './ReportFilters';
@@ -19,17 +19,22 @@ export default function EnrollmentSummaryDashboard() {
     status: 'all'
   });
 
-  const { data: assignments = [] } = useQuery({
-    queryKey: ['assignments-summary', filters],
-    queryFn: async () => {
-      let query = {};
-      if (filters.status && filters.status !== 'all') {
-        query.status = filters.status;
-      }
-      return await base44.entities.TrainingAssignment.list('-created_date', 1000);
-    },
+  const { data: allAssignments = [], isLoading: loadingAssignments } = useQuery({
+    queryKey: ['assignments-summary'],
+    queryFn: () => base44.entities.TrainingAssignment.list('-created_date', 1000),
     initialData: []
   });
+
+  // Apply filters client-side
+  const assignments = useMemo(() => {
+    return allAssignments.filter(a => {
+      if (filters.status && filters.status !== 'all' && a.status !== filters.status) return false;
+      if (filters.employee && !a.assigned_to_user_id?.toLowerCase().includes(filters.employee.toLowerCase())) return false;
+      if (filters.course && !a.course_title?.toLowerCase().includes(filters.course.toLowerCase())) return false;
+      if (filters.businessLine && filters.businessLine !== 'all' && a.assigned_to_business_line && a.assigned_to_business_line !== filters.businessLine) return false;
+      return true;
+    });
+  }, [allAssignments, filters]);
 
   const { data: attempts = [] } = useQuery({
     queryKey: ['attempts-summary', filters],
@@ -38,27 +43,20 @@ export default function EnrollmentSummaryDashboard() {
   });
 
   const stats = useMemo(() => {
-    const filtered = assignments.filter(a => {
-      if (filters.status && filters.status !== 'all' && a.status !== filters.status) return false;
-      if (filters.employee && !a.assigned_to_user_id?.includes(filters.employee)) return false;
-      if (filters.course && !a.course_title?.includes(filters.course)) return false;
-      return true;
-    });
-
-    const completed = filtered.filter(a => a.status === 'completed').length;
-    const overdue = filtered.filter(a => a.status === 'overdue').length;
+    const completed = assignments.filter(a => a.status === 'completed').length;
+    const overdue = assignments.filter(a => a.status === 'overdue').length;
     const avgScore = attempts.length > 0
       ? Math.round(attempts.reduce((sum, a) => sum + (a.score || 0), 0) / attempts.length)
       : 0;
 
     return {
-      totalEnrolled: filtered.length,
+      totalEnrolled: assignments.length,
       completed,
-      completionRate: filtered.length > 0 ? Math.round((completed / filtered.length) * 100) : 0,
+      completionRate: assignments.length > 0 ? Math.round((completed / assignments.length) * 100) : 0,
       overdue,
       avgScore
     };
-  }, [assignments, attempts, filters]);
+  }, [assignments, attempts]);
 
   const courseCompletionData = useMemo(() => {
     const grouped = {};
@@ -91,6 +89,11 @@ export default function EnrollmentSummaryDashboard() {
 
   return (
     <div className="space-y-6">
+      {loadingAssignments && (
+        <div className="flex justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        </div>
+      )}
       <ReportFilters
         onFilterChange={setFilters}
         businessLineOptions={[
