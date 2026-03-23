@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus
+  Plus, FileText
 } from "lucide-react";
 import DocumentManagementDashboard from "@/components/documents/DocumentManagementDashboard";
 import DocumentPackageCreator from "@/components/documents/DocumentPackageCreator";
@@ -43,13 +43,17 @@ export default function DocumentHub() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Document Hub</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
-            Manage signatures, templates, and patient documents
-          </p>
-        </div>
+      <div className="page-header-gradient bg-gradient-to-r from-slate-700 via-blue-700 to-indigo-800 mb-1">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+              <FileText className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Document Hub</h1>
+              <p className="text-blue-200 mt-1">Manage signatures, templates, and patient documents</p>
+            </div>
+          </div>
         <div className="flex flex-wrap gap-2">
           {activeTab === "signatures" && (
             <>
