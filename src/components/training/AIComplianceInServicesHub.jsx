@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles } from "lucide-react";
+import { Archive, BarChart3, CheckCircle2, Copy, PlusCircle, Send, Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { generateTrainingCourse } from "@/functions/generateTrainingCourse";
 import { assignInService } from "@/functions/assignInService";
@@ -34,7 +34,7 @@ export default function AIComplianceInServicesHub() {
     reading_level: "plain professional",
     lesson_length: 30,
     question_count: 10,
-    question_types: ["mcq", "true_false"],
+    question_types: ["mcq", "true_false", "scenario_based"],
     include_case_scenarios: true,
     include_key_takeaways: true,
     include_policy_section: true,
@@ -55,6 +55,8 @@ export default function AIComplianceInServicesHub() {
     remediationMessage: 'Please review the lesson content and complete a new retake.'
   });
   const [pendingAssignmentPayload, setPendingAssignmentPayload] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState("");
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const { data: users = [] } = useQuery({ queryKey: ["learning-users"], queryFn: () => base44.entities.User.list('-created_date', 500), initialData: [] });
@@ -106,8 +108,16 @@ export default function AIComplianceInServicesHub() {
   };
 
   const runAIGeneration = async () => {
-    await generateTrainingCourse(generator);
-    queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+    setGenerating(true);
+    setGenerateError("");
+    try {
+      await generateTrainingCourse(generator);
+      queryClient.invalidateQueries({ queryKey: ["in-service-courses"] });
+    } catch (err) {
+      setGenerateError(err?.message || "AI generation failed. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const savePromptAsTemplate = async () => {
@@ -231,14 +241,41 @@ export default function AIComplianceInServicesHub() {
                 <Textarea placeholder="Any specific requirements or focus areas..." value={generator.custom_instructions} onChange={(e) => setGenerator({ ...generator, custom_instructions: e.target.value })} rows={3} />
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Question Types</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                  {[
+                    ['mcq', 'Multiple Choice'],
+                    ['true_false', 'True / False'],
+                    ['scenario_based', 'Scenario-Based'],
+                    ['multi_select', 'Select All That Apply'],
+                    ['short_answer', 'Short Answer'],
+                    ['matching', 'Matching'],
+                  ].map(([type, label]) => (
+                    <label key={type} className="flex items-center gap-2 rounded-xl border p-2.5 hover:bg-gray-50 cursor-pointer">
+                      <Checkbox
+                        checked={generator.question_types.includes(type)}
+                        onCheckedChange={(checked) => {
+                          const types = checked
+                            ? [...generator.question_types, type]
+                            : generator.question_types.filter(t => t !== type);
+                          setGenerator({ ...generator, question_types: types.length > 0 ? types : ['mcq'] });
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-xs font-medium">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Content Options</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                   {[
-                    ['include_case_scenarios', 'Case scenarios'],
-                    ['include_key_takeaways', 'Key takeaways'],
-                    ['include_policy_section', 'Policy section'],
-                    ['include_references', 'References'],
-                    ['include_acknowledgement', 'Acknowledgement'],
+                    ['include_case_scenarios', 'Case scenarios with discussion questions'],
+                    ['include_key_takeaways', 'Key takeaways & action items'],
+                    ['include_policy_section', 'Policy & regulatory references'],
+                    ['include_references', 'Source references & citations'],
+                    ['include_acknowledgement', 'Attestation & acknowledgement'],
                   ].map(([key, label]) => (
                     <label key={key} className="flex items-center gap-2 rounded-xl border p-3 hover:bg-gray-50 cursor-pointer min-h-[48px]">
                       <Checkbox checked={generator[key]} onCheckedChange={(checked) => setGenerator({ ...generator, [key]: !!checked })} className="w-5 h-5" />
@@ -247,12 +284,25 @@ export default function AIComplianceInServicesHub() {
                   ))}
                 </div>
               </div>
+              {generateError && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {generateError}
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
-                <Button className="flex-1 bg-purple-600 hover:bg-purple-700 min-h-[48px] text-base font-semibold" onClick={runAIGeneration}>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate AI In-Service
+                <Button
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 min-h-[48px] text-base font-semibold"
+                  onClick={runAIGeneration}
+                  disabled={generating || !generator.topic.trim()}
+                >
+                  {generating ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating Course...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4 mr-2" /> Generate AI In-Service</>
+                  )}
                 </Button>
-                <Button variant="outline" onClick={savePromptAsTemplate} className="min-h-[48px] sm:min-w-[180px]">Save as Template</Button>
+                <Button variant="outline" onClick={savePromptAsTemplate} disabled={generating} className="min-h-[48px] sm:min-w-[180px]">Save as Template</Button>
               </div>
             </CardContent>
           </Card>

@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       reading_level = 'plain professional',
       lesson_length = 30,
       question_count = 10,
-      question_types = ['mcq', 'true_false'],
+      question_types = ['mcq', 'true_false', 'scenario_based'],
       include_case_scenarios = true,
       include_key_takeaways = true,
       include_policy_section = true,
@@ -48,7 +48,22 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Topic is required' }, { status: 400 });
     }
 
-    const prompt = `You are building a healthcare compliance in-service for employees in hospice, home health, palliative care, and administrative/clinical departments.
+    const audienceLabel = audience_roles.length > 0 ? audience_roles.join(', ') : 'all employees';
+    const questionTypeLabel = question_types.join(', ');
+
+    const prompt = `You are an expert instructional designer and healthcare educator building a training course for employees in hospice, home health, palliative care, and administrative/clinical departments.
+
+INSTRUCTIONAL DESIGN REQUIREMENTS:
+Follow evidence-based instructional design principles:
+1. ADDIE model: Analyze the audience, Design around clear objectives, Develop practical content, plan for Implementation, and build in Evaluation through assessment.
+2. Bloom's Taxonomy: Create learning objectives AND assessment questions at multiple cognitive levels:
+   - Remember: Recall facts and basic concepts
+   - Understand: Explain ideas or concepts
+   - Apply: Use information in new situations
+   - Analyze: Draw connections among ideas
+   - Evaluate: Justify a decision or course of action
+3. Gagné's Nine Events of Instruction: Structure each module to: gain attention, inform objectives, stimulate recall of prior learning, present content, provide guidance, elicit performance, provide feedback, assess performance, enhance retention.
+4. Constructive Alignment: Every learning objective MUST have at least one assessment question that directly tests it. Map each question to a specific objective.
 
 Create a complete in-service package as strict JSON with this shape:
 {
@@ -80,10 +95,12 @@ Create a complete in-service package as strict JSON with this shape:
           {
             "title": "",
             "situation": "",
-            "guidance": ""
+            "guidance": "",
+            "discussion_questions": [""]
           }
         ],
-        "key_takeaways": [""]
+        "key_takeaways": [""],
+        "check_your_understanding": [""]
       }
     }
   ],
@@ -95,7 +112,9 @@ Create a complete in-service package as strict JSON with this shape:
       "correct_answer": {},
       "rationale": "",
       "rubric": "",
-      "difficulty": "easy|medium|hard"
+      "difficulty": "easy|medium|hard",
+      "bloom_level": "remember|understand|apply|analyze|evaluate",
+      "mapped_objective_index": 0
     }
   ],
   "references": [
@@ -103,48 +122,81 @@ Create a complete in-service package as strict JSON with this shape:
   ]
 }
 
-Rules:
+TOPIC AND PARAMETERS:
 - Topic: ${topic}
 - Training category: ${training_category}
 - Business line: ${business_line}
-- Audience: ${audience_roles.join(', ') || 'all employees'}
-- Purpose: ${purpose_of_training}
+- Audience: ${audienceLabel}
+- Purpose: ${purpose_of_training || 'General professional development and compliance'}
 - Reading level: ${reading_level}
 - Lesson length: ${lesson_length} minutes
 - Number of test questions: ${question_count}
-- Question types to include: ${question_types.join(', ')}
-- Include case scenarios: ${include_case_scenarios ? 'yes' : 'no'}
-- Include key takeaways: ${include_key_takeaways ? 'yes' : 'no'}
+- Question types to include: ${questionTypeLabel}
+- Include case scenarios: ${include_case_scenarios ? 'yes — include 2-3 realistic case scenarios per module with discussion questions' : 'no'}
+- Include key takeaways: ${include_key_takeaways ? 'yes — 4-6 actionable takeaways per module' : 'no'}
 - Include policy section: ${include_policy_section ? 'yes' : 'no'}
-- Include references: ${include_references ? 'yes' : 'no'}
+- Include references: ${include_references ? 'yes — cite specific regulations, guidelines, or best practice sources' : 'no'}
 - Include acknowledgement language: ${include_acknowledgement ? 'yes' : 'no'}
 - Custom instructions: ${custom_instructions || 'none'}
 
-Style and quality requirements:
-- Write for frontline healthcare staff, not executives, attorneys, or academics.
-- Use plain, practical, professional language at about an 8th-10th grade reading level.
-- Make the lesson easy to understand quickly during a busy workday.
-- Keep sentences short, direct, and action-oriented.
-- Use brief sections with clear headings.
-- Explain what staff should do, what to watch for, what to document, and what to report.
-- Include realistic home health, hospice, office, leadership, and field-based examples when relevant.
-- Prefer checklists, bullets, quick tips, short examples, and simple action steps over long lectures.
-- Avoid jargon, theory-heavy explanations, legalistic wording, academic tone, and repetitive filler.
-- Define any required clinical or compliance term in simple words before using it.
-- Make every section directly useful during real patient care or daily operations.
-- Make test questions practical and based on real decisions staff may face.
-- If a concept is complex, break it into simple steps before testing it.
-- Keep the overall tone supportive, professional, and easy to scan.
+CONTENT QUALITY REQUIREMENTS:
+1. LEARNING OBJECTIVES: Write 4-6 measurable objectives using action verbs from Bloom's Taxonomy (identify, explain, apply, analyze, evaluate, demonstrate). Each objective must be specific, measurable, and achievable within the lesson timeframe.
 
-Always include a warning that AI-generated training should be reviewed by an admin before publishing.`;
+2. MODULE STRUCTURE:
+   - Open each module with a compelling hook: a real-world scenario, surprising statistic, or thought-provoking question that connects to the learner's daily work.
+   - "Check Your Understanding" prompts between sections to reinforce learning before the final assessment.
+   - Build from foundational concepts to complex application — scaffold the difficulty.
+   - Every section must answer: "What should staff DO differently after reading this?"
+
+3. CASE SCENARIOS: Each scenario must:
+   - Present a realistic, specific patient/workplace situation (not generic)
+   - Include clinical details relevant to the audience (vital signs, medications, diagnoses when appropriate)
+   - Pose a genuine decision point where the learner must choose a course of action
+   - Include discussion questions that push critical thinking
+   - Provide clear guidance that references specific policies, regulations, or best practices
+
+4. ASSESSMENT QUESTIONS — THIS IS CRITICAL:
+   - Distribute questions across ALL Bloom's levels — at least 20% should be Apply/Analyze/Evaluate level
+   - Each question MUST map to a specific learning objective (use mapped_objective_index)
+   - Include scenario-based questions that present realistic clinical situations requiring critical thinking
+   - For MCQ: Write 4 plausible options. All distractors must be realistic wrong answers, not obviously false.
+   - For scenario_based: Present a detailed situation with enough context for the learner to make an informed decision
+   - For short_answer: Provide a detailed rubric with specific criteria for full credit, partial credit, and zero credit
+   - For matching: Create pairs that test genuine understanding, not just vocabulary recall
+   - Difficulty distribution: 30% easy (Remember/Understand), 40% medium (Apply/Analyze), 30% hard (Evaluate/Create)
+   - Every rationale must explain WHY the correct answer is right AND why each wrong answer is wrong
+   - Test practical application over rote memorization
+
+5. WRITING STYLE:
+   - Write for frontline healthcare staff, not executives, attorneys, or academics.
+   - Use plain, practical, professional language at about an 8th-10th grade reading level.
+   - Make the lesson easy to understand during a busy workday.
+   - Keep sentences short, direct, and action-oriented.
+   - Use brief sections with clear headings.
+   - Explain what staff should do, what to watch for, what to document, and what to report.
+   - Include realistic home health, hospice, office, leadership, and field-based examples.
+   - Prefer checklists, bullets, quick tips, short examples, and simple action steps over long lectures.
+   - Avoid jargon, theory-heavy explanations, legalistic wording, academic tone, and repetitive filler.
+   - Define any required clinical or compliance term in simple words before using it.
+   - Make every section directly useful during real patient care or daily operations.
+   - If a concept is complex, break it into simple steps before testing it.
+
+6. QUALITY CHECKS:
+   - Ensure no two questions test the exact same concept in the same way
+   - Verify all answer options are grammatically consistent with the question stem
+   - Confirm correct answers are factually accurate for healthcare compliance
+   - Double-check that scenario details are clinically realistic
+   - Ensure the total content is appropriate for the ${lesson_length}-minute timeframe
+
+Always include a warning that AI-generated training should be reviewed by a subject matter expert before publishing.`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      temperature: 0.4,
-      max_tokens: 8000,
+      temperature: 0.35,
+      max_tokens: 12000,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You create practical healthcare training materials as valid JSON only.' },
+        { role: 'system', content: 'You are a certified instructional designer and healthcare compliance educator. You create evidence-based training materials following ADDIE methodology and Bloom\'s Taxonomy. Return valid JSON only.' },
         { role: 'user', content: prompt }
       ]
     });

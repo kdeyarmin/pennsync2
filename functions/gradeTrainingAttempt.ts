@@ -31,16 +31,43 @@ const parseAssignmentNotes = (value) => {
 const gradeSubjectiveQuestions = async (subjectiveQuestions) => {
   if (subjectiveQuestions.length === 0) return [];
 
-  const prompt = `Grade these healthcare training responses using the provided rubric and return JSON only: {"evaluations":[{"questionId":"","scoreAwarded":0,"maxPoints":1,"confidence":0.0,"feedback":""}]}
+  const questionsForGrading = subjectiveQuestions.map(q => ({
+    questionId: q.questionId,
+    question: q.prompt,
+    rubric: q.rubric,
+    learnerAnswer: q.learnerAnswer,
+    maxPoints: q.maxPoints
+  }));
 
-${JSON.stringify(subjectiveQuestions)}`;
+  const prompt = `You are a healthcare compliance training evaluator. Grade each learner response below and return JSON only.
+
+GRADING CRITERIA:
+- Award full points when the response demonstrates correct understanding AND practical application ability
+- Award partial points (50-75%) when the response shows understanding but misses key details or clinical specifics
+- Award minimal points (25%) when the response shows basic awareness but significant gaps in understanding
+- Award zero points when the response is incorrect, dangerously wrong, or shows no understanding
+- For clinical/compliance questions: accuracy is paramount — incorrect clinical information must receive zero points regardless of how well-written
+- For scenario-based questions: evaluate whether the learner's proposed actions would lead to safe, compliant patient care
+- Be strict on safety-critical content (medication errors, patient safety, HIPAA violations) but fair on stylistic differences
+
+FEEDBACK REQUIREMENTS:
+- Explain what was correct in the response
+- Identify what was missing or incorrect with specific detail
+- For incorrect answers: explain the correct approach and why it matters for patient care
+- Keep feedback constructive and educational — this is a learning opportunity
+
+Return this exact JSON structure:
+{"evaluations":[{"questionId":"","scoreAwarded":0,"maxPoints":1,"confidence":0.0,"feedback":""}]}
+
+Questions to grade:
+${JSON.stringify(questionsForGrading)}`;
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    temperature: 0.2,
+    temperature: 0.15,
     response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: 'You are a strict healthcare compliance grader. Return valid JSON only.' },
+      { role: 'system', content: 'You are an experienced healthcare compliance educator and clinical instructor. You grade training assessments with clinical accuracy and provide constructive educational feedback. Return valid JSON only.' },
       { role: 'user', content: prompt }
     ]
   });
