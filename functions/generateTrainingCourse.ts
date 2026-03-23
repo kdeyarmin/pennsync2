@@ -102,12 +102,12 @@ Design principles:
 - Make the "real_world_relevance" compelling — connect to actual incidents, regulatory changes, or common audit findings in ${business_line === 'all' ? 'home health and hospice' : business_line}`;
 
     const outlineCompletion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       temperature: 0.3,
-      max_tokens: 3000,
+      max_tokens: 4000,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You are a senior healthcare instructional designer. Return valid JSON only.' },
+        { role: 'system', content: 'You are a senior healthcare instructional designer with expertise in ADDIE methodology, Bloom\'s Taxonomy, and CMS regulatory compliance for home health and hospice. Return valid JSON only.' },
         { role: 'user', content: outlinePrompt }
       ]
     });
@@ -316,12 +316,12 @@ CONTENT CREATION RULES:
    - Every section must pass the "So what?" test — the learner should understand why this matters to THEM`;
 
     const contentCompletion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       temperature: 0.4,
       max_tokens: 16000,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. Return valid JSON only.' },
+        { role: 'system', content: 'You are an award-winning healthcare education designer known for creating courses that are simultaneously rigorous, engaging, and immediately practical. You combine clinical accuracy with compelling storytelling. You have deep expertise in CMS Conditions of Participation, OSHA standards, and state healthcare regulations. Return valid JSON only.' },
         { role: 'user', content: contentPrompt }
       ]
     });
