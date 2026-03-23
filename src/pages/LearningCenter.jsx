@@ -19,7 +19,8 @@ import {
   Filter,
   TrendingUp,
   Calendar,
-  FileText,
+
+
   ChevronRight,
   Target,
   Loader2,
@@ -108,10 +109,8 @@ export default function LearningCenter() {
     }),
     [activeAssignments]
   );
-  const inProgressAssignments = useMemo(() =>
-    assignments.filter(a => a.status === 'in_progress'),
-    [assignments]
-  );
+
+
 
   // Sort active assignments: overdue first, then due soonest
   const sortedActive = useMemo(() => {

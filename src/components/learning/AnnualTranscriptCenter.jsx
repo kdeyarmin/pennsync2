@@ -4,7 +4,8 @@ import { Award, Search, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+
+
 import CertificateDownloadButton from "@/components/training/CertificateDownloadButton";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
