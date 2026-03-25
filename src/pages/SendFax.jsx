@@ -81,8 +81,8 @@ export default function SendFax() {
           </TabsContent>
 
           <TabsContent value="search" className="mt-4 sm:mt-6">
-            <FaxSearchInterface onSelectFaxForAI={(fax) => {
-              toast.info(`Fax selected for AI analysis: ${fax?.id || 'Unknown'}`);
+            <FaxSearchInterface onSelectFaxForAI={(faxId) => {
+              toast.info(`Fax selected for AI analysis: ${faxId || 'Unknown'}`);
             }} />
           </TabsContent>
 
