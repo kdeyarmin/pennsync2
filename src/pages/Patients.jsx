@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -242,6 +242,25 @@ export default function Patients() {
     return age;
   };
 
+  const lastVisitDateByPatientId = useMemo(() => {
+    const map = {};
+    for (const v of allVisits) {
+      const existing = map[v.patient_id];
+      if (!existing || new Date(v.visit_date) > new Date(existing)) {
+        map[v.patient_id] = v.visit_date;
+      }
+    }
+    return map;
+  }, [allVisits]);
+
+  const visitCountByPatientId = useMemo(() => {
+    const map = {};
+    for (const v of allVisits) {
+      map[v.patient_id] = (map[v.patient_id] || 0) + 1;
+    }
+    return map;
+  }, [allVisits]);
+
   const filteredPatients = (patients || []).filter(patient => {
     if (!patient) return false;
     
@@ -292,13 +311,13 @@ export default function Patients() {
       case 'oldest':
         return new Date(a.created_date || 0) - new Date(b.created_date || 0);
       case 'last-visit': {
-        const aVisit = allVisits.find(v => v.patient_id === a.id);
-        const bVisit = allVisits.find(v => v.patient_id === b.id);
-        return new Date(bVisit?.visit_date || 0) - new Date(aVisit?.visit_date || 0);
+        const aDate = lastVisitDateByPatientId[a.id] || 0;
+        const bDate = lastVisitDateByPatientId[b.id] || 0;
+        return new Date(bDate) - new Date(aDate);
       }
       case 'most-visits': {
-        const aCount = allVisits.filter(v => v.patient_id === a.id).length;
-        const bCount = allVisits.filter(v => v.patient_id === b.id).length;
+        const aCount = visitCountByPatientId[a.id] || 0;
+        const bCount = visitCountByPatientId[b.id] || 0;
         return bCount - aCount;
       }
       default:
