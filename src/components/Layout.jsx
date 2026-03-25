@@ -53,7 +53,10 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [currentPageName]);
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  }, [currentPageName]);
 
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;

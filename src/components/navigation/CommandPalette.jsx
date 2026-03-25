@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, Mail, BookUser,
-  Video, HelpCircle, AlertTriangle, BookOpen, WifiOff, Search,
-  Send, Heart, Stethoscope, Activity, Pill, Calendar
+  Video, HelpCircle, AlertTriangle, BookOpen, WifiOff,
+  Send, Heart, Activity, Pill
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
