@@ -158,9 +158,13 @@ button:focus-visible {
   html {
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
   }
 
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   body {
     @apply bg-background text-foreground;
     overflow-x: hidden;
