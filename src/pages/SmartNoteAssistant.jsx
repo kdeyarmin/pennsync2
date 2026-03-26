@@ -886,6 +886,7 @@ Return ONLY the final note text.`
                 patient={patient}
                 visitType={visitType}
                 analysisScore={analysis?.overall_score}
+                analysis={analysis}
                 currentUser={currentUser}
                 signatureImage={signatureImage}
                 setSignatureImage={setSignatureImage}
