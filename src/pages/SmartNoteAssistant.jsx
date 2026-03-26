@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Sparkles, CheckCircle2, Loader2,
   Shield, ArrowRight, Pill,
-  TrendingUp, ClipboardList, User, FileText
+  TrendingUp, ClipboardList, User, FileText,
+  Mic, Square
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
 import { logActivity, ActivityActions } from "../components/utils/activityLogger";
@@ -729,6 +730,13 @@ Return ONLY the final note text.`
                 </div>
                 {/* Enhanced Audio Recorder */}
                 <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex flex-wrap gap-2 items-center">
+                  <Button 
+                    variant={listening ? "destructive" : "default"} 
+                    className={`h-9 gap-2 text-xs font-semibold shadow-sm ${listening ? 'animate-pulse' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                    onClick={listening ? stopDictation : startDictation}
+                  >
+                    {listening ? <><Square className="w-4 h-4 fill-current" /> Stop Dictation</> : <><Mic className="w-4 h-4" /> Live Dictation</>}
+                  </Button>
                   <EnhancedAudioRecorder
                     onTranscribed={(transcribed) => setNote(prev => prev ? prev + " " + transcribed : transcribed)}
                     disabled={false}
