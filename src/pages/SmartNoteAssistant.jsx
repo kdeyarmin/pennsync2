@@ -98,7 +98,18 @@ export default function SmartNoteAssistant() {
   const isHospice = careScope === "hospice";
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
-    queryFn: () => base44.entities.Patient.filter({ status: "active" }, "first_name", 200),
+    queryFn: async () => {
+        try {
+            return await base44.entities.Patient.filter({ status: "active" }, "first_name", 200);
+        } catch (e) {
+            if (!navigator.onLine) {
+                const { getPatientsLocally } = await import('@/lib/indexedDB');
+                const local = await getPatientsLocally();
+                return local || [];
+            }
+            throw e;
+        }
+    }
   });
   const patient = patients.find(p => p.id === patientId);
 
@@ -136,6 +147,9 @@ export default function SmartNoteAssistant() {
   useEffect(() => {
     if (note.trim()) {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ note, visitType, patientId }));
+      import('@/lib/indexedDB').then(({ saveDraftNoteLocally }) => {
+          saveDraftNoteLocally({ id: 'current_draft', note, visitType, patientId });
+      }).catch(console.error);
     }
   }, [note, visitType, patientId]);
 
@@ -354,33 +368,40 @@ Return ONLY the final note text.`
       setNoteSections(parseNoteSections(result));
       setStep(2);
       if (patientId && currentUser?.email) {
-        const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
         const noteText = typeof result === "string" ? result : JSON.stringify(result);
         
-        // Update patient chart with enhanced notes
-        const currentPatient = await base44.entities.Patient.get(patientId);
-        const enhancedHistory = currentPatient.enhanced_notes_history || [];
-        enhancedHistory.push({
-          date: visitDate,
-          visit_type: visitType,
-          note: noteText,
-          compliance_score: analysisData.compliance_score,
-          created_by: currentUser.email,
-          created_at: new Date().toISOString()
-        });
-        
-        await Promise.all([
-          base44.entities.Patient.update(patientId, {
-            enhanced_notes_history: enhancedHistory,
-            clinical_notes: noteText
-          }),
-          base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: noteText.length, quality_score: analysisData.overall_score, rough_note_compliance: Math.max(0, analysisData.compliance_score - 20), enhanced_note_compliance: analysisData.compliance_score, compliance_improvement: 20 }),
-          base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysisData.compliance_score, status: analysisData.compliance_score >= 90 ? "passed" : analysisData.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
-        ]);
-        // Auto-generate follow-up tasks from the finalized note
-        generateTasksFromNote(noteText, visit.id);
-        // Auto-analyze supply usage from visit notes
-        analyzeSupplyUsage(noteText, visit.id);
+        if (navigator.onLine) {
+            const visit = await base44.entities.Visit.create({ patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
+            
+            // Update patient chart with enhanced notes
+            const currentPatient = await base44.entities.Patient.get(patientId);
+            const enhancedHistory = currentPatient.enhanced_notes_history || [];
+            enhancedHistory.push({
+              date: visitDate,
+              visit_type: visitType,
+              note: noteText,
+              compliance_score: analysisData.compliance_score,
+              created_by: currentUser.email,
+              created_at: new Date().toISOString()
+            });
+            
+            await Promise.all([
+              base44.entities.Patient.update(patientId, {
+                enhanced_notes_history: enhancedHistory,
+                clinical_notes: noteText
+              }),
+              base44.entities.NoteConversion.create({ nurse_email: currentUser.email, patient_id: patientId, visit_type: visitType, diagnosis: patient?.primary_diagnosis || "", rough_note_length: note.length, enhanced_note_length: noteText.length, quality_score: analysisData.overall_score, rough_note_compliance: Math.max(0, analysisData.compliance_score - 20), enhanced_note_compliance: analysisData.compliance_score, compliance_improvement: 20 }),
+              base44.entities.ComplianceAudit.create({ visit_id: visit.id, nurse_email: currentUser.email, patient_id: patientId, audit_date: new Date().toISOString(), compliance_score: analysisData.compliance_score, status: analysisData.compliance_score >= 90 ? "passed" : analysisData.compliance_score >= 80 ? "flagged" : "critical", audit_type: "automated" })
+            ]);
+            // Auto-generate follow-up tasks from the finalized note
+            generateTasksFromNote(noteText, visit.id);
+            // Auto-analyze supply usage from visit notes
+            analyzeSupplyUsage(noteText, visit.id);
+        } else {
+            const { addToSyncQueue } = await import('@/lib/indexedDB');
+            await addToSyncQueue('CREATE_VISIT', { patient_id: patientId, visit_date: visitDate, visit_type: visitType, status: "completed", nurse_notes: result, raw_transcription: note });
+            toast.success("Saved offline. Will sync when reconnected.");
+        }
         logActivity(ActivityActions.NOTE_ENHANCED, { patient_id: patientId, visit_type: visitType, overall_score: analysisData.overall_score });
       }
     } catch (err) {

@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
+import OfflineManager from '@/components/offline/OfflineManager'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import SignerPortal from '@/pages/SignerPortal';
@@ -140,6 +141,7 @@ function App() {
             <AuthenticatedApp />
           </Router>
           <Toaster />
+          <OfflineManager />
           <VisualEditAgent />
         </QueryClientProvider>
       </AuthProvider>
