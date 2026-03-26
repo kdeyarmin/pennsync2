@@ -13,8 +13,8 @@
     "check:updates": "node tools-check-updates.mjs"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.0",
-    "@base44/vite-plugin": "^1.0.0",
+    "@base44/sdk": "^0.8.23",
+    "@base44/vite-plugin": "^1.0.6",
     "@floating-ui/core": "^1.6.1",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
