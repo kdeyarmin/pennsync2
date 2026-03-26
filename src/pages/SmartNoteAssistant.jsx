@@ -27,6 +27,8 @@ import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
 import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNoteRecorder";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
+import { toast } from "sonner";
+import SearchablePatientSelect from "@/components/ui/SearchablePatientSelect";
 
 const HOME_HEALTH_VISIT_TYPES = [
   { value: "routine_visit", label: "Routine SN Visit" },
@@ -59,37 +61,7 @@ const TABS = [
   { id: "trends", label: "Vital Trends", icon: TrendingUp, color: "cyan" },
 ];
 
-const STEPS = [
-  { label: "Write", icon: FileText },
-  { label: "Generate", icon: Sparkles },
-];
-
-function StepIndicator({ step }) {
-  return (
-    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
-      {STEPS.map((s, i) => {
-        const n = i + 1;
-        const active = step === n;
-        const done = step > n;
-        return (
-          <div key={n} className="flex items-center">
-            <div className={`flex items-center gap-1.5 text-xs font-semibold ${active ? "text-indigo-700" : done ? "text-green-600" : "text-gray-400"}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${active ? "bg-indigo-600 text-white" : done ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"}`}>
-                {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : n}
-              </div>
-              <span className="hidden sm:inline">{s.label}</span>
-            </div>
-            {i < STEPS.length - 1 && (
-              <div className="flex-1 h-0.5 bg-gray-200 mx-1">
-                <div className={`h-full ${step > n ? "bg-green-400 w-full" : "w-0"} transition-all duration-500`} />
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+import StepIndicator from "../components/smartNote/StepIndicator";
 
 export default function SmartNoteAssistant() {
   const [patientId, setPatientId] = useState("");
@@ -197,7 +169,7 @@ export default function SmartNoteAssistant() {
 
   const startDictation = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert("Speech recognition not supported in this browser."); return; }
+    if (!SR) { toast.error("Speech recognition not supported in this browser."); return; }
     const rec = new SR();
     rec.continuous = true;
     rec.interimResults = false;
@@ -348,13 +320,13 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         const errorMsg = promiseErr?.status === 402 || promiseErr?.data?.extra_data?.reason === 'integration_credits_limit_reached'
           ? "Monthly integration limit reached. Please upgrade your plan to continue."
           : "Analysis failed. Please try again.";
-        alert(errorMsg);
+        toast.error(errorMsg);
         setStep(1);
         setAnalyzing(false);
         return;
       }
     } catch (err) {
-      alert("Analysis failed. Please try again.");
+      toast.error("Analysis failed. Please try again.");
       setStep(1);
     } finally {
       setAnalyzing(false);
@@ -637,21 +609,12 @@ Return ONLY the final note text.`
                     <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Patient</label>
                     <span className="text-xs text-gray-400 font-normal normal-case ml-1">optional</span>
                   </div>
-                  <Select value={patientId} onValueChange={setPatientId}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12 sm:h-11 text-sm rounded-xl">
-                      <SelectValue placeholder={<span className="flex items-center gap-2 text-gray-400"><User className="w-4 h-4" /> Search for a patient…</span>} />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl shadow-xl max-h-[50vh] bg-white">
-                      {patients.map(p => (
-                        <SelectItem key={p.id} value={p.id} className="py-3 sm:py-2.5 px-3 min-h-[52px] sm:min-h-0 bg-white hover:bg-indigo-50">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900">{p.first_name} {p.last_name}</span>
-                            {p.primary_diagnosis && <span className="text-xs text-gray-500 mt-0.5">{p.primary_diagnosis}</span>}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchablePatientSelect 
+                    patients={patients} 
+                    value={patientId} 
+                    onValueChange={setPatientId} 
+                    className="bg-gray-50 border-gray-200 h-12 sm:h-11 text-sm rounded-xl"
+                  />
                 </div>
                 <div className="border-t border-gray-100" />
                 <div>
