@@ -18,6 +18,7 @@ import NoteTemplateSelector from "../components/smartNote/NoteTemplateSelector";
 import VitalSignValidator from "../components/smartNote/VitalSignValidator";
 import StructuredNoteDrafter from "../components/smartNote/StructuredNoteDrafter";
 import EnhancedAudioRecorder from "../components/smartNote/EnhancedAudioRecorder";
+import SOAPAudioRecorder from "../components/smartNote/SOAPAudioRecorder";
 import MedicationManagementTab from "../components/smartNote/MedicationManagementTab";
 import VitalsTrendAnalysis from "../components/smartNote/VitalsTrendAnalysis";
 import AlertsPanel from "../components/smartNote/AlertsPanel";
@@ -743,10 +744,14 @@ Return ONLY the final note text.`
                   </Button>
                 </div>
                 {/* Enhanced Audio Recorder */}
-                <div className="px-4 py-2 bg-blue-50 border-b border-blue-100">
+                <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex flex-wrap gap-2 items-center">
                   <EnhancedAudioRecorder
                     onTranscribed={(transcribed) => setNote(prev => prev ? prev + " " + transcribed : transcribed)}
                     disabled={false}
+                  />
+                  <SOAPAudioRecorder 
+                    onSOAPGenerated={(soapText) => setNote(prev => prev ? prev + "\n\n" + soapText : soapText)} 
+                    disabled={false} 
                   />
                 </div>
                 <textarea ref={textareaRef} value={note} onChange={e => setNote(e.target.value)}
