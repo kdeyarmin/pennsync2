@@ -31,7 +31,7 @@ export default function Breadcrumbs({ currentPageName, customPath = [] }) {
       "SecurityCompliance": [{ label: "Admin", page: "AdminDashboard" }, { label: "Security & Compliance" }],
       
       // Training
-      "StaffTrainingHub": [{ label: "Training", page: "StaffTrainingHub" }],
+      "MyLearning": [{ label: "My Learning", page: "MyLearning" }],
       "TrainingManagement": [{ label: "Admin", page: "AdminDashboard" }, { label: "Training Management" }],
       
       // Care Plans

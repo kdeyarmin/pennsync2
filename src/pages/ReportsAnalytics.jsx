@@ -82,15 +82,15 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-indigo-600" />
-            Reports & Analytics
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">
-            KPIs, outcomes, performance metrics, and AI-powered population health insights
-          </p>
+      <div className="page-header-gradient bg-gradient-to-r from-indigo-700 via-blue-700 to-slate-800 mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <BarChart3 className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Reports & Analytics</h1>
+            <p className="text-blue-200 mt-1">KPIs, outcomes, performance metrics, and AI-powered population health insights</p>
+          </div>
         </div>
       </div>
 

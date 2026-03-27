@@ -1,3 +1,25 @@
+// REMOVED PAGES (2026-03-23): 92 orphaned page files deleted — not in any route or import.
+// If you need any of these back, check git history for the commit that removed them.
+// Removed: AIComplianceInServices, AITrainingGenerator, About, AdminDashboard, AdminTrainingAnalytics,
+// AdminUserSetup, AgencyAnalytics, AgencySettings, AnalyticsDashboard, AnnualEducationTranscript,
+// AnnualMandatoryEducation, AutomaticCarePlans, CarePlanBuilder, ClinicalInsightsDashboard,
+// ClinicalLibrary, ComplianceDashboard, ComplianceMonitoringDashboard, ComplianceRegulatory,
+// CustomizableDashboard, DataQualityMonitor, DischargeSummaries, DocumentIngestion, DocumentManagement,
+// DocumentSignatures, DocumentVisit, DocumentationTraining, DuplicatePatients, EducationLibrary,
+// EmployeeTranscript, FaxAddressBook, FaxContacts, FaxDashboard, FaxLogsDashboard, Features, Home,
+// IncidentReportingModule, JoinTelehealth, LearningReports, ManageNewFeatures, ManagerSkillGapDashboard,
+// MedicalScribe, MedicareComplianceDashboard, MedicareGuidelinesLibrary, MedicationReconciliation,
+// MyAnnualEducation, MyTraining, NotificationSettings, NurseEducationVideos, NursePerformanceDashboard,
+// NurseTraining, NurseTrainingHub, OASISAnalyticsDashboard, OASISAnalyzer, OASISAuditDashboard,
+// OASISClinicalReview, OASISComplianceReview, OASISDocumentationReview, OASISRevenueAnalysis, OASISReview,
+// OfflineDocumentation, OfflineVisitDocumentation, PDFSearch, PDFTemplateLibrary, PDFTools, PatientAlerts,
+// PatientEducation, PatientEducationPortal, PatientRecordDashboard, PatientTriage, PersonnelFile,
+// PopulationHealthAnalytics, PredictiveAnalytics, ProductivityDashboard, QualityDashboard,
+// RealTimeComplianceDashboard, ReferralAdmissionNote, ReferralProcessor, ReferralTriage, Reports,
+// ScheduleOptimizer, SecurityPolicy, SignDocument, Support, SurveyPreparation, SystemHealthMonitor,
+// SystemJobMonitor, SystemMonitoring, TemplateLibrary, TrainingManagement, UserActivityLog,
+// UserActivityReport, UserGuides
+
 import './App.css'
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -21,7 +43,6 @@ import Messages from '@/pages/Messages';
 import AdminOperations from '@/pages/AdminOperations';
 import UserManagement from '@/pages/UserManagement';
 import AdminTraining from '@/pages/AdminTraining';
-import StaffTrainingHub from '@/pages/StaffTrainingHub';
 import CarePlanManagement from '@/pages/CarePlanManagement';
 import SmartOASISAssessment from '@/pages/SmartOASISAssessment';
 import SendFax from '@/pages/SendFax';
@@ -89,7 +110,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminOperations" element={<LayoutWrapper currentPageName="AdminOperations"><AdminOperations /></LayoutWrapper>} />
       <Route path="/UserManagement" element={<LayoutWrapper currentPageName="UserManagement"><UserManagement /></LayoutWrapper>} />
       <Route path="/AdminTraining" element={<LayoutWrapper currentPageName="AdminTraining"><AdminTraining /></LayoutWrapper>} />
-      <Route path="/StaffTrainingHub" element={<LayoutWrapper currentPageName="StaffTrainingHub"><StaffTrainingHub /></LayoutWrapper>} />
+      <Route path="/StaffTrainingHub" element={<Navigate to="/AdminTraining" replace />} />
       <Route path="/CarePlanManagement" element={<LayoutWrapper currentPageName="CarePlanManagement"><CarePlanManagement /></LayoutWrapper>} />
       <Route path="/SmartOASISAssessment" element={<LayoutWrapper currentPageName="SmartOASISAssessment"><SmartOASISAssessment /></LayoutWrapper>} />
       <Route path="/SendFax" element={<LayoutWrapper currentPageName="SendFax"><SendFax /></LayoutWrapper>} />
