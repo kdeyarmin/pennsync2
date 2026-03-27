@@ -457,7 +457,7 @@ Provide:
 
       {/* Training Link */}
       <div className="text-center">
-        <Link to={createPageUrl("StaffTrainingHub")}>
+        <Link to={createPageUrl("MyLearning")}>
           <Button variant="outline" className="gap-2">
             <GraduationCap className="w-4 h-4" />
             Go to Full Training Hub

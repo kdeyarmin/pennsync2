@@ -200,24 +200,30 @@ export default function Messages() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Mail className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 flex-shrink-0" />
-            <span className="truncate">Messages</span>
-            {unreadCount > 0 && (
-              <Badge className="bg-red-600 text-xs sm:text-sm flex-shrink-0">{unreadCount} Unread</Badge>
-            )}
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 hidden sm:block">Secure internal messaging for patient care coordination</p>
+      <div className="page-header-gradient bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 mb-4 sm:mb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
+            <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Mail className="w-8 h-8 text-white" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                <span className="truncate">Messages</span>
+                {unreadCount > 0 && (
+                  <Badge className="bg-white/20 text-white text-xs sm:text-sm flex-shrink-0">{unreadCount} Unread</Badge>
+                )}
+              </h1>
+              <p className="text-blue-200 mt-1 hidden sm:block">Secure internal messaging for patient care coordination</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setShowNewMessage(true)}
+            className="bg-white/10 hover:bg-white/20 text-white border-0 min-h-[44px] w-full sm:w-auto"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            New Message
+          </Button>
         </div>
-        <Button
-          onClick={() => setShowNewMessage(true)}
-          className="bg-blue-600 hover:bg-blue-700 min-h-[44px] w-full sm:w-auto"
-        >
-          <Send className="w-4 h-4 mr-2" />
-          New Message
-        </Button>
       </div>
 
       {/* Filters */}

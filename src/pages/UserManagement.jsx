@@ -369,14 +369,14 @@ export default function UserManagement() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      <div className="page-header-gradient bg-gradient-to-r from-purple-700 via-indigo-700 to-slate-800 mb-4 sm:mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <Users className="w-8 h-8 text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">User Management</h1>
-            <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Manage user accounts, roles, and permissions</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white truncate">User Management</h1>
+            <p className="text-purple-200 mt-1 hidden sm:block">Manage user accounts, roles, and permissions</p>
           </div>
         </div>
       </div>

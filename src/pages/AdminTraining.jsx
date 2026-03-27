@@ -188,14 +188,16 @@ export default function AdminTraining() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <GraduationCap className="w-8 h-8 text-indigo-600" />
-          Training & Education Management
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          Manage courses, assign learning paths, monitor skill gaps, and generate AI-powered training
-        </p>
+      <div className="page-header-gradient bg-gradient-to-r from-indigo-700 via-purple-700 to-slate-800 mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <GraduationCap className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Training & Education Management</h1>
+            <p className="text-indigo-200 mt-1">Manage courses, assign learning paths, monitor skill gaps, and generate AI-powered training</p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="courses" className="space-y-6">

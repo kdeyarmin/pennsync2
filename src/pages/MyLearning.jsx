@@ -26,21 +26,23 @@ export default function MyLearning() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <GraduationCap className="w-8 h-8 text-indigo-600" />
-            My Learning
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">
-            All your training, courses, transcripts, and continuing education
-          </p>
+      <div className="page-header-gradient bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 mb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+              <GraduationCap className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">My Learning</h1>
+              <p className="text-blue-200 mt-1">All your training, courses, transcripts, and continuing education</p>
+            </div>
+          </div>
+          <Link to={createPageUrl('LearningCenter')}>
+            <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0">
+              Learning Center
+            </Button>
+          </Link>
         </div>
-        <Link to={createPageUrl('LearningCenter')}>
-          <Button variant="outline" size="sm">
-            Learning Center
-          </Button>
-        </Link>
       </div>
 
       <Tabs defaultValue="courses" className="space-y-6">

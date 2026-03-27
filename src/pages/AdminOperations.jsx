@@ -33,14 +33,16 @@ export default function AdminOperations() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Settings className="w-8 h-8 text-indigo-600" />
-          Admin Operations
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          System monitoring, data quality, user activity, and operational oversight
-        </p>
+      <div className="page-header-gradient bg-gradient-to-r from-slate-800 via-slate-700 to-indigo-800 mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <Settings className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Admin Operations</h1>
+            <p className="text-slate-300 mt-1">System monitoring, data quality, user activity, and operational oversight</p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">

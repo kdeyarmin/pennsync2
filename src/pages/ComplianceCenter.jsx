@@ -314,14 +314,16 @@ export default function ComplianceCenter() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Shield className="w-8 h-8 text-indigo-600" />
-          Compliance Center
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          Medicare compliance monitoring, real-time alerts, and regulatory tracking
-        </p>
+      <div className="page-header-gradient bg-gradient-to-r from-emerald-700 via-teal-700 to-slate-800 mb-6">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Compliance Center</h1>
+            <p className="text-emerald-200 mt-1">Medicare compliance monitoring, real-time alerts, and regulatory tracking</p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="medicare" className="space-y-6">
