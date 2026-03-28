@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
-  BarChart3, Settings, Brain, Target, Bell, Mail, BookUser,
+  BarChart3, Settings, Brain, Target, Mail, BookUser,
   Video, HelpCircle, AlertTriangle, BookOpen, WifiOff,
-  Send, Heart, Activity, Pill
+  Send, Heart, Activity
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -26,17 +26,16 @@ const PAGE_REGISTRY = [
   { name: "PatientDetails", icon: Users, category: "Patient Care", keywords: ["record", "chart"] },
   { name: "CarePlanManagement", icon: Target, category: "Patient Care", keywords: ["care plan", "goals"] },
   { name: "SmartOASISAssessment", icon: Brain, category: "Patient Care", keywords: ["oasis", "assessment"] },
-  { name: "IncidentReporting", icon: AlertTriangle, category: "Patient Care", keywords: ["incident", "report", "safety"] },
-  { name: "MedicationReconciliation", icon: Pill, category: "Patient Care", keywords: ["medication", "meds", "drugs", "reconciliation"] },
-  { name: "PatientAlerts", icon: Bell, category: "Patient Care", keywords: ["alerts", "warnings"] },
+  { name: "Incidents", icon: AlertTriangle, category: "Patient Care", keywords: ["incident", "report", "safety"] },
+  { name: "ClinicalChart", icon: Activity, category: "Patient Care", keywords: ["chart", "clinical", "patient chart"] },
 
   // Documentation
   { name: "SmartNoteAssistant", icon: Brain, category: "Documentation", keywords: ["smart note", "clinical note", "documentation", "ai"] },
+  { name: "ClinicalDocumentation", icon: FileText, category: "Documentation", keywords: ["clinical", "documentation", "notes"] },
   { name: "DocumentHub", icon: FileText, category: "Documentation", keywords: ["documents", "files"] },
   { name: "ReferralIntake", icon: FileText, category: "Documentation", keywords: ["referral", "intake", "admission"] },
   { name: "VisitScribe", icon: FileText, category: "Documentation", keywords: ["scribe", "dictation", "voice"] },
-  { name: "DischargeSummaries", icon: FileText, category: "Documentation", keywords: ["discharge", "summary"] },
-  { name: "TemplateLibrary", icon: FileText, category: "Documentation", keywords: ["template", "templates"] },
+  { name: "EventReport", icon: FileText, category: "Documentation", keywords: ["event", "report", "incident report"] },
 
   // Communication
   { name: "Messages", icon: Mail, category: "Communication", keywords: ["messages", "inbox", "chat"] },
@@ -45,33 +44,31 @@ const PAGE_REGISTRY = [
   { name: "Telehealth", icon: Video, category: "Communication", keywords: ["telehealth", "video", "call"] },
 
   // Compliance & Quality
-  { name: "ComplianceCenter", icon: Shield, category: "Compliance", keywords: ["compliance", "audit", "quality"] },
-  { name: "ComplianceDashboard", icon: Shield, category: "Compliance", keywords: ["compliance", "metrics"] },
-  { name: "OASISReview", icon: ClipboardList, category: "Compliance", keywords: ["oasis", "review"] },
+  { name: "ComplianceCenter", icon: Shield, category: "Compliance", keywords: ["compliance", "audit", "quality", "metrics"] },
   { name: "SecurityCompliance", icon: Shield, category: "Compliance", keywords: ["security", "hipaa"] },
+  { name: "RegulatoryCompliance", icon: ClipboardList, category: "Compliance", keywords: ["regulatory", "cms", "state requirements"] },
 
   // Analytics & Reports
-  { name: "AnalyticsDashboard", icon: BarChart3, category: "Analytics", keywords: ["analytics", "metrics", "data"] },
-  { name: "Reports", icon: BarChart3, category: "Analytics", keywords: ["reports", "export"] },
-  { name: "PredictiveAnalytics", icon: Activity, category: "Analytics", keywords: ["predictive", "forecast", "risk"] },
-  { name: "NursePerformanceDashboard", icon: BarChart3, category: "Analytics", keywords: ["performance", "nurse", "staff"] },
+  { name: "ReportsAnalytics", icon: BarChart3, category: "Analytics", keywords: ["reports", "analytics", "metrics", "export", "data"] },
 
   // Training & Learning
-  { name: "MyLearning", icon: GraduationCap, category: "Learning", keywords: ["training", "learning", "courses", "education"] },
+  { name: "LearningCenter", icon: GraduationCap, category: "Learning", keywords: ["learning", "courses", "catalog", "browse"] },
+  { name: "MyLearning", icon: GraduationCap, category: "Learning", keywords: ["training", "my courses", "progress", "education"] },
   { name: "ClinicalSkillsChecklist", icon: GraduationCap, category: "Learning", keywords: ["skills", "checklist", "competency"] },
-  { name: "EducationLibrary", icon: BookOpen, category: "Learning", keywords: ["education", "library", "resources"] },
   { name: "PatientEducationHub", icon: Heart, category: "Learning", keywords: ["patient education", "handout"] },
 
   // Admin
   { name: "AdminOperations", icon: Settings, category: "Admin", keywords: ["admin", "operations", "manage"] },
   { name: "UserManagement", icon: Users, category: "Admin", keywords: ["users", "accounts", "roles"] },
-  { name: "UserSettings", icon: Settings, category: "Admin", keywords: ["settings", "preferences", "profile"] },
+  { name: "AdminTraining", icon: GraduationCap, category: "Admin", keywords: ["training manager", "assign training"] },
+  { name: "ClinicalPathwayManager", icon: ClipboardList, category: "Admin", keywords: ["pathways", "clinical pathways"] },
   { name: "PatientDataManagement", icon: Users, category: "Admin", keywords: ["data", "management", "import"] },
+  { name: "UserSettings", icon: Settings, category: "Settings", keywords: ["settings", "preferences", "profile"] },
 
-  // Tools
+  // Tools & Resources
+  { name: "ResourceLibrary", icon: BookOpen, category: "Tools", keywords: ["library", "resources", "guidelines"] },
   { name: "OfflineMode", icon: WifiOff, category: "Tools", keywords: ["offline", "sync"] },
   { name: "Help", icon: HelpCircle, category: "Tools", keywords: ["help", "support", "guide"] },
-  { name: "PDFTools", icon: FileText, category: "Tools", keywords: ["pdf", "export"] },
 ];
 
 // Convert PascalCase page names to human-readable labels
