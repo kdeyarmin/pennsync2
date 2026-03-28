@@ -65,7 +65,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
         <AlertDescription className="text-indigo-900">
           <span className="font-semibold">{relevantUpdates.length} New Regulation Update(s)</span>
           <span className="ml-2">requiring your attention.</span>
-          <Link to={createPageUrl("ComplianceDashboard")} className="ml-2 text-indigo-700 underline">
+          <Link to={createPageUrl("ComplianceCenter")} className="ml-2 text-indigo-700 underline">
             Review Now →
           </Link>
         </AlertDescription>

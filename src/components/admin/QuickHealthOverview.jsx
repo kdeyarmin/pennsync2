@@ -79,7 +79,7 @@ export default function QuickHealthOverview() {
             {usersWithoutCreds > 0 && (
               <div className="flex items-center justify-between text-sm bg-white p-2 rounded">
                 <span>{usersWithoutCreds} staff need credential upload</span>
-                <Link to="/AdminDashboard">
+                <Link to="/AdminOperations">
                   <Button size="sm" variant="outline">Review</Button>
                 </Link>
               </div>
@@ -88,7 +88,7 @@ export default function QuickHealthOverview() {
             {expiredCreds > 0 && (
               <div className="flex items-center justify-between text-sm bg-red-100 p-2 rounded border border-red-300">
                 <span className="text-red-800 font-semibold">{expiredCreds} expired credentials</span>
-                <Link to="/AdminDashboard">
+                <Link to="/AdminOperations">
                   <Button size="sm" variant="destructive">Urgent</Button>
                 </Link>
               </div>
