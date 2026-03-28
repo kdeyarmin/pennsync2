@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ import DocumentList from "../components/documents/DocumentList";
 import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashboard";
 import CarePlanProposalReviewer from "../components/carePlan/CarePlanProposalReviewer";
 import PatientTelehealthPanel from "../components/telehealth/PatientTelehealthPanel";
+import CareTeamMessaging from "../components/messaging/CareTeamMessaging";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -373,6 +374,7 @@ export default function PatientDetails() {
               { value: "care",          label: "Care Plans"},
               { value: "telehealth",    label: "Telehealth"},
               { value: "documents",     label: "Docs"      },
+              { value: "messaging",     label: "Messaging" },
             ].map(({ value, label }) => (
               <TabsTrigger key={value} value={value} className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] min-w-[72px] text-xs sm:text-sm whitespace-nowrap">
                 {label}
@@ -912,6 +914,11 @@ export default function PatientDetails() {
               <ProgressReportGenerator patientId={patientId} patient={patient} />
             </TabsContent>
           </Tabs>
+        </TabsContent>
+
+        {/* Messaging Tab */}
+        <TabsContent value="messaging" className="space-y-6">
+          <CareTeamMessaging patientId={patientId} />
         </TabsContent>
       </Tabs>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,10 +18,12 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
-  Lightbulb
+  Lightbulb,
+  Save
 } from "lucide-react";
 import { format } from "date-fns";
 import { createPageUrl } from "@/utils";
+import { toast } from "sonner";
 
 export default function CareTeamMessaging({ patientId, relatedEventId, relatedEventType }) {
   const queryClient = useQueryClient();
@@ -51,7 +53,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
   });
 
   // Group messages by thread
-  const threads = React.useMemo(() => {
+  const threads = useMemo(() => {
     const grouped = {};
     messages.forEach(msg => {
       const threadId = msg.thread_id || msg.id;
@@ -80,6 +82,23 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
         setNewSubject("");
         setShowNewThread(false);
       }
+    }
+  });
+
+  const saveToChartMutation = useMutation({
+    mutationFn: async () => {
+      if (!patientId || !selectedThread) return;
+      const patient = await base44.entities.Patient.get(patientId);
+      
+      const logHeader = `\n\n--- Clinical Communication Log: ${selectedThread.subject} (${format(new Date(), 'MMM d, yyyy')}) ---\n`;
+      const logBody = selectedThread.messages.map(m => `[${format(new Date(m.created_date), 'h:mm a')}] ${m.sender_name} (${m.priority}): ${m.message_text}`).join('\n');
+      
+      const newNotes = (patient.clinical_notes || "") + logHeader + logBody;
+      
+      return base44.entities.Patient.update(patientId, { clinical_notes: newNotes });
+    },
+    onSuccess: () => {
+      toast.success("Thread saved to patient chart");
     }
   });
 
@@ -226,6 +245,15 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
             </CardTitle>
             {selectedThread && (
               <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => saveToChartMutation.mutate()}
+                  disabled={saveToChartMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  Save to Chart
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
