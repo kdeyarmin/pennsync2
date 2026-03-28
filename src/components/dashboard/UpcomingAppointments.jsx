@@ -21,7 +21,7 @@ export default function UpcomingAppointments({ visits, patientId }) {
             Upcoming Appointments
           </CardTitle>
           <Button size="sm" variant="outline" asChild>
-            <Link to={createPageUrl('DocumentVisit')}>
+            <Link to={createPageUrl('VisitScribe')}>
               <Plus className="w-4 h-4 mr-1" />
               Schedule
             </Link>

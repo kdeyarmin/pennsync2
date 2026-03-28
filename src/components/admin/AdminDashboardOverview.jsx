@@ -88,7 +88,7 @@ export default function AdminDashboardOverview() {
       title: "E-Signatures",
       description: "Monitor signature requests",
       icon: PenTool,
-      page: "DocumentSignatures",
+      page: "DocumentHub",
       color: "orange"
     }
   ];
@@ -237,7 +237,7 @@ export default function AdminDashboardOverview() {
                     <p className="text-sm text-gray-600">{doc.document_type || 'Document signature request'}</p>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link to={createPageUrl('DocumentSignatures')}>Review</Link>
+                    <Link to={createPageUrl('DocumentHub')}>Review</Link>
                   </Button>
                 </div>
               ))}

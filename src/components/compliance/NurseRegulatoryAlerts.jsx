@@ -144,7 +144,7 @@ export default function NurseRegulatoryAlerts({ nurseEmail, compact = false }) {
                         {update.suggested_training.slice(0, 2).map((t, i) => (
                           <Link 
                             key={i} 
-                            to={`${createPageUrl("NurseTraining")}?topic=${encodeURIComponent(t)}`}
+                            to={`${createPageUrl("LearningCenter")}?topic=${encodeURIComponent(t)}`}
                           >
                             <Badge variant="outline" className="text-xs cursor-pointer hover:bg-purple-100">
                               {t}

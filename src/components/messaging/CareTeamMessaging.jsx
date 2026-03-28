@@ -376,7 +376,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
                     <Button
                       size="sm"
                       className="bg-purple-600 hover:bg-purple-700 text-xs"
-                      onClick={() => window.location.href = createPageUrl(`ReferralAdmissionNote?referral_id=${msg.related_event_id}`)}
+                      onClick={() => window.location.href = createPageUrl(`ReferralIntake?referral_id=${msg.related_event_id}`)}
                     >
                       <Sparkles className="w-3 h-3 mr-1" />
                       Create Admission Note

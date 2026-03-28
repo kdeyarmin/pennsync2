@@ -39,7 +39,7 @@ export default function QuickActionsPanel({
       label: todayVisit ? "Document Today's Visit" : "Quick Documentation",
       description: todayVisit ? `${todayVisit.visit_type}` : "Add clinical notes",
       color: "bg-green-500 hover:bg-green-600",
-      link: todayVisit ? `${createPageUrl("DocumentVisit")}?visitId=${todayVisit.id}` : null,
+      link: todayVisit ? `${createPageUrl("VisitScribe")}?visitId=${todayVisit.id}` : null,
       badge: todayVisit ? "Today" : null
     },
     {
@@ -132,7 +132,7 @@ export default function QuickActionsPanel({
             {recentVisits.slice(0, 3).map((visit, idx) => (
               <Link
                 key={idx}
-                to={`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`}
+                to={`${createPageUrl("VisitScribe")}?visitId=${visit.id}`}
                 className="block p-2 hover:bg-gray-50 rounded transition-colors mb-2 border border-gray-200"
               >
                 <div className="flex items-center justify-between mb-1">

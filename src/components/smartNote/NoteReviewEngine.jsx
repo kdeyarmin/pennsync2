@@ -1148,7 +1148,7 @@ Return JSON:
                             <FlagButton itemType="training" itemId={idx} content={`Training: ${gap.recommended_training}`} />
                           </div>
                           <p className="text-gray-600 mb-1">{gap.evidence}</p>
-                          <Link to={`${createPageUrl("NurseTraining")}?topic=${encodeURIComponent(gap.recommended_training)}`}>
+                          <Link to={`${createPageUrl("LearningCenter")}?topic=${encodeURIComponent(gap.recommended_training)}`}>
                             <Button size="sm" variant="link" className="h-5 p-0 text-xs text-purple-600">
                               <GraduationCap className="w-3 h-3 mr-1" />
                               {gap.recommended_training}

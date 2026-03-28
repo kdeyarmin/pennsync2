@@ -169,7 +169,7 @@ export default function OASISUploadWidget() {
         )}
 
         <div className="pt-2 border-t">
-          <Link to={createPageUrl("OASIS")}>
+          <Link to={createPageUrl("SmartOASISAssessment")}>
             <Button variant="outline" size="sm" className="w-full">
               <ExternalLink className="w-4 h-4 mr-2" />
               Go to Full OASIS Analyzer
