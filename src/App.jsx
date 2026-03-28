@@ -51,6 +51,7 @@ const ClinicalChart = lazy(() => import('@/pages/ClinicalChart'));
 const TemplateManagement = lazy(() => import('@/pages/TemplateManagement'));
 const DocumentAuditLogs = lazy(() => import('@/pages/DocumentAuditLogs'));
 const BulkSignatureRequests = lazy(() => import('@/pages/BulkSignatureRequests'));
+const FaxAnalytics = lazy(() => import('@/pages/FaxAnalytics'));
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -126,6 +127,7 @@ const AuthenticatedApp = () => {
       <Route path="/TemplateManagement" element={<LayoutWrapper currentPageName="TemplateManagement"><TemplateManagement /></LayoutWrapper>} />
       <Route path="/DocumentAuditLogs" element={<LayoutWrapper currentPageName="DocumentAuditLogs"><DocumentAuditLogs /></LayoutWrapper>} />
       <Route path="/BulkSignatureRequests" element={<LayoutWrapper currentPageName="BulkSignatureRequests"><BulkSignatureRequests /></LayoutWrapper>} />
+      <Route path="/FaxAnalytics" element={<LayoutWrapper currentPageName="FaxAnalytics"><FaxAnalytics /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
     </Suspense>
