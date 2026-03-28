@@ -19,7 +19,7 @@ export default function RegulatoryCompliance() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Link to={createPageUrl("ComplianceDashboard")} className="w-full sm:w-auto">
+        <Link to={createPageUrl("ComplianceCenter")} className="w-full sm:w-auto">
           <Button variant="outline" size="sm" className="min-h-[44px] w-full sm:w-auto">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back

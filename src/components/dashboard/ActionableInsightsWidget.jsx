@@ -53,7 +53,7 @@ export default function ActionableInsightsWidget() {
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
       action: 'Review Alerts',
-      link: createPageUrl('PatientAlerts'),
+      link: createPageUrl('Incidents'),
       count: alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length,
       priority: 'high'
     },
@@ -66,7 +66,7 @@ export default function ActionableInsightsWidget() {
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
       action: 'View Tasks',
-      link: createPageUrl('NurseWorkflow'),
+      link: createPageUrl('Dashboard'),
       count: tasks.length,
       priority: 'medium'
     },

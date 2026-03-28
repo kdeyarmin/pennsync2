@@ -660,7 +660,7 @@ export default function PatientDetails() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => navigate(`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`)}
+                                  onClick={() => navigate(`${createPageUrl("VisitScribe")}?visitId=${visit.id}`)}
                                 >
                                   <ExternalLink className="w-3 h-3 mr-1" />
                                   View

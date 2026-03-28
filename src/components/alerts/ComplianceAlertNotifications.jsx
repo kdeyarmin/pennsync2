@@ -144,7 +144,7 @@ export default function ComplianceAlertNotifications({
           </CardTitle>
           {!showAll && alerts.length > maxAlerts && (
             <Button variant="ghost" size="sm" asChild>
-              <Link to={createPageUrl('PatientAlerts')}>
+              <Link to={createPageUrl('Incidents')}>
                 View All ({alerts.length})
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Link>

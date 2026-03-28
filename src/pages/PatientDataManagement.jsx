@@ -547,7 +547,7 @@ export default function PatientDataManagement() {
                           </DropdownMenuItem>
                           {patient.activeAlertsCount > 0 && (
                             <DropdownMenuItem asChild>
-                              <Link to={`${createPageUrl("PatientAlerts")}?patientId=${patient.id}`}>
+                              <Link to={`${createPageUrl("PatientDetails")}?patientId=${patient.id}`}>
                                 <Bell className="w-4 h-4 mr-2" />
                                 View Alerts
                               </Link>
@@ -598,7 +598,7 @@ export default function PatientDataManagement() {
               Cancel
             </Button>
             <Button asChild>
-              <Link to={`${createPageUrl("PatientAlerts")}?patientId=${selectedPatient?.id}`}>
+              <Link to={`${createPageUrl("PatientDetails")}?patientId=${selectedPatient?.id}`}>
                 Go to Alerts
               </Link>
             </Button>

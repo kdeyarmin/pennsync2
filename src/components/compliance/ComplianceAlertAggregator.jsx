@@ -66,7 +66,7 @@ export default function ComplianceAlertAggregator() {
             title: 'Overdue Visit Documentation',
             message: `Visit for ${patient?.first_name || 'Patient'} ${patient?.last_name || ''} on ${format(visitDate, 'MMM d')} needs documentation`,
             daysOverdue: daysSince,
-            link: `${createPageUrl("DocumentVisit")}?visitId=${visit.id}`,
+            link: `${createPageUrl("VisitScribe")}?visitId=${visit.id}`,
             linkText: 'Document Now',
             category: 'Documentation'
           });
@@ -168,7 +168,7 @@ export default function ComplianceAlertAggregator() {
         title: 'Security Events Detected',
         message: `${recentSecurityEvents.length} security event(s) in the last 7 days require review`,
         count: recentSecurityEvents.length,
-        link: createPageUrl("AdminDashboard"),
+        link: createPageUrl("AdminOperations"),
         linkText: 'View Logs',
         category: 'Security'
       });
@@ -188,7 +188,7 @@ export default function ComplianceAlertAggregator() {
         title: 'Incomplete Visit Documentation',
         message: `${incompleteVisits.length} completed visit(s) have minimal documentation`,
         count: incompleteVisits.length,
-        link: createPageUrl("QualityDashboard"),
+        link: createPageUrl("ReportsAnalytics"),
         linkText: 'Review Quality',
         category: 'Quality Measures'
       });

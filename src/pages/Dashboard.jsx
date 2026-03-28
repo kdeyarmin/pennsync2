@@ -308,7 +308,7 @@ export default function Dashboard() {
           { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  bg: "bg-green-50",  border: "border-green-200 hover:border-green-400",  icon: "text-green-600"  },
           { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          bg: "bg-purple-50", border: "border-purple-200 hover:border-purple-400", icon: "text-purple-600" },
           { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           bg: "bg-orange-50", border: "border-orange-200 hover:border-orange-400", icon: "text-orange-600" },
-          { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, bg: "bg-red-50",    border: "border-red-200 hover:border-red-400",      icon: "text-red-600"    },
+          { page: "Incidents",            label: "Incidents",         Icon: AlertTriangle, bg: "bg-red-50",    border: "border-red-200 hover:border-red-400",      icon: "text-red-600"    },
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (

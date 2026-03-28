@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,17 @@ export default function Patients() {
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
   const [sortBy, setSortBy] = useState('newest');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debounceTimer = useRef(null);
+
+  // Debounce search input by 300ms to avoid filtering on every keystroke
+  useEffect(() => {
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(filters.search || '');
+    }, 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [filters.search]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -261,18 +272,25 @@ export default function Patients() {
     return map;
   }, [allVisits]);
 
-  const filteredPatients = (patients || []).filter(patient => {
+  const carePlanCountByPatientId = useMemo(() => {
+    const map = {};
+    for (const cp of allCarePlans) {
+      map[cp.patient_id] = (map[cp.patient_id] || 0) + 1;
+    }
+    return map;
+  }, [allCarePlans]);
+
+  const filteredPatients = useMemo(() => (patients || []).filter(patient => {
     if (!patient) return false;
-    
-    // Fuzzy search across name, MRN, phone, diagnosis
-    const searchTerm = filters.search || "";
-    const matchesSearch = patientMatchesSearch(patient, searchTerm);
+
+    // Fuzzy search across name, MRN, phone, diagnosis (debounced)
+    const matchesSearch = patientMatchesSearch(patient, debouncedSearch);
 
     // Status filter
     const matchesStatus = !filters.status || filters.status === 'all' || patient.status === filters.status;
 
     // Diagnosis filter
-    const matchesDiagnosis = !filters.diagnosis || 
+    const matchesDiagnosis = !filters.diagnosis ||
       (patient.primary_diagnosis || '').toLowerCase().includes(filters.diagnosis.toLowerCase());
 
     // Age filter
@@ -280,17 +298,17 @@ export default function Patients() {
     const matchesAgeMin = !filters.ageMin || (patientAge !== null && patientAge >= parseInt(filters.ageMin));
     const matchesAgeMax = !filters.ageMax || (patientAge !== null && patientAge <= parseInt(filters.ageMax));
 
-    // Visit filter
-    const patientVisits = allVisits.filter(v => v.patient_id === patient.id);
+    // Visit filter — use pre-built index instead of filtering allVisits per patient
+    const patientVisitCount = visitCountByPatientId[patient.id] || 0;
     const matchesVisits = !filters.hasVisits || filters.hasVisits === 'all' ||
-      (filters.hasVisits === 'yes' && patientVisits.length > 0) ||
-      (filters.hasVisits === 'no' && patientVisits.length === 0);
+      (filters.hasVisits === 'yes' && patientVisitCount > 0) ||
+      (filters.hasVisits === 'no' && patientVisitCount === 0);
 
-    // Care plan filter
-    const patientCarePlans = allCarePlans.filter(cp => cp.patient_id === patient.id);
+    // Care plan filter — use pre-built index instead of filtering allCarePlans per patient
+    const patientCarePlanCount = carePlanCountByPatientId[patient.id] || 0;
     const matchesCarePlans = !filters.hasCarePlans || filters.hasCarePlans === 'all' ||
-      (filters.hasCarePlans === 'yes' && patientCarePlans.length > 0) ||
-      (filters.hasCarePlans === 'no' && patientCarePlans.length === 0);
+      (filters.hasCarePlans === 'yes' && patientCarePlanCount > 0) ||
+      (filters.hasCarePlans === 'no' && patientCarePlanCount === 0);
 
     // Date range filter
     const createdDate = new Date(patient.created_date);
@@ -323,7 +341,7 @@ export default function Patients() {
       default:
         return 0;
     }
-  });
+  }), [patients, filters, debouncedSearch, sortBy, visitCountByPatientId, lastVisitDateByPatientId, carePlanCountByPatientId]);
 
   const togglePatientSelection = (patient) => {
     setSelectedPatients(prev => {

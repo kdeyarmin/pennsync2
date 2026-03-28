@@ -81,6 +81,7 @@ export default function DocumentHub() {
           )}
         </div>
       </div>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 gap-1 h-auto p-1">
