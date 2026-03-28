@@ -4,14 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Plus, Trash2, Send, FileText, LayoutTemplate, Settings, Bell } from 'lucide-react';
+import { Upload, Plus, Trash2, Send, FileText, LayoutTemplate, Settings, Bell, BookOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function SignatureRequestCreator({ onCancel }) {
   const [step, setStep] = useState(1);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [selectedLibraryDoc, setSelectedLibraryDoc] = useState(null);
   
   const [signers, setSigners] = useState([
     { id: '1', name: '', email: '', role: 'Signer 1', color: 'bg-blue-500' }
@@ -25,6 +27,23 @@ export default function SignatureRequestCreator({ onCancel }) {
   const containerRef = useRef(null);
 
   const [isSending, setIsSending] = useState(false);
+
+  const { data: libraryDocs = [] } = useQuery({
+    queryKey: ['libraryDocuments'],
+    queryFn: () => base44.entities.LibraryDocument.list('-created_date', 50),
+    initialData: []
+  });
+
+  const { data: pdfTemplates = [] } = useQuery({
+    queryKey: ['pdfTemplates'],
+    queryFn: () => base44.entities.PDFTemplate.list('-created_date', 50),
+    initialData: []
+  });
+
+  const allLibraryItems = [
+    ...libraryDocs.map(d => ({ id: d.id, title: d.title, file_url: d.file_url, type: 'document', category: d.category })),
+    ...pdfTemplates.map(t => ({ id: t.id, title: t.template_name, file_url: t.template_file_url, type: 'template', category: t.template_category }))
+  ];
 
   useEffect(() => {
     if (file) {
@@ -120,8 +139,20 @@ export default function SignatureRequestCreator({ onCancel }) {
     
     setIsSending(true);
     try {
-      // 1. Upload file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // 1. Upload file or use library doc
+      let finalFileUrl = "";
+      let finalFileName = "";
+      
+      if (file) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        finalFileUrl = file_url;
+        finalFileName = file.name;
+      } else if (selectedLibraryDoc) {
+        finalFileUrl = selectedLibraryDoc.file_url;
+        finalFileName = selectedLibraryDoc.title;
+      } else {
+        throw new Error("No file selected");
+      }
       
       // 2. Map signers to format expected by DocumentSignature
       const mappedSigners = signers.map((s, idx) => ({
@@ -134,10 +165,10 @@ export default function SignatureRequestCreator({ onCancel }) {
 
       // 3. Create DocumentSignature record
       const docSig = await base44.entities.DocumentSignature.create({
-        document_title: file.name,
+        document_title: finalFileName,
         document_type: 'custom_request',
         document_content: 'Uploaded PDF for signing',
-        document_url: file_url,
+        document_url: finalFileUrl,
         patient_id: "none",
         status: "pending",
         signers: mappedSigners,
@@ -156,7 +187,7 @@ export default function SignatureRequestCreator({ onCancel }) {
       // 4. Create Packages and Tokens for each signer
       for (const signer of signers) {
         const pkg = await base44.entities.DocumentPackage.create({
-          package_name: `Signature Request: ${file.name}`,
+          package_name: `Signature Request: ${finalFileName}`,
           patient_id: "none",
           document_signatures: [docSig.id],
           status: "pending",
@@ -181,8 +212,8 @@ export default function SignatureRequestCreator({ onCancel }) {
         
         await base44.integrations.Core.SendEmail({
           to: signer.email,
-          subject: `Signature Requested: ${file.name}`,
-          body: `Hello ${signer.name},\n\nYou have been requested to sign a document: ${file.name}.\n\nPlease review and sign the document by clicking the link below:\n\n${signingUrl}\n\nThank you.`
+          subject: `Signature Requested: ${finalFileName}`,
+          body: `Hello ${signer.name},\n\nYou have been requested to sign a document: ${finalFileName}.\n\nPlease review and sign the document by clicking the link below:\n\n${signingUrl}\n\nThank you.`
         });
       }
 
@@ -193,6 +224,7 @@ export default function SignatureRequestCreator({ onCancel }) {
       } else {
         setStep(1);
         setFile(null);
+        setSelectedLibraryDoc(null);
         setSigners([{ id: '1', name: '', email: '', role: 'Signer 1', color: 'bg-blue-500' }]);
         setFields([]);
       }
@@ -228,20 +260,63 @@ export default function SignatureRequestCreator({ onCancel }) {
         </div>
 
         {step === 1 && (
-          <div className="max-w-2xl mx-auto text-center py-16 px-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-            <Upload className="w-12 h-12 mx-auto text-slate-400 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Document</h3>
-            <p className="text-slate-500 mb-6">Select a PDF document that requires signatures</p>
-            <div className="relative inline-block">
-              <Button className="bg-blue-600 hover:bg-blue-700 pointer-events-none">
-                Browse Files
-              </Button>
-              <input 
-                type="file" 
-                accept=".pdf" 
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                onChange={handleFileChange}
-              />
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center py-12 px-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors mb-8">
+              <Upload className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Document</h3>
+              <p className="text-slate-500 mb-6">Select a PDF document that requires signatures</p>
+              <div className="relative inline-block">
+                <Button className="bg-blue-600 hover:bg-blue-700 pointer-events-none">
+                  Browse Files
+                </Button>
+                <input 
+                  type="file" 
+                  accept=".pdf" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleFileChange}
+                />
+              </div>
+            </div>
+
+            <div className="relative flex py-5 items-center">
+                <div className="flex-grow border-t border-slate-200"></div>
+                <span className="flex-shrink-0 mx-4 text-slate-400 text-sm font-medium">OR</span>
+                <div className="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                Select from Document Library
+              </h3>
+              
+              {allLibraryItems.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {allLibraryItems.map((item) => (
+                    <Card 
+                      key={item.id} 
+                      className="cursor-pointer hover:shadow-md transition-shadow border-slate-200"
+                      onClick={() => {
+                        setSelectedLibraryDoc(item);
+                        setPreviewUrl(item.file_url);
+                        setStep(2);
+                      }}
+                    >
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          {item.type === 'template' ? <LayoutTemplate className="w-6 h-6 text-blue-600" /> : <FileText className="w-6 h-6 text-blue-600" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-slate-900 truncate">{item.title}</h4>
+                          <p className="text-sm text-slate-500 capitalize">{item.type} • {item.category}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-center py-8">No documents or templates found in the library.</p>
+              )}
             </div>
           </div>
         )}
@@ -251,10 +326,15 @@ export default function SignatureRequestCreator({ onCancel }) {
             <div className="bg-blue-50 p-4 rounded-lg flex items-center gap-3">
                <FileText className="w-5 h-5 text-blue-600" />
                <div>
-                 <p className="text-sm font-medium text-blue-900">Selected File</p>
-                 <p className="text-sm text-blue-700">{file?.name}</p>
+                <p className="text-sm font-medium text-blue-900">Selected File</p>
+                <p className="text-sm text-blue-700">{file?.name || selectedLibraryDoc?.title}</p>
                </div>
-               <Button variant="ghost" size="sm" className="ml-auto text-blue-600 hover:text-blue-800 hover:bg-blue-100" onClick={() => setStep(1)}>Change</Button>
+               <Button variant="ghost" size="sm" className="ml-auto text-blue-600 hover:text-blue-800 hover:bg-blue-100" onClick={() => {
+                setStep(1);
+                setFile(null);
+                setSelectedLibraryDoc(null);
+                setPreviewUrl(null);
+               }}>Change</Button>
             </div>
 
             <div className="space-y-4">

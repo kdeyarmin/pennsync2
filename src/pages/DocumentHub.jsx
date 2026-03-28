@@ -86,8 +86,8 @@ export default function DocumentHub() {
             Documents
           </TabsTrigger>
           {currentUser?.role === 'admin' && (
-            <TabsTrigger value="templates" className="min-h-[44px] text-sm col-span-2 sm:col-span-1">
-              Templates
+            <TabsTrigger value="library" className="min-h-[44px] text-sm col-span-2 sm:col-span-1">
+              Document Library
             </TabsTrigger>
           )}
         </TabsList>
@@ -107,9 +107,9 @@ export default function DocumentHub() {
           <DocumentManagementDashboard />
         </TabsContent>
 
-        {/* Templates Tab (Admin Only) */}
+        {/* Library Tab (Admin Only) */}
         {currentUser?.role === 'admin' && (
-          <TabsContent value="templates" className="space-y-6">
+          <TabsContent value="library" className="space-y-6">
             <TemplateLibrary />
             
             <PDFTemplateBuilder
