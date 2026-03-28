@@ -59,7 +59,6 @@ import Dashboard from './pages/Dashboard';
 import DocumentHub from './pages/DocumentHub';
 import EventReport from './pages/EventReport';
 import Help from './pages/Help';
-import IncidentReporting from './pages/IncidentReporting';
 import Incidents from './pages/Incidents';
 import LearningCenter from './pages/LearningCenter';
 import Messages from './pages/Messages';
@@ -99,7 +98,6 @@ export const PAGES = {
     "DocumentHub": DocumentHub,
     "EventReport": EventReport,
     "Help": Help,
-    "IncidentReporting": IncidentReporting,
     "Incidents": Incidents,
     "LearningCenter": LearningCenter,
     "Messages": Messages,
