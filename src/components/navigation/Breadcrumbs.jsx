@@ -11,60 +11,55 @@ export default function Breadcrumbs({ currentPageName, customPath = [] }) {
 
     // Map page names to breadcrumb structures
     const pageMap = {
-      // Patient pages
+      // Patient Care
       "Patients": [{ label: "Patients", page: "Patients" }],
       "PatientDetails": [{ label: "Patients", page: "Patients" }, { label: "Patient Details" }],
-      "Patient360": [{ label: "Patients", page: "Patients" }, { label: "Patient 360" }],
-      
-      // Documentation pages
-      "QuickNote": [{ label: "Documentation", page: "QuickNote" }, { label: "Quick Note" }],
+      "ClinicalChart": [{ label: "Patients", page: "Patients" }, { label: "Clinical Chart" }],
+      "CarePlanManagement": [{ label: "Patient Care" }, { label: "Care Plans" }],
+      "SmartOASISAssessment": [{ label: "Patient Care" }, { label: "OASIS Assessment" }],
+      "Incidents": [{ label: "Patient Care" }, { label: "Incidents" }],
+      "PatientEducationHub": [{ label: "Patient Care" }, { label: "Patient Education" }],
+
+      // Documentation
+      "ClinicalDocumentation": [{ label: "Documentation" }, { label: "Clinical Notes" }],
       "SmartNoteAssistant": [{ label: "Documentation" }, { label: "Smart Notes" }],
-      "DocumentVisit": [{ label: "Documentation" }, { label: "Document Visit" }],
-      
-      // Reports & Analytics
-      "Reports": [{ label: "Reports & Analytics", page: "Reports" }],
-      "AgencyAnalytics": [{ label: "Reports & Analytics", page: "Reports" }, { label: "Agency Analytics" }],
-      
-      // Admin pages
-      "AdminDashboard": [{ label: "Admin", page: "AdminDashboard" }],
-      "UserManagement": [{ label: "Admin", page: "AdminDashboard" }, { label: "User Management" }],
-      "SecurityCompliance": [{ label: "Admin", page: "AdminDashboard" }, { label: "Security & Compliance" }],
-      
-      // Training
-      "MyLearning": [{ label: "My Learning", page: "MyLearning" }],
-      "TrainingManagement": [{ label: "Admin", page: "AdminDashboard" }, { label: "Training Management" }],
-      
-      // Care Plans
-      "CarePlanManagement": [{ label: "Care Plans", page: "CarePlanManagement" }],
-      
-      // Compliance
-      "MedicareComplianceDashboard": [{ label: "Compliance", page: "MedicareComplianceDashboard" }],
-      "MedicareGuidelinesLibrary": [{ label: "Compliance" }, { label: "Guidelines Library" }],
-      
-      // Referrals
-      "ReferralIntake": [{ label: "Referrals", page: "ReferralIntake" }],
-      
-      // Alerts & Notifications
-      "PatientAlerts": [{ label: "Patient Care" }, { label: "Patient Alerts" }],
-      
-      // Messages
+      "VisitScribe": [{ label: "Documentation" }, { label: "Visit Scribe" }],
+      "DocumentHub": [{ label: "Documentation" }, { label: "Documents" }],
+      "ReferralIntake": [{ label: "Documentation" }, { label: "Referral Intake" }],
+      "EventReport": [{ label: "Documentation" }, { label: "Event Report" }],
+
+      // Communication
       "Messages": [{ label: "Communication", page: "Messages" }],
-      
-      // Settings
-      "UserSettings": [{ label: "Settings", page: "UserSettings" }],
-      "NotificationSettings": [{ label: "Settings", page: "UserSettings" }, { label: "Notifications" }],
-      
-      // Workflow
-      "NurseWorkflow": [{ label: "My Workflow", page: "NurseWorkflow" }],
-      
-      // Features
-      "Features": [{ label: "Features & Help", page: "Features" }],
-      
-      // Offline
+      "SendFax": [{ label: "Communication" }, { label: "Send Fax" }],
+      "PhysicianDirectory": [{ label: "Communication" }, { label: "Physician Directory" }],
+      "Telehealth": [{ label: "Communication" }, { label: "Telehealth" }],
+
+      // Compliance
+      "ComplianceCenter": [{ label: "Compliance" }, { label: "Compliance Center" }],
+      "SecurityCompliance": [{ label: "Compliance" }, { label: "Security & Compliance" }],
+      "RegulatoryCompliance": [{ label: "Compliance" }, { label: "Regulatory Compliance" }],
+
+      // Analytics
+      "ReportsAnalytics": [{ label: "Reports & Analytics" }],
+
+      // Learning
+      "LearningCenter": [{ label: "Learning" }, { label: "Learning Center" }],
+      "MyLearning": [{ label: "Learning" }, { label: "My Courses" }],
+      "ClinicalSkillsChecklist": [{ label: "Learning" }, { label: "Skills Checklist" }],
+      "TrainingCoursePlayer": [{ label: "Learning", page: "MyLearning" }, { label: "Course Player" }],
+
+      // Admin
+      "AdminOperations": [{ label: "Admin", page: "AdminOperations" }],
+      "UserManagement": [{ label: "Admin", page: "AdminOperations" }, { label: "User Management" }],
+      "AdminTraining": [{ label: "Admin", page: "AdminOperations" }, { label: "Training Manager" }],
+      "ClinicalPathwayManager": [{ label: "Admin", page: "AdminOperations" }, { label: "Clinical Pathways" }],
+      "PatientDataManagement": [{ label: "Admin", page: "AdminOperations" }, { label: "Data Management" }],
+
+      // Settings & Tools
+      "UserSettings": [{ label: "Settings" }],
+      "ResourceLibrary": [{ label: "Tools" }, { label: "Resource Library" }],
       "OfflineMode": [{ label: "Tools" }, { label: "Offline Mode" }],
-      
-      // Education
-      "PatientEducationHub": [{ label: "Patient Care" }, { label: "Patient Education" }]
+      "Help": [{ label: "Help" }],
     };
 
     return pageMap[currentPageName] || breadcrumbs;
