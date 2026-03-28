@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DocumentManagementDashboard from "@/components/documents/DocumentManagementDashboard";
 import DocumentPackageCreator from "@/components/documents/DocumentPackageCreator";
 import SignatureTracking from "@/components/documents/SignatureTracking";
@@ -16,6 +17,7 @@ export default function DocumentHub() {
   const [activeTab, setActiveTab] = useState("signatures");
   const [showPackageCreator, setShowPackageCreator] = useState(false);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const navigate = useNavigate();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -49,7 +51,7 @@ export default function DocumentHub() {
           {activeTab === "signatures" && (
             <>
               <Button 
-                onClick={() => setShowPackageCreator(true)}
+                onClick={() => navigate('/CreateSignatureRequest')}
                 className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
               >
                 <Plus className="w-4 h-4 mr-2" />

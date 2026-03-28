@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Plus, GripVertical, Trash2, Send, FileText, LayoutTemplate } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, Plus, Trash2, Send, FileText, LayoutTemplate, Settings, Bell } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -13,11 +13,17 @@ export default function SignatureRequestCreator({ onCancel }) {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientEmail, setRecipientEmail] = useState('');
-  const [fields, setFields] = useState([
-    { id: 'field-1', type: 'signature', label: 'Signature', required: true }
+  const [signers, setSigners] = useState([
+    { id: '1', name: '', email: '', role: 'Signer 1', color: 'bg-blue-500' }
   ]);
+  
+  const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [reminderInterval, setReminderInterval] = useState('3');
+  
+  const [fields, setFields] = useState([]);
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
+  const containerRef = useRef(null);
+
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
@@ -35,30 +41,80 @@ export default function SignatureRequestCreator({ onCancel }) {
     }
   };
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-    const items = Array.from(fields);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    setFields(items);
+  const addSigner = () => {
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
+    setSigners([
+      ...signers, 
+      { 
+        id: Date.now().toString(), 
+        name: '', 
+        email: '', 
+        role: `Signer ${signers.length + 1}`,
+        color: colors[signers.length % colors.length]
+      }
+    ]);
   };
 
-  const addField = () => {
-    const newId = `field-${Date.now()}`;
-    setFields([...fields, { id: newId, type: 'signature', label: 'Signature', required: true }]);
+  const removeSigner = (id) => {
+    if (signers.length <= 1) return;
+    setSigners(signers.filter(s => s.id !== id));
+    // Also remove fields assigned to this signer
+    setFields(fields.filter(f => f.signerId !== id));
   };
 
-  const removeField = (id) => {
-    setFields(fields.filter(f => f.id !== id));
+  const updateSigner = (id, field, value) => {
+    setSigners(signers.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
 
-  const updateField = (id, newLabel) => {
-    setFields(fields.map(f => f.id === id ? { ...f, label: newLabel } : f));
+  const addField = (signerId) => {
+    const field = {
+      id: `field-${Date.now()}`,
+      signerId,
+      type: 'signature',
+      label: 'Signature',
+      position: { x: 50, y: 50 },
+      size: { width: 150, height: 40 },
+      required: true
+    };
+    setFields([...fields, field]);
+    toast.success("Field added - drag to position");
+  };
+
+  const updateField = (fieldId, updates) => {
+    setFields(fields.map(f => f.id === fieldId ? { ...f, ...updates } : f));
+  };
+
+  const removeField = (fieldId) => {
+    setFields(fields.filter(f => f.id !== fieldId));
+    if (selectedFieldId === fieldId) setSelectedFieldId(null);
+  };
+
+  const handleDragStart = (e, fieldId) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("fieldId", fieldId);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const fieldId = e.dataTransfer.getData("fieldId");
+    if (!fieldId || !containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, e.clientX - rect.left - 75);
+    const y = Math.max(0, e.clientY - rect.top - 20);
+    
+    updateField(fieldId, { position: { x, y } });
   };
 
   const handleSend = async () => {
-    if (!file || !recipientEmail || !recipientName) {
-      toast.error('Please fill in all required fields');
+    // Validate
+    const invalidSigners = signers.filter(s => !s.name || !s.email);
+    if (invalidSigners.length > 0) {
+      toast.error('Please fill in all signer names and emails');
+      return;
+    }
+    if (fields.length === 0) {
+      toast.error('Please place at least one signature field on the document');
       return;
     }
     
@@ -67,63 +123,78 @@ export default function SignatureRequestCreator({ onCancel }) {
       // 1. Upload file
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       
-      // 2. Create DocumentSignature record
+      // 2. Map signers to format expected by DocumentSignature
+      const mappedSigners = signers.map((s, idx) => ({
+        id: parseInt(s.id),
+        name: s.name,
+        email: s.email,
+        role: 'patient', // generic role
+        required: true
+      }));
+
+      // 3. Create DocumentSignature record
       const docSig = await base44.entities.DocumentSignature.create({
-        document_name: file.name,
+        document_title: file.name,
+        document_type: 'custom_request',
+        document_content: 'Uploaded PDF for signing',
         document_url: file_url,
         patient_id: "none",
-        signer_email: recipientEmail,
         status: "pending",
+        signers: mappedSigners,
         signature_fields: fields.map(f => ({
           id: f.id,
           label: f.label,
           required: f.required,
+          signer_id: parseInt(f.signerId),
+          position: f.position,
           signed: false
         })),
-        requires_signature: true
+        created_by_email: 'system',
+        sent_date: new Date().toISOString()
       });
 
-      // 3. Create DocumentPackage
-      const pkg = await base44.entities.DocumentPackage.create({
-        package_name: `Signature Request: ${file.name}`,
-        patient_id: "none",
-        document_signatures: [docSig.id],
-        status: "pending",
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        signer_email: recipientEmail,
-        signer_name: recipientName
-      });
+      // 4. Create Packages and Tokens for each signer
+      for (const signer of signers) {
+        const pkg = await base44.entities.DocumentPackage.create({
+          package_name: `Signature Request: ${file.name}`,
+          patient_id: "none",
+          document_signatures: [docSig.id],
+          status: "pending",
+          due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          signer_email: signer.email,
+          signer_name: signer.name,
+          auto_reminder_enabled: remindersEnabled,
+          reminder_days_before: parseInt(reminderInterval)
+        });
 
-      // 4. Create Token
-      const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      await base44.entities.DocumentPackageToken.create({
-        package_id: pkg.id,
-        token: token,
-        signer_email: recipientEmail,
-        signer_name: recipientName,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      });
+        const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await base44.entities.DocumentPackageToken.create({
+          package_id: pkg.id,
+          token: token,
+          signer_email: signer.email,
+          signer_name: signer.name,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        });
 
-      // 5. Send Email
-      const origin = window.location.origin;
-      const signingUrl = `${origin}/signer?token=${token}`;
-      
-      await base44.integrations.Core.SendEmail({
-        to: recipientEmail,
-        subject: `Signature Requested: ${file.name}`,
-        body: `Hello ${recipientName},\n\nYou have been requested to sign a document: ${file.name}.\n\nPlease review and sign the document by clicking the link below:\n\n${signingUrl}\n\nThank you.`
-      });
+        const origin = window.location.origin;
+        const signingUrl = `${origin}/signer?token=${token}`;
+        
+        await base44.integrations.Core.SendEmail({
+          to: signer.email,
+          subject: `Signature Requested: ${file.name}`,
+          body: `Hello ${signer.name},\n\nYou have been requested to sign a document: ${file.name}.\n\nPlease review and sign the document by clicking the link below:\n\n${signingUrl}\n\nThank you.`
+        });
+      }
 
-      toast.success('Signature request sent successfully!');
+      toast.success('Signature requests sent successfully!');
       
       if (onCancel) {
         onCancel();
       } else {
         setStep(1);
         setFile(null);
-        setRecipientName('');
-        setRecipientEmail('');
-        setFields([{ id: 'field-1', type: 'signature', label: 'Signature', required: true }]);
+        setSigners([{ id: '1', name: '', email: '', role: 'Signer 1', color: 'bg-blue-500' }]);
+        setFields([]);
       }
       
     } catch (err) {
@@ -160,7 +231,7 @@ export default function SignatureRequestCreator({ onCancel }) {
           <div className="max-w-2xl mx-auto text-center py-16 px-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
             <Upload className="w-12 h-12 mx-auto text-slate-400 mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Document</h3>
-            <p className="text-slate-500 mb-6">Select a PDF document that requires a signature</p>
+            <p className="text-slate-500 mb-6">Select a PDF document that requires signatures</p>
             <div className="relative inline-block">
               <Button className="bg-blue-600 hover:bg-blue-700 pointer-events-none">
                 Browse Files
@@ -187,132 +258,228 @@ export default function SignatureRequestCreator({ onCancel }) {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Recipient Details</h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Recipient Name</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="John Doe" 
-                    value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Recipient Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="john@example.com" 
-                    value={recipientEmail}
-                    onChange={(e) => setRecipientEmail(e.target.value)}
-                  />
-                </div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Recipients</h3>
+                <Button variant="outline" size="sm" onClick={addSigner} className="gap-2">
+                  <Plus className="w-4 h-4" /> Add Signer
+                </Button>
               </div>
+
+              {signers.map((signer, index) => (
+                <Card key={signer.id} className="relative overflow-hidden">
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${signer.color}`}></div>
+                  <CardContent className="p-4 pl-6 flex flex-col gap-4 relative">
+                    {signers.length > 1 && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-2 top-2 text-slate-400 hover:text-red-500"
+                        onClick={() => removeSigner(signer.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <h4 className="font-medium text-slate-700">Signer {index + 1}</h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Name</Label>
+                        <Input 
+                          placeholder="John Doe" 
+                          value={signer.name}
+                          onChange={(e) => updateSigner(signer.id, 'name', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input 
+                          type="email" 
+                          placeholder="john@example.com" 
+                          value={signer.email}
+                          onChange={(e) => updateSigner(signer.id, 'email', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+
+            <Card className="bg-slate-50 border-slate-200">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Bell className="w-5 h-5 text-slate-600" />
+                  <h3 className="font-medium">Automated Reminders</h3>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Send reminder emails to signers</span>
+                  <input 
+                    type="checkbox" 
+                    checked={remindersEnabled}
+                    onChange={(e) => setRemindersEnabled(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                </div>
+                {remindersEnabled && (
+                  <div className="flex items-center gap-3 text-sm pt-2">
+                    <span className="text-slate-600">Remind every</span>
+                    <Select value={reminderInterval} onValueChange={setReminderInterval}>
+                      <SelectTrigger className="w-24 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 day</SelectItem>
+                        <SelectItem value="3">3 days</SelectItem>
+                        <SelectItem value="5">5 days</SelectItem>
+                        <SelectItem value="7">7 days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="text-slate-600">until signed</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             <div className="flex justify-end pt-4">
               <Button 
                 onClick={() => setStep(3)} 
-                disabled={!recipientName || !recipientEmail}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                Next: Setup Fields
+                Next: Place Fields
               </Button>
             </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4">
-            {/* Left side: Document Preview */}
-            <div className="border rounded-xl bg-slate-100 h-[600px] overflow-hidden flex flex-col">
-              <div className="bg-slate-800 text-slate-200 text-sm font-medium p-2 text-center">
-                Document Preview
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4">
+            {/* Left side: Toolbox & Fields */}
+            <div className="lg:col-span-1 flex flex-col h-[700px] border rounded-xl bg-white shadow-sm overflow-hidden">
+              <div className="bg-slate-50 border-b p-4">
+                <h3 className="font-semibold text-slate-900">Signers</h3>
+                <p className="text-xs text-slate-500 mt-1">Select a signer, then add fields.</p>
               </div>
-              <div className="flex-1 p-4">
-                {previewUrl ? (
-                  <iframe 
-                    src={previewUrl} 
-                    className="w-full h-full rounded shadow-sm bg-white" 
-                    title="PDF Preview"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-400">No preview available</div>
-                )}
-              </div>
-            </div>
-
-            {/* Right side: Fields Setup */}
-            <div className="flex flex-col h-[600px]">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold">Configure Signature Fields</h3>
-                  <p className="text-sm text-slate-500 mt-1">Drag to reorder required fields.</p>
-                </div>
-                <Button variant="outline" size="sm" onClick={addField} className="gap-2 shrink-0">
-                  <Plus className="w-4 h-4" /> Add Field
-                </Button>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto pr-2">
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <Droppable droppableId="fields">
-                    {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
-                        {fields.map((field, index) => (
-                          <Draggable key={field.id} draggableId={field.id} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg shadow-sm"
-                              >
-                                <div {...provided.dragHandleProps} className="text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing p-1">
-                                  <GripVertical className="w-5 h-5" />
-                                </div>
-                                <div className="flex-1 flex gap-3">
-                                  <Input 
-                                    value={field.label}
-                                    onChange={(e) => updateField(field.id, e.target.value)}
-                                    placeholder="Field Label (e.g. Signature)"
-                                    className="flex-1"
-                                  />
-                                </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
-                                  onClick={() => removeField(field.id)}
-                                  disabled={fields.length === 1}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
+              <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+                {signers.map(signer => {
+                  const signerFields = fields.filter(f => f.signerId === signer.id);
+                  return (
+                    <div key={signer.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${signer.color}`}></div>
+                          <span className="text-sm font-medium truncate w-32" title={signer.name || `Signer ${signer.id}`}>
+                            {signer.name || `Signer ${signer.id}`}
+                          </span>
+                        </div>
+                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => addField(signer.id)}>
+                          <Plus className="w-3 h-3 mr-1" /> Field
+                        </Button>
                       </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
+                      
+                      {signerFields.length > 0 && (
+                        <div className="pl-5 space-y-1">
+                          {signerFields.map(field => (
+                            <div 
+                              key={field.id}
+                              onClick={() => setSelectedFieldId(field.id)}
+                              className={`flex justify-between items-center text-xs p-1.5 rounded cursor-pointer ${selectedFieldId === field.id ? 'bg-blue-100 text-blue-900 font-medium' : 'hover:bg-slate-100 text-slate-600'}`}
+                            >
+                              <span>{field.label}</span>
+                              <button onClick={(e) => { e.stopPropagation(); removeField(field.id); }} className="text-slate-400 hover:text-red-500">
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
-              <div className="flex justify-between pt-4 border-t mt-4">
-                <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+              {selectedFieldId && (
+                <div className="p-4 border-t bg-blue-50/50">
+                  <h4 className="text-xs font-semibold uppercase text-slate-500 mb-3">Edit Field</h4>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Label</Label>
+                      <Input 
+                        size="sm" 
+                        className="h-8 text-sm"
+                        value={fields.find(f => f.id === selectedFieldId)?.label || ''}
+                        onChange={(e) => updateField(selectedFieldId, { label: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-4 border-t bg-slate-50">
+                <Button variant="outline" className="w-full mb-2" onClick={() => setStep(2)}>Back</Button>
                 <Button 
                   onClick={handleSend} 
                   disabled={isSending || fields.length === 0}
-                  className="bg-green-600 hover:bg-green-700 gap-2"
+                  className="w-full bg-green-600 hover:bg-green-700 gap-2"
                 >
                   {isSending ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <Send className="w-4 h-4" />
                   )}
-                  Send Request
+                  Send Requests
                 </Button>
+              </div>
+            </div>
+
+            {/* Right side: Interactive Document Canvas */}
+            <div className="lg:col-span-3 h-[700px] border rounded-xl bg-slate-200 overflow-auto relative">
+              <div 
+                className="mx-auto my-8 relative shadow-lg bg-white bg-no-repeat bg-contain bg-center"
+                style={{
+                  width: '800px', 
+                  height: '1131px', // ~ letter aspect ratio
+                  backgroundImage: previewUrl ? `url(${previewUrl})` : 'none'
+                }}
+                ref={containerRef}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+              >
+                {/* Fallback visual if previewUrl is just a generic blob that can't be rendered as bg */}
+                {!previewUrl?.match(/\.(jpeg|jpg|gif|png)$/i) && (
+                  <div className="absolute inset-0 opacity-20 pointer-events-none">
+                    <iframe src={previewUrl} className="w-full h-full" scrolling="no" />
+                    <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px]"></div>
+                  </div>
+                )}
+                
+                {fields.map(field => {
+                  const signer = signers.find(s => s.id === field.signerId);
+                  const colorClass = signer ? signer.color : 'bg-blue-500';
+                  const isSelected = selectedFieldId === field.id;
+                  
+                  return (
+                    <div
+                      key={field.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, field.id)}
+                      onClick={() => setSelectedFieldId(field.id)}
+                      className={`absolute border-2 cursor-move flex items-center justify-center p-2 rounded shadow-sm transition-all
+                        ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500 z-10' : 'opacity-90 hover:opacity-100'}
+                      `}
+                      style={{
+                        left: `${field.position.x}px`,
+                        top: `${field.position.y}px`,
+                        width: `${field.size.width}px`,
+                        height: `${field.size.height}px`,
+                        borderColor: 'currentColor'
+                      }}
+                    >
+                      <div className={`absolute inset-0 ${colorClass} opacity-10 rounded`}></div>
+                      <div className={`text-xs font-semibold ${colorClass.replace('bg-', 'text-')} flex flex-col items-center pointer-events-none`}>
+                        <span className="truncate w-full text-center px-1">{field.label}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

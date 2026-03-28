@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, Clock, Lock } from 'lucide-react';
 import SignerPackageViewer from '@/components/signer/SignerPackageViewer';
-import SignatureRequestCreator from '@/components/signer/SignatureRequestCreator';
 import { toast } from 'sonner';
 
 export default function SignerPortal() {
@@ -14,14 +13,12 @@ export default function SignerPortal() {
   const [isValid, setIsValid] = useState(false);
   const [packageData, setPackageData] = useState(null);
   const [error, setError] = useState(null);
-  
-  const [isCreatingMode, setIsCreatingMode] = useState(false);
 
   const token = searchParams.get('token');
 
   useEffect(() => {
     if (!token) {
-      setIsCreatingMode(true);
+      setError('No access token provided. Please use the link from your email.');
       setIsLoading(false);
       return;
     }
@@ -55,15 +52,7 @@ export default function SignerPortal() {
     );
   }
 
-  if (isCreatingMode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-        <div className="max-w-6xl mx-auto">
-          <SignatureRequestCreator />
-        </div>
-      </div>
-    );
-  }
+
 
   if (error) {
     return (
