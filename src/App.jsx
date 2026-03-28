@@ -11,46 +11,46 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import ErrorBoundary from '@/components/utils/ErrorBoundary';
+import React, { Suspense, lazy } from 'react';
 
 // Page imports
-import Dashboard from '@/pages/Dashboard';
-import Patients from '@/pages/Patients';
-import PatientDetails from '@/pages/PatientDetails';
-import ClinicalDocumentation from '@/pages/ClinicalDocumentation';
-import DocumentHub from '@/pages/DocumentHub';
-import Messages from '@/pages/Messages';
-import AdminOperations from '@/pages/AdminOperations';
-import UserManagement from '@/pages/UserManagement';
-import AdminTraining from '@/pages/AdminTraining';
-import StaffTrainingHub from '@/pages/StaffTrainingHub';
-import CarePlanManagement from '@/pages/CarePlanManagement';
-import SmartOASISAssessment from '@/pages/SmartOASISAssessment';
-import SendFax from '@/pages/SendFax';
-import PhysicianDirectory from '@/pages/PhysicianDirectory';
-import Telehealth from '@/pages/Telehealth';
-import ResourceLibrary from '@/pages/ResourceLibrary';
-import ComplianceCenter from '@/pages/ComplianceCenter';
-import Incidents from '@/pages/Incidents';
-import MyLearning from '@/pages/MyLearning';
-import ReferralIntake from '@/pages/ReferralIntake';
-import OfflineMode from '@/pages/OfflineMode';
-import Help from '@/pages/Help';
-import ReportsAnalytics from '@/pages/ReportsAnalytics';
-import SecurityCompliance from '@/pages/SecurityCompliance';
-import PatientDataManagement from '@/pages/PatientDataManagement';
-import UserSettings from '@/pages/UserSettings';
-import ClinicalPathwayManager from '@/pages/ClinicalPathwayManager';
-
-import TrainingCoursePlayer from '@/pages/TrainingCoursePlayer';
-import EventReport from '@/pages/EventReport';
-import SmartNoteAssistant from '@/pages/SmartNoteAssistant';
-import PatientEducationHub from '@/pages/PatientEducationHub';
-import VisitScribe from '@/pages/VisitScribe';
-import IncidentReporting from '@/pages/IncidentReporting';
-import ClinicalChart from '@/pages/ClinicalChart';
-import TemplateManagement from '@/pages/TemplateManagement';
-import DocumentAuditLogs from '@/pages/DocumentAuditLogs';
-import BulkSignatureRequests from '@/pages/BulkSignatureRequests';
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Patients = lazy(() => import('@/pages/Patients'));
+const PatientDetails = lazy(() => import('@/pages/PatientDetails'));
+const ClinicalDocumentation = lazy(() => import('@/pages/ClinicalDocumentation'));
+const DocumentHub = lazy(() => import('@/pages/DocumentHub'));
+const Messages = lazy(() => import('@/pages/Messages'));
+const AdminOperations = lazy(() => import('@/pages/AdminOperations'));
+const UserManagement = lazy(() => import('@/pages/UserManagement'));
+const AdminTraining = lazy(() => import('@/pages/AdminTraining'));
+const StaffTrainingHub = lazy(() => import('@/pages/StaffTrainingHub'));
+const CarePlanManagement = lazy(() => import('@/pages/CarePlanManagement'));
+const SmartOASISAssessment = lazy(() => import('@/pages/SmartOASISAssessment'));
+const SendFax = lazy(() => import('@/pages/SendFax'));
+const PhysicianDirectory = lazy(() => import('@/pages/PhysicianDirectory'));
+const Telehealth = lazy(() => import('@/pages/Telehealth'));
+const ResourceLibrary = lazy(() => import('@/pages/ResourceLibrary'));
+const ComplianceCenter = lazy(() => import('@/pages/ComplianceCenter'));
+const Incidents = lazy(() => import('@/pages/Incidents'));
+const MyLearning = lazy(() => import('@/pages/MyLearning'));
+const ReferralIntake = lazy(() => import('@/pages/ReferralIntake'));
+const OfflineMode = lazy(() => import('@/pages/OfflineMode'));
+const Help = lazy(() => import('@/pages/Help'));
+const ReportsAnalytics = lazy(() => import('@/pages/ReportsAnalytics'));
+const SecurityCompliance = lazy(() => import('@/pages/SecurityCompliance'));
+const PatientDataManagement = lazy(() => import('@/pages/PatientDataManagement'));
+const UserSettings = lazy(() => import('@/pages/UserSettings'));
+const ClinicalPathwayManager = lazy(() => import('@/pages/ClinicalPathwayManager'));
+const TrainingCoursePlayer = lazy(() => import('@/pages/TrainingCoursePlayer'));
+const EventReport = lazy(() => import('@/pages/EventReport'));
+const SmartNoteAssistant = lazy(() => import('@/pages/SmartNoteAssistant'));
+const PatientEducationHub = lazy(() => import('@/pages/PatientEducationHub'));
+const VisitScribe = lazy(() => import('@/pages/VisitScribe'));
+const IncidentReporting = lazy(() => import('@/pages/IncidentReporting'));
+const ClinicalChart = lazy(() => import('@/pages/ClinicalChart'));
+const TemplateManagement = lazy(() => import('@/pages/TemplateManagement'));
+const DocumentAuditLogs = lazy(() => import('@/pages/DocumentAuditLogs'));
+const BulkSignatureRequests = lazy(() => import('@/pages/BulkSignatureRequests'));
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -81,9 +81,10 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      {/* Public Signer Portal - No auth required */}
-      <Route path="/signer" element={<SignerPortal />} />
+    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div></div>}>
+      <Routes>
+        {/* Public Signer Portal - No auth required */}
+        <Route path="/signer" element={<SignerPortal />} />
       
       {/* Authenticated Routes */}
       <Route path="/" element={<Navigate to="/Dashboard" replace />} />
@@ -127,6 +128,7 @@ const AuthenticatedApp = () => {
       <Route path="/BulkSignatureRequests" element={<LayoutWrapper currentPageName="BulkSignatureRequests"><BulkSignatureRequests /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 

@@ -26,6 +26,7 @@ import AlertsPanel from "../components/smartNote/AlertsPanel";
 import FinalNoteDisplay from "../components/smartNote/FinalNoteDisplay";
 import FollowUpTasksPanel from "../components/smartNote/FollowUpTasksPanel";
 import VoiceClinicalNoteRecorder from "../components/smartNote/VoiceClinicalNoteRecorder";
+import ComplianceChecklist from "../components/smartNote/ComplianceChecklist";
 import { generateFollowUpTasks } from "@/functions/generateFollowUpTasks";
 import { analyzeVisitForSupplyUsage } from "@/functions/analyzeVisitForSupplyUsage";
 import { toast } from "sonner";
@@ -54,15 +55,8 @@ const getVisitTypes = (careScope) => {
   return HOME_HEALTH_VISIT_TYPES;
 };
 
-const TABS = [
-  { id: "builder", label: "Note Builder", icon: Sparkles, color: "indigo" },
-  { id: "medications", label: "Medications", icon: Pill, color: "emerald" },
-  { id: "drafter", label: "Draft from Vitals", icon: ClipboardList, color: "violet" },
-  { id: "summary", label: "Visit Summary", icon: FileText, color: "purple" },
-  { id: "trends", label: "Vital Trends", icon: TrendingUp, color: "cyan" },
-];
-
 import StepIndicator from "../components/smartNote/StepIndicator";
+import SmartNoteTabs from "../components/smartNote/SmartNoteTabs";
 
 export default function SmartNoteAssistant() {
   const [patientId, setPatientId] = useState("");
@@ -169,6 +163,14 @@ export default function SmartNoteAssistant() {
   }, [finalNote, noteSections]);
 
   useEffect(() => { if (step === 1) textareaRef.current?.focus(); }, [step]);
+
+  useEffect(() => {
+    return () => {
+      if (recRef.current) {
+        recRef.current.stop();
+      }
+    };
+  }, []);
 
   const restoreDraft = () => {
     const saved = sessionStorage.getItem(DRAFT_KEY);
@@ -530,32 +532,12 @@ Return ONLY the final note text.`
   const scoreColor = !analysis ? "text-gray-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
   const ready = note.trim().length >= 20;
 
-  const tabColorMap = { indigo: "bg-indigo-600", violet: "bg-violet-600", purple: "bg-purple-600", emerald: "bg-emerald-600" };
-  const tabHoverMap = { indigo: "hover:bg-indigo-50 hover:text-indigo-700", violet: "hover:bg-violet-50 hover:text-violet-700", purple: "hover:bg-purple-50 hover:text-purple-700", emerald: "hover:bg-emerald-50 hover:text-emerald-700" };
-
   return (
     <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-3 sm:space-y-4">
 
       <SmartNoteHeader careScope={careScope} onReset={reset} step={step} activeTab={activeTab} />
 
-      {/* Tabs */}
-      <div className="flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm gap-1 overflow-x-auto">
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[44px] whitespace-nowrap px-2 ${isActive ? `${tabColorMap[tab.color]} text-white shadow-sm` : `text-gray-500 ${tabHoverMap[tab.color]}`}`}
-            >
-              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-            </button>
-          );
-        })}
-      </div>
+      <SmartNoteTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* ── TAB: MEDICATIONS ── */}
       {activeTab === "medications" && (
@@ -680,45 +662,7 @@ Return ONLY the final note text.`
                 }}
               />
 
-              {/* Regulatory checks transparency - scope-specific */}
-              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
-                <p className="text-xs font-semibold text-indigo-700 mb-1.5 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5" /> Medicare compliance checks performed:
-                </p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-indigo-600">
-                  {(isHospice ? [
-                    "42 CFR §418 Hospice CoPs",
-                    "Terminal prognosis documentation",
-                    "Comfort-focused goals",
-                    "Symptom management (pain/dyspnea)",
-                    "IDG/IDT interdisciplinary notes",
-                    "Benefit period documentation",
-                    "Patient/family education",
-                    "Medication management",
-                    "Spiritual/psychosocial assessment",
-                    "Bereavement support",
-                    "Advance directives reviewed",
-                    "State hospice survey standards"
-                  ] : [
-                    "Medicare 42 CFR Part 484",
-                    "Homebound status",
-                    "Skilled need justification",
-                    "Vitals + interpretation",
-                    "Patient response",
-                    "Education with teach-back",
-                    "Safety / fall risk",
-
-                    "Care plan progress",
-                    "Pain assessment",
-                    "Medication adherence",
-                    "State survey standards"
-                  ]).map((item, i) => (
-                    <span key={i} className="flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-indigo-400 shrink-0" />{item}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <ComplianceChecklist isHospice={isHospice} />
 
               <div className="bg-white border-2 border-indigo-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
