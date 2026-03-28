@@ -12,6 +12,7 @@ import DocumentPackageCreator from "@/components/documents/DocumentPackageCreato
 import SignatureTracking from "@/components/documents/SignatureTracking";
 import TemplateLibrary from "@/components/documents/TemplateLibrary";
 import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
+import DocumentAnalytics from "@/components/documents/DocumentAnalytics";
 
 export default function DocumentHub() {
   const [activeTab, setActiveTab] = useState("signatures");
@@ -73,7 +74,7 @@ export default function DocumentHub() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1">
           <TabsTrigger value="signatures" className="relative min-h-[44px] text-sm">
             Signatures
             {stats.pending > 0 && (
@@ -90,6 +91,9 @@ export default function DocumentHub() {
               Document Library
             </TabsTrigger>
           )}
+          <TabsTrigger value="analytics" className="min-h-[44px] text-sm col-span-2 sm:col-span-1">
+            Analytics
+          </TabsTrigger>
         </TabsList>
 
         {/* Signatures Tab */}
@@ -118,6 +122,11 @@ export default function DocumentHub() {
             />
           </TabsContent>
         )}
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          <DocumentAnalytics />
+        </TabsContent>
       </Tabs>
     </div>
   );
