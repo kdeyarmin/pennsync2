@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ export default function WorkflowExecutionEngine({
   autoExecute = true
 }) {
   const [executing, setExecuting] = useState(false);
+  const executingRef = useRef(false);
   const [executionResults, setExecutionResults] = useState([]);
   const [progress, setProgress] = useState(0);
   const [lastExecutionError, setLastExecutionError] = useState("");
@@ -196,10 +197,11 @@ export default function WorkflowExecutionEngine({
   }, [executeSingleAction]);
 
   const executeWorkflows = useCallback(async () => {
-    if (executing || !analysisResults || automationRules.length === 0) {
+    if (executingRef.current || !analysisResults || automationRules.length === 0) {
       return;
     }
 
+    executingRef.current = true;
     setExecuting(true);
     setProgress(10);
     setLastExecutionError("");
@@ -291,6 +293,7 @@ export default function WorkflowExecutionEngine({
       setLastExecutionError(error.message || "Workflow execution failed");
       setProgress(0);
     } finally {
+      executingRef.current = false;
       setExecuting(false);
     }
   }, [
@@ -299,7 +302,6 @@ export default function WorkflowExecutionEngine({
     createWorkflowMutation,
     evaluateRule,
     executeActions,
-    executing,
     oasisUploadId,
     patientId,
     patientName,
