@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Zap, CheckCircle2, XCircle, AlertTriangle, Play } from "lucide-react";
+import { Loader2, Zap, CheckCircle2, XCircle, AlertTriangle, Play, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { deriveActionTypes, evaluateRuleTrigger } from "@/components/oasis/workflowEngineUtils";
 
 const ACTION_LABELS = {
   create_task: "Create task",
@@ -14,6 +15,21 @@ const ACTION_LABELS = {
   flag_for_review: "Flag for review"
 };
 
+/**
+ * Renders UI for evaluating and executing automation rules against the provided analysis and PDGM data.
+ *
+ * Evaluates active automation rules, runs configured actions (tasks, alerts, notifications, flags),
+ * persists workflow execution records, and displays execution controls, progress, errors, and results.
+ *
+ * @param {Object} props - Component props.
+ * @param {Object} props.analysisResults - Analysis results used to evaluate automation rule triggers; required for execution.
+ * @param {Object} [props.pdgmData] - Optional PDGM-related data that can be used by rule evaluations.
+ * @param {string} [props.patientId] - Optional patient identifier used when creating tasks/alerts and for execution context.
+ * @param {string} [props.patientName] - Optional patient name included in persisted workflow records.
+ * @param {string} [props.oasisUploadId] - Optional upload identifier used to derive an execution key for auto-execution deduplication.
+ * @param {boolean} [props.autoExecute=true] - If true, automatically triggers workflow execution when the execution context changes and no prior results exist.
+ * @returns {JSX.Element|null} A card-based UI that provides controls to run workflows, shows execution progress/status, and lists per-rule execution results; returns null when `analysisResults` is not provided.
+ */
 export default function WorkflowExecutionEngine({
   analysisResults,
   pdgmData,
@@ -26,6 +42,8 @@ export default function WorkflowExecutionEngine({
   const [executionResults, setExecutionResults] = useState([]);
   const [progress, setProgress] = useState(0);
   const [lastExecutionError, setLastExecutionError] = useState("");
+  const [lastRunSummary, setLastRunSummary] = useState(null);
+  const [currentRunId, setCurrentRunId] = useState("");
   const [autoExecutedKey, setAutoExecutedKey] = useState(null);
   const queryClient = useQueryClient();
 
@@ -33,7 +51,7 @@ export default function WorkflowExecutionEngine({
     if (oasisUploadId) return `upload:${oasisUploadId}`;
     if (patientId) return `patient:${patientId}`;
     if (!analysisResults) return null;
-    return `analysis:${analysisResults.overall_score || "unknown"}:${analysisResults.accuracy_score || "unknown"}`;
+    return `analysis:${analysisResults.overall_score ?? "unknown"}:${analysisResults.accuracy_score ?? "unknown"}`;
   }, [oasisUploadId, patientId, analysisResults]);
 
   const { data: automationRules = [] } = useQuery({
@@ -67,117 +85,12 @@ export default function WorkflowExecutionEngine({
     }
   });
 
-  const evaluateRule = useCallback((rule, analysis, pdgm) => {
-    const conditions = rule.trigger_conditions || {};
-    let triggered = false;
-    let reason = "";
-    let context = {};
+  const evaluateRule = useCallback((rule, analysis, pdgm) => evaluateRuleTrigger(rule, analysis, pdgm), []);
 
-    switch (rule.trigger_type) {
-      case "compliance_issue":
-        if (analysis.compliance_score < (conditions.score_value || 80)) {
-          triggered = true;
-          reason = `Compliance score ${analysis.compliance_score}% below threshold`;
-          context = {
-            compliance_score: analysis.compliance_score,
-            concerns: analysis.compliance_concerns?.slice(0, 3) || []
-          };
-        }
-        break;
-
-      case "revenue_opportunity": {
-        const matchingOpportunities = analysis.revenue_tips?.filter((tip) =>
-          conditions.severity_levels?.includes(tip.potential_impact)
-        ) || [];
-
-        if (matchingOpportunities.length > 0) {
-          triggered = true;
-          reason = "High-impact revenue opportunities identified";
-          context = { opportunities: matchingOpportunities };
-        }
-        break;
-      }
-
-      case "accuracy_concern":
-        if (analysis.accuracy_score < (conditions.score_value || 80)) {
-          triggered = true;
-          reason = `Accuracy score ${analysis.accuracy_score}% below threshold`;
-          context = {
-            accuracy_score: analysis.accuracy_score,
-            issues: analysis.accuracy_issues?.slice(0, 3) || []
-          };
-        }
-        break;
-
-      case "score_threshold": {
-        const scoreToCheck =
-          conditions.score_type === "overall"
-            ? analysis.overall_score
-            : conditions.score_type === "compliance"
-              ? analysis.compliance_score
-              : analysis.accuracy_score;
-
-        const meetsCondition =
-          conditions.score_operator === "less_than"
-            ? scoreToCheck < conditions.score_value
-            : conditions.score_operator === "greater_than"
-              ? scoreToCheck > conditions.score_value
-              : scoreToCheck === conditions.score_value;
-
-        if (meetsCondition) {
-          triggered = true;
-          reason = `${conditions.score_type || "overall"} score ${scoreToCheck}% ${conditions.score_operator?.replace("_", " ")} ${conditions.score_value}%`;
-          context = { score: scoreToCheck };
-        }
-        break;
-      }
-
-      case "specific_m_item": {
-        const flaggedItems = analysis.accuracy_issues?.filter((issue) =>
-          conditions.m_item_codes?.includes(issue.item)
-        ) || [];
-
-        if (flaggedItems.length > 0) {
-          triggered = true;
-          reason = "Targeted M-items flagged for review";
-          context = { flagged_items: flaggedItems };
-        }
-        break;
-      }
-
-      case "missing_documentation":
-        if ((analysis.missing_high_value_documentation?.length || 0) > 0) {
-          triggered = true;
-          reason = "Missing high-value documentation detected";
-          context = {
-            missing_docs: analysis.missing_high_value_documentation?.slice(0, 3) || []
-          };
-        }
-        break;
-
-      case "pdgm_discrepancy":
-        if (pdgm?.clinical_group && (analysis.revenue_tips?.length || 0) > 0) {
-          triggered = true;
-          reason = "PDGM grouping opportunities identified";
-          context = {
-            clinical_group: pdgm.clinical_group,
-            revenue_tips: analysis.revenue_tips?.slice(0, 2) || []
-          };
-        }
-        break;
-
-      default:
-        break;
-    }
-
-    return { triggered, reason, context };
-  }, []);
-
-  const executeActions = useCallback(async (rule, triggerContext) => {
-    const actions = [];
+  const executeSingleAction = useCallback(async (actionType, rule, triggerContext) => {
     const config = rule.action_config || {};
 
-    switch (rule.action_type) {
+    switch (actionType) {
       case "create_task": {
         try {
           const task = await createTaskMutation.mutateAsync({
@@ -193,57 +106,62 @@ export default function WorkflowExecutionEngine({
             ai_reason: triggerContext.reason || "Automation rule triggered"
           });
 
-          actions.push({
+          return {
             action_type: "create_task",
             status: "completed",
             result: task,
             executed_at: new Date().toISOString()
-          });
+          };
         } catch (error) {
-          actions.push({
+          return {
             action_type: "create_task",
             status: "failed",
             error: error.message,
             executed_at: new Date().toISOString()
-          });
+          };
         }
-        break;
       }
 
       case "create_alert": {
-        if (patientId) {
-          try {
-            const alert = await createAlertMutation.mutateAsync({
-              patient_id: patientId,
-              alert_type: "compliance_issue",
-              severity: config.task_priority || "medium",
-              title: rule.rule_name,
-              message: config.notification_message || rule.description,
-              contributing_factors: [triggerContext.reason || "Automated rule trigger"],
-              recommended_actions: [config.task_description_template || "Review OASIS assessment"],
-              status: "active"
-            });
-
-            actions.push({
-              action_type: "create_alert",
-              status: "completed",
-              result: alert,
-              executed_at: new Date().toISOString()
-            });
-          } catch (error) {
-            actions.push({
-              action_type: "create_alert",
-              status: "failed",
-              error: error.message,
-              executed_at: new Date().toISOString()
-            });
-          }
+        if (!patientId) {
+          return {
+            action_type: "create_alert",
+            status: "skipped",
+            error: "Patient ID is required to create alerts",
+            executed_at: new Date().toISOString()
+          };
         }
-        break;
+
+        try {
+          const alert = await createAlertMutation.mutateAsync({
+            patient_id: patientId,
+            alert_type: "compliance_issue",
+            severity: config.task_priority || "medium",
+            title: rule.rule_name,
+            message: config.notification_message || rule.description,
+            contributing_factors: [triggerContext.reason || "Automated rule trigger"],
+            recommended_actions: [config.task_description_template || "Review OASIS assessment"],
+            status: "active"
+          });
+
+          return {
+            action_type: "create_alert",
+            status: "completed",
+            result: alert,
+            executed_at: new Date().toISOString()
+          };
+        } catch (error) {
+          return {
+            action_type: "create_alert",
+            status: "failed",
+            error: error.message,
+            executed_at: new Date().toISOString()
+          };
+        }
       }
 
       case "notify_clinician":
-        actions.push({
+        return {
           action_type: "notify_clinician",
           status: "completed",
           result: {
@@ -252,33 +170,48 @@ export default function WorkflowExecutionEngine({
             sent_at: new Date().toISOString()
           },
           executed_at: new Date().toISOString()
-        });
-        break;
+        };
 
       case "flag_for_review":
-        actions.push({
+        return {
           action_type: "flag_for_review",
           status: "completed",
           result: { flagged: true },
           executed_at: new Date().toISOString()
-        });
-        break;
+        };
 
       default:
-        actions.push({
-          action_type: rule.action_type || "unknown_action",
+        return {
+          action_type: actionType || "unknown_action",
           status: "failed",
           error: "Unsupported action type",
           executed_at: new Date().toISOString()
-        });
-        break;
+        };
     }
-
-    return actions;
   }, [createAlertMutation, createTaskMutation, currentUser?.email, patientId]);
 
+  const executeActions = useCallback(async (rule, triggerContext) => {
+    const actionTypes = deriveActionTypes(rule);
+
+    if (actionTypes.length === 0) {
+      return [{
+        action_type: "unknown_action",
+        status: "skipped",
+        error: "No actions configured for rule",
+        executed_at: new Date().toISOString()
+      }];
+    }
+
+    const results = [];
+    for (const actionType of actionTypes) {
+      const actionResult = await executeSingleAction(actionType, rule, triggerContext);
+      results.push(actionResult);
+    }
+    return results;
+  }, [executeSingleAction]);
+
   const executeWorkflows = useCallback(async () => {
-    if (executing || !analysisResults || !pdgmData || automationRules.length === 0) {
+    if (executing || !analysisResults || automationRules.length === 0) {
       return;
     }
 
@@ -286,6 +219,8 @@ export default function WorkflowExecutionEngine({
     setProgress(10);
     setLastExecutionError("");
     const startTime = Date.now();
+    const runId = `wf-${startTime}`;
+    setCurrentRunId(runId);
     const results = [];
 
     try {
@@ -308,9 +243,14 @@ export default function WorkflowExecutionEngine({
           try {
             const actionResults = await executeActions(rule, triggerResult);
             const completedActions = actionResults.filter((action) => action.status === "completed").length;
+            const failedActions = actionResults.filter((action) => action.status === "failed").length;
 
             workflowResult.actions = actionResults;
-            workflowResult.status = completedActions === actionResults.length ? "completed" : "partially_completed";
+            workflowResult.status = failedActions === 0 && completedActions === actionResults.length
+              ? "completed"
+              : failedActions > 0
+                ? "failed"
+                : "partially_completed";
 
             await createWorkflowMutation.mutateAsync({
               oasis_upload_id: oasisUploadId,
@@ -336,7 +276,8 @@ export default function WorkflowExecutionEngine({
               status: workflowResult.status,
               completion_percentage: actionResults.length > 0 ? (completedActions / actionResults.length) * 100 : 0,
               execution_time_ms: Date.now() - startTime,
-              outcome_summary: `Executed ${completedActions} of ${actionResults.length} actions`
+              outcome_summary: `Executed ${completedActions} of ${actionResults.length} actions`,
+              run_id: runId
             });
           } catch (error) {
             workflowResult.status = "failed";
@@ -352,6 +293,13 @@ export default function WorkflowExecutionEngine({
       }
 
       setExecutionResults(results);
+      setLastRunSummary({
+        runAt: new Date().toISOString(),
+        triggeredRules: results.length,
+        completedRules: results.filter((result) => result.status === "completed").length,
+        failedRules: results.filter((result) => result.status === "failed").length,
+        runId
+      });
       setProgress(100);
     } catch (error) {
       console.error("Workflow execution error:", error);
@@ -374,7 +322,7 @@ export default function WorkflowExecutionEngine({
   ]);
 
   useEffect(() => {
-    if (!autoExecute || !executionKey || executionResults.length > 0 || executing) {
+    if (!autoExecute || !executionKey || executionResults.length > 0 || executing || automationRules.length === 0) {
       return;
     }
 
@@ -384,9 +332,9 @@ export default function WorkflowExecutionEngine({
 
     setAutoExecutedKey(executionKey);
     executeWorkflows();
-  }, [autoExecute, autoExecutedKey, executeWorkflows, executionKey, executionResults.length, executing]);
+  }, [autoExecute, autoExecutedKey, executeWorkflows, executionKey, executionResults.length, executing, automationRules.length]);
 
-  if (!analysisResults || automationRules.length === 0) return null;
+  if (!analysisResults) return null;
 
   return (
     <Card className="border-2 border-purple-300">
@@ -398,7 +346,7 @@ export default function WorkflowExecutionEngine({
           </CardTitle>
           <Button
             onClick={executeWorkflows}
-            disabled={executing}
+            disabled={executing || automationRules.length === 0}
             size="sm"
             className="bg-purple-600 hover:bg-purple-700"
           >
@@ -414,7 +362,7 @@ export default function WorkflowExecutionEngine({
         {executing && (
           <div className="mb-4">
             <Progress value={progress} className="h-2" />
-            <p className="text-xs text-gray-500 mt-2">Evaluating rules and executing actions...</p>
+            <p className="text-xs text-gray-500 mt-2">Evaluating rules and executing actions... {currentRunId}</p>
           </div>
         )}
 
@@ -423,6 +371,25 @@ export default function WorkflowExecutionEngine({
             <AlertTriangle className="w-4 h-4 text-red-600" />
             <AlertDescription className="text-red-800">
               {lastExecutionError}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {lastRunSummary && (
+          <Alert className="mb-4 bg-violet-50 border-violet-200">
+            <Info className="w-4 h-4 text-violet-700" />
+            <AlertDescription className="text-violet-900 text-xs">
+              Last run at {new Date(lastRunSummary.runAt).toLocaleString()} ({lastRunSummary.runId}): {lastRunSummary.triggeredRules} triggered,
+              {" "}{lastRunSummary.completedRules} completed, {lastRunSummary.failedRules} failed.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {automationRules.length === 0 && !executing && (
+          <Alert className="mb-4 bg-blue-50 border-blue-200">
+            <Info className="w-4 h-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              No active automation rules are configured yet.
             </AlertDescription>
           </Alert>
         )}
@@ -459,11 +426,11 @@ export default function WorkflowExecutionEngine({
                       {result.actions.map((action, actionIndex) => (
                         <div key={`${action.action_type}-${actionIndex}`} className="flex items-center gap-2 text-sm">
                           {action.status === "completed" && <CheckCircle2 className="w-3 h-3 text-green-600" />}
-                          {action.status === "failed" && <XCircle className="w-3 h-3 text-red-600" />}
+                          {(action.status === "failed" || action.status === "skipped") && <XCircle className="w-3 h-3 text-red-600" />}
                           <span className="text-gray-700">
                             {ACTION_LABELS[action.action_type] || action.action_type.replace(/_/g, " ")}
                           </span>
-                          {action.status === "failed" && action.error && (
+                          {(action.status === "failed" || action.status === "skipped") && action.error && (
                             <span className="text-xs text-red-600">({action.error})</span>
                           )}
                         </div>

@@ -10,7 +10,8 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview",
-    "check:updates": "node tools-check-updates.mjs"
+    "check:updates": "node tools-check-updates.mjs",
+    "test:utils": "node --test src/components/oasis/workflowEngineUtils.test.js src/components/fax/faxTrackerUtils.test.js"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.0",
