@@ -10,7 +10,12 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview",
-    "check:updates": "node tools-check-updates.mjs"
+    "check:updates": "node tools-check-updates.mjs",
+    "test:utils": "node --test src/components/oasis/workflowEngineUtils.test.js src/components/fax/faxTrackerUtils.test.js",
+    "lint:workflow-targets": "npx eslint src/components/oasis/WorkflowExecutionEngine.jsx src/components/oasis/workflowEngineUtils.js src/components/oasis/workflowEngineUtils.test.js src/components/fax/RealtimeFaxStatusTracker.jsx src/components/fax/faxTrackerUtils.js src/components/fax/faxTrackerUtils.test.js --max-warnings 0",
+    "typecheck:utils": "npx tsc --noEmit --allowJs --checkJs src/components/oasis/workflowEngineUtils.js src/components/oasis/workflowEngineUtils.test.js src/components/fax/faxTrackerUtils.js src/components/fax/faxTrackerUtils.test.js",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "verify:workflow-quality": "npm run lint:workflow-targets && npm run typecheck:utils && npm run test:utils && npm run build"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.0",

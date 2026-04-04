@@ -77,6 +77,13 @@ Updated `src/components/oasis/WorkflowExecutionEngine.jsx` to improve workflow b
    - tightened effect dependencies around auto-run execution
    - improved key stability for rendered action/result rows
 
+7. **Fax workflow resilience upgrades**
+   - added live-update pause/resume control to reduce noisy polling during manual audits
+   - added explicit query-error alerting for fax status failures
+   - added keyboard-accessible row interactions in the status list
+   - added in-context “Retry failed fax” action from the detail modal
+   - improved status summary cards with percentage distribution
+
 ## Recommended next improvements (prioritized)
 
 ### P0 (1 sprint)
