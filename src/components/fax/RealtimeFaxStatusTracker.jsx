@@ -20,6 +20,13 @@ const statusConfig = {
 };
 
 
+/**
+ * Displays a real-time dashboard and list of fax logs from the last 24 hours, with live update controls and the ability to retry failed faxes.
+ *
+ * Renders status summary cards, a searchable list of recent fax events with error details, a details modal for each fax (including retry action for failed faxes), and controls to pause/resume live updates and manually refresh data.
+ *
+ * @returns {JSX.Element} The Fax Status Tracker UI.
+ */
 export default function RealtimeFaxStatusTracker() {
   const [selectedFax, setSelectedFax] = useState(null);
   const [liveUpdatesEnabled, setLiveUpdatesEnabled] = useState(true);

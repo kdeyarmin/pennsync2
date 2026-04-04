@@ -15,6 +15,20 @@ const ACTION_LABELS = {
   flag_for_review: "Flag for review"
 };
 
+/**
+ * Coordinates evaluation of automation rules and execution of configured workflow actions, and renders UI for running and reporting those workflow runs.
+ *
+ * Renders controls, progress, per-rule results, and summary information; may auto-run based on input context when `autoExecute` is enabled.
+ *
+ * @param {Object} props - Component properties.
+ * @param {Object} props.analysisResults - Analysis results used to evaluate automation rules; when falsy the component renders nothing.
+ * @param {Object} [props.pdgmData] - Optional PDGM-related data passed to rule evaluation.
+ * @param {string} [props.patientId] - Patient identifier used when creating tasks/alerts and persisting executions.
+ * @param {string} [props.patientName] - Patient display name used when persisting workflow execution records.
+ * @param {string} [props.oasisUploadId] - OASIS upload identifier used to associate executions with a specific upload.
+ * @param {boolean} [props.autoExecute=true] - If true, the engine will attempt an automatic execution when inputs change and no prior results exist.
+ * @returns {JSX.Element|null} A React element showing workflow controls, progress, and results, or `null` when `analysisResults` is not provided.
+ */
 export default function WorkflowExecutionEngine({
   analysisResults,
   pdgmData,
