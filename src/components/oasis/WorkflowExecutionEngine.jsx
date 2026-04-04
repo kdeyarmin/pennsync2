@@ -51,7 +51,7 @@ export default function WorkflowExecutionEngine({
     if (oasisUploadId) return `upload:${oasisUploadId}`;
     if (patientId) return `patient:${patientId}`;
     if (!analysisResults) return null;
-    return `analysis:${analysisResults.overall_score || "unknown"}:${analysisResults.accuracy_score || "unknown"}`;
+    return `analysis:${analysisResults.overall_score ?? "unknown"}:${analysisResults.accuracy_score ?? "unknown"}`;
   }, [oasisUploadId, patientId, analysisResults]);
 
   const { data: automationRules = [] } = useQuery({
