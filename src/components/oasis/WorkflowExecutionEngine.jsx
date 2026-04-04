@@ -30,22 +30,41 @@ export default function WorkflowExecutionEngine({
   const [lastExecutionError, setLastExecutionError] = useState("");
   const [lastRunSummary, setLastRunSummary] = useState(null);
   const [currentRunId, setCurrentRunId] = useState("");
-  const [autoExecutedKey, setAutoExecutedKey] = useState(null);
   const queryClient = useQueryClient();
 
-  const executionKey = useMemo(() => {
-    if (oasisUploadId) return `upload:${oasisUploadId}`;
-    if (patientId) return `patient:${patientId}`;
-    if (!analysisResults) return null;
-    return `analysis:${analysisResults.overall_score || "unknown"}:${analysisResults.accuracy_score || "unknown"}`;
-  }, [oasisUploadId, patientId, analysisResults]);
+  // Generate deterministic idempotency key from all relevant fields
+  const generateIdempotencyKey = useCallback(() => {
+    if (!analysisResults && !pdgmData) return null;
 
-  const { data: automationRules = [] } = useQuery({
+    const parts = [];
+    if (oasisUploadId) parts.push(`upload:${oasisUploadId}`);
+    if (patientId) parts.push(`patient:${patientId}`);
+
+    // Include stable hash of analysisResults (treating 0 as distinct)
+    if (analysisResults) {
+      const analysisHash = JSON.stringify({
+        overall_score: analysisResults.overall_score ?? null,
+        accuracy_score: analysisResults.accuracy_score ?? null,
+        // Include other relevant fields that affect execution
+        key_fields: analysisResults
+      });
+      parts.push(`analysis:${analysisHash}`);
+    }
+
+    // Include pdgmData
+    if (pdgmData) {
+      parts.push(`pdgm:${JSON.stringify(pdgmData)}`);
+    }
+
+    return parts.join('|');
+  }, [oasisUploadId, patientId, analysisResults, pdgmData]);
+
+  const { data: automationRules, isLoading: isLoadingRules, error: rulesError } = useQuery({
     queryKey: ["automationRules"],
     queryFn: () => base44.entities.OASISAutomationRule.filter({ is_active: true })
   });
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me()
   });
@@ -146,17 +165,28 @@ export default function WorkflowExecutionEngine({
         }
       }
 
-      case "notify_clinician":
+      case "notify_clinician": {
+        // Don't mark as sent until currentUser.email is actually available
+        const recipientEmail = currentUser?.email;
+        if (!recipientEmail) {
+          return {
+            action_type: "notify_clinician",
+            status: "failed",
+            error: "Recipient email not available",
+            executed_at: new Date().toISOString()
+          };
+        }
         return {
           action_type: "notify_clinician",
           status: "completed",
           result: {
-            recipient: currentUser?.email,
+            recipient: recipientEmail,
             message: config.notification_message || "OASIS workflow triggered",
             sent_at: new Date().toISOString()
           },
           executed_at: new Date().toISOString()
         };
+      }
 
       case "flag_for_review":
         return {
@@ -197,7 +227,18 @@ export default function WorkflowExecutionEngine({
   }, [executeSingleAction]);
 
   const executeWorkflows = useCallback(async () => {
-    if (executingRef.current || !analysisResults || automationRules.length === 0) {
+    if (executingRef.current || !analysisResults || !automationRules || automationRules.length === 0) {
+      return;
+    }
+
+    // Check idempotency before executing
+    const idempotencyKey = generateIdempotencyKey();
+    if (!idempotencyKey) return;
+
+    // Check if this execution has already been performed (using queryClient cache as persistent storage)
+    const executedWorkflows = queryClient.getQueryData(['executedWorkflows']) || {};
+    if (executedWorkflows[idempotencyKey]) {
+      console.log('Workflow already executed for this idempotency key:', idempotencyKey);
       return;
     }
 
@@ -280,14 +321,23 @@ export default function WorkflowExecutionEngine({
       }
 
       setExecutionResults(results);
+      const completedRules = results.filter((result) => result.status === "completed").length;
+      const failedRules = results.filter((result) => result.status === "failed").length;
+      const partiallyCompletedRules = results.filter((result) => result.status === "partially_completed").length;
+
       setLastRunSummary({
         runAt: new Date().toISOString(),
         triggeredRules: results.length,
-        completedRules: results.filter((result) => result.status === "completed").length,
-        failedRules: results.filter((result) => result.status === "failed").length,
+        completedRules,
+        failedRules,
+        partiallyCompletedRules,
         runId
       });
       setProgress(100);
+
+      // Store idempotency key to prevent duplicate executions
+      const updatedExecutedWorkflows = { ...executedWorkflows, [idempotencyKey]: true };
+      queryClient.setQueryData(['executedWorkflows'], updatedExecutedWorkflows);
     } catch (error) {
       console.error("Workflow execution error:", error);
       setLastExecutionError(error.message || "Workflow execution failed");
@@ -305,23 +355,83 @@ export default function WorkflowExecutionEngine({
     oasisUploadId,
     patientId,
     patientName,
-    pdgmData
+    pdgmData,
+    generateIdempotencyKey,
+    queryClient
   ]);
 
   useEffect(() => {
-    if (!autoExecute || !executionKey || executionResults.length > 0 || executing || automationRules.length === 0) {
+    // Wait for user data to load before auto-executing (needed for notify_clinician)
+    if (isLoadingUser || !currentUser?.email) {
       return;
     }
 
-    if (autoExecutedKey === executionKey) {
+    if (!autoExecute || !analysisResults || executing || isLoadingRules) {
       return;
     }
 
-    setAutoExecutedKey(executionKey);
+    // Don't auto-execute if rules haven't loaded or if there are no rules
+    if (!automationRules || automationRules.length === 0) {
+      return;
+    }
+
+    // Check idempotency before auto-executing
+    const idempotencyKey = generateIdempotencyKey();
+    if (!idempotencyKey) return;
+
+    const executedWorkflows = queryClient.getQueryData(['executedWorkflows']) || {};
+    if (executedWorkflows[idempotencyKey]) {
+      return;
+    }
+
     executeWorkflows();
-  }, [autoExecute, autoExecutedKey, executeWorkflows, executionKey, executionResults.length, executing, automationRules.length]);
+  }, [autoExecute, executeWorkflows, analysisResults, executing, automationRules, isLoadingRules, isLoadingUser, currentUser?.email, generateIdempotencyKey, queryClient]);
 
   if (!analysisResults) return null;
+
+  // Show loading state while rules are loading
+  if (isLoadingRules || isLoadingUser) {
+    return (
+      <Card className="border-2 border-purple-300">
+        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-purple-600" />
+            Automated Workflow Execution
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <Alert className="bg-blue-50 border-blue-200">
+            <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+            <AlertDescription className="text-blue-800">
+              Loading automation rules and user data...
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state if rules or user data failed to load
+  if (rulesError || userError) {
+    return (
+      <Card className="border-2 border-purple-300">
+        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-purple-600" />
+            Automated Workflow Execution
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <Alert className="bg-red-50 border-red-200">
+            <XCircle className="w-4 h-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              {rulesError ? `Failed to load automation rules: ${rulesError.message}` : `Failed to load user data: ${userError.message}`}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-2 border-purple-300">
@@ -333,7 +443,7 @@ export default function WorkflowExecutionEngine({
           </CardTitle>
           <Button
             onClick={executeWorkflows}
-            disabled={executing || automationRules.length === 0}
+            disabled={executing || !automationRules || automationRules.length === 0}
             size="sm"
             className="bg-purple-600 hover:bg-purple-700"
           >
@@ -367,12 +477,13 @@ export default function WorkflowExecutionEngine({
             <Info className="w-4 h-4 text-violet-700" />
             <AlertDescription className="text-violet-900 text-xs">
               Last run at {new Date(lastRunSummary.runAt).toLocaleString()} ({lastRunSummary.runId}): {lastRunSummary.triggeredRules} triggered,
-              {" "}{lastRunSummary.completedRules} completed, {lastRunSummary.failedRules} failed.
+              {" "}{lastRunSummary.completedRules} completed, {lastRunSummary.failedRules} failed
+              {lastRunSummary.partiallyCompletedRules > 0 && `, ${lastRunSummary.partiallyCompletedRules} partially completed`}.
             </AlertDescription>
           </Alert>
         )}
 
-        {automationRules.length === 0 && !executing && (
+        {automationRules && automationRules.length === 0 && !executing && (
           <Alert className="mb-4 bg-blue-50 border-blue-200">
             <Info className="w-4 h-4 text-blue-600" />
             <AlertDescription className="text-blue-800">
@@ -430,7 +541,7 @@ export default function WorkflowExecutionEngine({
           </div>
         )}
 
-        {!executing && executionResults.length === 0 && automationRules.length > 0 && (
+        {!executing && executionResults.length === 0 && automationRules && automationRules.length > 0 && (
           <Alert className="bg-blue-50 border-blue-200">
             <Zap className="w-4 h-4 text-blue-600" />
             <AlertDescription className="text-blue-800">
