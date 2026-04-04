@@ -41,12 +41,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify workflow quality gates
-        run: npm run verify:workflow-quality
+      - name: Lint workflow target files
+        run: npm run lint:workflow-targets
+
+      - name: Typecheck utility modules
+        run: npm run typecheck:utils
+
+      - name: Run utility unit tests
+        run: npm run test:utils
 
       - name: Typecheck (informational baseline)
         run: npm run typecheck
         continue-on-error: true
+
+      - name: Build app
+        run: npm run build
 
       - name: Production audit (informational baseline)
         run: npm run audit:prod
