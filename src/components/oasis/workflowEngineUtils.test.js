@@ -44,6 +44,7 @@ test('evaluateRuleTrigger supports pdgm discrepancy when pdgm data exists', () =
   assert.equal(result.context.clinical_group, 'MMTA');
   assert.equal(result.context.revenue_tips.length, 2);
 });
+
 test('deriveActionTypes returns empty array when no actions configured', () => {
   const actionTypes = deriveActionTypes({});
   assert.deepEqual(actionTypes, []);
