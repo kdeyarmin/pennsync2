@@ -1,5 +1,5 @@
-import { test } from 'node:test';
-import { strict as assert } from 'node:assert';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import { deriveActionTypes, evaluateRuleTrigger } from './workflowEngineUtils.js';
 
 test('deriveActionTypes prefers action_config.actions when present', () => {
@@ -44,8 +44,6 @@ test('evaluateRuleTrigger supports pdgm discrepancy when pdgm data exists', () =
   assert.equal(result.context.clinical_group, 'MMTA');
   assert.equal(result.context.revenue_tips.length, 2);
 });
-
-
 test('deriveActionTypes returns empty array when no actions configured', () => {
   const actionTypes = deriveActionTypes({});
   assert.deepEqual(actionTypes, []);

@@ -1,5 +1,5 @@
-import { test } from 'node:test';
-import { strict as assert } from 'node:assert';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   TWENTY_FOUR_HOURS_MS,
   filterRecentFaxLogs,
@@ -44,8 +44,6 @@ test('getRelativeTimeLabel returns human readable labels', () => {
   assert.equal(getRelativeTimeLabel('2026-04-04T09:00:00.000Z', now), '3h ago');
   assert.equal(getRelativeTimeLabel('2026-04-02T12:00:00.000Z', now), '2d ago');
 });
-
-
 test('getStatusCounts handles empty arrays', () => {
   assert.deepEqual(getStatusCounts([]), {
     delivered: 0,
