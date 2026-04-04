@@ -50,7 +50,7 @@ export default function RealtimeFaxStatusTracker() {
   });
 
   const retryFaxMutation = useMutation({
-    mutationFn: (fax) => retryFailedFax({ fax_id: fax.id }),
+    mutationFn: (fax) => retryFailedFax({ fax_log_id: fax.id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['faxLogs'] });
       queryClient.invalidateQueries({ queryKey: ['faxLogs', 'recent'] });
