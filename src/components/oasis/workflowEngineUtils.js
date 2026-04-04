@@ -55,12 +55,14 @@ export const evaluateRuleTrigger = (rule = {}, analysis = {}, pdgm = {}) => {
       break;
 
     case "score_threshold": {
-      const scoreToCheck =
-        conditions.score_type === "overall"
-          ? analysis.overall_score
-          : conditions.score_type === "compliance"
-            ? analysis.compliance_score
-            : analysis.accuracy_score;
+      const scoreType = conditions.score_type || "overall";
+      const scoreMap = {
+        overall: analysis.overall_score,
+        compliance: analysis.compliance_score,
+        accuracy: analysis.accuracy_score
+      };
+      const scoreToCheck = scoreMap[scoreType];
+      if (scoreToCheck == null) break;
 
       const meetsCondition =
         conditions.score_operator === "less_than"
@@ -71,7 +73,7 @@ export const evaluateRuleTrigger = (rule = {}, analysis = {}, pdgm = {}) => {
 
       if (meetsCondition) {
         triggered = true;
-        reason = `${conditions.score_type || "overall"} score ${scoreToCheck}% ${conditions.score_operator?.replace("_", " ")} ${conditions.score_value}%`;
+        reason = `${scoreType} score ${scoreToCheck}% ${conditions.score_operator?.replace("_", " ")} ${conditions.score_value}%`;
         context = { score: scoreToCheck };
       }
       break;
