@@ -44,3 +44,24 @@ test('evaluateRuleTrigger supports pdgm discrepancy when pdgm data exists', () =
   assert.equal(result.context.clinical_group, 'MMTA');
   assert.equal(result.context.revenue_tips.length, 2);
 });
+test('deriveActionTypes returns empty array when no actions configured', () => {
+  const actionTypes = deriveActionTypes({});
+  assert.deepEqual(actionTypes, []);
+});
+
+test('evaluateRuleTrigger supports score_threshold greater_than checks', () => {
+  const result = evaluateRuleTrigger(
+    {
+      trigger_type: 'score_threshold',
+      trigger_conditions: {
+        score_type: 'overall',
+        score_operator: 'greater_than',
+        score_value: 90
+      }
+    },
+    { overall_score: 95, compliance_score: 80, accuracy_score: 88 }
+  );
+
+  assert.equal(result.triggered, true);
+  assert.equal(result.context.score, 95);
+});

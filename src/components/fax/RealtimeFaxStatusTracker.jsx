@@ -187,6 +187,13 @@ export default function RealtimeFaxStatusTracker() {
                 Unable to load fax statuses right now. Try refreshing.
               </AlertDescription>
             </Alert>
+          ) : retryFaxMutation.isError ? (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Retry failed. Please try again in a few seconds.
+              </AlertDescription>
+            </Alert>
           ) : faxLogs.length === 0 ? (
             <p className="text-center text-gray-500 py-6">No faxes sent in the last 24 hours</p>
           ) : (
