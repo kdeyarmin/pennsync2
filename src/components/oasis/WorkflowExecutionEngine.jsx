@@ -15,6 +15,21 @@ const ACTION_LABELS = {
   flag_for_review: "Flag for review"
 };
 
+/**
+ * Renders UI for evaluating and executing automation rules against the provided analysis and PDGM data.
+ *
+ * Evaluates active automation rules, runs configured actions (tasks, alerts, notifications, flags),
+ * persists workflow execution records, and displays execution controls, progress, errors, and results.
+ *
+ * @param {Object} props - Component props.
+ * @param {Object} props.analysisResults - Analysis results used to evaluate automation rule triggers; required for execution.
+ * @param {Object} [props.pdgmData] - Optional PDGM-related data that can be used by rule evaluations.
+ * @param {string} [props.patientId] - Optional patient identifier used when creating tasks/alerts and for execution context.
+ * @param {string} [props.patientName] - Optional patient name included in persisted workflow records.
+ * @param {string} [props.oasisUploadId] - Optional upload identifier used to derive an execution key for auto-execution deduplication.
+ * @param {boolean} [props.autoExecute=true] - If true, automatically triggers workflow execution when the execution context changes and no prior results exist.
+ * @returns {JSX.Element|null} A card-based UI that provides controls to run workflows, shows execution progress/status, and lists per-rule execution results; returns null when `analysisResults` is not provided.
+ */
 export default function WorkflowExecutionEngine({
   analysisResults,
   pdgmData,

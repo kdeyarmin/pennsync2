@@ -20,6 +20,13 @@ const statusConfig = {
 };
 
 
+/**
+ * Render a real-time fax status tracker UI that displays recent fax delivery statuses, summary cards, a scrollable activity list, and a details modal with retry capabilities.
+ *
+ * The component fetches and periodically refreshes recent fax logs, optionally subscribes to live updates while live updates are enabled, computes status counts and percentages, shows transient retry success notices, and provides a modal to view fax details and retry failed faxes.
+ *
+ * @returns {JSX.Element} The React element rendering the fax status tracker interface.
+ */
 export default function RealtimeFaxStatusTracker() {
   const [selectedFax, setSelectedFax] = useState(null);
   const [liveUpdatesEnabled, setLiveUpdatesEnabled] = useState(true);
