@@ -357,7 +357,7 @@ export default function CarePlanManagement() {
         setPlanItems([]);
         setLinkedPathways({});
       }, 2000);
-    } catch (e) {
+    } catch {
       toast.error("Failed to save care plan.");
     }
     setSaving(false);
@@ -475,7 +475,7 @@ export default function CarePlanManagement() {
               patientName={builderPatient ? `${builderPatient.first_name} ${builderPatient.last_name}` : ""}
               diagnosis={builderPatient?.primary_diagnosis}
               careType={careType}
-              onInterventionsGenerated={(interventions, schedule) => {
+              onInterventionsGenerated={(interventions, _schedule) => {
                 toast.success(`Generated ${interventions.length} interventions`);
               }}
             />

@@ -91,7 +91,7 @@ export default function UserManagement({ users, currentUser }) {
     mutationFn: async (data) => {
       return await base44.functions.invoke('createUserWithTempPassword', data);
     },
-    onSuccess: async (data) => {
+    onSuccess: async (_data) => {
       // Log activity
       await logActivity('user_invited', {
         entity_type: 'UserInvitation',

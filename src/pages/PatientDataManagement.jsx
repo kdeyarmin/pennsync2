@@ -69,7 +69,7 @@ export default function PatientDataManagement() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
 
-  const { data: patients = [], isLoading, error } = useQuery({
+  const { data: patients = [], isLoading } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
       try {

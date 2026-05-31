@@ -57,7 +57,7 @@ export default function PDFTemplateManager() {
     visual_elements: []
   });
 
-  const { data: templates = [], isLoading } = useQuery({
+  const { data: templates = [] } = useQuery({
     queryKey: ['pdf-templates'],
     queryFn: () => base44.entities.PDFTemplate.list('-created_date'),
     initialData: []
@@ -139,7 +139,7 @@ export default function PDFTemplateManager() {
       const result = await base44.integrations.Core.UploadFile({ file });
       setTemplateData(prev => ({ ...prev, template_file_url: result.file_url }));
       toast.success("Template uploaded successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to upload template");
     }
   };

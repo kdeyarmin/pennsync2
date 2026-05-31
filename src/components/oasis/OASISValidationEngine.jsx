@@ -34,7 +34,7 @@ const CMS_VALIDATION_RULES = {
 
   M1021: {
     // Primary Diagnosis
-    validate: (value, allAnswers) => {
+    validate: (value, _allAnswers) => {
       const errors = [];
       const warnings = [];
       const suggestions = [];
@@ -82,7 +82,7 @@ const CMS_VALIDATION_RULES = {
 
   M1810: {
     // Dressing Upper Body
-    validate: (value, allAnswers) => {
+    validate: (value, _allAnswers) => {
       const errors = [];
       const warnings = [];
       const suggestions = [];
@@ -121,7 +121,7 @@ const CMS_VALIDATION_RULES = {
 
   M1830: {
     // Bathing
-    validate: (value, allAnswers) => {
+    validate: (value, _allAnswers) => {
       const errors = [];
       const warnings = [];
       const suggestions = [];
@@ -140,7 +140,7 @@ const CMS_VALIDATION_RULES = {
 
   M1840: {
     // Toileting
-    validate: (value, allAnswers) => {
+    validate: (value, _allAnswers) => {
       const errors = [];
       const warnings = [];
       const suggestions = [];
@@ -179,7 +179,7 @@ const CMS_VALIDATION_RULES = {
 
   M1850: {
     // Transferring
-    validate: (value, allAnswers) => {
+    validate: (value, _allAnswers) => {
       const errors = [];
       const warnings = [];
       const suggestions = [];

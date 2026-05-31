@@ -102,7 +102,7 @@ export default function EnrollmentSummaryDashboard() {
           { value: 'all', label: 'All' }
         ]}
         showPlan={false}
-        onExport={(format) => {
+        onExport={(_format) => {
           // Export functionality
         }}
       />

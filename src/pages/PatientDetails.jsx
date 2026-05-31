@@ -738,7 +738,7 @@ export default function PatientDetails() {
                 <PredictiveRiskAnalyzer 
                   patientId={patientId} 
                   patientName={`${patient.first_name} ${patient.last_name}`}
-                  onAlertsCreated={(count) => {
+                  onAlertsCreated={(_count) => {
                     queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
                   }}
                   autoAnalyze={false}

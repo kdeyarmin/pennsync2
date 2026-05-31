@@ -99,7 +99,7 @@ Return JSON:
         }
       });
       setCodes(result);
-    } catch (err) {
+    } catch {
       alert("Failed to generate code suggestions. Please try again.");
     } finally {
       setLoading(false);

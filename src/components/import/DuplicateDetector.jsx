@@ -47,7 +47,7 @@ const calculateSimilarity = (str1, str2) => {
 };
 
 // MRN-ONLY duplicate matching
-const calculateMatchScore = (patient, existingPatient, sensitivity = 'medium', criteria = {}) => {
+const calculateMatchScore = (patient, existingPatient, _sensitivity = 'medium', _criteria = {}) => {
   let score = 0;
   let matches = [];
   const criteriaMatched = {};

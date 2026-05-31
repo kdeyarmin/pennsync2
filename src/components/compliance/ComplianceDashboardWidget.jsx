@@ -15,7 +15,7 @@ import {
 } from "date-fns";
 
 export default function ComplianceDashboardWidget() {
-  const { data: currentUser } = useQuery({
+  useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });

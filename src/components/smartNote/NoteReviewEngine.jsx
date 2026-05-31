@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +60,6 @@ export default function NoteReviewEngine({
   const [currentFlagItem, setCurrentFlagItem] = useState(null);
   const [flagNote, setFlagNote] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
-  const queryClient = useQueryClient();
 
   // Fetch nurse skills for gap analysis
   const { data: nurseSkills = [] } = useQuery({

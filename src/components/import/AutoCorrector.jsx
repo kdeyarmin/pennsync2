@@ -19,7 +19,7 @@ export default function AutoCorrector({ csvData, columnMapping, onCorrectedData 
       total: 0
     };
 
-    const correctedRows = csvData.rows.map((row, rowIdx) => {
+    const correctedRows = csvData.rows.map((row, _rowIdx) => {
       const newRow = [...row];
       
       Object.entries(columnMapping).forEach(([colIndex, fieldKey]) => {

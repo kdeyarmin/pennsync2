@@ -228,7 +228,7 @@ export default function OASISValidationPanel({ pdgmData, analysisResults }) {
   );
 }
 
-function performValidationChecks(pdgmData, analysisResults) {
+function performValidationChecks(pdgmData, _analysisResults) {
   const checks = [];
   
   // Category 1: Admission Source & Timing Validation
@@ -556,7 +556,7 @@ function validateDates(data) {
           impact: 'Late assessments may not capture initial patient status accurately'
         });
       }
-    } catch (e) {
+    } catch {
       issues.push({
         severity: 'low',
         title: 'Invalid Date Format',

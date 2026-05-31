@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   ChevronDown, ChevronUp, Lightbulb, BookOpenCheck, MessageSquare, Eye,
   AlertTriangle, Zap, ListChecks, ThumbsUp, ThumbsDown, Brain, Stethoscope,
-  HelpCircle, ClipboardList, Play, Video
+  HelpCircle, ClipboardList, Video
 } from "lucide-react";
 
 function ReadingTime({ content }) {

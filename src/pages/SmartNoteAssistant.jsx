@@ -352,7 +352,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         setAnalyzing(false);
         return;
       }
-    } catch (err) {
+    } catch {
       alert("Analysis failed. Please try again.");
       setStep(1);
     } finally {

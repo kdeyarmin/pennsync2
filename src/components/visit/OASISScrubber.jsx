@@ -1554,7 +1554,7 @@ Return JSON:
     }
   };
 
-  const handleSuggestionReject = (reason) => {
+  const handleSuggestionReject = (_reason) => {
     setFeedbackStats(prev => ({ ...prev, rejected: prev.rejected + 1 }));
   };
 

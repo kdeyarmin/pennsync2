@@ -176,7 +176,7 @@ export default function EnhancedMultiReportComparison({
     // Radar chart data for overall comparison
     const radarData = ['Clinical', 'Functional', 'Comorbidity'].map(metric => {
       const dataPoint = { subject: metric };
-      reportData.forEach((r, idx) => {
+      reportData.forEach((r, _idx) => {
         const key = metric === 'Clinical' ? 'clinicalWeight' : 
                    metric === 'Functional' ? 'functionalMultiplier' : 'comorbidityMultiplier';
         dataPoint[r.shortLabel] = r.pdgmResult[key] || 1;

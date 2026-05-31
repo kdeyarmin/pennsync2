@@ -141,7 +141,7 @@ Return JSON:
     setEditedTexts({ ...editedTexts, [index]: text });
   };
 
-  const handleSaveEdit = (index) => {
+  const handleSaveEdit = (_index) => {
     setEditingIndex(null);
   };
 

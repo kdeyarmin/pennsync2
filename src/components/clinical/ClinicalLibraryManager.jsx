@@ -42,7 +42,7 @@ export default function ClinicalLibraryManager() {
     queryFn: () => base44.auth.me()
   });
 
-  const { data: templates = [], isLoading } = useQuery({
+  const { data: templates = [] } = useQuery({
     queryKey: ['clinical-templates'],
     queryFn: () => base44.entities.ClinicalLibraryTemplate.list('-usage_count', 200),
     initialData: []

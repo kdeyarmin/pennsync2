@@ -43,7 +43,7 @@ export default function EnhancedAudioRecorder({ onTranscribed, disabled = false 
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
-    } catch (err) {
+    } catch {
       setError("Microphone access denied. Please enable microphone in browser settings.");
     }
   };

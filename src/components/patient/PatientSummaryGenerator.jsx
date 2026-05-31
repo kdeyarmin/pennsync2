@@ -167,7 +167,7 @@ Provide actionable handoff information including:
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       alert('Failed to copy to clipboard');
     }
   };

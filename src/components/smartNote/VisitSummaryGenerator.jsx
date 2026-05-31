@@ -114,7 +114,7 @@ Return JSON with these keys:
         }
       });
       setSummary(result);
-    } catch (err) {
+    } catch {
       alert("Failed to generate summary. Please try again.");
     } finally {
       setLoading(false);

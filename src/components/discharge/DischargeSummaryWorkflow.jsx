@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,6 @@ import {
 import DigitalSignaturePad from './DigitalSignaturePad';
 
 export default function DischargeSummaryWorkflow({ patientId, onClose, onComplete }) {
-  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState('generate'); // generate, review, sign, complete
   const [dischargeDate, setDischargeDate] = useState(new Date().toISOString().split('T')[0]);
   const [reviewNotes, setReviewNotes] = useState('');

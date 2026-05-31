@@ -60,7 +60,7 @@ export default function Dashboard() {
         queryClient.refetchQueries({ queryKey: ['myNoteConversions'] }),
       ]);
       toast.success('Dashboard refreshed');
-    } catch (error) {
+    } catch {
       toast.error('Some data failed to refresh. Please try again.');
     } finally {
       setIsRefreshing(false);
