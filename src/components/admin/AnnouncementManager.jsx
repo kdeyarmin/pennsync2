@@ -83,7 +83,7 @@ export default function AnnouncementManager() {
       console.log('✅ Created successfully:', result);
       return result;
     },
-    onSuccess: async (data) => {
+    onSuccess: async (_data) => {
       console.log('🔄 Refetching announcements...');
       await queryClient.invalidateQueries({ queryKey: ['announcements'] });
       const refetchResult = await refetch();

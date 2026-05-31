@@ -340,7 +340,7 @@ export default function Messages() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
-                {selectedThread.messages.map((msg, idx) => (
+                {selectedThread.messages.map((msg, _idx) => (
                   <Card key={msg.id} className={msg.sender_email === currentUser?.email ? 'bg-blue-50' : 'bg-gray-50'}>
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">

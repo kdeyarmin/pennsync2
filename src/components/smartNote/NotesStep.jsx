@@ -29,7 +29,7 @@ export default function NotesStep({
                 e.preventDefault?.();
                 onNotesChange(e.target.value);
               }}
-              onKeyDown={(e) => {
+              onKeyDown={(_e) => {
                 // Don't prevent any keys - let all typing flow through
               }}
               placeholder="Type or dictate your rough notes or bullet points...\n\nExamples:\n• Patient states feeling better\n• Wound improving, less drainage\n• Taught medication management\n• BP elevated, pt needs MD follow-up"

@@ -750,7 +750,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     }).sort((a, b) => b.completionRate - a.completionRate);
   };
 
-  const generateDetailedFinancialData = (filteredVisits, allPatients) => {
+  const generateDetailedFinancialData = (filteredVisits, _allPatients) => {
     const visitTypes = {};
     const revenuePerType = {
       'skilled_nursing': 180,

@@ -228,7 +228,7 @@ export default function OASISValidationPanel({ pdgmData, analysisResults }) {
   );
 }
 
-function performValidationChecks(pdgmData, analysisResults) {
+function performValidationChecks(pdgmData, _analysisResults) {
   const checks = [];
   
   // Category 1: Admission Source & Timing Validation

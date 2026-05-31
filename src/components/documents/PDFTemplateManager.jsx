@@ -57,7 +57,7 @@ export default function PDFTemplateManager() {
     visual_elements: []
   });
 
-  const { data: templates = [], isLoading } = useQuery({
+  const { data: templates = [] } = useQuery({
     queryKey: ['pdf-templates'],
     queryFn: () => base44.entities.PDFTemplate.list('-created_date'),
     initialData: []

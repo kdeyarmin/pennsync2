@@ -224,7 +224,7 @@ Evaluate the response and provide feedback:
   };
 
   const calculateFinalScore = () => {
-    const scores = Object.values(userResponses).map((_, idx) => {
+    const scores = Object.values(userResponses).map((_, _idx) => {
       return feedback?.score || 70;
     });
     const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);

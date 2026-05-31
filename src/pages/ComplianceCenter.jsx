@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,6 @@ export default function ComplianceCenter() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState(new Set());
-  const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -52,28 +51,28 @@ export default function ComplianceCenter() {
     initialData: [],
   });
 
-  const { data: allUsers = [], refetch: refetchUsers } = useQuery({
+  const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: trainingAssignments = [], refetch: refetchAssignments } = useQuery({
+  const { data: trainingAssignments = [] } = useQuery({
     queryKey: ['allTrainingAssignments'],
     queryFn: () => base44.entities.TrainingAssignment.list('-updated_date', 500),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: personnelCredentials = [], refetch: refetchCredentials } = useQuery({
+  const { data: personnelCredentials = [] } = useQuery({
     queryKey: ['allPersonnelCredentials'],
     queryFn: () => base44.entities.PersonnelCredential.list('-updated_date', 500),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: visits = [], refetch: refetchVisits } = useQuery({
+  const { data: visits = [] } = useQuery({
     queryKey: ['allVisits'],
     queryFn: () => base44.entities.Visit.filter({}, '-visit_date', 500),
     initialData: [],

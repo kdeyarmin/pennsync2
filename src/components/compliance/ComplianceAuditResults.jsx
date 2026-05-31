@@ -41,7 +41,7 @@ export default function ComplianceAuditResults({ users = [] }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedAudit, setSelectedAudit] = useState(null);
 
-  const { data: audits = [], isLoading } = useQuery({
+  const { data: audits = [] } = useQuery({
     queryKey: ['complianceAudits'],
     queryFn: () => base44.entities.ComplianceAudit.list('-audit_date', 200),
   });

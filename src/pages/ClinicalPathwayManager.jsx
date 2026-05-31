@@ -555,7 +555,7 @@ export default function ClinicalPathwayManager() {
           <TabsContent value="ai-generate">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <AIPathwayGenerator
-                onPathwayGenerated={(pathway) => {
+                onPathwayGenerated={(_pathway) => {
                   queryClient.invalidateQueries({ queryKey: ['clinicalPathways'] });
                 }}
               />
@@ -563,7 +563,7 @@ export default function ClinicalPathwayManager() {
               {selectedPathwayForUpdate && (
                 <AIPathwayUpdater
                   pathway={selectedPathwayForUpdate}
-                  onPathwayUpdated={(updated) => {
+                  onPathwayUpdated={(_updated) => {
                     queryClient.invalidateQueries({ queryKey: ['clinicalPathways'] });
                     setSelectedPathwayForUpdate(null);
                   }}

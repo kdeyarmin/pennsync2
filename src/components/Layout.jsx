@@ -38,7 +38,7 @@ export default function Layout({ children, currentPageName }) {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  const { data: currentUser, error: userError } = useQuery({
+  const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {

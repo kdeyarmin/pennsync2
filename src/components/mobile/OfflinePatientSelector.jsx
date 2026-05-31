@@ -17,7 +17,7 @@ export default function OfflinePatientSelector({ onCacheComplete, showDetails = 
   const [isCaching, setIsCaching] = useState(false);
   const [cacheResult, setCacheResult] = useState(null);
 
-  const { data: currentUser } = useQuery({
+  const {  } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });

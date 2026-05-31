@@ -51,7 +51,7 @@ export default function AIDocumentationSuggester({
       setIsLoading(true);
       try {
         // Build comprehensive patient history context
-        const patientHistoryContext = previousVisits?.slice(0, 5).map((v, idx) => ({
+        const patientHistoryContext = previousVisits?.slice(0, 5).map((v, _idx) => ({
           date: v.visit_date,
           type: v.visit_type,
           vitals: v.vital_signs,

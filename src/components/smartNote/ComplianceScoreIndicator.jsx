@@ -244,7 +244,7 @@ export default function ComplianceScoreIndicator({
   };
 
   // Enhanced default suggestions - context-aware based on diagnosis and vital signs
-  const getDefaultSuggestion = (elementName, type, issueType = 'missing', currentDiagnosis = null) => {
+  const getDefaultSuggestion = (elementName, type, _issueType = 'missing', currentDiagnosis = null) => {
     const detectedConditions = detectConditions(currentDiagnosis || diagnosis);
     const primaryCondition = detectedConditions[0];
     const conditionData = primaryCondition ? conditionSpecificAssessments[primaryCondition] : null;
@@ -1345,7 +1345,7 @@ Return JSON:
                       <input
                         type="checkbox"
                         checked={selectedEnhancedIssues.size === enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length && selectedEnhancedIssues.size > 0}
-                        onChange={(e) => {
+                        onChange={(_e) => {
                           if (selectedEnhancedIssues.size === enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length) {
                             setSelectedEnhancedIssues(new Set());
                           } else {

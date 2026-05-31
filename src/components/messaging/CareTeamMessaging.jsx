@@ -41,7 +41,7 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
     queryFn: () => base44.auth.me()
   });
 
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: messages = [] } = useQuery({
     queryKey: ['messages', patientId],
     queryFn: async () => {
       const filters = patientId ? { patient_id: patientId } : {};

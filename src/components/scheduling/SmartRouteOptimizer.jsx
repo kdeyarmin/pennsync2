@@ -149,7 +149,7 @@ Return JSON:
     return durations[visitType] || 45;
   };
 
-  const getVisitPriority = (visit, patient) => {
+  const getVisitPriority = (visit, _patient) => {
     if (visit.visit_type === 'admission' || visit.visit_type === 'prn') return 'high';
     if (visit.visit_type === 'recertification' || visit.visit_type === 'discharge') return 'medium';
     return 'low';

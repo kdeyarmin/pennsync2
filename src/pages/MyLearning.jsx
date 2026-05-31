@@ -11,7 +11,7 @@ import EmployeeTranscriptCenter from "@/components/learning/EmployeeTranscriptCe
 import AnnualTranscriptCenter from "@/components/learning/AnnualTranscriptCenter";
 
 export default function MyLearning() {
-  const { data: currentUser, isLoading } = useQuery({
+  const {  isLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });

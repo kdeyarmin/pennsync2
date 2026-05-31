@@ -115,7 +115,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
               }
             }
           }
-        }).catch(err => ({ compliance_score: 0, violations: [] })),
+        }).catch(_err => ({ compliance_score: 0, violations: [] })),
 
         // Clinical Guideline Check
         base44.integrations.Core.InvokeLLM({
@@ -156,7 +156,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
               }
             }
           }
-        }).catch(err => ({ compliance_score: 0, violations: [] })),
+        }).catch(_err => ({ compliance_score: 0, violations: [] })),
 
         // Visit Type Check
         base44.integrations.Core.InvokeLLM({
@@ -194,7 +194,7 @@ Return violations with: rule_name, reference, severity, status, missing_elements
               }
             }
           }
-        }).catch(err => ({ compliance_score: 0, violations: [] })),
+        }).catch(_err => ({ compliance_score: 0, violations: [] })),
 
         // Recent Regulatory Updates Check
         base44.integrations.Core.InvokeLLM({
@@ -234,7 +234,7 @@ Identify any violations of these recent regulations.`,
               }
             }
           }
-        }).catch(err => ({ compliance_score: 0, violations: [] }))
+        }).catch(_err => ({ compliance_score: 0, violations: [] }))
       ]);
 
       // Aggregate results

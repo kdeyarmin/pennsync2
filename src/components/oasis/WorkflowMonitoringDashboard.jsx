@@ -42,7 +42,7 @@ export default function WorkflowMonitoringDashboard() {
   const [ruleFilter, setRuleFilter] = useState('all');
 
   // Fetch workflow executions
-  const { data: workflowExecutions = [], isLoading } = useQuery({
+  const { data: workflowExecutions = [] } = useQuery({
     queryKey: ['workflowExecutions'],
     queryFn: () => base44.entities.OASISWorkflowExecution.list('-created_date', 200),
   });
