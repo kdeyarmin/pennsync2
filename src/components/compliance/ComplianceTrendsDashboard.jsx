@@ -25,7 +25,7 @@ export default function ComplianceTrendsDashboard() {
   const [timeRange, setTimeRange] = useState("30");
   const [selectedNurse, setSelectedNurse] = useState("all");
 
-  const {  } = useQuery({
+  useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });

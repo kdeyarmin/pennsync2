@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Send, Loader2 } from "lucide-react";
 
 export default function EventReport() {
-  const {  } = useQuery({
+  useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });

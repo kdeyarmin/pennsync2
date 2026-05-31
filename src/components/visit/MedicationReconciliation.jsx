@@ -15,7 +15,7 @@ export default function MedicationReconciliation({ patientId, onMedicationsUpdat
   const [showForm, setShowForm] = useState(false);
   const [noChanges, setNoChanges] = useState(false);
 
-  const {  } = useQuery({
+  useQuery({
     queryKey: ['patient', patientId],
     queryFn: () => base44.entities.Patient.filter({ id: patientId }),
     select: (data) => data[0],
