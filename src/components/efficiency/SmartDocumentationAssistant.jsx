@@ -318,7 +318,7 @@ Format as JSON with clear sections`;
                             try {
                               const parsed = JSON.parse(e.target.value);
                               setEditingSection({...editingSection, content: parsed});
-                            } catch (err) {
+                            } catch {
                               // Keep typing
                             }
                           }}

@@ -139,7 +139,7 @@ export default function PDFTemplateManager() {
       const result = await base44.integrations.Core.UploadFile({ file });
       setTemplateData(prev => ({ ...prev, template_file_url: result.file_url }));
       toast.success("Template uploaded successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to upload template");
     }
   };

@@ -84,7 +84,7 @@ Return ONLY the clinical narrative note text — nothing else.`
 
       const noteText = typeof result === "string" ? result : JSON.stringify(result);
       setDraft(noteText);
-    } catch (err) {
+    } catch {
       alert("Failed to generate draft. Please try again.");
     } finally {
       setLoading(false);

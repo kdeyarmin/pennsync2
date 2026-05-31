@@ -357,7 +357,7 @@ export default function CarePlanManagement() {
         setPlanItems([]);
         setLinkedPathways({});
       }, 2000);
-    } catch (e) {
+    } catch {
       toast.error("Failed to save care plan.");
     }
     setSaving(false);

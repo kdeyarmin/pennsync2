@@ -59,7 +59,7 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
       const uploadResponse = await base44.integrations.Core.UploadFile({ file });
       setUploadedFileUrl(uploadResponse.file_url);
       toast.success('Document uploaded successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to upload document');
     } finally {
       setIsUploading(false);

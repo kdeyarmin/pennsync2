@@ -264,7 +264,7 @@ Return JSON:
 
       setShowFeedbackDialog(false);
       alert("Feedback submitted! This will help improve future scheduling.");
-    } catch (error) {
+    } catch {
       // If entity doesn't exist, just close dialog
       setShowFeedbackDialog(false);
       console.log("Feedback noted (entity may not exist yet)");

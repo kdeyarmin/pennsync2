@@ -556,7 +556,7 @@ function validateDates(data) {
           impact: 'Late assessments may not capture initial patient status accurately'
         });
       }
-    } catch (e) {
+    } catch {
       issues.push({
         severity: 'low',
         title: 'Invalid Date Format',

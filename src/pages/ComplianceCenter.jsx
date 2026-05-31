@@ -393,7 +393,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                   }
                 });
                 setAIInsights(result);
-              } catch (error) {
+              } catch {
                 toast.error('Failed to generate insights');
               }
               setIsGeneratingInsights(false);

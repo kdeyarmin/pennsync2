@@ -35,7 +35,7 @@ Keep your response conversational and ask ONE question at a time. Start with the
         role: 'assistant',
         content: response
       }]);
-    } catch (error) {
+    } catch {
       toast.error('Failed to start AI assistant');
     }
     setIsProcessing(false);
@@ -106,7 +106,7 @@ Ask the next relevant question to gather information. Keep it conversational and
           content: response
         }]);
       }
-    } catch (error) {
+    } catch {
       toast.error('AI processing failed');
       setConversation([...updatedConversation, {
         role: 'assistant',
@@ -149,7 +149,7 @@ Format as a bulleted list of improvements.`
         role: 'assistant',
         content: response
       }]);
-    } catch (error) {
+    } catch {
       toast.error('Failed to analyze template');
     }
     setIsProcessing(false);
@@ -215,7 +215,7 @@ ${response}`,
         ai_prompt_instructions: refinedResponse.trim()
       });
 
-    } catch (error) {
+    } catch {
       toast.error('Failed to refine instructions');
     }
     setIsProcessing(false);

@@ -29,7 +29,7 @@ export default function PDFMerger({ onMergeComplete }) {
           url: result.file_url,
           size: file.size
         };
-      } catch (error) {
+      } catch {
         toast.error(`Failed to upload ${file.name}`);
         return null;
       }

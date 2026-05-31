@@ -100,7 +100,7 @@ export default function VoiceDataEntry({
       if (recognitionRef.current === recognition && isListening) {
         try {
           recognition.start();
-        } catch (e) {
+        } catch {
           console.log("Recognition restart prevented");
         }
       }

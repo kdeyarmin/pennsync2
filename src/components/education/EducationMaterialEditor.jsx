@@ -87,7 +87,7 @@ Return only the enhanced content, keeping all {{variable}} placeholders exactly 
 
       setFormData(prev => ({ ...prev, content: response }));
       toast.success('Content enhanced with AI');
-    } catch (error) {
+    } catch {
       toast.error('Failed to enhance content');
     } finally {
       setIsEnhancing(false);

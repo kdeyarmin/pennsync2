@@ -478,7 +478,7 @@ export function clearSensitiveData(stateSetters) {
         setter('');
         setter({});
         setter([]);
-      } catch (e) {
+      } catch {
         // Ignore errors from setters
       }
     }

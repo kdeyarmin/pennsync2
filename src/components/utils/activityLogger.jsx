@@ -78,7 +78,7 @@ export const logError = async (errorMessage, errorDetails = {}) => {
     let user = null;
     try {
       user = await base44.auth.me();
-    } catch (e) {
+    } catch {
       // User might not be logged in
     }
 

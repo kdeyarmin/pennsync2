@@ -101,7 +101,7 @@ export default function SignatureTracker({ patientId = null }) {
       window.URL.revokeObjectURL(url);
       a.remove();
       toast.success("Document downloaded!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to download document");
     }
   };
