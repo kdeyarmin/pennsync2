@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import CareScopeSelector from "../components/profile/CareScopeSelector";
 import CareScopeBadge from "../components/profile/CareScopeBadge";
+import DutyStatusCard from "../components/voice/DutyStatusCard";
 
 const isAgencyAdmin = (user) => user?.role === 'admin' || user?.account_type === 'agency_admin' || user?.account_type === 'super_admin';
 
@@ -268,6 +269,8 @@ export default function UserSettings() {
 
         {/* Profile / Role Tab */}
         <TabsContent value="profile" className="space-y-6">
+          <DutyStatusCard />
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

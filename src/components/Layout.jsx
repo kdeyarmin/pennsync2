@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2
+  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -121,7 +121,14 @@ export default function Layout({ children, currentPageName }) {
     initialData: [], refetchInterval: 30000, enabled: !!currentUser?.email,
   });
 
+  const { data: unreadSmsMessages = [] } = useQuery({
+    queryKey: ['unread-sms', currentUser?.email],
+    queryFn: () => base44.entities.SmsMessage.filter({ nurse_email: currentUser?.email, is_read: false }, '-created_date', 50),
+    initialData: [], refetchInterval: 30000, enabled: !!currentUser?.email,
+  });
+
   const unreadMessageCount = messages.filter(m => !m.read_by?.includes(currentUser?.email)).length;
+  const unreadSmsCount = unreadSmsMessages.length;
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
@@ -148,6 +155,7 @@ export default function Layout({ children, currentPageName }) {
       category: "Communication",
       items: [
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
+        { name: "Phone Center", icon: Phone, page: "PhoneCenter", badge: unreadSmsCount },
         { name: "Fax", icon: BookUser, page: "SendFax" },
         { name: "Providers", icon: Users, page: "PhysicianDirectory" },
         { name: "Telehealth", icon: Video, page: "Telehealth" },
@@ -174,7 +182,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Help", icon: HelpCircle, page: "Help" },
       ],
     },
-  ], [unreadMessageCount]);
+  ], [unreadMessageCount, unreadSmsCount]);
 
   const adminItems = useMemo(() => [
     { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },

@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Settings, Info } from "lucide-react";
 import AnnouncementManager from "@/components/admin/AnnouncementManager";
 import AIConfigurationManager from "@/components/admin/AIConfigurationManager";
+import PhoneProvisioningPanel from "@/components/admin/PhoneProvisioningPanel";
 
 export default function SystemSettingsPage() {
   return (
@@ -28,6 +29,7 @@ export default function SystemSettingsPage() {
         </CardContent>
       </Card>
 
+      <PhoneProvisioningPanel />
       <AnnouncementManager />
       <AIConfigurationManager />
     </div>
