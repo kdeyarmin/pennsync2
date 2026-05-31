@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import * as pdfjsLib from "pdfjs-dist";
-import { 
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import {
   Trash2, 
   ArrowUp, 
   ArrowDown,
@@ -14,8 +15,8 @@ import {
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-// Set worker source
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Bundled worker, version-matched to the installed pdfjs-dist (no CDN dependency)
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export default function PDFPageManager({ pdfUrl, onSave }) {
   const [pages, setPages] = useState([]);
