@@ -9,7 +9,7 @@ can call and text, while the nurse's personal cell stays hidden. It uses 8x8's
 1. An 8x8 CPaaS (Connect) account with **SMS** and **Voice / Number Masking** enabled.
 2. A **voice sub-account** provisioned for Number Masking and an **SMS sub-account**.
 3. One **virtual number per nurse** purchased/allocated to the sub-account.
-4. **Signed BAA with 8x8** — a hard go-live gate (see §5). No PHI flows until executed.
+4. **Signed BAA with 8x8** — ✅ signed and on file. (Still required; see §5 for the ongoing obligations it covers.)
 
 ## 2. Backend secrets (Base44 dashboard)
 
@@ -72,7 +72,7 @@ shapes in `handleEightXEightVoiceCall.ts` (`buildSay` / `buildMakeCall`) and
 
 ## 5. HIPAA / TCPA compliance (required)
 
-- **BAA with 8x8** must be signed before production PHI flows.
+- **BAA with 8x8** — ✅ signed and on file, so PHI may flow over the 8x8 channels once the remaining technical steps are complete.
 - **STOP / HELP / START** keyword handling is built into the inbound SMS handler
   and is legally required. `SmsConsent` is the opt-in/opt-out ledger; `sendSms`
   refuses to text an `opted_out` number.
