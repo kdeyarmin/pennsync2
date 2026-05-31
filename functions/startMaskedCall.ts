@@ -8,8 +8,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * nurse's WORK number as the caller ID. The patient never sees the cell.
  *
  * NOTE: the exact Voice API origination endpoint/body depends on the
- * provisioned voice subaccount. The request is parameterized via
- * EIGHT_X_EIGHT_VOICE_API_BASE; validate the body shape against 8x8 Connect.
+ * provisioned voice subaccount. The base URL comes from the
+ * AgencySettings.eight_x_eight_voice_api_base admin setting; validate the body
+ * shape against 8x8 Connect.
  */
 
 function normalizeE164(raw: string | null | undefined): string | null {
@@ -60,10 +61,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    const apiKey = Deno.env.get('EIGHT_X_EIGHT_VOICE_API_KEY') || Deno.env.get('EIGHT_X_EIGHT_SMS_API_KEY');
-    const voiceBase = Deno.env.get('EIGHT_X_EIGHT_VOICE_API_BASE');
+    const apiKey = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
     const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
-    const voiceSubAccountId = settings[0]?.eight_x_eight_voice_subaccount_id || Deno.env.get('EIGHT_X_EIGHT_VOICE_SUBACCOUNT_ID');
+    const voiceBase = settings[0]?.eight_x_eight_voice_api_base;
+    const voiceSubAccountId = settings[0]?.eight_x_eight_voice_subaccount_id;
 
     if (!apiKey || !voiceBase || !voiceSubAccountId) {
       return Response.json({ error: '8x8 Voice credentials not configured' }, { status: 500 });

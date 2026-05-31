@@ -11,25 +11,32 @@ can call and text, while the nurse's personal cell stays hidden. It uses 8x8's
 3. One **virtual number per nurse** purchased/allocated to the sub-account.
 4. **Signed BAA with 8x8** — ✅ signed and on file. (Still required; see §5 for the ongoing obligations it covers.)
 
-## 2. Backend secrets (Base44 dashboard)
+## 2. Configuration
 
-Set these as backend function secrets (see `.env.example`). They are **not**
-`VITE_*` and must never reach the browser.
+### Backend secrets (Base44 dashboard) — only two
+Set as backend function secrets (see `.env.example`). They are **not** `VITE_*`
+and must never reach the browser.
 
 | Secret | Purpose |
 |---|---|
-| `EIGHT_X_EIGHT_SMS_API_KEY` | Bearer token for the SMS API |
-| `EIGHT_X_EIGHT_SMS_SUBACCOUNT_ID` | SMS sub-account (fallback; prefer AgencySettings) |
-| `EIGHT_X_EIGHT_VOICE_API_KEY` | Bearer token for the Voice API (falls back to SMS key) |
-| `EIGHT_X_EIGHT_VOICE_SUBACCOUNT_ID` | Voice sub-account (fallback) |
-| `EIGHT_X_EIGHT_VOICE_API_BASE` | Voice API base URL for outbound origination |
-| `EIGHT_X_EIGHT_REGION` | e.g. `us` → `sms.us.8x8.com` (fallback) |
+| `EIGHT_X_EIGHT_API_KEY` | 8x8 Connect API bearer token — used for **both** SMS and Voice |
 | `EIGHT_X_EIGHT_WEBHOOK_SECRET` | Shared secret used to verify inbound webhooks |
-| `EIGHT_X_EIGHT_MAIN_OFFICE_NUMBER` | Off-duty transfer fallback |
 
-Sub-account IDs, region, and main office number are best configured at runtime
-in **Admin → Settings → 8x8 Phone** (stored on `AgencySettings`); env values are
-fallbacks.
+> If your 8x8 account issues separate keys per product, use the one that
+> authorizes both SMS and Voice on the sub-accounts below.
+
+### Runtime config (Admin → Settings → 8x8 Phone, stored on `AgencySettings`)
+No environment variables — an admin sets these in the app:
+
+| Field | Purpose |
+|---|---|
+| `eight_x_eight_sms_subaccount_id` | SMS sub-account |
+| `eight_x_eight_voice_subaccount_id` | Voice sub-account |
+| `eight_x_eight_voice_api_base` | Voice API base URL for outbound click-to-call |
+| `eight_x_eight_region` | e.g. `us` → `sms.us.8x8.com` (defaults to `us`) |
+| `main_office_number_e164` | Off-duty transfer / referral number |
+| `default_off_duty_template` | Default off-duty message |
+| `sms_messaging_enabled` | Agency-wide SMS kill switch |
 
 ## 3. Webhook registration
 

@@ -76,7 +76,7 @@ function callflow(actions: unknown[]) {
 
 async function getMainOffice(base44: any): Promise<string> {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
-  return settings[0]?.main_office_number_e164 || Deno.env.get('EIGHT_X_EIGHT_MAIN_OFFICE_NUMBER') || '';
+  return settings[0]?.main_office_number_e164 || '';
 }
 
 Deno.serve(async (req) => {

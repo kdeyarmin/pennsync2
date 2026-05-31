@@ -25,6 +25,7 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `main_office_number_e164` | string | Off-duty call transfer target / referral number. |
 | `eight_x_eight_sms_subaccount_id` | string | |
 | `eight_x_eight_voice_subaccount_id` | string | |
+| `eight_x_eight_voice_api_base` | string | Voice API base URL for outbound click-to-call origination. |
 | `eight_x_eight_region` | string | e.g. `us` → builds `sms.us.8x8.com`. |
 | `default_off_duty_template` | text | Default off-duty message when a nurse hasn't set one. |
 | `sms_messaging_enabled` | boolean | Agency-wide kill switch (default true). |

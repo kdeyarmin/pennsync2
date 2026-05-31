@@ -46,6 +46,7 @@ export default function PhoneProvisioningPanel() {
     main_office_number_e164: "",
     eight_x_eight_sms_subaccount_id: "",
     eight_x_eight_voice_subaccount_id: "",
+    eight_x_eight_voice_api_base: "",
     eight_x_eight_region: "us",
     default_off_duty_template: "",
     sms_messaging_enabled: true,
@@ -58,6 +59,7 @@ export default function PhoneProvisioningPanel() {
         main_office_number_e164: settings.main_office_number_e164 || "",
         eight_x_eight_sms_subaccount_id: settings.eight_x_eight_sms_subaccount_id || "",
         eight_x_eight_voice_subaccount_id: settings.eight_x_eight_voice_subaccount_id || "",
+        eight_x_eight_voice_api_base: settings.eight_x_eight_voice_api_base || "",
         eight_x_eight_region: settings.eight_x_eight_region || "us",
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
@@ -141,6 +143,16 @@ export default function PhoneProvisioningPanel() {
                 onChange={(e) => setAgency((a) => ({ ...a, eight_x_eight_voice_subaccount_id: e.target.value }))}
                 className="mt-1"
               />
+            </div>
+            <div className="md:col-span-2">
+              <Label className="text-sm font-medium">Voice API base URL</Label>
+              <Input
+                placeholder="https://voice.wavecell.com/api/v1"
+                value={agency.eight_x_eight_voice_api_base}
+                onChange={(e) => setAgency((a) => ({ ...a, eight_x_eight_voice_api_base: e.target.value }))}
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Used for outbound click-to-call origination (from your 8x8 voice sub-account).</p>
             </div>
           </div>
           <div>

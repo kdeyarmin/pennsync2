@@ -37,8 +37,8 @@ async function getAgencyConfig(base44: any) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return {
-    smsSubAccountId: s.eight_x_eight_sms_subaccount_id || Deno.env.get('EIGHT_X_EIGHT_SMS_SUBACCOUNT_ID'),
-    region: s.eight_x_eight_region || Deno.env.get('EIGHT_X_EIGHT_REGION') || 'us',
+    smsSubAccountId: s.eight_x_eight_sms_subaccount_id,
+    region: s.eight_x_eight_region || 'us',
     smsEnabled: s.sms_messaging_enabled ?? true,
   };
 }
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid destination phone number' }, { status: 400 });
     }
 
-    const apiKey = Deno.env.get('EIGHT_X_EIGHT_SMS_API_KEY');
+    const apiKey = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
     const { smsSubAccountId, region, smsEnabled } = await getAgencyConfig(base44);
     if (!apiKey || !smsSubAccountId) {
       return Response.json({ error: '8x8 SMS credentials not configured' }, { status: 500 });

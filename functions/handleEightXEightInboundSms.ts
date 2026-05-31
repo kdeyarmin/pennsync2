@@ -82,9 +82,9 @@ async function getAgencyConfig(base44: any) {
   const settings = await base44.asServiceRole.entities.AgencySettings.list('-created_date', 1).catch(() => []);
   const s = settings[0] || {};
   return {
-    smsSubAccountId: s.eight_x_eight_sms_subaccount_id || Deno.env.get('EIGHT_X_EIGHT_SMS_SUBACCOUNT_ID'),
-    region: s.eight_x_eight_region || Deno.env.get('EIGHT_X_EIGHT_REGION') || 'us',
-    mainOffice: s.main_office_number_e164 || Deno.env.get('EIGHT_X_EIGHT_MAIN_OFFICE_NUMBER') || '',
+    smsSubAccountId: s.eight_x_eight_sms_subaccount_id,
+    region: s.eight_x_eight_region || 'us',
+    mainOffice: s.main_office_number_e164 || '',
     defaultOffDuty: s.default_off_duty_template || '',
     smsEnabled: s.sms_messaging_enabled ?? true,
   };
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
 
     const base44 = createClientFromRequest(req);
     const config = await getAgencyConfig(base44);
-    const apiKey = Deno.env.get('EIGHT_X_EIGHT_SMS_API_KEY');
+    const apiKey = Deno.env.get('EIGHT_X_EIGHT_API_KEY');
     const host = `https://sms.${config.region}.8x8.com`;
 
     const patientNum = normalizeE164(source) || source;
