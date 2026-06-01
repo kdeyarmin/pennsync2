@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/components/oasis/**'
       - 'src/components/fax/**'
+      - 'src/components/voice/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/workflow-quality.yml'
@@ -15,6 +16,7 @@ on:
     paths:
       - 'src/components/oasis/**'
       - 'src/components/fax/**'
+      - 'src/components/voice/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/workflow-quality.yml'
