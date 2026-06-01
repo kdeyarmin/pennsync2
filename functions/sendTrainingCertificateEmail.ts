@@ -93,11 +93,29 @@ const buildCertificatePdf = async ({ userName, moduleName, completionDate, score
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const payload = await req.json();
-    const certificate = payload?.data || payload;
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (!certificate?.user_id || !certificate?.course_title || !certificate?.issued_at || !certificate?.certificate_id) {
-      return Response.json({ error: 'Certificate payload is missing required fields' }, { status: 400 });
+    const payload = await req.json();
+    const incoming = payload?.data || payload;
+    if (!incoming?.certificate_id) {
+      return Response.json({ error: 'certificate_id is required' }, { status: 400 });
+    }
+
+    // Load the PERSISTED certificate — never trust the request body for the
+    // recipient/content, or anyone could email a forged certificate to any
+    // address. Everything downstream uses this DB-sourced record.
+    const [certificate] = await base44.asServiceRole.entities.TrainingCertificate
+      .filter({ certificate_id: incoming.certificate_id }, '-created_date', 1);
+    if (!certificate) {
+      return Response.json({ error: 'Certificate not found' }, { status: 404 });
+    }
+    // Ownership: only the certificate's owner or an admin may (re)send it.
+    if (certificate.user_id !== user.email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if (!certificate.user_id || !certificate.course_title || !certificate.issued_at) {
+      return Response.json({ error: 'Certificate record is missing required fields' }, { status: 400 });
     }
 
     const [employee] = await base44.asServiceRole.entities.User.filter({ email: certificate.user_id }, '-created_date', 1);

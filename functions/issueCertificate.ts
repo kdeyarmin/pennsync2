@@ -11,12 +11,26 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { assignment_id, user_id, course_id, score } = await req.json();
+        const body = await req.json();
+        const { assignment_id, user_id, course_id, score } = body;
 
         if (!assignment_id || !user_id || !course_id) {
-            return Response.json({ 
-                error: 'assignment_id, user_id, and course_id are required' 
+            return Response.json({
+                error: 'assignment_id, user_id, and course_id are required'
             }, { status: 400 });
+        }
+
+        // Opt-in lockdown: this should only be invoked by the training system
+        // (gradeTrainingAttempt passes _internal_secret) or an admin. When
+        // INTERNAL_FN_SECRET is configured we ENFORCE that; unset => no
+        // enforcement (so nothing breaks before it's set). Set it at launch to
+        // stop a user self-issuing a certificate by calling this endpoint.
+        const internalSecret = Deno.env.get('INTERNAL_FN_SECRET');
+        if (internalSecret) {
+            const isInternal = body._internal_secret === internalSecret;
+            if (!isInternal && user.role !== 'admin') {
+                return Response.json({ error: 'Certificates may only be issued by the training system or an admin.' }, { status: 403 });
+            }
         }
 
         // Fetch assignment and course details
@@ -26,6 +40,13 @@ Deno.serve(async (req) => {
 
         if (!assignment || !course) {
             return Response.json({ error: 'Assignment or course not found' }, { status: 404 });
+        }
+
+        // The certificate subject must match the assignment's assignee — prevents
+        // minting a certificate against someone else's assignment. (The training
+        // system passes user_id === assignment.assigned_to_user_id.)
+        if (assignment.assigned_to_user_id && assignment.assigned_to_user_id !== user_id) {
+            return Response.json({ error: 'user_id does not match the assignment assignee.' }, { status: 403 });
         }
 
         const userName = userData && userData.length > 0 ? userData[0].full_name : user_id;
