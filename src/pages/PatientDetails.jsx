@@ -55,6 +55,7 @@ import DocumentList from "../components/documents/DocumentList";
 import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashboard";
 import CarePlanProposalReviewer from "../components/carePlan/CarePlanProposalReviewer";
 import PatientTelehealthPanel from "../components/telehealth/PatientTelehealthPanel";
+import PatientContactActions from "../components/voice/PatientContactActions";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -415,13 +416,16 @@ export default function PatientDetails() {
                 incidents={incidents}
               />
             </div>
-            <QuickActionsPanel
-              patient={patient}
-              recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
-              upcomingVisits={visits.filter(v => v.status === 'scheduled')}
-              activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
-              pendingTasks={tasks.filter(t => t.status === 'pending')}
-            />
+            <div className="space-y-6">
+              <PatientContactActions patient={patient} currentUser={currentUser} />
+              <QuickActionsPanel
+                patient={patient}
+                recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
+                upcomingVisits={visits.filter(v => v.status === 'scheduled')}
+                activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
+                pendingTasks={tasks.filter(t => t.status === 'pending')}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
