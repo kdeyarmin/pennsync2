@@ -70,14 +70,16 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
 
   const isAdmin = currentUser?.role === 'admin';
 
-  // Fetch alerts
+  // Fetch alerts via a SERVER-SCOPED function so the browser only receives
+  // alerts the caller is authorized for (assigned patients, or all for admins).
+  // The favorites filter below is UX-only, no longer an access boundary.
   const { data: allAlerts = [], isLoading } = useQuery({
-    queryKey: ['patientAlerts', patientId, showAllPatients],
+    queryKey: ['scopedPatientAlerts', patientId],
     queryFn: async () => {
-      if (patientId) {
-        return base44.entities.PatientAlert.filter({ patient_id: patientId }, '-created_date');
-      }
-      return base44.entities.PatientAlert.list('-created_date', 100);
+      const res = await base44.functions.invoke('getScopedPatientAlerts', {
+        patient_id: patientId || undefined,
+      });
+      return res?.data?.alerts || [];
     }
   });
 
