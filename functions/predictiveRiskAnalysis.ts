@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     }
 
     // Fetch comprehensive patient data
-    const patient = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
+    const patient = await base44.entities.Patient.filter({ id: patient_id });
     if (!patient || patient.length === 0) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
@@ -25,10 +25,10 @@ Deno.serve(async (req) => {
 
     // Fetch related data
     const [visits, carePlans, incidents, existingAlerts] = await Promise.all([
-      base44.asServiceRole.entities.Visit.filter({ patient_id }, '-visit_date', 10),
-      base44.asServiceRole.entities.CarePlan.filter({ patient_id }),
-      base44.asServiceRole.entities.Incident.filter({ patient_id }, '-incident_date', 5),
-      base44.asServiceRole.entities.PatientAlert.filter({ patient_id, status: 'active' })
+      base44.entities.Visit.filter({ patient_id }, '-visit_date', 10),
+      base44.entities.CarePlan.filter({ patient_id }),
+      base44.entities.Incident.filter({ patient_id }, '-incident_date', 5),
+      base44.entities.PatientAlert.filter({ patient_id, status: 'active' })
     ]);
 
     // Calculate age

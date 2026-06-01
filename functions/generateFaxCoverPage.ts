@@ -25,8 +25,8 @@ Deno.serve(async (req) => {
 
     // Fetch patient + document in parallel
     const [patientResults, documentResults] = await Promise.all([
-      patient_id ? base44.asServiceRole.entities.Patient.filter({ id: patient_id }) : Promise.resolve([]),
-      document_id ? base44.asServiceRole.entities.Document.filter({ id: document_id }) : Promise.resolve([])
+      patient_id ? base44.entities.Patient.filter({ id: patient_id }) : Promise.resolve([]),
+      document_id ? base44.entities.Document.filter({ id: document_id }) : Promise.resolve([])
     ]);
 
     const patient = patientResults[0] || null;
