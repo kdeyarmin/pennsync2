@@ -25,6 +25,12 @@ Deno.serve(async (req) => {
     }
 
     const originalFax = faxLogs[0];
+
+    // Ownership: only the original sender (or an admin) may resend a PHI fax.
+    if (originalFax.sent_by && originalFax.sent_by !== user.email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const maxRetries = 3;
 
     // Check retry limit

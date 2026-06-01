@@ -14,7 +14,19 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${scheduledFaxes.length} scheduled faxes to process`);
 
+    // NOTE: only ONE scheduled-fax processor should be enabled in the platform
+    // scheduler (this OR processScheduledFaxesByPriority) — running both will
+    // double-send. See docs.
+
     for (const scheduledFax of scheduledFaxes) {
+      // Claim the row (pending -> processing) BEFORE sending so an overlapping
+      // run won't also pick it up. Mitigates the duplicate-send race.
+      try {
+        await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, { status: 'processing' });
+      } catch (claimErr) {
+        console.error(`Could not claim scheduled fax ${scheduledFax.id}; skipping`, claimErr);
+        continue;
+      }
       try {
         // Use the batch send function for each scheduled fax
         const response = await base44.asServiceRole.functions.invoke('sendBatchFax', {
