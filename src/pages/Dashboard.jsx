@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { formatEastern, todayEastern } from "@/components/utils/timezone";
+import { formatEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
 
@@ -53,10 +53,7 @@ export default function Dashboard() {
     setIsRefreshing(true);
     try {
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['todayVisits'] }),
-        queryClient.refetchQueries({ queryKey: ['patients'] }),
-        queryClient.refetchQueries({ queryKey: ['activeCarePlans'] }),
-        queryClient.refetchQueries({ queryKey: ['recentIncidents'] }),
+        queryClient.refetchQueries({ queryKey: ['dashboardData'] }),
         queryClient.refetchQueries({ queryKey: ['myNoteConversions'] }),
       ]);
       toast.success('Dashboard refreshed');
@@ -78,40 +75,27 @@ export default function Dashboard() {
       }
     }, [currentUser?.email]);
 
-    const { data: visits = [], isLoading, error: visitsError } = useQuery({
-      queryKey: ['todayVisits'],
-      queryFn: async () => {
-        const today = todayEastern();
-        return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
-      },
-      initialData: [],
-      staleTime: 120000,      // 2 min — visits change occasionally
-      gcTime: 300000,
-    });
-
-  const { data: patients = [], error: patientsError } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 100), // reduced from 200
-    initialData: [],
-    staleTime: 600000,        // 10 min — patient list rarely changes mid-session
-    gcTime: 900000,
+  // Core datasets are fetched through a SERVER-SCOPED function so a non-admin's
+  // browser only receives their assigned patients' data (admins: agency-wide).
+  // Kept under a dedicated ['dashboardData'] key to avoid disturbing the shared
+  // ['patients']/['todayVisits']/... cache used across the rest of the app.
+  const { data: dashboardData = {}, isLoading, error: dashboardError } = useQuery({
+    queryKey: ['dashboardData', currentUser?.email],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getDashboardData', {});
+      return res?.data || {};
+    },
+    enabled: !!currentUser?.email,
+    initialData: {},
+    staleTime: 120000,
+    gcTime: 300000,
   });
-
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['activeCarePlans'],
-    queryFn: () => base44.entities.CarePlan.filter({ status: 'active' }, '-updated_date', 50),  // reduced from 100
-    initialData: [],
-    staleTime: 600000,
-    gcTime: 900000,
-  });
-
-  const { data: incidents = [] } = useQuery({
-    queryKey: ['recentIncidents'],
-    queryFn: () => base44.entities.Incident.list('-incident_date', 20),  // reduced from 30
-    initialData: [],
-    staleTime: 600000,
-    gcTime: 900000,
-  });
+  const visits = dashboardData.visits || [];
+  const patients = dashboardData.patients || [];
+  const carePlans = dashboardData.carePlans || [];
+  const incidents = dashboardData.incidents || [];
+  const visitsError = dashboardError;
+  const patientsError = dashboardError;
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['myNoteConversions', currentUser?.email],
