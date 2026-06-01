@@ -1,11 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * setNurseDutyStatus — self-service duty toggle + off-duty message editor.
- * A nurse updates their own status; an admin may target another user.
+ * setNurseDutyStatus — self-service duty toggle, scheduled time-off window, and
+ * off-duty message editor. A nurse updates their own status; an admin may target
+ * another user.
  *
- * No 8x8 call is needed: the inbound VCA webhook (handleEightXEightVoiceCall)
- * reads duty_status live at call time, so the change takes effect immediately.
+ * No 8x8 call is needed: the inbound VCA/SMS webhooks read duty_status and the
+ * scheduled_off_duty_* window live at call/message time, so changes take effect
+ * immediately and a schedule expires on its own (no cron).
  */
 
 Deno.serve(async (req) => {
@@ -14,10 +16,30 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { duty_status, off_duty_message, target_user_email } = await req.json();
+    const {
+      duty_status,
+      off_duty_message,
+      target_user_email,
+      scheduled_off_duty_start,
+      scheduled_off_duty_end,
+    } = await req.json();
 
     if (duty_status && !['on_duty', 'off_duty'].includes(duty_status)) {
       return Response.json({ error: 'duty_status must be "on_duty" or "off_duty"' }, { status: 400 });
+    }
+
+    // Validate the scheduled time-off window. `null` clears it; otherwise both
+    // ends must be valid dates and the end must be strictly after the start.
+    const clearingSchedule = scheduled_off_duty_start === null || scheduled_off_duty_end === null;
+    if (!clearingSchedule && (scheduled_off_duty_start !== undefined || scheduled_off_duty_end !== undefined)) {
+      const s = new Date(scheduled_off_duty_start).getTime();
+      const e = new Date(scheduled_off_duty_end).getTime();
+      if (Number.isNaN(s) || Number.isNaN(e)) {
+        return Response.json({ error: 'Scheduled start and end must both be valid dates.' }, { status: 400 });
+      }
+      if (e <= s) {
+        return Response.json({ error: 'Scheduled end time must be after the start time.' }, { status: 400 });
+      }
     }
 
     // Resolve who is being updated.
@@ -34,6 +56,10 @@ Deno.serve(async (req) => {
     const update: Record<string, unknown> = {};
     if (duty_status) update.duty_status = duty_status;
     if (off_duty_message !== undefined) update.off_duty_message = off_duty_message;
+    // Clear with null, set with an ISO string. Stored as-is and read live by the
+    // inbound call/SMS webhooks, so the schedule needs no cron to take effect.
+    if (scheduled_off_duty_start !== undefined) update.scheduled_off_duty_start = scheduled_off_duty_start || null;
+    if (scheduled_off_duty_end !== undefined) update.scheduled_off_duty_end = scheduled_off_duty_end || null;
     if (Object.keys(update).length === 0) {
       return Response.json({ error: 'Nothing to update' }, { status: 400 });
     }
@@ -50,6 +76,8 @@ Deno.serve(async (req) => {
         target_user_email: target.email,
         duty_status: update.duty_status ?? target.duty_status,
         off_duty_message_set: off_duty_message !== undefined,
+        scheduled_off_duty_start: update.scheduled_off_duty_start,
+        scheduled_off_duty_end: update.scheduled_off_duty_end,
         timestamp: new Date().toISOString(),
       },
       status: 'success',

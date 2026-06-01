@@ -40,6 +40,20 @@ function phoneVariants(value: string): string[] {
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
+// Mirrors isOffDutyNow() in src/components/voice/dutyUtils.js — manual toggle OR
+// an active scheduled time-off window, evaluated live at message time.
+function isOffDutyNow(user: any, now = new Date()): boolean {
+  if (!user) return false;
+  if (user.duty_status === 'off_duty') return true;
+  const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
+  const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
+  if (!Number.isNaN(s) && !Number.isNaN(e) && e > s) {
+    const t = now.getTime();
+    if (t >= s && t <= e) return true;
+  }
+  return false;
+}
+
 async function hmacHex(secret: string, raw: string): Promise<string> {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
@@ -198,7 +212,8 @@ Deno.serve(async (req) => {
     }
 
     // --- Off-duty auto-reply (skip if the sender just opted out above) ---
-    if (nurse.duty_status === 'off_duty') {
+    const offDuty = isOffDutyNow(nurse);
+    if (offDuty) {
       const optedOut = (await base44.asServiceRole.entities.SmsConsent
         .filter({ phone_e164: patientNum }, '-captured_at', 1).catch(() => []))[0]?.consent_status === 'opted_out';
       if (!optedOut) {
@@ -235,7 +250,7 @@ Deno.serve(async (req) => {
         patient_id: patientId,
         thread_id: inboundRow.thread_id,
         body_length: text.length,
-        off_duty: nurse.duty_status === 'off_duty',
+        off_duty: offDuty,
       },
       status: 'success',
     }).catch(() => {});

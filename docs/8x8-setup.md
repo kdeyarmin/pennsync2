@@ -76,6 +76,12 @@ shapes in `handleEightXEightVoiceCall.ts` (`buildSay` / `buildMakeCall`) and
   office number.
 - **Inbound call** (`handleEightXEightVoiceCall`): on duty → masked bridge to the
   nurse's cell; off duty → greeting then transfer to the main office.
+- **Duty status** (`setNurseDutyStatus`): a nurse is off duty via the manual
+  On/Off switch **or** an active scheduled time-off window
+  (`scheduled_off_duty_start`/`_end`, e.g. the weekend). Both inbound webhooks
+  evaluate this live (`isOffDutyNow`, mirrored from
+  `src/components/voice/dutyUtils.js`), so a schedule needs no cron — it takes
+  effect and expires on its own.
 
 ## 5. HIPAA / TCPA compliance (required)
 

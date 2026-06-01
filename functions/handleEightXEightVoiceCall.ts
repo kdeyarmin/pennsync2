@@ -35,6 +35,21 @@ function phoneVariants(value: string): string[] {
   return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
+// Mirrors isOffDutyNow() in src/components/voice/dutyUtils.js — a nurse is off
+// duty via the manual toggle OR an active scheduled time-off window. Read live
+// here so a schedule takes effect (and expires) without any cron.
+function isOffDutyNow(user: any, now = new Date()): boolean {
+  if (!user) return false;
+  if (user.duty_status === 'off_duty') return true;
+  const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
+  const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
+  if (!Number.isNaN(s) && !Number.isNaN(e) && e > s) {
+    const t = now.getTime();
+    if (t >= s && t <= e) return true;
+  }
+  return false;
+}
+
 async function hmacHex(secret: string, raw: string): Promise<string> {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
@@ -130,7 +145,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const offDuty = nurse.duty_status === 'off_duty';
+    const offDuty = isOffDutyNow(nurse);
     const callMode = offDuty ? 'off_duty_transfer' : 'masked_bridge';
 
     const logRow = await base44.asServiceRole.entities.CallLog.create({

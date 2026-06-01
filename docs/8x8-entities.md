@@ -16,6 +16,8 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `personal_cell_e164` | string | **PRIVATE** masked-bridge target. Restrict read access to service role / admin — never expose to patient-facing surfaces. |
 | `duty_status` | string enum | `on_duty` \| `off_duty` (default `off_duty`). |
 | `off_duty_message` | text | Per-nurse off-duty greeting; overrides agency default. |
+| `scheduled_off_duty_start` | string (ISO) | Optional. Start of a scheduled time-off window (e.g. the weekend). Nullable. |
+| `scheduled_off_duty_end` | string (ISO) | Optional. End of the scheduled window; the nurse is treated as off duty between start and end, then automatically back on duty. Nullable. |
 | `eight_x_eight_voice_endpoint_id` | string | Optional 8x8 voice endpoint id. |
 
 ## Extend `AgencySettings` (single-row entity)
