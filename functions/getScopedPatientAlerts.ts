@@ -39,15 +39,16 @@ Deno.serve(async (req) => {
       return Response.json({ alerts });
     }
 
-    // Non-admin: restrict to the caller's assigned patients.
+    // Non-admin: restrict to the caller's assigned patients. Query the alerts
+    // BY those patient ids (not a global window then filter) so a busy tenant's
+    // other-patient alerts can't truncate an authorized patient's older alert.
     const myPatients = await base44.asServiceRole.entities.Patient
       .filter({ assigned_nurses: user.email }, '-created_date', 1000).catch(() => []);
-    const allowed = new Set((myPatients || []).map((p: any) => p.id));
-    if (allowed.size === 0) return Response.json({ alerts: [] });
+    const allowedIds = (myPatients || []).map((p: any) => p.id).filter(Boolean);
+    if (allowedIds.length === 0) return Response.json({ alerts: [] });
 
-    // Pull a recent window server-side, then keep only authorized rows.
-    const recent = await base44.asServiceRole.entities.PatientAlert.list('-created_date', 1000).catch(() => []);
-    const alerts = (recent || []).filter((a: any) => allowed.has(a.patient_id)).slice(0, cap);
+    const alerts = await base44.asServiceRole.entities.PatientAlert
+      .filter({ patient_id: { $in: allowedIds } }, '-created_date', cap).catch(() => []);
     return Response.json({ alerts });
   } catch (error) {
     console.error('getScopedPatientAlerts error:', error?.message);

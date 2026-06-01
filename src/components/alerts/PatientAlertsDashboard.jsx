@@ -114,7 +114,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const updateAlertMutation = useMutation({
     mutationFn: ({ alertId, data }) => base44.entities.PatientAlert.update(alertId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patientAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['scopedPatientAlerts'] });
       setDetailsDialogOpen(false);
       setSelectedAlert(null);
       setResolutionNotes("");
