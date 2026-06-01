@@ -7,10 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, Clock, Info } from "lucide-react";
 import { format } from "date-fns";
 import SmsThreadView from "@/components/messaging/SmsThreadView";
-
-function last10(raw) {
-  return (raw || "").replace(/[^\d]/g, "").slice(-10);
-}
+import { last10 } from "@/components/voice/phoneUtils";
 
 /**
  * SmsConversationList — a nurse's text inbox. Groups SmsMessage rows into

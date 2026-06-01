@@ -12,15 +12,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-
-function normalizeE164(raw) {
-  if (!raw) return null;
-  const d = String(raw).replace(/[^\d]/g, "");
-  if (d.length === 10) return `+1${d}`;
-  if (d.length === 11 && d.startsWith("1")) return `+${d}`;
-  if (String(raw).trim().startsWith("+") && d.length >= 8) return `+${d}`;
-  return null;
-}
+import { normalizeE164 } from "@/components/voice/phoneUtils";
 
 /**
  * PatientContactActions — Text / Call buttons on the patient detail page.
