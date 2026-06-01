@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { queryClientInstance } from "@/lib/query-client";
 import {
   Dialog,
   DialogContent,
@@ -28,9 +29,10 @@ export default function SessionTimeoutManager({
       last_activity: new Date(lastActivity).toISOString()
     }, 'warning');
     
-    // Clear sensitive data from memory
+    // Clear sensitive data from memory (incl. cached PHI in the query cache)
     sessionStorage.clear();
-    
+    try { queryClientInstance.clear(); } catch (_e) { /* no-op */ }
+
     // Logout and redirect
     base44.auth.logout();
   }, [timeoutMinutes, lastActivity]);

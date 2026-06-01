@@ -100,6 +100,14 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // Gate the whole app on authentication. The no-token path does NOT set an
+  // authError, so without this an unauthenticated user would render every
+  // route and fire PHI queries. Never rely on authError alone here.
+  if (!isAuthenticated) {
+    navigateToLogin();
+    return null;
+  }
+
   // Render the main app
   return (
     <Suspense fallback={

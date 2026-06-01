@@ -26,8 +26,12 @@ class ErrorBoundary extends React.Component {
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h2>
               <p className="text-sm text-gray-600 mb-4">
-                {this.state.error?.message || 'An unexpected error occurred'}
+                An unexpected error occurred. Please reload the page; if it keeps
+                happening, contact your administrator.
               </p>
+              {import.meta.env?.DEV && this.state.error?.message && (
+                <p className="text-xs text-gray-400 mb-4 break-words">{this.state.error.message}</p>
+              )}
               <Button onClick={() => window.location.reload()} className="gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Reload Page
