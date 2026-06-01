@@ -169,7 +169,8 @@ Deno.serve(async (req) => {
     // Best-effort patient resolution for the log.
     let patientId: string | null = null;
     if (callerNum) {
-      for (const v of phoneVariants(callerNum)) {
+      const variants = [...new Set(phoneVariants(callerNum))];
+      for (const v of variants) {
         const m = await base44.asServiceRole.entities.Patient.filter({ phone: v }).catch(() => []);
         if (m.length > 0) { patientId = m[0].id; break; }
       }
