@@ -11,13 +11,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Patient ID required' }, { status: 400 });
     }
 
-    // Fetch comprehensive patient data
+    // Fetch via the RLS-scoped client (NOT asServiceRole) so the platform
+    // enforces that this caller may access this patient — prevents
+    // cross-patient IDOR via a guessed patientId.
     const [patient, visits, oasisRecords, carePlans, incidents] = await Promise.all([
-      base44.asServiceRole.entities.Patient.filter({ id: patientId }),
-      base44.asServiceRole.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 20),
-      base44.asServiceRole.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 3),
-      base44.asServiceRole.entities.CarePlan.filter({ patient_id: patientId }),
-      base44.asServiceRole.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 10)
+      base44.entities.Patient.filter({ id: patientId }),
+      base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 20),
+      base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date', 3),
+      base44.entities.CarePlan.filter({ patient_id: patientId }),
+      base44.entities.Incident.filter({ patient_id: patientId }, '-incident_date', 10)
     ]);
 
     if (!patient[0]) {
