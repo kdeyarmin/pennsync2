@@ -51,7 +51,7 @@ const DDI_RULES = [
   { a: 'statin_any', b: 'fibrate', severity: 'major', type: 'pharmacodynamic', description: 'Increased myopathy/rhabdomyolysis risk (esp. gemfibrozil).', recommendation: 'Avoid gemfibrozil with statins; if a fibrate is needed prefer fenofibrate with monitoring.' },
   { a: 'ssri_snri', b: 'triptan', severity: 'moderate', type: 'pharmacodynamic', description: 'Serotonin syndrome risk.', recommendation: 'Monitor for serotonin toxicity and counsel the patient.' },
   { a: 'maoi', b: 'triptan', severity: 'major', type: 'pharmacodynamic', description: 'Serotonin syndrome risk.', recommendation: 'Avoid the combination.' },
-  { a: 'clopidogrel', b: 'cyp2c19_inhibitor', severity: 'moderate', type: 'pharmacokinetic', description: 'Reduced activation of clopidogrel -> decreased antiplatelet effect.', recommendation: 'Prefer pantoprazole; avoid omeprazole/esomeprazole.' },
+  { a: 'clopidogrel', b: 'cyp2c19_inhibitor', severity: 'moderate', type: 'pharmacokinetic', description: 'Reduced activation of clopidogrel -> decreased antiplatelet effect.', recommendation: 'Avoid CYP2C19 inhibitors with clopidogrel where possible (e.g., use pantoprazole instead of omeprazole/esomeprazole; reassess concurrent fluconazole).' },
 ];
 function ddiGroupsFor(name: string): string[] {
   const n = String(name || '').toLowerCase();
