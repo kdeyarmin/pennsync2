@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, Clock, Info } from "lucide-react";
 import { format } from "date-fns";
 import SmsThreadView from "@/components/messaging/SmsThreadView";
-import { last10 } from "@/components/voice/phoneUtils";
+import { last10, formatPhoneDisplay } from "@/components/voice/phoneUtils";
 
 /**
  * SmsConversationList — a nurse's text inbox. Groups SmsMessage rows into
@@ -69,7 +69,7 @@ export default function SmsConversationList() {
         const otherNumber = last.direction === "outbound" ? last.to_number : last.from_number;
         const pid = sorted.find((m) => m.patient_id)?.patient_id || null;
         const patient = (pid && patientById[pid]) || patientByPhone[last10(otherNumber)] || null;
-        const label = patient ? `${patient.first_name} ${patient.last_name}` : otherNumber;
+        const label = patient ? `${patient.first_name} ${patient.last_name}` : formatPhoneDisplay(otherNumber);
         return {
           threadId,
           messages: sorted,

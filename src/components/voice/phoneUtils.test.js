@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeE164, last10, phoneVariants, getThreadId } from "./phoneUtils.js";
+import { normalizeE164, last10, phoneVariants, getThreadId, maskPhone, formatPhoneDisplay } from "./phoneUtils.js";
 
 test("normalizeE164 handles 10-digit US numbers", () => {
   assert.equal(normalizeE164("2155550100"), "+12155550100");
@@ -53,4 +53,36 @@ test("getThreadId is stable regardless of argument order", () => {
 test("getThreadId normalizes both numbers before keying", () => {
   // The same patient texting from a free-form vs E.164 number maps to one thread.
   assert.equal(getThreadId("+12155550100", "(215) 555-9999"), getThreadId("+12155550100", "+12155559999"));
+});
+
+test("maskPhone reveals only the last four digits", () => {
+  assert.equal(maskPhone("+12155550100"), "(•••) •••-0100");
+  assert.equal(maskPhone("(215) 555-0100"), "(•••) •••-0100");
+  assert.equal(maskPhone("2155550100"), "(•••) •••-0100");
+});
+
+test("maskPhone never leaks more than the last four digits", () => {
+  // The full number must not appear anywhere in the masked output.
+  const masked = maskPhone("+12155550100");
+  assert.ok(!masked.includes("215555"));
+  assert.ok(!masked.includes("2155550"));
+});
+
+test("maskPhone degrades safely for empty or short input", () => {
+  assert.equal(maskPhone(""), "unknown");
+  assert.equal(maskPhone(null), "unknown");
+  assert.equal(maskPhone(undefined), "unknown");
+  assert.equal(maskPhone("12"), "••••");
+});
+
+test("formatPhoneDisplay pretty-prints US numbers", () => {
+  assert.equal(formatPhoneDisplay("+12155550100"), "(215) 555-0100");
+  assert.equal(formatPhoneDisplay("2155550100"), "(215) 555-0100");
+  assert.equal(formatPhoneDisplay("1-215-555-0100"), "(215) 555-0100");
+});
+
+test("formatPhoneDisplay falls back without dropping non-US numbers", () => {
+  assert.equal(formatPhoneDisplay("+442079460958"), "+442079460958");
+  assert.equal(formatPhoneDisplay(""), "");
+  assert.equal(formatPhoneDisplay(null), "");
 });

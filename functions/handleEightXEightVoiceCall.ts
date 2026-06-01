@@ -24,6 +24,16 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return digits ? `+${digits}` : null;
 }
 
+// Mirrors phoneVariants() in src/components/voice/phoneUtils.js — candidate
+// stored formats used to match a caller against the free-form Patient.phone.
+function phoneVariants(value: string): string[] {
+  const d = (value || '').replace(/[^\d]/g, '');
+  const ten = d.slice(-10);
+  if (ten.length !== 10) return value ? [value] : [];
+  const a = ten.slice(0, 3), b = ten.slice(3, 6), c = ten.slice(6);
+  return [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+}
+
 async function hmacHex(secret: string, raw: string): Promise<string> {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
@@ -113,9 +123,7 @@ Deno.serve(async (req) => {
     // Best-effort patient resolution for the log.
     let patientId: string | null = null;
     if (callerNum) {
-      const d = callerNum.replace(/[^\d]/g, '').slice(-10);
-      const a = d.slice(0, 3), b = d.slice(3, 6), c = d.slice(6);
-      for (const v of [callerNum, `+1${d}`, d, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`]) {
+      for (const v of phoneVariants(callerNum)) {
         const m = await base44.asServiceRole.entities.Patient.filter({ phone: v }).catch(() => []);
         if (m.length > 0) { patientId = m[0].id; break; }
       }

@@ -44,3 +44,34 @@ export function getThreadId(a, b) {
   const nb = normalizeE164(b) || b;
   return [na, nb].sort().join("|");
 }
+
+/**
+ * Mask a phone number for display, revealing only the last 4 digits. This is
+ * the number-masking helper for the nurse's PRIVATE personal cell — it must
+ * never be shown in full in the UI or written to audit logs. The backend
+ * functions keep an inline copy (single-file deploy model).
+ * Returns "unknown" for empty input and "••••" when fewer than 4 digits.
+ */
+export function maskPhone(raw) {
+  if (!raw) return "unknown";
+  const d = String(raw).replace(/[^\d]/g, "");
+  if (d.length < 4) return "••••";
+  return `(•••) •••-${d.slice(-4)}`;
+}
+
+/**
+ * Pretty-print a phone number for display, e.g. "+12155550100" -> "(215)
+ * 555-0100". Used for masked call history and SMS threads where the patient's
+ * number is shown to their own nurse. Falls back to E.164 (or the raw input)
+ * for non-US / unparseable numbers so nothing is ever dropped.
+ */
+export function formatPhoneDisplay(raw) {
+  const e164 = normalizeE164(raw);
+  // Only NANP (+1) numbers get the pretty (xxx) xxx-xxxx US format; anything
+  // else keeps its E.164 form so we never mangle an international number.
+  if (e164 && /^\+1\d{10}$/.test(e164)) {
+    const ten = e164.slice(2);
+    return `(${ten.slice(0, 3)}) ${ten.slice(3, 6)}-${ten.slice(6)}`;
+  }
+  return e164 || (raw ? String(raw) : "");
+}

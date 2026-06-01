@@ -11,11 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, Save, ShieldCheck, Info } from "lucide-react";
 import { toast } from "sonner";
-
-function maskLast4(raw) {
-  const d = (raw || "").replace(/[^\d]/g, "");
-  return d.length >= 4 ? `••• ••• ${d.slice(-4)}` : "set";
-}
+import { maskPhone } from "@/components/voice/phoneUtils";
 
 /**
  * PhoneProvisioningPanel — admin-only. Assigns 8x8 work numbers + private cell
@@ -218,7 +214,7 @@ export default function PhoneProvisioningPanel() {
                   )}
                   {u.personal_cell_e164 && (
                     <Badge className="bg-gray-200 text-gray-700">
-                      <ShieldCheck className="w-3 h-3 mr-1" /> Cell {maskLast4(u.personal_cell_e164)}
+                      <ShieldCheck className="w-3 h-3 mr-1" /> Cell {maskPhone(u.personal_cell_e164)}
                     </Badge>
                   )}
                 </div>

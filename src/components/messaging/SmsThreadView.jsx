@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Send, MessageSquare, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 
 /**
  * SmsThreadView — renders one SMS conversation (message bubbles) and a compose
@@ -54,7 +55,7 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
             <MessageSquare className="w-4 h-4" />
             {otherPartyLabel}
           </span>
-          <span className="text-xs font-normal text-gray-500">{otherPartyNumber}</span>
+          <span className="text-xs font-normal text-gray-500">{formatPhoneDisplay(otherPartyNumber)}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
