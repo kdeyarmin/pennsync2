@@ -10,6 +10,7 @@ import { Send, MessageSquare, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
+import { smsSegments } from "@/components/messaging/smsUtils";
 
 /**
  * SmsThreadView — renders one SMS conversation (message bubbles) and a compose
@@ -46,6 +47,8 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
     if (!draft.trim()) return;
     sendMutation.mutate(draft.trim());
   };
+
+  const meta = smsSegments(draft);
 
   return (
     <Card className="lg:col-span-2">
@@ -96,7 +99,12 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
               rows={3}
               className="resize-none"
             />
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center gap-2">
+              <span className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-gray-400"}`}>
+                {meta.chars > 0
+                  ? `${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`
+                  : ""}
+              </span>
               <Button
                 onClick={handleSend}
                 disabled={!draft.trim() || sendMutation.isPending}

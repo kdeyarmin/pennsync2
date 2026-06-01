@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeE164 } from "@/components/voice/phoneUtils";
+import { smsSegments } from "@/components/messaging/smsUtils";
 
 /**
  * PatientContactActions — Text / Call buttons on the patient detail page.
@@ -142,6 +143,14 @@ export default function PatientContactActions({ patient, currentUser }) {
             placeholder="Type your message… Avoid clinical details / PHI."
             className="resize-none"
           />
+          {(() => {
+            const meta = smsSegments(draft);
+            return meta.chars > 0 ? (
+              <p className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-gray-400"}`}>
+                {`${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`}
+              </p>
+            ) : null;
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTextOpen(false)}>Cancel</Button>
             <Button
