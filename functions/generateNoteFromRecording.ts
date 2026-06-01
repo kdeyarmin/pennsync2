@@ -18,9 +18,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch patient data for context
-    const patient = await base44.asServiceRole.entities.Patient.get(patient_id);
+    // Fetch patient via the RLS-scoped client (NOT asServiceRole) so the
+    // platform enforces that this caller may access this patient — prevents
+    // generating a note against an arbitrary patient_id (IDOR).
+    const patient = await base44.entities.Patient.get(patient_id);
     if (!patient) {
+      // Patient doesn't exist or the caller isn't authorized for it.
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
 

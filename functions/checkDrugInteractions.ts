@@ -25,6 +25,12 @@ const DDI_GROUPS: Record<string, string[]> = {
   benzodiazepine: ['alprazolam', 'lorazepam', 'diazepam', 'clonazepam', 'temazepam', 'midazolam'],
   allopurinol: ['allopurinol'],
   thiopurine: ['azathioprine', 'mercaptopurine'],
+  triptan: ['sumatriptan', 'rizatriptan', 'eletriptan', 'zolmitriptan', 'naratriptan', 'almotriptan', 'frovatriptan'],
+  warfarin_potentiator: ['amiodarone', 'fluconazole', 'metronidazole', 'ciprofloxacin', 'sulfamethoxazole', 'bactrim', 'septra'],
+  statin_any: ['simvastatin', 'lovastatin', 'atorvastatin', 'rosuvastatin', 'pravastatin', 'pitavastatin', 'fluvastatin'],
+  fibrate: ['gemfibrozil', 'fenofibrate'],
+  clopidogrel: ['clopidogrel', 'plavix'],
+  cyp2c19_inhibitor: ['omeprazole', 'esomeprazole', 'fluconazole'],
 };
 const DDI_RULES = [
   { a: 'warfarin', b: 'nsaid', severity: 'major', type: 'pharmacodynamic', description: 'Greatly increased risk of serious GI/other bleeding.', recommendation: 'Avoid; if unavoidable use gastroprotection and monitor INR/bleeding closely.' },
@@ -39,6 +45,13 @@ const DDI_RULES = [
   { a: 'allopurinol', b: 'thiopurine', severity: 'major', type: 'pharmacokinetic', description: 'Severe myelosuppression.', recommendation: 'Avoid, or reduce thiopurine dose by ~75% with close monitoring.' },
   { a: 'lithium', b: 'nsaid', severity: 'major', type: 'pharmacokinetic', description: 'Reduced lithium clearance -> toxicity.', recommendation: 'Avoid NSAIDs; monitor lithium levels.' },
   { a: 'lithium', b: 'ace_arb', severity: 'major', type: 'pharmacokinetic', description: 'Reduced lithium clearance -> toxicity.', recommendation: 'Monitor lithium levels closely.' },
+  { a: 'warfarin', b: 'warfarin_potentiator', severity: 'major', type: 'pharmacokinetic', description: 'Raises INR / bleeding risk (CYP / protein-binding interaction).', recommendation: 'Monitor INR closely and adjust the warfarin dose.' },
+  { a: 'warfarin', b: 'ssri_snri', severity: 'major', type: 'pharmacodynamic', description: 'Additive bleeding risk (impaired platelet function).', recommendation: 'Monitor for bleeding; consider gastroprotection.' },
+  { a: 'ssri_snri', b: 'nsaid', severity: 'moderate', type: 'pharmacodynamic', description: 'Increased GI bleeding risk.', recommendation: 'Use gastroprotection; monitor for bleeding.' },
+  { a: 'statin_any', b: 'fibrate', severity: 'major', type: 'pharmacodynamic', description: 'Increased myopathy/rhabdomyolysis risk (esp. gemfibrozil).', recommendation: 'Avoid gemfibrozil with statins; if a fibrate is needed prefer fenofibrate with monitoring.' },
+  { a: 'ssri_snri', b: 'triptan', severity: 'moderate', type: 'pharmacodynamic', description: 'Serotonin syndrome risk.', recommendation: 'Monitor for serotonin toxicity and counsel the patient.' },
+  { a: 'maoi', b: 'triptan', severity: 'major', type: 'pharmacodynamic', description: 'Serotonin syndrome risk.', recommendation: 'Avoid the combination.' },
+  { a: 'clopidogrel', b: 'cyp2c19_inhibitor', severity: 'moderate', type: 'pharmacokinetic', description: 'Reduced activation of clopidogrel -> decreased antiplatelet effect.', recommendation: 'Prefer pantoprazole; avoid omeprazole/esomeprazole.' },
 ];
 function ddiGroupsFor(name: string): string[] {
   const n = String(name || '').toLowerCase();

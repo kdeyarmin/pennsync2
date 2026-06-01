@@ -31,6 +31,26 @@ test("flags opioid + benzodiazepine (respiratory depression)", () => {
   assert.ok(r.requires_intervention);
 });
 
+test("flags warfarin + amiodarone (INR potentiator)", () => {
+  const [r] = findDeterministicInteractions([{ name: "Warfarin" }, { name: "amiodarone 200mg" }]);
+  assert.equal(r.severity, "major");
+});
+
+test("flags simvastatin + gemfibrozil (rhabdomyolysis)", () => {
+  const [r] = findDeterministicInteractions([{ name: "simvastatin" }, { name: "gemfibrozil" }]);
+  assert.equal(r.severity, "major");
+});
+
+test("flags clopidogrel + omeprazole (reduced antiplatelet effect)", () => {
+  const [r] = findDeterministicInteractions([{ name: "clopidogrel" }, { name: "omeprazole" }]);
+  assert.equal(r.severity, "moderate");
+});
+
+test("flags sumatriptan + sertraline (serotonin syndrome risk)", () => {
+  const [r] = findDeterministicInteractions([{ name: "sumatriptan" }, { name: "sertraline" }]);
+  assert.equal(r.severity, "moderate");
+});
+
 test("no false positive for an unrelated pair", () => {
   assert.deepEqual(findDeterministicInteractions([{ name: "acetaminophen" }, { name: "vitamin d" }]), []);
 });
