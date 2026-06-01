@@ -21,7 +21,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
   if (String(raw).trim().startsWith('+') && digits.length >= 8) return `+${digits}`;
-  return digits ? `+${digits}` : null;
+  return null;
 }
 
 // Mirrors phoneVariants() in src/components/voice/phoneUtils.js — candidate
@@ -114,6 +114,24 @@ async function getMainOffice(base44: any): Promise<string> {
   return settings[0]?.main_office_number_e164 || '';
 }
 
+/**
+ * Replay defense: reject calls whose provider timestamp is far from now. Only a
+ * timestamp in the SIGNED body is trusted (HMAC covers the raw body). Fails
+ * OPEN when absent/unparseable. Confirm 8x8's field name for your account.
+ */
+function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
+  const raw = payload?.timestamp ?? payload?.eventTime ?? payload?.time ?? payload?.createdTime ?? payload?.ts;
+  if (raw == null) return false;
+  let ms: number;
+  if (typeof raw === 'number') ms = raw < 1e12 ? raw * 1000 : raw;
+  else {
+    const parsed = Date.parse(String(raw));
+    if (Number.isNaN(parsed)) return false;
+    ms = parsed;
+  }
+  return Math.abs(Date.now() - ms) > maxSkewMs;
+}
+
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
@@ -122,6 +140,9 @@ Deno.serve(async (req) => {
     }
 
     const payload = JSON.parse(raw || '{}');
+    if (isReplayStale(payload)) {
+      return Response.json({ error: 'Stale webhook (possible replay)' }, { status: 401 });
+    }
     const calledRaw = payload.called || payload.destination || payload.to;
     const callerRaw = payload.callerNumber || payload.source || payload.from || payload.caller;
     const providerCallId = payload.callId || payload.sessionId || payload.id || null;

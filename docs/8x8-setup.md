@@ -59,6 +59,16 @@ shared-secret header (`x-webhook-secret`). Confirm the exact header name and
 signing scheme 8x8 sends for your account and, if it differs, update
 `SIGNATURE_HEADERS` / `verifyWebhook` in the function files.
 
+### Replay protection
+The two action webhooks (`handleEightXEightInboundSms`, `handleEightXEightVoiceCall`)
+also reject **stale** events: if the signed body carries a timestamp
+(`timestamp`/`eventTime`/`time`/`createdTime`/`ts`) more than ~15 min from now,
+the request is rejected as a possible replay. The check **fails open** when no
+parseable timestamp is present (idempotency on `provider_message_id` /
+`provider_call_id` already de-dups genuine retries). Confirm the timestamp field
+name 8x8 sends and tune `isReplayStale` / the skew if needed. Only body fields
+are trusted (the HMAC covers the raw body); header timestamps are not.
+
 ### Callflow / API shape caveats
 8x8 callflow action names (`makeCall`, `say`) and the outbound voice
 origination endpoint depend on your provisioned sub-account. Validate the JSON
@@ -88,7 +98,11 @@ shapes in `handleEightXEightVoiceCall.ts` (`buildSay` / `buildMakeCall`) and
 - **BAA with 8x8** — ✅ signed and on file, so PHI may flow over the 8x8 channels once the remaining technical steps are complete.
 - **STOP / HELP / START** keyword handling is built into the inbound SMS handler
   and is legally required. `SmsConsent` is the opt-in/opt-out ledger; `sendSms`
-  refuses to text an `opted_out` number.
+  refuses to text an `opted_out` number, and off-duty/HELP auto-replies are
+  fail-closed (a consent-read error suppresses the reply) and honor the agency
+  SMS kill switch. **Scope:** a STOP opt-out applies to **texts**; masked
+  **voice calls remain allowed** (clinical, nurse-initiated) — the patient UI
+  states this explicitly. Revisit if your TCPA posture requires call opt-out.
 - **PHI minimization**: templated/off-duty messages must contain no diagnoses,
   DOB, or other PHI. Message bodies are **never** written to `UserActivity` /
   `SecurityLog` (only length + thread id). Personal cell numbers are masked to

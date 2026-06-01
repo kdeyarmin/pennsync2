@@ -22,7 +22,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
   if (String(raw).trim().startsWith('+') && digits.length >= 8) return `+${digits}`;
-  return digits ? `+${digits}` : null;
+  return null;
 }
 
 function getThreadId(a: string, b: string): string {
@@ -121,6 +121,27 @@ async function sendSms8x8(apiKey: string, host: string, subAccountId: string, so
   }).catch((err) => { console.error('auto-reply send failed:', err); return null; });
 }
 
+/**
+ * Replay defense: reject events whose provider timestamp is far from now. We
+ * only trust a timestamp in the SIGNED body (the HMAC covers the raw body, so a
+ * body field is tamper-proof; header timestamps are not signed). Fails OPEN
+ * when no parseable timestamp is present — idempotency already de-dups true
+ * retries, so this is belt-and-suspenders. Confirm 8x8's field name and widen/
+ * narrow the skew as needed for your account.
+ */
+function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
+  const raw = payload?.timestamp ?? payload?.eventTime ?? payload?.time ?? payload?.createdTime ?? payload?.ts;
+  if (raw == null) return false;
+  let ms: number;
+  if (typeof raw === 'number') ms = raw < 1e12 ? raw * 1000 : raw;
+  else {
+    const parsed = Date.parse(String(raw));
+    if (Number.isNaN(parsed)) return false;
+    ms = parsed;
+  }
+  return Math.abs(Date.now() - ms) > maxSkewMs;
+}
+
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
@@ -130,6 +151,9 @@ Deno.serve(async (req) => {
     }
 
     const payload = JSON.parse(raw || '{}');
+    if (isReplayStale(payload)) {
+      return Response.json({ error: 'Stale webhook (possible replay)' }, { status: 401 });
+    }
     // 8x8 inbound payload field names can vary by product; parse defensively.
     const source = payload.source || payload.from || payload.msisdn || payload.sender;
     const destination = payload.destination || payload.to || payload.recipient;
