@@ -42,6 +42,7 @@ const PatientDetails = lazy(() => import('@/pages/PatientDetails'));
 const ClinicalDocumentation = lazy(() => import('@/pages/ClinicalDocumentation'));
 const DocumentHub = lazy(() => import('@/pages/DocumentHub'));
 const Messages = lazy(() => import('@/pages/Messages'));
+const PhoneCenter = lazy(() => import('@/pages/PhoneCenter'));
 const AdminOperations = lazy(() => import('@/pages/AdminOperations'));
 const UserManagement = lazy(() => import('@/pages/UserManagement'));
 const AdminTraining = lazy(() => import('@/pages/AdminTraining'));
@@ -114,6 +115,7 @@ const AuthenticatedApp = () => {
         <Route path="/ClinicalDocumentation" element={<LayoutWrapper currentPageName="ClinicalDocumentation"><ClinicalDocumentation /></LayoutWrapper>} />
         <Route path="/DocumentHub" element={<LayoutWrapper currentPageName="DocumentHub"><DocumentHub /></LayoutWrapper>} />
         <Route path="/Messages" element={<LayoutWrapper currentPageName="Messages"><Messages /></LayoutWrapper>} />
+        <Route path="/PhoneCenter" element={<LayoutWrapper currentPageName="PhoneCenter"><PhoneCenter /></LayoutWrapper>} />
         <Route path="/AdminOperations" element={<LayoutWrapper currentPageName="AdminOperations"><AdminOperations /></LayoutWrapper>} />
         <Route path="/UserManagement" element={<LayoutWrapper currentPageName="UserManagement"><UserManagement /></LayoutWrapper>} />
         <Route path="/AdminTraining" element={<LayoutWrapper currentPageName="AdminTraining"><AdminTraining /></LayoutWrapper>} />
