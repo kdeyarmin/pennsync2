@@ -39,6 +39,14 @@ test("phoneVariants produces common stored formats for matching", () => {
   assert.ok(variants.includes("215.555.0100"));
 });
 
+test("phoneVariants contains no duplicates when input is already normalized", () => {
+  // An E.164 input collides with the generated `+1${ten}` form; the deduped
+  // list must not issue the same Patient.filter() lookup twice.
+  const variants = phoneVariants("+12155550100");
+  assert.equal(variants.length, new Set(variants).size);
+  assert.ok(variants.includes("+12155550100"));
+});
+
 test("phoneVariants degrades gracefully without ten digits", () => {
   assert.deepEqual(phoneVariants(""), []);
   assert.deepEqual(phoneVariants("123"), ["123"]);

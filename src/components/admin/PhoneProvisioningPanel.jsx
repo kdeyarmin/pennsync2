@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, Save, ShieldCheck, Info } from "lucide-react";
 import { toast } from "sonner";
-import { maskPhone } from "@/components/voice/phoneUtils";
+import { maskPhone, formatPhoneDisplay } from "@/components/voice/phoneUtils";
 
 /**
  * PhoneProvisioningPanel — admin-only. Assigns 8x8 work numbers + private cell
@@ -208,7 +208,7 @@ export default function PhoneProvisioningPanel() {
                 </div>
                 <div className="flex items-center gap-2">
                   {u.work_phone_number ? (
-                    <Badge className="bg-green-100 text-green-800">Work: {u.work_phone_number}</Badge>
+                    <Badge className="bg-green-100 text-green-800">Work: {formatPhoneDisplay(u.work_phone_number)}</Badge>
                   ) : (
                     <Badge variant="outline">No work number</Badge>
                   )}

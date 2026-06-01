@@ -22,12 +22,13 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return null;
 }
 
-function phoneVariants(e164: string): string[] {
-  const d = e164.replace(/[^\d]/g, '');
+function phoneVariants(value: string): string[] {
+  const d = (value || '').replace(/[^\d]/g, '');
   const ten = d.slice(-10);
-  if (ten.length !== 10) return [e164];
+  if (ten.length !== 10) return value ? [value] : [];
   const a = ten.slice(0, 3), b = ten.slice(3, 6), c = ten.slice(6);
-  return [e164, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
 Deno.serve(async (req) => {

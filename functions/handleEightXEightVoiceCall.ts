@@ -31,7 +31,8 @@ function phoneVariants(value: string): string[] {
   const ten = d.slice(-10);
   if (ten.length !== 10) return value ? [value] : [];
   const a = ten.slice(0, 3), b = ten.slice(3, 6), c = ten.slice(6);
-  return [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
 async function hmacHex(secret: string, raw: string): Promise<string> {

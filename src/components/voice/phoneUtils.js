@@ -32,7 +32,11 @@ export function phoneVariants(value) {
   const a = ten.slice(0, 3);
   const b = ten.slice(3, 6);
   const c = ten.slice(6);
-  return [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  // De-dupe: when `value` is already one of the normalized forms (e.g. an
+  // E.164 `+1XXXXXXXXXX`), it collides with a generated variant. Removing the
+  // duplicate avoids a redundant Patient.filter() lookup per variant.
+  const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
 /**
