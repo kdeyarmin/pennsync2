@@ -1,0 +1,58 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+
+/**
+ * getDashboardData — returns the Dashboard's core datasets (active patients,
+ * today's visits, active care plans, recent incidents) scoped to the caller so
+ * a non-admin's browser never receives agency-wide PHI it isn't authorized for.
+ *   - admins: agency-wide (unchanged from the previous client queries)
+ *   - everyone else: only their assigned patients' data (Patient.assigned_nurses)
+ *
+ * Defense-in-depth; Base44 row-level security remains the primary control. This
+ * is fetched under its own ['dashboardData', email] query key so the app-wide
+ * shared keys (['patients'], ['todayVisits'], ...) and their cross-component
+ * invalidations are left untouched.
+ */
+
+// Today's date in America/New_York (matches the client's todayEastern()).
+function todayEastern(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+}
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const sr = base44.asServiceRole.entities;
+    const today = todayEastern();
+
+    if (user.role === 'admin') {
+      const [patients, visits, carePlans, incidents] = await Promise.all([
+        sr.Patient.filter({ status: 'active' }, '-updated_date', 100),
+        sr.Visit.filter({ visit_date: today }, '-visit_time'),
+        sr.CarePlan.filter({ status: 'active' }, '-updated_date', 50),
+        sr.Incident.list('-incident_date', 20),
+      ]);
+      return Response.json({ patients, visits, carePlans, incidents });
+    }
+
+    // Non-admin: restrict everything to the caller's assigned patients.
+    const patients = await sr.Patient.filter({ assigned_nurses: user.email, status: 'active' }, '-updated_date', 100);
+    const ids = (patients || []).map((p: any) => p.id).filter(Boolean);
+    if (ids.length === 0) {
+      return Response.json({ patients: [], visits: [], carePlans: [], incidents: [] });
+    }
+    const [visits, carePlans, incidents] = await Promise.all([
+      sr.Visit.filter({ patient_id: { $in: ids }, visit_date: today }, '-visit_time'),
+      sr.CarePlan.filter({ patient_id: { $in: ids }, status: 'active' }, '-updated_date', 50),
+      sr.Incident.filter({ patient_id: { $in: ids } }, '-incident_date', 20),
+    ]);
+    return Response.json({ patients, visits, carePlans, incidents });
+  } catch (error) {
+    console.error('getDashboardData error:', error?.message);
+    return Response.json({ error: 'Failed to load dashboard data' }, { status: 500 });
+  }
+});
