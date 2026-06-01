@@ -17,7 +17,7 @@ function toTime(value) {
   return Number.isNaN(t) ? null : t;
 }
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+export const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * True when `now` falls inside a valid scheduled time-off window. The window is
@@ -33,10 +33,15 @@ export function isScheduledOffActive(start, end, now = new Date(), recurring = f
   const e = toTime(end);
   if (s === null || e === null || e <= s) return false;
   const t = now.getTime();
-  if (!recurring) return t >= s && t <= e;
-  if (t < s) return false;
-  const delta = ((t - s) % WEEK_MS + WEEK_MS) % WEEK_MS;
-  return delta <= e - s;
+  // Recurrence only makes sense for a window shorter than its weekly period; a
+  // window >= 1 week would cover every instant, so fall back to one-off
+  // semantics (which expires) rather than trapping the nurse off duty forever.
+  if (recurring && e - s < WEEK_MS) {
+    if (t < s) return false;
+    const delta = ((t - s) % WEEK_MS + WEEK_MS) % WEEK_MS;
+    return delta <= e - s;
+  }
+  return t >= s && t <= e;
 }
 
 /**

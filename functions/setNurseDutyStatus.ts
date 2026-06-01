@@ -29,17 +29,35 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'duty_status must be "on_duty" or "off_duty"' }, { status: 400 });
     }
 
-    // Validate the scheduled time-off window. `null` clears it; otherwise both
-    // ends must be valid dates and the end must be strictly after the start.
-    const clearingSchedule = scheduled_off_duty_start === null || scheduled_off_duty_end === null;
-    if (!clearingSchedule && (scheduled_off_duty_start !== undefined || scheduled_off_duty_end !== undefined)) {
-      const s = new Date(scheduled_off_duty_start).getTime();
-      const e = new Date(scheduled_off_duty_end).getTime();
-      if (Number.isNaN(s) || Number.isNaN(e)) {
-        return Response.json({ error: 'Scheduled start and end must both be valid dates.' }, { status: 400 });
-      }
-      if (e <= s) {
-        return Response.json({ error: 'Scheduled end time must be after the start time.' }, { status: 400 });
+    // Validate the scheduled time-off window. Start and end must be supplied
+    // together: both `null` clears it; both ISO strings set it. A one-sided
+    // value is rejected rather than silently persisting a half-window.
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const startProvided = scheduled_off_duty_start !== undefined;
+    const endProvided = scheduled_off_duty_end !== undefined;
+    if (startProvided !== endProvided) {
+      return Response.json({ error: 'Provide scheduled_off_duty_start and scheduled_off_duty_end together.' }, { status: 400 });
+    }
+    let clearingSchedule = false;
+    if (startProvided && endProvided) {
+      const bothNull = scheduled_off_duty_start === null && scheduled_off_duty_end === null;
+      const eitherNull = scheduled_off_duty_start === null || scheduled_off_duty_end === null;
+      if (bothNull) {
+        clearingSchedule = true;
+      } else if (eitherNull) {
+        return Response.json({ error: 'Both a start and end time are required to set a time-off window.' }, { status: 400 });
+      } else {
+        const s = new Date(scheduled_off_duty_start).getTime();
+        const e = new Date(scheduled_off_duty_end).getTime();
+        if (Number.isNaN(s) || Number.isNaN(e)) {
+          return Response.json({ error: 'Scheduled start and end must both be valid dates.' }, { status: 400 });
+        }
+        if (e <= s) {
+          return Response.json({ error: 'Scheduled end time must be after the start time.' }, { status: 400 });
+        }
+        if (scheduled_off_duty_recurring && e - s >= WEEK_MS) {
+          return Response.json({ error: 'A repeating time-off window must be shorter than 7 days.' }, { status: 400 });
+        }
       }
     }
 

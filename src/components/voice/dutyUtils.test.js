@@ -57,6 +57,16 @@ test("recurring weekly window repeats on later weeks", () => {
   assert.equal(isScheduledOffActive(start, end, new Date("2026-06-28T12:00:00Z"), false), false);
 });
 
+test("recurring window >= 1 week falls back to one-off and still expires", () => {
+  // An 8-day recurring window must NOT trap the nurse off duty forever.
+  const start = iso("2026-06-06T00:00:00Z");
+  const end = iso("2026-06-14T00:00:00Z"); // 8 days
+  // Inside the literal one-off span -> off duty.
+  assert.equal(isScheduledOffActive(start, end, new Date("2026-06-10T12:00:00Z"), true), true);
+  // Weeks later -> NOT off duty (would have been a permanent lock under the bug).
+  assert.equal(isScheduledOffActive(start, end, new Date("2026-07-15T12:00:00Z"), true), false);
+});
+
 test("recurring window never activates before its anchor", () => {
   const start = iso("2026-06-06T00:00:00Z");
   const end = iso("2026-06-08T00:00:00Z");

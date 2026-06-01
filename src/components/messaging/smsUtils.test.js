@@ -42,8 +42,9 @@ test("a single emoji forces UCS-2 at 70 per segment", () => {
 });
 
 test("UCS-2 splits at 70/67", () => {
-  assert.equal(smsSegments("ä".repeat(70) + "😀").segments >= 2, true);
-  const r = smsSegments("ñ😀".repeat(40)); // clearly UCS-2 and long
+  // The emoji forces UCS-2; 70 single-unit chars + a 2-unit emoji = 72 > 70.
+  assert.equal(smsSegments("a".repeat(70) + "😀").segments >= 2, true);
+  const r = smsSegments("ñ😀".repeat(40)); // emoji forces UCS-2, and it's long
   assert.equal(r.encoding, "UCS-2");
   assert.equal(r.perSegment, 67);
   assert.ok(r.segments >= 2);

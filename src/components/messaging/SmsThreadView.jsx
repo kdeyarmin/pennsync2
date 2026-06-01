@@ -106,9 +106,9 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
           <div className="space-y-2 border-t pt-3">
             {quickReplies.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {quickReplies.map((q) => (
+                {quickReplies.map((q, i) => (
                   <button
-                    key={q.label}
+                    key={i}
                     type="button"
                     onClick={() => insertReply(q.text)}
                     title={q.text}

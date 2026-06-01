@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, PhoneOff, Save, Info, CalendarClock, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { scheduleState, getUpcomingWeekend } from "@/components/voice/dutyUtils";
+import { scheduleState, getUpcomingWeekend, WEEK_MS } from "@/components/voice/dutyUtils";
 
 /** ISO string -> value for an <input type="datetime-local"> (local time). */
 function toLocalInput(iso) {
@@ -134,6 +134,10 @@ export default function DutyStatusCard() {
     }
     if (new Date(endIso) <= new Date(startIso)) {
       toast.error("End time must be after the start time.");
+      return;
+    }
+    if (recurring && new Date(endIso) - new Date(startIso) >= WEEK_MS) {
+      toast.error("A repeating time-off window must be shorter than 7 days.");
       return;
     }
     mutation.mutate(

@@ -49,9 +49,11 @@ function isOffDutyNow(user: any, now = new Date()): boolean {
   const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
   if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return false;
   const t = now.getTime();
-  if (user.scheduled_off_duty_recurring) {
+  const week = 7 * 24 * 60 * 60 * 1000;
+  // Recurrence only applies when the window is shorter than a week; otherwise it
+  // would cover every instant, so fall back to one-off (expiring) semantics.
+  if (user.scheduled_off_duty_recurring && e - s < week) {
     if (t < s) return false;
-    const week = 7 * 24 * 60 * 60 * 1000;
     const delta = ((t - s) % week + week) % week;
     return delta <= e - s;
   }

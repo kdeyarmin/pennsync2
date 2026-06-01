@@ -149,9 +149,9 @@ export default function PatientContactActions({ patient, currentUser }) {
           )}
           {quickReplies.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {quickReplies.map((q) => (
+              {quickReplies.map((q, i) => (
                 <button
-                  key={q.label}
+                  key={i}
                   type="button"
                   onClick={() => insertReply(q.text)}
                   title={q.text}
