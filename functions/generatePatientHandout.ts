@@ -2400,7 +2400,7 @@ Deno.serve(async (req) => {
 
     // If action is email, send it with PDF attachment
     if (action === 'email' && patientEmail) {
-      console.log('Sending email to:', patientEmail);
+      console.log('Sending handout email (recipient redacted)');
       diagnostics.stage = 'sending_email';
       
       try {
