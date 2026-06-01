@@ -12,6 +12,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No user data provided' }, { status: 400 });
     }
 
+    // Opt-in webhook-secret gate: if SIGNUP_WEBHOOK_SECRET is set, require it so
+    // arbitrary HTTP callers can't forge signups / role escalation. Unset => no
+    // enforcement (so the platform trigger keeps working).
+    const signupSecret = Deno.env.get('SIGNUP_WEBHOOK_SECRET');
+    if (signupSecret && req.headers.get('x-webhook-secret') !== signupSecret) {
+      return Response.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
     // Check if user was invited
     console.log('Checking for invitation...');
     const invitations = await base44.asServiceRole.entities.UserInvitation.filter({ 
@@ -22,6 +30,13 @@ Deno.serve(async (req) => {
 
     if (invitations && invitations.length > 0) {
       const invitation = invitations[0];
+
+      // Don't trust the body's user.id<->email pairing: confirm the id resolves
+      // to the invited email before granting role/approval.
+      const actualUsers = await base44.asServiceRole.entities.User.filter({ id: user.id });
+      if (!actualUsers?.[0] || actualUsers[0].email !== user.email) {
+        return Response.json({ error: 'User id/email mismatch' }, { status: 400 });
+      }
       
       // Auto-approve ALL invited users (admin-added users should be automatically approved)
       console.log('Auto-approving invited user...');
