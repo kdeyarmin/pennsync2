@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PhoneIncoming, PhoneOutgoing, PhoneForwarded, PhoneMissed, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 
 const STATUS_STYLES = {
   completed: "bg-green-100 text-green-800",
@@ -76,7 +77,7 @@ export default function CallHistoryList() {
                 <CallIcon call={call} />
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {call.direction === "outbound" ? call.to_number : call.from_number}
+                    {formatPhoneDisplay(call.direction === "outbound" ? call.to_number : call.from_number)}
                   </p>
                   <p className="text-xs text-gray-500">{MODE_LABEL[call.call_mode] || call.call_mode}</p>
                 </div>

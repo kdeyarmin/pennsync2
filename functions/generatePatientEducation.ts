@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     }
 
     // Get patient
-    const patientResults = await base44.asServiceRole.entities.Patient.filter({ id: patientId });
+    const patientResults = await base44.entities.Patient.filter({ id: patientId });
     const patient = patientResults[0];
 
     if (!patient) {
@@ -26,12 +26,12 @@ Deno.serve(async (req) => {
     // Get recent visit if visitId provided
     let visitData = null;
     if (visitId) {
-      const visits = await base44.asServiceRole.entities.Visit.filter({ id: visitId });
+      const visits = await base44.entities.Visit.filter({ id: visitId });
       visitData = visits[0];
     }
 
     // Get care plans
-    const carePlans = await base44.asServiceRole.entities.CarePlan.filter({
+    const carePlans = await base44.entities.CarePlan.filter({
       patient_id: patientId,
       status: 'active'
     });

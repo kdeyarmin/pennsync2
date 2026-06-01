@@ -1,6 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-import { AccessToken } from 'npm:twilio@5.4.0/lib/jwt/AccessToken.js';
-import VideoGrant from 'npm:twilio@5.4.0/lib/jwt/AccessToken.js';
 
 Deno.serve(async (req) => {
   try {
@@ -8,8 +6,21 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { room_name, identity } = await req.json();
+    const { room_name } = await req.json();
     if (!room_name) return Response.json({ error: 'room_name is required' }, { status: 400 });
+
+    // AUTHORIZATION: only the session host, a listed participant, or an admin
+    // may mint a video grant for this room. Otherwise any authenticated user
+    // could join another patient's live telehealth A/V session (PHI breach).
+    const sessions = await base44.asServiceRole.entities.TelehealthSession.filter({ room_name }, '-created_date', 1);
+    const session = sessions[0];
+    if (!session) return Response.json({ error: 'Telehealth session not found' }, { status: 404 });
+    const participants = Array.isArray(session.participant_list) ? session.participant_list : [];
+    const authorized = user.role === 'admin'
+      || session.host_email === user.email
+      || participants.includes(user.email)
+      || (user.full_name && participants.includes(user.full_name));
+    if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const apiKey = Deno.env.get('TWILIO_API_KEY');
@@ -19,7 +30,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
     }
 
-    const participantIdentity = identity || user.full_name || user.email;
+    // Identity is server-derived from the authenticated user — never trust a
+    // caller-supplied identity (it would allow impersonating another clinician).
+    const participantIdentity = user.full_name || user.email;
 
     // Generate token via Twilio REST API
     const tokenUrl = `https://iam.twilio.com/v1/Accounts/${accountSid}/Tokens`;

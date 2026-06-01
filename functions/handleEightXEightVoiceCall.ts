@@ -21,7 +21,39 @@ function normalizeE164(raw: string | null | undefined): string | null {
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
   if (String(raw).trim().startsWith('+') && digits.length >= 8) return `+${digits}`;
-  return digits ? `+${digits}` : null;
+  return null;
+}
+
+// Mirrors phoneVariants() in src/components/voice/phoneUtils.js — candidate
+// stored formats used to match a caller against the free-form Patient.phone.
+function phoneVariants(value: string): string[] {
+  const d = (value || '').replace(/[^\d]/g, '');
+  const ten = d.slice(-10);
+  if (ten.length !== 10) return value ? [value] : [];
+  const a = ten.slice(0, 3), b = ten.slice(3, 6), c = ten.slice(6);
+  const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  return variants.filter((v, i) => variants.indexOf(v) === i);
+}
+
+// Mirrors isOffDutyNow() in src/components/voice/dutyUtils.js — a nurse is off
+// duty via the manual toggle OR an active scheduled time-off window. Read live
+// here so a schedule takes effect (and expires) without any cron.
+function isOffDutyNow(user: any, now = new Date()): boolean {
+  if (!user) return false;
+  if (user.duty_status === 'off_duty') return true;
+  const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
+  const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
+  if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return false;
+  const t = now.getTime();
+  const week = 7 * 24 * 60 * 60 * 1000;
+  // Recurrence only applies when the window is shorter than a week; otherwise it
+  // would cover every instant, so fall back to one-off (expiring) semantics.
+  if (user.scheduled_off_duty_recurring && e - s < week) {
+    if (t < s) return false;
+    const delta = ((t - s) % week + week) % week;
+    return delta <= e - s;
+  }
+  return t >= s && t <= e;
 }
 
 async function hmacHex(secret: string, raw: string): Promise<string> {
@@ -56,7 +88,10 @@ async function verifyWebhook(req: Request, raw: string): Promise<boolean> {
 
 // ---- 8x8 callflow builders (validate against your 8x8 account schema) ----
 function buildSay(text: string) {
-  return { action: 'say', params: { text, language: 'en-US', voiceProfile: 'en-US-female' } };
+  // Defense in depth: strip markup/control chars and cap length before TTS, so
+  // even a legacy/unsanitized off_duty_message can't inject SSML/markup.
+  const safe = String(text || '').replace(/[<>]/g, '').replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, 320);
+  return { action: 'say', params: { text: safe, language: 'en-US', voiceProfile: 'en-US-female' } };
 }
 function buildMakeCall(destination: string, callerId: string) {
   return {
@@ -79,6 +114,24 @@ async function getMainOffice(base44: any): Promise<string> {
   return settings[0]?.main_office_number_e164 || '';
 }
 
+/**
+ * Replay defense: reject calls whose provider timestamp is far from now. Only a
+ * timestamp in the SIGNED body is trusted (HMAC covers the raw body). Fails
+ * OPEN when absent/unparseable. Confirm 8x8's field name for your account.
+ */
+function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
+  const raw = payload?.timestamp ?? payload?.eventTime ?? payload?.time ?? payload?.createdTime ?? payload?.ts;
+  if (raw == null) return false;
+  let ms: number;
+  if (typeof raw === 'number') ms = raw < 1e12 ? raw * 1000 : raw;
+  else {
+    const parsed = Date.parse(String(raw));
+    if (Number.isNaN(parsed)) return false;
+    ms = parsed;
+  }
+  return Math.abs(Date.now() - ms) > maxSkewMs;
+}
+
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
@@ -87,6 +140,9 @@ Deno.serve(async (req) => {
     }
 
     const payload = JSON.parse(raw || '{}');
+    if (isReplayStale(payload)) {
+      return Response.json({ error: 'Stale webhook (possible replay)' }, { status: 401 });
+    }
     const calledRaw = payload.called || payload.destination || payload.to;
     const callerRaw = payload.callerNumber || payload.source || payload.from || payload.caller;
     const providerCallId = payload.callId || payload.sessionId || payload.id || null;
@@ -113,37 +169,44 @@ Deno.serve(async (req) => {
     // Best-effort patient resolution for the log.
     let patientId: string | null = null;
     if (callerNum) {
-      const d = callerNum.replace(/[^\d]/g, '').slice(-10);
-      const a = d.slice(0, 3), b = d.slice(3, 6), c = d.slice(6);
-      for (const v of [callerNum, `+1${d}`, d, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`]) {
+      const variants = [...new Set(phoneVariants(callerNum))];
+      for (const v of variants) {
         const m = await base44.asServiceRole.entities.Patient.filter({ phone: v }).catch(() => []);
         if (m.length > 0) { patientId = m[0].id; break; }
       }
     }
 
-    const offDuty = nurse.duty_status === 'off_duty';
+    const offDuty = isOffDutyNow(nurse);
     const callMode = offDuty ? 'off_duty_transfer' : 'masked_bridge';
 
-    const logRow = await base44.asServiceRole.entities.CallLog.create({
-      direction: 'inbound',
-      from_number: callerNum,
-      to_number: offDuty ? mainOffice : nurse.personal_cell_e164 || '',
-      displayed_number: workNum,
-      nurse_email: nurse.email,
-      patient_id: patientId,
-      call_mode: callMode,
-      status: 'ringing',
-      provider_call_id: providerCallId,
-    });
+    // Idempotency: 8x8 may retry the VCA webhook. Only create the CallLog +
+    // audit row once per provider call id; the callflow returned below is
+    // deterministic, so re-returning it on a retry is safe.
+    const existingCall = providerCallId
+      ? await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: providerCallId }, '-created_date', 1).catch(() => [])
+      : [];
+    if (existingCall.length === 0) {
+      const logRow = await base44.asServiceRole.entities.CallLog.create({
+        direction: 'inbound',
+        from_number: callerNum,
+        to_number: offDuty ? mainOffice : nurse.personal_cell_e164 || '',
+        displayed_number: workNum,
+        nurse_email: nurse.email,
+        patient_id: patientId,
+        call_mode: callMode,
+        status: 'ringing',
+        provider_call_id: providerCallId,
+      });
 
-    await base44.asServiceRole.entities.UserActivity.create({
-      user_email: 'system',
-      action: 'inbound_call_received',
-      entity_type: 'CallLog',
-      entity_id: logRow.id,
-      details: { call_mode: callMode, nurse_email: nurse.email, patient_id: patientId, provider_call_id: providerCallId },
-      status: 'success',
-    }).catch(() => {});
+      await base44.asServiceRole.entities.UserActivity.create({
+        user_email: 'system',
+        action: 'inbound_call_received',
+        entity_type: 'CallLog',
+        entity_id: logRow.id,
+        details: { call_mode: callMode, nurse_email: nurse.email, patient_id: patientId, provider_call_id: providerCallId },
+        status: 'success',
+      }).catch(() => {});
+    }
 
     // Off duty: greet, then transfer to the main office.
     if (offDuty) {

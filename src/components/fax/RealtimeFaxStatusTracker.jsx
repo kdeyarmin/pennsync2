@@ -221,13 +221,13 @@ export default function RealtimeFaxStatusTracker() {
                       <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm text-gray-900 truncate">
-                          To: {fax.recipient_fax_number || 'Unknown'}
+                          To: {fax.to_number || fax.recipient_fax_number || 'Unknown'}
                         </p>
                         <p className="text-xs text-gray-600 mt-0.5">
                           {fax.document_name || 'Untitled'} · {getRelativeTimeLabel(fax.created_date)}
                         </p>
-                        {fax.error_message && (
-                          <p className="text-xs text-red-700 mt-1">{fax.error_message}</p>
+                        {(fax.failure_reason || fax.error_message) && (
+                          <p className="text-xs text-red-700 mt-1">{fax.failure_reason || fax.error_message}</p>
                         )}
                       </div>
                     </div>
@@ -262,7 +262,7 @@ export default function RealtimeFaxStatusTracker() {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-xs font-medium text-gray-600 uppercase">Recipient</p>
-                <p className="text-sm font-semibold text-gray-900">{selectedFax.recipient_fax_number || 'Unknown'}</p>
+                <p className="text-sm font-semibold text-gray-900">{selectedFax.to_number || selectedFax.recipient_fax_number || 'Unknown'}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-600 uppercase">Document</p>
@@ -278,16 +278,16 @@ export default function RealtimeFaxStatusTracker() {
                 <p className="text-xs font-medium text-gray-600 uppercase">Sent</p>
                 <p className="text-sm text-gray-900">{new Date(selectedFax.created_date).toLocaleString()}</p>
               </div>
-              {selectedFax.error_message && (
+              {(selectedFax.failure_reason || selectedFax.error_message) && (
                 <div className="bg-red-50 border border-red-200 rounded p-3">
                   <p className="text-xs font-medium text-red-900 uppercase mb-1">Error</p>
-                  <p className="text-sm text-red-700">{selectedFax.error_message}</p>
+                  <p className="text-sm text-red-700">{selectedFax.failure_reason || selectedFax.error_message}</p>
                 </div>
               )}
-              {selectedFax.twilio_sid && (
+              {(selectedFax.telnyx_fax_id || selectedFax.twilio_sid) && (
                 <div>
                   <p className="text-xs font-medium text-gray-600 uppercase">Tracking ID</p>
-                  <p className="text-xs font-mono text-gray-600 break-all">{selectedFax.twilio_sid}</p>
+                  <p className="text-xs font-mono text-gray-600 break-all">{selectedFax.telnyx_fax_id || selectedFax.twilio_sid}</p>
                 </div>
               )}
 

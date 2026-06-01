@@ -25,12 +25,13 @@ function getThreadId(a: string, b: string): string {
   return [na, nb].sort().join('|');
 }
 
-function phoneVariants(e164: string): string[] {
-  const d = e164.replace(/[^\d]/g, '');
+function phoneVariants(value: string): string[] {
+  const d = (value || '').replace(/[^\d]/g, '');
   const ten = d.slice(-10);
-  if (ten.length !== 10) return [e164];
+  if (ten.length !== 10) return value ? [value] : [];
   const a = ten.slice(0, 3), b = ten.slice(3, 6), c = ten.slice(6);
-  return [e164, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  return variants.filter((v, i) => variants.indexOf(v) === i);
 }
 
 async function getAgencyConfig(base44: any) {
@@ -60,6 +61,13 @@ Deno.serve(async (req) => {
     const { to_number, body, patient_id } = await req.json();
     if (!to_number || !body) {
       return Response.json({ error: 'Missing required fields: to_number, body' }, { status: 400 });
+    }
+    // Validate body type/length before it reaches the provider (cost/abuse).
+    if (typeof body !== 'string') {
+      return Response.json({ error: 'Message body must be a string' }, { status: 400 });
+    }
+    if (body.length > 1600) {
+      return Response.json({ error: 'Message is too long (max 1600 characters).' }, { status: 400 });
     }
 
     const fromNumber = user.work_phone_number;
@@ -111,20 +119,30 @@ Deno.serve(async (req) => {
     // Send via 8x8 SMS API
     const host = `https://sms.${region}.8x8.com`;
     const url = `${host}/api/v1/subaccounts/${smsSubAccountId}/messages`;
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        source: fromNumber,
-        destination,
-        text: body,
-        encoding: 'AUTO',
-        clientMessageId,
-      }),
-    });
+    let resp: Response;
+    try {
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: fromNumber,
+          destination,
+          text: body,
+          encoding: 'AUTO',
+          clientMessageId,
+        }),
+      });
+    } catch (netErr) {
+      // Network/DNS failure: don't leave the row stuck in 'queued' forever.
+      await base44.entities.SmsMessage.update(smsRow.id, {
+        status: 'failed',
+        failure_reason: `Network error reaching 8x8: ${netErr.message}`,
+      }).catch(() => {});
+      return Response.json({ error: 'Failed to reach 8x8 SMS API', details: netErr.message }, { status: 502 });
+    }
 
     const data = await resp.json().catch(() => ({}));
 

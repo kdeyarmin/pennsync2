@@ -36,8 +36,19 @@ Deno.serve(async (req) => {
     let sentCount = 0;
     let failedCount = 0;
 
+    // NOTE: only ONE scheduled-fax processor should be enabled in the platform
+    // scheduler (this OR processScheduledFaxes) — running both double-sends.
+
     // Process faxes in priority order
     for (const scheduledFax of dueFaxes) {
+      // Claim before sending so an overlapping run won't also send it.
+      try {
+        await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, { status: 'processing' });
+      } catch (claimErr) {
+        console.error(`Could not claim scheduled fax ${scheduledFax.id}; skipping`, claimErr);
+        continue;
+      }
+      let anyRecipientFailed = false;
       try {
         // Send to all recipients
         for (const toNumber of scheduledFax.to_numbers) {
@@ -54,16 +65,21 @@ Deno.serve(async (req) => {
 
             if (sendResult.data.success) {
               sentCount++;
+            } else {
+              anyRecipientFailed = true;
+              failedCount++;
             }
           } catch (sendError) {
             console.error(`Failed to send to ${toNumber}:`, sendError);
+            anyRecipientFailed = true;
             failedCount++;
           }
         }
 
-        // Mark as sent
+        // Only mark fully 'sent' when every recipient succeeded; otherwise
+        // 'failed' so the partial failure is visible and recoverable.
         await base44.asServiceRole.entities.ScheduledFax.update(scheduledFax.id, {
-          status: 'sent'
+          status: anyRecipientFailed ? 'failed' : 'sent'
         });
 
       } catch (error) {

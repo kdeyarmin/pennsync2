@@ -22,7 +22,7 @@ function normalizeE164(raw: string | null | undefined): string | null {
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
   if (String(raw).trim().startsWith('+') && digits.length >= 8) return `+${digits}`;
-  return digits ? `+${digits}` : null;
+  return null;
 }
 
 function getThreadId(a: string, b: string): string {
@@ -31,12 +31,33 @@ function getThreadId(a: string, b: string): string {
   return [na, nb].sort().join('|');
 }
 
-function phoneVariants(e164: string): string[] {
-  const d = e164.replace(/[^\d]/g, '');
+function phoneVariants(value: string): string[] {
+  const d = (value || '').replace(/[^\d]/g, '');
   const ten = d.slice(-10);
-  if (ten.length !== 10) return [e164];
+  if (ten.length !== 10) return value ? [value] : [];
   const a = ten.slice(0, 3), b = ten.slice(3, 6), c = ten.slice(6);
-  return [e164, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  const variants = [value, `+1${ten}`, `1${ten}`, ten, `(${a}) ${b}-${c}`, `${a}-${b}-${c}`, `${a}.${b}.${c}`];
+  return variants.filter((v, i) => variants.indexOf(v) === i);
+}
+
+// Mirrors isOffDutyNow() in src/components/voice/dutyUtils.js — manual toggle OR
+// an active scheduled time-off window, evaluated live at message time.
+function isOffDutyNow(user: any, now = new Date()): boolean {
+  if (!user) return false;
+  if (user.duty_status === 'off_duty') return true;
+  const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
+  const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
+  if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return false;
+  const t = now.getTime();
+  const week = 7 * 24 * 60 * 60 * 1000;
+  // Recurrence only applies when the window is shorter than a week; otherwise it
+  // would cover every instant, so fall back to one-off (expiring) semantics.
+  if (user.scheduled_off_duty_recurring && e - s < week) {
+    if (t < s) return false;
+    const delta = ((t - s) % week + week) % week;
+    return delta <= e - s;
+  }
+  return t >= s && t <= e;
 }
 
 async function hmacHex(secret: string, raw: string): Promise<string> {
@@ -100,6 +121,27 @@ async function sendSms8x8(apiKey: string, host: string, subAccountId: string, so
   }).catch((err) => { console.error('auto-reply send failed:', err); return null; });
 }
 
+/**
+ * Replay defense: reject events whose provider timestamp is far from now. We
+ * only trust a timestamp in the SIGNED body (the HMAC covers the raw body, so a
+ * body field is tamper-proof; header timestamps are not signed). Fails OPEN
+ * when no parseable timestamp is present — idempotency already de-dups true
+ * retries, so this is belt-and-suspenders. Confirm 8x8's field name and widen/
+ * narrow the skew as needed for your account.
+ */
+function isReplayStale(payload: any, maxSkewMs = 15 * 60 * 1000): boolean {
+  const raw = payload?.timestamp ?? payload?.eventTime ?? payload?.time ?? payload?.createdTime ?? payload?.ts;
+  if (raw == null) return false;
+  let ms: number;
+  if (typeof raw === 'number') ms = raw < 1e12 ? raw * 1000 : raw;
+  else {
+    const parsed = Date.parse(String(raw));
+    if (Number.isNaN(parsed)) return false;
+    ms = parsed;
+  }
+  return Math.abs(Date.now() - ms) > maxSkewMs;
+}
+
 Deno.serve(async (req) => {
   try {
     const raw = await req.text();
@@ -109,6 +151,9 @@ Deno.serve(async (req) => {
     }
 
     const payload = JSON.parse(raw || '{}');
+    if (isReplayStale(payload)) {
+      return Response.json({ error: 'Stale webhook (possible replay)' }, { status: 401 });
+    }
     // 8x8 inbound payload field names can vary by product; parse defensively.
     const source = payload.source || payload.from || payload.msisdn || payload.sender;
     const destination = payload.destination || payload.to || payload.recipient;
@@ -139,6 +184,17 @@ Deno.serve(async (req) => {
         status: 'failure',
       }).catch(() => {});
       return Response.json({ success: true });
+    }
+
+    // Idempotency: 8x8 retries webhooks. If we already stored this provider
+    // message id, acknowledge without creating a duplicate row, re-notifying,
+    // or (critically for TCPA) re-sending an auto-reply.
+    if (providerMessageId) {
+      const dup = await base44.asServiceRole.entities.SmsMessage
+        .filter({ provider_message_id: providerMessageId }, '-created_date', 1).catch(() => []);
+      if (dup.length > 0) {
+        return Response.json({ success: true, deduped: true });
+      }
     }
 
     // Resolve patient (best effort).
@@ -178,6 +234,19 @@ Deno.serve(async (req) => {
       consent_checked: false,
     });
 
+    // Opt-out status, computed once and FAIL-CLOSED: if the consent ledger
+    // can't be read, assume opted-out so we never text someone after STOP.
+    let priorOptedOut = true;
+    try {
+      const consents = await base44.asServiceRole.entities.SmsConsent
+        .filter({ phone_e164: patientNum }, '-captured_at', 1);
+      priorOptedOut = consents[0]?.consent_status === 'opted_out';
+    } catch (err) {
+      console.error('consent read failed; suppressing non-essential auto-reply:', err);
+      priorOptedOut = true;
+    }
+    const smsEnabled = config.smsEnabled !== false;
+
     // --- Keyword handling FIRST (TCPA, legally required) ---
     if (STOP_WORDS.includes(keyword)) {
       await recordConsent('opted_out', 'keyword_stop');
@@ -192,21 +261,21 @@ Deno.serve(async (req) => {
       await recordConsent('opted_in', 'keyword_start');
       await sendReply('You are now subscribed to texts from your care team. Reply STOP to opt out, HELP for help.');
     } else if (HELP_WORDS.includes(keyword)) {
-      const office = config.mainOffice ? ` or call our office at ${config.mainOffice}` : '';
-      await sendReply(`This is your home-health care team. Reply STOP to unsubscribe${office}.`);
+      // HELP is transactional but still skip if opted-out / SMS disabled.
+      if (!priorOptedOut && smsEnabled) {
+        const office = config.mainOffice ? ` or call our office at ${config.mainOffice}` : '';
+        await sendReply(`This is your home-health care team. Reply STOP to unsubscribe${office}.`);
+      }
     }
 
-    // --- Off-duty auto-reply (skip if the sender just opted out above) ---
-    if (nurse.duty_status === 'off_duty') {
-      const optedOut = (await base44.asServiceRole.entities.SmsConsent
-        .filter({ phone_e164: patientNum }, '-captured_at', 1).catch(() => []))[0]?.consent_status === 'opted_out';
-      if (!optedOut) {
-        const office = config.mainOffice || 'the main office';
-        const msg = (nurse.off_duty_message || config.defaultOffDuty ||
-          `Your nurse is currently off duty. For assistance, please call the main office at ${office}.`)
-          .replace(/\{office\}/gi, office);
-        await sendReply(msg);
-      }
+    // --- Off-duty auto-reply (only when on the books: not opted out + SMS on) ---
+    const offDuty = isOffDutyNow(nurse);
+    if (offDuty && !priorOptedOut && smsEnabled) {
+      const office = config.mainOffice || 'the main office';
+      const msg = (nurse.off_duty_message || config.defaultOffDuty ||
+        `Your nurse is currently off duty. For assistance, please call the main office at ${office}.`)
+        .replace(/\{office\}/gi, office);
+      await sendReply(msg);
     }
 
     // --- Notify the nurse in-app ---
@@ -234,7 +303,7 @@ Deno.serve(async (req) => {
         patient_id: patientId,
         thread_id: inboundRow.thread_id,
         body_length: text.length,
-        off_duty: nurse.duty_status === 'off_duty',
+        off_duty: offDuty,
       },
       status: 'success',
     }).catch(() => {});

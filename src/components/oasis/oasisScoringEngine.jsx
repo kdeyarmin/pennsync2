@@ -144,9 +144,11 @@ export function evaluateOASIS(answers) {
  * Returns: "home_health" | "hospice" | "both"
  */
 export function computeCareScope(answers) {
-  const prognosis = answers["m0069"];  // prognosis
-  const therapyNeeds = answers["m0110"]; // therapy need
-  const adlDeficit = answers["m1800"] + (answers["m1810"] || 0) + (answers["m1820"] || 0);
+  // Coerce to numbers: OASIS answers often arrive as strings, and "3" + 0
+  // string-concatenates to "30" (>= 6) — producing a wrong care-scope result.
+  const num = (v) => Number(v) || 0;
+  const prognosis = num(answers["m0069"]);  // prognosis
+  const adlDeficit = num(answers["m1800"]) + num(answers["m1810"]) + num(answers["m1820"]);
   if (prognosis === 1) return "hospice";
   if (adlDeficit >= 6) return "both";
   return "home_health";

@@ -103,8 +103,10 @@ const HIGH_VALUE_COMORBIDITIES = [
   'i63', 'i64', 'stroke', 'cva', 'cerebrovascular',
   // Dementia
   'f01', 'f02', 'f03', 'g30', 'dementia', 'alzheimer',
-  // Cancer (active treatment)
-  'c', 'cancer', 'malignant', 'neoplasm',
+  // Cancer (active treatment). NOTE: no bare 'c' — substring matching would
+  // flag any diagnosis containing the letter "c" (scoliosis, fracture, …),
+  // falsely inflating comorbidity level and PDGM payment.
+  'cancer', 'malignant', 'neoplasm',
   // Wound infection
   'l89', 'pressure ulcer', 'wound infection',
   // Peripheral vascular disease
@@ -116,7 +118,8 @@ const HIGH_VALUE_COMORBIDITIES = [
 // Medium-value comorbidities
 const MEDIUM_VALUE_COMORBIDITIES = [
   'hypertension', 'i10', 'htn',
-  'diabetes', 'e11', 'dm',
+  // No bare 'dm' — it substring-matches "edema", "abdominal", etc.
+  'diabetes', 'e11',
   'atrial fibrillation', 'i48', 'afib',
   'obesity', 'e66',
   'depression', 'f32', 'f33',
@@ -184,8 +187,11 @@ function mapDiagnosisToClinicalGroup(primaryDiagnosis, icd10Code) {
   if (icd10Code) {
     const code = icd10Code.toUpperCase().replace(/[^A-Z0-9]/g, '');
     
-    // Check specific codes first (more specific = higher priority)
-    for (const [prefix, group] of Object.entries(ICD10_CLINICAL_GROUPS)) {
+    // Check specific codes first: sort prefixes longest-first so a specific
+    // code (e.g. 'I63') wins over a generic one (e.g. 'I') regardless of the
+    // object's declaration order.
+    const orderedGroups = Object.entries(ICD10_CLINICAL_GROUPS).sort((a, b) => b[0].length - a[0].length);
+    for (const [prefix, group] of orderedGroups) {
       if (code.startsWith(prefix)) {
         // Handle stroke specially - it's neuro even though it starts with I
         if (code.startsWith('I63') || code.startsWith('I64')) {
@@ -474,7 +480,10 @@ function validateEpisodeTiming(data) {
   // Check M0110 first (most reliable)
   if (m0110) {
     const m0110Val = String(m0110).toLowerCase();
-    if (m0110Val.includes('2') || m0110Val.includes('late')) {
+    // M0110: response 01 = early, 02 = late. Match the exact code, not any
+    // string containing the digit "2" (which would misread "2024", "12", …).
+    const m0110Digits = m0110Val.replace(/[^0-9]/g, '');
+    if (m0110Digits === '02' || m0110Digits === '2' || m0110Val.includes('late')) {
       expectedTiming = 'late';
     }
   }
@@ -587,7 +596,10 @@ Deno.serve(async (req) => {
       correctedRevenue._correctionCount = correctedPdgmData._correctionCount || 0;
       
       revenueDifference = correctedRevenue.totalPayment - originalRevenue.totalPayment;
-      percentageIncrease = ((revenueDifference / originalRevenue.totalPayment) * 100).toFixed(2);
+      // Guard against divide-by-zero (Infinity/NaN) if base payment is 0.
+      percentageIncrease = originalRevenue.totalPayment > 0
+        ? ((revenueDifference / originalRevenue.totalPayment) * 100).toFixed(2)
+        : '0.00';
     }
 
     // Calculate alternative scenarios for comparison

@@ -13,6 +13,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeE164 } from "@/components/voice/phoneUtils";
+import { smsSegments } from "@/components/messaging/smsUtils";
+import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
 
 /**
  * PatientContactActions — Text / Call buttons on the patient detail page.
@@ -34,6 +36,16 @@ export default function PatientContactActions({ patient, currentUser }) {
   });
   const consentStatus = consents[0]?.consent_status || "unknown";
   const optedOut = consentStatus === "opted_out";
+
+  const { data: settingsArr = [] } = useQuery({
+    queryKey: ["agency-settings"],
+    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
+    staleTime: 5 * 60 * 1000,
+    initialData: [],
+  });
+  const quickReplies = getQuickReplies(settingsArr[0]);
+  const insertReply = (text) =>
+    setDraft((d) => (d.trim() ? `${d.replace(/\s*$/, "")} ${text}` : text));
 
   const sendText = useMutation({
     mutationFn: (body) => base44.functions.invoke("sendSms", { to_number: patient.phone, body, patient_id: patient.id }),
@@ -135,6 +147,21 @@ export default function PatientContactActions({ patient, currentUser }) {
               </AlertDescription>
             </Alert>
           )}
+          {quickReplies.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {quickReplies.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => insertReply(q.text)}
+                  title={q.text}
+                  className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          )}
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -142,6 +169,14 @@ export default function PatientContactActions({ patient, currentUser }) {
             placeholder="Type your message… Avoid clinical details / PHI."
             className="resize-none"
           />
+          {(() => {
+            const meta = smsSegments(draft);
+            return meta.chars > 0 ? (
+              <p className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-gray-400"}`}>
+                {`${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`}
+              </p>
+            ) : null;
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTextOpen(false)}>Cancel</Button>
             <Button

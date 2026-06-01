@@ -11,11 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, Save, ShieldCheck, Info } from "lucide-react";
 import { toast } from "sonner";
-
-function maskLast4(raw) {
-  const d = (raw || "").replace(/[^\d]/g, "");
-  return d.length >= 4 ? `••• ••• ${d.slice(-4)}` : "set";
-}
+import { maskPhone, formatPhoneDisplay } from "@/components/voice/phoneUtils";
 
 /**
  * PhoneProvisioningPanel — admin-only. Assigns 8x8 work numbers + private cell
@@ -50,6 +46,7 @@ export default function PhoneProvisioningPanel() {
     eight_x_eight_region: "us",
     default_off_duty_template: "",
     sms_messaging_enabled: true,
+    sms_quick_replies: [],
   });
   const [inputs, setInputs] = useState({}); // email -> { work, cell }
 
@@ -63,6 +60,7 @@ export default function PhoneProvisioningPanel() {
         eight_x_eight_region: settings.eight_x_eight_region || "us",
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
+        sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
       });
     }
   }, [settings]);
@@ -166,6 +164,24 @@ export default function PhoneProvisioningPanel() {
             />
             <p className="text-xs text-gray-500 mt-1">Used when a nurse hasn't set their own. {"{office}"} inserts the main office number.</p>
           </div>
+          <div>
+            <Label className="text-sm font-medium">Text quick replies</Label>
+            <Textarea
+              rows={4}
+              placeholder={"One per line, e.g.\nRunning about 15 minutes late.\nI'm on my way now."}
+              value={(agency.sms_quick_replies || []).join("\n")}
+              onChange={(e) =>
+                setAgency((a) => ({
+                  ...a,
+                  sms_quick_replies: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
+                }))
+              }
+              className="mt-1 resize-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              One-tap snippets nurses can insert when texting (keep them PHI-free). Leave blank to use the built-in defaults.
+            </p>
+          </div>
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
               <Label className="text-sm font-semibold">SMS messaging enabled</Label>
@@ -212,13 +228,13 @@ export default function PhoneProvisioningPanel() {
                 </div>
                 <div className="flex items-center gap-2">
                   {u.work_phone_number ? (
-                    <Badge className="bg-green-100 text-green-800">Work: {u.work_phone_number}</Badge>
+                    <Badge className="bg-green-100 text-green-800">Work: {formatPhoneDisplay(u.work_phone_number)}</Badge>
                   ) : (
                     <Badge variant="outline">No work number</Badge>
                   )}
                   {u.personal_cell_e164 && (
                     <Badge className="bg-gray-200 text-gray-700">
-                      <ShieldCheck className="w-3 h-3 mr-1" /> Cell {maskLast4(u.personal_cell_e164)}
+                      <ShieldCheck className="w-3 h-3 mr-1" /> Cell {maskPhone(u.personal_cell_e164)}
                     </Badge>
                   )}
                 </div>

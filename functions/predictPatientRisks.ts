@@ -15,17 +15,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'patient_id is required' }, { status: 400 });
     }
 
-    // Fetch comprehensive patient data
+    // Fetch comprehensive patient data using the RLS-scoped client (NOT
+    // asServiceRole) so the platform enforces that this user may access this
+    // patient — prevents cross-patient IDOR via a guessed patient_id. Mirrors
+    // the safe pattern in processCompletedVisit / expandClinicalPhrase.
     const [patients, visits, carePlans, incidents, alerts] = await Promise.all([
-      base44.asServiceRole.entities.Patient.filter({ id: patient_id }),
-      base44.asServiceRole.entities.Visit.filter({ patient_id }, '-visit_date', 20),
-      base44.asServiceRole.entities.CarePlan.filter({ patient_id }),
-      base44.asServiceRole.entities.Incident.filter({ patient_id }),
-      base44.asServiceRole.entities.PatientAlert.filter({ patient_id, status: 'active' })
+      base44.entities.Patient.filter({ id: patient_id }),
+      base44.entities.Visit.filter({ patient_id }, '-visit_date', 20),
+      base44.entities.CarePlan.filter({ patient_id }),
+      base44.entities.Incident.filter({ patient_id }),
+      base44.entities.PatientAlert.filter({ patient_id, status: 'active' })
     ]);
 
     const patient = patients[0];
     if (!patient) {
+      // Either the patient doesn't exist or the caller isn't authorized for it.
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
 

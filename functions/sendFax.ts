@@ -42,26 +42,39 @@ Deno.serve(async (req) => {
     formData.append('MediaUrl', file_url);
     formData.append('Quality', 'fine');
 
-    const twilioResponse = await fetch(
-      `https://fax.twilio.com/v1/Faxes`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData.toString()
-      }
-    );
+    let twilioResponse: Response;
+    try {
+      twilioResponse = await fetch(
+        `https://fax.twilio.com/v1/Faxes`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData.toString()
+        }
+      );
+    } catch (netErr) {
+      // Network/DNS failure: don't strand the row in 'queued'/'sending'.
+      await base44.entities.FaxLog.update(faxLog.id, {
+        status: 'failed',
+        failure_reason: `Network error reaching Twilio: ${netErr.message}`,
+      }).catch(() => {});
+      return Response.json({ error: 'Failed to reach fax provider' }, { status: 502 });
+    }
 
-    const twilioData = await twilioResponse.json();
+    const twilioData = await twilioResponse.json().catch(() => ({}));
 
     if (!twilioResponse.ok) {
+      // Log provider detail server-side; never echo it to the client (it can
+      // contain the recipient number / document URL — PHI).
+      console.error('Twilio fax send error', { status: twilioResponse.status, code: twilioData?.code, log_id: faxLog.id });
       await base44.entities.FaxLog.update(faxLog.id, {
         status: 'failed',
         failure_reason: twilioData.message || 'Fax send failed'
       });
-      return Response.json({ error: 'Twilio API error', details: twilioData }, { status: twilioResponse.status });
+      return Response.json({ error: 'Fax provider rejected the request', log_id: faxLog.id }, { status: twilioResponse.status });
     }
 
     // Update log with Twilio SID
@@ -95,6 +108,8 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Don't return raw error text (may contain PHI like numbers/URLs).
+    console.error('sendFax error:', error?.message);
+    return Response.json({ error: 'Failed to send fax' }, { status: 500 });
   }
 });

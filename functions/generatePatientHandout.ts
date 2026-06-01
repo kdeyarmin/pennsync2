@@ -1661,7 +1661,9 @@ Deno.serve(async (req) => {
     diagnostics.stage = 'parsing_request';
 
     const body = await req.json();
-    console.log('Request body:', body);
+    // HIPAA: never log the full request body — it carries patientName/email/
+    // condition (PHI). Log only the non-PHI key shape for debugging.
+    console.log('Request received with keys:', Object.keys(body || {}));
     
     const { condition, patientName, patientEmail, action, selectedSections, customNotes, styleOptions } = body;
     diagnostics.condition = condition;
@@ -2398,7 +2400,7 @@ Deno.serve(async (req) => {
 
     // If action is email, send it with PDF attachment
     if (action === 'email' && patientEmail) {
-      console.log('Sending email to:', patientEmail);
+      console.log('Sending handout email (recipient redacted)');
       diagnostics.stage = 'sending_email';
       
       try {

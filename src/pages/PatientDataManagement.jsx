@@ -69,8 +69,14 @@ export default function PatientDataManagement() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
 
+  // Admin-only page: gate the agency-wide data pulls on role (defense in depth;
+  // server-side row authorization is the primary control).
+  const { data: currentUser } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
+  const isAdmin = currentUser?.role === 'admin';
+
   const { data: patients = [], isLoading } = useQuery({
     queryKey: ['patients'],
+    enabled: isAdmin,
     queryFn: async () => {
       try {
         const allPatients = await base44.entities.Patient.list('-created_date', 2000);
@@ -85,6 +91,7 @@ export default function PatientDataManagement() {
 
   const { data: allVisits = [] } = useQuery({
     queryKey: ['allVisits'],
+    enabled: isAdmin,
     queryFn: async () => {
       try {
         return await base44.entities.Visit.list('-visit_date', 500);
@@ -98,6 +105,7 @@ export default function PatientDataManagement() {
 
   const { data: allAlerts = [] } = useQuery({
     queryKey: ['allAlerts'],
+    enabled: isAdmin,
     queryFn: async () => {
       try {
         return await base44.entities.PatientAlert.list('-created_date', 200);
@@ -111,6 +119,7 @@ export default function PatientDataManagement() {
 
   const { data: allIncidents = [] } = useQuery({
     queryKey: ['allIncidents'],
+    enabled: isAdmin,
     queryFn: async () => {
       try {
         return await base44.entities.Incident.list('-incident_date', 200);
@@ -248,6 +257,22 @@ export default function PatientDataManagement() {
     if (sortBy !== field) return <Minus className="w-4 h-4 opacity-30" />;
     return sortOrder === 'asc' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />;
   };
+
+  // Admin-only surface: block non-admins (server-side authz is the real gate).
+  if (currentUser && !isAdmin) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <Card className="max-w-md border-amber-300">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Access restricted</h2>
+            <p className="text-sm text-gray-600">
+              Patient Data Management is available to administrators only.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
