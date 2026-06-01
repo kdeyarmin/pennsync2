@@ -80,3 +80,28 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 
 The existing `UserActivity`, `Notification`, and `SecurityLog` entities are
 reused as-is (no changes required).
+
+---
+
+## Entity read-permission checklist (HIPAA / privacy)
+
+When creating the entities in the Base44 dashboard, lock down read access on the
+fields/entities that hold private numbers or PHI. The functions use
+`asServiceRole` for the operations that legitimately need these values, so
+restricting client read access does **not** break the feature.
+
+- **`User.personal_cell_e164`** — the nurse's private cell (masked-bridge target).
+  Restrict read access to **service role + admins only**. It must never be
+  returned to patient-facing surfaces or to other nurses. (The admin UI renders
+  only the last 4 digits.)
+- **`CallLog`** — rows contain the real call endpoints (including the nurse's
+  cell in `from_number`/`to_number`). Restrict read access to the **owning
+  `nurse_email` + admins**. The Phone Center call history already filters by
+  `nurse_email`; this enforces it server-side.
+- **`SmsMessage`** — `body` may contain PHI. Restrict read access to the
+  **owning `nurse_email` + admins** (the inbox already filters by `nurse_email`).
+- **`SmsConsent`** — opt-in/opt-out ledger with patient phone numbers. Restrict
+  to **admins + service role**.
+
+These are Base44 dashboard settings, not code — but they are the real access
+control (client-side filtering is convenience, not security).
