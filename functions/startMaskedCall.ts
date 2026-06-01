@@ -86,22 +86,32 @@ Deno.serve(async (req) => {
     // Originate: ring the nurse's cell first, then bridge to the patient with
     // the work number as the presented caller ID.
     const url = `${voiceBase}/subaccounts/${voiceSubAccountId}/callflows`;
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        callflow: [
-          {
-            action: 'makeCall',
-            params: {
-              source: { type: 'phoneNumber', phoneNumber: nurseCell },
-              destination: { type: 'phoneNumber', phoneNumber: destination },
-              callerId: workNumber,
+    let resp: Response;
+    try {
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callflow: [
+            {
+              action: 'makeCall',
+              params: {
+                source: { type: 'phoneNumber', phoneNumber: nurseCell },
+                destination: { type: 'phoneNumber', phoneNumber: destination },
+                callerId: workNumber,
+              },
             },
-          },
-        ],
-      }),
-    });
+          ],
+        }),
+      });
+    } catch (netErr) {
+      // Network/DNS failure: don't leave the CallLog stuck in 'initiated'.
+      await base44.entities.CallLog.update(callLog.id, {
+        status: 'failed',
+        failure_reason: `Network error reaching 8x8: ${netErr.message}`,
+      }).catch(() => {});
+      return Response.json({ error: 'Failed to reach 8x8 Voice API', details: netErr.message }, { status: 502 });
+    }
 
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {

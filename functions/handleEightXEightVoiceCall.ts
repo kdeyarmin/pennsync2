@@ -88,7 +88,10 @@ async function verifyWebhook(req: Request, raw: string): Promise<boolean> {
 
 // ---- 8x8 callflow builders (validate against your 8x8 account schema) ----
 function buildSay(text: string) {
-  return { action: 'say', params: { text, language: 'en-US', voiceProfile: 'en-US-female' } };
+  // Defense in depth: strip markup/control chars and cap length before TTS, so
+  // even a legacy/unsanitized off_duty_message can't inject SSML/markup.
+  const safe = String(text || '').replace(/[<>]/g, '').replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, 320);
+  return { action: 'say', params: { text: safe, language: 'en-US', voiceProfile: 'en-US-female' } };
 }
 function buildMakeCall(destination: string, callerId: string) {
   return {
@@ -154,26 +157,34 @@ Deno.serve(async (req) => {
     const offDuty = isOffDutyNow(nurse);
     const callMode = offDuty ? 'off_duty_transfer' : 'masked_bridge';
 
-    const logRow = await base44.asServiceRole.entities.CallLog.create({
-      direction: 'inbound',
-      from_number: callerNum,
-      to_number: offDuty ? mainOffice : nurse.personal_cell_e164 || '',
-      displayed_number: workNum,
-      nurse_email: nurse.email,
-      patient_id: patientId,
-      call_mode: callMode,
-      status: 'ringing',
-      provider_call_id: providerCallId,
-    });
+    // Idempotency: 8x8 may retry the VCA webhook. Only create the CallLog +
+    // audit row once per provider call id; the callflow returned below is
+    // deterministic, so re-returning it on a retry is safe.
+    const existingCall = providerCallId
+      ? await base44.asServiceRole.entities.CallLog.filter({ provider_call_id: providerCallId }, '-created_date', 1).catch(() => [])
+      : [];
+    if (existingCall.length === 0) {
+      const logRow = await base44.asServiceRole.entities.CallLog.create({
+        direction: 'inbound',
+        from_number: callerNum,
+        to_number: offDuty ? mainOffice : nurse.personal_cell_e164 || '',
+        displayed_number: workNum,
+        nurse_email: nurse.email,
+        patient_id: patientId,
+        call_mode: callMode,
+        status: 'ringing',
+        provider_call_id: providerCallId,
+      });
 
-    await base44.asServiceRole.entities.UserActivity.create({
-      user_email: 'system',
-      action: 'inbound_call_received',
-      entity_type: 'CallLog',
-      entity_id: logRow.id,
-      details: { call_mode: callMode, nurse_email: nurse.email, patient_id: patientId, provider_call_id: providerCallId },
-      status: 'success',
-    }).catch(() => {});
+      await base44.asServiceRole.entities.UserActivity.create({
+        user_email: 'system',
+        action: 'inbound_call_received',
+        entity_type: 'CallLog',
+        entity_id: logRow.id,
+        details: { call_mode: callMode, nurse_email: nurse.email, patient_id: patientId, provider_call_id: providerCallId },
+        status: 'success',
+      }).catch(() => {});
+    }
 
     // Off duty: greet, then transfer to the main office.
     if (offDuty) {

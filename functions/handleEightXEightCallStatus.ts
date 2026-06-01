@@ -48,8 +48,16 @@ function mapStatus(raw: string): string {
     FAILED: 'failed',
     CANCELLED: 'failed',
   };
-  return map[(raw || '').toUpperCase()] || 'initiated';
+  // Unknown statuses return '' so the caller ignores them rather than
+  // regressing a call to 'initiated'.
+  return map[(raw || '').toUpperCase()] || '';
 }
+
+// Monotonic rank so out-of-order / duplicate CDRs can't regress the call and
+// can't re-fire the missed-call notification.
+const CALL_RANK: Record<string, number> = {
+  initiated: 1, ringing: 2, bridged: 3, completed: 4, no_answer: 4, failed: 4,
+};
 
 Deno.serve(async (req) => {
   try {
@@ -75,9 +83,22 @@ Deno.serve(async (req) => {
 
     const row = rows[0];
     const mapped = mapStatus(statusRaw);
+    const durationVal = duration != null ? Number(duration) : null;
+
+    // Forward-only: ignore unknown and out-of-order/duplicate transitions (this
+    // also prevents a retried CDR from re-sending the missed-call notification),
+    // but still persist a duration update if one arrived.
+    const forward = !!mapped && (CALL_RANK[mapped] || 0) > (CALL_RANK[row.status] || 0);
+    if (!forward) {
+      if (durationVal != null && durationVal !== row.duration_seconds) {
+        await base44.asServiceRole.entities.CallLog.update(row.id, { duration_seconds: durationVal }).catch(() => {});
+      }
+      return Response.json({ success: true, ignored: true, status: row.status });
+    }
+
     await base44.asServiceRole.entities.CallLog.update(row.id, {
       status: mapped,
-      duration_seconds: duration != null ? Number(duration) : row.duration_seconds,
+      duration_seconds: durationVal != null ? durationVal : row.duration_seconds,
     });
 
     // Notify the nurse on a missed inbound call.

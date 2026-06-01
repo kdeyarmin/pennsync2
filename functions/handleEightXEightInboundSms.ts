@@ -162,6 +162,17 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
+    // Idempotency: 8x8 retries webhooks. If we already stored this provider
+    // message id, acknowledge without creating a duplicate row, re-notifying,
+    // or (critically for TCPA) re-sending an auto-reply.
+    if (providerMessageId) {
+      const dup = await base44.asServiceRole.entities.SmsMessage
+        .filter({ provider_message_id: providerMessageId }, '-created_date', 1).catch(() => []);
+      if (dup.length > 0) {
+        return Response.json({ success: true, deduped: true });
+      }
+    }
+
     // Resolve patient (best effort).
     let patientId: string | null = null;
     for (const variant of phoneVariants(patientNum)) {
@@ -199,6 +210,19 @@ Deno.serve(async (req) => {
       consent_checked: false,
     });
 
+    // Opt-out status, computed once and FAIL-CLOSED: if the consent ledger
+    // can't be read, assume opted-out so we never text someone after STOP.
+    let priorOptedOut = true;
+    try {
+      const consents = await base44.asServiceRole.entities.SmsConsent
+        .filter({ phone_e164: patientNum }, '-captured_at', 1);
+      priorOptedOut = consents[0]?.consent_status === 'opted_out';
+    } catch (err) {
+      console.error('consent read failed; suppressing non-essential auto-reply:', err);
+      priorOptedOut = true;
+    }
+    const smsEnabled = config.smsEnabled !== false;
+
     // --- Keyword handling FIRST (TCPA, legally required) ---
     if (STOP_WORDS.includes(keyword)) {
       await recordConsent('opted_out', 'keyword_stop');
@@ -213,22 +237,21 @@ Deno.serve(async (req) => {
       await recordConsent('opted_in', 'keyword_start');
       await sendReply('You are now subscribed to texts from your care team. Reply STOP to opt out, HELP for help.');
     } else if (HELP_WORDS.includes(keyword)) {
-      const office = config.mainOffice ? ` or call our office at ${config.mainOffice}` : '';
-      await sendReply(`This is your home-health care team. Reply STOP to unsubscribe${office}.`);
+      // HELP is transactional but still skip if opted-out / SMS disabled.
+      if (!priorOptedOut && smsEnabled) {
+        const office = config.mainOffice ? ` or call our office at ${config.mainOffice}` : '';
+        await sendReply(`This is your home-health care team. Reply STOP to unsubscribe${office}.`);
+      }
     }
 
-    // --- Off-duty auto-reply (skip if the sender just opted out above) ---
+    // --- Off-duty auto-reply (only when on the books: not opted out + SMS on) ---
     const offDuty = isOffDutyNow(nurse);
-    if (offDuty) {
-      const optedOut = (await base44.asServiceRole.entities.SmsConsent
-        .filter({ phone_e164: patientNum }, '-captured_at', 1).catch(() => []))[0]?.consent_status === 'opted_out';
-      if (!optedOut) {
-        const office = config.mainOffice || 'the main office';
-        const msg = (nurse.off_duty_message || config.defaultOffDuty ||
-          `Your nurse is currently off duty. For assistance, please call the main office at ${office}.`)
-          .replace(/\{office\}/gi, office);
-        await sendReply(msg);
-      }
+    if (offDuty && !priorOptedOut && smsEnabled) {
+      const office = config.mainOffice || 'the main office';
+      const msg = (nurse.off_duty_message || config.defaultOffDuty ||
+        `Your nurse is currently off duty. For assistance, please call the main office at ${office}.`)
+        .replace(/\{office\}/gi, office);
+      await sendReply(msg);
     }
 
     // --- Notify the nurse in-app ---

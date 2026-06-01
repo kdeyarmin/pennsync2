@@ -72,9 +72,19 @@ Deno.serve(async (req) => {
       target = found[0];
     }
 
+    // The off-duty message is spoken to callers (TTS) and sent as an SMS
+    // auto-reply, so sanitize on write: strip angle-bracket markup / control
+    // chars (defends against SSML/markup injection) and cap the length.
+    if (off_duty_message !== undefined && off_duty_message !== null && typeof off_duty_message !== 'string') {
+      return Response.json({ error: 'off_duty_message must be a string' }, { status: 400 });
+    }
+    const cleanOffDuty = typeof off_duty_message === 'string'
+      ? off_duty_message.replace(/[<>]/g, "").replace(/[\u0000-\u001F\u007F]/g, " ").slice(0, 320)
+      : off_duty_message;
+
     const update: Record<string, unknown> = {};
     if (duty_status) update.duty_status = duty_status;
-    if (off_duty_message !== undefined) update.off_duty_message = off_duty_message;
+    if (off_duty_message !== undefined) update.off_duty_message = cleanOffDuty;
     // Clear with null, set with an ISO string. Stored as-is and read live by the
     // inbound call/SMS webhooks, so the schedule needs no cron to take effect.
     if (scheduled_off_duty_start !== undefined) update.scheduled_off_duty_start = scheduled_off_duty_start || null;
