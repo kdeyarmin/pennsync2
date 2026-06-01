@@ -45,6 +45,42 @@ test("isOffDutyNow tolerates null/undefined user", () => {
   assert.equal(isOffDutyNow(undefined), false);
 });
 
+test("recurring weekly window repeats on later weeks", () => {
+  // Anchor: Sat 2026-06-06 00:00Z -> Mon 2026-06-08 00:00Z.
+  const start = iso("2026-06-06T00:00:00Z");
+  const end = iso("2026-06-08T00:00:00Z");
+  // Three weeks later, same Sunday-noon slot -> still off duty.
+  assert.equal(isScheduledOffActive(start, end, new Date("2026-06-28T12:00:00Z"), true), true);
+  // Three weeks later, a Wednesday -> on duty.
+  assert.equal(isScheduledOffActive(start, end, new Date("2026-07-01T12:00:00Z"), true), false);
+  // Non-recurring: a later week is simply expired.
+  assert.equal(isScheduledOffActive(start, end, new Date("2026-06-28T12:00:00Z"), false), false);
+});
+
+test("recurring window never activates before its anchor", () => {
+  const start = iso("2026-06-06T00:00:00Z");
+  const end = iso("2026-06-08T00:00:00Z");
+  assert.equal(isScheduledOffActive(start, end, new Date("2026-05-31T12:00:00Z"), true), false);
+});
+
+test("isOffDutyNow honors the recurring flag on the user", () => {
+  const user = {
+    duty_status: "on_duty",
+    scheduled_off_duty_start: iso("2026-06-06T00:00:00Z"),
+    scheduled_off_duty_end: iso("2026-06-08T00:00:00Z"),
+    scheduled_off_duty_recurring: true,
+  };
+  assert.equal(isOffDutyNow(user, new Date("2026-06-28T12:00:00Z")), true); // later weekend
+  assert.equal(isOffDutyNow(user, new Date("2026-07-01T12:00:00Z")), false); // weekday
+});
+
+test("scheduleState reports 'recurring' when scheduled but not in-window", () => {
+  const start = iso("2026-06-06T00:00:00Z");
+  const end = iso("2026-06-08T00:00:00Z");
+  assert.equal(scheduleState(start, end, new Date("2026-07-01T12:00:00Z"), true), "recurring");
+  assert.equal(scheduleState(start, end, new Date("2026-06-28T12:00:00Z"), true), "active");
+});
+
 test("scheduleState classifies the window relative to now", () => {
   const start = iso("2026-06-06T00:00:00Z");
   const end = iso("2026-06-08T00:00:00Z");

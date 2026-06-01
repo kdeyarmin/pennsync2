@@ -46,6 +46,7 @@ export default function PhoneProvisioningPanel() {
     eight_x_eight_region: "us",
     default_off_duty_template: "",
     sms_messaging_enabled: true,
+    sms_quick_replies: [],
   });
   const [inputs, setInputs] = useState({}); // email -> { work, cell }
 
@@ -59,6 +60,7 @@ export default function PhoneProvisioningPanel() {
         eight_x_eight_region: settings.eight_x_eight_region || "us",
         default_off_duty_template: settings.default_off_duty_template || "",
         sms_messaging_enabled: settings.sms_messaging_enabled ?? true,
+        sms_quick_replies: Array.isArray(settings.sms_quick_replies) ? settings.sms_quick_replies : [],
       });
     }
   }, [settings]);
@@ -161,6 +163,24 @@ export default function PhoneProvisioningPanel() {
               className="mt-1 resize-none"
             />
             <p className="text-xs text-gray-500 mt-1">Used when a nurse hasn't set their own. {"{office}"} inserts the main office number.</p>
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Text quick replies</Label>
+            <Textarea
+              rows={4}
+              placeholder={"One per line, e.g.\nRunning about 15 minutes late.\nI'm on my way now."}
+              value={(agency.sms_quick_replies || []).join("\n")}
+              onChange={(e) =>
+                setAgency((a) => ({
+                  ...a,
+                  sms_quick_replies: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
+                }))
+              }
+              className="mt-1 resize-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              One-tap snippets nurses can insert when texting (keep them PHI-free). Leave blank to use the built-in defaults.
+            </p>
           </div>
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>

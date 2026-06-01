@@ -49,6 +49,7 @@ export default function DutyStatusCard() {
   const [scheduleOn, setScheduleOn] = useState(false);
   const [startInput, setStartInput] = useState("");
   const [endInput, setEndInput] = useState("");
+  const [recurring, setRecurring] = useState(false);
 
   const { data: user, isLoading } = useQuery({
     queryKey: ["currentUser"],
@@ -58,9 +59,11 @@ export default function DutyStatusCard() {
   useEffect(() => {
     if (!user) return;
     setOffDutyMessage(user.off_duty_message || "");
-    const state = scheduleState(user.scheduled_off_duty_start, user.scheduled_off_duty_end);
-    const live = state === "active" || state === "upcoming";
+    const isRecurring = !!user.scheduled_off_duty_recurring;
+    const state = scheduleState(user.scheduled_off_duty_start, user.scheduled_off_duty_end, undefined, isRecurring);
+    const live = state !== "none" && state !== "expired";
     setScheduleOn(live);
+    setRecurring(live && isRecurring);
     setStartInput(live ? toLocalInput(user.scheduled_off_duty_start) : "");
     setEndInput(live ? toLocalInput(user.scheduled_off_duty_end) : "");
   }, [user]);
@@ -75,7 +78,13 @@ export default function DutyStatusCard() {
 
   const onDuty = user?.duty_status === "on_duty";
   const hasWorkNumber = !!user?.work_phone_number;
-  const savedState = scheduleState(user?.scheduled_off_duty_start, user?.scheduled_off_duty_end);
+  const savedRecurring = !!user?.scheduled_off_duty_recurring;
+  const savedState = scheduleState(
+    user?.scheduled_off_duty_start,
+    user?.scheduled_off_duty_end,
+    undefined,
+    savedRecurring
+  );
 
   const handleToggle = (checked) => {
     mutation.mutate(
@@ -107,9 +116,10 @@ export default function DutyStatusCard() {
     // Turning the schedule off clears any saved window.
     setStartInput("");
     setEndInput("");
+    setRecurring(false);
     if (user?.scheduled_off_duty_start || user?.scheduled_off_duty_end) {
       mutation.mutate(
-        { scheduled_off_duty_start: null, scheduled_off_duty_end: null },
+        { scheduled_off_duty_start: null, scheduled_off_duty_end: null, scheduled_off_duty_recurring: false },
         { onSuccess: () => toast.success("Scheduled time off cleared") }
       );
     }
@@ -127,7 +137,7 @@ export default function DutyStatusCard() {
       return;
     }
     mutation.mutate(
-      { scheduled_off_duty_start: startIso, scheduled_off_duty_end: endIso },
+      { scheduled_off_duty_start: startIso, scheduled_off_duty_end: endIso, scheduled_off_duty_recurring: recurring },
       { onSuccess: () => toast.success("Scheduled time off saved") }
     );
   };
@@ -177,8 +187,9 @@ export default function DutyStatusCard() {
           <Alert className="bg-amber-50 border-amber-200">
             <CalendarClock className="w-4 h-4 text-amber-600" />
             <AlertDescription className="text-amber-800 text-sm">
-              Scheduled time off is active right now — calls and texts are going to the main office until{" "}
-              {format(new Date(user.scheduled_off_duty_end), "EEE MMM d, h:mm a")}.
+              {savedRecurring
+                ? "Scheduled time off is active right now (weekly) — calls and texts are going to the main office."
+                : `Scheduled time off is active right now — calls and texts are going to the main office until ${format(new Date(user.scheduled_off_duty_end), "EEE MMM d, h:mm a")}.`}
             </AlertDescription>
           </Alert>
         )}
@@ -228,13 +239,26 @@ export default function DutyStatusCard() {
                   />
                 </div>
               </div>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="off-recurring" className="text-xs text-gray-600">
+                  Repeat every week (e.g. every weekend)
+                </Label>
+                <Switch id="off-recurring" checked={recurring} onCheckedChange={setRecurring} disabled={mutation.isPending} />
+              </div>
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="text-xs text-gray-500">
                   {savedState === "active" && (
-                    <Badge className="bg-amber-600">Active now · ends {format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}</Badge>
+                    <Badge className="bg-amber-600">
+                      {savedRecurring ? "Active now · weekly" : `Active now · ends ${format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}`}
+                    </Badge>
                   )}
                   {savedState === "upcoming" && (
                     <Badge className="bg-blue-600">Scheduled · {prettyWindow(user.scheduled_off_duty_start, user.scheduled_off_duty_end)}</Badge>
+                  )}
+                  {savedState === "recurring" && (
+                    <Badge className="bg-indigo-600">
+                      Weekly · {format(new Date(user.scheduled_off_duty_start), "EEE h:mm a")} – {format(new Date(user.scheduled_off_duty_end), "EEE h:mm a")}
+                    </Badge>
                   )}
                 </span>
                 <Button onClick={handleSaveSchedule} disabled={mutation.isPending} size="sm" className="bg-indigo-600 hover:bg-indigo-700">

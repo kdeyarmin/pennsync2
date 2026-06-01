@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
       target_user_email,
       scheduled_off_duty_start,
       scheduled_off_duty_end,
+      scheduled_off_duty_recurring,
     } = await req.json();
 
     if (duty_status && !['on_duty', 'off_duty'].includes(duty_status)) {
@@ -60,6 +61,9 @@ Deno.serve(async (req) => {
     // inbound call/SMS webhooks, so the schedule needs no cron to take effect.
     if (scheduled_off_duty_start !== undefined) update.scheduled_off_duty_start = scheduled_off_duty_start || null;
     if (scheduled_off_duty_end !== undefined) update.scheduled_off_duty_end = scheduled_off_duty_end || null;
+    if (scheduled_off_duty_recurring !== undefined) update.scheduled_off_duty_recurring = !!scheduled_off_duty_recurring;
+    // Clearing the window also drops any recurrence so it can't linger.
+    if (clearingSchedule) update.scheduled_off_duty_recurring = false;
     if (Object.keys(update).length === 0) {
       return Response.json({ error: 'Nothing to update' }, { status: 400 });
     }
@@ -78,6 +82,7 @@ Deno.serve(async (req) => {
         off_duty_message_set: off_duty_message !== undefined,
         scheduled_off_duty_start: update.scheduled_off_duty_start,
         scheduled_off_duty_end: update.scheduled_off_duty_end,
+        scheduled_off_duty_recurring: update.scheduled_off_duty_recurring,
         timestamp: new Date().toISOString(),
       },
       status: 'success',

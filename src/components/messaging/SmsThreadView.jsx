@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 import { smsSegments } from "@/components/messaging/smsUtils";
+import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
 
 /**
  * SmsThreadView — renders one SMS conversation (message bubbles) and a compose
@@ -32,6 +33,14 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
     },
   });
 
+  const { data: settingsArr = [] } = useQuery({
+    queryKey: ["agency-settings"],
+    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
+    staleTime: 5 * 60 * 1000,
+    initialData: [],
+  });
+  const quickReplies = getQuickReplies(settingsArr[0]);
+
   if (!thread) {
     return (
       <Card className="lg:col-span-2">
@@ -47,6 +56,9 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
     if (!draft.trim()) return;
     sendMutation.mutate(draft.trim());
   };
+
+  const insertReply = (text) =>
+    setDraft((d) => (d.trim() ? `${d.replace(/\s*$/, "")} ${text}` : text));
 
   const meta = smsSegments(draft);
 
@@ -92,6 +104,21 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
           </Alert>
         ) : (
           <div className="space-y-2 border-t pt-3">
+            {quickReplies.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {quickReplies.map((q) => (
+                  <button
+                    key={q.label}
+                    type="button"
+                    onClick={() => insertReply(q.text)}
+                    title={q.text}
+                    className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  >
+                    {q.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <Textarea
               placeholder="Type a text message… (avoid clinical details / PHI)"
               value={draft}

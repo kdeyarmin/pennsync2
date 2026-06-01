@@ -43,11 +43,15 @@ function isOffDutyNow(user: any, now = new Date()): boolean {
   if (user.duty_status === 'off_duty') return true;
   const s = user.scheduled_off_duty_start ? new Date(user.scheduled_off_duty_start).getTime() : NaN;
   const e = user.scheduled_off_duty_end ? new Date(user.scheduled_off_duty_end).getTime() : NaN;
-  if (!Number.isNaN(s) && !Number.isNaN(e) && e > s) {
-    const t = now.getTime();
-    if (t >= s && t <= e) return true;
+  if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return false;
+  const t = now.getTime();
+  if (user.scheduled_off_duty_recurring) {
+    if (t < s) return false;
+    const week = 7 * 24 * 60 * 60 * 1000;
+    const delta = ((t - s) % week + week) % week;
+    return delta <= e - s;
   }
-  return false;
+  return t >= s && t <= e;
 }
 
 async function hmacHex(secret: string, raw: string): Promise<string> {
