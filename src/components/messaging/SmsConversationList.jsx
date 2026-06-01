@@ -86,15 +86,21 @@ export default function SmsConversationList() {
 
   const selected = threads.find((t) => t.threadId === selectedThreadId) || null;
 
-  // Mark inbound messages read when a thread is opened.
+  // Mark inbound messages read while a thread is open. Keyed on the set of
+  // unread ids so it also fires when new messages arrive via polling — not only
+  // when the thread is first selected.
+  const selectedUnreadKey = (selected?.messages || [])
+    .filter((m) => m.direction === "inbound" && !m.is_read)
+    .map((m) => m.id)
+    .join(",");
   useEffect(() => {
-    if (!selected) return;
-    const unread = selected.messages.filter((m) => m.direction === "inbound" && !m.is_read);
-    if (unread.length === 0) return;
-    Promise.all(unread.map((m) => base44.entities.SmsMessage.update(m.id, { is_read: true })))
+    if (!user?.email || !selectedUnreadKey) return;
+    Promise.all(
+      selectedUnreadKey.split(",").map((id) => base44.entities.SmsMessage.update(id, { is_read: true }))
+    )
       .then(() => queryClient.invalidateQueries({ queryKey: ["sms-messages", user?.email] }))
       .catch(() => {});
-  }, [selectedThreadId]);
+  }, [selectedUnreadKey, user?.email]);
 
   if (!user?.work_phone_number) {
     return (

@@ -8,7 +8,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * store the inbound message -> if the nurse is off duty, auto-reply with their
  * off-duty message + the main office number -> notify the nurse in-app.
  *
- * Always returns 200 after processing so 8x8 does not retry indefinitely.
+ * After a verified webhook is processed it returns 200 so 8x8 does not retry
+ * indefinitely. An invalid signature is rejected with 401 (before processing).
  */
 
 const STOP_WORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];

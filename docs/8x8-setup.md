@@ -93,8 +93,8 @@ shapes in `handleEightXEightVoiceCall.ts` (`buildSay` / `buildMakeCall`) and
 
 ## 6. Verification / testing
 
-See the phased verification plan in
-`/root/.claude/plans/i-would-like-to-glittery-kettle.md`. In short: provision a
+Once the entities (§ `docs/8x8-entities.md`) and webhooks are configured, exercise
+the integration end to end in this order: provision a
 test nurse, then exercise outbound SMS, inbound SMS (+ STOP/START), inbound
 masked call (on/off duty), and outbound click-to-call. Webhooks can be exercised
 by POSTing sample 8x8 payloads with a correctly computed signature header (and a
