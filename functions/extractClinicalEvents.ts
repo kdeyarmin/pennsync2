@@ -121,9 +121,9 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
                            event.severity === 'high' ? 'high' : 'medium';
         
         let taskType = 'followup';
-        if (event.event_type.includes('medication')) taskType = 'call';
+        if (event.event_type?.includes('medication')) taskType = 'call';
         if (event.event_type === 'fall') taskType = 'safety';
-        if (event.event_type.includes('wound')) taskType = 'document';
+        if (event.event_type?.includes('wound')) taskType = 'document';
         
         await base44.asServiceRole.entities.Task.create({
           patient_id,
@@ -142,9 +142,9 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
       // Create patient alert for high/critical events
       if (event.severity === 'high' || event.severity === 'critical') {
         let alertType = 'urgent_intervention';
-        if (event.event_type.includes('medication')) alertType = 'medication_risk';
+        if (event.event_type?.includes('medication')) alertType = 'medication_risk';
         if (event.event_type === 'fall') alertType = 'fall_risk';
-        if (event.event_type.includes('vital')) alertType = 'vital_deterioration';
+        if (event.event_type?.includes('vital')) alertType = 'vital_deterioration';
         if (event.event_type === 'infection') alertType = 'infection_risk';
         if (event.event_type === 'cognitive_change') alertType = 'symptom_escalation';
         

@@ -99,7 +99,7 @@ export default function VisitScribe() {
               </CardHeader>
               <CardContent>
                 {!hasAudio ? (
-                  <AudioRecorder onRecordingComplete={handleRecordingComplete} />
+                  <AudioRecorder onAudioProcessed={handleRecordingComplete} isProcessing={isProcessing} />
                 ) : (
                   <div className="space-y-4">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
@@ -186,9 +186,9 @@ export default function VisitScribe() {
               <CardDescription>AI will review and generate a compliant clinical note</CardDescription>
             </CardHeader>
             <CardContent>
-              <UnifiedDocumentReview 
+              <UnifiedDocumentReview
                 roughNote={roughNote}
-                onSuggestionApplied={(updatedNote) => setRoughNote(updatedNote)}
+                onEnhancedNoteReady={({ enhancedNote }) => setRoughNote(enhancedNote)}
               />
             </CardContent>
           </Card>

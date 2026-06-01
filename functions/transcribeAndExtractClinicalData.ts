@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     // Get patient context if available
     let patientContext = '';
     if (patient_id) {
-      const patient = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
+      const patient = await base44.entities.Patient.filter({ id: patient_id });
       if (patient.length > 0) {
         const p = patient[0];
         patientContext = `Patient: ${p.first_name} ${p.last_name}, DOB: ${p.date_of_birth}, Primary Diagnosis: ${p.primary_diagnosis || 'None'}, Medications: ${JSON.stringify(p.current_medications || [])}`;

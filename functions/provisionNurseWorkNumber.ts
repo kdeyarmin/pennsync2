@@ -18,9 +18,13 @@ function normalizeE164(raw: string | null | undefined): string | null {
   return null;
 }
 
+// Mirrors maskPhone() in src/components/voice/phoneUtils.js — reveals only the
+// last 4 digits so the nurse's private cell is never written in full to audit.
 function maskLast4(e164: string): string {
-  const d = e164.replace(/[^\d]/g, '');
-  return d.length >= 4 ? `***-***-${d.slice(-4)}` : '****';
+  const d = (e164 || '').replace(/[^\d]/g, '');
+  if (!e164) return 'unknown';
+  if (d.length < 4) return '••••';
+  return `(•••) •••-${d.slice(-4)}`;
 }
 
 Deno.serve(async (req) => {

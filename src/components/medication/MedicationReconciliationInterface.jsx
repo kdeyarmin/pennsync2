@@ -89,7 +89,11 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
   // Resolve discrepancy
   const resolveDiscrepancyMutation = useMutation({
     mutationFn: async ({ discrepancyIndex, status, notes, action }) => {
-      const updatedDiscrepancies = [...reconciliation.discrepancies];
+      // Re-read the latest record before mutating so two quick resolutions
+      // (or a second tab) don't overwrite each other from a stale snapshot.
+      const latestArr = await base44.entities.MedicationReconciliation.filter({ id: reconciliationId });
+      const latest = latestArr?.[0] || reconciliation;
+      const updatedDiscrepancies = [...(latest.discrepancies || [])];
       updatedDiscrepancies[discrepancyIndex] = {
         ...updatedDiscrepancies[discrepancyIndex],
         status,
@@ -124,6 +128,19 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
   // Complete reconciliation
   const completeMutation = useMutation({
     mutationFn: async () => {
+      // PATIENT SAFETY: do not allow sign-off while discrepancies are still
+      // open. Each discrepancy's resolution already applies its action to the
+      // live Medication list (see resolveDiscrepancyMutation), so completing
+      // with pending discrepancies would mark the chart "reconciled" while
+      // flagged interactions/duplicates were never reviewed.
+      const pendingDiscrepancies = (reconciliation.discrepancies || [])
+        .filter(d => !d.status || d.status === 'pending');
+      if (pendingDiscrepancies.length > 0) {
+        throw new Error(
+          `Resolve or dismiss all ${pendingDiscrepancies.length} open discrepancies before completing.`
+        );
+      }
+
       // Build final reconciled medication list
       const reconciled = (reconciliation.extracted_discharge_medications || []).map(med => ({
         medication_name: med.medication_name,
@@ -146,6 +163,9 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
     onSuccess: () => {
       setStep('complete');
       toast.success('Medication reconciliation completed');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to complete reconciliation');
     }
   });
 

@@ -16,6 +16,9 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `personal_cell_e164` | string | **PRIVATE** masked-bridge target. Restrict read access to service role / admin — never expose to patient-facing surfaces. |
 | `duty_status` | string enum | `on_duty` \| `off_duty` (default `off_duty`). |
 | `off_duty_message` | text | Per-nurse off-duty greeting; overrides agency default. |
+| `scheduled_off_duty_start` | string (ISO) | Optional. Start of a scheduled time-off window (e.g. the weekend). Nullable. |
+| `scheduled_off_duty_end` | string (ISO) | Optional. End of the scheduled window; the nurse is treated as off duty between start and end, then automatically back on duty. Nullable. |
+| `scheduled_off_duty_recurring` | boolean | Optional (default false). When true the window repeats weekly on the same day/time (e.g. every weekend). |
 | `eight_x_eight_voice_endpoint_id` | string | Optional 8x8 voice endpoint id. |
 
 ## Extend `AgencySettings` (single-row entity)
@@ -29,6 +32,7 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `eight_x_eight_region` | string | e.g. `us` → builds `sms.us.8x8.com`. |
 | `default_off_duty_template` | text | Default off-duty message when a nurse hasn't set one. |
 | `sms_messaging_enabled` | boolean | Agency-wide kill switch (default true). |
+| `sms_quick_replies` | array (string) | Optional one-tap PHI-safe text snippets for the compose box. Falls back to built-in defaults when empty. |
 
 ## New `SmsMessage`
 

@@ -46,8 +46,14 @@ function mapStatus(raw: string): string {
     REJECTED: 'failed',
     EXPIRED: 'failed',
   };
-  return map[(raw || '').toUpperCase()] || 'sent';
+  // Unknown statuses return '' so the caller can ignore them instead of
+  // silently regressing a message to 'sent'.
+  return map[(raw || '').toUpperCase()] || '';
 }
+
+// Monotonic rank so a late/out-of-order DLR can't downgrade a terminal state
+// (e.g. a stale QUEUED arriving after DELIVERED).
+const SMS_RANK: Record<string, number> = { queued: 1, sent: 2, delivered: 3, failed: 3 };
 
 Deno.serve(async (req) => {
   try {
@@ -73,6 +79,10 @@ Deno.serve(async (req) => {
 
     const row = rows[0];
     const mapped = mapStatus(statusRaw);
+    // Ignore unknown statuses and non-forward transitions (out-of-order DLRs).
+    if (!mapped || (SMS_RANK[mapped] || 0) <= (SMS_RANK[row.status] || 0)) {
+      return Response.json({ success: true, ignored: true, status: row.status });
+    }
     await base44.asServiceRole.entities.SmsMessage.update(row.id, {
       status: mapped,
       failure_reason: mapped === 'failed' ? (errorDescription || 'Delivery failed') : null,

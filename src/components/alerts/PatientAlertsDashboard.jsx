@@ -60,6 +60,16 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const [activeTab, setActiveTab] = useState("active");
   const queryClient = useQueryClient();
 
+  // Fetch current user FIRST — the alerts useMemo below references currentUser
+  // and isAdmin, which would hit the temporal dead zone (ReferenceError) if
+  // these consts were declared after it.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
+
   // Fetch alerts
   const { data: allAlerts = [], isLoading } = useQuery({
     queryKey: ['patientAlerts', patientId, showAllPatients],
@@ -75,7 +85,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const alerts = React.useMemo(() => {
     if (patientId || isAdmin) return allAlerts;
     if (!currentUser?.favorited_patients) return [];
-    return allAlerts.filter(alert => 
+    return allAlerts.filter(alert =>
       currentUser.favorited_patients.some(fav => fav.id === alert.patient_id)
     );
   }, [allAlerts, patientId, currentUser, isAdmin]);
@@ -85,14 +95,6 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list()
   });
-
-  // Fetch current user
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
-  });
-
-  const isAdmin = currentUser?.role === 'admin';
 
   // Fetch clinical events for linking
   const { data: clinicalEvents = [] } = useQuery({

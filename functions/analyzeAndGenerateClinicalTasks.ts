@@ -13,10 +13,10 @@ Deno.serve(async (req) => {
 
     // Fetch comprehensive patient data
     const [patient, visits, carePlans, alerts, recentTasks] = await Promise.all([
-      base44.asServiceRole.entities.Patient.filter({ id: patientId }).then(p => p[0]),
-      base44.asServiceRole.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
-      base44.asServiceRole.entities.CarePlan.filter({ patient_id: patientId, status: 'active' }),
-      base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
+      base44.entities.Patient.filter({ id: patientId }).then(p => p[0]),
+      base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
+      base44.entities.CarePlan.filter({ patient_id: patientId, status: 'active' }),
+      base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
       base44.asServiceRole.entities.Task.filter({ patient_id: patientId, status: { $in: ['pending', 'in_progress'] } })
     ]);
 

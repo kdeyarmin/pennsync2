@@ -10,6 +10,10 @@ Deno.serve(async (req) => {
     }
 
     const { nurse_email } = await req.json();
+    // Only admins may build a path from another nurse's PHI/performance data.
+    if (nurse_email && nurse_email !== user.email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const targetEmail = nurse_email || user.email;
 
     // Fetch nurse performance data
