@@ -73,8 +73,10 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   // Fetch alerts via a SERVER-SCOPED function so the browser only receives
   // alerts the caller is authorized for (assigned patients, or all for admins).
   // The favorites filter below is UX-only, no longer an access boundary.
+  // Keep the ['patientAlerts'] key so the app-wide invalidations (workflow
+  // engine, alert analyzers/widgets, risk analyzers) still refresh this view.
   const { data: allAlerts = [], isLoading } = useQuery({
-    queryKey: ['scopedPatientAlerts', patientId],
+    queryKey: ['patientAlerts', patientId],
     queryFn: async () => {
       const res = await base44.functions.invoke('getScopedPatientAlerts', {
         patient_id: patientId || undefined,
@@ -114,7 +116,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const updateAlertMutation = useMutation({
     mutationFn: ({ alertId, data }) => base44.entities.PatientAlert.update(alertId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scopedPatientAlerts'] });
+      queryClient.invalidateQueries({ queryKey: ['patientAlerts'] });
       setDetailsDialogOpen(false);
       setSelectedAlert(null);
       setResolutionNotes("");
