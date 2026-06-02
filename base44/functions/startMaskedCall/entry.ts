@@ -84,8 +84,12 @@ Deno.serve(async (req) => {
     });
 
     // Originate: ring the nurse's cell first, then bridge to the patient with
-    // the work number as the presented caller ID.
+    // the work number as the presented caller ID. Bound the request with an
+    // AbortController timeout so a slow host can't hang the function.
     const url = `${voiceBase}/subaccounts/${voiceSubAccountId}/callflows`;
+    const ORIGINATE_TIMEOUT_MS = 15000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ORIGINATE_TIMEOUT_MS);
     let resp: Response;
     try {
       resp = await fetch(url, {
@@ -103,14 +107,24 @@ Deno.serve(async (req) => {
             },
           ],
         }),
+        signal: controller.signal,
       });
     } catch (netErr) {
-      // Network/DNS failure: don't leave the CallLog stuck in 'initiated'.
+      // Network/DNS failure or timeout: don't leave the CallLog stuck in 'initiated'.
+      const aborted = netErr?.name === 'AbortError';
+      const reason = aborted
+        ? `Timed out after ${ORIGINATE_TIMEOUT_MS} ms reaching 8x8`
+        : `Network error reaching 8x8: ${netErr.message}`;
       await base44.entities.CallLog.update(callLog.id, {
         status: 'failed',
-        failure_reason: `Network error reaching 8x8: ${netErr.message}`,
+        failure_reason: reason,
       }).catch(() => {});
-      return Response.json({ error: 'Failed to reach 8x8 Voice API', details: netErr.message }, { status: 502 });
+      return Response.json(
+        { error: aborted ? '8x8 Voice API timed out' : 'Failed to reach 8x8 Voice API', details: netErr.message },
+        { status: aborted ? 504 : 502 },
+      );
+    } finally {
+      clearTimeout(timer);
     }
 
     const data = await resp.json().catch(() => ({}));
