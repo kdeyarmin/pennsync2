@@ -23,10 +23,7 @@ import {
   Loader2
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
-<<<<<<< HEAD
-=======
 import { exportToPDF } from "../utils/pdfExporter";
->>>>>>> origin/main
 
 export default function StaffEducationComplianceReport() {
   const [timeframe, setTimeframe] = useState('30');
@@ -47,14 +44,6 @@ export default function StaffEducationComplianceReport() {
     queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
   });
 
-<<<<<<< HEAD
-  const { data: recommendations = [] } = useQuery({
-    queryKey: ['allRecommendations'],
-    queryFn: () => base44.entities.TrainingRecommendation.list('-created_date', 1000),
-  });
-
-=======
->>>>>>> origin/main
   const complianceData = React.useMemo(() => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeframe));
@@ -111,30 +100,6 @@ export default function StaffEducationComplianceReport() {
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-<<<<<<< HEAD
-      const response = await base44.functions.invoke('generateStaffTrainingReport', {
-        timeframe: parseInt(timeframe),
-        complianceData
-      });
-
-      const data = response.data || response;
-      if (data.pdf) {
-        const binaryString = atob(data.pdf);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = data.filename || `Staff_Training_Report_${formatEastern(new Date(), 'yyyy-MM-dd')}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-      }
-=======
       const timeframeLabels = {
         '7': 'Last 7 days', '30': 'Last 30 days', '90': 'Last 90 days',
         '180': 'Last 6 months', '365': 'Last year',
@@ -171,7 +136,6 @@ export default function StaffEducationComplianceReport() {
           },
         ],
       });
->>>>>>> origin/main
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate report. Please try again.');

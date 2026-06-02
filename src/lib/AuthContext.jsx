@@ -138,12 +138,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-<<<<<<< HEAD
-    // Don't redirect if we're already on login page to prevent loops
-    if (window.location.pathname === '/login') return;
-=======
     // Use the SDK's redirectToLogin method
->>>>>>> origin/main
     base44.auth.redirectToLogin(window.location.href);
   };
 
@@ -170,8 +165,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> origin/main

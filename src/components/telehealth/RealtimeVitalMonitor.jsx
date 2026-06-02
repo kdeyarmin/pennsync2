@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { useState } from "react";
-=======
 import { useEffect, useState } from "react";
->>>>>>> origin/main
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,39 +45,15 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
     initialData: [],
   });
 
-<<<<<<< HEAD
-  // Fetch recent vital readings
-  useQuery({
-    queryKey: ['vital-readings', patientId],
-    queryFn: () => base44.entities.VitalSignsForm?.filter?.({ patient_id: patientId }, '-created_date', 5) || Promise.resolve([]),
-    onSuccess: (data) => {
-      if (data?.length > 0) {
-        const latest = data[0];
-        setVitals(prev => ({
-          ...prev,
-          heart_rate: latest.heart_rate || prev.heart_rate,
-          blood_pressure_systolic: latest.systolic || prev.blood_pressure_systolic,
-          blood_pressure_diastolic: latest.diastolic || prev.blood_pressure_diastolic,
-          temperature: latest.temperature || prev.temperature,
-          respiratory_rate: latest.respiratory_rate || prev.respiratory_rate,
-          oxygen_saturation: latest.oxygen_saturation || prev.oxygen_saturation,
-        }));
-        setLastUpdate(new Date(latest.created_date));
-      }
-    },
-=======
   // Fetch recent vital readings. React Query v5 removed the useQuery onSuccess
   // callback, so the latest reading is applied in an effect below instead.
   const { data: vitalReadings } = useQuery({
     queryKey: ['vital-readings', patientId],
     queryFn: () => base44.entities.VitalSignsForm?.filter?.({ patient_id: patientId }, '-created_date', 5) || Promise.resolve([]),
->>>>>>> origin/main
     refetchInterval: 15000,
     enabled: !!patientId,
   });
 
-<<<<<<< HEAD
-=======
   useEffect(() => {
     if (!vitalReadings?.length) return;
     const latest = vitalReadings[0];
@@ -97,7 +69,6 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
     if (latest.created_date) setLastUpdate(new Date(latest.created_date));
   }, [vitalReadings]);
 
->>>>>>> origin/main
   const handleInputChange = (field, value) => {
     setManualInput(prev => ({ ...prev, [field]: parseFloat(value) || null }));
   };

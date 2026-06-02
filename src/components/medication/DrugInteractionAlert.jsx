@@ -27,11 +27,7 @@ export default function DrugInteractionAlert({ medications, patientId, autoCheck
     if (autoCheck && medications && medications.length >= 2 && !isChecking) {
       checkInteractions();
     }
-<<<<<<< HEAD
-     
-=======
     // eslint-disable-next-line react-hooks/exhaustive-deps
->>>>>>> origin/main
   }, [medsKey, autoCheck]);
 
   const checkInteractions = async () => {

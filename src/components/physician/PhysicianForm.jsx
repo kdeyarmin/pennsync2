@@ -223,11 +223,7 @@ export default function PhysicianForm({ physician, onClose }) {
             <SelectTrigger className="h-11 mt-1">
               <SelectValue />
             </SelectTrigger>
-<<<<<<< HEAD
-            <SelectContent style={{ zIndex: 9999 }}>
-=======
             <SelectContent>
->>>>>>> origin/main
               <SelectItem value="fax">Fax</SelectItem>
               <SelectItem value="phone">Phone</SelectItem>
               <SelectItem value="email">Email</SelectItem>

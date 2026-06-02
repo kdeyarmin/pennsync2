@@ -26,20 +26,11 @@ function addWrappedText(doc, text, x, y, maxWidth, lineHeight, pageHeight, margi
   return y;
 }
 
-<<<<<<< HEAD
-import { toast } from "sonner";
-
-=======
->>>>>>> origin/main
 export default function SmartNotePDFExporterEnhanced({
   finalNote,
   patient,
   visitType,
   analysisScore,
-<<<<<<< HEAD
-  analysis,
-=======
->>>>>>> origin/main
   currentUser,
   signatureImage,
 }) {
@@ -218,50 +209,6 @@ export default function SmartNotePDFExporterEnhanced({
         y += 4;
       }
 
-<<<<<<< HEAD
-      // ─── COMPLIANCE REPORT SECTION ────────────────────────────────────────
-      if (analysis && analysis.findings && analysis.findings.length > 0) {
-        if (y > pageHeight - margin - 40) {
-          doc.addPage();
-          y = margin + 10;
-        }
-
-        doc.setFillColor(255, 247, 237); // orange-50
-        doc.setDrawColor(253, 186, 116); // orange-300
-        doc.setLineWidth(0.3);
-        doc.roundedRect(margin, y, contentWidth, 8, 1.5, 1.5, "FD");
-
-        doc.setTextColor(194, 65, 12); // orange-700
-        doc.setFontSize(9);
-        doc.setFont(undefined, "bold");
-        doc.text("COMPLIANCE REPORT & FINDINGS", margin + 3, y + 5.5);
-        y += 13;
-
-        doc.setFontSize(8.5);
-        for (const finding of analysis.findings) {
-          if (y > pageHeight - margin - 20) {
-            doc.addPage();
-            y = margin + 10;
-          }
-          doc.setFont(undefined, "bold");
-          doc.setTextColor(0, 0, 0);
-          doc.text(`• [${finding.severity.toUpperCase()}] ${finding.issue}`, margin + 2, y);
-          y += 4.5;
-          doc.setFont(undefined, "normal");
-          doc.setTextColor(60, 60, 60);
-          const detailText = doc.splitTextToSize(`Suggestion: ${finding.suggestion || "N/A"}`, contentWidth - 10);
-          for (const line of detailText) {
-             if (y > pageHeight - margin - 10) { doc.addPage(); y = margin + 10; }
-             doc.text(line, margin + 8, y);
-             y += 4.5;
-          }
-          y += 2;
-        }
-        y += 4;
-      }
-
-=======
->>>>>>> origin/main
       // ─── SIGNATURE SECTION ────────────────────────────────────────────────
       if (y > pageHeight - margin - 45) {
         doc.addPage();
@@ -349,11 +296,7 @@ export default function SmartNotePDFExporterEnhanced({
       doc.save(filename);
     } catch (err) {
       console.error("PDF export error:", err);
-<<<<<<< HEAD
-      toast.error("Failed to export PDF. Please try again.");
-=======
       alert("Failed to export PDF. Please try again.");
->>>>>>> origin/main
     } finally {
       setExporting(false);
     }
