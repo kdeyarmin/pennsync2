@@ -34,8 +34,8 @@ function CheckRow({ check }) {
     <div className="flex items-start gap-2 py-1.5">
       <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${meta.color}`} />
       <div className="min-w-0">
-        <p className="text-sm font-medium text-gray-900">{check.label}</p>
-        <p className="text-xs text-gray-600">{check.detail}</p>
+        <p className="text-sm font-medium text-slate-900">{check.label}</p>
+        <p className="text-xs text-slate-600">{check.detail}</p>
       </div>
     </div>
   );
@@ -218,15 +218,15 @@ export default function PhoneProvisioningPanel() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Configuration</p>
-              <div className="divide-y divide-gray-100">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Configuration</p>
+              <div className="divide-y divide-slate-100">
                 {configChecks.map((c) => <CheckRow key={c.id} check={c} />)}
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">Reflects the values in the form below (save to apply).</p>
+              <p className="text-[11px] text-slate-400 mt-1">Reflects the values in the form below (save to apply).</p>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live connection</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Live connection</p>
                 <Button
                   type="button"
                   size="sm"
@@ -240,17 +240,17 @@ export default function PhoneProvisioningPanel() {
                 </Button>
               </div>
               {liveChecks.length === 0 ? (
-                <p className="text-sm text-gray-500 py-3">
+                <p className="text-sm text-slate-500 py-3">
                   Run the test to probe backend secrets, reach the 8x8 SMS API, and check nurse provisioning.
                   Nothing is sent — it's a read-only health check.
                 </p>
               ) : (
                 <>
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-slate-100">
                     {liveChecks.map((c) => <CheckRow key={c.id} check={c} />)}
                   </div>
                   {liveResult?.stats && (
-                    <p className="text-[11px] text-gray-500 mt-2">
+                    <p className="text-[11px] text-slate-500 mt-2">
                       {liveResult.stats.nurses_with_work_number}/{liveResult.stats.total_users} users have a work number ·
                       {" "}host {liveResult.sms_host} · checked {new Date(liveResult.generated_at).toLocaleTimeString()}
                     </p>
@@ -262,8 +262,8 @@ export default function PhoneProvisioningPanel() {
 
           {/* End-to-end test send */}
           <div className="border-t pt-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Send a test text</p>
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Send a test text</p>
+            <p className="text-xs text-slate-500 mb-2">
               The definitive check: sends one real, non-PHI message from a provisioned work number to a phone you
               control. Honors opt-outs; bypasses the SMS kill switch since it's a diagnostic.
             </p>
@@ -313,19 +313,19 @@ export default function PhoneProvisioningPanel() {
           {WEBHOOK_FUNCTIONS.map((w) => {
             const candidateUrl = urlBase ? `${urlBase}/functions/${w.fn}` : null;
             return (
-              <div key={w.fn} className="p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <div key={w.fn} className="p-3 rounded-lg border border-slate-200 bg-slate-50">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900">{w.event}</p>
-                    <p className="text-xs text-gray-500">Configure on: {w.configuredOn}</p>
+                    <p className="text-sm font-semibold text-slate-900">{w.event}</p>
+                    <p className="text-xs text-slate-500">Configure on: {w.configuredOn}</p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <code className="text-xs bg-white border border-gray-200 rounded px-2 py-1 text-indigo-700">{w.fn}</code>
+                    <code className="text-xs bg-white border border-slate-200 rounded px-2 py-1 text-indigo-700">{w.fn}</code>
                     <CopyButton value={candidateUrl || w.fn} label="endpoint" />
                   </div>
                 </div>
                 {candidateUrl && (
-                  <p className="text-[11px] text-gray-400 mt-1 break-all">Suggested URL: {candidateUrl}</p>
+                  <p className="text-[11px] text-slate-400 mt-1 break-all">Suggested URL: {candidateUrl}</p>
                 )}
               </div>
             );
@@ -466,11 +466,11 @@ export default function PhoneProvisioningPanel() {
               onCheckedChange={(v) => setAgency((a) => ({ ...a, sms_messaging_enabled: v }))}
             />
           </div>
-          <div className="p-3 bg-gray-50 rounded-lg space-y-3">
+          <div className="p-3 bg-slate-50 rounded-lg space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-sm font-semibold">Voicemail capture</Label>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-slate-600">
                   Record a voicemail when a patient's masked call to an on-duty nurse goes unanswered.
                   Requires the recording action in your 8x8 callflow and the voicemail webhook.
                 </p>
@@ -482,7 +482,7 @@ export default function PhoneProvisioningPanel() {
             </div>
             {agency.voicemail_enabled && (
               <div>
-                <Label className="text-xs font-medium text-gray-600">Voicemail greeting</Label>
+                <Label className="text-xs font-medium text-slate-600">Voicemail greeting</Label>
                 <Textarea
                   rows={2}
                   placeholder="You've reached your care team. Please leave a message after the tone and we'll call you back. Call {office} for urgent needs."
@@ -490,7 +490,7 @@ export default function PhoneProvisioningPanel() {
                   onChange={(e) => setAgency((a) => ({ ...a, voicemail_greeting: e.target.value }))}
                   className="mt-1 resize-none"
                 />
-                <p className="text-[11px] text-gray-500 mt-1">{"{office}"} inserts the main office number. Keep it PHI-free.</p>
+                <p className="text-[11px] text-slate-500 mt-1">{"{office}"} inserts the main office number. Keep it PHI-free.</p>
               </div>
             )}
           </div>

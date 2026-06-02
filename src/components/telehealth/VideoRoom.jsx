@@ -299,7 +299,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   const ss = String(elapsedSec % 60).padStart(2, "0");
 
   return (
-    <div ref={containerRef} className={`flex flex-col gap-4 ${isFullscreen ? "h-full overflow-y-auto bg-gray-950 p-4" : ""}`}>
+    <div ref={containerRef} className={`flex flex-col gap-4 ${isFullscreen ? "h-full overflow-y-auto bg-slate-950 p-4" : ""}`}>
       {/* Status bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">

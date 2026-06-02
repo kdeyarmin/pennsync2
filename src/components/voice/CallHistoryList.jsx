@@ -191,7 +191,7 @@ export default function CallHistoryList() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Disposition</p>
+              <p className="text-xs font-medium text-slate-600 mb-1.5">Disposition</p>
               <div className="flex flex-wrap gap-1.5">
                 {DISPOSITIONS.map((d) => (
                   <button
@@ -201,7 +201,7 @@ export default function CallHistoryList() {
                     className={`text-xs px-2 py-1 rounded-full border transition-colors ${
                       disposition === d.value
                         ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-gray-50 text-gray-700 border-gray-200 hover:border-blue-300"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-blue-300"
                     }`}
                   >
                     {d.label}
@@ -210,7 +210,7 @@ export default function CallHistoryList() {
               </div>
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1.5">Note (avoid clinical detail / PHI)</p>
+              <p className="text-xs font-medium text-slate-600 mb-1.5">Note (avoid clinical detail / PHI)</p>
               <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} className="resize-none" />
             </div>
           </div>
