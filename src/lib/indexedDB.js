@@ -116,3 +116,23 @@ export const removeFromSyncQueue = async (id) => {
     request.onerror = () => reject(request.error);
   });
 };
+
+/**
+ * Clear the locally-cached patient roster (PHI) on logout/timeout.
+ *
+ * Deliberately clears ONLY the re-fetchable PATIENTS cache and leaves
+ * DRAFT_NOTES and SYNC_QUEUE intact: those hold unsynced field work, and wiping
+ * them when a 15-minute idle timeout fires mid-visit (often while offline) would
+ * be silent data loss. Re-fetchable patient PHI is purged; pending writes survive
+ * until they sync.
+ */
+export const clearCachedPatients = async () => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.PATIENTS, 'readwrite');
+    const store = tx.objectStore(STORES.PATIENTS);
+    const request = store.clear();
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+};

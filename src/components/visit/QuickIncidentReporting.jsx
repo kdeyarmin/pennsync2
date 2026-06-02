@@ -886,33 +886,42 @@ Signature: _________________________`;
         status: 'reported'
       });
 
-      // Send notifications if requested
+      // Send notifications if requested. These are best-effort and run in their
+      // own try/catch: the incident is already saved above, so a failed email
+      // must NOT bubble to the outer catch and prompt the nurse to re-submit
+      // (which would create a duplicate incident record).
+      let notifyFailed = false;
       if (notifyPhysician || notifyOffice) {
-        const summary = `${selectedIncident.name} - ${patient.first_name} ${patient.last_name}
+        try {
+          const summary = `${selectedIncident.name} - ${patient.first_name} ${patient.last_name}
 
 ${report.substring(0, 500)}...
 
 Full report available in patient record.`;
 
-        // Email physician
-        if (notifyPhysician && patient.physician_email) {
-          await base44.integrations.Core.SendEmail({
-            to: patient.physician_email,
-            subject: `URGENT: ${selectedIncident.name} - ${patient.first_name} ${patient.last_name}`,
-            body: summary,
-            from_name: 'Penn Sync Home Health - Incident Alert'
-          });
-        }
+          // Email physician
+          if (notifyPhysician && patient.physician_email) {
+            await base44.integrations.Core.SendEmail({
+              to: patient.physician_email,
+              subject: `URGENT: ${selectedIncident.name} - ${patient.first_name} ${patient.last_name}`,
+              body: summary,
+              from_name: 'Penn Sync Home Health - Incident Alert'
+            });
+          }
 
-        // Email office/administrator
-        if (notifyOffice) {
-          const adminEmail = 'office@pennsync.com'; // Update with actual office email
-          await base44.integrations.Core.SendEmail({
-            to: adminEmail,
-            subject: `Incident Report: ${selectedIncident.name} - ${patient.first_name} ${patient.last_name}`,
-            body: summary,
-            from_name: 'Penn Sync Home Health'
-          });
+          // Email office/administrator
+          if (notifyOffice) {
+            const adminEmail = 'office@pennsync.com'; // Update with actual office email
+            await base44.integrations.Core.SendEmail({
+              to: adminEmail,
+              subject: `Incident Report: ${selectedIncident.name} - ${patient.first_name} ${patient.last_name}`,
+              body: summary,
+              from_name: 'Penn Sync Home Health'
+            });
+          }
+        } catch (notifyError) {
+          notifyFailed = true;
+          console.error('Incident saved, but notification email failed:', notifyError);
         }
       }
 
@@ -921,11 +930,13 @@ Full report available in patient record.`;
         onIncidentReported(report);
       }
 
-      alert('Incident report created successfully! Report added to documentation.');
+      alert(notifyFailed
+        ? 'Incident report saved and added to documentation, but a notification email failed to send. Please notify the physician/office directly if needed.'
+        : 'Incident report created successfully! Report added to documentation.');
       setShowDialog(false);
       setSelectedIncident(null);
       setIncidentData({});
-      
+
     } catch (error) {
       console.error('Error creating incident report:', error);
       alert('Error creating incident report. Please try again.');

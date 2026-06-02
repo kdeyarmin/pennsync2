@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { Check, ChevronsUpDown, Clock, Star, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -126,7 +127,8 @@ export default function SearchablePatientSelect({
       setCreateDialogOpen(false);
       setNewPatient({ first_name: "", last_name: "" });
     } catch (error) {
-      console.error('Error creating patient:', error);
+      // Surface the failure (the dialog stays open so the entry isn't lost).
+      toast.error(error?.message || 'Failed to create patient. Please try again.');
     }
     setCreating(false);
   };

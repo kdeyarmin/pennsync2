@@ -34,6 +34,7 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
   const [overriddenWarnings, setOverriddenWarnings] = useState({});
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [currentWarning, setCurrentWarning] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOCRDataExtracted = (extractedData) => {
     setFormData(prev => ({
@@ -109,7 +110,11 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Prevent double-submit: a second click before the create resolves would
+    // create a duplicate patient record.
+    if (isSubmitting) return;
+
     // Enhanced validation
     const errors = validatePatient(formData);
     const blockingErrors = errors.filter(e => 
@@ -130,16 +135,17 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       // Include override justifications in form data
       const dataWithOverrides = {
         ...formData,
         validation_overrides: overriddenWarnings
       };
-      
+
       // Sanitize all input data before submission using the new sanitizeObject
       const sanitizedData = sanitizeObject(dataWithOverrides);
-      
+
       if (patient) {
         // Update existing patient
         await base44.entities.Patient.update(patient.id, sanitizedData);
@@ -154,7 +160,7 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
           // Don't log PHI as per outline
         });
       }
-      
+
       if (onSuccess) onSuccess();
     } catch (error) {
       // Use the new handleSecureError for robust error handling and user feedback
@@ -163,6 +169,8 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
         'patient_form_submit',
         (msg) => alert(msg)
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -432,9 +440,9 @@ export default function PatientForm({ patient, onSuccess, onCancel }) {
           <Button type="button" className="btn-ghost text-slate-600" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" className="btn-primary">
+          <Button type="submit" className="btn-primary" disabled={isSubmitting}>
             <Save className="w-4 h-4 mr-2" />
-            {patient ? 'Update Patient' : 'Add Patient'}
+            {isSubmitting ? 'Saving…' : (patient ? 'Update Patient' : 'Add Patient')}
           </Button>
         </CardFooter>
       </form>

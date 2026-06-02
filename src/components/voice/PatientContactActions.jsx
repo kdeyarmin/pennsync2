@@ -10,11 +10,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle, FileText, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeE164 } from "@/components/voice/phoneUtils";
 import { smsSegments } from "@/components/messaging/smsUtils";
 import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
+import { getTemplates, renderTemplate, buildTemplateContext } from "@/components/messaging/smsTemplates";
+import ScheduleSendDialog from "@/components/messaging/ScheduleSendDialog";
 
 /**
  * PatientContactActions — Text / Call buttons on the patient detail page.
@@ -44,8 +49,11 @@ export default function PatientContactActions({ patient, currentUser }) {
     initialData: [],
   });
   const quickReplies = getQuickReplies(settingsArr[0]);
+  const templates = getTemplates(settingsArr[0]);
+  const templateContext = buildTemplateContext({ patient, user: currentUser, settings: settingsArr[0] });
   const insertReply = (text) =>
     setDraft((d) => (d.trim() ? `${d.replace(/\s*$/, "")} ${text}` : text));
+  const applyTemplate = (body) => setDraft(renderTemplate(body, templateContext));
 
   const sendText = useMutation({
     mutationFn: (body) => base44.functions.invoke("sendSms", { to_number: patient.phone, body, patient_id: patient.id }),
@@ -147,21 +155,37 @@ export default function PatientContactActions({ patient, currentUser }) {
               </AlertDescription>
             </Alert>
           )}
-          {quickReplies.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {quickReplies.map((q, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => insertReply(q.text)}
-                  title={q.text}
-                  className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                >
-                  {q.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {templates.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="h-7 text-xs">
+                    <FileText className="w-3.5 h-3.5 mr-1.5" /> Templates
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="max-w-xs">
+                  {templates.map((t, i) => (
+                    <DropdownMenuItem key={i} onSelect={() => applyTemplate(t.body)} className="flex-col items-start">
+                      <span className="text-xs font-medium">{t.label}</span>
+                      <span className="text-[11px] text-gray-500 line-clamp-2">{renderTemplate(t.body, templateContext)}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {quickReplies.map((q, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => insertReply(q.text)}
+                title={q.text}
+                className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -179,6 +203,13 @@ export default function PatientContactActions({ patient, currentUser }) {
           })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTextOpen(false)}>Cancel</Button>
+            <ScheduleSendDialog
+              toNumber={patient?.phone}
+              patientId={patient?.id}
+              body={draft}
+              disabled={!draft.trim() || sendText.isPending || optedOut}
+              onScheduled={() => { setDraft(""); setTextOpen(false); }}
+            />
             <Button
               onClick={() => draft.trim() && sendText.mutate(draft.trim())}
               disabled={!draft.trim() || sendText.isPending}

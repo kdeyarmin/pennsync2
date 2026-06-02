@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2 } from "lucide-react";
+import { Users, BookOpen, Sparkles, TrendingDown, GraduationCap, Loader2, FileText } from "lucide-react";
 import CourseManager from "@/components/training/CourseManager";
 import LearningPlanManager from "@/components/training/LearningPlanManager";
 import AIComplianceInServicesHub from "@/components/training/AIComplianceInServicesHub";
@@ -13,6 +13,7 @@ import AnnualMandatoryEducationHub from "@/components/training/AnnualMandatoryEd
 import ManagerSkillGapSummary from "@/components/training/ManagerSkillGapSummary";
 import ManagerSkillGapAreas from "@/components/training/ManagerSkillGapAreas";
 import ManagerSkillGapPeople from "@/components/training/ManagerSkillGapPeople";
+import StaffEducationComplianceReport from "@/components/training/StaffEducationComplianceReport";
 
 const isManager = (user) => 
   user?.role === "admin" || 
@@ -31,6 +32,10 @@ export default function AdminTraining() {
   });
 
   const hasAccess = !userLoading && currentUser && (currentUser.role === 'admin' || isManager(currentUser));
+  // The compliance report aggregates org-wide staff PII (names, emails, scores,
+  // completions). Unlike the team-scoped Skill Gaps tab, it is not limited to a
+  // manager's team, so restrict it to admins.
+  const isAdmin = currentUser?.role === 'admin';
 
   const { data: users = [] } = useQuery({
     queryKey: ["skill-gap-users"],
@@ -223,6 +228,12 @@ export default function AdminTraining() {
               <TrendingDown className="w-4 h-4 mr-2" />
               Skill Gaps
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="compliance-report" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                <FileText className="w-4 h-4 mr-2" />
+                Compliance Report
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -317,6 +328,12 @@ export default function AdminTraining() {
             <ManagerSkillGapPeople people={analysis.people} missedTopics={analysis.missedTopics} />
           </div>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="compliance-report">
+            <StaffEducationComplianceReport />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

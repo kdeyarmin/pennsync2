@@ -79,6 +79,7 @@ export default function SmsConversationList() {
           label,
           unreadCount: sorted.filter((m) => m.direction === "inbound" && !m.is_read).length,
           optedOut: !!optOutByPhone[last10(otherNumber)],
+          patient,
         };
       })
       .sort((a, b) => new Date(b.lastMessage.created_date) - new Date(a.lastMessage.created_date));
@@ -159,6 +160,8 @@ export default function SmsConversationList() {
         otherPartyLabel={selected?.label}
         otherPartyNumber={selected?.otherNumber}
         patientId={selected?.patientId}
+        patient={selected?.patient}
+        currentUser={user}
         optedOut={selected?.optedOut}
         onSent={() => queryClient.invalidateQueries({ queryKey: ["sms-messages", user?.email] })}
       />

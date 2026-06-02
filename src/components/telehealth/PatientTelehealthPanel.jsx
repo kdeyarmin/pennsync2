@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Video, Copy, Calendar } from "lucide-react";
+import { Video, Copy, Calendar, MessageSquare } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SessionDocumentation from "@/components/telehealth/SessionDocumentation";
-import VideoRoom from "@/components/telehealth/VideoRoom";
+import TelehealthCall from "@/components/telehealth/TelehealthCall";
+import { generateJoinToken, buildPatientJoinLink } from "@/components/telehealth/telehealthUtils";
 import { toast } from "sonner";
 
 const visitTypes = {
@@ -28,6 +29,7 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   const [showDocumentation, setShowDocumentation] = useState(false);
   const [participantList, setParticipantList] = useState([]);
   const [newSession, setNewSession] = useState({ visit_type: "routine_followup", scheduled_at: "" });
+  const endingRef = useRef(false);
 
   const { data: sessions = [] } = useQuery({
     queryKey: ["patient-telehealth-sessions", patient?.id],
@@ -56,10 +58,30 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patientVisits", patient?.id] })
   });
 
+  const textLink = useMutation({
+    mutationFn: ({ to_number, body }) => base44.functions.invoke("sendSms", { to_number, body, patient_id: patient?.id }),
+    onSuccess: () => toast.success("Join link texted to the patient"),
+    onError: (e) => toast.error(e?.message || "Couldn't send the text")
+  });
+
+  const textPatient = (session) => {
+    const phone = patient?.phone || patient?.phone_number || patient?.cell;
+    if (!phone) {
+      toast.error("No phone number on file for this patient");
+      return;
+    }
+    const greeting = patient?.first_name ? `Hi ${patient.first_name}, ` : "Hi, ";
+    textLink.mutate({
+      to_number: phone,
+      body: `${greeting}here's your secure telehealth visit link: ${session.invite_link}`
+    });
+  };
+
   const upcomingSessions = useMemo(() => sessions.filter((session) => ["scheduled", "active"].includes(session.status)), [sessions]);
   const pastSessions = useMemo(() => sessions.filter((session) => ["completed", "cancelled"].includes(session.status)), [sessions]);
 
   const startSession = async (session) => {
+    endingRef.current = false;
     const participants = [...new Set([currentUser?.full_name || currentUser?.email, patient?.first_name ? `${patient.first_name} ${patient.last_name}` : patient?.id])].filter(Boolean);
     setParticipantList(participants);
     await updateMutation.mutateAsync({
@@ -70,7 +92,9 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   };
 
   const endSession = async () => {
-    if (!activeSession) return;
+    // Guard against the End button + Twilio "disconnected" event both firing.
+    if (!activeSession || endingRef.current) return;
+    endingRef.current = true;
     const endedAt = new Date();
     const startedAt = activeSession.started_at ? new Date(activeSession.started_at) : endedAt;
     const duration = Math.max(1, Math.round((endedAt - startedAt) / 60000));
@@ -118,12 +142,14 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
     toast.success("Telehealth visit logged to patient chart");
     setShowDocumentation(false);
     setActiveSession(null);
+    endingRef.current = false;
     queryClient.invalidateQueries({ queryKey: ["patient-telehealth-sessions", patient?.id] });
   };
 
   const createSession = async () => {
     const roomName = `telehealth-${patient.id}-${Date.now()}`;
-    const inviteLink = `${window.location.origin}/Telehealth?room=${roomName}`;
+    // Patient-facing capability link: the token is the patient's access grant.
+    const inviteLink = buildPatientJoinLink(window.location.origin, roomName, generateJoinToken());
     await createMutation.mutateAsync({
       room_name: roomName,
       patient_id: patient.id,
@@ -178,9 +204,10 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
                 </div>
                 <Button variant="outline" className="text-red-600 border-red-200" onClick={endSession}>End Session</Button>
               </div>
-              <VideoRoom
+              <TelehealthCall
                 roomName={activeSession.room_name}
                 identity={currentUser?.full_name || currentUser?.email}
+                role="staff"
                 onDisconnect={endSession}
                 onParticipantListChange={setParticipantList}
               />
@@ -197,7 +224,12 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
                 <div>
                   <p className="font-semibold text-slate-900">{visitTypes[session.visit_type]?.label || session.visit_type}</p>
                   <p className="text-sm text-slate-500 flex items-center gap-2"><Calendar className="w-3 h-3" />{session.scheduled_at ? new Date(session.scheduled_at).toLocaleString() : 'Now'}</p>
-                  {session.invite_link && <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1 mt-1" onClick={() => { navigator.clipboard.writeText(session.invite_link); toast.success('Invite link copied'); }}><Copy className="w-3 h-3" />Copy patient link</button>}
+                  {session.invite_link && (
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
+                      <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1" onClick={() => { navigator.clipboard.writeText(session.invite_link); toast.success('Join link copied'); }}><Copy className="w-3 h-3" />Copy join link</button>
+                      <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1 disabled:opacity-50" disabled={textLink.isPending} onClick={() => textPatient(session)}><MessageSquare className="w-3 h-3" />Text to patient</button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{session.status}</Badge>

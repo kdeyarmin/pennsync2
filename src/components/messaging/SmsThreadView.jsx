@@ -6,19 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, MessageSquare, AlertTriangle } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Send, MessageSquare, AlertTriangle, RotateCw, FileText, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 import { smsSegments } from "@/components/messaging/smsUtils";
 import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
+import { getTemplates, renderTemplate, buildTemplateContext } from "@/components/messaging/smsTemplates";
+import ScheduleSendDialog from "@/components/messaging/ScheduleSendDialog";
 
 /**
  * SmsThreadView — renders one SMS conversation (message bubbles) and a compose
  * box that sends through the nurse's work number via the sendSms function.
  */
-export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumber, patientId, optedOut, onSent }) {
+export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumber, patientId, patient, currentUser, optedOut, onSent }) {
   const [draft, setDraft] = useState("");
+
+  const [resendingId, setResendingId] = useState(null);
 
   const sendMutation = useMutation({
     mutationFn: (body) =>
@@ -33,6 +40,28 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
     },
   });
 
+  // Resend a previously failed outbound message (re-sends the same body; the
+  // backend creates a fresh SmsMessage row, so the original failure stays in
+  // the thread as a record).
+  const resendMutation = useMutation({
+    mutationFn: (body) =>
+      base44.functions.invoke("sendSms", { to_number: otherPartyNumber, body, patient_id: patientId || undefined }),
+    onSuccess: () => {
+      toast.success("Message resent");
+      onSent?.();
+    },
+    onError: (err) => toast.error(err?.message || "Failed to resend message"),
+    onSettled: () => setResendingId(null),
+  });
+  const handleResend = (msg) => {
+    // Guard against concurrent resends: only one outbound request at a time,
+    // regardless of which failed bubble was tapped (each bubble's own spinner
+    // is still driven by resendingId).
+    if (resendMutation.isPending || sendMutation.isPending) return;
+    setResendingId(msg.id);
+    resendMutation.mutate(msg.body);
+  };
+
   const { data: settingsArr = [] } = useQuery({
     queryKey: ["agency-settings"],
     queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
@@ -40,6 +69,9 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
     initialData: [],
   });
   const quickReplies = getQuickReplies(settingsArr[0]);
+  const templates = getTemplates(settingsArr[0]);
+  const templateContext = buildTemplateContext({ patient, user: currentUser, settings: settingsArr[0] });
+  const applyTemplate = (body) => setDraft(renderTemplate(body, templateContext));
 
   if (!thread) {
     return (
@@ -90,6 +122,24 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                   </div>
                 </div>
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.body}</p>
+                {outbound && msg.status === "failed" && !optedOut && (
+                  <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-red-200">
+                    {msg.failure_reason
+                      ? <span className="text-[11px] text-red-700 truncate" title={msg.failure_reason}>{msg.failure_reason}</span>
+                      : <span />}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs text-red-700 hover:text-red-800 hover:bg-red-50"
+                      onClick={() => handleResend(msg)}
+                      disabled={resendMutation.isPending || sendMutation.isPending}
+                    >
+                      <RotateCw className={`w-3 h-3 mr-1 ${resendMutation.isPending && resendingId === msg.id ? "animate-spin" : ""}`} />
+                      Resend
+                    </Button>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -104,21 +154,37 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
           </Alert>
         ) : (
           <div className="space-y-2 border-t pt-3">
-            {quickReplies.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {quickReplies.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => insertReply(q.text)}
-                    title={q.text}
-                    className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                  >
-                    {q.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center flex-wrap gap-1.5">
+              {templates.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs">
+                      <FileText className="w-3.5 h-3.5 mr-1.5" /> Templates
+                      <ChevronDown className="w-3 h-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="max-w-xs">
+                    {templates.map((t, i) => (
+                      <DropdownMenuItem key={i} onSelect={() => applyTemplate(t.body)} className="flex-col items-start">
+                        <span className="text-xs font-medium">{t.label}</span>
+                        <span className="text-[11px] text-gray-500 line-clamp-2">{renderTemplate(t.body, templateContext)}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {quickReplies.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => insertReply(q.text)}
+                  title={q.text}
+                  className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
             <Textarea
               placeholder="Type a text message… (avoid clinical details / PHI)"
               value={draft}
@@ -132,14 +198,23 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                   ? `${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`
                   : ""}
               </span>
-              <Button
-                onClick={handleSend}
-                disabled={!draft.trim() || sendMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Text
-              </Button>
+              <div className="flex items-center gap-2">
+                <ScheduleSendDialog
+                  toNumber={otherPartyNumber}
+                  patientId={patientId}
+                  body={draft}
+                  disabled={!draft.trim() || sendMutation.isPending}
+                  onScheduled={() => setDraft("")}
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!draft.trim() || sendMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Text
+                </Button>
+              </div>
             </div>
           </div>
         )}

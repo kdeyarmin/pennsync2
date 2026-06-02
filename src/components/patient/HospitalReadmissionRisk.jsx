@@ -69,10 +69,14 @@ export default function HospitalReadmissionRisk({ patient }) {
     });
     
     if (recentHospitalizations.length > 0) {
-      const mostRecent = recentHospitalizations[0];
-      const mostRecentDate = parseISO(mostRecent.incident_date);
-      const daysSince = isValid(mostRecentDate) ? differenceInDays(today, mostRecentDate) : 0;
-      
+      // Use the genuinely most-recent hospitalization (smallest days-since).
+      // The query returns rows in unspecified order, so indexing [0] could pick
+      // an older event and under-score the 30-day vs 90-day tier. Every entry
+      // here already passed isValid() in the filter above.
+      const daysSince = Math.min(
+        ...recentHospitalizations.map(h => differenceInDays(today, parseISO(h.incident_date)))
+      );
+
       if (daysSince <= 30) {
         totalScore += 25;
         riskFactors.push({
@@ -166,30 +170,34 @@ export default function HospitalReadmissionRisk({ patient }) {
       });
     }
 
-    // Age factor (65+ at higher risk)
+    // Age factor (65+ at higher risk). An unparseable date_of_birth must only
+    // skip the age component — it must NOT discard the risk already accumulated
+    // above (recent hospitalizations, comorbidities, falls, etc.), which a prior
+    // early-return did, mislabeling genuinely high-risk patients as "Low".
     if (patient.date_of_birth) {
       const dob = parseISO(patient.date_of_birth);
-      if (!isValid(dob)) return { totalScore, riskLevel: 'Low', riskColor: 'green', riskPercentage: '< 10%', riskFactors: [] };
-      const age = differenceInDays(today, dob) / 365;
-      
-      if (age >= 85) {
-        totalScore += 10;
-        riskFactors.push({
-          factor: 'Advanced Age',
-          impact: 'Medium',
-          details: `Age ${Math.floor(age)} - increased frailty risk`,
-          score: 10,
-          intervention: 'Fall prevention, functional assessment, caregiver support'
-        });
-      } else if (age >= 75) {
-        totalScore += 5;
-        riskFactors.push({
-          factor: 'Advanced Age',
-          impact: 'Low',
-          details: `Age ${Math.floor(age)}`,
-          score: 5,
-          intervention: 'Regular monitoring, fall risk assessment'
-        });
+      if (isValid(dob)) {
+        const age = differenceInDays(today, dob) / 365;
+
+        if (age >= 85) {
+          totalScore += 10;
+          riskFactors.push({
+            factor: 'Advanced Age',
+            impact: 'Medium',
+            details: `Age ${Math.floor(age)} - increased frailty risk`,
+            score: 10,
+            intervention: 'Fall prevention, functional assessment, caregiver support'
+          });
+        } else if (age >= 75) {
+          totalScore += 5;
+          riskFactors.push({
+            factor: 'Advanced Age',
+            impact: 'Low',
+            details: `Age ${Math.floor(age)}`,
+            score: 5,
+            intervention: 'Regular monitoring, fall risk assessment'
+          });
+        }
       }
     }
 
