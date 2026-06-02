@@ -59,6 +59,7 @@ import {
   Activity,
   ChevronUp
 } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
 import { toast } from "sonner";
@@ -369,17 +370,11 @@ export default function UserManagement() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">User Management</h1>
-            <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Manage user accounts, roles, and permissions</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={Users}
+        title="User Management"
+        description="Manage user accounts, roles, and permissions"
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">

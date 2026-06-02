@@ -87,11 +87,14 @@ using the design-system `text-slate-900`**.
 
 **Fix (foundation + rollout):** added `src/components/ui/PageHeader.jsx`, a single
 component that standardizes heading scale, the `slate` color token, icon
-treatment, an optional description, and an actions slot. Adopted on **7 pages so
+treatment, an optional description, and an actions slot. Adopted on **13 pages so
 far**: `DocumentHub`, `ComplianceCenter`, `PhysicianDirectory`, `ResourceLibrary`,
-`Telehealth`, `MyLearning`, and `ReferralIntake`. **Rollout to the remaining
-pages continues as a mechanical follow-up** (see Roadmap) — done in safe,
-reviewable batches rather than one giant sweep.
+`Telehealth`, `MyLearning`, `ReferralIntake`, `ReportsAnalytics`,
+`SecurityCompliance`, `UserSettings`, `UserManagement`, `AutomaticCarePlans`, and
+`PatientDataManagement`. **Rollout to the remaining pages continues as a
+mechanical follow-up** (see Roadmap) — done in safe, reviewable batches rather
+than one giant sweep. Gradient "hero" headers (e.g. `SendFax`, `Help`,
+`ClinicalDocumentation`) are intentionally left as-is.
 
 ```jsx
 import PageHeader from "@/components/ui/PageHeader";
@@ -176,6 +179,6 @@ tidy it and is safe to script.
 | `src/components/layout/DesktopSidebar.jsx` | Visible "Search… ⌘K" trigger at top of nav |
 | `src/components/layout/MobileHeader.jsx` | Search button that opens the palette on mobile |
 | `src/components/ui/PageHeader.jsx` | New reusable, standardized page-header component |
-| `src/pages/{DocumentHub,ComplianceCenter,PhysicianDirectory,ResourceLibrary,Telehealth,MyLearning,ReferralIntake}.jsx` | Adopt `PageHeader` (7 pages) |
+| `src/pages/*` (13 pages) | Adopt `PageHeader`: DocumentHub, ComplianceCenter, PhysicianDirectory, ResourceLibrary, Telehealth, MyLearning, ReferralIntake, ReportsAnalytics, SecurityCompliance, UserSettings, UserManagement, AutomaticCarePlans, PatientDataManagement |
 | `src/pages/ClinicalPathwayManager.jsx` | Add admin-only page guard (review follow-up) |
 | `docs/UI_UX_REVIEW.md` | This review |
