@@ -69,6 +69,7 @@ export default function Layout({ children, currentPageName }) {
 
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
+  const isTimeOffApprover = isAdmin || currentUser?.is_manager === true;
 
   useEffect(() => {
     if (!currentUser?.email) return;
@@ -90,6 +91,18 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => base44.entities.Message.filter({ recipients: currentUser.email }, '-created_date', 50),
     initialData: [], refetchInterval: 60000, enabled: !!currentUser?.email,
   });
+
+  // Time-off requests awaiting this user's review (admins see all pending;
+  // managers see their direct reports'). Drives the "Time Off" nav badge.
+  const { data: pendingTimeOff = [] } = useQuery({
+    queryKey: ['pending-timeoff', currentUser?.email, isAdmin],
+    queryFn: () => isAdmin
+      ? base44.entities.TimeOffRequest.filter({ status: 'pending' }, '-created_date', 100)
+      : base44.entities.TimeOffRequest.filter({ manager_email: currentUser.email, status: 'pending' }, '-created_date', 100),
+    initialData: [], refetchInterval: 120000, enabled: !!currentUser?.email && isTimeOffApprover,
+  });
+  // Exclude the reviewer's own requests — they can't approve those.
+  const pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
 
   // Fetch charted visits to filter alerts
   const { data: chartedVisits = [] } = useQuery({
@@ -183,6 +196,12 @@ export default function Layout({ children, currentPageName }) {
       ],
     },
     {
+      category: "Workplace",
+      items: [
+        navItem("TimeOff", { badge: pendingTimeOffCount }),
+      ],
+    },
+    {
       category: "Tools",
       items: [
         navItem("UserSettings"),
@@ -190,7 +209,7 @@ export default function Layout({ children, currentPageName }) {
         navItem("Help"),
       ],
     },
-  ], [unreadMessageCount, unreadSmsCount]);
+  ], [unreadMessageCount, unreadSmsCount, pendingTimeOffCount]);
 
   const adminItems = useMemo(() => [
     { category: "Admin", items: [navItem("AdminOperations")] },

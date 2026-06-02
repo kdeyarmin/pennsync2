@@ -80,6 +80,7 @@ export const ROUTES = [
   { name: 'CreateSignatureRequest', Component: lazyPage(() => import('@/pages/CreateSignatureRequest')) },
   { name: 'DataQualityMonitor', Component: lazyPage(() => import('@/pages/DataQualityMonitor')) },
   { name: 'SystemHealthMonitor', Component: lazyPage(() => import('@/pages/SystemHealthMonitor')) },
+  { name: 'TimeOff', Component: lazyPage(() => import('@/pages/TimeOff')) },
 ];
 
 /**

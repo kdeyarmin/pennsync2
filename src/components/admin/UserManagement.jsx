@@ -45,8 +45,9 @@ import {
 import { format } from "date-fns";
 import { logActivity } from "@/components/utils/activityLogger";
 import { toast } from "sonner";
+import { BALANCE_TRACKABLE_TYPES, typeLabel } from "@/components/timeoff/timeOffUtils";
 
-export default function UserManagement({ users, currentUser }) {
+export default function UserManagement({ users }) {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -136,15 +137,26 @@ export default function UserManagement({ users, currentUser }) {
       license_number: user.license_number || '',
       care_scope: user.care_scope || 'home_health',
       role: user.role,
-      is_approved: user.is_approved ?? false
+      is_approved: user.is_approved ?? false,
+      is_manager: user.is_manager ?? false,
+      manager_email: user.manager_email || '',
+      pto_allowances: user.pto_allowances || {}
     });
     setShowEditDialog(true);
   };
 
   const handleSaveEdit = () => {
     if (!editingUser) return;
-    
+
     const { id, ...userData } = editingUser;
+    // Normalize allowance overrides: keep only valid numbers, drop blanks.
+    const allowances = {};
+    Object.entries(userData.pto_allowances || {}).forEach(([type, value]) => {
+      if (value !== "" && value != null && !Number.isNaN(Number(value))) {
+        allowances[type] = Math.max(0, Number(value));
+      }
+    });
+    userData.pto_allowances = allowances;
     updateUserMutation.mutate({ userId: id, data: userData });
   };
 
@@ -180,7 +192,6 @@ export default function UserManagement({ users, currentUser }) {
   );
 
   const pendingUsers = users.filter(u => !u.is_approved && u.role !== 'admin');
-  const approvedUsers = users.filter(u => u.is_approved || u.role === 'admin');
 
   const downloadUserRoster = async () => {
     setIsDownloadingRoster(true);
@@ -595,6 +606,72 @@ export default function UserManagement({ users, currentUser }) {
                     <SelectItem value="both">🏥 Both Home Health & Hospice</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="p-4 bg-emerald-50 rounded-lg space-y-3 border border-emerald-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-medium">Time-off approver</Label>
+                    <p className="text-sm text-slate-600">Let this user approve their team's time-off requests</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={editingUser.is_manager ? 'bg-emerald-500' : 'bg-slate-400'}>
+                      {editingUser.is_manager ? 'Approver' : 'Not an approver'}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant={editingUser.is_manager ? 'outline' : 'default'}
+                      onClick={() => setEditingUser({ ...editingUser, is_manager: !editingUser.is_manager })}
+                      className={editingUser.is_manager ? '' : 'bg-emerald-600 hover:bg-emerald-700'}
+                    >
+                      {editingUser.is_manager ? 'Remove approver' : 'Make approver'}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm">Reports to (approver for their requests)</Label>
+                  <Select
+                    value={editingUser.manager_email || 'none'}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, manager_email: value === 'none' ? '' : value })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="No manager (route to admins)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No manager (route to admins)</SelectItem>
+                      {users
+                        .filter((u) => u.email && u.id !== editingUser.id && (u.role === 'admin' || u.is_manager === true))
+                        .map((u) => (
+                          <SelectItem key={u.id} value={u.email}>
+                            {u.full_name || u.email} {u.role === 'admin' ? '(Admin)' : ''}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Annual time-off allowances (days)</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+                    {BALANCE_TRACKABLE_TYPES.map((type) => (
+                      <div key={type}>
+                        <Label className="text-xs text-slate-500">{typeLabel(type)}</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="default"
+                          value={editingUser.pto_allowances?.[type] ?? ''}
+                          onChange={(e) =>
+                            setEditingUser({
+                              ...editingUser,
+                              pto_allowances: { ...(editingUser.pto_allowances || {}), [type]: e.target.value },
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">Blank uses the agency default for that type.</p>
+                </div>
               </div>
 
               {editingUser.role !== 'admin' && (

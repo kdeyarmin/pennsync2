@@ -148,6 +148,7 @@ import SystemJobMonitor from './pages/SystemJobMonitor';
 import SystemMonitoring from './pages/SystemMonitoring';
 import Telehealth from './pages/Telehealth';
 import TemplateLibrary from './pages/TemplateLibrary';
+import TimeOff from './pages/TimeOff';
 import TrainingCoursePlayer from './pages/TrainingCoursePlayer';
 import TrainingManagement from './pages/TrainingManagement';
 import UserActivityLog from './pages/UserActivityLog';
@@ -272,6 +273,7 @@ export const PAGES = {
     "SystemMonitoring": SystemMonitoring,
     "Telehealth": Telehealth,
     "TemplateLibrary": TemplateLibrary,
+    "TimeOff": TimeOff,
     "TrainingCoursePlayer": TrainingCoursePlayer,
     "TrainingManagement": TrainingManagement,
     "UserActivityLog": UserActivityLog,

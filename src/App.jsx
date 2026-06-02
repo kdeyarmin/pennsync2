@@ -9,8 +9,10 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
+import OfflineManager from '@/components/offline/OfflineManager'
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
+import SignerPortal from '@/pages/SignerPortal';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
@@ -28,10 +30,11 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
 
-  // Public patient join route renders WITHOUT authentication — it is gated by
-  // the per-session capability token in the link, not by an app login. This is
-  // checked before the auth gate below so patients are never bounced to login.
-  if (location.pathname.toLowerCase().startsWith('/join')) {
+  // Public patient join/signer routes render WITHOUT authentication — they are
+  // gated by capability tokens in the link, not by an app login. This is
+  // checked before the auth gate below so external users are never bounced to login.
+  const normalizedPath = location.pathname.toLowerCase();
+  if (normalizedPath.startsWith('/join') || normalizedPath.startsWith('/signer')) {
     return (
       <Suspense fallback={
         <div className="fixed inset-0 flex items-center justify-center">
@@ -40,6 +43,7 @@ const AuthenticatedApp = () => {
       }>
         <Routes>
           <Route path="/join" element={<JoinTelehealth />} />
+          <Route path="/signer" element={<SignerPortal />} />
         </Routes>
       </Suspense>
     );
@@ -110,6 +114,7 @@ function App() {
             <AuthenticatedApp />
           </Router>
           <Toaster />
+          <OfflineManager />
           <VisualEditAgent />
         </QueryClientProvider>
       </AuthProvider>

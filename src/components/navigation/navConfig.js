@@ -2,7 +2,7 @@ import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Mail, BookUser, Video,
   HelpCircle, AlertTriangle, BookOpen, WifiOff, Heart, Activity,
-  Phone, FileSignature, ShieldCheck, DollarSign, Award, ClipboardCheck,
+  Phone, FileSignature, ShieldCheck, DollarSign, Award, ClipboardCheck, CalendarDays,
   TrendingUp, LifeBuoy, FileCheck, Stethoscope, ScrollText, CheckCircle2,
 } from "lucide-react";
 
@@ -102,6 +102,7 @@ export const NAV_PAGES = [
   { page: "PatientDataManagement", label: "Data Management", icon: Users, category: "Admin", keywords: ["data", "management", "import", "duplicates"] },
 
   // Tools & Resources
+  { page: "TimeOff", label: "Time Off", icon: CalendarDays, category: "Workplace", keywords: ["time off", "pto", "leave", "vacation", "calendar"] },
   { page: "ResourceLibrary", label: "Library", icon: BookOpen, category: "Tools", keywords: ["library", "resources", "guidelines"] },
   { page: "OfflineMode", label: "Offline Mode", icon: WifiOff, category: "Tools", keywords: ["offline", "sync"] },
   { page: "Help", label: "Help", icon: HelpCircle, category: "Tools", keywords: ["help", "guide", "manual"] },
