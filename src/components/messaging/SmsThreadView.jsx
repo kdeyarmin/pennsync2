@@ -16,6 +16,7 @@ import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
 import { smsSegments } from "@/components/messaging/smsUtils";
 import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
 import { getTemplates, renderTemplate, buildTemplateContext } from "@/components/messaging/smsTemplates";
+import ScheduleSendDialog from "@/components/messaging/ScheduleSendDialog";
 
 /**
  * SmsThreadView — renders one SMS conversation (message bubbles) and a compose
@@ -197,14 +198,23 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                   ? `${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`
                   : ""}
               </span>
-              <Button
-                onClick={handleSend}
-                disabled={!draft.trim() || sendMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Text
-              </Button>
+              <div className="flex items-center gap-2">
+                <ScheduleSendDialog
+                  toNumber={otherPartyNumber}
+                  patientId={patientId}
+                  body={draft}
+                  disabled={!draft.trim() || sendMutation.isPending}
+                  onScheduled={() => setDraft("")}
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!draft.trim() || sendMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Text
+                </Button>
+              </div>
             </div>
           </div>
         )}

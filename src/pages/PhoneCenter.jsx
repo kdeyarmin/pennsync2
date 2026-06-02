@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, PhoneCall, UserCheck, Phone } from "lucide-react";
+import { MessageSquare, PhoneCall, UserCheck, Phone, CalendarClock } from "lucide-react";
 import SmsConversationList from "@/components/messaging/SmsConversationList";
+import ScheduledSmsList from "@/components/messaging/ScheduledSmsList";
 import CallHistoryList from "@/components/voice/CallHistoryList";
 import DutyStatusCard from "@/components/voice/DutyStatusCard";
 
@@ -25,10 +26,14 @@ export default function PhoneCenter() {
       </div>
 
       <Tabs defaultValue="texts" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1">
           <TabsTrigger value="texts" className="min-h-[44px]">
             <MessageSquare className="h-4 w-4 mr-2" />
             Texts
+          </TabsTrigger>
+          <TabsTrigger value="scheduled" className="min-h-[44px]">
+            <CalendarClock className="h-4 w-4 mr-2" />
+            Scheduled
           </TabsTrigger>
           <TabsTrigger value="calls" className="min-h-[44px]">
             <PhoneCall className="h-4 w-4 mr-2" />
@@ -42,6 +47,10 @@ export default function PhoneCenter() {
 
         <TabsContent value="texts">
           <SmsConversationList />
+        </TabsContent>
+
+        <TabsContent value="scheduled">
+          <ScheduledSmsList />
         </TabsContent>
 
         <TabsContent value="calls">

@@ -19,6 +19,7 @@ import { normalizeE164 } from "@/components/voice/phoneUtils";
 import { smsSegments } from "@/components/messaging/smsUtils";
 import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
 import { getTemplates, renderTemplate, buildTemplateContext } from "@/components/messaging/smsTemplates";
+import ScheduleSendDialog from "@/components/messaging/ScheduleSendDialog";
 
 /**
  * PatientContactActions — Text / Call buttons on the patient detail page.
@@ -202,6 +203,13 @@ export default function PatientContactActions({ patient, currentUser }) {
           })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTextOpen(false)}>Cancel</Button>
+            <ScheduleSendDialog
+              toNumber={patient?.phone}
+              patientId={patient?.id}
+              body={draft}
+              disabled={!draft.trim() || sendText.isPending || optedOut}
+              onScheduled={() => { setDraft(""); setTextOpen(false); }}
+            />
             <Button
               onClick={() => draft.trim() && sendText.mutate(draft.trim())}
               disabled={!draft.trim() || sendText.isPending}

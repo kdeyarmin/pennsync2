@@ -94,6 +94,11 @@ shapes in `handleEightXEightVoiceCall.ts` (`buildSay` / `buildMakeCall`) and
 ## 4. How each flow works
 
 - **Outbound text** (`sendSms`): nurse → patient from the nurse's work number.
+- **Scheduled text** (`scheduleSms` / `dispatchScheduledSms` / `cancelScheduledSms`):
+  a nurse queues a text for a future time (e.g. an appointment reminder). The
+  `dispatchScheduledSms` **cron** (schedule it in the Base44 dashboard, e.g.
+  every 5 min) sends due messages, re-checking consent + the kill switch at send
+  time; pending sends can be canceled until they fire.
 - **Outbound call** (`startMaskedCall`): rings the nurse's cell, then bridges to
   the patient presenting the work number as caller ID.
 - **Inbound text** (`handleEightXEightInboundSms`): stored to the nurse's inbox;

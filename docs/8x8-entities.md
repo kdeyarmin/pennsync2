@@ -90,6 +90,34 @@ lowercase string enums) as used by `FaxLog` and `Message`.
 | `captured_at` | string (ISO) | |
 | `notes` | text | |
 
+## New `ScheduledSms` (queued future sends)
+
+| Field | Type | Notes |
+|---|---|---|
+| `to_number` | string | E.164 destination |
+| `from_number` | string | Nurse's work number |
+| `body` | text | Message content |
+| `patient_id` | string | Nullable |
+| `nurse_email` | string | Owner |
+| `thread_id` | string | Deterministic `min\|max` of the two numbers |
+| `send_at` | string (ISO) | When to send |
+| `status` | string enum | `pending` \| `sending` \| `sent` \| `failed` \| `canceled` |
+| `template_label` | string | Nullable; the template the message came from |
+| `provider_message_id` | string | Nullable; 8x8 `umid` once sent |
+| `sms_message_id` | string | Nullable; the `SmsMessage` row created on send |
+| `failure_reason` | string | Nullable |
+| `attempts` | number | Send attempts |
+| `sent_at` | string (ISO) | Nullable |
+| `created_by` | string | Nurse email |
+| `canceled_by` | string | Nullable |
+| `canceled_at` | string (ISO) | Nullable |
+
+> `dispatchScheduledSms` is a **cron** function — configure a schedule (e.g.
+> every 5 minutes) for it in the Base44 dashboard. It claims due `pending` rows
+> (`pending → sending`) before sending so overlapping runs don't double-send,
+> and re-checks the kill switch + opt-out at send time. Restrict `ScheduledSms`
+> read access to the owning `nurse_email` + admins (the body may contain PHI).
+
 The existing `UserActivity`, `Notification`, and `SecurityLog` entities are
 reused as-is (no changes required).
 
