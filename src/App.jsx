@@ -1,20 +1,42 @@
+// REMOVED PAGES (2026-03-23): 92 orphaned page files deleted — not in any route or import.
+// If you need any of these back, check git history for the commit that removed them.
+// Removed: AIComplianceInServices, AITrainingGenerator, About, AdminDashboard, AdminTrainingAnalytics,
+// AdminUserSetup, AgencyAnalytics, AgencySettings, AnalyticsDashboard, AnnualEducationTranscript,
+// AnnualMandatoryEducation, AutomaticCarePlans, CarePlanBuilder, ClinicalInsightsDashboard,
+// ClinicalLibrary, ComplianceDashboard, ComplianceMonitoringDashboard, ComplianceRegulatory,
+// CustomizableDashboard, DataQualityMonitor, DischargeSummaries, DocumentIngestion, DocumentManagement,
+// DocumentSignatures, DocumentVisit, DocumentationTraining, DuplicatePatients, EducationLibrary,
+// EmployeeTranscript, FaxAddressBook, FaxContacts, FaxDashboard, FaxLogsDashboard, Features, Home,
+// IncidentReportingModule, JoinTelehealth, LearningReports, ManageNewFeatures, ManagerSkillGapDashboard,
+// MedicalScribe, MedicareComplianceDashboard, MedicareGuidelinesLibrary, MedicationReconciliation,
+// MyAnnualEducation, MyTraining, NotificationSettings, NurseEducationVideos, NursePerformanceDashboard,
+// NurseTraining, NurseTrainingHub, OASISAnalyticsDashboard, OASISAnalyzer, OASISAuditDashboard,
+// OASISClinicalReview, OASISComplianceReview, OASISDocumentationReview, OASISRevenueAnalysis, OASISReview,
+// OfflineDocumentation, OfflineVisitDocumentation, PDFSearch, PDFTemplateLibrary, PDFTools, PatientAlerts,
+// PatientEducation, PatientEducationPortal, PatientRecordDashboard, PatientTriage, PersonnelFile,
+// PopulationHealthAnalytics, PredictiveAnalytics, ProductivityDashboard, QualityDashboard,
+// RealTimeComplianceDashboard, ReferralAdmissionNote, ReferralProcessor, ReferralTriage, Reports,
+// ScheduleOptimizer, SecurityPolicy, SignDocument, Support, SurveyPreparation, SystemHealthMonitor,
+// SystemJobMonitor, SystemMonitoring, TemplateLibrary, TrainingManagement, UserActivityLog,
+// UserActivityReport, UserGuides
+
+import './App.css'
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
-import OfflineManager from '@/components/offline/OfflineManager'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
-import SignerPortal from '@/pages/SignerPortal';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import ErrorBoundary from '@/components/utils/ErrorBoundary';
-import React, { Suspense, lazy } from 'react';
 
-// Page imports
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
+// Dashboard loaded eagerly (landing page), all others lazy-loaded for code splitting
+import Dashboard from '@/pages/Dashboard';
+
 const Patients = lazy(() => import('@/pages/Patients'));
 const PatientDetails = lazy(() => import('@/pages/PatientDetails'));
 const ClinicalDocumentation = lazy(() => import('@/pages/ClinicalDocumentation'));
@@ -24,7 +46,6 @@ const PhoneCenter = lazy(() => import('@/pages/PhoneCenter'));
 const AdminOperations = lazy(() => import('@/pages/AdminOperations'));
 const UserManagement = lazy(() => import('@/pages/UserManagement'));
 const AdminTraining = lazy(() => import('@/pages/AdminTraining'));
-const StaffTrainingHub = lazy(() => import('@/pages/StaffTrainingHub'));
 const CarePlanManagement = lazy(() => import('@/pages/CarePlanManagement'));
 const SmartOASISAssessment = lazy(() => import('@/pages/SmartOASISAssessment'));
 const SendFax = lazy(() => import('@/pages/SendFax'));
@@ -48,45 +69,37 @@ const EventReport = lazy(() => import('@/pages/EventReport'));
 const SmartNoteAssistant = lazy(() => import('@/pages/SmartNoteAssistant'));
 const PatientEducationHub = lazy(() => import('@/pages/PatientEducationHub'));
 const VisitScribe = lazy(() => import('@/pages/VisitScribe'));
-const IncidentReporting = lazy(() => import('@/pages/IncidentReporting'));
 const ClinicalChart = lazy(() => import('@/pages/ClinicalChart'));
 const LearningCenter = lazy(() => import('@/pages/LearningCenter'));
 const RegulatoryCompliance = lazy(() => import('@/pages/RegulatoryCompliance'));
-const TemplateManagement = lazy(() => import('@/pages/TemplateManagement'));
-const DocumentAuditLogs = lazy(() => import('@/pages/DocumentAuditLogs'));
-const BulkSignatureRequests = lazy(() => import('@/pages/BulkSignatureRequests'));
-const FaxAnalytics = lazy(() => import('@/pages/FaxAnalytics'));
-const CreateSignatureRequest = lazy(() => import('@/pages/CreateSignatureRequest'));
-// Pages that are linked via createPageUrl()/navigation but were previously
-// unrouted (dead links). Routed here so every linked feature is reachable.
-const AIComplianceInServices = lazy(() => import('@/pages/AIComplianceInServices'));
-const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
-const AnnualEducationTranscript = lazy(() => import('@/pages/AnnualEducationTranscript'));
-const AnnualMandatoryEducation = lazy(() => import('@/pages/AnnualMandatoryEducation'));
-const ComplianceDashboard = lazy(() => import('@/pages/ComplianceDashboard'));
-const DocumentSignatures = lazy(() => import('@/pages/DocumentSignatures'));
-const DocumentVisit = lazy(() => import('@/pages/DocumentVisit'));
-const EmployeeTranscript = lazy(() => import('@/pages/EmployeeTranscript'));
-const ManagerSkillGapDashboard = lazy(() => import('@/pages/ManagerSkillGapDashboard'));
-const MyAnnualEducation = lazy(() => import('@/pages/MyAnnualEducation'));
-const MyTraining = lazy(() => import('@/pages/MyTraining'));
-const NursePerformanceDashboard = lazy(() => import('@/pages/NursePerformanceDashboard'));
-const NurseTraining = lazy(() => import('@/pages/NurseTraining'));
-const OASISAnalyzer = lazy(() => import('@/pages/OASISAnalyzer'));
-const OASISComplianceReview = lazy(() => import('@/pages/OASISComplianceReview'));
-const OASISDocumentationReview = lazy(() => import('@/pages/OASISDocumentationReview'));
-const OASISRevenueAnalysis = lazy(() => import('@/pages/OASISRevenueAnalysis'));
-const PatientAlerts = lazy(() => import('@/pages/PatientAlerts'));
-const QualityDashboard = lazy(() => import('@/pages/QualityDashboard'));
-const Reports = lazy(() => import('@/pages/Reports'));
-const Support = lazy(() => import('@/pages/Support'));
+
+// Public (no-login) patient telehealth join page.
+const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
+  const location = useLocation();
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+
+  // Public patient join route renders WITHOUT authentication — it is gated by
+  // the per-session capability token in the link, not by an app login. This is
+  // checked before the auth gate below so patients are never bounced to login.
+  if (location.pathname.toLowerCase().startsWith('/join')) {
+    return (
+      <Suspense fallback={
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        </div>
+      }>
+        <Routes>
+          <Route path="/join" element={<JoinTelehealth />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -108,14 +121,10 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // Public routes (e.g. external document signers, who have no account) must
-  // render WITHOUT the authentication gate below.
-  const isPublicRoute = window.location.pathname.startsWith('/signer');
-
-  // Gate the whole app on authentication (public routes excepted). The no-token
-  // path does NOT set an authError, so without this an unauthenticated user
-  // would render every route and fire PHI queries. Never rely on authError alone.
-  if (!isPublicRoute && !isAuthenticated) {
+  // Gate the whole app on authentication. The no-token path does NOT set an
+  // authError, so without this an unauthenticated user would render every
+  // route and fire PHI queries. Never rely on authError alone here.
+  if (!isAuthenticated) {
     navigateToLogin();
     return null;
   }
@@ -128,10 +137,6 @@ const AuthenticatedApp = () => {
       </div>
     }>
       <Routes>
-        {/* Public Signer Portal - No auth required */}
-        <Route path="/signer" element={<SignerPortal />} />
-
-        {/* Authenticated Routes */}
         <Route path="/" element={<Navigate to="/Dashboard" replace />} />
         <Route path="/Dashboard" element={<LayoutWrapper currentPageName="Dashboard"><Dashboard /></LayoutWrapper>} />
         <Route path="/Patients" element={<LayoutWrapper currentPageName="Patients"><Patients /></LayoutWrapper>} />
@@ -143,7 +148,7 @@ const AuthenticatedApp = () => {
         <Route path="/AdminOperations" element={<LayoutWrapper currentPageName="AdminOperations"><AdminOperations /></LayoutWrapper>} />
         <Route path="/UserManagement" element={<LayoutWrapper currentPageName="UserManagement"><UserManagement /></LayoutWrapper>} />
         <Route path="/AdminTraining" element={<LayoutWrapper currentPageName="AdminTraining"><AdminTraining /></LayoutWrapper>} />
-        <Route path="/StaffTrainingHub" element={<LayoutWrapper currentPageName="StaffTrainingHub"><StaffTrainingHub /></LayoutWrapper>} />
+        <Route path="/StaffTrainingHub" element={<Navigate to="/AdminTraining" replace />} />
         <Route path="/CarePlanManagement" element={<LayoutWrapper currentPageName="CarePlanManagement"><CarePlanManagement /></LayoutWrapper>} />
         <Route path="/SmartOASISAssessment" element={<LayoutWrapper currentPageName="SmartOASISAssessment"><SmartOASISAssessment /></LayoutWrapper>} />
         <Route path="/SendFax" element={<LayoutWrapper currentPageName="SendFax"><SendFax /></LayoutWrapper>} />
@@ -160,48 +165,23 @@ const AuthenticatedApp = () => {
         <Route path="/PatientDataManagement" element={<LayoutWrapper currentPageName="PatientDataManagement"><PatientDataManagement /></LayoutWrapper>} />
         <Route path="/UserSettings" element={<LayoutWrapper currentPageName="UserSettings"><UserSettings /></LayoutWrapper>} />
         <Route path="/ClinicalPathwayManager" element={<LayoutWrapper currentPageName="ClinicalPathwayManager"><ClinicalPathwayManager /></LayoutWrapper>} />
-        <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
         <Route path="/MyLearning" element={<LayoutWrapper currentPageName="MyLearning"><MyLearning /></LayoutWrapper>} />
         <Route path="/LearningCenter" element={<LayoutWrapper currentPageName="LearningCenter"><LearningCenter /></LayoutWrapper>} />
+        <Route path="/ClinicalSkillsChecklist" element={<LayoutWrapper currentPageName="ClinicalSkillsChecklist"><ClinicalSkillsChecklist /></LayoutWrapper>} />
         <Route path="/TrainingCoursePlayer" element={<LayoutWrapper currentPageName="TrainingCoursePlayer"><TrainingCoursePlayer /></LayoutWrapper>} />
         <Route path="/EventReport" element={<LayoutWrapper currentPageName="EventReport"><EventReport /></LayoutWrapper>} />
         <Route path="/SmartNoteAssistant" element={<LayoutWrapper currentPageName="SmartNoteAssistant"><SmartNoteAssistant /></LayoutWrapper>} />
         <Route path="/PatientEducationHub" element={<LayoutWrapper currentPageName="PatientEducationHub"><PatientEducationHub /></LayoutWrapper>} />
         <Route path="/VisitScribe" element={<LayoutWrapper currentPageName="VisitScribe"><VisitScribe /></LayoutWrapper>} />
-        <Route path="/IncidentReporting" element={<LayoutWrapper currentPageName="IncidentReporting"><IncidentReporting /></LayoutWrapper>} />
+        <Route path="/IncidentReporting" element={<Navigate to="/Incidents" replace />} />
         <Route path="/ClinicalChart" element={<LayoutWrapper currentPageName="ClinicalChart"><ClinicalChart /></LayoutWrapper>} />
         <Route path="/RegulatoryCompliance" element={<LayoutWrapper currentPageName="RegulatoryCompliance"><RegulatoryCompliance /></LayoutWrapper>} />
-        <Route path="/TemplateManagement" element={<LayoutWrapper currentPageName="TemplateManagement"><TemplateManagement /></LayoutWrapper>} />
-        <Route path="/DocumentAuditLogs" element={<LayoutWrapper currentPageName="DocumentAuditLogs"><DocumentAuditLogs /></LayoutWrapper>} />
-        <Route path="/BulkSignatureRequests" element={<LayoutWrapper currentPageName="BulkSignatureRequests"><BulkSignatureRequests /></LayoutWrapper>} />
-        <Route path="/FaxAnalytics" element={<LayoutWrapper currentPageName="FaxAnalytics"><FaxAnalytics /></LayoutWrapper>} />
-        <Route path="/CreateSignatureRequest" element={<LayoutWrapper currentPageName="CreateSignatureRequest"><CreateSignatureRequest /></LayoutWrapper>} />
-        <Route path="/AIComplianceInServices" element={<LayoutWrapper currentPageName="AIComplianceInServices"><AIComplianceInServices /></LayoutWrapper>} />
-        <Route path="/AdminDashboard" element={<LayoutWrapper currentPageName="AdminDashboard"><AdminDashboard /></LayoutWrapper>} />
-        <Route path="/AnnualEducationTranscript" element={<LayoutWrapper currentPageName="AnnualEducationTranscript"><AnnualEducationTranscript /></LayoutWrapper>} />
-        <Route path="/AnnualMandatoryEducation" element={<LayoutWrapper currentPageName="AnnualMandatoryEducation"><AnnualMandatoryEducation /></LayoutWrapper>} />
-        <Route path="/ComplianceDashboard" element={<LayoutWrapper currentPageName="ComplianceDashboard"><ComplianceDashboard /></LayoutWrapper>} />
-        <Route path="/DocumentSignatures" element={<LayoutWrapper currentPageName="DocumentSignatures"><DocumentSignatures /></LayoutWrapper>} />
-        <Route path="/DocumentVisit" element={<LayoutWrapper currentPageName="DocumentVisit"><DocumentVisit /></LayoutWrapper>} />
-        <Route path="/EmployeeTranscript" element={<LayoutWrapper currentPageName="EmployeeTranscript"><EmployeeTranscript /></LayoutWrapper>} />
-        <Route path="/ManagerSkillGapDashboard" element={<LayoutWrapper currentPageName="ManagerSkillGapDashboard"><ManagerSkillGapDashboard /></LayoutWrapper>} />
-        <Route path="/MyAnnualEducation" element={<LayoutWrapper currentPageName="MyAnnualEducation"><MyAnnualEducation /></LayoutWrapper>} />
-        <Route path="/MyTraining" element={<LayoutWrapper currentPageName="MyTraining"><MyTraining /></LayoutWrapper>} />
-        <Route path="/NursePerformanceDashboard" element={<LayoutWrapper currentPageName="NursePerformanceDashboard"><NursePerformanceDashboard /></LayoutWrapper>} />
-        <Route path="/NurseTraining" element={<LayoutWrapper currentPageName="NurseTraining"><NurseTraining /></LayoutWrapper>} />
-        <Route path="/OASISAnalyzer" element={<LayoutWrapper currentPageName="OASISAnalyzer"><OASISAnalyzer /></LayoutWrapper>} />
-        <Route path="/OASISComplianceReview" element={<LayoutWrapper currentPageName="OASISComplianceReview"><OASISComplianceReview /></LayoutWrapper>} />
-        <Route path="/OASISDocumentationReview" element={<LayoutWrapper currentPageName="OASISDocumentationReview"><OASISDocumentationReview /></LayoutWrapper>} />
-        <Route path="/OASISRevenueAnalysis" element={<LayoutWrapper currentPageName="OASISRevenueAnalysis"><OASISRevenueAnalysis /></LayoutWrapper>} />
-        <Route path="/PatientAlerts" element={<LayoutWrapper currentPageName="PatientAlerts"><PatientAlerts /></LayoutWrapper>} />
-        <Route path="/QualityDashboard" element={<LayoutWrapper currentPageName="QualityDashboard"><QualityDashboard /></LayoutWrapper>} />
-        <Route path="/Reports" element={<LayoutWrapper currentPageName="Reports"><Reports /></LayoutWrapper>} />
-        <Route path="/Support" element={<LayoutWrapper currentPageName="Support"><Support /></LayoutWrapper>} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </Suspense>
   );
 };
+
 
 function App() {
 
@@ -214,7 +194,6 @@ function App() {
             <AuthenticatedApp />
           </Router>
           <Toaster />
-          <OfflineManager />
           <VisualEditAgent />
         </QueryClientProvider>
       </AuthProvider>

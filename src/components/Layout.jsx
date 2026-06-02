@@ -103,8 +103,8 @@ export default function Layout({ children, currentPageName }) {
       const chartedPatientIds = new Set(chartedVisits.map(v => v.patient_id));
       return alerts.filter(a => chartedPatientIds.has(a.patient_id));
     },
-    initialData: [],
-    refetchInterval: 60000,
+    initialData: [], 
+    refetchInterval: 60000, 
     enabled: !!currentUser?.email && currentUser?.role !== 'admin' && chartedVisits.length > 0,
   });
 
@@ -179,6 +179,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Tools",
       items: [
+        { name: "Settings", icon: Settings, page: "UserSettings" },
         { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Help", icon: HelpCircle, page: "Help" },
       ],
@@ -187,28 +188,27 @@ export default function Layout({ children, currentPageName }) {
 
   const adminItems = useMemo(() => [
     { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },
-    {
-      category: "Manage",
+    { 
+      category: "Manage", 
       items: [
         { name: "Users", icon: Users, page: "UserManagement" },
         { name: "Training Manager", icon: GraduationCap, page: "AdminTraining" },
         { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
-      ]
+      ] 
     },
-    {
-      category: "Analytics",
+    { 
+      category: "Analytics", 
       items: [
         { name: "Reports & Analytics", icon: BarChart3, page: "ReportsAnalytics" },
         { name: "Compliance Center", icon: Shield, page: "ComplianceCenter" },
         { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
-      ]
+      ] 
     },
     {
       category: "Configuration",
       items: [
         { name: "Data Management", icon: Users, page: "PatientDataManagement" },
         { name: "Security", icon: Shield, page: "SecurityCompliance" },
-        { name: "Settings", icon: Settings, page: "UserSettings" },
       ]
     },
 
