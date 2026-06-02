@@ -179,6 +179,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "Tools",
       items: [
+        { name: "Settings", icon: Settings, page: "UserSettings" },
         { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
         { name: "Help", icon: HelpCircle, page: "Help" },
       ],
@@ -203,13 +204,12 @@ export default function Layout({ children, currentPageName }) {
         { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
       ] 
     },
-    { 
-      category: "Configuration", 
+    {
+      category: "Configuration",
       items: [
         { name: "Data Management", icon: Users, page: "PatientDataManagement" },
         { name: "Security", icon: Shield, page: "SecurityCompliance" },
-        { name: "Settings", icon: Settings, page: "UserSettings" },
-      ] 
+      ]
     },
 
   ], [totalNotificationCount, isAdmin]);

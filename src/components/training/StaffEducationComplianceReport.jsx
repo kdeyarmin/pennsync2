@@ -23,6 +23,7 @@ import {
   Loader2
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
+import { exportToPDF } from "../utils/pdfExporter";
 
 export default function StaffEducationComplianceReport() {
   const [timeframe, setTimeframe] = useState('30');
@@ -41,11 +42,6 @@ export default function StaffEducationComplianceReport() {
   const { data: allModules = [] } = useQuery({
     queryKey: ['trainingModules'],
     queryFn: () => base44.entities.TrainingModule.filter({ is_active: true }),
-  });
-
-  const { data: recommendations = [] } = useQuery({
-    queryKey: ['allRecommendations'],
-    queryFn: () => base44.entities.TrainingRecommendation.list('-created_date', 1000),
   });
 
   const complianceData = React.useMemo(() => {
@@ -104,28 +100,42 @@ export default function StaffEducationComplianceReport() {
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-      const response = await base44.functions.invoke('generateStaffTrainingReport', {
-        timeframe: parseInt(timeframe),
-        complianceData
-      });
+      const timeframeLabels = {
+        '7': 'Last 7 days', '30': 'Last 30 days', '90': 'Last 90 days',
+        '180': 'Last 6 months', '365': 'Last year',
+      };
 
-      const data = response.data || response;
-      if (data.pdf) {
-        const binaryString = atob(data.pdf);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = data.filename || `Staff_Training_Report_${formatEastern(new Date(), 'yyyy-MM-dd')}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-      }
+      const statusFor = (staff) =>
+        (staff.avgScore >= 90 && staff.overdue === 0) ? 'Excellent'
+          : (staff.overdue > 0 || staff.avgScore < 70) ? 'At Risk'
+          : 'On Track';
+
+      await exportToPDF({
+        filename: `Staff_Training_Report_${formatEastern(new Date(), 'yyyy-MM-dd')}.pdf`,
+        title: 'Staff Education Compliance Report',
+        subtitle: timeframeLabels[timeframe] || `Last ${timeframe} days`,
+        orientation: 'landscape',
+        content: [
+          { type: 'heading', text: 'Summary', size: 14 },
+          { type: 'text', text: `Compliance rate: ${complianceData.complianceRate}% (${complianceData.completedRequired} of ${complianceData.totalRequired} required trainings completed)` },
+          { type: 'text', text: `Total completions: ${complianceData.totalCompletions}  |  Average score: ${complianceData.avgScore}%` },
+          { type: 'text', text: `Active staff: ${complianceData.totalStaff}  |  At-risk staff: ${complianceData.atRiskStaff}  |  Overdue trainings: ${complianceData.totalOverdue}` },
+          { type: 'spacer', height: 6 },
+          { type: 'heading', text: 'Staff Training Performance', size: 14 },
+          {
+            type: 'table',
+            headers: ['Staff Member', 'Email', 'Completed', 'Avg Score', 'Overdue', 'Status'],
+            rows: complianceData.staffMetrics.map((staff) => [
+              staff.name || 'N/A',
+              staff.email || '',
+              `${staff.completed} / ${staff.total}`,
+              `${staff.avgScore}%`,
+              staff.overdue > 0 ? String(staff.overdue) : '-',
+              statusFor(staff),
+            ]),
+          },
+        ],
+      });
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate report. Please try again.');
