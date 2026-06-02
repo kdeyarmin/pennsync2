@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Loader2, FileAudio } from 'lucide-react';
+import { Square, Loader2, FileAudio } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
