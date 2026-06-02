@@ -625,7 +625,7 @@ export default function LearningCenter() {
               ))}
             </div>
           )}
-          <Link to={createPageUrl('MyCompetencies')}>
+          <Link to={createPageUrl('MyLearning')}>
             <Button variant="outline" className="w-full">
               View All Competencies
             </Button>
@@ -688,7 +688,7 @@ export default function LearningCenter() {
             </div>
           )}
           {certificates.length > 0 && (
-            <Link to={createPageUrl('MyCertificates')}>
+            <Link to={createPageUrl('MyLearning')}>
               <Button variant="outline" className="w-full">
                 View All Certificates
               </Button>
@@ -757,7 +757,7 @@ export default function LearningCenter() {
                       <Sparkles className="w-4 h-4 mr-1.5" /> AI Compliance In-Services
                     </Button>
                   </Link>
-                  <Link to={createPageUrl('CourseApprovalQueue')}>
+                  <Link to={createPageUrl('AdminTraining')}>
                     <Button variant="outline" size="sm">
                       <BookOpen className="w-4 h-4 mr-1.5" /> Approval Queue
                     </Button>
@@ -771,7 +771,7 @@ export default function LearningCenter() {
               )}
               {isSupervisor && (
                 <>
-                  <Link to={createPageUrl('TeamTrainingDashboard')}>
+                  <Link to={createPageUrl('AdminTraining')}>
                     <Button variant="outline" size="sm">
                       <Users className="w-4 h-4 mr-1.5" /> Team Dashboard
                     </Button>
@@ -788,7 +788,7 @@ export default function LearningCenter() {
                   </Link>
                 </>
               )}
-              <Link to={createPageUrl('TrainingReports')}>
+              <Link to={createPageUrl('ReportsAnalytics')}>
                 <Button variant="outline" size="sm">
                   <BarChart3 className="w-4 h-4 mr-1.5" /> Reports
                 </Button>

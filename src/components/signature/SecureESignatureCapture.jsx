@@ -124,6 +124,14 @@ export default function SecureESignatureCapture({
       return;
     }
 
+    // The signature record is attributed to `user`; if identity could not be
+    // resolved (auth.me failed) we must not write a record with an undefined
+    // signer — and reading user.email below would throw.
+    if (!user?.email) {
+      toast.error('Could not verify your identity. Please refresh and sign in again.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -157,24 +165,30 @@ export default function SecureESignatureCapture({
       // Save to DocumentSignature entity
       const savedSignature = await base44.entities.DocumentSignature.create(signatureRecord);
 
-      // Create audit log entry
-      await base44.entities.SecurityLog.create({
-        event_type: 'signature_captured',
-        user_email: user.email,
-        user_name: user.full_name,
-        event_details: {
-          document_type: documentType,
-          document_id: documentId,
-          signature_id: savedSignature.id,
-          signature_role: signatureRole,
-          signature_hash: signatureHash,
-          timestamp: timestamp,
-          ip_address: ipAddress,
-          location: locationData
-        },
-        severity: 'info',
-        ip_address: ipAddress
-      });
+      // Create audit log entry. This runs AFTER the signature is already saved, so
+      // a failure here must not surface as "signature failed" (which would make
+      // the user re-sign and create a duplicate legal signature). Best-effort only.
+      try {
+        await base44.entities.SecurityLog.create({
+          event_type: 'signature_captured',
+          user_email: user.email,
+          user_name: user.full_name,
+          event_details: {
+            document_type: documentType,
+            document_id: documentId,
+            signature_id: savedSignature.id,
+            signature_role: signatureRole,
+            signature_hash: signatureHash,
+            timestamp: timestamp,
+            ip_address: ipAddress,
+            location: locationData
+          },
+          severity: 'info',
+          ip_address: ipAddress
+        });
+      } catch (auditError) {
+        console.error('Signature audit-log write failed (signature was saved):', auditError);
+      }
 
       toast.success('Signature captured successfully');
 

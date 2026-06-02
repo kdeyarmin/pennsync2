@@ -33,7 +33,9 @@ export default function MedicationReconciliation() {
 
   const stats = {
     total: reconciliations.length,
-    pending: reconciliations.filter(r => r.status === 'pending_review').length,
+    // Active = not yet completed/notified. Previously only counted
+    // 'pending_review', so 'in_progress' reconciliations were invisible.
+    pending: reconciliations.filter(r => r.status === 'pending_review' || r.status === 'in_progress').length,
     completed: reconciliations.filter(r => r.status === 'completed').length,
     critical: reconciliations.filter(r => r.critical_discrepancies > 0).length
   };
@@ -63,7 +65,7 @@ export default function MedicationReconciliation() {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-            <p className="text-sm text-gray-600">Pending Review</p>
+            <p className="text-sm text-gray-600">Pending / In Progress</p>
           </CardContent>
         </Card>
         <Card>

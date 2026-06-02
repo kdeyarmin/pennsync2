@@ -80,37 +80,50 @@ export default function DischargeSummaryWorkflow({ patientId, onClose, onComplet
     },
     onSuccess: () => {
       refetchSummary();
+    },
+    onError: (error) => {
+      // Without this, a failed update left the user with no feedback at all —
+      // for a legally-signed discharge document the workflow just appeared frozen.
+      toast.error(error?.message || 'Failed to save the discharge summary. Please try again.');
     }
   });
 
   // Mark as reviewed
   const handleReviewComplete = async () => {
-    await updateMutation.mutateAsync({
-      status: 'reviewed',
-      reviewed_by: currentUser?.email,
-      reviewed_date: new Date().toISOString(),
-      review_notes: reviewNotes
-    });
-    toast.success('Review completed');
-    setCurrentStep('sign');
+    try {
+      await updateMutation.mutateAsync({
+        status: 'reviewed',
+        reviewed_by: currentUser?.email,
+        reviewed_date: new Date().toISOString(),
+        review_notes: reviewNotes
+      });
+      toast.success('Review completed');
+      setCurrentStep('sign');
+    } catch {
+      // Failure already surfaced by updateMutation.onError; do not advance the step.
+    }
   };
 
   // Handle signature
   const handleSignature = async (signatureData) => {
-    await updateMutation.mutateAsync({
-      status: 'signed',
-      signature: {
-        signature_data: signatureData,
-        signed_by: currentUser?.email,
-        signed_by_name: currentUser?.full_name,
-        signed_by_credentials: 'RN',
-        signed_date: new Date().toISOString(),
-        ip_address: 'System'
-      }
-    });
-    toast.success('Discharge summary signed');
-    setCurrentStep('complete');
-    setShowSignaturePad(false);
+    try {
+      await updateMutation.mutateAsync({
+        status: 'signed',
+        signature: {
+          signature_data: signatureData,
+          signed_by: currentUser?.email,
+          signed_by_name: currentUser?.full_name,
+          signed_by_credentials: 'RN',
+          signed_date: new Date().toISOString(),
+          ip_address: 'System'
+        }
+      });
+      toast.success('Discharge summary signed');
+      setCurrentStep('complete');
+      setShowSignaturePad(false);
+    } catch {
+      // Failure already surfaced by updateMutation.onError; keep the signature pad open.
+    }
   };
 
   const summary = editedSummary || existingSummary;

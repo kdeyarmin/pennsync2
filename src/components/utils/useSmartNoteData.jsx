@@ -1,22 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
-// Utility function to normalize API responses
+// Utility function to normalize API responses.
+// NOTE: do not log `response` here — it carries PHI (patient records/notes) and
+// this runs on every fetch.
 const normalizeApiResponse = (response) => {
-  console.log('normalizeApiResponse input:', response);
   if (Array.isArray(response)) {
-    console.log('Response is array:', response.length);
     return response;
   }
   if (response?.data && Array.isArray(response.data)) {
-    console.log('Response.data is array:', response.data.length);
     return response.data;
   }
   if (response?.results && Array.isArray(response.results)) {
-    console.log('Response.results is array:', response.results.length);
     return response.results;
   }
-  console.log('normalizeApiResponse returning empty array');
   return [];
 };
 

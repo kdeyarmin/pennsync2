@@ -30,8 +30,44 @@ export default function MedicationManagementSection({ patient }) {
   });
   const queryClient = useQueryClient();
 
+  // Apply an add/edit/delete against the LATEST medication list rather than the
+  // (possibly stale) prop, and match edits/deletes by medication identity rather
+  // than array index — so a concurrent change (e.g. medication reconciliation
+  // adding a drug) isn't clobbered and we never edit/remove the wrong entry.
+  const sameMedication = (a, b) =>
+    !!a && !!b &&
+    a.name === b.name &&
+    a.dosage === b.dosage &&
+    a.frequency === b.frequency &&
+    a.prescriber === b.prescriber &&
+    a.start_date === b.start_date;
+
   const updatePatientMutation = useMutation({
-    mutationFn: (data) => base44.entities.Patient.update(patient.id, data),
+    mutationFn: async (op) => {
+      const latestArr = await base44.entities.Patient.filter({ id: patient.id });
+      const meds = [...((latestArr?.[0] || patient).current_medications || [])];
+      let updated = meds;
+
+      if (op.type === 'save') {
+        if (op.original) {
+          const idx = meds.findIndex((m) => sameMedication(m, op.original));
+          if (idx !== -1) {
+            updated = [...meds];
+            updated[idx] = op.medication;
+          } else {
+            // The edited med is no longer present (changed elsewhere) — add it.
+            updated = [...meds, op.medication];
+          }
+        } else {
+          updated = [...meds, op.medication];
+        }
+      } else if (op.type === 'delete') {
+        const idx = op.original ? meds.findIndex((m) => sameMedication(m, op.original)) : -1;
+        updated = idx !== -1 ? meds.filter((_, i) => i !== idx) : meds;
+      }
+
+      return base44.entities.Patient.update(patient.id, { current_medications: updated });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       queryClient.invalidateQueries({ queryKey: ['patient', patient.id] });
@@ -69,23 +105,15 @@ export default function MedicationManagementSection({ patient }) {
   };
 
   const handleSaveMedication = () => {
-    const currentMedications = patient.current_medications || [];
-    let updatedMedications;
-
-    if (editingMed !== null) {
-      updatedMedications = [...currentMedications];
-      updatedMedications[editingMed] = medForm;
-    } else {
-      updatedMedications = [...currentMedications, medForm];
-    }
-
-    updatePatientMutation.mutate({ current_medications: updatedMedications });
+    // Pass the original entry (when editing) so the mutation can locate it in the
+    // latest server-side list by identity instead of trusting a stale index.
+    const original = editingMed !== null ? (patient.current_medications || [])[editingMed] : null;
+    updatePatientMutation.mutate({ type: 'save', medication: medForm, original });
   };
 
   const handleDeleteMedication = (index) => {
-    const currentMedications = patient.current_medications || [];
-    const updatedMedications = currentMedications.filter((_, i) => i !== index);
-    updatePatientMutation.mutate({ current_medications: updatedMedications });
+    const original = (patient.current_medications || [])[index];
+    updatePatientMutation.mutate({ type: 'delete', original });
   };
 
   const getFrequencyColor = (frequency) => {

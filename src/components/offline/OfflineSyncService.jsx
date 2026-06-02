@@ -14,7 +14,11 @@ const STORAGE_KEYS = {
   PENDING_TASKS: 'offline_pending_tasks',
   SYNC_QUEUE: 'offline_sync_queue',
   LAST_SYNC: 'offline_last_sync',
-  CONFLICT_LOG: 'offline_conflicts'
+  CONFLICT_LOG: 'offline_conflicts',
+  // Maps an offline_ placeholder id (e.g. an offline visit) to the real server
+  // id it received once synced. Persisted so dependent items (notes/vitals) can
+  // resolve their parent even when the visit synced on an earlier run.
+  ID_MAP: 'offline_id_map'
 };
 
 // Offline storage manager
@@ -99,6 +103,35 @@ class OfflineStorageManager {
   static setLastSync() {
     try { localStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()); } catch {}
   }
+
+  static getIdMap() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.ID_MAP);
+      return data ? JSON.parse(data) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  // Record that an offline placeholder id now maps to a real server id.
+  static setIdMapping(offlineId, realId) {
+    if (!offlineId || !realId) return;
+    try {
+      const map = this.getIdMap();
+      map[offlineId] = realId;
+      localStorage.setItem(STORAGE_KEYS.ID_MAP, JSON.stringify(map));
+    } catch (error) {
+      console.error('Failed to persist offline id mapping:', error);
+    }
+  }
+
+  // Resolve a possibly-offline id to its real server id (returns null if a still
+  // -unsynced offline id has no mapping yet).
+  static resolveId(id) {
+    if (typeof id !== 'string' || !id.startsWith('offline_')) return id;
+    const map = this.getIdMap();
+    return map[id] || null;
+  }
 }
 
 // Sync worker
@@ -110,9 +143,12 @@ class OfflineSyncWorker {
       switch (item.type) {
         case 'visit':
           if (item.data.id && item.data.id.startsWith('offline_')) {
-            // New visit - create
+            // New visit - create, then remember offline_id -> real id so queued
+            // notes/vitals referencing this visit can be attached on this or a
+            // later sync run (previously they were orphaned and lost forever).
             const { id, ...visitData } = item.data;
             result = await base44.entities.Visit.create(visitData);
+            OfflineStorageManager.setIdMapping(id, result?.id);
           } else if (item.data.id) {
             // Update existing visit
             const { id, ...visitData } = item.data;
@@ -123,24 +159,35 @@ class OfflineSyncWorker {
           }
           break;
 
-        case 'note':
-          if (item.data.visit_id && item.data.visit_id.startsWith('offline_')) {
-            // Skip - visit hasn't been synced yet
-            return { status: 'pending', reason: 'waiting_for_visit' };
+        case 'note': {
+          let noteVisitId = item.data.visit_id;
+          if (typeof noteVisitId === 'string' && noteVisitId.startsWith('offline_')) {
+            // Resolve to the real visit id once its visit has synced; stay
+            // pending only while no mapping exists yet.
+            noteVisitId = OfflineStorageManager.resolveId(noteVisitId);
+            if (!noteVisitId) {
+              return { status: 'pending', reason: 'waiting_for_visit' };
+            }
           }
-          result = await base44.entities.Visit.update(item.data.visit_id, {
+          result = await base44.entities.Visit.update(noteVisitId, {
             nurse_notes: item.data.nurse_notes
           });
           break;
+        }
 
-        case 'vitals':
-          if (item.data.visit_id && item.data.visit_id.startsWith('offline_')) {
-            return { status: 'pending', reason: 'waiting_for_visit' };
+        case 'vitals': {
+          let vitalsVisitId = item.data.visit_id;
+          if (typeof vitalsVisitId === 'string' && vitalsVisitId.startsWith('offline_')) {
+            vitalsVisitId = OfflineStorageManager.resolveId(vitalsVisitId);
+            if (!vitalsVisitId) {
+              return { status: 'pending', reason: 'waiting_for_visit' };
+            }
           }
-          result = await base44.entities.Visit.update(item.data.visit_id, {
+          result = await base44.entities.Visit.update(vitalsVisitId, {
             vital_signs: item.data.vital_signs
           });
           break;
+        }
 
         case 'task':
           if (item.data.id && item.data.id.startsWith('offline_')) {
@@ -412,7 +459,7 @@ export default function OfflineSyncService() {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(syncProgress.current / syncProgress.total) * 100}%` }}
+                style={{ width: `${syncProgress.total > 0 ? (syncProgress.current / syncProgress.total) * 100 : 0}%` }}
               />
             </div>
           </div>
