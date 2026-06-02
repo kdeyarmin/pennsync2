@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -9,13 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Video, Plus, Calendar, Clock, CheckCircle2, MessageSquare } from "lucide-react";
+import { Video, Plus, Calendar, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import VideoRoom from "../components/telehealth/VideoRoom";
+import TelehealthCall from "../components/telehealth/TelehealthCall";
 import SessionCard from "../components/telehealth/SessionCard";
 import SessionDocumentation from "../components/telehealth/SessionDocumentation";
-import TelehealthChat from "../components/telehealth/TelehealthChat";
 import RealtimeVitalMonitor from "../components/telehealth/RealtimeVitalMonitor";
+import { generateJoinToken, buildPatientJoinLink } from "../components/telehealth/telehealthUtils";
 
 const visitTypes = [
   { value: "routine_followup", label: "Routine Follow-up" },
@@ -29,9 +30,11 @@ const visitTypes = [
 export default function Telehealth() {
   const [activeSession, setActiveSession] = useState(null);
   const [showNewSession, setShowNewSession] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [showDocumentation, setShowDocumentation] = useState(false);
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const endingRef = useRef(false);
+  const autoJoinedRef = useRef(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
@@ -63,31 +66,58 @@ export default function Telehealth() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["telehealth-sessions"] })
   });
 
+  const textLink = useMutation({
+    mutationFn: ({ to_number, body, patient_id }) => base44.functions.invoke("sendSms", { to_number, body, patient_id }),
+    onSuccess: () => toast.success("Join link texted to the patient"),
+    onError: (e) => toast.error(e?.message || "Couldn't send the text")
+  });
+
+  const handleTextPatient = (session) => {
+    const patient = patients.find((p) => p.id === session.patient_id);
+    const phone = patient?.phone || patient?.phone_number || patient?.cell;
+    if (!phone) {
+      toast.error("No phone number on file for this patient");
+      return;
+    }
+    const greeting = patient?.first_name ? `Hi ${patient.first_name}, ` : "Hi, ";
+    textLink.mutate({
+      to_number: phone,
+      body: `${greeting}here's your secure telehealth visit link: ${session.invite_link}`,
+      patient_id: session.patient_id
+    });
+  };
+
   const handleJoin = async (session) => {
+    endingRef.current = false;
     await updateSession.mutateAsync({ id: session.id, data: { status: "active", started_at: new Date().toISOString() } });
     setActiveSession(session);
     setShowDocumentation(false);
   };
 
   const handleDisconnect = async () => {
-    if (activeSession) {
-      const endTime = new Date();
-      const startTime = activeSession.started_at ? new Date(activeSession.started_at) : endTime;
-      const durationMinutes = Math.round((endTime - startTime) / 60000);
-      await updateSession.mutateAsync({
-        id: activeSession.id,
-        data: {
-          status: "completed",
-          ended_at: endTime.toISOString(),
-          duration_minutes: durationMinutes
-        }
-      });
-      setShowDocumentation(true);
-      toast.success("Session ended - Please complete documentation");
-    } else {
-      setActiveSession(null);
+    if (!activeSession) {
       setShowDocumentation(false);
+      return;
     }
+    // The in-room "End session" control, the outer button, and Twilio's own
+    // "disconnected" event can all fire at nearly the same moment. Complete the
+    // session exactly once so we don't double-write the chart or stack toasts.
+    if (endingRef.current) return;
+    endingRef.current = true;
+
+    const endTime = new Date();
+    const startTime = activeSession.started_at ? new Date(activeSession.started_at) : endTime;
+    const durationMinutes = Math.max(1, Math.round((endTime - startTime) / 60000));
+    await updateSession.mutateAsync({
+      id: activeSession.id,
+      data: {
+        status: "completed",
+        ended_at: endTime.toISOString(),
+        duration_minutes: durationMinutes
+      }
+    });
+    setShowDocumentation(true);
+    toast.success("Session ended — please complete documentation");
   };
 
   const handleSaveDocumentation = async (docData) => {
@@ -98,6 +128,7 @@ export default function Telehealth() {
       });
       setActiveSession(null);
       setShowDocumentation(false);
+      endingRef.current = false;
     }
   };
 
@@ -105,6 +136,19 @@ export default function Telehealth() {
     await updateSession.mutateAsync({ id: session.id, data: { status: "cancelled" } });
     toast.success("Session cancelled");
   };
+
+  // Deep link support: /Telehealth?room=<room_name> opens and joins that
+  // session for the authorized staff member who followed an invite/join link.
+  // Sessions are server-scoped, so an unmatched/forbidden room simply no-ops.
+  useEffect(() => {
+    const roomParam = searchParams.get("room");
+    if (!roomParam || autoJoinedRef.current || activeSession || sessions.length === 0) return;
+    const match = sessions.find((s) => s.room_name === roomParam);
+    if (match && (match.status === "scheduled" || match.status === "active")) {
+      autoJoinedRef.current = true;
+      handleJoin(match);
+    }
+  }, [searchParams, sessions, activeSession]);
 
   const upcoming = sessions.filter(s => s.status === "scheduled" || s.status === "active");
   const past = sessions.filter(s => s.status === "completed" || s.status === "cancelled");
@@ -154,50 +198,30 @@ export default function Telehealth() {
 
       {/* Active session */}
       {activeSession && !showDocumentation && (
-        <div className="px-3 sm:px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-4">
-            <Card className="border-green-400 bg-green-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                    <span className="font-semibold text-green-800">Active Session — {activeSession.patient_name}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => setShowChat(!showChat)}
-                      className="gap-2"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      {showChat ? 'Hide' : 'Show'} Chat
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={handleDisconnect} className="text-red-600 border-red-300">
-                      End Session
-                    </Button>
-                  </div>
+        <div className="px-3 sm:px-4 md:px-6 space-y-4 max-w-4xl">
+          <Card className="border-green-400 bg-green-50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+                  <span className="font-semibold text-green-800">Active Session — {activeSession.patient_name}</span>
                 </div>
-                <VideoRoom
-                  roomName={activeSession.room_name}
-                  identity={currentUser?.full_name || currentUser?.email}
-                  onDisconnect={handleDisconnect}
-                />
-              </CardContent>
-            </Card>
-            <RealtimeVitalMonitor 
-              sessionId={activeSession.id}
-              patientId={activeSession.patient_id}
-            />
-          </div>
-          {showChat && (
-            <div className="lg:col-span-1">
-              <TelehealthChat 
-                sessionId={activeSession.id}
-                userName={currentUser?.full_name || currentUser?.email}
+                <Button size="sm" variant="outline" onClick={handleDisconnect} className="text-red-600 border-red-300">
+                  End Session
+                </Button>
+              </div>
+              <TelehealthCall
+                roomName={activeSession.room_name}
+                identity={currentUser?.full_name || currentUser?.email}
+                role="staff"
+                onDisconnect={handleDisconnect}
               />
-            </div>
-          )}
+            </CardContent>
+          </Card>
+          <RealtimeVitalMonitor
+            sessionId={activeSession.id}
+            patientId={activeSession.patient_id}
+          />
         </div>
       )}
 
@@ -231,7 +255,7 @@ export default function Telehealth() {
               <p>No upcoming sessions. Create one to get started.</p>
             </div>
           ) : upcoming.map(s => (
-            <SessionCard key={s.id} session={s} onJoin={handleJoin} onCancel={handleCancel} />
+            <SessionCard key={s.id} session={s} onJoin={handleJoin} onCancel={handleCancel} onTextPatient={handleTextPatient} />
           ))}
         </TabsContent>
 
@@ -275,17 +299,20 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
     e.preventDefault();
     const patient = patients.find(p => p.id === form.patient_id);
     const roomName = `session-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const inviteLink = `${window.location.origin}/join-telehealth?room=${roomName}`;
+    const patientName = patient ? `${patient.first_name} ${patient.last_name}` : "Unknown";
+    // Patient-facing capability link: the token is the patient's access grant.
+    const inviteLink = buildPatientJoinLink(window.location.origin, roomName, generateJoinToken());
     onSubmit({
       room_name: roomName,
       patient_id: form.patient_id,
-      patient_name: patient ? `${patient.first_name} ${patient.last_name}` : "Unknown",
+      patient_name: patientName,
       host_email: currentUser?.email,
       host_name: currentUser?.full_name,
       visit_type: form.visit_type,
       scheduled_at: form.scheduled_at || new Date().toISOString(),
       status: "scheduled",
-      invite_link: inviteLink
+      invite_link: inviteLink,
+      participant_list: [currentUser?.full_name || currentUser?.email, patientName].filter(Boolean)
     });
   };
 
