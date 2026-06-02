@@ -21,12 +21,12 @@ import { format, addDays } from "date-fns";
 export default function CareCoordinationAnalyzer({ 
   patientId, 
   autoAnalyze = false,
-  compact = false 
+  _compact = false 
 }) {
   const queryClient = useQueryClient();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [alerts, setAlerts] = useState([]);
-  const [expandedAlert, setExpandedAlert] = useState(null);
+  const [_expandedAlert, _setExpandedAlert] = useState(null);
   const [customNotes, setCustomNotes] = useState({});
 
   const { data: patient } = useQuery({

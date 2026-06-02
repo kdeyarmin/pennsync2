@@ -16,7 +16,7 @@ export default function AdminTrainingAssignment() {
   const [selectedModule, setSelectedModule] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [reason, setReason] = useState("");
-  const [assignmentType, setAssignmentType] = useState("manual");
+  const [_assignmentType, _setAssignmentType] = useState("manual");
 
   // Fetch all users
   const { data: users = [] } = useQuery({
@@ -81,7 +81,7 @@ export default function AdminTrainingAssignment() {
       return;
     }
 
-    const module = modules.find(m => m.id === selectedModule);
+    const _module = modules.find(m => m.id === selectedModule);
     
     assignTrainingMutation.mutate({
       nurse_email: selectedNurse,

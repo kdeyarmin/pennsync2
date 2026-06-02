@@ -30,7 +30,7 @@ export default function OfflineSyncManager() {
   const [pendingDrafts, setPendingDrafts] = useState([]);
   const [syncErrors, setSyncErrors] = useState([]);
   const [conflicts, setConflicts] = useState([]);
-  const [backgroundSyncEnabled, setBackgroundSyncEnabled] = useState(true);
+  const [backgroundSyncEnabled, _setBackgroundSyncEnabled] = useState(true);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

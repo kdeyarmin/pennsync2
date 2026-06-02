@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 export default function CaseMixOptimizationPanel({
-  patientId,
+  _patientId,
   currentNote,
   diagnosis,
   onApplyRecommendation
@@ -107,7 +107,7 @@ Return JSON:
     onApplyRecommendation?.(text);
   };
 
-  const getImpactColor = (impact) => {
+  const _getImpactColor = (impact) => {
     if (impact === 'high') return 'bg-green-600 text-white';
     if (impact === 'medium') return 'bg-yellow-600 text-white';
     return 'bg-blue-600 text-white';

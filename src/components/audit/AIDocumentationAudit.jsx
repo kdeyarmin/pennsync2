@@ -203,7 +203,7 @@ Return JSON:
     return 'text-red-600';
   };
 
-  const getScoreBg = (score) => {
+  const _getScoreBg = (score) => {
     if (score >= 90) return 'bg-green-500';
     if (score >= 70) return 'bg-yellow-500';
     return 'bg-red-500';

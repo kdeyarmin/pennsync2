@@ -44,7 +44,7 @@ export default function ReferralTriage() {
 
       // Create initial care plans from preliminary care plan
       if (lastAnalysis.preliminary_care_plan?.initial_focus_areas?.length > 0) {
-        const carePlans = lastAnalysis.preliminary_care_plan.initial_focus_areas.map((area, index) => ({
+        const carePlans = lastAnalysis.preliminary_care_plan.initial_focus_areas.map((area, _index) => ({
           patient_id: patient.id,
           problem: area,
           goal: `Address ${area.toLowerCase()} during care delivery`,

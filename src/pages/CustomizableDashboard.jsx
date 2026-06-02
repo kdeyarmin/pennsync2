@@ -193,7 +193,7 @@ export default function CustomizableDashboard() {
     }));
   }, [incidents]);
 
-  const handleDrillDown = (chartType, data) => {
+  const handleDrillDown = (chartType, _data) => {
     // Navigate to detailed view based on chart type
     switch (chartType) {
       case 'patients':
@@ -335,7 +335,7 @@ export default function CustomizableDashboard() {
         <DashboardCustomizer
           currentUser={currentUser}
           widgets={widgets}
-          onUpdate={(newWidgets) => {
+          onUpdate={(_newWidgets) => {
             // Handle widget update if needed
           }}
         />

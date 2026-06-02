@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export default function OptimalCommunicationAdvisor({ 
-  patientId,
+  _patientId,
   patientData,
   recentVisits,
   upcomingVisits,

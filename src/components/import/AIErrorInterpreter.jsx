@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brain, Loader2, Lightbulb, RefreshCw } from "lucide-react";
 
-export default function AIErrorInterpreter({ errors, onApplySuggestions }) {
+export default function AIErrorInterpreter({ errors, _onApplySuggestions }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 

@@ -198,7 +198,7 @@ export default function AnnouncementManager() {
     updateMutation.mutate({ id, data: { is_active: !currentStatus } });
   };
 
-  const getTypeColor = (type) => {
+  const _getTypeColor = (type) => {
     switch (type) {
       case 'urgent': return 'bg-red-100 text-red-800';
       case 'success': return 'bg-green-100 text-green-800';
@@ -483,7 +483,7 @@ export default function AnnouncementManager() {
                       selected={formData.expires_at}
                       onSelect={(date) => {
                         if (date) {
-                          const now = new Date();
+                          const _now = new Date();
                           date.setHours(23, 59, 59, 999);
                           setFormData({...formData, expires_at: date});
                         } else {

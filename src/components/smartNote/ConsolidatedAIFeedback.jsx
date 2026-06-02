@@ -17,7 +17,7 @@ import { retrieveRelevantGuidelines, formatGuidelinesForPrompt } from "./Guideli
 
 export default function ConsolidatedAIFeedback({
   enhancedNote,
-  roughNote,
+  _roughNote,
   patientData,
   diagnosis,
   vitalSigns,

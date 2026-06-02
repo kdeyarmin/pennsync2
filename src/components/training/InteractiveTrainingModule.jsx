@@ -24,7 +24,7 @@ export default function InteractiveTrainingModule({ trainingData, onComplete, on
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showFeedback, setShowFeedback] = useState(false);
   const [startTime] = useState(Date.now());
-  const [score, setScore] = useState(0);
+  const [_score, setScore] = useState(0);
 
   const content = trainingData.training_content;
 

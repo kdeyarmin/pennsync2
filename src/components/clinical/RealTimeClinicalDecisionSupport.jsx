@@ -25,11 +25,11 @@ import {
 
 export default function RealTimeClinicalDecisionSupport({
   patient,
-  visit,
+  _visit,
   vitalSigns,
   narrativeText,
   carePlans,
-  medications,
+  _medications,
   onInsertText
 }) {
   const [analysis, setAnalysis] = useState(null);

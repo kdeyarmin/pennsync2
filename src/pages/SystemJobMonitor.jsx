@@ -44,7 +44,7 @@ import { format } from "date-fns";
 export default function SystemJobMonitor() {
   const queryClient = useQueryClient();
   const [selectedJobType, setSelectedJobType] = useState("all");
-  const [selectedLog, setSelectedLog] = useState(null);
+  const [_selectedLog, setSelectedLog] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const { data: currentUser } = useQuery({

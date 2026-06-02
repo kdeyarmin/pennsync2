@@ -20,9 +20,9 @@ import {
   Activity
 } from "lucide-react";
 
-export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, patientId, onTasksCreated, onPathwaysTriggered }) {
+export default function ClinicalPathwayTrigger({ pdgmData, _analysisResults, patientId, onTasksCreated, onPathwaysTriggered }) {
   const [triggeredPathways, setTriggeredPathways] = useState([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [_isAnalyzing, _setIsAnalyzing] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch all active clinical pathways
@@ -384,7 +384,7 @@ export default function ClinicalPathwayTrigger({ pdgmData, analysisResults, pati
   );
 }
 
-const getPriorityColor = (priority) => {
+const _getPriorityColor = (priority) => {
   switch (priority) {
     case 'critical': return 'bg-red-600 text-white';
     case 'high': return 'bg-orange-500 text-white';

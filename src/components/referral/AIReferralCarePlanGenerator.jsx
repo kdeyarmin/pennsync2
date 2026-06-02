@@ -79,7 +79,7 @@ export default function AIReferralCarePlanGenerator({
 
     setSaving(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const _today = new Date().toISOString().split('T')[0];
       
       for (const plan of generatedPlans) {
         const targetDate = new Date();

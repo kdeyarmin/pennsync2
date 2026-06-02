@@ -23,7 +23,7 @@ export default function PredictiveReadmissionModel({ patients, visits, incidents
   // Calculate risk factors for each patient
   const riskAnalysis = useMemo(() => {
     return patients.filter(p => p.status === "active").map(patient => {
-      const patientVisits = visits.filter(v => v.patient_id === patient.id);
+      const _patientVisits = visits.filter(v => v.patient_id === patient.id);
       const patientIncidents = incidents.filter(i => i.patient_id === patient.id);
       
       let riskScore = 0;

@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 export default function SupplyManagementDashboard() {
   const queryClient = useQueryClient();
-  const [editingId, setEditingId] = useState(null);
+  const [_editingId, setEditingId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [newSupply, setNewSupply] = useState({
@@ -59,7 +59,7 @@ export default function SupplyManagementDashboard() {
     },
   });
 
-  const updateSupplyMutation = useMutation({
+  const _updateSupplyMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.SupplyItem.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["supplies"] });

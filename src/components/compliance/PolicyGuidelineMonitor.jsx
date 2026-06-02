@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-export default function PolicyGuidelineMonitor({ nurseEmail, onTrainingRecommended }) {
+export default function PolicyGuidelineMonitor({ _nurseEmail, onTrainingRecommended }) {
   const [isLoading, setIsLoading] = useState(false);
   const [updates, setUpdates] = useState(null);
   const [expanded, setExpanded] = useState(true);

@@ -69,7 +69,7 @@ export default function IncidentReportingModule() {
     initialData: [],
   });
 
-  const { data: incidents = [], isLoading } = useQuery({
+  const { data: incidents = [], _isLoading } = useQuery({
     queryKey: ['incidents'],
     queryFn: () => base44.entities.Incident.list('-created_date', 200),
     initialData: [],
@@ -151,7 +151,7 @@ Please review this incident in the Incident Reporting Dashboard.`
       }));
       
       toast.success(`${files.length} photo(s) uploaded`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to upload photos");
     }
     setUploading(false);

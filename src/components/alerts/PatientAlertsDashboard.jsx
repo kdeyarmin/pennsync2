@@ -50,7 +50,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function PatientAlertsDashboard({ patientId = null, showAllPatients = true }) {
+export default function PatientAlertsDashboard({ patientId = null, _showAllPatients = true }) {
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [resolutionNotes, setResolutionNotes] = useState("");
@@ -101,7 +101,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   });
 
   // Fetch clinical events for linking
-  const { data: clinicalEvents = [] } = useQuery({
+  const { data: _clinicalEvents = [] } = useQuery({
     queryKey: ['clinicalEvents'],
     queryFn: () => base44.entities.ClinicalEvent.list('-created_date', 200),
     initialData: []

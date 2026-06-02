@@ -10,9 +10,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-export default function TextExpander({ onExpand }) {
+export default function TextExpander({ _onExpand }) {
   const [showDialog, setShowDialog] = useState(false);
-  const [customShortcuts, setCustomShortcuts] = useState([]);
+  const [customShortcuts, _setCustomShortcuts] = useState([]);
 
   const defaultShortcuts = [
     { trigger: "wnl", expansion: "within normal limits" },

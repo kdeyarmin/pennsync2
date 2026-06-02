@@ -41,7 +41,7 @@ export default function FamilyCommunication({ patient, visit, vitalSigns, narrat
   const [summary, setSummary] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [sendMethod, setSendMethod] = useState("email");
+  const [sendMethod, _setSendMethod] = useState("email");
   const [previewMode, setPreviewMode] = useState(false);
   const [includeOptions, setIncludeOptions] = useState({
     vitals: true,

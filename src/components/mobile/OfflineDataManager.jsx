@@ -232,7 +232,7 @@ export default function OfflineDataManager() {
 
           <TabsContent value="patients" className="space-y-4 mt-4">
             <OfflinePatientSelector 
-              onCacheComplete={(count) => {
+              onCacheComplete={(_count) => {
                 queryClient.invalidateQueries();
               }}
             />

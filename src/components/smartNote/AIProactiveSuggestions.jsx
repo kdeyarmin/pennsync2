@@ -19,7 +19,7 @@ import {
 export default function AIProactiveSuggestions({ 
   roughNote, 
   enhancedNote,
-  patientContext, 
+  _patientContext, 
   comprehensiveContext,
   diagnosis,
   vitalSigns,

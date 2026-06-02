@@ -510,7 +510,7 @@ export default function RealTimeComplianceDashboard() {
 
   const COLORS_PIE = ['#EF4444', '#F97316', '#EAB308', '#3B82F6', '#10B981'];
 
-  const featureDistribution = featureCompliance.map((f, idx) => ({
+  const featureDistribution = featureCompliance.map((f, _idx) => ({
     name: f.name,
     value: f.total,
     score: f.avgScore

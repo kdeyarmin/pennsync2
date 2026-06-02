@@ -24,7 +24,7 @@ export default function ClinicalGuidelinesAssistant({
 }) {
   const [guidelines, setGuidelines] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedProtocol, setSelectedProtocol] = useState(null);
+  const [_selectedProtocol, _setSelectedProtocol] = useState(null);
 
   useEffect(() => {
     if (diagnosis) {

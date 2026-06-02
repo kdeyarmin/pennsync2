@@ -16,7 +16,7 @@ const FUNCTIONAL_OPTIONS = [
   { value: "3", label: "3 – Dependent" },
 ];
 
-const PAIN_OPTIONS = Array.from({ length: 11 }, (_, i) => ({ value: String(i), label: String(i) }));
+const _PAIN_OPTIONS = Array.from({ length: 11 }, (_, i) => ({ value: String(i), label: String(i) }));
 
 const QUICK_FIELDS = [
   { key: "ambulation", label: "Ambulation (M1860)", options: FUNCTIONAL_OPTIONS },

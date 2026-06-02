@@ -147,7 +147,7 @@ export default function ClinicalTemplateLibrary({ onSelectTemplate, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTab, setSelectedTab] = useState('visit_types');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [_selectedTemplate, setSelectedTemplate] = useState(null);
 
   const filteredVisitTemplates = VISIT_TYPE_TEMPLATES.filter(t =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

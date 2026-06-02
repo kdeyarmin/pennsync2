@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 
-export default function AITrainingRecommendations({ userId, userEmail }) {
+export default function AITrainingRecommendations({ _userId, userEmail }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [recommendations, setRecommendations] = useState(null);
   const queryClient = useQueryClient();

@@ -39,7 +39,7 @@ export default function ValidationSummary({ validationErrors, validRecords, tota
     .slice(0, 5);
 
   const validationRate = totalRows > 0 ? Math.round((validRecords.length / totalRows) * 100) : 0;
-  const errorRate = totalRows > 0 ? Math.round((validationErrors.length / totalRows) * 100) : 0;
+  const _errorRate = totalRows > 0 ? Math.round((validationErrors.length / totalRows) * 100) : 0;
 
   return (
     <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50">

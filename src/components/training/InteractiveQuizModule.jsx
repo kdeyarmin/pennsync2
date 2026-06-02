@@ -28,7 +28,7 @@ const quizCategories = [
   { id: "hipaa", label: "HIPAA & Privacy", questions: 8 }
 ];
 
-export default function InteractiveQuizModule({ nurseEmail, onQuizCompleted }) {
+export default function InteractiveQuizModule({ _nurseEmail, onQuizCompleted }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [questions, setQuestions] = useState([]);

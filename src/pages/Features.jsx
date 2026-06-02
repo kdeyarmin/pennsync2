@@ -525,7 +525,7 @@ export default function FeaturesPage() {
   const generateFeaturesPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const featuresList = features.map(cat => ({
+      const _featuresList = features.map(cat => ({
         category: cat.category,
         items: cat.items.map(f => ({
           name: f.name,

@@ -65,7 +65,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
   });
 
   // Invalidate patient list when new patients are created
-  const onPatientCreated = () => {
+  const _onPatientCreated = () => {
     queryClient.invalidateQueries({ queryKey: ['patients-for-select'] });
   };
 

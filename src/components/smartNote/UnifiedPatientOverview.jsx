@@ -134,7 +134,7 @@ export default function UnifiedPatientOverview({
             {recentVisits.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">No recent visits</p>
             ) : (
-              recentVisits.map((visit, idx) => (
+              recentVisits.map((visit, _idx) => (
                 <div key={visit.id} className="p-3 bg-gray-50 rounded border">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-semibold">

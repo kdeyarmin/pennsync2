@@ -57,7 +57,7 @@ export default function LearningPathProgress({ planId, userId }) {
     const progressPercentage = totalCourses > 0 ? Math.round((completedCount / totalCourses) * 100) : 0;
 
     const now = new Date();
-    const upcomingDue = assignments
+    const _upcomingDue = assignments
         .filter(a => a.due_date && a.status !== 'completed')
         .sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 

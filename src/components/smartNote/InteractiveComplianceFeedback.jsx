@@ -23,10 +23,10 @@ import {
 export default function InteractiveComplianceFeedback({
   complianceData,
   enhancedComplianceData,
-  roughNote,
-  enhancedNote,
+  _roughNote,
+  _enhancedNote,
   onInsertSuggestion,
-  onHighlightSection,
+  _onHighlightSection,
   onFixAllAndReEnhance,
   isFixingAll
 }) {
@@ -40,7 +40,7 @@ export default function InteractiveComplianceFeedback({
     return 'text-red-600';
   };
 
-  const getProgressColor = (score) => {
+  const _getProgressColor = (score) => {
     if (score >= 80) return 'bg-green-500';
     if (score >= 60) return 'bg-yellow-500';
     return 'bg-red-500';

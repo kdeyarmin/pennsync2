@@ -133,7 +133,7 @@ export default function MedicationManagementTab({ patient, patientId, onAddToNot
 
   const removeMedication = (id) => setMedications(prev => prev.filter(m => m._id !== id));
 
-  const changeStatus = (id, newStatus) => {
+  const _changeStatus = (id, newStatus) => {
     if (newStatus !== "active") {
       setEditingId(id);
       setEditReason("");

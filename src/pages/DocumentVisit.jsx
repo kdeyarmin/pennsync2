@@ -84,7 +84,7 @@ export default function DocumentVisit() {
   const urlParams = new URLSearchParams(window.location.search);
   const visitId = urlParams.get('visitId');
 
-  const [isRecording, setIsRecording] = useState(false);
+  const [_isRecording, _setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGeneratingTemplate, setIsGeneratingTemplate] = useState(false);
   const [narrativeText, setNarrativeText] = useState("");
@@ -889,7 +889,7 @@ Generate the complete clinical narrative based on the audio and context:`;
     });
   };
 
-  const handleScrubbedNote = (scrubbedText) => {
+  const _handleScrubbedNote = (scrubbedText) => {
     setNarrativeText(scrubbedText);
   };
 

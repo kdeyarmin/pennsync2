@@ -22,7 +22,7 @@ import InteractiveTrainingModule from "../components/training/InteractiveTrainin
 import PersonalizedTrainingRecommender from "../components/training/PersonalizedTrainingRecommender";
 
 export default function NurseTrainingHub() {
-  const [selectedModule, setSelectedModule] = useState(null);
+  const [_selectedModule, setSelectedModule] = useState(null);
   const [activeTraining, setActiveTraining] = useState(null);
 
   const queryClient = useQueryClient();
@@ -74,7 +74,7 @@ export default function NurseTrainingHub() {
   });
 
   const completeModuleMutation = useMutation({
-    mutationFn: async ({ moduleId, score, timeSpent }) => {
+    mutationFn: async ({ moduleId, score, _timeSpent }) => {
       return await base44.entities.TrainingCompletion.create({
         nurse_email: currentUser.email,
         training_module_id: moduleId,

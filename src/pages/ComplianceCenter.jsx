@@ -27,7 +27,7 @@ export default function ComplianceCenter() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState(new Set());
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -40,40 +40,40 @@ export default function ComplianceCenter() {
     initialData: [],
   });
 
-  const { data: medicareRules = [] } = useQuery({
+  const { data: _medicareRules = [] } = useQuery({
     queryKey: ['medicareComplianceRules'],
     queryFn: () => base44.entities.MedicareComplianceRule.list(),
     initialData: [],
   });
 
-  const { data: patients = [] } = useQuery({
+  const { data: _patients = [] } = useQuery({
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list(),
     initialData: [],
   });
 
-  const { data: allUsers = [], refetch: refetchUsers } = useQuery({
+  const { data: allUsers = [], refetch: _refetchUsers } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: trainingAssignments = [], refetch: refetchAssignments } = useQuery({
+  const { data: trainingAssignments = [], refetch: _refetchAssignments } = useQuery({
     queryKey: ['allTrainingAssignments'],
     queryFn: () => base44.entities.TrainingAssignment.list('-updated_date', 500),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: personnelCredentials = [], refetch: refetchCredentials } = useQuery({
+  const { data: personnelCredentials = [], refetch: _refetchCredentials } = useQuery({
     queryKey: ['allPersonnelCredentials'],
     queryFn: () => base44.entities.PersonnelCredential.list('-updated_date', 500),
     initialData: [],
     refetchInterval: 30000,
   });
 
-  const { data: visits = [], refetch: refetchVisits } = useQuery({
+  const { data: _visits = [], refetch: _refetchVisits } = useQuery({
     queryKey: ['allVisits'],
     queryFn: () => base44.entities.Visit.filter({}, '-visit_date', 500),
     initialData: [],
@@ -155,7 +155,7 @@ export default function ComplianceCenter() {
     }));
 
   // Nurse performance
-  const nursePerformance = uniqueNurses.map(email => {
+  const _nursePerformance = uniqueNurses.map(email => {
     const nurseAudits = filteredAudits.filter(a => a.nurse_email === email);
     const avgScore = nurseAudits.length > 0
       ? nurseAudits.reduce((sum, a) => sum + (a.compliance_score || 0), 0) / nurseAudits.length
@@ -310,7 +310,7 @@ export default function ComplianceCenter() {
     );
   }
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+  const _COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -391,7 +391,7 @@ Provide: overall_assessment, critical_priorities (array), systemic_issues, actio
                   }
                 });
                 setAIInsights(result);
-              } catch (error) {
+              } catch {
                 toast.error('Failed to generate insights');
               }
               setIsGeneratingInsights(false);

@@ -36,7 +36,7 @@ export default function PatientEducationPortal() {
     enabled: !!selectedPatientId,
   });
 
-  const { data: visits = [] } = useQuery({
+  const { data: _visits = [] } = useQuery({
     queryKey: ["patient-visits", selectedPatientId],
     queryFn: () =>
       selectedPatientId
@@ -49,7 +49,7 @@ export default function PatientEducationPortal() {
     enabled: !!selectedPatientId,
   });
 
-  const { data: carePlans = [] } = useQuery({
+  const { data: _carePlans = [] } = useQuery({
     queryKey: ["patient-care-plans", selectedPatientId],
     queryFn: () =>
       selectedPatientId

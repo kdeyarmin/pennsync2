@@ -13,7 +13,7 @@ import {
 export default function PatientHistoryTimeline({ history }) {
   if (!history) return null;
 
-  const { visits, carePlans, incidents, trends, continuityInsights } = history;
+  const { visits, _carePlans, _incidents, trends, continuityInsights } = history;
 
   const getTrendIcon = (trend) => {
     if (trend === 'increasing' || trend === 'improving') return <TrendingUp className="w-4 h-4 text-green-600" />;
@@ -131,7 +131,7 @@ export default function PatientHistoryTimeline({ history }) {
         <CardContent className="py-2">
           <ScrollArea className="h-48">
             <div className="space-y-3 pr-4">
-              {visits?.slice(0, 5).map((visit, idx) => (
+              {visits?.slice(0, 5).map((visit, _idx) => (
                 <div key={visit.id} className="relative pl-6 pb-3 border-l-2 border-blue-200 last:border-transparent">
                   <div className="absolute left-0 top-0 -translate-x-1/2 w-3 h-3 rounded-full bg-blue-600"></div>
                   <div className="bg-gray-50 p-2 rounded">

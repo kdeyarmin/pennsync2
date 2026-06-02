@@ -31,7 +31,7 @@ export default function DischargeSummaries() {
     initialData: []
   });
 
-  const isAdmin = currentUser?.role === 'admin';
+  const _isAdmin = currentUser?.role === 'admin';
 
   // Filter summaries
   const filteredSummaries = useMemo(() => {

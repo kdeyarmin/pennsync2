@@ -28,8 +28,8 @@ import {
 } from "lucide-react";
 
 export default function AdminTrainingAnalytics() {
-  const [selectedModule, setSelectedModule] = useState('all');
-  const [dateRange, setDateRange] = useState('30');
+  const [_selectedModule, _setSelectedModule] = useState('all');
+  const [_dateRange, _setDateRange] = useState('30');
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],

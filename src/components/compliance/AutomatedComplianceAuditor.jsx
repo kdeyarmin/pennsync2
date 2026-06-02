@@ -183,7 +183,7 @@ Return JSON:
     if (onAuditComplete) onAuditComplete(results);
   };
 
-  const getStatusColor = (status) => {
+  const _getStatusColor = (status) => {
     switch (status) {
       case 'passed': return 'bg-green-100 text-green-800';
       case 'flagged': return 'bg-yellow-100 text-yellow-800';

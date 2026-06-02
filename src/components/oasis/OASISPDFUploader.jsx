@@ -102,7 +102,7 @@ const OASIS_EXTRACTION_SCHEMA = {
 
 export default function OASISPDFUploader({ 
   visitId, 
-  patientId,
+  _patientId,
   onDataExtracted, 
   initialData = null,
   compact = false 
@@ -170,7 +170,7 @@ export default function OASISPDFUploader({
   const processFile = async (fileObj, index, updateFiles) => {
     const maxRetries = 3;
     let attempt = 0;
-    let lastError = null;
+    let _lastError = null;
 
     while (attempt < maxRetries) {
       try {
@@ -214,7 +214,7 @@ export default function OASISPDFUploader({
           throw new Error(extractedResult.details || "Extraction failed");
         }
       } catch (err) {
-        lastError = err;
+        _lastError = err;
         attempt++;
         
         updateFiles(prev => {

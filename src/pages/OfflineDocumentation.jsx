@@ -6,7 +6,7 @@ import OfflineVisitDocumentation from '../components/offline/OfflineVisitDocumen
 import { FileText, Upload, AlertCircle, Info } from 'lucide-react';
 
 export default function OfflineDocumentation() {
-  const [selectedPatientId, setSelectedPatientId] = useState(null);
+  const [selectedPatientId, _setSelectedPatientId] = useState(null);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

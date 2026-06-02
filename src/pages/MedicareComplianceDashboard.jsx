@@ -38,7 +38,7 @@ import AIComplianceAssistant from "../components/compliance/AIComplianceAssistan
 export default function MedicareComplianceDashboard() {
   const [timeRange, setTimeRange] = useState(30);
   const [selectedNurse, setSelectedNurse] = useState("all");
-  const [selectedRule, setSelectedRule] = useState("all");
+  const [_selectedRule, _setSelectedRule] = useState("all");
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
   const [aiInsights, setAIInsights] = useState(null);
 
@@ -264,7 +264,7 @@ Return JSON with sections: overall_assessment, critical_priorities (array), syst
     setIsGeneratingInsights(false);
   };
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  const _COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">

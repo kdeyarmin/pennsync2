@@ -81,7 +81,7 @@ export default function SystemHealthMonitor() {
   const [alerts, setAlerts] = useState([]);
   const [dismissed, setDismissed] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, _setAutoRefresh] = useState(true);
 
   // Fetch real entity counts for actual system data
   const { data: visits = [] } = useQuery({

@@ -260,7 +260,7 @@ If you cannot identify the medication, return:
   };
 
   // Edit medication
-  const editMedication = (id, field, value) => {
+  const _editMedication = (id, field, value) => {
     setScannedMedications(prev => prev.map(m => 
       m.id === id ? { ...m, [field]: value } : m
     ));

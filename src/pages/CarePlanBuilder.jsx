@@ -35,7 +35,7 @@ export default function CarePlanBuilder() {
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   const [careType, setCareType] = useState("home_health");
   const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
-  const [assessmentData, setAssessmentData] = useState(null);
+  const [assessmentData, _setAssessmentData] = useState(null);
 
   const { data: patients = [] } = useQuery({
     queryKey: ["patients-list"],
@@ -43,7 +43,7 @@ export default function CarePlanBuilder() {
     initialData: [],
   });
 
-  const { data: currentUser } = useQuery({
+  const { data: _currentUser } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
   });
@@ -111,7 +111,7 @@ export default function CarePlanBuilder() {
     try {
       const existingPlans = await base44.entities.CarePlan.filter({ patient_id: selectedPatientId });
 
-      const interventionsWithPathways = planItems.map(item => ({
+      const _interventionsWithPathways = planItems.map(item => ({
         id: item.id,
         name: item.name,
         description: item.description,
@@ -141,7 +141,7 @@ export default function CarePlanBuilder() {
       setSaved(true);
       toast.success(`Care plan saved — ${planItems.length} interventions for ${selectedPatient?.first_name} ${selectedPatient?.last_name}`);
       setTimeout(() => setSaved(false), 3000);
-    } catch (e) {
+    } catch {
       toast.error("Failed to save care plan.");
     }
     setSaving(false);

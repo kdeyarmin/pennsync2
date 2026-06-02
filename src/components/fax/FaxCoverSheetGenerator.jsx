@@ -32,7 +32,7 @@ export default function FaxCoverSheetGenerator({
     sender_number: "",
   });
 
-  const urgencyColors = {
+  const _urgencyColors = {
     routine: "bg-green-100 text-green-700 border-green-200",
     urgent: "bg-yellow-100 text-yellow-700 border-yellow-200",
     stat: "bg-red-100 text-red-700 border-red-200",

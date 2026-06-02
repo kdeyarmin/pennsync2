@@ -6,7 +6,7 @@ import { Brain, CheckCircle2, Copy, RotateCcw, Sparkles } from "lucide-react";
 export default function EnhancementStep({
   roughNote, enhancedNote, copied, savedSuccessfully, recheckMode,
   onEnhance, onCopy, onRecheck, onClear, onNoteChange,
-  isEnhancingRunning, analysisResults
+  _isEnhancingRunning, _analysisResults
 }) {
   if (!roughNote || roughNote.length < 50) return null;
 

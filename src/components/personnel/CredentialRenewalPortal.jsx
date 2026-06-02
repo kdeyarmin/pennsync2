@@ -25,7 +25,7 @@ import { format, parseISO, differenceInDays, addMonths } from "date-fns";
 
 export default function CredentialRenewalPortal({ userId }) {
   const [selectedCredential, setSelectedCredential] = useState(null);
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [_showUploadDialog, setShowUploadDialog] = useState(false);
   const [renewalData, setRenewalData] = useState({
     uploaded_file_url: "",
     uploaded_file_name: "",

@@ -26,7 +26,7 @@ export default function NurseLearningDashboard({
   onStartQuiz
 }) {
   const [deficitAnalysis, setDeficitAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [_isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     if (nurseEmail) {

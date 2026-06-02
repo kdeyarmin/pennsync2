@@ -18,7 +18,7 @@ export default function UnifiedAISuggestions({
   roughNote,
   diagnosis,
   vitalSigns,
-  patientData,
+  _patientData,
   patientContext,
   careType = "home_health",
   visitType,

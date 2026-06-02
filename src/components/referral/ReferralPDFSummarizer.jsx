@@ -43,7 +43,7 @@ export default function ReferralPDFSummarizer({
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState(0);
-  const [fileUrl, setFileUrl] = useState(externalFileUrl);
+  const [_fileUrl, setFileUrl] = useState(externalFileUrl);
   const [extractedData, setExtractedData] = useState(null);
 
   const processingStages = [
@@ -703,7 +703,7 @@ HANDWRITTEN NOTES HANDLING:
   };
 
   const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
+  const [_generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
   const [oasisResults, setOasisResults] = useState(null);
 
   const generateAdmissionPacket = async () => {

@@ -17,12 +17,12 @@ import { motion } from "framer-motion";
 export default function InteractiveWorkflowGuide({
   patientSelected,
   vitalsEntered,
-  templateUsed,
+  _templateUsed,
   notesEntered,
   noteEnhanced,
   compliancePassed,
   onStepClick,
-  currentActiveStep
+  _currentActiveStep
 }) {
   const steps = [
     {

@@ -416,7 +416,7 @@ Provide specific suggestions that would help the nurse complete this step effici
   );
 }
 
-function renderStepContent(stepId, { formData, updateField, getValue, patientData, carePlans, recentVisits }) {
+function renderStepContent(stepId, { _formData, updateField, getValue, _patientData, _carePlans, _recentVisits }) {
   switch (stepId) {
     case 'vitals':
       return (

@@ -8,7 +8,7 @@ import { generateOASISReportPDF } from "@/functions/generateOASISReportPDF";
 
 export default function OASISExportManager({ 
   analysisResults, 
-  pdgmData, 
+  _pdgmData, 
   revenueData,
   navigationData,
   qualityScore,

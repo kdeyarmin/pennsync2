@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Send, Loader2 } from "lucide-react";
 
 export default function EventReport() {
-  const { data: currentUser } = useQuery({
+  const { data: _currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
@@ -121,7 +121,7 @@ export default function EventReport() {
       const incident = await base44.entities.Incident.create(incidentData);
 
       // Generate PDF
-      const pdfResponse = await base44.integrations.Core.InvokeLLM({
+      const _pdfResponse = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate an Event Report PDF document with the following information:
 
 Event Report ID: ${incident.id}

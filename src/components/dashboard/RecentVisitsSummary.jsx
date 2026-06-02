@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Activity, ChevronRight } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 
-export default function RecentVisitsSummary({ visits, patient, showAll = false }) {
+export default function RecentVisitsSummary({ visits, _patient, showAll = false }) {
   const completedVisits = visits.filter(v => v.status === 'completed');
   const displayVisits = showAll ? completedVisits : completedVisits.slice(0, 5);
 

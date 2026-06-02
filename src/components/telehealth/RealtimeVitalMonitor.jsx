@@ -25,7 +25,7 @@ const VITAL_ICONS = {
   oxygen_saturation: Wind,
 };
 
-export default function RealtimeVitalMonitor({ sessionId, patientId }) {
+export default function RealtimeVitalMonitor({ _sessionId, patientId }) {
   const [vitals, setVitals] = useState({
     heart_rate: null,
     blood_pressure_systolic: null,
@@ -39,7 +39,7 @@ export default function RealtimeVitalMonitor({ sessionId, patientId }) {
   const [lastUpdate, setLastUpdate] = useState(null);
 
   // Fetch agency settings for custom thresholds
-  const { data: agencySettings = {} } = useQuery({
+  const { data: _agencySettings = {} } = useQuery({
     queryKey: ['agency-settings'],
     queryFn: () => base44.entities.AgencySettings.list('-created_date', 1),
     initialData: [],

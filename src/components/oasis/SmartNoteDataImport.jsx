@@ -25,7 +25,7 @@ import {
 
 export default function SmartNoteDataImport({ 
   patientId,
-  patientName,
+  _patientName,
   onImportData
 }) {
   const [isExpanded, setIsExpanded] = useState(false);

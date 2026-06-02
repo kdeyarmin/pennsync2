@@ -128,7 +128,7 @@ export default function PatientDetails() {
     enabled: !!patientId,
   });
 
-  const { data: patientOASIS = [] } = useQuery({
+  const { data: _patientOASIS = [] } = useQuery({
     queryKey: ['patientOASIS', patientId],
     queryFn: () => base44.entities.OASISUpload.filter({ patient_id: patientId }, '-created_date'),
     initialData: [],
@@ -142,8 +142,8 @@ export default function PatientDetails() {
     enabled: !!patientId,
   });
 
-  const [detectedCarePlanGaps, setDetectedCarePlanGaps] = useState(null);
-  const [detectedMedicationIssues, setDetectedMedicationIssues] = useState(null);
+  const [_detectedCarePlanGaps, _setDetectedCarePlanGaps] = useState(null);
+  const [_detectedMedicationIssues, _setDetectedMedicationIssues] = useState(null);
 
   // Calculate critical indicators
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === 'critical');
@@ -735,7 +735,7 @@ export default function PatientDetails() {
                 <PredictiveRiskAnalyzer 
                   patientId={patientId} 
                   patientName={`${patient.first_name} ${patient.last_name}`}
-                  onAlertsCreated={(count) => {
+                  onAlertsCreated={(_count) => {
                     queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
                   }}
                   autoAnalyze={false}

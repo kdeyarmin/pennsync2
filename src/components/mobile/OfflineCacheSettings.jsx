@@ -54,7 +54,7 @@ export default function OfflineCacheSettings() {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - freshnessDays);
-      const cutoffISO = cutoffDate.toISOString();
+      const _cutoffISO = cutoffDate.toISOString();
 
       const cachedCount = {
         patients: 0,

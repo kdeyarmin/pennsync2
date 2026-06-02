@@ -6,7 +6,7 @@ import { formatEastern } from "../utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function UpcomingAppointments({ visits, patientId }) {
+export default function UpcomingAppointments({ visits, _patientId }) {
   const upcomingVisits = visits
     .filter(v => v.status === 'scheduled' && new Date(v.visit_date) >= new Date())
     .sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date))

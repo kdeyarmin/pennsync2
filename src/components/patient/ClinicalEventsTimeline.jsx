@@ -157,7 +157,7 @@ export default function ClinicalEventsTimeline({ patientId, limit = 20 }) {
             
             {filteredEvents.map((event, idx) => {
               const Icon = EVENT_ICONS[event.event_type] || Activity;
-              const isLast = idx === filteredEvents.length - 1;
+              const _isLast = idx === filteredEvents.length - 1;
               
               return (
                 <div key={event.id} className="relative pl-14 pb-6">

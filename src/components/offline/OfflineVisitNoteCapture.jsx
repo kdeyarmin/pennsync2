@@ -90,7 +90,7 @@ export default function OfflineVisitNoteCapture({ patient, onComplete }) {
 
     try {
       // Save to offline queue
-      const savedId = OfflineStorageManager.saveToQueue('visit', {
+      const _savedId = OfflineStorageManager.saveToQueue('visit', {
         ...visitData,
         status: 'completed',
         offline_created: !isOnline,

@@ -210,7 +210,7 @@ Provide specific, actionable insights with confidence levels.`;
     return colors[level] || colors.moderate;
   };
 
-  const getRiskIcon = (level) => {
+  const _getRiskIcon = (level) => {
     if (level === 'critical' || level === 'high') return <AlertTriangle className="w-5 h-5" />;
     if (level === 'moderate') return <Clock className="w-5 h-5" />;
     return <CheckCircle2 className="w-5 h-5" />;

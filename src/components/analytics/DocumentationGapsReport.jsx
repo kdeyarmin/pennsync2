@@ -70,7 +70,7 @@ export default function DocumentationGapsReport({ oasisData = [], noteData = [],
   // Note quality issues
   const noteIssues = useMemo(() => {
     let lowQuality = 0;
-    let missingVitals = 0;
+    let _missingVitals = 0;
     let shortNotes = 0;
 
     noteData.forEach(note => {
@@ -137,7 +137,7 @@ export default function DocumentationGapsReport({ oasisData = [], noteData = [],
                       cy="50%"
                       outerRadius={70}
                       dataKey="value"
-                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      label={({ _name, percent }) => `${(percent * 100).toFixed(0)}%`}
                       labelLine={false}
                     >
                       {gapCategories.map((entry, index) => (

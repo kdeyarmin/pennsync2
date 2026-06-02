@@ -19,7 +19,7 @@ export default function PreEnhancementReview({
   onDismissedElements,
   onFixAllAndReEnhance,
   appliedFixes = [],
-  onAnalysisStateChange
+  _onAnalysisStateChange
 }) {
   if (!roughNote || roughNote.length < 30) return null;
 

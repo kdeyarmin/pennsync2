@@ -169,7 +169,7 @@ Return comprehensive risk assessment with actionable recommendations.`,
     }
   };
 
-  const getRiskColor = (level) => {
+  const _getRiskColor = (level) => {
     switch (level) {
       case 'critical': return 'bg-red-600';
       case 'high': return 'bg-orange-600';

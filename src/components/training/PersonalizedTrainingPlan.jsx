@@ -201,12 +201,12 @@ export default function PersonalizedTrainingPlan({
   nurseEmail, 
   skillGaps = [], 
   onStartModule,
-  onModuleComplete 
+  _onModuleComplete 
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [trainingPlan, setTrainingPlan] = useState(null);
   const [expandedModules, setExpandedModules] = useState(new Set());
-  const [moduleProgress, setModuleProgress] = useState({});
+  const [moduleProgress, _setModuleProgress] = useState({});
 
   useEffect(() => {
     if (skillGaps.length > 0) {

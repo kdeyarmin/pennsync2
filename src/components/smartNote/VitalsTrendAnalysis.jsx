@@ -53,7 +53,7 @@ export default function VitalsTrendAnalysis({ patientId }) {
     };
   }, [chartData]);
 
-  const isLoaded = !isLoading && chartData.length > 0;
+  const _isLoaded = !isLoading && chartData.length > 0;
 
   return (
     <div className="space-y-4">

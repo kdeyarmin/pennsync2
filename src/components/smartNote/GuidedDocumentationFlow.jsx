@@ -57,7 +57,7 @@ export default function GuidedDocumentationFlow({
   careType,
   visitType,
   onNoteChange,
-  initialNote = "",
+  _initialNote = "",
   patient = null,
   previousVisits = [],
   carePlans = [],

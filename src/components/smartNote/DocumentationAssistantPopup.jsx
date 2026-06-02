@@ -19,7 +19,7 @@ export default function DocumentationAssistantPopup({
   noteText,
   careType,
   diagnosis,
-  cursorPosition,
+  _cursorPosition,
   onInsert
 }) {
   const [suggestions, setSuggestions] = useState([]);

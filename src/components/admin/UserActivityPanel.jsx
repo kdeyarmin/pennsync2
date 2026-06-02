@@ -69,7 +69,7 @@ function ActionRow({ activity }) {
   );
 }
 
-export default function UserActivityPanel({ userEmail, userName }) {
+export default function UserActivityPanel({ userEmail, _userName }) {
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ["user-activity-detail", userEmail],
     queryFn: () =>

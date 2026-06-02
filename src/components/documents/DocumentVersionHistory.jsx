@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronDown, ChevronUp, Download, Eye } from 'lucide-react';
 
-export default function DocumentVersionHistory({ documentSignatureId, packageId }) {
+export default function DocumentVersionHistory({ documentSignatureId, _packageId }) {
   const [expandedVersion, setExpandedVersion] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);

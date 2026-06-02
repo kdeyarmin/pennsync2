@@ -131,7 +131,7 @@ export default function HospitalReadmissionRisk({ patient }) {
 
     // Comorbidities - analyze diagnosis
     const diagnosis = patient.primary_diagnosis?.toLowerCase() || '';
-    let comorbidityCount = 0;
+    let _comorbidityCount = 0;
     
     const highRiskDiagnoses = [
       { terms: ['chf', 'heart failure', 'cardiomyopathy'], name: 'Congestive Heart Failure' },

@@ -56,7 +56,7 @@ const quizTopics = [
   }
 ];
 
-export default function AIComplianceQuizGenerator({ nurseEmail, recommendations = [], initialTopicId = null }) {
+export default function AIComplianceQuizGenerator({ nurseEmail, _recommendations = [], initialTopicId = null }) {
   const queryClient = useQueryClient();
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [quiz, setQuiz] = useState(null);

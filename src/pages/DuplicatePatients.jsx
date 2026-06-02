@@ -375,7 +375,7 @@ export default function DuplicatePatients() {
   });
 
   const mergePatientMutation = useMutation({
-    mutationFn: async ({ keepId, mergeIds }) => {
+    mutationFn: async ({ _keepId, mergeIds }) => {
       for (const mergeId of mergeIds) {
         await base44.entities.Patient.update(mergeId, { status: 'discharged' });
       }

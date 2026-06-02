@@ -91,7 +91,7 @@ export default function FaxDashboard() {
     }
 
     // Date filter
-    const now = new Date();
+    const _now = new Date();
     let cutoffDate = new Date();
     if (dateRange === '24h') cutoffDate.setHours(cutoffDate.getHours() - 24);
     else if (dateRange === '7days') cutoffDate.setDate(cutoffDate.getDate() - 7);

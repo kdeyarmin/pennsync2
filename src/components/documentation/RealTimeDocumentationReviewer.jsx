@@ -23,12 +23,12 @@ export default function RealTimeDocumentationReviewer({
   noteContent, 
   noteType = "soap", // soap, admission, discharge, etc.
   patientData,
-  onApplySuggestion,
+  _onApplySuggestion,
   autoAnalyze = false
 }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
-  const [complianceScore, setComplianceScore] = useState(0);
+  const [_complianceScore, setComplianceScore] = useState(0);
 
   useEffect(() => {
     if (autoAnalyze && noteContent && noteContent.length > 50) {

@@ -40,7 +40,7 @@ export default function SecurityAuditScheduler() {
     setRunningAudit(true);
     try {
       // Fetch all relevant data
-      const [users, patients, visits, activities] = await Promise.all([
+      const [users, patients, _visits, activities] = await Promise.all([
         base44.asServiceRole.entities.User.list('-created_date', 100),
         base44.asServiceRole.entities.Patient.list('-created_date', 100),
         base44.asServiceRole.entities.Visit.list('-created_date', 100),

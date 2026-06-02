@@ -7,7 +7,7 @@ import { Mic, MicOff, Activity, MessageSquare } from "lucide-react";
 export default function UnifiedVoiceHub({ 
   onTranscription, 
   onVitalsRecognized, 
-  isListening = false,
+  _isListening = false,
   compact = false 
 }) {
   const [mode, setMode] = useState('dictate'); // 'dictate' | 'vitals'

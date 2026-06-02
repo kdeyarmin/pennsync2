@@ -329,7 +329,7 @@ class OfflineStorage {
             try {
               existingVisit = await base44.entities.Visit.filter({ id: visit.data.id });
               existingVisit = existingVisit[0];
-            } catch (e) {
+            } catch {
               // Visit doesn't exist on server
             }
           }

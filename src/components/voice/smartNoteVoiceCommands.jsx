@@ -172,7 +172,7 @@ export const smartNoteCommands = [
 // Parse vital signs from spoken text with improved accuracy
 export const parseVitalSigns = (text) => {
   const vitals = {};
-  const normalizedText = text.toLowerCase();
+  const _normalizedText = text.toLowerCase();
   
   // Blood Pressure - multiple formats
   const bpPatterns = [

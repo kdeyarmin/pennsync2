@@ -166,7 +166,7 @@ export const exportToPDF = async (options = {}) => {
         doc.addPage();
         yPosition = margin;
       } else if (section.type === 'barChart') {
-        const { data, xKey, yKey, title, height = 80, maxBars = 20 } = section;
+        const { data, xKey, yKey, _title, height = 80, maxBars = 20 } = section;
         const chartWidth = pageWidth - (2 * margin);
         const chartHeight = height;
         const displayData = data.slice(0, maxBars);
@@ -215,7 +215,7 @@ export const exportToPDF = async (options = {}) => {
         
         yPosition += chartHeight + 15;
       } else if (section.type === 'pieChart') {
-        const { data, nameKey, valueKey, title, radius = 40 } = section;
+        const { data, nameKey, valueKey, _title, radius = 40 } = section;
         
         if (data.length === 0) {
           yPosition += 5;

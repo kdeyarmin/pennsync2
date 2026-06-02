@@ -22,7 +22,7 @@ export default function AICarePlanSuggester({ patientId, onCarePlanCreated }) {
   const [suggestions, setSuggestions] = useState(null);
   const [expandedSuggestions, setExpandedSuggestions] = useState([]);
   const [creatingPlans, setCreatingPlans] = useState(new Set());
-  const [customNotes, setCustomNotes] = useState({});
+  const [_customNotes, _setCustomNotes] = useState({});
 
   const generateSuggestions = async () => {
     if (!patientId) return;

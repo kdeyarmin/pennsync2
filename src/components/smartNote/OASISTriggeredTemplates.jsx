@@ -217,7 +217,7 @@ export default function OASISTriggeredTemplates({
 
   // Determine which templates are triggered
   const triggeredTemplates = Object.entries(OASIS_TEMPLATES)
-    .filter(([key, template]) => template.trigger(latestOASIS))
+    .filter(([_key, template]) => template.trigger(latestOASIS))
     .map(([key, template]) => ({ key, ...template }));
 
   const handleInsertTemplate = (key, template) => {

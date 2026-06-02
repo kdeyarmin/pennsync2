@@ -6,7 +6,7 @@ import { Settings, GripVertical, Eye, EyeOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export default function DashboardCustomizer({ currentUser, widgets, onUpdate }) {
+export default function DashboardCustomizer({ _currentUser, widgets, onUpdate }) {
   const [isOpen, setIsOpen] = useState(false);
   const [localWidgets, setLocalWidgets] = useState(widgets);
   const queryClient = useQueryClient();

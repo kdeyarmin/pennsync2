@@ -9,7 +9,7 @@ import { CheckCircle2, Clock, AlertCircle, Mail, Download, FileText } from "luci
 import { toast } from "sonner";
 
 export default function SignatureTracker({ patientId = null }) {
-  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [_selectedDoc, _setSelectedDoc] = useState(null);
   const [sendingReminder, setSendingReminder] = useState(false);
   const queryClient = useQueryClient();
 

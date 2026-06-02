@@ -22,7 +22,7 @@ export default function VoiceDictation({ onTranscriptionComplete }) {
   const analyserRef = useRef(null);
   const animationRef = useRef(null);
 
-  const startRecording = async () => {
+  const _startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       

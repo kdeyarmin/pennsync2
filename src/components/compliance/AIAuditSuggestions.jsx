@@ -20,7 +20,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-export default function AIAuditSuggestions({ audit, onApplySuggestion }) {
+export default function AIAuditSuggestions({ audit, _onApplySuggestion }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const [expandedIssues, setExpandedIssues] = useState(new Set());

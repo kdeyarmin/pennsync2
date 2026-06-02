@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export default function ContextualAITools({
-  currentStep,
+  _currentStep,
   hasPatient,
   hasNotes,
   hasEnhancedNote,

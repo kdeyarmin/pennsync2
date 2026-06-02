@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import ReportFilters from './ReportFilters';
 
-const COLORS = ['#0b407f', '#fbbf24', '#10b981', '#ef4444'];
+const _COLORS = ['#0b407f', '#fbbf24', '#10b981', '#ef4444'];
 
 export default function EnrollmentSummaryDashboard() {
   const [filters, setFilters] = useState({

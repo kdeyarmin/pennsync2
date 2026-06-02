@@ -900,7 +900,7 @@ export default function OASISAnalyzer() {
                 if (sanitized !== undefined) {
                   result[key] = sanitized;
                 }
-              } catch (e) {
+              } catch {
                 // Skip problematic properties
                 continue;
               }
@@ -1226,7 +1226,7 @@ Return JSON:
           } else {
             throw new Error("Text extraction also failed");
           }
-        } catch (fallbackErr) {
+        } catch {
           throw new Error(`Unable to read PDF: ${extractErr.message}. Please ensure the PDF is not password-protected, corrupted, or scanned without OCR. Try re-saving the PDF or using a different file.`);
         }
       }
@@ -1415,7 +1415,7 @@ Return JSON:
           if (diffDays > 30) {
             episodeTiming = 'late';
           }
-        } catch (e) {
+        } catch {
           // Keep default early
         }
       }
@@ -1549,7 +1549,7 @@ Return JSON:
 
       // Increase content limit for better analysis
       const maxContentLength = 15000;
-      const truncatedContent = oasisTextContent.length > maxContentLength 
+      const _truncatedContent = oasisTextContent.length > maxContentLength 
         ? oasisTextContent.substring(0, maxContentLength) + "\n[content truncated for processing]"
         : oasisTextContent;
 

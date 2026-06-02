@@ -27,8 +27,8 @@ import { parseISO, isWithinInterval } from "date-fns";
 
 export default function CustomReportGenerator({ 
   audits = [], 
-  nurses = [],
-  patients = []
+  _nurses = [],
+  _patients = []
 }) {
   const [filters, setFilters] = useState({
     startDate: "",
@@ -48,7 +48,7 @@ export default function CustomReportGenerator({
     return Array.from(emails);
   }, [audits]);
 
-  const issueCategories = [
+  const _issueCategories = [
     "Homebound Status",
     "Skilled Need",
     "Vital Signs",

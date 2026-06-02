@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 export default function ProactiveClinicalSupport({ patientId, compact = false }) {
-  const [expandedAlert, setExpandedAlert] = useState(null);
+  const [_expandedAlert, _setExpandedAlert] = useState(null);
 
   const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['clinicalRiskAnalysis', patientId],

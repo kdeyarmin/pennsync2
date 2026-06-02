@@ -13,7 +13,7 @@ import { logActivity, ActivityActions } from "../components/utils/activityLogger
 export default function VisitScribe() {
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [uploadedAudio, setUploadedAudio] = useState(null);
-  const [transcription, setTranscription] = useState(null);
+  const [_transcription, setTranscription] = useState(null);
   const [roughNote, setRoughNote] = useState("");
   const [activeTab, setActiveTab] = useState("record");
 

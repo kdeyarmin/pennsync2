@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, Target, ClipboardList, CheckCircle2, Plus, Sparkles } from "lucide-react";
 
 export default function AISmartSuggester({ 
-  noteContent,
+  _noteContent,
   roughNote,
   enhancedNote,
   patientId,

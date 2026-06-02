@@ -268,7 +268,7 @@ Provide:
     }
   };
 
-  const generatePeriodSummary = async (startDate, endDate) => {
+  const _generatePeriodSummary = async (startDate, endDate) => {
     const periodKey = `${startDate}-${endDate}`;
     if (periodSummaries[periodKey]) return;
 

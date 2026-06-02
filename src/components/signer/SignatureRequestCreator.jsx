@@ -155,7 +155,7 @@ export default function SignatureRequestCreator({ onCancel }) {
       }
       
       // 2. Map signers to format expected by DocumentSignature
-      const mappedSigners = signers.map((s, idx) => ({
+      const mappedSigners = signers.map((s, _idx) => ({
         id: parseInt(s.id),
         name: s.name,
         email: s.email,

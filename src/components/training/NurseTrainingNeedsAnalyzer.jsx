@@ -517,7 +517,7 @@ export default function NurseTrainingNeedsAnalyzer() {
   );
 }
 
-function getTypeColor(type) {
+function _getTypeColor(type) {
   const colors = {
     documentation: "bg-blue-100 text-blue-800",
     clinical: "bg-green-100 text-green-800",
@@ -529,7 +529,7 @@ function getTypeColor(type) {
   return colors[type] || "bg-gray-100 text-gray-800";
 }
 
-function getSourceLabel(source) {
+function _getSourceLabel(source) {
   const labels = {
     smart_note: "Smart Note",
     compliance_check: "Compliance Check",

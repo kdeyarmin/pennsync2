@@ -221,7 +221,7 @@ const CMS_VALIDATION_RULES = {
   }
 };
 
-export default function OASISValidationEngine({ questionId, value, allAnswers, onChange }) {
+export default function OASISValidationEngine({ questionId, value, allAnswers, _onChange }) {
   const [validation, setValidation] = useState({ errors: [], warnings: [], suggestions: [], isValid: true });
   const [showDetails, setShowDetails] = useState(false);
 

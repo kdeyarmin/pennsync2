@@ -11,7 +11,7 @@ import SignaturePadCanvas from '@/components/signature/SignaturePadCanvas';
 export default function SignerDocumentSigner({
   documentId,
   packageData,
-  token,
+  _token,
   onComplete,
   onCancel,
 }) {
@@ -27,7 +27,7 @@ export default function SignerDocumentSigner({
       setIsLoading(true);
       const signature = await base44.entities.DocumentSignature.get(documentId);
       setDocumentUrl(signature.pdf_url);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load document');
     } finally {
       setIsLoading(false);

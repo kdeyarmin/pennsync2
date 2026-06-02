@@ -128,7 +128,7 @@ export default function KPIDashboard({ dateRange }) {
   ];
 
   // Chart data - Monthly trends
-  const monthlyData = Array.from({ length: 6 }, (_, i) => {
+  const _monthlyData = Array.from({ length: 6 }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() - (5 - i));
     const monthName = date.toLocaleString('default', { month: 'short' });

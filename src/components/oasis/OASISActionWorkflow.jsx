@@ -40,10 +40,10 @@ import {
 export default function OASISActionWorkflow({ 
   analysisId, 
   analysisResults, 
-  pdgmData,
-  originalPayment,
+  _pdgmData,
+  _originalPayment,
   patientName,
-  scenarios = []
+  _scenarios = []
 }) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("pending");
@@ -185,7 +185,7 @@ export default function OASISActionWorkflow({
   };
 
   // Generate actions from selected scenarios
-  const generateActionsFromScenarios = async (selectedScenarios) => {
+  const _generateActionsFromScenarios = async (selectedScenarios) => {
     for (const scenario of selectedScenarios) {
       for (const change of (scenario.changes_made || [])) {
         await createActionMutation.mutateAsync({

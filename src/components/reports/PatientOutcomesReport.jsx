@@ -14,7 +14,7 @@ export default function PatientOutcomesReport({ dateRange }) {
     initialData: [],
   });
 
-  const filteredPatients = patients.filter(p => {
+  const _filteredPatients = patients.filter(p => {
     const admissionDate = new Date(p.admission_date);
     return admissionDate >= new Date(dateRange.start) && admissionDate <= new Date(dateRange.end);
   });

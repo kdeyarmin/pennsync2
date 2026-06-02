@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 export default function VisitChecklistIntegration({
   visitId,
   patientId,
-  onChecklistComplete
+  _onChecklistComplete
 }) {
   // Fetch patient data
   const { data: patient } = useQuery({

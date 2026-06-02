@@ -17,7 +17,7 @@ import {
 export default function GranularComplianceGapAnalyzer({ 
   visits, 
   patients, 
-  carePlans, 
+  _carePlans, 
   complianceAudits,
   dateRange = 30 
 }) {

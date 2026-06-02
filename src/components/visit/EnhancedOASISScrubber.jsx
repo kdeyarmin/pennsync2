@@ -39,7 +39,7 @@ export default function EnhancedOASISScrubber({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [analysis, setAnalysis] = useState(null);
-  const [expandedSections, setExpandedSections] = useState({});
+  const [_expandedSections, setExpandedSections] = useState({});
 
   // Only show for home health patients
   if (patient?.care_type !== 'home_health') {
@@ -261,7 +261,7 @@ Be specific about OASIS item numbers and response options. Provide ready-to-use 
     setIsAnalyzing(false);
   };
 
-  const toggleSection = (section) => {
+  const _toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section]

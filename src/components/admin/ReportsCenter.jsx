@@ -32,7 +32,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function ReportsCenter({ users: allUsers, patients: allPatients, visits, incidents }) {
   const [reportType, setReportType] = useState("productivity");
   const [dateRange, setDateRange] = useState("30");
-  const [selectedNurse, setSelectedNurse] = useState("all");
+  const [_selectedNurse, _setSelectedNurse] = useState("all");
   const [isGenerating, setIsGenerating] = useState(false);
   const [exportFormat, setExportFormat] = useState("pdf");
   const [reportPreview, setReportPreview] = useState(null);

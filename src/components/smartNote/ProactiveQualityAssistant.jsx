@@ -143,7 +143,7 @@ Return JSON with specific suggestions that include before/after examples:
     }
   };
 
-  const getPriorityColor = (priority) => {
+  const _getPriorityColor = (priority) => {
     switch (priority) {
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
@@ -152,7 +152,7 @@ Return JSON with specific suggestions that include before/after examples:
     }
   };
 
-  const getIssueIcon = (issueType) => {
+  const _getIssueIcon = (issueType) => {
     switch (issueType) {
       case 'vague_language': return <AlertCircle className="w-4 h-4 text-orange-600" />;
       case 'weak_flow': return <TrendingUp className="w-4 h-4 text-yellow-600" />;

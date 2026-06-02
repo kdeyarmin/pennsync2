@@ -150,7 +150,7 @@ export default function NotificationCenter({ currentUser, onClose }) {
   });
 
   const unreadNotifications = notifications.filter(n => !n.is_read);
-  const readNotifications = notifications.filter(n => n.is_read);
+  const _readNotifications = notifications.filter(n => n.is_read);
 
   const getNotificationIcon = (type) => {
     switch (type) {

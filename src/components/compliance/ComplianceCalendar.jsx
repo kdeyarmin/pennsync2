@@ -38,7 +38,7 @@ import { createPageUrl } from "@/utils";
 export default function ComplianceCalendar() {
   const [filterUrgency, setFilterUrgency] = useState("all");
   const [filterType, setFilterType] = useState("all");
-  const [selectedView, setSelectedView] = useState("list");
+  const [_selectedView, _setSelectedView] = useState("list");
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],

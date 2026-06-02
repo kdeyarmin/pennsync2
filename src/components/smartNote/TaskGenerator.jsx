@@ -41,7 +41,7 @@ export default function TaskGenerator({
   complianceGaps = [],
   auditResults = null,
   incidentData = null,
-  nurseEmail = null,
+  _nurseEmail = null,
   onTasksGenerated,
   onTrainingRecommended,
   autoGenerate = false

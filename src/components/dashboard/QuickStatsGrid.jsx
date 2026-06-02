@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { formatEastern } from "../utils/timezone";
 
-export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, patient }) {
+export default function QuickStatsGrid({ visits, carePlans, alerts, incidents, _patient }) {
   const completedVisits = visits.filter(v => v.status === 'completed').length;
   const upcomingVisits = visits.filter(v => 
     v.status === 'scheduled' && new Date(v.visit_date) >= new Date()
