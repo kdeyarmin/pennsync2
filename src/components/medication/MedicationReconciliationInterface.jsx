@@ -74,10 +74,16 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
         discharge_document_url: uploadedFileUrl,
         trigger_source: 'hospital_discharge'
       });
-      return response.data;
+      // The function wrapper may return the value either directly or under .data.
+      return response?.data ?? response;
     },
     onSuccess: (data) => {
-      setReconciliationId(data.reconciliation.id);
+      const newReconciliationId = data?.reconciliation?.id;
+      if (!newReconciliationId) {
+        toast.error('Reconciliation finished but returned no result. Please try again.');
+        return;
+      }
+      setReconciliationId(newReconciliationId);
       setStep('review');
       toast.success('Medications analyzed successfully');
     },
