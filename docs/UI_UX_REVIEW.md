@@ -132,37 +132,52 @@ This is the single biggest *structural* navigation risk: it confuses users
 become unreachable. Consolidation is valuable but **higher-risk** and needs
 product decisions, so it is left as a roadmap item rather than changed here.
 
-### 5. Three independently-maintained navigation maps — DOCUMENTED ⚠️
+### 5. Three independently-maintained navigation maps — FIXED ✅
 
 The sidebar (`Layout.jsx`), the breadcrumb `pageMap` (`Breadcrumbs.jsx`), and the
-command-palette registry (`CommandPalette.jsx`) each hardcode their own list of
-pages/labels/categories. They drift apart over time (e.g., breadcrumbs reference
-`Patient360`, `QuickNote`, `NurseWorkflow` that aren't routed). A single shared
-"navigation manifest" (one array of `{ page, label, icon, category, roles }`
-consumed by all three) would keep them in sync and is the natural home for the
-PageHeader title too.
+command-palette registry (`CommandPalette.jsx`) each hardcoded their own list of
+pages/labels/categories and drifted apart (e.g., breadcrumbs referenced
+`Patient360`, `QuickNote`, `NurseWorkflow`, `AgencyAnalytics`, and other unrouted
+pages).
 
-### 6. Color-token inconsistency (`gray` vs `slate`) — DOCUMENTED (low) ⚠️
+**Fix:** added `src/components/navigation/navConfig.js` — a single manifest where
+every routed page appears once with its canonical `{ page, label, icon, category,
+keywords }`. All three surfaces now read from it:
+- **Command palette** consumes `NAV_PAGES` directly (its inline registry is gone).
+- **Sidebar** builds each item via a `navItem(page)` helper that pulls label + icon
+  from the manifest (dynamic unread badges and the Alerts action stay inline). The
+  manifest's label/icon for sidebar pages match the previous curated values, so the
+  primary nav is pixel-identical.
+- **Breadcrumbs** dropped the stale/unrouted entries and now derive a consistent
+  "Category › Page" trail from the manifest for any page without a custom trail.
 
-The design system standardizes on `slate` (body, `h1`–`h5`), but `text-gray-*`
-/ `bg-gray-50` are used widely across pages. Visually subtle (gray-900 `#111827`
-vs slate-900 `#0f172a`), so low priority — but a project-wide find/replace would
-tidy it and is safe to script.
+Adding a page to navigation is now a single manifest entry + a route — nothing
+else to keep in sync, so the surfaces can't drift.
+
+### 6. Color-token inconsistency (`gray` vs `slate`) — FIXED ✅
+
+The design system standardizes on `slate` (body, `h1`–`h5`), but `text-gray-*` /
+`bg-gray-*` had spread across pages. **Fix:** a mechanical project-wide sweep
+replaced every Tailwind `*-gray-<shade>` utility with its `*-slate-<shade>`
+equivalent — **9,095 occurrences across 826 files**. slate shares gray's exact
+shade set, so the diff is perfectly balanced (every changed line is only a token
+swap) and build-verified.
 
 ---
 
 ## Prioritized roadmap (remaining work)
 
 ### P0 — safe, high impact (recommended next)
-- Roll `PageHeader` out across the remaining pages (mechanical; ~1 header block
-  per page). Start with the sidebar-linked pages users hit most.
-- Normalize `text-gray-*`/`bg-gray-*` → `slate` equivalents project-wide.
+- Roll `PageHeader` out across the remaining standard-header pages (mechanical;
+  ~1 header block per page). 13 done so far.
 
 ### P1 — structural
-- Create one **navigation manifest** and have the sidebar, breadcrumbs, and
-  command palette consume it. Delete the breadcrumb entries for unrouted pages.
 - Pick a single source of truth for routing (reconcile `App.jsx` with
-  `pages.config.js`) so new pages are reachable by construction.
+  `pages.config.js`) so new pages are reachable by construction. The new
+  `navConfig.js` manifest is the natural place to drive this from.
+- ~~Create one navigation manifest consumed by sidebar, breadcrumbs, and command
+  palette~~ — **done** (`navConfig.js`).
+- ~~Normalize `gray` → `slate` tokens project-wide~~ — **done**.
 
 ### P2 — product/IA
 - Consolidate the duplicate OASIS / Compliance / Training / Dashboard families
@@ -174,11 +189,14 @@ tidy it and is safe to script.
 
 | File | Change |
 | --- | --- |
-| `src/components/Layout.jsx` | Stop forcing OS dark mode; pin toaster to light theme |
-| `src/components/navigation/CommandPalette.jsx` | Registry covers all 64 routed pages; add Recent section + `open-command-palette` event |
+| `src/components/Layout.jsx` | Stop forcing OS dark mode; pin toaster to light; sidebar builds nav from manifest |
+| `src/components/navigation/navConfig.js` | **New** single-source-of-truth nav manifest (all 64 pages) |
+| `src/components/navigation/CommandPalette.jsx` | Consume manifest; Recent section + `open-command-palette` event |
+| `src/components/navigation/Breadcrumbs.jsx` | Drop stale/unrouted entries; derive trails from manifest |
 | `src/components/layout/DesktopSidebar.jsx` | Visible "Search… ⌘K" trigger at top of nav |
 | `src/components/layout/MobileHeader.jsx` | Search button that opens the palette on mobile |
 | `src/components/ui/PageHeader.jsx` | New reusable, standardized page-header component |
+| `src/**/*` (826 files) | Mechanical `gray → slate` Tailwind token normalization (9,095 swaps) |
 | `src/pages/*` (13 pages) | Adopt `PageHeader`: DocumentHub, ComplianceCenter, PhysicianDirectory, ResourceLibrary, Telehealth, MyLearning, ReferralIntake, ReportsAnalytics, SecurityCompliance, UserSettings, UserManagement, AutomaticCarePlans, PatientDataManagement |
 | `src/pages/ClinicalPathwayManager.jsx` | Add admin-only page guard (review follow-up) |
 | `docs/UI_UX_REVIEW.md` | This review |

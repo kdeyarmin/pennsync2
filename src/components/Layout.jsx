@@ -3,14 +3,9 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
-import {
-  Home, Users, FileText, ClipboardList, Shield, GraduationCap,
-  BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Phone
-} from "lucide-react";
+import { Bell, LogOut, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
 
@@ -24,6 +19,15 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 import CommandPalette from "@/components/navigation/CommandPalette";
+import { getPageMeta } from "@/components/navigation/navConfig";
+
+// Build a sidebar item from the shared navConfig manifest so label + icon stay
+// in sync with the command palette and breadcrumbs. `extra` carries the
+// sidebar-only bits (dynamic unread badges, etc.).
+const navItem = (page, extra = {}) => {
+  const meta = getPageMeta(page);
+  return { name: meta.label, icon: meta.icon, page, ...extra };
+};
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -137,81 +141,79 @@ export default function Layout({ children, currentPageName }) {
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
   const navCategories = useMemo(() => [
-    { category: "Overview", items: [{ name: "Dashboard", icon: Home, page: "Dashboard" }] },
+    { category: "Overview", items: [navItem("Dashboard")] },
     {
       category: "Patient Care",
       items: [
-        { name: "Patients", icon: Users, page: "Patients" },
-        { name: "Care Plans", icon: Target, page: "CarePlanManagement" },
-        { name: "OASIS Assessment", icon: Brain, page: "SmartOASISAssessment" },
-        { name: "Incidents", icon: AlertTriangle, page: "Incidents" },
+        navItem("Patients"),
+        navItem("CarePlanManagement"),
+        navItem("SmartOASISAssessment"),
+        navItem("Incidents"),
       ],
     },
     {
       category: "Documentation",
       items: [
-        { name: "Clinical Notes", icon: Brain, page: "ClinicalDocumentation" },
-        { name: "Documents", icon: FileText, page: "DocumentHub" },
-        { name: "Referrals", icon: FileText, page: "ReferralIntake" },
+        navItem("ClinicalDocumentation"),
+        navItem("DocumentHub"),
+        navItem("ReferralIntake"),
       ],
     },
     {
       category: "Communication",
       items: [
-        { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
-        { name: "Phone Center", icon: Phone, page: "PhoneCenter", badge: unreadSmsCount },
-        { name: "Fax", icon: BookUser, page: "SendFax" },
-        { name: "Providers", icon: Users, page: "PhysicianDirectory" },
-        { name: "Telehealth", icon: Video, page: "Telehealth" },
+        navItem("Messages", { badge: unreadMessageCount }),
+        navItem("PhoneCenter", { badge: unreadSmsCount }),
+        navItem("SendFax"),
+        navItem("PhysicianDirectory"),
+        navItem("Telehealth"),
       ],
     },
     {
       category: "Resources",
-      items: [
-        { name: "Library", icon: BookOpen, page: "ResourceLibrary" },
-      ],
+      items: [navItem("ResourceLibrary")],
     },
     {
       category: "My Learning",
       items: [
-        { name: "Learning Center", icon: GraduationCap, page: "LearningCenter" },
-        { name: "My Courses", icon: BookOpen, page: "MyLearning" },
-        { name: "Skills Checklists", icon: CheckCircle2, page: "ClinicalSkillsChecklist" },
+        navItem("LearningCenter"),
+        navItem("MyLearning"),
+        navItem("ClinicalSkillsChecklist"),
       ],
     },
     {
       category: "Tools",
       items: [
-        { name: "Offline Mode", icon: WifiOff, page: "OfflineMode" },
-        { name: "Help", icon: HelpCircle, page: "Help" },
+        navItem("OfflineMode"),
+        navItem("Help"),
       ],
     },
   ], [unreadMessageCount, unreadSmsCount]);
 
   const adminItems = useMemo(() => [
-    { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },
+    { category: "Admin", items: [navItem("AdminOperations")] },
     {
       category: "Manage",
       items: [
-        { name: "Users", icon: Users, page: "UserManagement" },
-        { name: "Training Manager", icon: GraduationCap, page: "AdminTraining" },
-        { name: "Clinical Pathways", icon: ClipboardList, page: "ClinicalPathwayManager" },
+        navItem("UserManagement"),
+        navItem("AdminTraining"),
+        navItem("ClinicalPathwayManager"),
       ]
     },
     {
       category: "Analytics",
       items: [
-        { name: "Reports & Analytics", icon: BarChart3, page: "ReportsAnalytics" },
-        { name: "Compliance Center", icon: Shield, page: "ComplianceCenter" },
+        navItem("ReportsAnalytics"),
+        navItem("ComplianceCenter"),
         { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
       ]
     },
     {
       category: "Configuration",
       items: [
-        { name: "Data Management", icon: Users, page: "PatientDataManagement" },
-        { name: "Security", icon: Shield, page: "SecurityCompliance" },
-        { name: "Settings", icon: Settings, page: "UserSettings" },
+        navItem("PatientDataManagement"),
+        navItem("SecurityCompliance"),
+        navItem("UserSettings"),
       ]
     },
 
