@@ -83,7 +83,7 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
       // Find text position in source document
       let text_anchor_start = null;
       let text_anchor_end = null;
-      
+
       if (event.source_text && nurse_notes) {
         const sourceText = event.source_text.trim();
         const index = nurse_notes.indexOf(sourceText);
@@ -117,14 +117,14 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
 
       // Auto-create follow-up task if needed
       if (event.requires_followup) {
-        const taskPriority = event.severity === 'critical' ? 'high' : 
+        const taskPriority = event.severity === 'critical' ? 'high' :
                            event.severity === 'high' ? 'high' : 'medium';
-        
+
         let taskType = 'followup';
-        if (event.event_type.includes('medication')) taskType = 'call';
+        if (event.event_type?.includes('medication')) taskType = 'call';
         if (event.event_type === 'fall') taskType = 'safety';
-        if (event.event_type.includes('wound')) taskType = 'document';
-        
+        if (event.event_type?.includes('wound')) taskType = 'document';
+
         await base44.asServiceRole.entities.Task.create({
           patient_id,
           title: `Follow-up: ${event.event_title}`,
@@ -142,12 +142,12 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
       // Create patient alert for high/critical events
       if (event.severity === 'high' || event.severity === 'critical') {
         let alertType = 'urgent_intervention';
-        if (event.event_type.includes('medication')) alertType = 'medication_risk';
+        if (event.event_type?.includes('medication')) alertType = 'medication_risk';
         if (event.event_type === 'fall') alertType = 'fall_risk';
-        if (event.event_type.includes('vital')) alertType = 'vital_deterioration';
+        if (event.event_type?.includes('vital')) alertType = 'vital_deterioration';
         if (event.event_type === 'infection') alertType = 'infection_risk';
         if (event.event_type === 'cognitive_change') alertType = 'symptom_escalation';
-        
+
         await base44.asServiceRole.entities.PatientAlert.create({
           patient_id,
           alert_type: alertType,
@@ -178,9 +178,8 @@ IMPORTANT: For source_text, provide the EXACT verbatim text from the note, not a
 
   } catch (error) {
     console.error('Error extracting clinical events:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

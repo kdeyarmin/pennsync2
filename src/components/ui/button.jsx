@@ -32,7 +32,16 @@ const Button = React.forwardRef((props, ref) => {
     const classes = buttonVariants({ variant, size, className })
 
     if (asChild && otherProps.children && React.isValidElement(otherProps.children)) {
-      return React.cloneElement(otherProps.children, { className: classes, ref, ...otherProps })
+      // Destructure `children` out of the forwarded props: otherwise spreading
+      // `...otherProps` passes the child element back in as its own children,
+      // replacing its label (e.g. <Button asChild><Link>Label</Link></Button>
+      // would render the Link inside itself instead of "Label").
+      const { children: childElement, ...rest } = otherProps
+      return React.cloneElement(childElement, {
+        className: cn(classes, childElement.props?.className),
+        ref,
+        ...rest,
+      })
     }
 
     return <button ref={ref} className={classes} {...otherProps} />
