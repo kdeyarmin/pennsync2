@@ -10,7 +10,7 @@ import LearningPlanManager from "../components/training/LearningPlanManager";
 import AIComplianceInServicesHub from "../components/training/AIComplianceInServicesHub";
 
 export default function TrainingManagement() {
-  const [currentUser, setCurrentUser] = React.useState(null);
+  const [_currentUser, setCurrentUser] = React.useState(null);
 
   React.useEffect(() => {
     base44.auth.me().then((user) => {
@@ -60,7 +60,7 @@ export default function TrainingManagement() {
 
 function EnrollmentManager() {
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   const { data: plans = [] } = useQuery({
     queryKey: ['learning-plans'],

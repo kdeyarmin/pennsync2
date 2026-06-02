@@ -19,7 +19,7 @@ import {
 
 export default function ProactiveClinicalTaskGenerator({ 
   patientId,
-  patientName,
+  _patientName,
   onTasksCreated,
   autoAnalyze = false
 }) {

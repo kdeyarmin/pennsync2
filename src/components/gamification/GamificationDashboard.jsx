@@ -39,7 +39,7 @@ const LEVELS = [
 
 export default function GamificationDashboard({ userEmail, compact = false }) {
   const [userStats, setUserStats] = useState(null);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [_showCelebration, _setShowCelebration] = useState(false);
 
   // Load user gamification data
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
     return BADGES.filter(b => userStats.badges.includes(b.id));
   };
 
-  const getAvailableBadges = () => {
+  const _getAvailableBadges = () => {
     if (!userStats?.badges) return BADGES;
     return BADGES.filter(b => !userStats.badges.includes(b.id));
   };

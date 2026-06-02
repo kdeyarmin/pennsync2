@@ -19,7 +19,7 @@ import {
 
 export default function OASISTaskGenerator({ 
   analysisResults, 
-  pdgmData, 
+  _pdgmData, 
   patientId,
   patientName,
   onTasksCreated 

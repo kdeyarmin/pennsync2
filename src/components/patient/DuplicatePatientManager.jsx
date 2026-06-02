@@ -143,7 +143,7 @@ export default function DuplicatePatientManager() {
     return groups.filter(g => !dismissedGroups.has(g.id));
   }, [patients, dismissedGroups]);
 
-  const handleDeleteDuplicate = async (patientId) => {
+  const _handleDeleteDuplicate = async (patientId) => {
     setIsProcessing(true);
     try {
       await deleteMutation.mutateAsync(patientId);

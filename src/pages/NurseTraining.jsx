@@ -80,7 +80,7 @@ export default function NurseTraining() {
     setViewingModule(true);
   };
 
-  const handleModuleComplete = (score) => {
+  const handleModuleComplete = (_score) => {
     setViewingModule(false);
     setSelectedModule(null);
   };

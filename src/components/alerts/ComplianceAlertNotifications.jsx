@@ -61,7 +61,7 @@ export default function ComplianceAlertNotifications({
     },
   });
 
-  const resolveMutation = useMutation({
+  const _resolveMutation = useMutation({
     mutationFn: ({ alertId, notes }) => base44.entities.PatientAlert.update(alertId, { 
       status: 'resolved',
       resolution_notes: notes

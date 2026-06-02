@@ -18,7 +18,7 @@ import { INTERVENTIONS_LIBRARY } from "@/components/carePlan/InterventionLibrary
 import { AssessmentSkeleton } from "@/components/ui/PageSkeleton";
 
 // ─── Question field ───────────────────────────────────────────────────────────
-function QuestionField({ question, value, onChange, onShowGuidance }) {
+function QuestionField({ question, value, onChange, _onShowGuidance }) {
   const numVal = value !== undefined && value !== "" ? parseInt(value, 10) : undefined;
   const showAlert = question.alert && numVal !== undefined && numVal >= question.alert.threshold;
 
@@ -213,7 +213,7 @@ export default function SmartOASISAssessment() {
     initialData: [],
   });
 
-  const { data: existingCarePlans = [] } = useQuery({
+  const { data: _existingCarePlans = [] } = useQuery({
     queryKey: ["care-plans", selectedPatientId],
     queryFn: () => base44.entities.CarePlan.filter({ patient_id: selectedPatientId }),
     enabled: !!selectedPatientId,

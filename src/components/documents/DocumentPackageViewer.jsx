@@ -11,7 +11,7 @@ import DocumentReplacementDialog from './DocumentReplacementDialog';
 export default function DocumentPackageViewer({ packageId }) {
   const [replacingDocument, setReplacingDocument] = useState(null);
   const [replacementDialogOpen, setReplacementDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   const { data: pkg } = useQuery({
     queryKey: ['document-package', packageId],

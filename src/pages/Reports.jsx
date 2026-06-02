@@ -40,7 +40,7 @@ export default function Reports() {
     start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   });
-  const [selectedTimeframe, setSelectedTimeframe] = useState('30');
+  const [selectedTimeframe, _setSelectedTimeframe] = useState('30');
   const [generating, setGenerating] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
     name: '',
@@ -92,7 +92,7 @@ export default function Reports() {
   });
 
   // Visits = enhancements (every enhance button click is a visit)
-  const totalVisits = noteConversions.length;
+  const _totalVisits = noteConversions.length;
 
   const { data: scheduledTasks = [], isLoading: schedulesLoading } = useQuery({
     queryKey: ['scheduledReports'],
@@ -103,7 +103,7 @@ export default function Reports() {
     enabled: !!currentUser
   });
 
-  const stats = calculateStats({
+  const _stats = calculateStats({
     visits: [], // Not used - visits counted from noteConversions
     noteConversions,
     patients,
@@ -112,11 +112,11 @@ export default function Reports() {
     dateRange: parseInt(selectedTimeframe)
   });
 
-  const highRiskPatients = riskAssessments.filter(
+  const _highRiskPatients = riskAssessments.filter(
     r => r.overall_risk_level === 'high' || r.overall_risk_level === 'critical'
   ).length;
 
-  const visitsTrendData = Array.from({ length: 30 }, (_, i) => {
+  const _visitsTrendData = Array.from({ length: 30 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (29 - i));
     const dateStr = date.toISOString().split('T')[0];
@@ -127,7 +127,7 @@ export default function Reports() {
     };
   });
 
-  const complianceTrendData = Array.from({ length: 12 }, (_, i) => {
+  const _complianceTrendData = Array.from({ length: 12 }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() - (11 - i));
     const monthStr = date.toISOString().slice(0, 7);
@@ -141,7 +141,7 @@ export default function Reports() {
     };
   });
 
-  const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
+  const _COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
 
   const generateReportMutation = useMutation({
     mutationFn: async (params) => {
@@ -287,7 +287,7 @@ export default function Reports() {
 
   const isAdminUser = currentUser?.role === 'admin';
 
-  const KPICard = ({ title, value, change, icon: Icon, trend }) => (
+  const _KPICard = ({ title, value, change, icon: Icon, trend }) => (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">

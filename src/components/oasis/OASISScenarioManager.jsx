@@ -51,7 +51,7 @@ export default function OASISScenarioManager({
   originalPdgmData, 
   originalPayment,
   patientName,
-  onScenarioSelect,
+  _onScenarioSelect,
   onCreateActions
 }) {
   const queryClient = useQueryClient();

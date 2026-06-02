@@ -19,7 +19,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 
-export default function DocumentIngestionUploader({ onDataExtracted, patientId = null }) {
+export default function DocumentIngestionUploader({ onDataExtracted, _patientId = null }) {
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);

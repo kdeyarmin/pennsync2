@@ -65,11 +65,11 @@ export default function AIPersonalizedTrainingRecommendations({ nurseEmail }) {
 
     try {
       // Aggregate documentation patterns
-      const complianceIssues = existingRecommendations.filter(r => 
+      const _complianceIssues = existingRecommendations.filter(r => 
         r.recommendation_type === 'compliance' || r.recommendation_type === 'documentation'
       );
 
-      const clinicalIssues = existingRecommendations.filter(r => 
+      const _clinicalIssues = existingRecommendations.filter(r => 
         r.recommendation_type === 'clinical'
       );
 

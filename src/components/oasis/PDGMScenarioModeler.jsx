@@ -41,7 +41,7 @@ export default function PDGMScenarioModeler({ baselineOasisData, baselineNavigat
   const [scenarios, setScenarios] = useState([]);
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationResult, setSimulationResult] = useState(null);
-  const [compareMode, setCompareMode] = useState(false);
+  const [_compareMode, _setCompareMode] = useState(false);
   const [selectedScenarios, setSelectedScenarios] = useState([]);
   const [newComorbidity, setNewComorbidity] = useState('');
 

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export default function QuickCarePlanUpdater({ 
-  patientId, 
+  _patientId, 
   carePlans = [],
   onCarePlanUpdated 
 }) {
@@ -30,7 +30,7 @@ export default function QuickCarePlanUpdater({
     return null;
   }
 
-  const handleUpdateProgress = async (carePlan, status, note) => {
+  const handleUpdateProgress = async (carePlan, status, _note) => {
     setUpdating(true);
     try {
       await base44.entities.CarePlan.update(carePlan.id, {

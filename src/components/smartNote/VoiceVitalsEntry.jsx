@@ -120,7 +120,7 @@ Return JSON:
       
       // Track recent entries
       const entry = result.type === 'vitals' 
-        ? Object.entries(result.vitals).filter(([k,v]) => v).map(([k,v]) => `${k.toUpperCase()}: ${v}`).join(', ')
+        ? Object.entries(result.vitals).filter(([_k,v]) => v).map(([k,v]) => `${k.toUpperCase()}: ${v}`).join(', ')
         : result.phrase;
       if (entry) {
         setRecentEntries(prev => [entry, ...prev.slice(0, 4)]);

@@ -17,7 +17,7 @@ import {
   XCircle
 } from "lucide-react";
 
-export default function PredictiveRiskAnalyzer({ patientId, patientName, onAlertsCreated, autoAnalyze = false }) {
+export default function PredictiveRiskAnalyzer({ patientId, _patientName, onAlertsCreated, autoAnalyze = false }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);

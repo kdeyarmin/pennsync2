@@ -64,7 +64,7 @@ const simulationScenarios = [
   }
 ];
 
-export default function ClinicalSimulationModule({ nurseEmail, onSimulationCompleted }) {
+export default function ClinicalSimulationModule({ _nurseEmail, onSimulationCompleted }) {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [simulation, setSimulation] = useState(null);

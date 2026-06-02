@@ -157,7 +157,7 @@ export default function PDFTemplateManager() {
     }
   };
 
-  const groupedTemplates = templates.reduce((acc, template) => {
+  const _groupedTemplates = templates.reduce((acc, template) => {
     const category = template.template_category;
     if (!acc[category]) acc[category] = [];
     acc[category].push(template);

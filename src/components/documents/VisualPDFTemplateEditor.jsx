@@ -360,7 +360,7 @@ export default function VisualPDFTemplateEditor({
   );
 }
 
-function ElementPropertiesPanel({ element, allElements, onUpdate, onDelete, onDuplicate, onMove }) {
+function ElementPropertiesPanel({ element, allElements, onUpdate, onDelete, onDuplicate, _onMove }) {
   const [richTextValue, setRichTextValue] = useState(element.properties.defaultValue || '');
 
   const handleRichTextChange = (value) => {

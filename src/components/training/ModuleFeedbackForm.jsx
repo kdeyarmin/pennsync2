@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, Send } from "lucide-react";
 
-export default function ModuleFeedbackForm({ moduleId, onSubmit }) {
+export default function ModuleFeedbackForm({ _moduleId, onSubmit }) {
   const [rating, setRating] = useState({
     effectiveness: 0,
     difficulty: 'just_right',

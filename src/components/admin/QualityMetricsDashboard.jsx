@@ -268,7 +268,7 @@ Total Time Saved,${metrics.totalTimeSavedHours} hours
 
 === NURSE PRODUCTIVITY ===
 Nurse,Total Visits,Completed,Completion Rate,Avg Doc Time
-${Object.entries(metrics.nurseStats).map(([email, stats]) => 
+${Object.entries(metrics.nurseStats).map(([_email, stats]) => 
   `${stats.name},${stats.totalVisits},${stats.completedVisits},${stats.completionRate}%,${stats.avgDocTime} min`
 ).join('\n')}`;
 
@@ -362,8 +362,8 @@ ${Object.entries(metrics.nurseStats).map(([email, stats]) =>
     );
   }
 
-  const completionStatus = getMetricStatus(metrics.completionRate, { excellent: 95, good: 85, fair: 75 });
-  const qualityStatus = getMetricStatus(metrics.avgQualityScore, { excellent: 90, good: 80, fair: 70 });
+  const _completionStatus = getMetricStatus(metrics.completionRate, { excellent: 95, good: 85, fair: 75 });
+  const _qualityStatus = getMetricStatus(metrics.avgQualityScore, { excellent: 90, good: 80, fair: 70 });
 
   return (
     <div className="space-y-6">

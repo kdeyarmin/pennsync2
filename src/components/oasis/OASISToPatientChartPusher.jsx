@@ -10,7 +10,7 @@ import { ArrowRight, Send, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function OASISToPatientChartPusher({ 
   analysisResults, 
-  pdgmData, 
+  _pdgmData, 
   patientId,
   oasisUploadId,
   predictions 

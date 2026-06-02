@@ -215,7 +215,7 @@ export default function PatientEducationHub() {
       const template = educationTopics.find(t => t.id === selectedTopic.id);
       if (template) {
         // Auto-select all sections and bullets by default
-        const initialSelections = {};
+        const _initialSelections = {};
         // Since templates are defined in the backend function, we'll handle this dynamically
         setSelectedSections({});
         setCustomNotes("");

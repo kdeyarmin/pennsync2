@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-export default function ProactiveRiskAnalyzer({ users = [] }) {
+export default function ProactiveRiskAnalyzer({ _users = [] }) {
   const queryClient = useQueryClient();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);

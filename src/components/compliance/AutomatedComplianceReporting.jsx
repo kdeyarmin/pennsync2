@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 
-export default function AutomatedComplianceReporting({ nurseEmail, isAdmin = false }) {
+export default function AutomatedComplianceReporting({ _nurseEmail, isAdmin = false }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [report, setReport] = useState(null);
   const [expanded, setExpanded] = useState(true);
@@ -47,7 +47,7 @@ export default function AutomatedComplianceReporting({ nurseEmail, isAdmin = fal
     queryFn: () => base44.entities.Patient.list(),
   });
 
-  const { data: securityLogs = [] } = useQuery({
+  const { data: _securityLogs = [] } = useQuery({
     queryKey: ['securityLogs'],
     queryFn: () => base44.entities.SecurityLog.filter({}, '-timestamp', 200),
     enabled: isAdmin

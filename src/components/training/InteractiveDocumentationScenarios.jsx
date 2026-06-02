@@ -106,7 +106,7 @@ const scenarioTemplates = [
   }
 ];
 
-export default function InteractiveDocumentationScenarios({ nurseEmail, recommendations = [], initialScenarioId = null }) {
+export default function InteractiveDocumentationScenarios({ nurseEmail, _recommendations = [], initialScenarioId = null }) {
   const queryClient = useQueryClient();
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [userResponse, setUserResponse] = useState("");

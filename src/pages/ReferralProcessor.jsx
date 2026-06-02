@@ -17,12 +17,12 @@ export default function ReferralProcessor() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [extractedData, setExtractedData] = useState(null);
-  const [referralAnalysis, setReferralAnalysis] = useState(null);
+  const [_referralAnalysis, setReferralAnalysis] = useState(null);
   const [isCreatingPatient, setIsCreatingPatient] = useState(false);
   const [diagnosisRanking, setDiagnosisRanking] = useState(null);
   const [isRankingDiagnoses, setIsRankingDiagnoses] = useState(false);
   const [selectedPrimaryDx, setSelectedPrimaryDx] = useState(null);
-  const [selectedSecondaryDx, setSelectedSecondaryDx] = useState([]);
+  const [selectedSecondaryDx, _setSelectedSecondaryDx] = useState([]);
   const [isCreatingCarePlans, setIsCreatingCarePlans] = useState(false);
   const [createdPatientId, setCreatedPatientId] = useState(null);
   const [createdCarePlans, setCreatedCarePlans] = useState(null);
@@ -158,7 +158,7 @@ export default function ReferralProcessor() {
 
         <ReferralPDFSummarizer
           onDataExtracted={(data) => setExtractedData(data)}
-          onUseForAdmission={(data) => {
+          onUseForAdmission={(_data) => {
             navigate(createPageUrl('SmartNoteAssistant'));
           }}
         />

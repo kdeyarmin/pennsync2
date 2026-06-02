@@ -50,13 +50,13 @@ export default function TemplateLibrary() {
 
   const queryClient = useQueryClient();
 
-  const { data: templates = [], isLoading: isLoadingTemplates } = useQuery({
+  const { data: templates = [], isLoading: _isLoadingTemplates } = useQuery({
     queryKey: ['pdfTemplates'],
     queryFn: () => base44.entities.PDFTemplate.list('-created_date', 100),
     initialData: []
   });
 
-  const { data: documents = [], isLoading: isLoadingDocs } = useQuery({
+  const { data: documents = [], isLoading: _isLoadingDocs } = useQuery({
     queryKey: ['libraryDocuments'],
     queryFn: () => base44.entities.LibraryDocument.list('-created_date', 100),
     initialData: []

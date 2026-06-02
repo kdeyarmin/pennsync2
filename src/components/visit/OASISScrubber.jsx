@@ -592,7 +592,7 @@ export default function OASISScrubber({
 
       if (clinicalIndicators.cardiacIssues.detected) {
         const hasHF = clinicalIndicators.cardiacIssues.heartFailure.length > 0;
-        const hasEdema = clinicalIndicators.cardiacIssues.edema.length > 0;
+        const _hasEdema = clinicalIndicators.cardiacIssues.edema.length > 0;
         alerts.push({
           type: 'cardiac',
           severity: hasHF ? 'high' : 'medium',
@@ -1614,7 +1614,7 @@ Return JSON:
     URL.revokeObjectURL(url);
   };
 
-  const getFilteredResults = () => {
+  const _getFilteredResults = () => {
     if (!oasisResults || analysisFilter === 'all') return oasisResults;
     
     const filtered = { ...oasisResults };
@@ -1641,7 +1641,7 @@ Return JSON:
     return filtered;
   };
 
-  const getCategoryIcon = (category) => {
+  const _getCategoryIcon = (category) => {
     const icons = {
       'Functional': Footprints,
       'Clinical': Stethoscope,

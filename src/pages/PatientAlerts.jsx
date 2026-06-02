@@ -29,7 +29,7 @@ export default function PatientAlerts() {
     queryFn: () => base44.entities.Patient.filter({ status: 'active' })
   });
 
-  const { data: currentUser } = useQuery({
+  const { data: _currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });

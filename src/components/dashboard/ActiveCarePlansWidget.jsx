@@ -7,7 +7,7 @@ import { formatEastern } from "../utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function ActiveCarePlansWidget({ carePlans, patientId, expanded = false }) {
+export default function ActiveCarePlansWidget({ carePlans, _patientId, expanded = false }) {
   const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
   const metGoals = carePlans.filter(cp => cp.status === 'met').length;
   const totalGoals = carePlans.length;

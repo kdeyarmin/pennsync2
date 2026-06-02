@@ -75,7 +75,7 @@ const CATEGORY_ICONS = {
   care: FileText
 };
 
-const CATEGORY_COLORS = {
+const _CATEGORY_COLORS = {
   functional: 'blue',
   clinical: 'green',
   cognitive: 'purple',

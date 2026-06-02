@@ -40,7 +40,7 @@ export default function EducationLibrary() {
     initialData: []
   });
 
-  const deleteMutation = useMutation({
+  const _deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.EducationMaterial.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['educationMaterials'] });

@@ -10,7 +10,7 @@ import {
 
 export default function InlineSuggestions({
   currentText,
-  cursorPosition,
+  _cursorPosition,
   diagnosis,
   careType,
   onAcceptSuggestion

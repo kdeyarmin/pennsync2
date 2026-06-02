@@ -57,7 +57,7 @@ const trainingTopics = {
   }
 };
 
-export default function AITrainingContentGenerator({ onContentGenerated, nurseEmail }) {
+export default function AITrainingContentGenerator({ onContentGenerated, _nurseEmail }) {
   const [selectedCategory, setSelectedCategory] = useState("documentation");
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -143,7 +143,7 @@ Use professional but accessible language.`,
   };
 
   const category = trainingTopics[selectedCategory];
-  const Icon = category.icon;
+  const _Icon = category.icon;
 
   return (
     <div className="space-y-4">

@@ -49,7 +49,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import { useNavigate } from "react-router-dom";
 
 export default function AutomaticCarePlans() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState(null);

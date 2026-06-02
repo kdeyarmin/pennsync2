@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle, ClipboardList } from "lucide-react";
 
-export default function GuidedDocumentationWorkflow({ visitType, diagnosis, careType }) {
+export default function GuidedDocumentationWorkflow({ visitType, diagnosis, _careType }) {
   const getWorkflowSteps = () => {
     const baseSteps = [
       { id: 'vitals', label: 'Vital Signs', required: true },

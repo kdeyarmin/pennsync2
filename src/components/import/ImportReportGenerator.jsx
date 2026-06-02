@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { FileDown, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
 
 export default function ImportReportGenerator({ 
-  importHistory, 
+  _importHistory, 
   validRecords, 
   validationErrors,
   importResults 

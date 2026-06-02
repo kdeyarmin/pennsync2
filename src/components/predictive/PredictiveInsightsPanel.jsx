@@ -21,7 +21,7 @@ export default function PredictiveInsightsPanel({
   oasisData = [], 
   visits = [],
   alerts = [],
-  selectedPatientId = ''
+  _selectedPatientId = ''
 }) {
   const [insights, setInsights] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);

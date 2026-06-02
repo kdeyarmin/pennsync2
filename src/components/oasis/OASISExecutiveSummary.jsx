@@ -35,7 +35,7 @@ export default function OASISExecutiveSummary({ analysisResults, pdgmData }) {
       // Extract only essential data
       const topIssues = (analysisResults.compliance_concerns || []).slice(0, 2).map(c => c.concern || c);
       const topRevenue = (analysisResults.revenue_tips || []).slice(0, 2).map(r => r.tip || r);
-      const topAccuracy = (analysisResults.accuracy_issues || []).slice(0, 2).map(a => a.issue || a);
+      const _topAccuracy = (analysisResults.accuracy_issues || []).slice(0, 2).map(a => a.issue || a);
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Create executive summary for OASIS assessment.

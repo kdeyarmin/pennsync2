@@ -11,7 +11,7 @@ export default function PDGMOptimizationSuggester({
   enhancedNote,
   patientData,
   diagnosis,
-  visitType,
+  _visitType,
   onApplySuggestion,
   onApplyAll,
   autoAnalyze = false

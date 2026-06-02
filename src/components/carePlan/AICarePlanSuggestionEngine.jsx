@@ -37,7 +37,7 @@ export default function AICarePlanSuggestionEngine({
     initialData: [],
   });
 
-  const { data: educationMaterials = [] } = useQuery({
+  const { data: _educationMaterials = [] } = useQuery({
     queryKey: ['patientEducationForCarePlan', diagnosis],
     queryFn: async () => {
       // Simulated - would query generated education materials
@@ -58,8 +58,8 @@ export default function AICarePlanSuggestionEngine({
 
     setIsGenerating(true);
     try {
-      const existingProblems = existingCarePlans.map(cp => cp.problem);
-      const existingGoals = existingCarePlans.map(cp => cp.goal);
+      const _existingProblems = existingCarePlans.map(cp => cp.problem);
+      const _existingGoals = existingCarePlans.map(cp => cp.goal);
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate Medicare-compliant care plan suggestions for Pennsylvania home health patient.

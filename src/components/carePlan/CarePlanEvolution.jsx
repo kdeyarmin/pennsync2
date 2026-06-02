@@ -22,7 +22,7 @@ import {
 import { format, differenceInDays, isValid } from "date-fns";
 
 export default function CarePlanEvolution({ 
-  patientId, 
+  _patientId, 
   patientName,
   carePlans = [], 
   visits = [],

@@ -113,7 +113,7 @@ export default function MedicationManager({ patientId }) {
     setEditingId(med.id);
   };
 
-  const statusColor = (status) => {
+  const _statusColor = (status) => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';

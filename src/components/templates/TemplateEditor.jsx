@@ -22,7 +22,7 @@ import {
 export default function TemplateEditor({ 
   templateData, 
   patient,
-  visitType,
+  _visitType,
   onContentChange,
   onClose 
 }) {

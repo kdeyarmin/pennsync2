@@ -38,7 +38,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
   const currentStepData = steps[currentStep];
 
   const handleResponseSubmit = () => {
-    const response = responses[currentStep];
+    const _response = responses[currentStep];
     
     // Simulate AI evaluation
     const isCorrect = Math.random() > 0.3; // Placeholder - would use AI in production

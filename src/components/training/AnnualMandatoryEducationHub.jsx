@@ -71,7 +71,7 @@ export default function AnnualMandatoryEducationHub() {
 
   const annualCourses = useMemo(() => courses.filter((course) => course.training_type === 'annual_mandatory' || course.annual_cycle_year === year), [courses, year]);
   const annualAssignments = useMemo(() => assignments.filter((assignment) => assignment.annual_cycle_year === year), [assignments, year]);
-  const annualCertificates = useMemo(() => certificates.filter((certificate) => certificate.annual_cycle_year === year), [certificates, year]);
+  const _annualCertificates = useMemo(() => certificates.filter((certificate) => certificate.annual_cycle_year === year), [certificates, year]);
   const dueSoon = annualAssignments.filter((assignment) => {
     if (!assignment.due_date || assignment.status === 'completed' || assignment.status === 'overdue') return false;
     const daysUntilDue = (new Date(assignment.due_date) - new Date()) / (1000 * 60 * 60 * 24);

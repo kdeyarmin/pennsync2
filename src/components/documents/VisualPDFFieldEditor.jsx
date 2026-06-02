@@ -31,10 +31,10 @@ export default function VisualPDFFieldEditor({ pdfUrl, onFieldsPlaced }) {
   const [selectedFieldType, setSelectedFieldType] = useState("text");
   const [fieldLabel, setFieldLabel] = useState("");
   const [draggingField, setDraggingField] = useState(null);
-  const [pdfLoaded, setPdfLoaded] = useState(false);
+  const [_pdfLoaded, setPdfLoaded] = useState(false);
   const [selectedField, setSelectedField] = useState(null);
   const [fontStyle, setFontStyle] = useState({ size: "14px", bold: false, italic: false, underline: false, color: "#000000" });
-  const [conditionalLogic, setConditionalLogic] = useState({});
+  const [_conditionalLogic, _setConditionalLogic] = useState({});
   const [tableRows, setTableRows] = useState(3);
   const [tableColumns, setTableColumns] = useState(3);
 

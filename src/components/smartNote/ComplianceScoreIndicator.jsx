@@ -80,7 +80,7 @@ export default function ComplianceScoreIndicator({
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [selectedEnhancedIssues, setSelectedEnhancedIssues] = useState(new Set());
   const [isFixingAll, setIsFixingAll] = useState(false);
-  const [highlightedText, setHighlightedText] = useState(null);
+  const [_highlightedText, setHighlightedText] = useState(null);
 
   // Condition-specific assessment requirements
   const conditionSpecificAssessments = {
@@ -244,7 +244,7 @@ export default function ComplianceScoreIndicator({
   };
 
   // Enhanced default suggestions - context-aware based on diagnosis and vital signs
-  const getDefaultSuggestion = (elementName, type, issueType = 'missing', currentDiagnosis = null) => {
+  const getDefaultSuggestion = (elementName, type, _issueType = 'missing', currentDiagnosis = null) => {
     const detectedConditions = detectConditions(currentDiagnosis || diagnosis);
     const primaryCondition = detectedConditions[0];
     const conditionData = primaryCondition ? conditionSpecificAssessments[primaryCondition] : null;
@@ -262,7 +262,7 @@ export default function ComplianceScoreIndicator({
     } : null;
     
     // Build condition-specific additions
-    const buildConditionSpecificText = (baseText, conditionKey) => {
+    const _buildConditionSpecificText = (baseText, conditionKey) => {
       if (!conditionData || !conditionData[conditionKey]) return baseText;
       return `${baseText} Condition-specific for ${primaryCondition}: ${conditionData[conditionKey]}`;
     };
@@ -1345,7 +1345,7 @@ Return JSON:
                       <input
                         type="checkbox"
                         checked={selectedEnhancedIssues.size === enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length && selectedEnhancedIssues.size > 0}
-                        onChange={(e) => {
+                        onChange={(_e) => {
                           if (selectedEnhancedIssues.size === enhancedComplianceData.flagged_issues.filter((_, idx) => !insertedIssues.has(idx)).length) {
                             setSelectedEnhancedIssues(new Set());
                           } else {

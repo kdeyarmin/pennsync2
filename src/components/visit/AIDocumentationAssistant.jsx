@@ -33,7 +33,7 @@ export default function AIDocumentationAssistant({
   const [suggestions, setSuggestions] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
-  const [lastAnalyzedLength, setLastAnalyzedLength] = useState(0);
+  const [_lastAnalyzedLength, setLastAnalyzedLength] = useState(0);
   const [insertedItems, setInsertedItems] = useState([]);
 
   // Auto-analyze when significant content changes

@@ -86,9 +86,9 @@ export default function ReferralIntake() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [extractedFormData, setExtractedFormData] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAnalyzing, _setIsAnalyzing] = useState(false);
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
-  const [processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
+  const [_processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const REFERRALS_PER_PAGE = 15;
   const [referralToDelete, setReferralToDelete] = useState(null);
@@ -262,7 +262,7 @@ Return comprehensive structured data for intelligent form pre-population and car
     setIsUploading(false);
   };
 
-  const handleMultiReferralDetectionComplete = async (analysis, selectedIndices) => {
+  const _handleMultiReferralDetectionComplete = async (analysis, selectedIndices) => {
     setProcessingMultipleReferrals(true);
     try {
       // Create referrals for each selected document
@@ -375,7 +375,7 @@ Return comprehensive structured data for intelligent form pre-population and car
     setIsUploading(false);
   };
 
-  const handleStatusChange = async (referralId, newStatus) => {
+  const _handleStatusChange = async (referralId, newStatus) => {
     try {
       await base44.entities.Referral.update(referralId, { status: newStatus });
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
@@ -824,7 +824,7 @@ Actions available:
       // Create all tasks and track success
       let createdTasksCount = 0;
       if (allSuggestedTasks.length > 0) {
-        const taskResults = await Promise.all(allSuggestedTasks.map(task => 
+        const _taskResults = await Promise.all(allSuggestedTasks.map(task => 
           base44.entities.Task.create(task)
             .then(() => { createdTasksCount++; return true; })
             .catch(err => { console.error('Failed to create task:', err); return false; })

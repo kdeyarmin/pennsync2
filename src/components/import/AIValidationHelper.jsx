@@ -12,7 +12,7 @@ import {
   RefreshCw
 } from "lucide-react";
 
-export default function AIValidationHelper({ validationErrors, onApplySuggestions }) {
+export default function AIValidationHelper({ validationErrors, _onApplySuggestions }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
 

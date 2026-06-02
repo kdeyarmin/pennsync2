@@ -144,8 +144,8 @@ export default function OASISComparisonView({
     setEditingItem(null);
   };
 
-  const pendingSuggestions = aiSuggestions.filter(([k, data]) => !data.reviewed);
-  const reviewedSuggestions = aiSuggestions.filter(([k, data]) => data.reviewed);
+  const pendingSuggestions = aiSuggestions.filter(([_k, data]) => !data.reviewed);
+  const reviewedSuggestions = aiSuggestions.filter(([_k, data]) => data.reviewed);
 
   return (
     <div className="space-y-4">

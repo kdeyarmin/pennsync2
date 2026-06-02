@@ -29,7 +29,7 @@ const MEDICARE_GUIDELINES = {
   "pe-2": { rule: "Emergency Plan", text: "Emergency contact and action plan must be documented and reviewed with patient/caregiver each visit.", link: "CoP 484.80(a)" },
 };
 
-export default function InterventionDetailPanel({ item, onLinkPathway, linkedPathway, onClose }) {
+export default function InterventionDetailPanel({ item, onLinkPathway, linkedPathway, _onClose }) {
   const [selectedPathway, setSelectedPathway] = useState(linkedPathway || "");
   const [aiInsight, setAiInsight] = useState(null);
   const [loadingAI, setLoadingAI] = useState(false);

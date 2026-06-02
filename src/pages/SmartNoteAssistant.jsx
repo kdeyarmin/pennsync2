@@ -72,7 +72,7 @@ export default function SmartNoteAssistant() {
   const [listening, setListening] = useState(false);
   const [activeTab, setActiveTab] = useState("builder");
   const [noteSections, setNoteSections] = useState(null);
-  const [copiedSection, setCopiedSection] = useState(null);
+  const [_copiedSection, setCopiedSection] = useState(null);
   const [hasDraft, setHasDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [signatureImage, setSignatureImage] = useState(null);
@@ -339,7 +339,7 @@ Return JSON: { "clinical_alerts": [{ "risk_type": "fall|medication|exacerbation|
         setAnalyzing(false);
         return;
       }
-    } catch (err) {
+    } catch {
       toast.error("Analysis failed. Please try again.");
       setStep(1);
     } finally {
@@ -439,7 +439,7 @@ Return ONLY the final note text.`
     }
   };
 
-  const selectBySeverity = (severity) => {
+  const _selectBySeverity = (severity) => {
     if (!analysis) return;
     const filtered = (analysis.findings || []).filter(f => f.severity === severity).map(f => f.id);
     setSelected(new Set([...selected, ...filtered]));
@@ -511,7 +511,7 @@ Return ONLY the final note text.`
     return secs.length > 1 ? secs : null;
   };
 
-  const copySection = async (key, text) => {
+  const _copySection = async (key, text) => {
     await navigator.clipboard.writeText(text);
     setCopiedSection(key);
     setTimeout(() => setCopiedSection(null), 2000);
@@ -519,13 +519,13 @@ Return ONLY the final note text.`
 
   const toggle = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-  const urgentAlerts = alerts.filter(a => a.urgency === "immediate");
-  const criticalFindings = analysis?.findings?.filter(f => f.severity === "critical") || [];
+  const _urgentAlerts = alerts.filter(a => a.urgency === "immediate");
+  const _criticalFindings = analysis?.findings?.filter(f => f.severity === "critical") || [];
   const needsClarificationFindings = analysis?.findings?.filter(f => f.needs_clarification) || [];
-  const answeredCount = needsClarificationFindings.filter(f => answers[f.id]?.trim()).length;
-  const complianceFindings = analysis?.findings?.filter(f => f.category === "compliance") || [];
-  const qualityFindings = analysis?.findings?.filter(f => f.category === "quality") || [];
-  const totalRevenueImpact = calculateTotalRevenueImpact();
+  const _answeredCount = needsClarificationFindings.filter(f => answers[f.id]?.trim()).length;
+  const _complianceFindings = analysis?.findings?.filter(f => f.category === "compliance") || [];
+  const _qualityFindings = analysis?.findings?.filter(f => f.category === "quality") || [];
+  const _totalRevenueImpact = calculateTotalRevenueImpact();
   const scoreColor = !analysis ? "text-slate-400" : analysis.overall_score >= 80 ? "text-green-600" : analysis.overall_score >= 60 ? "text-orange-500" : "text-red-600";
   const ready = note.trim().length >= 20;
 

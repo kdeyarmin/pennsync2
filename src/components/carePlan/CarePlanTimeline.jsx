@@ -9,7 +9,7 @@ import {
   TrendingUp
 } from "lucide-react";
 
-export default function CarePlanTimeline({ carePlans = [], patient }) {
+export default function CarePlanTimeline({ carePlans = [], _patient }) {
   if (!carePlans || carePlans.length === 0) {
     return (
       <Card>

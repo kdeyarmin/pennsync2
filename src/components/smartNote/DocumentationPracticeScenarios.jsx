@@ -29,7 +29,7 @@ export default function DocumentationPracticeScenarios({
   weakAreas = [],
   recentErrors = [],
   nurseEmail,
-  onComplete,
+  _onComplete,
   isOpen,
   onOpenChange
 }) {

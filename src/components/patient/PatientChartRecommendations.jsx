@@ -74,7 +74,7 @@ export default function PatientChartRecommendations({ patientId }) {
 
   const pendingRecs = recommendations.filter(r => r.status === 'pending');
   const acceptedRecs = recommendations.filter(r => r.status === 'accepted');
-  const completedRecs = recommendations.filter(r => r.status === 'completed');
+  const _completedRecs = recommendations.filter(r => r.status === 'completed');
 
   if (isLoading) {
     return <Card><CardContent className="p-6 text-center text-slate-500">Loading recommendations...</CardContent></Card>;

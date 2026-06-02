@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Save, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function SessionDocumentation({ sessionId, onSave, initialData = {} }) {
+export default function SessionDocumentation({ _sessionId, onSave, initialData = {} }) {
   const [formData, setFormData] = useState({
     chief_complaint: initialData.chief_complaint || '',
     vitals_captured: initialData.vitals_captured || {

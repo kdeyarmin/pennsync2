@@ -14,7 +14,7 @@ import PDGMReimbursementReport from "@/components/reports/PDGMReimbursementRepor
 import KPIDashboard from "@/components/reports/KPIDashboard";
 
 export default function ReportsAnalytics() {
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, _setDateRange] = useState({
     start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   });

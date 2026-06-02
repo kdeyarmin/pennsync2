@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Activity, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 
-export default function HealthTrendsChart({ visits, patient }) {
+export default function HealthTrendsChart({ visits, _patient }) {
   const completedVisits = visits
     .filter(v => v.status === 'completed' && v.vital_signs)
     .slice(0, 10)

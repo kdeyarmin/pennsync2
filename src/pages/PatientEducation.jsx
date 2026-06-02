@@ -29,7 +29,7 @@ import TeachBackPromptsGenerator from "../components/education/TeachBackPromptsG
 
 export default function PatientEducation() {
   const [selectedPatientId, setSelectedPatientId] = useState("");
-  const [selectedTopic, setSelectedTopic] = useState("");
+  const [_selectedTopic, _setSelectedTopic] = useState("");
   const [generatedMaterial, setGeneratedMaterial] = useState(null);
   const [teachBackRecords, setTeachBackRecords] = useState([]);
 

@@ -166,7 +166,7 @@ ${searchResults.key_points?.map((point, idx) => `${idx + 1}. ${point}`).join('\n
 ${searchResults.patient_considerations ? `Patient-Specific Considerations:\n${searchResults.patient_considerations}\n` : ''}
 
 Monitoring Plan:
-${searchResults.monitoring?.map((item, idx) => `- ${item}`).join('\n') || ''}
+${searchResults.monitoring?.map((item, _idx) => `- ${item}`).join('\n') || ''}
 
 ${searchResults.red_flags?.length > 0 ? `Red Flags to Watch:\n${searchResults.red_flags.map(flag => `⚠️ ${flag}`).join('\n')}` : ''}
 `.trim();
