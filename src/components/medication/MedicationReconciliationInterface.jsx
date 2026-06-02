@@ -122,6 +122,11 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
       refetchReconciliation();
       queryClient.invalidateQueries({ queryKey: ['patient-medications', patientId] });
       toast.success('Discrepancy resolved');
+    },
+    onError: (error) => {
+      // These writes create/update/discontinue real Medication records — a silent
+      // failure would leave the chart inconsistent with what the nurse saw.
+      toast.error(error?.message || 'Failed to resolve discrepancy. The medication change was not saved.');
     }
   });
 
@@ -171,8 +176,12 @@ export default function MedicationReconciliationInterface({ patientId, onClose, 
 
   const severityConfig = {
     critical: { color: 'bg-red-100 text-red-800 border-red-300', icon: AlertTriangle, label: 'Critical' },
+    // "major" is what the drug-interaction engine emits for serious interactions;
+    // without this entry the lookup below fell back to "Low" (blue), hiding the risk.
+    major: { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: AlertTriangle, label: 'Major' },
     high: { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: AlertTriangle, label: 'High' },
     moderate: { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: AlertTriangle, label: 'Moderate' },
+    medium: { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: AlertTriangle, label: 'Moderate' },
     low: { color: 'bg-blue-100 text-blue-800 border-blue-300', icon: Eye, label: 'Low' }
   };
 

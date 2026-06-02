@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Clock, RefreshCw } from "lucide-react";
 import { logSecurityEvent } from "../utils/security";
+import { clearCachedPHI } from "@/lib/phiStorage";
 
 /**
  * Session Timeout Manager Component
@@ -32,6 +33,9 @@ export default function SessionTimeoutManager({
     // Clear sensitive data from memory (incl. cached PHI in the query cache)
     sessionStorage.clear();
     try { queryClientInstance.clear(); } catch (_e) { /* no-op */ }
+    // Purge re-fetchable PHI persisted to localStorage/IndexedDB (preserves
+    // unsynced offline work — see clearCachedPHI).
+    try { clearCachedPHI(); } catch (_e) { /* no-op */ }
 
     // Logout and redirect
     base44.auth.logout();

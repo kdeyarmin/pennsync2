@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 import { queryClientInstance } from '@/lib/query-client';
+import { clearCachedPHI } from '@/lib/phiStorage';
 
 const AuthContext = createContext();
 
@@ -127,6 +128,9 @@ export const AuthProvider = ({ children }) => {
     // HIPAA: purge all cached PHI so the next user on a shared device can't
     // see the previous session's patient data before refetch.
     try { queryClientInstance.clear(); } catch (_e) { /* no-op */ }
+    // Also purge re-fetchable PHI persisted to localStorage/IndexedDB (the
+    // in-memory React Query cache is not the only copy).
+    try { clearCachedPHI(); } catch (_e) { /* no-op */ }
 
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect

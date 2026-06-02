@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { base44 } from '@/api/base44Client';
 import { logError } from './activityLogger';
 
@@ -97,6 +98,24 @@ export function sanitizeInput(input) {
     .replace(/javascript:/gi, '') // Remove javascript: protocol
     .replace(/on\w+=/gi, '') // Remove event handlers
     .trim();
+}
+
+/**
+ * Sanitize an HTML string for safe use with dangerouslySetInnerHTML.
+ *
+ * The regex-based sanitizeInput() above is for plain-text fields and is NOT a
+ * safe sanitizer for an HTML sink. Any time stored/AI/user-supplied HTML is
+ * rendered (e.g. document content), run it through this DOMPurify pass, which
+ * strips scripts, event handlers, and dangerous URL schemes while keeping
+ * formatting markup.
+ * @param {string} html
+ * @returns {string} sanitized HTML safe to inject
+ */
+export function sanitizeHtml(html) {
+  if (typeof html !== 'string' || html.length === 0) {
+    return '';
+  }
+  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
 }
 
 /**
