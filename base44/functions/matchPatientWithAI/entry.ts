@@ -26,7 +26,7 @@ ${JSON.stringify(existingPatients.map(p => ({
     first_name: p.first_name,
     middle_name: p.middle_name,
     last_name: p.last_name,
-    full_name: \`\${p.first_name || ''} \${p.middle_name || ''} \${p.last_name || ''}\`.trim(),
+    full_name: `${p.first_name || ''} ${p.middle_name || ''} ${p.last_name || ''}`.trim(),
     mrn: p.medical_record_number,
     dob: p.date_of_birth,
     phone: p.phone,
