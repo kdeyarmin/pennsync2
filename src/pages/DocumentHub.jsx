@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import SignatureTracking from "@/components/documents/SignatureTracking";
 import TemplateLibrary from "@/components/documents/TemplateLibrary";
 import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
 import DocumentAnalytics from "@/components/documents/DocumentAnalytics";
+import { getNormalizedSignatureStatus, isSignatureOverdue } from "@/components/signature/signatureUtils";
 
 export default function DocumentHub() {
   const [activeTab, setActiveTab] = useState("signatures");
@@ -31,13 +32,17 @@ export default function DocumentHub() {
     initialData: [],
   });
 
-  const stats = {
-    pending: allSignatures.filter(s => s.status === 'pending').length,
-    signed: allSignatures.filter(s => s.status === 'signed').length,
-    overdue: allSignatures.filter(s => 
-      s.status === 'pending' && s.due_date && new Date(s.due_date) < new Date()
-    ).length,
-  };
+  const normalizedSignatures = useMemo(() => allSignatures.map((signature) => ({
+    ...signature,
+    normalizedStatus: getNormalizedSignatureStatus(signature),
+    isOverdue: isSignatureOverdue(signature),
+  })), [allSignatures]);
+
+  const stats = useMemo(() => ({
+    pending: normalizedSignatures.filter((signature) => signature.normalizedStatus !== 'signed').length,
+    signed: normalizedSignatures.filter((signature) => signature.normalizedStatus === 'signed').length,
+    overdue: normalizedSignatures.filter((signature) => signature.isOverdue).length,
+  }), [normalizedSignatures]);
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
