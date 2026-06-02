@@ -10,12 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Video, Plus, Calendar, Clock, CheckCircle2, MessageSquare } from "lucide-react";
+import { Video, Plus, Calendar, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import VideoRoom from "../components/telehealth/VideoRoom";
+import TelehealthCall from "../components/telehealth/TelehealthCall";
 import SessionCard from "../components/telehealth/SessionCard";
 import SessionDocumentation from "../components/telehealth/SessionDocumentation";
-import TelehealthChat from "../components/telehealth/TelehealthChat";
 import RealtimeVitalMonitor from "../components/telehealth/RealtimeVitalMonitor";
 import { generateJoinToken, buildPatientJoinLink } from "../components/telehealth/telehealthUtils";
 
@@ -31,7 +30,6 @@ const visitTypes = [
 export default function Telehealth() {
   const [activeSession, setActiveSession] = useState(null);
   const [showNewSession, setShowNewSession] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [showDocumentation, setShowDocumentation] = useState(false);
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
@@ -67,6 +65,27 @@ export default function Telehealth() {
     mutationFn: ({ id, data }) => base44.entities.TelehealthSession.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["telehealth-sessions"] })
   });
+
+  const textLink = useMutation({
+    mutationFn: ({ to_number, body, patient_id }) => base44.functions.invoke("sendSms", { to_number, body, patient_id }),
+    onSuccess: () => toast.success("Join link texted to the patient"),
+    onError: (e) => toast.error(e?.message || "Couldn't send the text")
+  });
+
+  const handleTextPatient = (session) => {
+    const patient = patients.find((p) => p.id === session.patient_id);
+    const phone = patient?.phone || patient?.phone_number || patient?.cell;
+    if (!phone) {
+      toast.error("No phone number on file for this patient");
+      return;
+    }
+    const greeting = patient?.first_name ? `Hi ${patient.first_name}, ` : "Hi, ";
+    textLink.mutate({
+      to_number: phone,
+      body: `${greeting}here's your secure telehealth visit link: ${session.invite_link}`,
+      patient_id: session.patient_id
+    });
+  };
 
   const handleJoin = async (session) => {
     endingRef.current = false;
@@ -179,51 +198,30 @@ export default function Telehealth() {
 
       {/* Active session */}
       {activeSession && !showDocumentation && (
-        <div className="px-3 sm:px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-4">
-            <Card className="border-green-400 bg-green-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                    <span className="font-semibold text-green-800">Active Session — {activeSession.patient_name}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => setShowChat(!showChat)}
-                      className="gap-2"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      {showChat ? 'Hide' : 'Show'} Chat
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={handleDisconnect} className="text-red-600 border-red-300">
-                      End Session
-                    </Button>
-                  </div>
+        <div className="px-3 sm:px-4 md:px-6 space-y-4 max-w-4xl">
+          <Card className="border-green-400 bg-green-50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+                  <span className="font-semibold text-green-800">Active Session — {activeSession.patient_name}</span>
                 </div>
-                <VideoRoom
-                  roomName={activeSession.room_name}
-                  identity={currentUser?.full_name || currentUser?.email}
-                  onDisconnect={handleDisconnect}
-                  onToggleChat={() => setShowChat((v) => !v)}
-                />
-              </CardContent>
-            </Card>
-            <RealtimeVitalMonitor 
-              sessionId={activeSession.id}
-              patientId={activeSession.patient_id}
-            />
-          </div>
-          {showChat && (
-            <div className="lg:col-span-1">
-              <TelehealthChat 
-                sessionId={activeSession.id}
-                userName={currentUser?.full_name || currentUser?.email}
+                <Button size="sm" variant="outline" onClick={handleDisconnect} className="text-red-600 border-red-300">
+                  End Session
+                </Button>
+              </div>
+              <TelehealthCall
+                roomName={activeSession.room_name}
+                identity={currentUser?.full_name || currentUser?.email}
+                role="staff"
+                onDisconnect={handleDisconnect}
               />
-            </div>
-          )}
+            </CardContent>
+          </Card>
+          <RealtimeVitalMonitor
+            sessionId={activeSession.id}
+            patientId={activeSession.patient_id}
+          />
         </div>
       )}
 
@@ -257,7 +255,7 @@ export default function Telehealth() {
               <p>No upcoming sessions. Create one to get started.</p>
             </div>
           ) : upcoming.map(s => (
-            <SessionCard key={s.id} session={s} onJoin={handleJoin} onCancel={handleCancel} />
+            <SessionCard key={s.id} session={s} onJoin={handleJoin} onCancel={handleCancel} onTextPatient={handleTextPatient} />
           ))}
         </TabsContent>
 

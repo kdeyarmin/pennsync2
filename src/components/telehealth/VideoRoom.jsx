@@ -2,18 +2,21 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { createTelehealthToken } from "@/functions/createTelehealthToken";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { VideoOff, Users, Loader2
-} from "lucide-react";
+import { VideoOff, Users, Loader2 } from "lucide-react";
 import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";
+import TelehealthChat from "./TelehealthChat";
 
-export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange, onToggleChat, joinToken, waitingMessage = "Waiting for patient to join..." }) {
+export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange, joinToken, videoDeviceId, audioDeviceId, waitingMessage = "Waiting for patient to join..." }) {
   const [participants, setParticipants] = useState([]);
-  const [status, setStatus] = useState("connecting"); // connecting | connected | error
+  const [status, setStatus] = useState("connecting"); // connecting | connected | reconnecting | error
   const [error, setError] = useState(null);
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [providerName, setProviderName] = useState(null);
   const [sessionStartTime, setSessionStartTime] = useState(null);
 
   useEffect(() => {
@@ -25,7 +28,26 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   const roomRef = useRef(null);
   const screenTrackRef = useRef(null);
   const cameraTrackRef = useRef(null);
+  const dataTrackRef = useRef(null);
   const endedRef = useRef(false);
+
+  // Append a chat message received over a remote participant's data track.
+  const handleIncomingMessage = useCallback((raw, senderIdentity) => {
+    let text = raw;
+    let ts = Date.now();
+    try {
+      const parsed = JSON.parse(raw);
+      text = parsed.text ?? raw;
+      ts = parsed.ts ?? ts;
+    } catch { /* fall back to the raw string */ }
+    setMessages(prev => [...prev, {
+      id: `${senderIdentity}-${ts}-${Math.random().toString(36).slice(2, 6)}`,
+      sender: senderIdentity,
+      text,
+      timestamp: new Date(ts).toISOString(),
+      isSelf: false,
+    }]);
+  }, []);
 
   const connectToRoom = useCallback(async () => {
     try {
@@ -36,19 +58,36 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         joinToken ? { room_name: roomName, join_token: joinToken } : { room_name: roomName, identity }
       );
       const { token } = res.data;
+      // For patients, greet them with the provider's name while they wait.
+      if (joinToken && res.data.host_name) setProviderName(res.data.host_name);
 
       const Video = (await import("twilio-video")).default;
 
+      // Honor the camera/mic chosen in the pre-join device check (bare deviceId
+      // is an "ideal" hint, so a since-unplugged device falls back gracefully).
+      const audioConstraint = audioDeviceId ? { deviceId: audioDeviceId } : true;
+      const videoConstraint = { width: 1280, height: 720 };
+      if (videoDeviceId) videoConstraint.deviceId = videoDeviceId;
+
       const connectedRoom = await Video.connect(token, {
         name: roomName,
-        audio: true,
-        video: { width: 1280, height: 720 }
+        audio: audioConstraint,
+        video: videoConstraint
       });
 
       roomRef.current = connectedRoom;
       endedRef.current = false;
       setStatus("connected");
       setSessionStartTime(new Date());
+
+      // Publish a data track so in-call chat messages actually reach the other side.
+      try {
+        const dataTrack = new Video.LocalDataTrack();
+        dataTrackRef.current = dataTrack;
+        await connectedRoom.localParticipant.publishTrack(dataTrack);
+      } catch (chatErr) {
+        console.error("Chat data track error:", chatErr);
+      }
 
       // Attach local camera video and keep a handle to the camera track so it
       // can be restored after a screen share ends.
@@ -66,6 +105,10 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
       connectedRoom.on("participantConnected", p => setParticipants(prev => [...prev, p]));
       connectedRoom.on("participantDisconnected", p => setParticipants(prev => prev.filter(x => x !== p)));
+      // Twilio recovers transient network drops on its own; surface that as a
+      // "Reconnecting…" state instead of treating the blip as the visit ending.
+      connectedRoom.on("reconnecting", () => setStatus("reconnecting"));
+      connectedRoom.on("reconnected", () => setStatus("connected"));
       connectedRoom.on("disconnected", () => {
         setStatus("disconnected");
         if (!endedRef.current) {
@@ -79,7 +122,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       setError(err.message);
       setStatus("error");
     }
-  }, [roomName, identity, joinToken, onDisconnect]);
+  }, [roomName, identity, joinToken, videoDeviceId, audioDeviceId, onDisconnect]);
 
   useEffect(() => {
     connectToRoom();
@@ -183,6 +226,22 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     }
   };
 
+  const sendMessage = (text) => {
+    try {
+      dataTrackRef.current?.send(JSON.stringify({ text, ts: Date.now() }));
+    } catch (err) {
+      console.error('Chat send error:', err);
+    }
+    // Data tracks don't echo back to the sender, so add our own message locally.
+    setMessages(prev => [...prev, {
+      id: `self-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      sender: identity,
+      text,
+      timestamp: new Date().toISOString(),
+      isSelf: true,
+    }]);
+  };
+
   if (status === "connecting") {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4 bg-gray-900 rounded-xl">
@@ -210,8 +269,17 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       {/* Status bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-green-700">Live</span>
+          {status === "reconnecting" ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+              <span className="text-sm font-medium text-amber-600">Reconnecting…</span>
+            </>
+          ) : (
+            <>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-green-700">Live</span>
+            </>
+          )}
           <Badge variant="outline" className="text-xs">
             <Users className="w-3 h-3 mr-1" />
             {participants.length + 1} participant{participants.length !== 0 ? "s" : ""}
@@ -240,14 +308,14 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
         {/* Remote participants */}
         {participants.map(participant => (
-          <RemoteParticipant key={participant.sid} participant={participant} />
+          <RemoteParticipant key={participant.sid} participant={participant} onMessage={handleIncomingMessage} />
         ))}
 
         {/* Waiting placeholder */}
         {participants.length === 0 && (
           <div className="bg-gray-800 rounded-xl aspect-video flex flex-col items-center justify-center gap-2">
             <Users className="w-10 h-10 text-gray-500" />
-            <p className="text-gray-400 text-sm">{waitingMessage}</p>
+            <p className="text-gray-400 text-sm">{providerName ? `Waiting for ${providerName} to join…` : waitingMessage}</p>
           </div>
         )}
       </div>
@@ -257,17 +325,22 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         audioMuted={audioMuted}
         videoMuted={videoMuted}
         screenSharing={screenSharing}
+        chatActive={showChat}
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
         onDisconnect={disconnect}
-        onToggleChat={onToggleChat}
+        onToggleChat={() => setShowChat(v => !v)}
         onToggleScreenShare={toggleScreenShare}
       />
+
+      {showChat && (
+        <TelehealthChat messages={messages} onSend={sendMessage} userName={identity} />
+      )}
     </div>
   );
 }
 
-function RemoteParticipant({ participant }) {
+function RemoteParticipant({ participant, onMessage }) {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
 
@@ -275,6 +348,7 @@ function RemoteParticipant({ participant }) {
     const attachTrack = (track) => {
       if (track.kind === "video" && videoRef.current) videoRef.current.appendChild(track.attach());
       if (track.kind === "audio" && audioRef.current) audioRef.current.appendChild(track.attach());
+      if (track.kind === "data") track.on("message", (data) => onMessage?.(data, participant.identity));
     };
 
     participant.tracks.forEach(pub => {
@@ -282,10 +356,12 @@ function RemoteParticipant({ participant }) {
     });
 
     participant.on("trackSubscribed", attachTrack);
-    participant.on("trackUnsubscribed", track => track.detach().forEach(el => el.remove()));
+    participant.on("trackUnsubscribed", track => {
+      if (typeof track.detach === "function") track.detach().forEach(el => el.remove());
+    });
 
     return () => participant.removeAllListeners();
-  }, [participant]);
+  }, [participant, onMessage]);
 
   return (
     <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">

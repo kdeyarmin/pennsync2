@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Video, CheckCircle, ShieldCheck } from 'lucide-react';
-import PreVisitChecklist from '@/components/telehealth/PreVisitChecklist';
-import VideoRoom from '@/components/telehealth/VideoRoom';
+import { Video, ShieldCheck } from 'lucide-react';
+import TelehealthCall from '@/components/telehealth/TelehealthCall';
 
 // Public, no-login page a patient lands on after following their telehealth
 // invite link (/join?room=...&t=...). The token in the URL is the capability
@@ -15,8 +14,7 @@ export default function JoinTelehealth() {
   const [searchParams] = useSearchParams();
   const roomName = searchParams.get('room');
   const joinToken = searchParams.get('t');
-  const [ready, setReady] = useState(false);
-  const [joined, setJoined] = useState(false);
+  const [left, setLeft] = useState(false);
 
   if (!roomName || !joinToken) {
     return (
@@ -35,62 +33,44 @@ export default function JoinTelehealth() {
     );
   }
 
-  if (joined) {
+  if (left) {
     return (
-      <div className="min-h-screen bg-gray-900 p-2 sm:p-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-4 flex items-center justify-between">
-            <Badge className="bg-green-100 text-green-700 gap-1">
-              <CheckCircle className="w-4 h-4" />
-              Connected
-            </Badge>
-            <span className="text-sm text-gray-300">Telehealth Visit</span>
-          </div>
-          <VideoRoom
-            roomName={roomName}
-            joinToken={joinToken}
-            identity="You"
-            waitingMessage="Waiting for your provider to join…"
-            onDisconnect={() => setJoined(false)}
-          />
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center space-y-4">
+            <Video className="w-12 h-12 text-blue-600 mx-auto" />
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">You&apos;ve left the visit</h1>
+              <p className="text-gray-600 text-sm">If you left by accident, you can rejoin below.</p>
+            </div>
+            <Button onClick={() => setLeft(false)} className="bg-blue-600 hover:bg-blue-700 gap-2">
+              <Video className="w-4 h-4" /> Rejoin visit
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Video className="w-8 h-8 text-blue-600" />
-              <div>
-                <CardTitle className="text-2xl">Ready for your visit?</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  Confirm a few things below, then join your provider.
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <PreVisitChecklist onReadyChange={setReady} isNurse={false} />
-
-            <Button
-              onClick={() => setJoined(true)}
-              disabled={!ready}
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-2"
-            >
-              <Video className="w-5 h-5" />
-              {ready ? 'Join Now' : 'Complete the checklist to join'}
-            </Button>
-
-            <p className="text-xs text-gray-500 flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Your video visit is private and secure.
-            </p>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-gray-900 p-3 sm:p-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-4 flex items-center justify-between">
+          <Badge className="bg-blue-100 text-blue-700 gap-1">
+            <Video className="w-3.5 h-3.5" /> Telehealth Visit
+          </Badge>
+          <span className="text-xs text-gray-300 flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" /> Private &amp; secure
+          </span>
+        </div>
+        <TelehealthCall
+          roomName={roomName}
+          joinToken={joinToken}
+          identity="You"
+          role="patient"
+          waitingMessage="Waiting for your provider to join…"
+          onDisconnect={() => setLeft(true)}
+        />
       </div>
     </div>
   );

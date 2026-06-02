@@ -5,6 +5,7 @@ export default function EnhancedVideoControls({
   audioMuted,
   videoMuted,
   screenSharing = false,
+  chatActive = false,
   onToggleAudio,
   onToggleVideo,
   onDisconnect,
@@ -60,8 +61,12 @@ export default function EnhancedVideoControls({
           variant="ghost"
           size="icon"
           onClick={onToggleChat}
-          className="rounded-full h-12 w-12 bg-gray-700 hover:bg-gray-600 text-white transition"
-          title="Show chat"
+          className={`rounded-full h-12 w-12 transition ${
+            chatActive
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              : 'bg-gray-700 hover:bg-gray-600 text-white'
+          }`}
+          title={chatActive ? 'Hide chat' : 'Show chat'}
         >
           <MessageSquare className="w-5 h-5" />
         </Button>

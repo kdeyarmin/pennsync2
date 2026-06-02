@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
 
     const token = `${signingInput}.${sigB64}`;
 
-    return Response.json({ token, identity: participantIdentity, room_name });
+    return Response.json({ token, identity: participantIdentity, room_name, host_name: session.host_name || null });
   } catch (error) {
     console.error('createTelehealthToken error:', error);
     return Response.json({ error: error.message }, { status: 500 });
