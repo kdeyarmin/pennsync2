@@ -119,6 +119,25 @@
     "profile_completeness_score": {
       "type": "number",
       "description": "Percentage of profile fields completed (0-100)"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of this user's manager/approver for time-off and approvals"
+    },
+    "is_manager": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this user can approve time-off requests for their direct reports"
+    },
+    "pto_allowances": {
+      "type": "object",
+      "description": "Per-user annual time-off day allowance overrides (falls back to agency defaults)",
+      "properties": {
+        "vacation": { "type": "number" },
+        "sick": { "type": "number" },
+        "personal": { "type": "number" },
+        "parental": { "type": "number" }
+      }
     }
   },
   "required": [

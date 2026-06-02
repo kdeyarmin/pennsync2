@@ -1,0 +1,66 @@
+{
+  "name": "TimeOffPolicy",
+  "type": "object",
+  "properties": {
+    "minimum_notice_days": {
+      "type": "number",
+      "default": 0,
+      "description": "Minimum calendar days of advance notice required before a time-off start date (0 disables the rule)"
+    },
+    "coverage_threshold": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of approved people off on the same day at which the calendar flags a coverage risk (0 disables the warning)"
+    },
+    "blackout_periods": {
+      "type": "array",
+      "description": "Date ranges during which time off cannot be requested",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Human-readable reason, e.g. 'State survey window'"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
+    "default_allowances": {
+      "type": "object",
+      "description": "Default annual day allowance per leave type (a type omitted here is untracked)",
+      "properties": {
+        "vacation": { "type": "number" },
+        "sick": { "type": "number" },
+        "personal": { "type": "number" },
+        "parental": { "type": "number" }
+      }
+    },
+    "accrual_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, the current year's allowance accrues monthly (annual ÷ 12 × months elapsed) instead of being fully available on Jan 1"
+    },
+    "carryover_max": {
+      "type": "number",
+      "default": 0,
+      "description": "Maximum unused days that roll over from the prior year per tracked type (0 disables carryover)"
+    }
+  },
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "required": []
+}

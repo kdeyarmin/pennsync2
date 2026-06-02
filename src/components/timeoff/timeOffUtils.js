@@ -1,0 +1,362 @@
+/**
+ * Pure helpers for the time-off / PTO system.
+ *
+ * Intentionally free of React and SDK imports so the logic stays unit-testable
+ * with `node --test` (see timeOffUtils.test.js), matching the convention used
+ * by phoneUtils, smsUtils, etc. in this repo.
+ */
+
+export const REQUEST_TYPES = [
+  { value: "vacation", label: "Vacation / PTO", color: "blue" },
+  { value: "sick", label: "Sick Leave", color: "amber" },
+  { value: "personal", label: "Personal Day", color: "violet" },
+  { value: "bereavement", label: "Bereavement", color: "slate" },
+  { value: "jury_duty", label: "Jury Duty", color: "slate" },
+  { value: "parental", label: "Parental Leave", color: "pink" },
+  { value: "unpaid", label: "Unpaid Leave", color: "slate" },
+  { value: "other", label: "Other", color: "slate" },
+];
+
+export const STATUSES = [
+  { value: "pending", label: "Pending", color: "amber" },
+  { value: "approved", label: "Approved", color: "emerald" },
+  { value: "denied", label: "Denied", color: "red" },
+  { value: "cancelled", label: "Cancelled", color: "slate" },
+];
+
+export function typeLabel(value) {
+  return REQUEST_TYPES.find((t) => t.value === value)?.label || value || "—";
+}
+
+export function statusLabel(value) {
+  return STATUSES.find((s) => s.value === value)?.label || value || "—";
+}
+
+/**
+ * Parse a `YYYY-MM-DD` (or full ISO) string into a local Date at midnight.
+ * Building the Date from explicit parts avoids the UTC-shift bug you get from
+ * `new Date("2026-01-01")`, which can land on the previous day in some zones.
+ */
+export function parseISODate(value) {
+  if (!value) return null;
+  const datePart = String(value).slice(0, 10);
+  const parts = datePart.split("-").map(Number);
+  const [y, m, d] = parts;
+  if (!y || !m || !d || parts.length !== 3) return null;
+  const date = new Date(y, m - 1, d);
+  if (isNaN(date.getTime())) return null;
+  // Reject impossible dates like 2026-02-31: JS rolls the overflow into the
+  // next month, which would silently shift a stored/requested date.
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null;
+  return date;
+}
+
+/** Format a Date (or date string) back to a `YYYY-MM-DD` string. */
+export function toISODate(date) {
+  const d = date instanceof Date ? date : parseISODate(date);
+  if (!d || isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Count business days (Mon–Fri), inclusive, between two date strings. */
+export function businessDaysBetween(start, end) {
+  const s = parseISODate(start);
+  const e = parseISODate(end);
+  if (!s || !e || e < s) return 0;
+  let count = 0;
+  const cur = new Date(s);
+  while (cur <= e) {
+    const day = cur.getDay();
+    if (day !== 0 && day !== 6) count += 1;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
+
+/** Calendar (inclusive) day count between two date strings. */
+export function calendarDaysBetween(start, end) {
+  const s = parseISODate(start);
+  const e = parseISODate(end);
+  if (!s || !e || e < s) return 0;
+  return Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
+}
+
+/**
+ * Total requested days, counting business days and honoring a single
+ * half-day flag (which subtracts 0.5 from the total).
+ */
+export function totalRequestedDays(start, end, halfDay = false) {
+  const business = businessDaysBetween(start, end);
+  if (business === 0) return 0;
+  if (halfDay) return Math.max(0.5, business - 0.5);
+  return business;
+}
+
+/** Does a request's date range cover the given `YYYY-MM-DD` day? */
+export function requestCoversDate(request, isoDate) {
+  const d = parseISODate(isoDate);
+  const s = parseISODate(request?.start_date);
+  const e = parseISODate(request?.end_date);
+  if (!d || !s || !e) return false;
+  return d >= s && d <= e;
+}
+
+/** Do two inclusive date ranges overlap at all? */
+export function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+  const as = parseISODate(aStart);
+  const ae = parseISODate(aEnd);
+  const bs = parseISODate(bStart);
+  const be = parseISODate(bEnd);
+  if (!as || !ae || !bs || !be) return false;
+  return as <= be && bs <= ae;
+}
+
+/** A request is "upcoming" if it has not fully ended as of `today`. */
+export function isUpcoming(request, today = new Date()) {
+  const e = parseISODate(request?.end_date);
+  if (!e) return false;
+  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return e >= t;
+}
+
+/** Is an approved request active on the given day? */
+export function isActiveOnDate(request, isoDate) {
+  return request?.status === "approved" && requestCoversDate(request, isoDate);
+}
+
+/**
+ * Sum of approved days, optionally constrained to a calendar year (by the
+ * request's start date). Used for the employee balance summary.
+ */
+export function approvedDaysInYear(requests = [], year) {
+  return requests
+    .filter((r) => r.status === "approved")
+    .reduce((sum, r) => {
+      const s = parseISODate(r.start_date);
+      if (!s) return sum;
+      if (year && s.getFullYear() !== year) return sum;
+      const days =
+        Number(r.total_days) ||
+        totalRequestedDays(r.start_date, r.end_date, r.half_day);
+      return sum + days;
+    }, 0);
+}
+
+/** Validate a request's core date fields. Returns an error string or null. */
+export function validateRequestDates(start, end) {
+  const s = parseISODate(start);
+  const e = parseISODate(end);
+  if (!s) return "Please choose a start date.";
+  if (!e) return "Please choose an end date.";
+  if (e < s) return "The end date can't be before the start date.";
+  return null;
+}
+
+/**
+ * Full submission validation: valid ordered dates *and* at least a partial
+ * working day. A weekend-only range yields 0 business days, which we reject so
+ * empty requests never enter the approval queue. Returns an error string or null.
+ */
+export function getRequestValidationError(start, end, halfDay = false) {
+  const dateError = validateRequestDates(start, end);
+  if (dateError) return dateError;
+  if (totalRequestedDays(start, end, halfDay) <= 0) {
+    return "Your selected range has no working days (weekends are excluded).";
+  }
+  return null;
+}
+
+/**
+ * Human-friendly date range, e.g. "Mar 3" or "Mar 3 – Mar 7, 2026".
+ * Locale-formatted, so not asserted in unit tests.
+ */
+export function formatDateRange(start, end) {
+  const s = parseISODate(start);
+  const e = parseISODate(end);
+  if (!s) return "—";
+  // Options are inlined (rather than spread from a shared object) so the string
+  // literals keep their precise types under tsc --checkJs.
+  if (!e || toISODate(s) === toISODate(e)) {
+    return s.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+  const sameYear = s.getFullYear() === e.getFullYear();
+  const startStr = sameYear
+    ? s.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : s.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const endStr = e.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return `${startStr} – ${endStr}`;
+}
+
+/**
+ * Enforce agency time-off policy (minimum advance notice + blackout periods)
+ * against a requested range. Returns an error string or null. Mirrored
+ * server-side in submitTimeOffRequest so the client check is advisory only.
+ */
+export function getPolicyViolation(start, end, policy, today = new Date()) {
+  const s = parseISODate(start);
+  if (!policy || !s) return null;
+
+  const notice = Number(policy.minimum_notice_days) || 0;
+  if (notice > 0) {
+    const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const earliest = new Date(t);
+    earliest.setDate(earliest.getDate() + notice);
+    if (s < earliest) {
+      return `Time off requires at least ${notice} day${notice === 1 ? "" : "s"} of advance notice.`;
+    }
+  }
+
+  const periods = Array.isArray(policy.blackout_periods) ? policy.blackout_periods : [];
+  for (const p of periods) {
+    if (p && rangesOverlap(start, end, p.start_date, p.end_date)) {
+      return `Your selected dates fall within a blackout period${p.label ? ` (${p.label})` : ""}.`;
+    }
+  }
+  return null;
+}
+
+/**
+ * Requests covering a given day. Approved always counts; pending is optional
+ * (used for the calendar's muted pending layer).
+ */
+export function requestsCoveringDate(requests = [], isoDate, { includePending = false } = {}) {
+  const allowed = includePending ? ["approved", "pending"] : ["approved"];
+  return requests.filter((r) => allowed.includes(r.status) && requestCoversDate(r, isoDate));
+}
+
+/** Count of approved people off on a given day (for coverage-threshold checks). */
+export function coverageCountOnDate(requests = [], isoDate) {
+  return requestsCoveringDate(requests, isoDate).length;
+}
+
+/** Distinct years (newest first) that requests start in — drives the year filter. */
+export function availableYears(requests = []) {
+  const years = [];
+  for (const r of requests) {
+    const s = parseISODate(r.start_date);
+    if (s) {
+      const y = s.getFullYear();
+      if (!years.includes(y)) years.push(y);
+    }
+  }
+  return years.sort((a, b) => b - a);
+}
+
+/** Leave types that carry an annual balance/allowance. */
+export const BALANCE_TRACKABLE_TYPES = ["vacation", "sick", "personal", "parental"];
+
+/** Merge agency default allowances with a user's per-user overrides. */
+export function resolveAllowances(policy, user) {
+  const defaults = (policy && policy.default_allowances) || {};
+  const overrides = (user && user.pto_allowances) || {};
+  const merged = {};
+  for (const type of BALANCE_TRACKABLE_TYPES) {
+    const raw = overrides[type] != null && overrides[type] !== "" ? overrides[type] : defaults[type];
+    if (raw != null && raw !== "") {
+      const n = Number(raw);
+      if (!Number.isNaN(n)) merged[type] = n;
+    }
+  }
+  return merged;
+}
+
+function sumDaysForType(requests, type, year, statuses) {
+  return requests.reduce((sum, r) => {
+    if (r.request_type !== type || !statuses.includes(r.status)) return sum;
+    const s = parseISODate(r.start_date);
+    if (!s || (year && s.getFullYear() !== year)) return sum;
+    return sum + (Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day));
+  }, 0);
+}
+
+/**
+ * Fraction of the annual allowance accrued for a given year as of `today`.
+ * Prior years are fully accrued; the current year accrues monthly
+ * (months elapsed ÷ 12); future years are treated as fully available for planning.
+ */
+export function accruedFraction(year, today = new Date()) {
+  const currentYear = today.getFullYear();
+  if (year < currentYear || year > currentYear) return 1;
+  return (today.getMonth() + 1) / 12;
+}
+
+/** Days carried over into `year` from the prior year, capped at carryoverMax. */
+export function getCarryover(requests = [], baseAllowance = 0, type, year, carryoverMax = 0) {
+  const cap = Number(carryoverMax) || 0;
+  if (cap <= 0) return 0;
+  const prevUsed = sumDaysForType(requests, type, year - 1, ["approved"]);
+  return Math.max(0, Math.min(cap, baseAllowance - prevUsed));
+}
+
+/**
+ * Effective allowance = (accrued portion of this year's base, if accrual is on)
+ * plus any carryover from last year. With no policy it's just the base.
+ */
+function effectiveAllowance(requests, baseAllowance, type, year, policy, today) {
+  if (!policy) return baseAllowance;
+  const accrued = policy.accrual_enabled
+    ? Math.round(baseAllowance * accruedFraction(year, today))
+    : baseAllowance;
+  return accrued + getCarryover(requests, baseAllowance, type, year, policy.carryover_max);
+}
+
+/**
+ * Balance detail for one tracked type, or null if the type is untracked.
+ * `options.policy` applies accrual/carryover; without it, the flat annual
+ * allowance is used (preserving the simple model).
+ */
+export function getBalanceForType(requests = [], allowances = {}, type, year = new Date().getFullYear(), options = {}) {
+  if (!allowances || !(type in allowances)) return null;
+  const base = Number(allowances[type]) || 0;
+  const allowance = effectiveAllowance(requests, base, type, year, options.policy, options.today || new Date());
+  const used = sumDaysForType(requests, type, year, ["approved"]);
+  const pending = sumDaysForType(requests, type, year, ["pending"]);
+  return { type, allowance, used, pending, remaining: allowance - used - pending };
+}
+
+/** Balance detail for every tracked type. */
+export function computeBalances(requests = [], allowances = {}, year = new Date().getFullYear(), options = {}) {
+  return Object.keys(allowances || {}).map((type) => getBalanceForType(requests, allowances, type, year, options));
+}
+
+/**
+ * Returns an error string if requesting `requestedDays` of `type` would exceed
+ * the remaining balance, else null. Untracked types never block.
+ */
+export function getBalanceViolation(requests = [], allowances = {}, type, requestedDays = 0, year = new Date().getFullYear(), options = {}) {
+  const bal = getBalanceForType(requests, allowances, type, year, options);
+  if (!bal) return null;
+  if (requestedDays > bal.remaining) {
+    const remaining = Math.max(0, bal.remaining);
+    return `This exceeds your ${typeLabel(type)} balance — ${remaining} of ${bal.allowance} day${bal.allowance === 1 ? "" : "s"} remaining this year.`;
+  }
+  return null;
+}
+
+/** Serialize requests to a CSV string with properly escaped fields. */
+export function buildTimeOffCSV(requests = []) {
+  const headers = [
+    "Employee", "Email", "Type", "Start", "End", "Business Days",
+    "Status", "Manager", "Reviewed By", "Reason",
+  ];
+  const escape = (value) => {
+    const str = value == null ? "" : String(value);
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+  const rows = requests.map((r) => [
+    r.employee_name || "",
+    r.employee_email || "",
+    typeLabel(r.request_type),
+    r.start_date || "",
+    r.end_date || "",
+    Number(r.total_days) || totalRequestedDays(r.start_date, r.end_date, r.half_day),
+    statusLabel(r.status),
+    r.manager_name || "",
+    r.reviewer_name || "",
+    r.reason || "",
+  ]);
+  return [headers, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+}
