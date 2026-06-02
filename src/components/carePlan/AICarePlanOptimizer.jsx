@@ -309,7 +309,7 @@ Return JSON:
                 </p>
                 
                 <Accordion type="single" collapsible className="space-y-2">
-                  {activeRecommendations.map((rec, idx) => {
+                  {activeRecommendations.map((rec, _idx) => {
                     const originalIdx = recommendations.recommendations.indexOf(rec);
                     return (
                       <AccordionItem 

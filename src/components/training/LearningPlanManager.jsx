@@ -195,7 +195,7 @@ export default function LearningPlanManager() {
                               <Button
                                 size="sm"
                                 onClick={() => addCourseMutation.mutate(course.id)}
-                                disabled={addCourseMutation.isLoading}
+                                disabled={addCourseMutation.isPending}
                               >
                                 Add
                               </Button>

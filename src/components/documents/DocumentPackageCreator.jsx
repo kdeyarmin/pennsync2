@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
+import {
   Package,
   CheckSquare,
   Square,
@@ -22,11 +22,10 @@ import {
   Mail
 } from "lucide-react";
 import { toast } from "sonner";
+import { createPageUrl } from "@/utils";
 import SearchablePatientSelect from "../ui/SearchablePatientSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import DocumentVersionHistory from "./DocumentVersionHistory";
-import DocumentReplacementDialog from "./DocumentReplacementDialog";
 
 export default function DocumentPackageCreator({ open, onClose }) {
   const queryClient = useQueryClient();
@@ -71,46 +70,96 @@ export default function DocumentPackageCreator({ open, onClose }) {
   };
 
   const createPackageMutation = useMutation({
-    mutationFn: async (packageData) => {
-      let patientId = selectedPatient;
-      
-      // If manually entering patient info, prepare it for the PDF
+    mutationFn: async () => {
+      const patientId = selectedPatient;
       const patientData = useExistingPatient ? null : manualPatientInfo;
-      
+      const selectedPatientRecord = patients.find((patient) => patient.id === selectedPatient);
+      const patientDisplayName = useExistingPatient && selectedPatientRecord
+        ? `${selectedPatientRecord.first_name} ${selectedPatientRecord.last_name}`
+        : `${manualPatientInfo.first_name} ${manualPatientInfo.last_name}`.trim();
       const signaturePromises = [];
-      
-      // Create document signatures for each template
+      // Track template metadata per signature so we can build version records afterwards
+      const signatureMeta = [];
+
       for (const templateId of selectedDocuments) {
-        const template = templates.find(t => t.id === templateId);
-        
-        let pdfUrl = template.template_file_url;
-        
-        // If using manual patient info, prepare PDF with that data
-        if (!useExistingPatient) {
-          const result = await base44.functions.invoke('preparePDFWithPatientInfo', {
-            template_url: template.template_file_url,
-            patient_info: patientData
-          });
-          pdfUrl = result.pdf_url;
+        const template = templates.find((item) => item.id === templateId);
+        if (!template) {
+          continue;
         }
-        
-        signaturePromises.push(
-          base44.entities.DocumentSignature.create({
-            patient_id: patientId,
-            document_type: template.template_category,
-            document_name: template.template_name,
-            original_pdf_url: pdfUrl,
-            status: 'pending',
-            required_signatures: template.signature_fields || [],
-            due_date: dueDate || null,
-            form_data: useExistingPatient ? null : patientData
-          })
-        );
+
+        const packetDocuments = template.packet_documents?.length > 0
+          ? template.packet_documents
+          : [{
+              document_name: template.template_name,
+              template_file_url: template.template_file_url,
+              signature_fields: template.signature_fields || [],
+              field_mappings: template.field_mappings || [],
+              carry_forward_fields: template.carry_forward_fields || [],
+            }];
+
+        for (const [index, packetDocument] of packetDocuments.entries()) {
+          let pdfUrl = packetDocument.template_file_url;
+
+          if (!useExistingPatient) {
+            const result = await base44.functions.invoke('preparePDFWithPatientInfo', {
+              template_url: packetDocument.template_file_url,
+              patient_info: patientData,
+            });
+            pdfUrl = result.pdf_url;
+          }
+
+          const documentName = packetDocuments.length > 1
+            ? `${template.template_name} - ${packetDocument.document_name || `Document ${index + 1}`}`
+            : template.template_name;
+
+          signatureMeta.push({
+            document_name: documentName,
+            document_type: template.template_category || 'other',
+          });
+
+          signaturePromises.push(
+            base44.entities.DocumentSignature.create({
+              patient_id: patientId,
+              template_id: template.id,
+              template_document_id: packetDocument.document_id || `${template.id}-${index + 1}`,
+              document_type: template.template_category,
+              document_name: documentName,
+              original_pdf_url: pdfUrl,
+              status: 'pending',
+              signers: (packetDocument.signature_fields || template.signature_fields || []).map((signer, signerIndex) => ({
+                id: signer.signer_id || signer.id || `${template.id}-${index + 1}-${signerIndex + 1}`,
+                name: signer.role === 'patient' ? (signerName || patientDisplayName || signer.label || `Signer ${signerIndex + 1}`) : (signer.label || signer.role || `Signer ${signerIndex + 1}`),
+                email: signerEmail || '',
+                role: signer.role || 'patient',
+                required: signer.required !== false,
+                signed_date: null,
+                signature: null,
+                signature_method: null,
+                order: signer.order || signerIndex + 1,
+              })),
+              required_signatures: (packetDocument.signature_fields || template.signature_fields || []).map((signer, signerIndex) => ({
+                signer_id: signer.signer_id || signer.id || `${template.id}-${index + 1}-${signerIndex + 1}`,
+                name: signer.role === 'patient' ? (signerName || patientDisplayName || signer.label || `Signer ${signerIndex + 1}`) : (signer.label || signer.role || `Signer ${signerIndex + 1}`),
+                role: signer.role || 'patient',
+                is_required: signer.required !== false,
+                is_signed: false,
+                order: signer.order || signerIndex + 1,
+              })),
+              field_mappings: packetDocument.field_mappings || template.field_mappings || [],
+              carry_forward_fields: packetDocument.carry_forward_fields || template.carry_forward_fields || [],
+              due_date: dueDate || null,
+              form_data: useExistingPatient ? null : patientData,
+            })
+          );
+        }
       }
 
-      // Create document signatures for uploaded files
       for (const file of uploadedFiles) {
         const { file_url } = await base44.integrations.Core.UploadFile({ file: file.file });
+        signatureMeta.push({
+          document_name: file.name,
+          document_type: 'other',
+        });
         signaturePromises.push(
           base44.entities.DocumentSignature.create({
             patient_id: patientId,
@@ -119,37 +168,44 @@ export default function DocumentPackageCreator({ open, onClose }) {
             original_pdf_url: file_url,
             status: 'pending',
             required_signatures: [],
+            field_mappings: [],
+            carry_forward_fields: [],
             due_date: dueDate || null,
-            form_data: useExistingPatient ? null : patientData
+            form_data: useExistingPatient ? null : patientData,
           })
         );
       }
 
       const signatures = await Promise.all(signaturePromises);
-      const signatureIds = signatures.map(s => s.id);
+      const signatureIds = signatures.map((signature) => signature.id);
 
-      // Create the package
       const pkg = await base44.entities.DocumentPackage.create({
         package_name: packageName,
         patient_id: patientId,
         document_signatures: signatureIds,
         status: 'pending',
         due_date: dueDate || null,
-        sent_to_patient_at: new Date().toISOString()
+        sent_to_patient_at: new Date().toISOString(),
       });
 
       // Create version 1 record for each signature for audit trail
+      let uploadedByEmail = '';
+      try {
+        uploadedByEmail = (await base44.auth.me()).email;
+      } catch {
+        // best-effort: version tracking is optional
+      }
       for (let i = 0; i < signatures.length; i++) {
         const sig = signatures[i];
-        const selectedTemplate = templates.find(t => selectedDocuments[i] === t.id);
+        const meta = signatureMeta[i] || {};
         await base44.entities.DocumentVersion.create({
           document_signature_id: sig.id,
           package_id: pkg.id,
           version_number: 1,
-          document_name: selectedTemplate?.template_name || 'Document',
-          document_type: selectedTemplate?.template_category || 'other',
+          document_name: meta.document_name || 'Document',
+          document_type: meta.document_type || 'other',
           pdf_url: sig.original_pdf_url,
-          uploaded_by: (await base44.auth.me()).email,
+          uploaded_by: uploadedByEmail,
           uploaded_at: new Date().toISOString(),
           change_reason: 'Initial document upload',
           is_current: true,
@@ -159,34 +215,47 @@ export default function DocumentPackageCreator({ open, onClose }) {
         });
       }
 
-      // Send signature request if enabled
-      if (sendForSignature && signerEmail && signerName) {
-        const signatureUrl = window.location.origin + `/sign?signature_id=${signatures[0].id}&patient_id=${patientId}`;
-        
+      if (sendForSignature && signerEmail && signerName && signatures.length > 0) {
+        const params = new URLSearchParams({ signature_id: signatures[0].id, patient_id: patientId || '' });
+        const signatureUrl = `${window.location.origin}${createPageUrl(`SignDocument?${params.toString()}`)}`;
+
         await base44.integrations.Core.SendEmail({
           to: signerEmail,
           subject: `Signature Requested: ${packageName}`,
-          body: `Hello ${signerName},\n\nYou have been requested to sign the following documents: ${packageName}\n\nPatient: ${patient ? `${patient.first_name} ${patient.last_name}` : 'See package details'}\n\n${signatureMessage ? `Message: ${signatureMessage}\n\n` : ''}Please click the link below to review and sign:\n${signatureUrl}\n\n${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}\n\n` : ''}Thank you!`
+          body: `Hello ${signerName}
+
+You have been requested to sign the following documents: ${packageName}
+
+Patient: ${patientDisplayName || 'See package details'}
+
+${signatureMessage ? `Message: ${signatureMessage}
+
+` : ''}Please click the link below to review and sign:
+${signatureUrl}
+
+${dueDate ? `Due Date: ${new Date(dueDate).toLocaleDateString()}
+
+` : ''}Thank you!`,
         });
-        
+
         toast.success("Package created and signature request sent!");
       }
 
       return pkg;
-      },
-      onSuccess: () => {
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['document-packages'] });
       queryClient.invalidateQueries({ queryKey: ['document-signatures-dashboard'] });
       toast.success("Document package created successfully!");
       resetForm();
       onClose();
-      },
-      onError: (error) => {
+    },
+    onError: (error) => {
       toast.error(`Failed to create package: ${error.message}`);
-      }
-      });
+    }
+  });
 
-      const resetForm = () => {
+  const resetForm = () => {
     setUseExistingPatient(true);
     setSelectedPatient(null);
     setManualPatientInfo({
@@ -208,7 +277,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
   };
 
   const toggleDocument = (templateId) => {
-    setSelectedDocuments(prev => 
+    setSelectedDocuments(prev =>
       prev.includes(templateId)
         ? prev.filter(id => id !== templateId)
         : [...prev, templateId]
@@ -220,14 +289,14 @@ export default function DocumentPackageCreator({ open, onClose }) {
       toast.error("Please select a patient");
       return;
     }
-    
+
     if (!useExistingPatient) {
       if (!manualPatientInfo.first_name || !manualPatientInfo.last_name || !manualPatientInfo.date_of_birth) {
         toast.error("Please enter patient name and date of birth");
         return;
       }
     }
-    
+
     if (!packageName || (selectedDocuments.length === 0 && uploadedFiles.length === 0)) {
       toast.error("Please fill in package name and select or upload at least one document");
       return;
@@ -244,17 +313,17 @@ export default function DocumentPackageCreator({ open, onClose }) {
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
     const pdfFiles = files.filter(file => file.type === 'application/pdf');
-    
+
     if (pdfFiles.length !== files.length) {
       toast.error("Only PDF files are allowed");
     }
-    
+
     const newFiles = pdfFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       file: file
     }));
-    
+
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
@@ -283,10 +352,10 @@ export default function DocumentPackageCreator({ open, onClose }) {
   };
 
   const applyPreset = (preset) => {
-    const presetTemplates = templates.filter(t => 
+    const presetTemplates = templates.filter(t =>
       preset.categories.includes(t.template_category)
     ).map(t => t.id);
-    
+
     setPackageName(preset.name);
     setSelectedDocuments(presetTemplates);
   };
@@ -341,10 +410,10 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 Patient data will auto-populate in documents
                 {patients.length > 0 && ` (${patients.length} patients available)`}
               </p>
-              </div>
-              )}
+            </div>
+          )}
 
-              {/* Manual Patient Information */}
+          {/* Manual Patient Information */}
           {!useExistingPatient && (
             <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -461,7 +530,7 @@ export default function DocumentPackageCreator({ open, onClose }) {
                 onChange={handleFileUpload}
                 className="hidden"
               />
-              
+
               {uploadedFiles.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {uploadedFiles.map((file) => (
@@ -571,14 +640,14 @@ export default function DocumentPackageCreator({ open, onClose }) {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => { resetForm(); onClose(); }}
               className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleCreate}
               disabled={createPackageMutation.isPending}
               className="w-full sm:w-auto"

@@ -81,10 +81,10 @@ Return JSON: {"text": "extracted text", "confidence": 0-100}`;
         ocr_confidence: 0
       });
 
-      return Response.json({ 
+      return Response.json({
         success: false,
-        error: error.message 
-      });
+        error: error.message
+      }, { status: 500 });
     }
 
     // Calculate adjusted confidence based on unclear markers

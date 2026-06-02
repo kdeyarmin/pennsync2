@@ -11,6 +11,8 @@ Deno.serve(async (req) => {
 
     // Initialize base44 client for AI analysis
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // AI-powered risk analysis
     let riskAnalysis = null;

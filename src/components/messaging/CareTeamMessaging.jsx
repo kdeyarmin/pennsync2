@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -105,9 +105,10 @@ export default function CareTeamMessaging({ patientId, relatedEventId, relatedEv
   const markAsReadMutation = useMutation({
     mutationFn: async (messageId) => {
       const msg = messages.find(m => m.id === messageId);
+      if (!msg || !user?.email) return;
       const readBy = msg.read_by || [];
-      if (!readBy.includes(user?.email)) {
-        readBy.push(user?.email);
+      if (!readBy.includes(user.email)) {
+        readBy.push(user.email);
         return base44.entities.Message.update(messageId, { read_by: readBy });
       }
     },

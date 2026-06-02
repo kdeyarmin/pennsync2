@@ -75,7 +75,12 @@ export default function OfflineSyncManager() {
   }, []);
 
   const loadPendingDrafts = () => {
-    const drafts = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]');
+    let drafts = [];
+    try {
+      drafts = JSON.parse(localStorage.getItem('offline_visit_drafts') || '[]');
+    } catch (e) {
+      console.warn('Failed to parse offline drafts:', e);
+    }
     setPendingDrafts(drafts);
   };
 

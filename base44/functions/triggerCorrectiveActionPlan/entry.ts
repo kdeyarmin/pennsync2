@@ -76,7 +76,13 @@ Rules:
     ]
   });
 
-  const parsed = JSON.parse(completion.choices[0].message.content || '{}');
+  let parsed;
+  try {
+    parsed = JSON.parse(completion.choices[0].message.content || '{}');
+  } catch (e) {
+    console.error('Failed to parse AI response for corrective action plan:', e);
+    parsed = {};
+  }
   return {
     title: parsed.course?.title || `Micro-Learning: ${topicLabel}`,
     short_description: parsed.course?.short_description || `Supplemental training for ${topicLabel}`,

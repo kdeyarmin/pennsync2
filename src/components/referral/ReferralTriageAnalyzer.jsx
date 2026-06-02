@@ -80,7 +80,7 @@ export default function ReferralTriageAnalyzer({ onTriageComplete }) {
       setReferralText(text);
       setError(null);
       toast.success('File loaded');
-    } catch (err) {
+    } catch {
       setError('Failed to read file');
     }
   };

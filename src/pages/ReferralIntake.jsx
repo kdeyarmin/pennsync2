@@ -45,6 +45,17 @@ import {
   UserCheck
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { todayEastern } from "@/components/utils/timezone";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -77,6 +88,10 @@ export default function ReferralIntake() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [multiReferralDetection, setMultiReferralDetection] = useState(null);
   const [processingMultipleReferrals, setProcessingMultipleReferrals] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const REFERRALS_PER_PAGE = 15;
+  const [referralToDelete, setReferralToDelete] = useState(null);
+  const [referralToReject, setReferralToReject] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -101,7 +116,7 @@ export default function ReferralIntake() {
 
     const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff'];
     if (!validTypes.includes(file.type)) {
-      alert('Please upload a PDF, PNG, JPG, or TIFF file');
+      toast.error('Please upload a PDF, PNG, JPG, or TIFF file');
       return;
     }
 
@@ -241,7 +256,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload file. Please try again.');
+      toast.error('Failed to upload file. Please try again.');
     }
     setIsUploading(false);
   };
@@ -281,10 +296,10 @@ Return comprehensive structured data for intelligent form pre-population and car
       setUploadDialogOpen(false);
 
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
+      toast.success(`Successfully created ${referralsToProcess.length} referral${referralsToProcess.length !== 1 ? 's' : ''} from multi-document PDF. They are ready for processing.`);
     } catch (error) {
       console.error('Error processing multiple referrals:', error);
-      alert('Failed to create referrals. Please try again.');
+      toast.error('Failed to create referrals. Please try again.');
     } finally {
       setProcessingMultipleReferrals(false);
     }
@@ -292,7 +307,7 @@ Return comprehensive structured data for intelligent form pre-population and car
 
   const handleCreateReferral = async () => {
     if (!uploadedFile) {
-      alert('Please upload a referral document first');
+      toast.error('Please upload a referral document first');
       return;
     }
 
@@ -354,7 +369,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error creating referral:', error);
-      alert('Failed to create referral. Please try again.');
+      toast.error('Failed to create referral. Please try again.');
     }
     setIsUploading(false);
   };
@@ -365,7 +380,7 @@ Return comprehensive structured data for intelligent form pre-population and car
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Failed to update status');
+      toast.error('Failed to update status');
     }
   };
 
@@ -421,10 +436,10 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       
-      alert(`Referral assigned to ${nurse?.full_name || nurseEmail}. Secure message sent.`);
+      toast.success(`Referral assigned to ${nurse?.full_name || nurseEmail}. Secure message sent.`);
     } catch (error) {
       console.error('Error assigning nurse:', error);
-      alert('Failed to assign nurse');
+      toast.error('Failed to assign nurse');
     }
   };
 
@@ -585,10 +600,6 @@ Actions available:
         // Match threshold: 60+ points = high confidence match
         if (bestMatch && bestMatch.score >= 60) {
           existingPatient = bestMatch.patient;
-          console.log(`Patient match found: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score}, Reasons: ${bestMatch.reasons.join(', ')})`);
-        } else if (bestMatch && bestMatch.score >= 40) {
-          // Possible match but not certain - log for review
-          console.warn(`Possible patient match: ${bestMatch.patient.first_name} ${bestMatch.patient.last_name} (Score: ${bestMatch.score})`);
         }
       }
 
@@ -613,7 +624,6 @@ Actions available:
             // High confidence (90%+) - auto-match but allow review
             if (!existingPatient) {
               existingPatient = allPatients.find(p => p.id === matchAnalysis.best_match_id);
-              console.log(`🎯 High-confidence AI match: ${existingPatient.first_name} ${existingPatient.last_name} (${matchAnalysis.confidence_score}% confidence)`);
             }
           } else if (matchAnalysis.confidence_level === 'high' && matchAnalysis.best_match_id) {
             // Medium-high confidence (70-89%) - flag for quick review
@@ -626,15 +636,12 @@ Actions available:
               },
               ...(matchAnalysis.alternative_matches || [])
             ];
-            console.log(`⚠️ Medium-high confidence match - requires quick review (${matchAnalysis.confidence_score}%)`);
           } else if (matchAnalysis.confidence_level === 'medium' && matchAnalysis.alternative_matches?.length > 0) {
             // Medium confidence (50-69%) - show multiple options
             updates.requires_manual_review = true;
             updates.match_suggestions = matchAnalysis.alternative_matches;
-            console.log(`🔍 Multiple possible matches found - manual review needed`);
           } else if (matchAnalysis.confidence_level === 'low' || matchAnalysis.recommendation === 'create_new') {
             // Low confidence - likely new patient
-            console.log(`✨ No strong matches found - likely new patient`);
           }
         }
       }
@@ -858,7 +865,7 @@ Actions available:
       }
       
       if (automationSummary.length > 0) {
-        alert(`Referral processed successfully!\n\nAI Automation Results:\n${automationSummary.join('\n')}`);
+        toast.success(`Referral processed successfully! AI Automation: ${automationSummary.join(', ')}`);
       }
       
       setProcessingReferralId(null);
@@ -873,7 +880,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error updating referral:', error);
-      alert('Failed to process referral. Please try again.');
+      toast.error('Failed to process referral. Please try again.');
     }
   };
 
@@ -891,41 +898,33 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error confirming match:', error);
-      alert('Failed to confirm match');
+      toast.error('Failed to confirm match');
     }
   };
 
   const handleDeleteReferral = async (referralId) => {
-    if (!confirm('Are you sure you want to delete this referral? This action cannot be undone.')) {
-      return;
-    }
-    
     try {
       await base44.entities.Referral.delete(referralId);
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert('Referral deleted successfully');
+      toast.success('Referral deleted successfully');
     } catch (error) {
       console.error('Error deleting referral:', error);
-      alert('Failed to delete referral');
+      toast.error('Failed to delete referral');
     }
   };
 
   const handleRejectReferral = async (referralId) => {
-    if (!confirm('Are you sure you want to reject this referral?')) {
-      return;
-    }
-    
     try {
-      await base44.entities.Referral.update(referralId, { 
+      await base44.entities.Referral.update(referralId, {
         status: 'declined',
         rejection_date: new Date().toISOString(),
         rejected_by: currentUser?.email
       });
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert('Referral rejected');
+      toast.success('Referral rejected');
     } catch (error) {
       console.error('Error rejecting referral:', error);
-      alert('Failed to reject referral');
+      toast.error('Failed to reject referral');
     }
   };
 
@@ -977,7 +976,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error creating new patient:', error);
-      alert('Failed to create new patient');
+      toast.error('Failed to create new patient');
     }
   };
 
@@ -986,6 +985,12 @@ Actions available:
     const priorityMatch = priorityFilter === 'all' || r.priority === priorityFilter;
     return statusMatch && priorityMatch;
   });
+
+  const totalPages = Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE);
+  const paginatedReferrals = filteredReferrals.slice(
+    (currentPage - 1) * REFERRALS_PER_PAGE,
+    currentPage * REFERRALS_PER_PAGE
+  );
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -1135,7 +1140,7 @@ Actions available:
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredReferrals.map((referral) => (
+                  {paginatedReferrals.map((referral) => (
                     <TableRow key={referral.id}>
                       <TableCell className="text-xs sm:text-sm font-medium">
                         {referral.patient_id ? (
@@ -1295,7 +1300,7 @@ Actions available:
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleRejectReferral(referral.id)}
+                              onClick={() => setReferralToReject(referral)}
                               className="text-orange-600 hover:bg-orange-50 min-h-[36px] text-xs flex-1"
                             >
                               <XCircle className="w-4 h-4 mr-1" />
@@ -1304,7 +1309,7 @@ Actions available:
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDeleteReferral(referral.id)}
+                              onClick={() => setReferralToDelete(referral)}
                               className="text-red-600 hover:bg-red-50 min-h-[36px] text-xs flex-1"
                             >
                               <Trash2 className="w-4 h-4 mr-1" />
@@ -1317,6 +1322,17 @@ Actions available:
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <span className="text-sm text-gray-500">
+                Showing {(currentPage - 1) * REFERRALS_PER_PAGE + 1}-{Math.min(currentPage * REFERRALS_PER_PAGE, filteredReferrals.length)} of {filteredReferrals.length}
+              </span>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Previous</Button>
+                <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -1595,7 +1611,7 @@ Actions available:
                   patientId={referrals.find(r => r.id === processingReferralId)?.patient_id}
                   onCarePlansSaved={() => {
                     queryClient.invalidateQueries({ queryKey: ['referrals'] });
-                    alert('Care plans saved successfully!');
+                    toast.success('Care plans saved successfully!');
                   }}
                 />
               )}
@@ -1643,6 +1659,52 @@ Actions available:
           </DialogContent>
         </Dialog>
       )}
+
+      <AlertDialog open={!!referralToDelete} onOpenChange={(open) => { if (!open) setReferralToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Referral</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the referral for {referralToDelete?.patient_name || 'this patient'}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                handleDeleteReferral(referralToDelete.id);
+                setReferralToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!referralToReject} onOpenChange={(open) => { if (!open) setReferralToReject(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Referral</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject the referral for {referralToReject?.patient_name || 'this patient'}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                handleRejectReferral(referralToReject.id);
+                setReferralToReject(null);
+              }}
+            >
+              Reject
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

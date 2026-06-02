@@ -36,13 +36,13 @@ Deno.serve(async (req) => {
       }));
 
     // Group events by type
-    const medicationEvents = clinicalEvents.filter(e => 
+    const medicationEvents = clinicalEvents.filter(e =>
       e.event_type.includes('medication')
     );
-    const symptomEvents = clinicalEvents.filter(e => 
+    const symptomEvents = clinicalEvents.filter(e =>
       e.event_type.includes('symptom')
     );
-    const labEvents = clinicalEvents.filter(e => 
+    const labEvents = clinicalEvents.filter(e =>
       e.event_type.includes('lab')
     );
 
@@ -229,14 +229,21 @@ Provide actionable insights for clinicians.`,
         lab_events: labEvents.length
       },
       vitals_data: vitalsHistory,
-      ...result
+      vital_trends: result?.vital_trends || [],
+      symptom_patterns: result?.symptom_patterns || [],
+      medication_insights: result?.medication_insights || {},
+      risk_indicators: result?.risk_indicators || [],
+      positive_trends: result?.positive_trends || [],
+      comparative_insights: result?.comparative_insights || [],
+      predictive_analytics: result?.predictive_analytics || {},
+      overall_trajectory: result?.overall_trajectory || 'unknown',
+      priority_recommendations: result?.priority_recommendations || []
     });
 
   } catch (error) {
     console.error('Error analyzing clinical trends:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

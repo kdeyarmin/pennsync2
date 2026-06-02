@@ -15,23 +15,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'patientId is required' }, { status: 400 });
     }
 
-    // Get patient
-    const patients = await base44.asServiceRole.entities.Patient.list();
-    const patient = patients.find(p => p.id === patientId);
+    // Get patient via the RLS-scoped client (NOT asServiceRole) so the
+    // platform enforces this caller may access this patient, and we avoid
+    // loading every patient in the tenant via .list() (IDOR / over-fetch).
+    const patientResults = await base44.entities.Patient.filter({ id: patientId });
+    const patient = patientResults[0];
 
     if (!patient) {
       return Response.json({ error: 'Patient not found' }, { status: 404 });
     }
 
-    // Get recent visit if visitId provided
+    // Get recent visit if visitId provided (RLS-scoped)
     let visitData = null;
     if (visitId) {
-      const visits = await base44.asServiceRole.entities.Visit.filter({ id: visitId });
+      const visits = await base44.entities.Visit.filter({ id: visitId });
       visitData = visits[0];
     }
 
-    // Get care plans
-    const carePlans = await base44.asServiceRole.entities.CarePlan.filter({
+    // Get care plans (RLS-scoped)
+    const carePlans = await base44.entities.CarePlan.filter({
       patient_id: patientId,
       status: 'active'
     });

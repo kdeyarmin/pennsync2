@@ -33,12 +33,13 @@ Deno.serve(async (req) => {
           }
         });
 
-        const twilioData = await twilioResponse.json();
-
         if (!twilioResponse.ok) {
-          console.error(`Twilio API error for fax ${faxLog.telnyx_fax_id}:`, twilioData);
+          const errorText = await twilioResponse.text();
+          console.error(`Twilio API error for fax ${faxLog.telnyx_fax_id}:`, errorText);
           continue;
         }
+
+        const twilioData = await twilioResponse.json();
 
         const currentTwilioStatus = twilioData.status;
         const newStatus = mapTwilioStatus(currentTwilioStatus, faxLog.status);

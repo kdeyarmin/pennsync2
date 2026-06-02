@@ -24,7 +24,7 @@ export default function PatientDeteriorationPredictor({ patientId, recentVisits,
     if (autoAnalyze && recentVisits?.length >= 2) {
       analyzeDeteriorationRisk();
     }
-  }, [autoAnalyze, patientId]);
+  }, [autoAnalyze, patientId, recentVisits]);
 
   const analyzeDeteriorationRisk = async () => {
     if (!recentVisits || recentVisits.length < 2) return;

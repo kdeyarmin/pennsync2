@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
+import { queryClientInstance } from '@/lib/query-client';
 
 const AuthContext = createContext();
 
@@ -123,7 +124,10 @@ export const AuthProvider = ({ children }) => {
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
-    
+    // HIPAA: purge all cached PHI so the next user on a shared device can't
+    // see the previous session's patient data before refetch.
+    try { queryClientInstance.clear(); } catch (_e) { /* no-op */ }
+
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect
       base44.auth.logout(window.location.href);
@@ -134,8 +138,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    // Don't redirect if we're already on login page to prevent loops
+    // Don't redirect if we're already on the login page to prevent loops
     if (window.location.pathname === '/login') return;
+    // Use the SDK's redirectToLogin method
     base44.auth.redirectToLogin(window.location.href);
   };
 

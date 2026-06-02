@@ -25,7 +25,7 @@ export default function ComplianceTrendsDashboard() {
   const [timeRange, setTimeRange] = useState("30");
   const [selectedNurse, setSelectedNurse] = useState("all");
 
-  const { data: currentUser } = useQuery({
+  useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
@@ -284,7 +284,7 @@ export default function ComplianceTrendsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {trends.patientStats.map((patient, idx) => (
+                {trends.patientStats.map((patient, _idx) => (
                   <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div>

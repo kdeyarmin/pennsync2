@@ -12,7 +12,9 @@ Deno.serve(async (req) => {
     let patientContext = '';
     let patientName = '';
     if (patientId) {
-      const patients = await base44.asServiceRole.entities.Patient.filter({ id: patientId });
+      // RLS-scoped read (NOT asServiceRole) so the caller cannot pull another
+      // patient's PHI into the prompt via a guessed patientId.
+      const patients = await base44.entities.Patient.filter({ id: patientId });
       const patient = patients[0];
       if (patient) {
         patientName = `${patient.first_name} ${patient.last_name}`;

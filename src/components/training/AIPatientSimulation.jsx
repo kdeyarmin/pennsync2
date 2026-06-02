@@ -187,7 +187,7 @@ Provide detailed, constructive feedback. Be encouraging but thorough in identify
       // Generate overall feedback
       setIsEvaluating(true);
       try {
-        const allResponses = [...responses, { step: currentStep, response: currentResponse, feedback }];
+        const allResponses = [...(responses || []), { step: currentStep, response: currentResponse, feedback }];
         const avgScore = Math.round(allResponses.reduce((sum, r) => sum + (r.feedback?.score || 0), 0) / allResponses.length);
 
         const result = await base44.integrations.Core.InvokeLLM({

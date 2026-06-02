@@ -3,6 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const { patient_id, medications, patient_conditions, patient_age, allergies } = await req.json();
 
     if (!medications || medications.length === 0) {
@@ -27,19 +29,19 @@ Perform a comprehensive medication safety analysis:
    - Critical interactions requiring immediate intervention
    - Significant interactions needing monitoring
    - Moderate interactions with clinical recommendations
-   
+
 2. CLINICAL GUIDELINE COMPLIANCE: Check medications against:
    - Evidence-based treatment guidelines for diagnosed conditions
    - Medicare/CMS medication appropriateness criteria
    - Beers Criteria for elderly patients (if age ≥65)
    - Disease-specific treatment protocols
-   
+
 3. AGE & CONDITION-SPECIFIC RISKS: Identify:
    - Medications potentially inappropriate for patient age
    - Contraindications based on patient conditions
    - Medications requiring dose adjustments
    - Medications requiring specific monitoring
-   
+
 4. ACTION ITEMS: Prioritized clinical recommendations
 
 Return analysis in this exact JSON structure:
@@ -155,6 +157,11 @@ Be thorough and specific. Focus on actionable clinical recommendations.`;
       model: 'claude_sonnet_4_6'
     });
 
+    // Defensive: the LLM may omit arrays — never assume they exist.
+    const interactions = Array.isArray(aiResponse.interactions) ? aiResponse.interactions : [];
+    const guidelinesIssues = Array.isArray(aiResponse.guidelines_issues) ? aiResponse.guidelines_issues : [];
+    const ageRisks = Array.isArray(aiResponse.age_condition_risks) ? aiResponse.age_condition_risks : [];
+
     // Create medication reconciliation record
     await base44.asServiceRole.entities.MedicationReconciliation.create({
       patient_id,
@@ -169,7 +176,7 @@ Be thorough and specific. Focus on actionable clinical recommendations.`;
         status: m.status
       })),
       discrepancies: [
-        ...aiResponse.interactions.map(i => ({
+        ...interactions.map(i => ({
           discrepancy_type: 'potential_interaction',
           severity: i.severity,
           medication_name: `${i.drug1} + ${i.drug2}`,
@@ -177,7 +184,7 @@ Be thorough and specific. Focus on actionable clinical recommendations.`;
           ai_recommendation: i.recommendation,
           status: 'pending'
         })),
-        ...aiResponse.guidelines_issues.map(g => ({
+        ...guidelinesIssues.map(g => ({
           discrepancy_type: 'missing_from_discharge',
           severity: 'moderate',
           medication_name: g.medication,
@@ -187,10 +194,11 @@ Be thorough and specific. Focus on actionable clinical recommendations.`;
         }))
       ],
       status: 'pending_review',
-      ai_confidence_score: 95,
-      total_discrepancies: aiResponse.interactions.length + aiResponse.guidelines_issues.length + aiResponse.age_condition_risks.length,
-      critical_discrepancies: aiResponse.interactions.filter(i => i.severity === 'critical').length +
-        aiResponse.age_condition_risks.filter(r => r.severity === 'critical').length
+      // Don't fabricate certainty: use the model's reported confidence if present.
+      ai_confidence_score: typeof aiResponse.confidence_score === 'number' ? aiResponse.confidence_score : null,
+      total_discrepancies: interactions.length + guidelinesIssues.length + ageRisks.length,
+      critical_discrepancies: interactions.filter(i => i.severity === 'critical').length +
+        ageRisks.filter(r => r.severity === 'critical').length
     });
 
     return Response.json(aiResponse);

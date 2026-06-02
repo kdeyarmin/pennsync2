@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, Clock, Mail, User, Plus, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
+import { getDocumentDisplayName, getNormalizedSignatureStatus } from "@/components/signature/signatureUtils";
 
 export default function ESignatureWorkflow({ document, documentType, patient, onClose }) {
   const [step, setStep] = useState("signers"); // signers, review, sent, tracking
@@ -24,6 +25,14 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
   const [reminderDays, setReminderDays] = useState(3);
   const [sending, setSending] = useState(false);
   const queryClient = useQueryClient();
+
+  const normalizedDocumentName = useMemo(() => {
+    if (typeof document === 'string') {
+      return `${documentType} - ${patient?.first_name || 'Patient'} ${patient?.last_name || ''}`.trim();
+    }
+
+    return getDocumentDisplayName(document) || `${documentType} Document`;
+  }, [document, documentType, patient?.first_name, patient?.last_name]);
 
   // Fetch document signatures tracking
   const { data: documentSignatures = [] } = useQuery({
@@ -74,31 +83,48 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
     try {
       const currentUser = await base44.auth.me();
       // Create document signature record
+      const createdAt = new Date().toISOString();
+      const normalizedSigners = signers.map((signer, index) => ({
+        id: String(signer.id),
+        name: signer.name.trim(),
+        email: signer.email.trim().toLowerCase(),
+        role: signer.role,
+        required: signer.required,
+        signed_date: null,
+        signature: null,
+        ip_address: null,
+        signature_method: null,
+        order: index + 1
+      }));
+
       const docRecord = await base44.entities.DocumentSignature.create({
         patient_id: patient?.id,
         document_type: documentType,
-        document_content: document,
-        document_title: `${documentType}_${patient?.first_name}_${patient?.last_name}_${new Date().toISOString().split('T')[0]}`,
+        document_name: normalizedDocumentName,
+        document_title: normalizedDocumentName,
+        document_content: typeof document === 'string' ? document : document?.content || document?.document_content || '',
+        document_url: document?.document_url || document?.original_pdf_url || null,
+        original_pdf_url: document?.original_pdf_url || document?.document_url || null,
         status: "pending",
-        signers: signers.map(s => ({
-          id: s.id,
-          name: s.name,
-          email: s.email,
-          role: s.role,
-          required: s.required,
-          signed_date: null,
-          signature: null,
-          ip_address: null,
-          signature_method: null,
-          order: s.order
+        signers: normalizedSigners,
+        required_signatures: normalizedSigners.map((signer) => ({
+          signer_id: signer.id,
+          name: signer.name,
+          role: signer.role,
+          is_required: signer.required !== false,
+          is_signed: false,
+          order: signer.order,
         })),
         created_by_email: currentUser.email,
         message: signMessage,
+        due_date: new Date(deadlineDate).toISOString(),
         expires_at: new Date(deadlineDate).toISOString(),
         reminder_sent: false,
+        signed_at: null,
+        signed_date: null,
         audit_trail: [{
           action: "sent",
-          timestamp: new Date().toISOString(),
+          timestamp: createdAt,
           signer_id: null,
           notes: `Document sent by ${currentUser.full_name}`
         }]
@@ -108,8 +134,8 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
       for (let signer of signers) {
         await base44.entities.Notification.create({
           user_email: signer.email,
-          subject: `Signature Requested: ${documentType}`,
-          message: `${patient?.first_name} ${patient?.last_name} requests your signature on the following document: ${documentType}\n\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}`,
+          subject: `Signature Requested: ${normalizedDocumentName}`,
+          message: `${patient?.first_name} ${patient?.last_name} requests your signature on the following document: ${normalizedDocumentName}\n\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}`,
           type: "signature_request",
           related_entity: "DocumentSignature",
           related_id: docRecord.id,
@@ -119,8 +145,8 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
         // Send email notification with deadline
         await base44.integrations.Core.SendEmail({
           to: signer.email,
-          subject: `[${signer.role.toUpperCase()}] Signature Requested: ${documentType}`,
-          body: `You have been requested to sign a document as a ${signer.role}.\n\nDocument: ${documentType}\nFrom: ${patient?.first_name} ${patient?.last_name}\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}\n\nPlease log in to the system to review and sign the document.`
+          subject: `[${signer.role.toUpperCase()}] Signature Requested: ${normalizedDocumentName}`,
+          body: `You have been requested to sign a document as a ${signer.role}.\n\nDocument: ${normalizedDocumentName}\nFrom: ${patient?.first_name} ${patient?.last_name}\nDeadline: ${new Date(deadlineDate).toLocaleDateString()}\n\nMessage: ${signMessage}\n\nPlease log in to the system to review and sign the document.`
         });
       }
 
@@ -145,7 +171,11 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
     }
   };
 
-  const recentDocuments = documentSignatures.slice(0, 5);
+  const recentDocuments = documentSignatures.slice(0, 5).map((doc) => ({
+    ...doc,
+    normalizedStatus: getNormalizedSignatureStatus(doc),
+    normalizedName: getDocumentDisplayName(doc),
+  }));
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -367,9 +397,9 @@ export default function ESignatureWorkflow({ document, documentType, patient, on
                     recentDocuments.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div>
-                          <p className="font-medium text-sm">{doc.document_title}</p>
+                          <p className="font-medium text-sm">{doc.normalizedName}</p>
                           <p className="text-xs text-gray-600">
-                            Status: <Badge variant={doc.status === "completed" ? "default" : "secondary"}>{doc.status}</Badge>
+                            Status: <Badge variant={doc.normalizedStatus === "signed" ? "default" : "secondary"}>{doc.normalizedStatus}</Badge>
                           </p>
                         </div>
                         <div className="flex gap-2">

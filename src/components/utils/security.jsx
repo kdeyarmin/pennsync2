@@ -11,7 +11,7 @@ import { logError } from './activityLogger';
  * @param {string} patientId - Patient ID to check access for
  * @returns {Promise<boolean>} - True if user has access
  */
-export async function canAccessPatient(patientId) {
+export async function canAccessPatient(_patientId) {
   try {
     const user = await base44.auth.me();
     if (!user) return false;
@@ -29,7 +29,7 @@ export async function canAccessPatient(patientId) {
  * @param {string} visitId - Visit ID to check access for
  * @returns {Promise<boolean>} - True if user has access
  */
-export async function canAccessVisit(visitId) {
+export async function canAccessVisit(_visitId) {
   try {
     const user = await base44.auth.me();
     
@@ -478,7 +478,7 @@ export function clearSensitiveData(stateSetters) {
         setter('');
         setter({});
         setter([]);
-      } catch (e) {
+      } catch {
         // Ignore errors from setters
       }
     }

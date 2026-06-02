@@ -50,7 +50,7 @@ export default function NoteEnhancementReport() {
   });
 
   // Filter by time range
-  const cutoffDate = subDays(new Date(), parseInt(timeRange));
+  const cutoffDate = subDays(new Date(), parseInt(timeRange, 10));
   const filteredEnhancements = enhancements.filter(c => 
     new Date(c.created_date) >= cutoffDate
   );

@@ -39,12 +39,12 @@ Deno.serve(async (req) => {
     );
 
     // Find admission date (earliest visit)
-    const admissionDate = visits.length > 0 
-      ? visits[visits.length - 1].visit_date 
+    const admissionDate = visits.length > 0
+      ? visits[visits.length - 1].visit_date
       : patient.created_date;
 
     // Separate visits by type
-    const skilledNursingVisits = visits.filter(v => 
+    const skilledNursingVisits = visits.filter(v =>
       ['skilled_nursing', 'admission', 'recertification'].includes(v.visit_type)
     );
     const therapyVisits = visits.filter(v => v.visit_type === 'therapy');
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     // Track medication changes
     const activeMeds = medications.filter(m => m.status === 'active');
     const discontinuedMeds = medications.filter(m => m.status === 'discontinued');
-    
+
     const medicationChanges = [];
     discontinuedMeds.forEach(med => {
       medicationChanges.push({
@@ -128,7 +128,7 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
     const carePlanOutcomes = carePlans.map(cp => ({
       problem: cp.problem,
       goal: cp.goal,
-      outcome: cp.status === 'met' ? 'met' : 
+      outcome: cp.status === 'met' ? 'met' :
                cp.status === 'not_met' ? 'not_met' :
                cp.status === 'revised' ? 'partially_met' : 'ongoing',
       notes: cp.progress_notes || 'See visit documentation'
@@ -142,7 +142,7 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
       discharge_date: discharge_date || new Date().toISOString().split('T')[0],
       primary_diagnosis: patient.primary_diagnosis,
       secondary_diagnoses: patient.secondary_diagnoses || [],
-      reason_for_admission: aiResponse.split('REASON FOR ADMISSION')[1]?.split('\n\n')[0]?.trim() || 
+      reason_for_admission: aiResponse.split('REASON FOR ADMISSION')[1]?.split('\n\n')[0]?.trim() ||
         `Patient admitted to home health for management of ${patient.primary_diagnosis}`,
       summary_of_care: aiResponse,
       visit_summary: {
@@ -160,8 +160,8 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
       functional_status: {
         at_admission: 'See admission assessment',
         at_discharge: 'Patient improved overall functional status',
-        improvement_areas: carePlans
-          .filter(cp => cp.status === 'met')
+        improvement_areas: (carePlans || [])
+          .filter(cp => cp && cp.status === 'met' && cp.problem)
           .map(cp => cp.problem)
       },
       patient_education_provided: educationMaterials.map(e => ({
@@ -196,8 +196,8 @@ Format as a professional medical summary. Be detailed, objective, and Medicare-c
 
   } catch (error) {
     console.error('Error generating discharge summary:', error);
-    return Response.json({ 
-      error: error.message || 'Failed to generate discharge summary' 
+    return Response.json({
+      error: error.message || 'Failed to generate discharge summary'
     }, { status: 500 });
   }
 });

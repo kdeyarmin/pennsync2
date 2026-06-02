@@ -4,6 +4,29 @@ const cleanValue = (value) => String(value ?? '').replace(/\uFEFF/g, '').trim();
 const normalizeHeader = (value) => cleanValue(value).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 const normalizeText = (value) => cleanValue(value).toLowerCase().replace(/\s+/g, ' ').trim();
 const normalizeName = (value) => normalizeText(value).replace(/[^a-z0-9 ]/g, '');
+
+// SSRF guard: only fetch https URLs on public hosts, never internal IPs /
+// metadata. Set FILE_URL_ALLOWED_HOSTS (comma-separated) to restrict to your
+// storage host(s). (Does not stop DNS rebinding — pair with the allowlist.)
+function isSafeFetchUrl(raw: string): boolean {
+  let u: URL;
+  try { u = new URL(String(raw)); } catch { return false; }
+  if (u.protocol !== 'https:') return false;
+  const host = u.hostname.toLowerCase();
+  if (['localhost', '0.0.0.0', '127.0.0.1', '::1', '169.254.169.254'].includes(host)) return false;
+  if (host.endsWith('.internal') || host.endsWith('.local')) return false;
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = +m[1], b = +m[2];
+    if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return false;
+  }
+  const allow = Deno.env.get('FILE_URL_ALLOWED_HOSTS');
+  if (allow) {
+    const hosts = allow.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+    if (!hosts.some((h) => host === h || host.endsWith('.' + h))) return false;
+  }
+  return true;
+}
 const normalizeMrn = (value) => cleanValue(value).toLowerCase().replace(/[^a-z0-9]/g, '');
 
 const toIsoDate = (value) => {
@@ -217,6 +240,7 @@ Deno.serve(async (req) => {
     let fileContent = cleanValue(body.file_content);
 
     if (!fileContent && body.file_url) {
+      if (!isSafeFetchUrl(body.file_url)) return Response.json({ success: false, error: 'Invalid or disallowed file_url' }, { status: 400 });
       const fileResponse = await fetch(body.file_url);
       if (!fileResponse.ok) {
         return Response.json({ success: false, error: 'Failed to read the uploaded file' }, { status: 400 });

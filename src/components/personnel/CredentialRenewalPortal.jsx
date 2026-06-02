@@ -65,7 +65,7 @@ export default function CredentialRenewalPortal({ userId }) {
       }));
       
       toast.success("File uploaded successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to upload file");
     }
     setUploading(false);

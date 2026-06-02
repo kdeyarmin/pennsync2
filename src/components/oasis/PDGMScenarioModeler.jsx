@@ -735,7 +735,7 @@ Provide detailed comparison showing what changed and why.`;
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {selectedScenarios.map((scenario, idx) => (
+                      {selectedScenarios.map((scenario, _idx) => (
                         <div key={scenario.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white rounded border">
                           <div>
                             <p className="font-semibold text-sm">{scenario.scenario_name}</p>

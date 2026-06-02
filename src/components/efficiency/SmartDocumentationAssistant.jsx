@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles, CheckCircle2, Clock, FileText, Zap, Edit2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 export default function SmartDocumentationAssistant({ 
   patientId, 
@@ -20,8 +20,6 @@ export default function SmartDocumentationAssistant({
   const [generatedData, setGeneratedData] = useState(null);
   const [appliedSections, setAppliedSections] = useState(new Set());
   const [editingSection, setEditingSection] = useState(null);
-
-  const queryClient = useQueryClient();
 
   // Fetch patient data
   const { data: patient } = useQuery({
@@ -318,7 +316,7 @@ Format as JSON with clear sections`;
                             try {
                               const parsed = JSON.parse(e.target.value);
                               setEditingSection({...editingSection, content: parsed});
-                            } catch (err) {
+                            } catch {
                               // Keep typing
                             }
                           }}

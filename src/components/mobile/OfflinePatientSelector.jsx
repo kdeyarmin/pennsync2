@@ -125,7 +125,8 @@ export default function OfflinePatientSelector({ onCacheComplete, showDetails = 
       }
 
       // Store in localStorage
-      const existingCache = JSON.parse(localStorage.getItem('offline_patient_data') || '[]');
+      let existingCache = [];
+      try { existingCache = JSON.parse(localStorage.getItem('offline_patient_data') || '[]'); } catch {}
       const mergedCache = [...cachedData];
       
       // Remove duplicates, keep newest

@@ -60,17 +60,31 @@ export default function EnhancedStepIndicator({
     return 'upcoming';
   };
 
+  const stepBgColors = {
+    blue: 'bg-blue-500 border-blue-500',
+    green: 'bg-green-500 border-green-500',
+    purple: 'bg-purple-500 border-purple-500',
+    indigo: 'bg-indigo-500 border-indigo-500',
+  };
+
+  const stepTextColors = {
+    blue: 'text-blue-700',
+    green: 'text-green-700',
+    purple: 'text-purple-700',
+    indigo: 'text-indigo-700',
+  };
+
   const getStepColor = (step) => {
     const status = getStepStatus(step);
     if (status === 'completed') return 'bg-green-500 border-green-500';
-    if (status === 'active') return `bg-${step.color}-500 border-${step.color}-500`;
+    if (status === 'active') return stepBgColors[step.color] || 'bg-blue-500 border-blue-500';
     return 'bg-gray-300 border-gray-300';
   };
 
   const getTextColor = (step) => {
     const status = getStepStatus(step);
     if (status === 'completed') return 'text-green-700';
-    if (status === 'active') return `text-${step.color}-700`;
+    if (status === 'active') return stepTextColors[step.color] || 'text-blue-700';
     return 'text-gray-500';
   };
 

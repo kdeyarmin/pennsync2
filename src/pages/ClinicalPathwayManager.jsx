@@ -46,6 +46,16 @@ import AICarePlanGenerator from "../components/clinical/AICarePlanGenerator";
 import AIPathwayGenerator from "../components/clinical/AIPathwayGenerator";
 import AIPathwayUpdater from "../components/clinical/AIPathwayUpdater";
 import OASISUploadWidget from "../components/oasis/OASISUploadWidget";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ClinicalPathwayManager() {
   const queryClient = useQueryClient();
@@ -53,6 +63,7 @@ export default function ClinicalPathwayManager() {
   const [editingPathway, setEditingPathway] = useState(null);
   const [activeTab, setActiveTab] = useState("pathways");
   const [selectedPathwayForUpdate, setSelectedPathwayForUpdate] = useState(null);
+  const [pathwayToDelete, setPathwayToDelete] = useState(null);
 
   const { data: pathways = [], isLoading } = useQuery({
     queryKey: ['clinicalPathways'],
@@ -526,7 +537,7 @@ export default function ClinicalPathwayManager() {
                    <Button
                      variant="outline"
                      size="sm"
-                     onClick={() => deleteMutation.mutate(pathway.id)}
+                     onClick={() => setPathwayToDelete(pathway)}
                      disabled={deleteMutation.isPending}
                      className="text-red-600 hover:bg-red-50 min-h-[44px]"
                    >
@@ -544,7 +555,7 @@ export default function ClinicalPathwayManager() {
           <TabsContent value="ai-generate">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <AIPathwayGenerator
-                onPathwayGenerated={(pathway) => {
+                onPathwayGenerated={(_pathway) => {
                   queryClient.invalidateQueries({ queryKey: ['clinicalPathways'] });
                 }}
               />
@@ -552,7 +563,7 @@ export default function ClinicalPathwayManager() {
               {selectedPathwayForUpdate && (
                 <AIPathwayUpdater
                   pathway={selectedPathwayForUpdate}
-                  onPathwayUpdated={(updated) => {
+                  onPathwayUpdated={(_updated) => {
                     queryClient.invalidateQueries({ queryKey: ['clinicalPathways'] });
                     setSelectedPathwayForUpdate(null);
                   }}
@@ -575,9 +586,7 @@ export default function ClinicalPathwayManager() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
                 <AIAssessmentDrafter
-                  onDraftComplete={(assessment) => {
-                    console.log("OASIS assessment generated:", assessment);
-                  }}
+                  onDraftComplete={() => {}}
                 />
               </div>
               <OASISUploadWidget />
@@ -586,21 +595,40 @@ export default function ClinicalPathwayManager() {
 
           <TabsContent value="icd10">
             <AIICD10Suggester
-              onCodesSelected={(codes) => {
-                console.log("ICD-10 codes selected:", codes);
-              }}
+              onCodesSelected={() => {}}
             />
           </TabsContent>
 
           <TabsContent value="careplan">
             <AICarePlanGenerator
-              onCarePlanGenerated={(plan) => {
-                console.log("Care plan generated:", plan);
-              }}
+              onCarePlanGenerated={() => {}}
             />
           </TabsContent>
         </Tabs>
       </div>
+
+      <AlertDialog open={!!pathwayToDelete} onOpenChange={(open) => { if (!open) setPathwayToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Clinical Pathway</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{pathwayToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                deleteMutation.mutate(pathwayToDelete.id);
+                setPathwayToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

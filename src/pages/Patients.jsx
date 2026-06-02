@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, User, FileText } from "lucide-react";
+import { Plus, User, FileText, ArrowUpDown } from "lucide-react";
 import { format } from 'date-fns';
 import { secureDelete, handleSecureError } from "../components/utils/security";
 import {
@@ -37,6 +37,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Patients() {
   const queryClient = useQueryClient();
@@ -51,6 +58,18 @@ export default function Patients() {
   const [selectedPatients, setSelectedPatients] = useState([]);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [patientsToMerge, setPatientsToMerge] = useState({ patient1: null, patient2: null });
+  const [sortBy, setSortBy] = useState('newest');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debounceTimer = useRef(null);
+
+  // Debounce search input by 300ms to avoid filtering on every keystroke
+  useEffect(() => {
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(filters.search || '');
+    }, 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [filters.search]);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -175,7 +194,7 @@ export default function Patients() {
     },
     onError: async (error) => {
       setIsDeleting(false);
-      await handleSecureError(error, 'patient_delete', (msg) => alert(msg));
+      await handleSecureError(error, 'patient_delete', (msg) => toast.error(msg));
     }
   });
 
@@ -234,18 +253,44 @@ export default function Patients() {
     return age;
   };
 
-  const filteredPatients = (patients || []).filter(patient => {
+  const lastVisitDateByPatientId = useMemo(() => {
+    const map = {};
+    for (const v of allVisits) {
+      const existing = map[v.patient_id];
+      if (!existing || new Date(v.visit_date) > new Date(existing)) {
+        map[v.patient_id] = v.visit_date;
+      }
+    }
+    return map;
+  }, [allVisits]);
+
+  const visitCountByPatientId = useMemo(() => {
+    const map = {};
+    for (const v of allVisits) {
+      map[v.patient_id] = (map[v.patient_id] || 0) + 1;
+    }
+    return map;
+  }, [allVisits]);
+
+  const carePlanCountByPatientId = useMemo(() => {
+    const map = {};
+    for (const cp of allCarePlans) {
+      map[cp.patient_id] = (map[cp.patient_id] || 0) + 1;
+    }
+    return map;
+  }, [allCarePlans]);
+
+  const filteredPatients = useMemo(() => (patients || []).filter(patient => {
     if (!patient) return false;
-    
-    // Fuzzy search across name, MRN, phone, diagnosis
-    const searchTerm = filters.search || "";
-    const matchesSearch = patientMatchesSearch(patient, searchTerm);
+
+    // Fuzzy search across name, MRN, phone, diagnosis (debounced)
+    const matchesSearch = patientMatchesSearch(patient, debouncedSearch);
 
     // Status filter
     const matchesStatus = !filters.status || filters.status === 'all' || patient.status === filters.status;
 
     // Diagnosis filter
-    const matchesDiagnosis = !filters.diagnosis || 
+    const matchesDiagnosis = !filters.diagnosis ||
       (patient.primary_diagnosis || '').toLowerCase().includes(filters.diagnosis.toLowerCase());
 
     // Age filter
@@ -253,27 +298,50 @@ export default function Patients() {
     const matchesAgeMin = !filters.ageMin || (patientAge !== null && patientAge >= parseInt(filters.ageMin));
     const matchesAgeMax = !filters.ageMax || (patientAge !== null && patientAge <= parseInt(filters.ageMax));
 
-    // Visit filter
-    const patientVisits = allVisits.filter(v => v.patient_id === patient.id);
+    // Visit filter — use pre-built index instead of filtering allVisits per patient
+    const patientVisitCount = visitCountByPatientId[patient.id] || 0;
     const matchesVisits = !filters.hasVisits || filters.hasVisits === 'all' ||
-      (filters.hasVisits === 'yes' && patientVisits.length > 0) ||
-      (filters.hasVisits === 'no' && patientVisits.length === 0);
+      (filters.hasVisits === 'yes' && patientVisitCount > 0) ||
+      (filters.hasVisits === 'no' && patientVisitCount === 0);
 
-    // Care plan filter
-    const patientCarePlans = allCarePlans.filter(cp => cp.patient_id === patient.id);
+    // Care plan filter — use pre-built index instead of filtering allCarePlans per patient
+    const patientCarePlanCount = carePlanCountByPatientId[patient.id] || 0;
     const matchesCarePlans = !filters.hasCarePlans || filters.hasCarePlans === 'all' ||
-      (filters.hasCarePlans === 'yes' && patientCarePlans.length > 0) ||
-      (filters.hasCarePlans === 'no' && patientCarePlans.length === 0);
+      (filters.hasCarePlans === 'yes' && patientCarePlanCount > 0) ||
+      (filters.hasCarePlans === 'no' && patientCarePlanCount === 0);
 
     // Date range filter
     const createdDate = new Date(patient.created_date);
     const matchesAfter = !filters.createdAfter || createdDate >= new Date(filters.createdAfter);
     const matchesBefore = !filters.createdBefore || createdDate <= new Date(filters.createdBefore);
 
-    return matchesSearch && matchesStatus && matchesDiagnosis && 
-           matchesAgeMin && matchesAgeMax && matchesVisits && 
+    return matchesSearch && matchesStatus && matchesDiagnosis &&
+           matchesAgeMin && matchesAgeMax && matchesVisits &&
            matchesCarePlans && matchesAfter && matchesBefore;
-  });
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return (`${a.last_name} ${a.first_name}`).localeCompare(`${b.last_name} ${b.first_name}`);
+      case 'name-desc':
+        return (`${b.last_name} ${b.first_name}`).localeCompare(`${a.last_name} ${a.first_name}`);
+      case 'newest':
+        return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+      case 'oldest':
+        return new Date(a.created_date || 0) - new Date(b.created_date || 0);
+      case 'last-visit': {
+        const aDate = lastVisitDateByPatientId[a.id] || 0;
+        const bDate = lastVisitDateByPatientId[b.id] || 0;
+        return new Date(bDate) - new Date(aDate);
+      }
+      case 'most-visits': {
+        const aCount = visitCountByPatientId[a.id] || 0;
+        const bCount = visitCountByPatientId[b.id] || 0;
+        return bCount - aCount;
+      }
+      default:
+        return 0;
+    }
+  }), [patients, filters, debouncedSearch, sortBy, visitCountByPatientId, lastVisitDateByPatientId, carePlanCountByPatientId]);
 
   const togglePatientSelection = (patient) => {
     setSelectedPatients(prev => {
@@ -333,10 +401,34 @@ export default function Patients() {
           <DuplicatePatientManager />
         </div>
 
-        <AdvancedPatientFilters 
+        <AdvancedPatientFilters
           onFilterChange={setFilters}
           activeFilters={filters}
         />
+      </div>
+
+      {/* Sort & Results Count */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-gray-500">
+          {filteredPatients.length} {filteredPatients.length === 1 ? 'patient' : 'patients'}
+          {filters.search && ` matching "${filters.search}"`}
+        </p>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px] h-8 text-xs">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="name-asc">Name A-Z</SelectItem>
+              <SelectItem value="name-desc">Name Z-A</SelectItem>
+              <SelectItem value="last-visit">Last Visit</SelectItem>
+              <SelectItem value="most-visits">Most Visits</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Bulk Actions Bar */}

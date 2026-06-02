@@ -97,18 +97,28 @@ export default function InteractiveWorkflowGuide({
     <div className="bg-white rounded-lg border p-3 mb-4">
       {/* Steps Row */}
       <div className="flex items-center justify-between gap-1 mb-3 overflow-x-auto pb-2">
-        {steps.map((step, idx) => {
+        {(() => {
+          const stepColors = {
+            blue: { active: 'bg-blue-100 ring-2 ring-blue-400', circle: 'bg-blue-500 text-white', text: 'text-blue-700' },
+            pink: { active: 'bg-pink-100 ring-2 ring-pink-400', circle: 'bg-pink-500 text-white', text: 'text-pink-700' },
+            purple: { active: 'bg-purple-100 ring-2 ring-purple-400', circle: 'bg-purple-500 text-white', text: 'text-purple-700' },
+            indigo: { active: 'bg-indigo-100 ring-2 ring-indigo-400', circle: 'bg-indigo-500 text-white', text: 'text-indigo-700' },
+            green: { active: 'bg-green-100 ring-2 ring-green-400', circle: 'bg-green-500 text-white', text: 'text-green-700' },
+            gray: { active: 'bg-gray-100 ring-2 ring-gray-400', circle: 'bg-gray-500 text-white', text: 'text-gray-700' },
+          };
+          return steps.map((step, idx) => {
           const isActive = idx === currentStepIdx;
           const isComplete = step.complete;
           const isPast = idx < currentStepIdx;
-          
+          const sc = stepColors[step.color] || stepColors.blue;
+
           return (
             <React.Fragment key={step.id}>
               <motion.button
                 onClick={() => onStepClick(step.id)}
                 className={`flex flex-col items-center p-2 rounded-lg transition-all min-w-[60px] ${
-                  isActive 
-                    ? `bg-${step.color}-100 ring-2 ring-${step.color}-400` 
+                  isActive
+                    ? sc.active
                     : isComplete || isPast
                       ? 'bg-green-50 hover:bg-green-100'
                       : 'bg-gray-50 hover:bg-gray-100'
@@ -117,10 +127,10 @@ export default function InteractiveWorkflowGuide({
                 whileTap={{ scale: 0.95 }}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
-                  isComplete 
-                    ? 'bg-green-500 text-white' 
+                  isComplete
+                    ? 'bg-green-500 text-white'
                     : isActive
-                      ? `bg-${step.color}-500 text-white`
+                      ? sc.circle
                       : 'bg-gray-200 text-gray-500'
                 }`}>
                   {isComplete ? (
@@ -130,12 +140,12 @@ export default function InteractiveWorkflowGuide({
                   )}
                 </div>
                 <span className={`text-xs font-medium ${
-                  isActive ? `text-${step.color}-700` : isComplete ? 'text-green-700' : 'text-gray-600'
+                  isActive ? sc.text : isComplete ? 'text-green-700' : 'text-gray-600'
                 }`}>
                   {step.label}
                 </span>
               </motion.button>
-              
+
               {idx < steps.length - 1 && (
                 <ArrowRight className={`w-4 h-4 flex-shrink-0 ${
                   idx < currentStepIdx ? 'text-green-400' : 'text-gray-300'
@@ -143,7 +153,8 @@ export default function InteractiveWorkflowGuide({
               )}
             </React.Fragment>
           );
-        })}
+        });
+        })()}
       </div>
 
       {/* Current Step Details */}

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Shield, CheckCircle2 } from 'lucide-react';
 
 export default function ComplianceChecklist({ isHospice }) {

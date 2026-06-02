@@ -30,6 +30,7 @@ import {
   User
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -37,6 +38,7 @@ export default function Messages() {
   const queryClient = useQueryClient();
   const [selectedThread, setSelectedThread] = useState(null);
   const [showNewMessage, setShowNewMessage] = useState(false);
+  const [visibleThreadCount, setVisibleThreadCount] = useState(20);
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterRead, setFilterRead] = useState("all");
   const [replyText, setReplyText] = useState("");
@@ -74,6 +76,7 @@ export default function Messages() {
   const markAsReadMutation = useMutation({
     mutationFn: async (messageId) => {
       const message = messages.find(m => m.id === messageId);
+      if (!message || !currentUser?.email) return;
       const readBy = message.read_by || [];
       if (!readBy.includes(currentUser.email)) {
         await base44.entities.Message.update(messageId, {
@@ -156,7 +159,7 @@ export default function Messages() {
 
   const handleSendMessage = () => {
     if (!newMessage.message_text || newMessage.recipients.length === 0) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -263,7 +266,8 @@ export default function Messages() {
               </CardContent>
             </Card>
           ) : (
-            filteredThreads.map(thread => (
+            <>
+            {filteredThreads.slice(0, visibleThreadCount).map(thread => (
               <Card
                 key={thread.threadId}
                 className={`cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all ${
@@ -301,7 +305,13 @@ export default function Messages() {
                   </p>
                 </CardContent>
               </Card>
-            ))
+            ))}
+            {filteredThreads.length > visibleThreadCount && (
+              <Button variant="outline" className="w-full" onClick={() => setVisibleThreadCount(c => c + 20)}>
+                Load more ({filteredThreads.length - visibleThreadCount} remaining)
+              </Button>
+            )}
+            </>
           )}
         </div>
 
@@ -324,7 +334,7 @@ export default function Messages() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
-                {selectedThread.messages.map((msg, idx) => (
+                {selectedThread.messages.map((msg, _idx) => (
                   <Card key={msg.id} className={msg.sender_email === currentUser?.email ? 'bg-blue-50' : 'bg-gray-50'}>
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">

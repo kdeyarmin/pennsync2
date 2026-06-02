@@ -1,28 +1,46 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCap, FileText, Award, Sparkles, Calendar } from "lucide-react";
+import { GraduationCap, FileText, Award, Sparkles, Calendar, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
 import MyTrainingDashboard from "@/components/training/MyTrainingDashboard";
 import MyAnnualEducationDashboard from "@/components/training/MyAnnualEducationDashboard";
 import EmployeeTranscriptCenter from "@/components/learning/EmployeeTranscriptCenter";
 import AnnualTranscriptCenter from "@/components/learning/AnnualTranscriptCenter";
 
 export default function MyLearning() {
-  const { data: currentUser } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <GraduationCap className="w-8 h-8 text-indigo-600" />
-          My Learning
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          All your training, courses, transcripts, and continuing education
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <GraduationCap className="w-8 h-8 text-indigo-600" />
+            My Learning
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">
+            All your training, courses, transcripts, and continuing education
+          </p>
+        </div>
+        <Link to={createPageUrl('LearningCenter')}>
+          <Button variant="outline" size="sm">
+            Learning Center
+          </Button>
+        </Link>
       </div>
 
       <Tabs defaultValue="courses" className="space-y-6">

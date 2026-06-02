@@ -69,7 +69,12 @@ export default function PatientDataManagement() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
 
-  const { data: patients = [], isLoading, error } = useQuery({
+  // Admin-only page: gate the agency-wide data pulls on role (defense in depth;
+  // server-side row authorization is the primary control).
+  const { data: currentUser } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
+  const isAdmin = currentUser?.role === 'admin';
+
+  const { data: patients = [], isLoading } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
       try {
@@ -81,6 +86,7 @@ export default function PatientDataManagement() {
       }
     },
     initialData: [],
+    enabled: isAdmin,
   });
 
   const { data: allVisits = [] } = useQuery({
@@ -94,6 +100,7 @@ export default function PatientDataManagement() {
       }
     },
     initialData: [],
+    enabled: isAdmin,
   });
 
   const { data: allAlerts = [] } = useQuery({
@@ -107,6 +114,7 @@ export default function PatientDataManagement() {
       }
     },
     initialData: [],
+    enabled: isAdmin,
   });
 
   const { data: allIncidents = [] } = useQuery({
@@ -120,6 +128,7 @@ export default function PatientDataManagement() {
       }
     },
     initialData: [],
+    enabled: isAdmin,
   });
 
   // Get unique diagnoses for filter
@@ -248,6 +257,22 @@ export default function PatientDataManagement() {
     if (sortBy !== field) return <Minus className="w-4 h-4 opacity-30" />;
     return sortOrder === 'asc' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />;
   };
+
+  // Admin-only surface: block non-admins (server-side authz is the real gate).
+  if (currentUser && !isAdmin) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <Card className="max-w-md border-amber-300">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Access restricted</h2>
+            <p className="text-sm text-gray-600">
+              Patient Data Management is available to administrators only.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -528,7 +553,7 @@ export default function PatientDataManagement() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="min-h-[44px] w-10">
+                          <Button variant="ghost" size="icon" aria-label="More actions" className="min-h-[44px] w-10">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>

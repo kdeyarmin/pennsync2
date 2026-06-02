@@ -92,7 +92,7 @@ export default function SearchablePatientSelect({
     ].slice(0, 5);
     
     setRecentPatients(updatedRecent);
-    localStorage.setItem(`recentPatients_${currentUserEmail}`, JSON.stringify(updatedRecent));
+    try { localStorage.setItem(`recentPatients_${currentUserEmail}`, JSON.stringify(updatedRecent)); } catch {}
   };
 
   // Toggle favorite
@@ -107,7 +107,7 @@ export default function SearchablePatientSelect({
       : [...favoritedPatients, patientId];
     
     setFavoritedPatients(updatedFavorites);
-    localStorage.setItem(`favoritedPatients_${currentUserEmail}`, JSON.stringify(updatedFavorites));
+    try { localStorage.setItem(`favoritedPatients_${currentUserEmail}`, JSON.stringify(updatedFavorites)); } catch {}
   };
 
   // Create new patient
@@ -117,7 +117,11 @@ export default function SearchablePatientSelect({
     setCreating(true);
     try {
       const created = await base44.entities.Patient.create(newPatient);
+      setLocalPatients((current) => [created, ...current]);
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['patients-list'] });
+      queryClient.invalidateQueries({ queryKey: ['patients-for-select'] });
+      queryClient.invalidateQueries({ queryKey: ['patients-for-signatures'] });
       handleSelect(created.id);
       setCreateDialogOpen(false);
       setNewPatient({ first_name: "", last_name: "" });

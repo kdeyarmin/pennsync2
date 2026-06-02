@@ -131,9 +131,10 @@ Write everything clearly and completely - no truncated text.`,
 
   } catch (error) {
     console.error('Error generating OASIS assessment:', error);
-    return Response.json({ 
-      error: error.message,
-      details: error.toString()
+    // Do not leak internal error details (error.toString()/stack) to the
+    // caller — could expose PHI or implementation details.
+    return Response.json({
+      error: error.message
     }, { status: 500 });
   }
 });

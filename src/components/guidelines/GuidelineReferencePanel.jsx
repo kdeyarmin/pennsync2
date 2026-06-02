@@ -189,7 +189,7 @@ export default function GuidelineReferencePanel({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <Badge className={`${getCategoryColor(guideline.category)} text-xs`}>
-                              {guideline.category.replace(/_/g, ' ')}
+                              {(guideline.category || '').replace(/_/g, ' ')}
                             </Badge>
                             {guideline.regulatory_citation && (
                               <Badge variant="outline" className="text-xs">

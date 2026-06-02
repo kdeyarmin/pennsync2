@@ -60,7 +60,7 @@ export default function CustomPDFUploader({ onFileAdded, existingFiles = [] }) {
         setFiles(prev => [...prev, newFile]);
         onFileAdded(newFile);
         toast.success(`${file.name} uploaded successfully`);
-      } catch (error) {
+      } catch {
         toast.error(`Failed to upload ${file.name}`);
       }
     }

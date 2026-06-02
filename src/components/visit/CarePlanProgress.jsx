@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ CURRENT VISIT DATA:`;
       // Add vital signs context
       if (Object.keys(vitalSigns).length > 0) {
         prompt += `\nVital Signs Today:`;
-        if (vitalSigns.blood_pressure_systolic) {
+        if (vitalSigns.blood_pressure_systolic && vitalSigns.blood_pressure_diastolic) {
           prompt += `\n- BP: ${vitalSigns.blood_pressure_systolic}/${vitalSigns.blood_pressure_diastolic}`;
         }
         if (vitalSigns.heart_rate) prompt += `\n- HR: ${vitalSigns.heart_rate}`;
@@ -95,7 +96,7 @@ Example: "Goal progress: Improved. Blood pressure decreased to 132/78 from basel
 
     } catch (error) {
       console.error("Error generating progress:", error);
-      alert("Error generating progress note. Please try again.");
+      toast.error("Error generating progress note. Please try again.");
     }
     
     setGeneratingFor(null);

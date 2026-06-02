@@ -15,11 +15,20 @@ export default function DrugInteractionAlert({ medications, patientId, autoCheck
   const [interactionResults, setInteractionResults] = useState(null);
   const [expandedInteractions, setExpandedInteractions] = useState({});
 
+  // Stable identity of the med set. Callers often pass a freshly-spread array
+  // each render; keying the effect on the array reference would re-run the
+  // (LLM + FDA) interaction check on every render. Key on content instead.
+  const medsKey = (medications || [])
+    .map((m) => `${m.id || m.name || ''}:${m.dosage || ''}`)
+    .sort()
+    .join('|');
+
   useEffect(() => {
-    if (autoCheck && medications && medications.length >= 2) {
+    if (autoCheck && medications && medications.length >= 2 && !isChecking) {
       checkInteractions();
     }
-  }, [medications, autoCheck]);
+     
+  }, [medsKey, autoCheck]);
 
   const checkInteractions = async () => {
     if (!medications || medications.length < 2) {

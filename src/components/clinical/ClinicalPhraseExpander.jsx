@@ -49,7 +49,7 @@ export default function ClinicalPhraseExpander({
     }
   }, [value, templates]);
 
-  const expandPhrase = async (phrase, template = null) => {
+  const expandPhrase = async (phrase, _template = null) => {
     setIsExpanding(true);
     setShowSuggestions(false);
 

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, BookOpen, Eye } from "lucide-react";
 import CourseForm from "./CourseForm";
+import { createPageUrl } from "@/utils";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function CourseManager() {
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -139,7 +151,6 @@ export default function CourseManager() {
                   <SelectItem value="all">All Business Lines</SelectItem>
                   <SelectItem value="home_health">Home Health</SelectItem>
                   <SelectItem value="hospice">Hospice</SelectItem>
-                  <SelectItem value="all">All</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -174,7 +185,7 @@ export default function CourseManager() {
                   <p><span className="text-gray-600">Required:</span> {course.is_mandatory ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Link to={`/TrainingCoursePlayer?courseId=${course.id}&preview=true`}>
+                  <Link to={`${createPageUrl('TrainingCoursePlayer')}?courseId=${course.id}&preview=true`}>
                     <Button variant="outline" size="sm">
                       <Eye className="w-4 h-4 mr-1" />
                       Preview
@@ -190,13 +201,30 @@ export default function CourseManager() {
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteMutation.mutate(course.id)}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Course</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete &ldquo;{course.title}&rdquo;? This action cannot be undone and will remove all associated modules and questions.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700"
+                          onClick={() => deleteMutation.mutate(course.id)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>

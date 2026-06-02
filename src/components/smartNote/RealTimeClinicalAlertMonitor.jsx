@@ -81,15 +81,15 @@ export default function RealTimeClinicalAlertMonitor({
 PATIENT CONTEXT:
 - Age: ${analysisContext.patient.age || 'Unknown'}
 - Primary Diagnosis: ${analysisContext.patient.primary_diagnosis || 'Not specified'}
-- Secondary Diagnoses: ${analysisContext.patient.secondary_diagnoses.join(', ') || 'None'}
-- Current Medications: ${analysisContext.patient.current_medications.map(m => m.name).join(', ') || 'Not documented'}
+- Secondary Diagnoses: ${analysisContext.patient.secondary_diagnoses?.join(', ') || 'None'}
+- Current Medications: ${analysisContext.patient.current_medications?.map(m => m.name).join(', ') || 'Not documented'}
 - Allergies: ${analysisContext.patient.allergies || 'None documented'}
 
 BASELINE VITALS (Patient's Normal):
-- BP: ${baselineVitals.blood_pressure_systolic}/${baselineVitals.blood_pressure_diastolic} mmHg
-- HR: ${baselineVitals.heart_rate} bpm
-- Temp: ${baselineVitals.temperature}°F
-- O2 Sat: ${baselineVitals.oxygen_saturation}%
+- BP: ${baselineVitals.blood_pressure_systolic || 'N/A'}/${baselineVitals.blood_pressure_diastolic || 'N/A'} mmHg
+- HR: ${baselineVitals.heart_rate || 'N/A'} bpm
+- Temp: ${baselineVitals.temperature || 'N/A'}°F
+- O2 Sat: ${baselineVitals.oxygen_saturation || 'N/A'}%
 
 CURRENT VITALS:
 - BP: ${vitalSigns.bp || 'Not recorded'}

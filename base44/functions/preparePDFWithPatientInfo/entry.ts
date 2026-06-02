@@ -32,12 +32,12 @@ Deno.serve(async (req) => {
     
     if (patient_id && field_mappings.length > 0) {
       try {
-        patientData = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
+        patientData = await base44.entities.Patient.filter({ id: patient_id });
         if (patientData.length > 0) patientData = patientData[0];
         
         // Get latest visit if needed
         if (field_mappings.some(m => m.data_source === 'visit')) {
-          const visits = await base44.asServiceRole.entities.Visit.filter(
+          const visits = await base44.entities.Visit.filter(
             { patient_id },
             '-visit_date',
             1
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
         
         // Get active care plans if needed
         if (field_mappings.some(m => m.data_source === 'care_plan')) {
-          carePlans = await base44.asServiceRole.entities.CarePlan.filter({
+          carePlans = await base44.entities.CarePlan.filter({
             patient_id,
             status: 'active'
           });

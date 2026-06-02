@@ -197,7 +197,7 @@ For each section, provide:
     try {
       // Merge subjective inputs into the documentation
       const updatedSections = await Promise.all(
-        documentationSections.sections.map(async (section, idx) => {
+        documentationSections.sections.map(async (section, _idx) => {
           const relevantInputs = documentationSections.subjective_prompts
             .map((prompt, pIdx) => ({
               prompt: prompt.prompt,

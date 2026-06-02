@@ -16,8 +16,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'User email is required' }, { status: 400 });
     }
 
-    // Generate a temporary password (8 characters, alphanumeric)
-    const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+    // Generate a cryptographically-secure temporary password. Math.random() is
+    // NOT a CSPRNG and must never be used for credentials.
+    const PW_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    const pwBytes = new Uint8Array(14);
+    crypto.getRandomValues(pwBytes);
+    const tempPassword = Array.from(pwBytes, (b) => PW_ALPHABET[b % PW_ALPHABET.length]).join('');
 
     // Get user details
     const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });

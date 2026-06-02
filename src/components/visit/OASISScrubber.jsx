@@ -1554,7 +1554,7 @@ Return JSON:
     }
   };
 
-  const handleSuggestionReject = (reason) => {
+  const handleSuggestionReject = (_reason) => {
     setFeedbackStats(prev => ({ ...prev, rejected: prev.rejected + 1 }));
   };
 
@@ -1806,7 +1806,21 @@ Return JSON:
 
                   {/* Clinical Indicators Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {[
+                    {(() => {
+                      const colorStyles = {
+                        blue: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-600', label: 'text-blue-900', badge: 'bg-blue-500' },
+                        cyan: { bg: 'bg-cyan-50 border-cyan-200', text: 'text-cyan-600', label: 'text-cyan-900', badge: 'bg-cyan-500' },
+                        red: { bg: 'bg-red-50 border-red-200', text: 'text-red-600', label: 'text-red-900', badge: 'bg-red-500' },
+                        orange: { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-600', label: 'text-orange-900', badge: 'bg-orange-500' },
+                        purple: { bg: 'bg-purple-50 border-purple-200', text: 'text-purple-600', label: 'text-purple-900', badge: 'bg-purple-500' },
+                        pink: { bg: 'bg-pink-50 border-pink-200', text: 'text-pink-600', label: 'text-pink-900', badge: 'bg-pink-500' },
+                        amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600', label: 'text-amber-900', badge: 'bg-amber-500' },
+                        rose: { bg: 'bg-rose-50 border-rose-200', text: 'text-rose-600', label: 'text-rose-900', badge: 'bg-rose-500' },
+                        teal: { bg: 'bg-teal-50 border-teal-200', text: 'text-teal-600', label: 'text-teal-900', badge: 'bg-teal-500' },
+                        indigo: { bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-600', label: 'text-indigo-900', badge: 'bg-indigo-500' },
+                        green: { bg: 'bg-green-50 border-green-200', text: 'text-green-600', label: 'text-green-900', badge: 'bg-green-500' },
+                      };
+                      return [
                       { key: 'assistDevices', label: 'Assistive Devices', icon: Footprints, color: 'blue' },
                       { key: 'oxygenUse', label: 'Oxygen Use', icon: Wind, color: 'cyan' },
                       { key: 'woundPresent', label: 'Wounds', icon: Activity, color: 'red' },
@@ -1817,24 +1831,25 @@ Return JSON:
                       { key: 'cardiacIssues', label: 'Cardiac', icon: Heart, color: 'rose' }
                     ].map(({ key, label, icon: Icon, color }) => {
                       const indicator = extractedIndicators.clinical[key];
+                      const cs = colorStyles[color] || colorStyles.blue;
                       return (
                         <TooltipProvider key={key}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className={`p-2 rounded border ${
-                                indicator?.detected 
-                                  ? `bg-${color}-50 border-${color}-200` 
+                                indicator?.detected
+                                  ? cs.bg
                                   : 'bg-gray-50 border-gray-200'
                               }`}>
                                 <div className="flex items-center gap-2">
-                                  <Icon className={`w-4 h-4 ${indicator?.detected ? `text-${color}-600` : 'text-gray-400'}`} />
-                                  <span className={`text-xs font-medium ${indicator?.detected ? `text-${color}-900` : 'text-gray-500'}`}>
+                                  <Icon className={`w-4 h-4 ${indicator?.detected ? cs.text : 'text-gray-400'}`} />
+                                  <span className={`text-xs font-medium ${indicator?.detected ? cs.label : 'text-gray-500'}`}>
                                     {label}
                                   </span>
                                 </div>
                                 <div className="mt-1">
                                   {indicator?.detected ? (
-                                    <Badge className={`bg-${color}-500 text-white text-xs`}>Detected</Badge>
+                                    <Badge className={`${cs.badge} text-white text-xs`}>Detected</Badge>
                                   ) : (
                                     <Badge variant="outline" className="text-xs">Not found</Badge>
                                   )}
@@ -1856,7 +1871,8 @@ Return JSON:
                           </Tooltip>
                         </TooltipProvider>
                       );
-                    })}
+                    });
+                    })()}
                   </div>
 
                   {/* Clinical Decision Support Alerts */}
@@ -2235,7 +2251,20 @@ Return JSON:
                         </CardHeader>
                         <CardContent className="p-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {Object.entries({
+                            {(() => {
+                              const colorStyles = {
+                                blue: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-600' },
+                                cyan: { bg: 'bg-cyan-50 border-cyan-200', text: 'text-cyan-600' },
+                                red: { bg: 'bg-red-50 border-red-200', text: 'text-red-600' },
+                                orange: { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-600' },
+                                purple: { bg: 'bg-purple-50 border-purple-200', text: 'text-purple-600' },
+                                pink: { bg: 'bg-pink-50 border-pink-200', text: 'text-pink-600' },
+                                amber: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600' },
+                                rose: { bg: 'bg-rose-50 border-rose-200', text: 'text-rose-600' },
+                                indigo: { bg: 'bg-indigo-50 border-indigo-200', text: 'text-indigo-600' },
+                                green: { bg: 'bg-green-50 border-green-200', text: 'text-green-600' },
+                              };
+                              return Object.entries({
                               assistDevices: { label: 'Assistive Devices', icon: Footprints, color: 'blue' },
                               oxygenUse: { label: 'Oxygen Usage', icon: Wind, color: 'cyan' },
                               woundPresent: { label: 'Wound Presence', icon: Activity, color: 'red' },
@@ -2248,12 +2277,13 @@ Return JSON:
                               independentMentioned: { label: 'Independence', icon: CheckCircle2, color: 'green' }
                             }).map(([key, { label, icon: Icon, color }]) => {
                               const indicator = extractedIndicators.clinical[key];
+                              const cs = colorStyles[color] || colorStyles.blue;
                               if (!indicator) return null;
                               return (
-                                <div key={key} className={`p-3 rounded border ${indicator.detected ? `bg-${color}-50 border-${color}-200` : 'bg-gray-50 border-gray-200'}`}>
+                                <div key={key} className={`p-3 rounded border ${indicator.detected ? cs.bg : 'bg-gray-50 border-gray-200'}`}>
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                      <Icon className={`w-4 h-4 ${indicator.detected ? `text-${color}-600` : 'text-gray-400'}`} />
+                                      <Icon className={`w-4 h-4 ${indicator.detected ? cs.text : 'text-gray-400'}`} />
                                       <span className="font-medium text-sm">{label}</span>
                                     </div>
                                     {indicator.detected ? (
@@ -2285,7 +2315,8 @@ Return JSON:
                                   )}
                                 </div>
                               );
-                            })}
+                            });
+                            })()}
                           </div>
                         </CardContent>
                       </Card>

@@ -27,18 +27,20 @@ export default function PersonalizedFeedback({
   // Track scores over time (simulated with local storage)
   useEffect(() => {
     if (auditResults?.quality_score) {
-      const stored = localStorage.getItem(`doc_scores_${userEmail}`) || '[]';
-      const scores = JSON.parse(stored);
-      scores.push({
-        date: new Date().toISOString(),
-        score: auditResults.quality_score,
-        compliance: auditResults.compliance_items_present?.length || 0,
-        missing: auditResults.missing_critical_elements?.length || 0
-      });
-      // Keep last 10 scores
-      const recentScores = scores.slice(-10);
-      localStorage.setItem(`doc_scores_${userEmail}`, JSON.stringify(recentScores));
-      setHistoricalScores(recentScores);
+      try {
+        const stored = localStorage.getItem(`doc_scores_${userEmail}`) || '[]';
+        const scores = JSON.parse(stored);
+        scores.push({
+          date: new Date().toISOString(),
+          score: auditResults.quality_score,
+          compliance: auditResults.compliance_items_present?.length || 0,
+          missing: auditResults.missing_critical_elements?.length || 0
+        });
+        // Keep last 10 scores
+        const recentScores = scores.slice(-10);
+        localStorage.setItem(`doc_scores_${userEmail}`, JSON.stringify(recentScores));
+        setHistoricalScores(recentScores);
+      } catch {}
     }
   }, [auditResults, userEmail]);
 

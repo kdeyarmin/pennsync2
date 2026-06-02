@@ -68,7 +68,7 @@ export default function SmartVitalsPredictor({
       const lastDiastolic = previousVisit.vital_signs.blood_pressure_diastolic;
       
       // Only suggest if it was within normal range
-      if (lastSystolic >= 110 && lastSystolic <= 140 && lastDiastolic >= 60 && lastDiastolic <= 90) {
+      if (lastSystolic && lastDiastolic && lastSystolic >= 110 && lastSystolic <= 140 && lastDiastolic >= 60 && lastDiastolic <= 90) {
         newPredictions.push({
           field: 'blood_pressure',
           value: `${lastSystolic}/${lastDiastolic}`,

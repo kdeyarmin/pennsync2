@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Heart, Thermometer, Wind } from "lucide-react";
+import { Activity, Heart, Wind } from "lucide-react";
 
 const VITAL_CONFIG = [
   { key: "blood_pressure_systolic", label: "BP Systolic", color: "#ef4444", unit: "mmHg" },

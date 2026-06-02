@@ -176,7 +176,7 @@ ${JSON.stringify(extractedData.demographics, null, 2)}
 EXISTING PATIENTS IN SYSTEM (Top Candidates):
 ${JSON.stringify(existingPatients.map(p => ({
     id: p.id,
-    name: \`\${p.first_name} \${p.middle_name || ''} \${p.last_name}\`.trim(),
+    name: `${p.first_name} ${p.middle_name || ''} ${p.last_name}`.trim(),
     mrn: p.medical_record_number,
     dob: p.date_of_birth,
     phone: p.phone,

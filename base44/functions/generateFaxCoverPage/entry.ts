@@ -23,10 +23,12 @@ Deno.serve(async (req) => {
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
     if (!anthropicKey) return Response.json({ error: 'Anthropic API key not configured' }, { status: 500 });
 
-    // Fetch patient + document in parallel
+    // Fetch patient + document in parallel.
+    // Reads are scoped to the authenticated user (RLS, NOT asServiceRole) so the
+    // caller cannot embed another patient's PHI into a cover sheet via a guessed id.
     const [patientResults, documentResults] = await Promise.all([
-      patient_id ? base44.asServiceRole.entities.Patient.filter({ id: patient_id }) : Promise.resolve([]),
-      document_id ? base44.asServiceRole.entities.Document.filter({ id: document_id }) : Promise.resolve([])
+      patient_id ? base44.entities.Patient.filter({ id: patient_id }) : Promise.resolve([]),
+      document_id ? base44.entities.Document.filter({ id: document_id }) : Promise.resolve([])
     ]);
 
     const patient = patientResults[0] || null;
@@ -107,7 +109,14 @@ Generate a professional cover sheet with a HIPAA confidentiality disclaimer. Ret
 
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const coverData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    let coverData = {};
+    if (jsonMatch) {
+      try {
+        coverData = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        console.error('Failed to parse cover page JSON from AI response:', e);
+      }
+    }
 
     return Response.json({ success: true, cover_page_data: coverData });
 

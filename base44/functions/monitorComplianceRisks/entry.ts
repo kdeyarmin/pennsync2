@@ -116,7 +116,9 @@ Deno.serve(async (req) => {
         v.visit_type?.toLowerCase().includes('ot')
       );
       
+      if (!patient.admission_date) continue;
       const admissionDate = new Date(patient.admission_date);
+      if (isNaN(admissionDate.getTime())) continue;
       const daysInEpisode = Math.floor((currentDate - admissionDate) / (1000 * 60 * 60 * 24));
       
       if (daysInEpisode < 60 && daysInEpisode > 7 && therapyVisits.length < 4) {

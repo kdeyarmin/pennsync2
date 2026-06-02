@@ -37,7 +37,7 @@ export default function TopTemplatesWidget() {
         {topTemplates.length === 0 ? (
           <div className="text-center py-6 text-gray-500">
             <p className="text-sm">No templates used yet</p>
-            <Link to={createPageUrl("ClinicalLibrary")} className="text-xs text-purple-600 hover:underline mt-2 block">
+            <Link to={createPageUrl("ResourceLibrary")} className="text-xs text-purple-600 hover:underline mt-2 block">
               Create your first template
             </Link>
           </div>
@@ -58,7 +58,7 @@ export default function TopTemplatesWidget() {
                 </div>
               </div>
             ))}
-            <Link to={createPageUrl("ClinicalLibrary")}>
+            <Link to={createPageUrl("ResourceLibrary")}>
               <button className="w-full mt-2 text-xs text-purple-600 hover:text-purple-700 font-medium py-2 hover:bg-purple-50 rounded transition-colors">
                 View All Templates →
               </button>

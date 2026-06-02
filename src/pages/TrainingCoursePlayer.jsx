@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, CheckCircle2, RotateCcw, Award, ChevronRight, ChevronLeft,
-  BookOpen, Clock, Star, Lock, Unlock, FileText, Send, Eye, RefreshCw, Home,
-  Check, Target, AlertCircle
+  BookOpen, Clock, Star, FileText, Send, Eye, RefreshCw, Home,
+  Check, Target, AlertCircle, Timer
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
@@ -23,10 +23,26 @@ import TrainingQuestionRenderer from "@/components/training/TrainingQuestionRend
 import CertificateDownloadButton from "@/components/training/CertificateDownloadButton";
 import CourseStepIndicator from "@/components/training/CourseStepIndicator";
 
-const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
+// Fisher-Yates shuffle for unbiased randomization
+const shuffle = (items) => {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
 
 const STEP_PROGRESS = {
   objectives: 5, content: 40, attestation: 75, test: 80, result: 100,
+};
+
+const formatElapsed = (ms) => {
+  const totalMin = Math.floor(ms / 60000);
+  const hrs = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  if (hrs > 0) return `${hrs}h ${mins}m`;
+  return `${mins}m`;
 };
 
 export default function TrainingCoursePlayer() {
@@ -46,6 +62,8 @@ export default function TrainingCoursePlayer() {
   const [proofFiles, setProofFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [startTime] = useState(() => Date.now());
+  const [elapsed, setElapsed] = useState(0);
+  const [submitError, setSubmitError] = useState("");
   const topRef = useRef(null);
 
   const startedAt = useMemo(() => new Date().toISOString(), []);
@@ -57,6 +75,14 @@ export default function TrainingCoursePlayer() {
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [step]);
+
+  // Elapsed time tracker
+  useEffect(() => {
+    if (step === "result") return;
+    setElapsed(Date.now() - startTime);
+    const interval = setInterval(() => setElapsed(Date.now() - startTime), 10000);
+    return () => clearInterval(interval);
+  }, [startTime, step]);
 
   const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: () => base44.auth.me() });
   const { data: assignment } = useQuery({
@@ -134,41 +160,44 @@ export default function TrainingCoursePlayer() {
   };
 
   const submitAttempt = async () => {
-    if (previewMode) {
-      alert("Preview mode: Submissions are disabled.");
-      return;
-    }
+    if (previewMode) return;
     setSubmitting(true);
-    if (proofFiles.length > 0) {
-      const uploaded = await Promise.all(
-        proofFiles.map(async (file) => ({
-          name: file.name,
-          url: (await base44.integrations.Core.UploadFile({ file })).file_url,
-        }))
-      );
-      await base44.entities.TrainingAssignment.update(assignmentId, {
-        external_proof_urls: uploaded.map((i) => i.url),
-        external_proof_names: uploaded.map((i) => i.name),
-        external_proof_submitted_at: new Date().toISOString(),
+    setSubmitError("");
+    try {
+      if (proofFiles.length > 0) {
+        const uploaded = await Promise.all(
+          proofFiles.map(async (file) => ({
+            name: file.name,
+            url: (await base44.integrations.Core.UploadFile({ file })).file_url,
+          }))
+        );
+        await base44.entities.TrainingAssignment.update(assignmentId, {
+          external_proof_urls: uploaded.map((i) => i.url),
+          external_proof_names: uploaded.map((i) => i.name),
+          external_proof_submitted_at: new Date().toISOString(),
+        });
+      }
+      const timeSpentMinutes = Math.round((Date.now() - startTime) / 60000);
+      const response = await gradeTrainingAttempt({
+        assignmentId,
+        responses: randomizedQuestions.map((q) => ({ questionId: q.id, answer: answers[q.id] })),
+        attestation: {
+          acknowledged: attestationAccepted,
+          signedName,
+          statement: course?.attestation_text,
+          deviceMetadata: { userAgent: navigator.userAgent },
+        },
+        startedAt,
+        timeSpentMinutes,
+        randomizedQuestionOrder: randomizedQuestions.map((q) => q.id),
       });
+      setResult(response.data || response);
+      setStep("result");
+    } catch (err) {
+      setSubmitError(err?.message || "Failed to submit quiz. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    const timeSpentMinutes = Math.round((Date.now() - startTime) / 60000);
-    const response = await gradeTrainingAttempt({
-      assignmentId,
-      responses: randomizedQuestions.map((q) => ({ questionId: q.id, answer: answers[q.id] })),
-      attestation: {
-        acknowledged: attestationAccepted,
-        signedName,
-        statement: course?.attestation_text,
-        deviceMetadata: { userAgent: navigator.userAgent },
-      },
-      startedAt,
-      timeSpentMinutes,
-      randomizedQuestionOrder: randomizedQuestions.map((q) => q.id),
-    });
-    setResult(response.data || response);
-    setStep("result");
-    setSubmitting(false);
   };
 
   if (!course) {
@@ -192,7 +221,19 @@ export default function TrainingCoursePlayer() {
   const courseName = previewMode ? course.title : assignment.course_title;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6" ref={topRef}>
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6" ref={topRef}>
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm">
+        <button
+          onClick={() => navigate(createPageUrl("LearningCenter"))}
+          className="text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1"
+        >
+          <Home className="w-3.5 h-3.5" /> Learning Center
+        </button>
+        <span className="text-slate-300">/</span>
+        <span className="text-slate-700 font-medium truncate">{courseName}</span>
+      </div>
+
       {/* Preview mode banner */}
       {previewMode && isAdmin && (
         <Alert className="border-indigo-200 bg-indigo-50">
@@ -204,14 +245,14 @@ export default function TrainingCoursePlayer() {
       )}
 
       {/* Course header card */}
-      <div className="rounded-2xl bg-gradient-to-r from-slate-800 to-blue-900 text-white p-6 shadow-xl">
+      <div className="rounded-2xl bg-gradient-to-r from-slate-800 to-blue-900 text-white p-4 sm:p-6 shadow-xl">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
             <p className="text-blue-300 text-xs font-semibold uppercase tracking-wider mb-1">
               {course.category?.replace(/_/g, " ") || "Training Course"}
             </p>
-            <h1 className="text-xl sm:text-2xl font-bold leading-tight">{courseName}</h1>
-            <div className="flex flex-wrap gap-3 mt-2 text-sm text-blue-200">
+            <h1 className="text-lg sm:text-2xl font-bold leading-tight">{courseName}</h1>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs sm:text-sm text-blue-200">
               {course.estimated_minutes && (
                 <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {course.estimated_minutes} min</span>
               )}
@@ -221,6 +262,9 @@ export default function TrainingCoursePlayer() {
               )}
               {!previewMode && (
                 <span>Attempt #{(assignment?.latest_attempt_number || 0) + 1}</span>
+              )}
+              {elapsed > 60000 && step !== "result" && (
+                <span className="flex items-center gap-1"><Timer className="w-3.5 h-3.5" /> {formatElapsed(elapsed)}</span>
               )}
             </div>
           </div>
@@ -302,6 +346,47 @@ export default function TrainingCoursePlayer() {
                       className="text-sm text-blue-600 underline hover:text-blue-800">
                       {course.attachment_names?.[i] || `Resource ${i + 1}`}
                     </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Real-world relevance */}
+            {course.real_world_relevance && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Why This Matters Right Now</p>
+                <p className="text-sm text-amber-900">{course.real_world_relevance}</p>
+              </div>
+            )}
+
+            {/* Regulatory crosswalk */}
+            {(course.regulatory_crosswalk_json || []).length > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="font-semibold text-slate-800 mb-2 text-sm">Regulatory Requirements Addressed</p>
+                <div className="space-y-2">
+                  {course.regulatory_crosswalk_json.map((reg, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <Badge variant="outline" className="text-xs flex-shrink-0 mt-0.5">{reg.regulation}</Badge>
+                      <span className="text-slate-600">{reg.title}{reg.how_this_course_addresses_it ? ` — ${reg.how_this_course_addresses_it}` : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Competency skills */}
+            {(course.competency_skills_json || []).length > 0 && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="font-semibold text-emerald-800 mb-2 text-sm">Skills You Will Demonstrate</p>
+                <div className="space-y-2">
+                  {course.competency_skills_json.map((skill, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-emerald-900 font-medium">{skill.skill}</span>
+                        {skill.criteria && <span className="text-emerald-700"> — {skill.criteria}</span>}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -506,8 +591,16 @@ export default function TrainingCoursePlayer() {
             ))}
           </div>
 
+          {/* Submit error */}
+          {submitError && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <AlertDescription className="text-red-800">{submitError}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Submit button */}
-          <div className="sticky bottom-4 z-10">
+          <div className="sticky bottom-3 sm:bottom-4 z-10">
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-4 flex flex-col sm:flex-row items-center gap-3">
               <div className="flex-1 text-sm text-slate-600">
                 {answeredCount < totalQuestions
@@ -597,7 +690,11 @@ export default function TrainingCoursePlayer() {
                         {item.points_earned}/{item.points_possible} pts
                       </Badge>
                     </div>
-                    <p className="text-slate-600">Your answer: <span className="font-medium">{JSON.stringify(item.answer)}</span></p>
+                    <p className="text-slate-600">Your answer: <span className="font-medium">{
+                      Array.isArray(item.answer) ? item.answer.join(', ')
+                      : typeof item.answer === 'object' && item.answer !== null ? Object.entries(item.answer).map(([k, v]) => `${k} → ${v}`).join(', ')
+                      : String(item.answer ?? '—')
+                    }</span></p>
                     {item.rationale && <p className="text-slate-500 mt-1">Rationale: {item.rationale}</p>}
                     {item.ai_feedback && <p className="text-slate-500 mt-1 italic">{item.ai_feedback}</p>}
                   </div>

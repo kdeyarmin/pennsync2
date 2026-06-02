@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export default function FaxRetrySettings() {
   const queryClient = useQueryClient();
 
-  const { data: configs = [], isLoading } = useQuery({
+  const { data: configs = [] } = useQuery({
     queryKey: ['fax-retry-config'],
     queryFn: () => base44.entities.FaxRetryConfig.list('-created_date', 1),
     initialData: []

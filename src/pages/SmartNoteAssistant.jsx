@@ -3,11 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Sparkles, CheckCircle2, Loader2,
-  Shield, ArrowRight, Pill,
-  TrendingUp, ClipboardList, User, FileText,
+  Sparkles, CheckCircle2, Loader2, ArrowRight, ClipboardList, User,
   Mic, Square
 } from "lucide-react";
 import { todayEastern } from "../components/utils/timezone";
@@ -429,7 +426,7 @@ Return ONLY the final note text.`
 
   const proceedToBuild = () => {
     if (analysis) {
-      const updatedFindings = analysis.findings.map(f => {
+      const updatedFindings = (analysis.findings || []).map(f => {
         if (f.needs_clarification && answers[f.id]) {
           return { ...f, needs_clarification: false, suggestion: answers[f.id] };
         }
@@ -444,13 +441,13 @@ Return ONLY the final note text.`
 
   const selectBySeverity = (severity) => {
     if (!analysis) return;
-    const filtered = analysis.findings.filter(f => f.severity === severity).map(f => f.id);
+    const filtered = (analysis.findings || []).filter(f => f.severity === severity).map(f => f.id);
     setSelected(new Set([...selected, ...filtered]));
   };
 
   const calculateTotalRevenueImpact = () => {
     if (!analysis) return 0;
-    const selected_findings = analysis.findings.filter(f => selected.has(f.id));
+    const selected_findings = (analysis.findings || []).filter(f => selected.has(f.id));
     const impacts = selected_findings
       .map(f => {
         const match = f.revenue_impact?.match(/\$?([\d,]+)/);

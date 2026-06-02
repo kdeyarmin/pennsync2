@@ -1,0 +1,195 @@
+import { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageSquare, PhoneCall, Send, ShieldCheck, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { normalizeE164 } from "@/components/voice/phoneUtils";
+import { smsSegments } from "@/components/messaging/smsUtils";
+import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
+
+/**
+ * PatientContactActions — Text / Call buttons on the patient detail page.
+ * Routes through the nurse's 8x8 work number so the nurse's personal cell is
+ * never exposed. Disabled (with explanation) when the nurse has no work number.
+ */
+export default function PatientContactActions({ patient, currentUser }) {
+  const [textOpen, setTextOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const e164 = normalizeE164(patient?.phone);
+  const hasWorkNumber = !!currentUser?.work_phone_number;
+
+  const { data: consents = [] } = useQuery({
+    queryKey: ["patient-consent", e164],
+    queryFn: () => base44.entities.SmsConsent.filter({ phone_e164: e164 }, "-captured_at", 1),
+    enabled: !!e164,
+    initialData: [],
+  });
+  const consentStatus = consents[0]?.consent_status || "unknown";
+  const optedOut = consentStatus === "opted_out";
+
+  const { data: settingsArr = [] } = useQuery({
+    queryKey: ["agency-settings"],
+    queryFn: () => base44.entities.AgencySettings.list("-created_date", 1),
+    staleTime: 5 * 60 * 1000,
+    initialData: [],
+  });
+  const quickReplies = getQuickReplies(settingsArr[0]);
+  const insertReply = (text) =>
+    setDraft((d) => (d.trim() ? `${d.replace(/\s*$/, "")} ${text}` : text));
+
+  const sendText = useMutation({
+    mutationFn: (body) => base44.functions.invoke("sendSms", { to_number: patient.phone, body, patient_id: patient.id }),
+    onSuccess: () => { setDraft(""); setTextOpen(false); toast.success("Text sent"); },
+    onError: (err) => toast.error(err?.message || "Failed to send text"),
+  });
+
+  const startCall = useMutation({
+    mutationFn: () => base44.functions.invoke("startMaskedCall", { patient_id: patient.id }),
+    onSuccess: () => toast.success("Connecting… your phone will ring shortly, then we'll dial the patient."),
+    onError: (err) => toast.error(err?.message || "Failed to start call"),
+  });
+
+  const disabledReason = !hasWorkNumber
+    ? "You need a work number assigned. Ask an administrator to provision one."
+    : !e164
+    ? "This patient has no valid phone number on file."
+    : null;
+  const disabled = !!disabledReason;
+
+  const TextButton = (
+    <Button variant="outline" className="flex-1" disabled={disabled || optedOut} onClick={() => setTextOpen(true)}>
+      <MessageSquare className="w-4 h-4 mr-2" />
+      Text
+    </Button>
+  );
+  const CallButton = (
+    <Button
+      variant="outline"
+      className="flex-1"
+      disabled={disabled || startCall.isPending}
+      onClick={() => startCall.mutate()}
+    >
+      <PhoneCall className="w-4 h-4 mr-2" />
+      Call
+    </Button>
+  );
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <PhoneCall className="w-4 h-4 text-blue-600" />
+          Contact Patient Privately
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-xs text-gray-500">
+          Calls and texts go through your work number — your personal cell is never shared.
+        </p>
+
+        {optedOut && (
+          <Alert className="bg-red-50 border-red-300 py-2">
+            <AlertTriangle className="w-4 h-4 text-red-600" />
+            <AlertDescription className="text-red-900 text-xs">
+              Patient opted out of texts (replied STOP). Texting is disabled; calling is still allowed.
+            </AlertDescription>
+          </Alert>
+        )}
+        {!optedOut && consentStatus === "opted_in" && (
+          <Badge className="bg-green-100 text-green-800 text-xs">
+            <ShieldCheck className="w-3 h-3 mr-1" /> Texting consent on file
+          </Badge>
+        )}
+
+        <div className="flex gap-2">
+          {disabled ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild><span className="flex-1">{TextButton}</span></TooltipTrigger>
+                <TooltipContent>{disabledReason}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild><span className="flex-1">{CallButton}</span></TooltipTrigger>
+                <TooltipContent>{disabledReason}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <>
+              {TextButton}
+              {CallButton}
+            </>
+          )}
+        </div>
+      </CardContent>
+
+      <Dialog open={textOpen} onOpenChange={setTextOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Text {patient?.first_name} {patient?.last_name}
+            </DialogTitle>
+          </DialogHeader>
+          {consentStatus === "unknown" && (
+            <Alert className="bg-amber-50 border-amber-200 py-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 text-xs">
+                No texting consent is recorded for this patient. Confirm they've agreed to receive texts before sending.
+              </AlertDescription>
+            </Alert>
+          )}
+          {quickReplies.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {quickReplies.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => insertReply(q.text)}
+                  title={q.text}
+                  className="text-xs px-2 py-1 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <Textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={4}
+            placeholder="Type your message… Avoid clinical details / PHI."
+            className="resize-none"
+          />
+          {(() => {
+            const meta = smsSegments(draft);
+            return meta.chars > 0 ? (
+              <p className={`text-xs ${meta.segments > 1 ? "text-amber-600" : "text-gray-400"}`}>
+                {`${meta.chars} chars · ${meta.segments} SMS${meta.segments > 1 ? ` (${meta.encoding})` : ""}`}
+              </p>
+            ) : null;
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => draft.trim() && sendText.mutate(draft.trim())}
+              disabled={!draft.trim() || sendText.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Send Text
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}

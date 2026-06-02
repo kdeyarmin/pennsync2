@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const user = await base44.auth.me();
 
-  if (user?.role !== 'admin') {
+  if (!user || user.role !== 'admin') {
     return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
   }
 
@@ -13,26 +13,26 @@ Deno.serve(async (req) => {
     const today = new Date();
     const sixtyDaysFromNow = new Date(today);
     sixtyDaysFromNow.setDate(today.getDate() + 60);
-    
+
     const notificationsSent = [];
-    
+
     for (const cred of credentials) {
       if (!cred.expiration_date || cred.status === 'expired') continue;
-      
+
       const expirationDate = new Date(cred.expiration_date);
       const daysUntilExpiry = Math.floor((expirationDate - today) / (1000 * 60 * 60 * 24));
-      
+
       // Send renewal request at 60, 30, 14, and 7 days before expiration
       const reminderOffsets = [60, 30, 14, 7];
       const remindersSent = cred.reminder_offsets_sent || [];
-      
+
       for (const offset of reminderOffsets) {
         if (daysUntilExpiry <= offset && !remindersSent.includes(offset)) {
           const userRecord = await base44.asServiceRole.entities.User.filter({ email: cred.user_id });
-          
+
           if (userRecord && userRecord.length > 0) {
-            const userName = userRecord[0].full_name;
-            
+            const userName = userRecord[0].full_name || cred.user_id;
+
             await base44.asServiceRole.integrations.Core.SendEmail({
               to: cred.user_id,
               subject: `🔔 Credential Renewal Required: ${cred.title}`,
@@ -57,13 +57,13 @@ If you need assistance, please contact your supervisor.
 Thank you,
 Credential Management System`
             });
-            
+
             // Update reminder tracking
             await base44.asServiceRole.entities.PersonnelCredential.update(cred.id, {
               reminder_offsets_sent: [...remindersSent, offset],
               last_reminder_sent_at: new Date().toISOString()
             });
-            
+
             notificationsSent.push({
               user_id: cred.user_id,
               credential: cred.title,
@@ -74,7 +74,7 @@ Credential Management System`
         }
       }
     }
-    
+
     return Response.json({
       success: true,
       notifications_sent: notificationsSent.length,

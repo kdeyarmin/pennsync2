@@ -218,7 +218,7 @@ Return detailed risk assessment:`,
     if (autoAnalyze && patients.length > 0 && !riskScores) {
       analyzeHospitalizationRisk();
     }
-  }, [autoAnalyze, patients.length]);
+  }, [autoAnalyze, patients.length, riskScores]);
 
   const getRiskColor = (level) => {
     switch(level) {

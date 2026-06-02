@@ -51,9 +51,11 @@ export default function OfflineIndicator() {
       updateStatus();
     };
 
+    let syncResultTimer;
     const handleSyncComplete = (event) => {
       setLastSyncResult(event.detail);
-      setTimeout(() => setLastSyncResult(null), 5000);
+      clearTimeout(syncResultTimer);
+      syncResultTimer = setTimeout(() => setLastSyncResult(null), 5000);
     };
 
     window.addEventListener('online', handleOnline);
@@ -71,6 +73,7 @@ export default function OfflineIndicator() {
       window.removeEventListener('offline-change-added', handleChangeAdded);
       window.removeEventListener('offline-sync-complete', handleSyncComplete);
       clearInterval(interval);
+      clearTimeout(syncResultTimer);
     };
   }, []);
 
@@ -78,7 +81,7 @@ export default function OfflineIndicator() {
     setIsSyncing(true);
     setSyncProgress(0);
     
-    const total = syncStatus.pending;
+    const total = syncStatus.pending || 1;
     let synced = 0;
 
     // Simulate progress updates
@@ -89,11 +92,12 @@ export default function OfflineIndicator() {
 
     try {
       const result = await offlineStorage.syncPendingData();
-      clearInterval(progressInterval);
       setSyncProgress(100);
       setLastSyncResult(result);
     } catch (error) {
       console.error('Sync error:', error);
+    } finally {
+      clearInterval(progressInterval);
     }
 
     setIsSyncing(false);

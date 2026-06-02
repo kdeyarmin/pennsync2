@@ -500,7 +500,7 @@ Return JSON:
                       <div key={doc.id} className="p-3 bg-gray-50 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs capitalize">{doc.category.replace(/_/g, ' ')}</Badge>
+                            <Badge variant="outline" className="text-xs capitalize">{(doc.category || '').replace(/_/g, ' ')}</Badge>
                             <Badge className={getPriorityBadge(doc.priority)}>{doc.priority}</Badge>
                           </div>
                           {doc.oasis_relevance && (

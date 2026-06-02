@@ -1661,8 +1661,10 @@ Deno.serve(async (req) => {
     diagnostics.stage = 'parsing_request';
 
     const body = await req.json();
-    console.log('Request body:', body);
-    
+    // HIPAA: never log the full request body — it carries patientName/email/
+    // condition (PHI). Log only the non-PHI key shape for debugging.
+    console.log('Request received with keys:', Object.keys(body || {}));
+
     const { condition, patientName, patientEmail, action, selectedSections, customNotes, styleOptions } = body;
     diagnostics.condition = condition;
     diagnostics.action = action;
@@ -2398,7 +2400,7 @@ Deno.serve(async (req) => {
 
     // If action is email, send it with PDF attachment
     if (action === 'email' && patientEmail) {
-      console.log('Sending email to:', patientEmail);
+      console.log('Sending handout email (recipient redacted)');
       diagnostics.stage = 'sending_email';
       
       try {
@@ -2607,12 +2609,11 @@ Deno.serve(async (req) => {
       console.error('Fallback PDF generation also failed:', fallbackError);
     }
     
-    return Response.json({ 
+    // Do not leak internal diagnostics (which include user email / condition
+    // PHI and implementation details) to the caller — only a safe stage label.
+    return Response.json({
       error: error.message || 'Unknown error occurred',
-      details: `Error at stage: ${diagnostics.stage}. ${diagnostics.failedSection ? `Failed section: ${diagnostics.failedSection}` : ''}`,
-      stage: diagnostics.stage,
-      diagnostics: diagnostics,
-      type: error.name
+      stage: diagnostics.stage
     }, { status: 500 });
   }
 });

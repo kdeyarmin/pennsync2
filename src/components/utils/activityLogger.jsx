@@ -70,7 +70,17 @@ export const ActivityActions = {
   DOCUMENT_DELETED: 'document_deleted',
   // Admin actions
   SETTINGS_UPDATED: 'settings_updated',
-  ROLE_PERMISSION_CHANGED: 'role_permission_changed'
+  ROLE_PERMISSION_CHANGED: 'role_permission_changed',
+  // 8x8 phone / messaging actions
+  SMS_SENT: 'sms_sent',
+  SMS_RECEIVED: 'sms_received',
+  SMS_STATUS_UPDATED: 'sms_status_updated',
+  SMS_OPT_OUT: 'sms_opt_out',
+  CALL_INITIATED: 'call_initiated',
+  INBOUND_CALL_RECEIVED: 'inbound_call_received',
+  CALL_STATUS_UPDATED: 'call_status_updated',
+  DUTY_STATUS_CHANGED: 'duty_status_changed',
+  WORK_NUMBER_PROVISIONED: 'work_number_provisioned'
 };
 
 export const logError = async (errorMessage, errorDetails = {}) => {
