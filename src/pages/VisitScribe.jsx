@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,7 +16,6 @@ export default function VisitScribe() {
   const [transcription, setTranscription] = useState(null);
   const [roughNote, setRoughNote] = useState("");
   const [activeTab, setActiveTab] = useState("record");
-  const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -100,7 +99,7 @@ export default function VisitScribe() {
               </CardHeader>
               <CardContent>
                 {!hasAudio ? (
-                  <AudioRecorder onRecordingComplete={handleRecordingComplete} />
+                  <AudioRecorder onAudioProcessed={handleRecordingComplete} isProcessing={isProcessing} />
                 ) : (
                   <div className="space-y-4">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
@@ -187,9 +186,9 @@ export default function VisitScribe() {
               <CardDescription>AI will review and generate a compliant clinical note</CardDescription>
             </CardHeader>
             <CardContent>
-              <UnifiedDocumentReview 
+              <UnifiedDocumentReview
                 roughNote={roughNote}
-                onSuggestionApplied={(updatedNote) => setRoughNote(updatedNote)}
+                onEnhancedNoteReady={({ enhancedNote }) => setRoughNote(enhancedNote)}
               />
             </CardContent>
           </Card>

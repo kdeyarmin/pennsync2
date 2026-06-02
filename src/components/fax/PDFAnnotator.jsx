@@ -10,10 +10,10 @@ import {
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import * as pdfjsLib from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-// Use a CDN worker to avoid bundler issues
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Bundled worker, version-matched to the installed pdfjs-dist (no CDN dependency)
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const TOOLS = {
   PEN: "pen",
