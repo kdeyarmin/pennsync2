@@ -81,7 +81,7 @@ export function calendarDaysBetween(start, end) {
   const s = parseISODate(start);
   const e = parseISODate(end);
   if (!s || !e || e < s) return 0;
-  return Math.round((e - s) / 86400000) + 1;
+  return Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
 }
 
 /**
@@ -177,12 +177,15 @@ export function formatDateRange(start, end) {
   const s = parseISODate(start);
   const e = parseISODate(end);
   if (!s) return "—";
-  const base = { month: "short", day: "numeric" };
+  // Options are inlined (rather than spread from a shared object) so the string
+  // literals keep their precise types under tsc --checkJs.
   if (!e || toISODate(s) === toISODate(e)) {
-    return s.toLocaleDateString(undefined, { ...base, year: "numeric" });
+    return s.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   }
   const sameYear = s.getFullYear() === e.getFullYear();
-  const startStr = s.toLocaleDateString(undefined, sameYear ? base : { ...base, year: "numeric" });
-  const endStr = e.toLocaleDateString(undefined, { ...base, year: "numeric" });
+  const startStr = sameYear
+    ? s.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : s.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const endStr = e.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   return `${startStr} – ${endStr}`;
 }
