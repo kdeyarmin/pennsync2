@@ -24,9 +24,7 @@ function looksLikePhone(value) {
 /** True when `value` parses as an absolute URL. */
 function looksLikeUrl(value) {
   try {
-    // eslint-disable-next-line no-new
-    new URL(String(value));
-    return true;
+    return Boolean(new URL(String(value)));
   } catch {
     return false;
   }
