@@ -32,6 +32,10 @@ export default function AdminTraining() {
   });
 
   const hasAccess = !userLoading && currentUser && (currentUser.role === 'admin' || isManager(currentUser));
+  // The compliance report aggregates org-wide staff PII (names, emails, scores,
+  // completions). Unlike the team-scoped Skill Gaps tab, it is not limited to a
+  // manager's team, so restrict it to admins.
+  const isAdmin = currentUser?.role === 'admin';
 
   const { data: users = [] } = useQuery({
     queryKey: ["skill-gap-users"],
@@ -226,10 +230,12 @@ export default function AdminTraining() {
               <TrendingDown className="w-4 h-4 mr-2" />
               Skill Gaps
             </TabsTrigger>
-            <TabsTrigger value="compliance-report" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
-              <FileText className="w-4 h-4 mr-2" />
-              Compliance Report
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="compliance-report" className="min-h-[44px] px-4 text-sm whitespace-nowrap">
+                <FileText className="w-4 h-4 mr-2" />
+                Compliance Report
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -325,9 +331,11 @@ export default function AdminTraining() {
           </div>
         </TabsContent>
 
-        <TabsContent value="compliance-report">
-          <StaffEducationComplianceReport />
-        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="compliance-report">
+            <StaffEducationComplianceReport />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
