@@ -52,12 +52,13 @@ export function renderTemplate(body, context = {}) {
  * Build the merge context from the available objects. Only fields we can
  * populate are included; anything absent renders as empty.
  */
-export function buildTemplateContext({ patient, user, settings } = {}) {
+export function buildTemplateContext(input) {
+  const src = input || {};
   return {
-    first_name: patient?.first_name || "",
-    last_name: patient?.last_name || "",
-    nurse_name: user?.full_name || "",
-    office: settings?.main_office_number_e164 || "",
+    first_name: src.patient?.first_name || "",
+    last_name: src.patient?.last_name || "",
+    nurse_name: src.user?.full_name || "",
+    office: src.settings?.main_office_number_e164 || "",
   };
 }
 

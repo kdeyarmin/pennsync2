@@ -23,10 +23,10 @@ function withinWindow(rows, sinceDays) {
  * Summarize phone/SMS activity.
  *
  * @param {object} input
- * @param {Array} [input.smsMessages]
- * @param {Array} [input.callLogs]
- * @param {Array} [input.consents]  latest-first consent ledger rows
- * @param {Array} [input.users]
+ * @param {any[]} [input.smsMessages]
+ * @param {any[]} [input.callLogs]
+ * @param {any[]} [input.consents]  latest-first consent ledger rows
+ * @param {any[]} [input.users]
  * @param {number} [input.sinceDays] window in days (0/undefined => all time)
  */
 export function summarizePhoneActivity({ smsMessages = [], callLogs = [], consents = [], users = [], sinceDays = 0 } = {}) {
