@@ -636,15 +636,12 @@ Actions available:
               },
               ...(matchAnalysis.alternative_matches || [])
             ];
-            console.log(`⚠️ Medium-high confidence match - requires quick review (${matchAnalysis.confidence_score}%)`);
           } else if (matchAnalysis.confidence_level === 'medium' && matchAnalysis.alternative_matches?.length > 0) {
             // Medium confidence (50-69%) - show multiple options
             updates.requires_manual_review = true;
             updates.match_suggestions = matchAnalysis.alternative_matches;
-            console.log(`🔍 Multiple possible matches found - manual review needed`);
           } else if (matchAnalysis.confidence_level === 'low' || matchAnalysis.recommendation === 'create_new') {
             // Low confidence - likely new patient
-            console.log(`✨ No strong matches found - likely new patient`);
           }
         }
       }
@@ -868,7 +865,7 @@ Actions available:
       }
       
       if (automationSummary.length > 0) {
-        alert(`Referral processed successfully!\n\nAI Automation Results:\n${automationSummary.join('\n')}`);
+        toast.success(`Referral processed successfully! AI Automation: ${automationSummary.join(', ')}`);
       }
       
       setProcessingReferralId(null);
@@ -883,7 +880,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error updating referral:', error);
-      alert('Failed to process referral. Please try again.');
+      toast.error('Failed to process referral. Please try again.');
     }
   };
 
@@ -901,7 +898,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
     } catch (error) {
       console.error('Error confirming match:', error);
-      alert('Failed to confirm match');
+      toast.error('Failed to confirm match');
     }
   };
 
