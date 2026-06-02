@@ -3,6 +3,7 @@ import { createTelehealthToken } from "@/functions/createTelehealthToken";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VideoOff, Users, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";
 import TelehealthChat from "./TelehealthChat";
@@ -18,6 +19,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   const [messages, setMessages] = useState([]);
   const [providerName, setProviderName] = useState(null);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const participantNames = [identity, ...participants.map((participant) => participant.identity)].filter(Boolean);
@@ -25,6 +28,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   }, [participants, identity, onParticipantListChange]);
 
   const localVideoRef = useRef(null);
+  const containerRef = useRef(null);
   const roomRef = useRef(null);
   const screenTrackRef = useRef(null);
   const cameraTrackRef = useRef(null);
@@ -58,6 +62,9 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         joinToken ? { room_name: roomName, join_token: joinToken } : { room_name: roomName, identity }
       );
       const { token } = res.data;
+      // Surface the server's friendly reason (e.g. "Invalid or expired join
+      // link") instead of a cryptic Twilio "invalid token" error downstream.
+      if (!token) throw new Error(res.data?.error || "We couldn't start the visit. Please try again.");
       // For patients, greet them with the provider's name while they wait.
       if (joinToken && res.data.host_name) setProviderName(res.data.host_name);
 
@@ -72,7 +79,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       const connectedRoom = await Video.connect(token, {
         name: roomName,
         audio: audioConstraint,
-        video: videoConstraint
+        video: videoConstraint,
+        networkQuality: { local: 1, remote: 1 }
       });
 
       roomRef.current = connectedRoom;
@@ -103,7 +111,10 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       // Existing remote participants
       setParticipants([...connectedRoom.participants.values()]);
 
-      connectedRoom.on("participantConnected", p => setParticipants(prev => [...prev, p]));
+      connectedRoom.on("participantConnected", p => {
+        setParticipants(prev => [...prev, p]);
+        if (p.identity) toast.success(`${p.identity} joined the visit`);
+      });
       connectedRoom.on("participantDisconnected", p => setParticipants(prev => prev.filter(x => x !== p)));
       // Twilio recovers transient network drops on its own; surface that as a
       // "Reconnecting…" state instead of treating the blip as the visit ending.
@@ -130,6 +141,22 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       roomRef.current?.disconnect();
     };
   }, [connectToRoom]);
+
+  // Live call timer (the previous duration display never ticked).
+  useEffect(() => {
+    if (!sessionStartTime) return;
+    const id = setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - sessionStartTime.getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [sessionStartTime]);
+
+  // Keep the fullscreen button in sync if the user exits with Esc.
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   const toggleAudio = () => {
     roomRef.current?.localParticipant.audioTracks.forEach(pub => {
@@ -212,6 +239,14 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     setScreenSharing(true);
   };
 
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      containerRef.current?.requestFullscreen?.();
+    }
+  };
+
   const toggleScreenShare = async () => {
     try {
       if (screenSharing) {
@@ -260,12 +295,11 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
     );
   }
 
-  const sessionDuration = sessionStartTime
-    ? Math.floor((new Date() - sessionStartTime) / 60000)
-    : 0;
+  const mm = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
+  const ss = String(elapsedSec % 60).padStart(2, "0");
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={containerRef} className={`flex flex-col gap-4 ${isFullscreen ? "h-full overflow-y-auto bg-gray-950 p-4" : ""}`}>
       {/* Status bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
@@ -286,8 +320,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
           </Badge>
         </div>
         <div className="flex items-center gap-3">
-          <NetworkMonitor roomRef={roomRef} />
-          <span className="text-sm text-gray-500 font-mono">{sessionDuration} min</span>
+          <NetworkMonitor room={roomRef.current} />
+          <span className={`text-sm font-mono ${isFullscreen ? "text-gray-300" : "text-gray-500"}`}>{mm}:{ss}</span>
         </div>
       </div>
 
@@ -295,7 +329,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       <div className={`grid gap-2 sm:gap-3 ${participants.length > 0 ? "sm:grid-cols-2 grid-cols-1" : "grid-cols-1"}`}>
         {/* Local video */}
         <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
-          <div ref={localVideoRef} className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover" />
+          <div ref={localVideoRef} className={`w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover ${screenSharing ? "" : "[&>video]:[transform:scaleX(-1)]"}`} />
           {videoMuted && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
               <VideoOff className="w-12 h-12 text-gray-500" />
@@ -331,6 +365,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         onDisconnect={disconnect}
         onToggleChat={() => setShowChat(v => !v)}
         onToggleScreenShare={toggleScreenShare}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
       />
 
       {showChat && (
