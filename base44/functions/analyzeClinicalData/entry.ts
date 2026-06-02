@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     switch (action) {
       case 'extract_events': {
         const { noteText, patientId } = params;
-        
+
         const eventsResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `Analyze this clinical note and extract ALL significant clinical events with high accuracy.
 
@@ -77,32 +77,29 @@ Be thorough - extract ALL clinically significant events, not just major ones.`,
             }
           }
         });
-        
-        return Response.json({ events: eventsResponse.events || [] });
+
+        return Response.json({ events: eventsResponse?.events || [] });
       }
-      
-      case 'extract_events':
-        return await extractEvents(base44, params);
-      
+
       case 'analyze_events':
         return await analyzeEvents(base44, params);
-      
+
       case 'analyze_trends':
         return await analyzeTrends(base44, params);
-      
+
       case 'generate_care_plans':
         return await generateCarePlans(base44, params);
-      
+
       case 'full_clinical_analysis':
         // Complete clinical analysis with all components
         return await fullClinicalAnalysis(base44, params);
-      
+
       default:
         return Response.json({ error: 'Invalid action' }, { status: 400 });
     }
   } catch (error) {
     console.error('Clinical data analysis error:', error);
-    return Response.json({ 
+    return Response.json({
       error: error.message,
       success: false
     }, { status: 500 });
@@ -155,7 +152,7 @@ For each event provide: event_type, event_title, event_description, structured_d
   for (const event of result.events || []) {
     let text_anchor_start = null;
     let text_anchor_end = null;
-    
+
     if (event.source_text && nurse_notes) {
       const index = nurse_notes.indexOf(event.source_text.trim());
       if (index !== -1) {
@@ -264,7 +261,8 @@ Only flag events with actual issues. For each flagged event provide: event_id, i
 
   return Response.json({
     success: true,
-    ...result,
+    flagged_events: result?.flagged_events || [],
+    overall_summary: result?.overall_summary || '',
     total_events_analyzed: events.length
   });
 }
@@ -431,7 +429,15 @@ Provide actionable insights for clinicians.`,
       lab_events: labEvents.length
     },
     vitals_data: vitalsHistory,
-    ...result
+    vital_trends: result?.vital_trends || [],
+    symptom_patterns: result?.symptom_patterns || [],
+    medication_insights: result?.medication_insights || {},
+    risk_indicators: result?.risk_indicators || [],
+    positive_trends: result?.positive_trends || [],
+    comparative_insights: result?.comparative_insights || [],
+    predictive_analytics: result?.predictive_analytics || {},
+    overall_trajectory: result?.overall_trajectory || 'unknown',
+    priority_recommendations: result?.priority_recommendations || []
   });
 }
 
@@ -510,7 +516,9 @@ Only suggest NEW care plans not already covered.`,
   return Response.json({
     success: true,
     patient_name: `${patient.first_name} ${patient.last_name}`,
-    ...result
+    suggestions: result?.suggestions || [],
+    overall_assessment: result?.overall_assessment || '',
+    critical_gaps_identified: result?.critical_gaps_identified || []
   });
 }
 

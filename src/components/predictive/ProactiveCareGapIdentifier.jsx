@@ -289,7 +289,7 @@ Return structured JSON with prioritized gaps.`,
                             {getTimelineIcon(gap.suggested_timeline)}
                           </div>
                           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-2">
-                            {gap.gap_category.replace(/_/g, ' ')}
+                            {(gap.gap_category || '').replace(/_/g, ' ')}
                           </p>
                         </div>
                       </div>

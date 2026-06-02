@@ -30,6 +30,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { Bell, Plus, Edit2, Trash2, Eye, EyeOff, Search, Clock, Calendar as CalendarIcon, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { formatEastern } from "@/components/utils/timezone";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AnnouncementManager() {
   const queryClient = useQueryClient();
@@ -37,6 +48,7 @@ export default function AnnouncementManager() {
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [announcementToDelete, setAnnouncementToDelete] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -55,7 +67,7 @@ export default function AnnouncementManager() {
         return result || [];
       } catch (error) {
         console.error('❌ Error fetching announcements:', error);
-        alert(`Error loading announcements: ${error.message}`);
+        toast.error(`Error loading announcements: ${error.message}`);
         return [];
       }
     },
@@ -71,7 +83,7 @@ export default function AnnouncementManager() {
       console.log('✅ Created successfully:', result);
       return result;
     },
-    onSuccess: async (data) => {
+    onSuccess: async (_data) => {
       console.log('🔄 Refetching announcements...');
       await queryClient.invalidateQueries({ queryKey: ['announcements'] });
       const refetchResult = await refetch();
@@ -81,7 +93,7 @@ export default function AnnouncementManager() {
     },
     onError: (error) => {
       console.error('❌ Create failed:', error);
-      alert(`Failed to create: ${error.message}`);
+      toast.error(`Failed to create: ${error.message}`);
     }
   });
 
@@ -92,11 +104,11 @@ export default function AnnouncementManager() {
       await refetch();
       setIsDialogOpen(false);
       resetForm();
-      alert('Announcement updated successfully!');
+      toast.success('Announcement updated successfully!');
     },
     onError: (error) => {
       console.error('Update error:', error);
-      alert(`Failed to update announcement: ${error.message}`);
+      toast.error(`Failed to update announcement: ${error.message}`);
     }
   });
 
@@ -105,7 +117,7 @@ export default function AnnouncementManager() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['announcements'] });
       await refetch();
-      alert('Announcement deleted successfully!');
+      toast.success('Announcement deleted successfully!');
     }
   });
 
@@ -340,11 +352,7 @@ export default function AnnouncementManager() {
                         size="sm"
                         variant="ghost"
                         className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
-                        onClick={() => {
-                          if (confirm('Delete this announcement?')) {
-                            deleteMutation.mutate(announcement.id);
-                          }
-                        }}
+                        onClick={() => setAnnouncementToDelete(announcement)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -440,7 +448,7 @@ export default function AnnouncementManager() {
                           onChange={(e) => {
                             const [hours, minutes] = e.target.value.split(':');
                             const newDate = new Date(formData.scheduled_for);
-                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
                             setFormData({...formData, scheduled_for: newDate});
                           }}
                           className="mt-1"
@@ -493,7 +501,7 @@ export default function AnnouncementManager() {
                           onChange={(e) => {
                             const [hours, minutes] = e.target.value.split(':');
                             const newDate = new Date(formData.expires_at);
-                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
                             setFormData({...formData, expires_at: newDate});
                           }}
                           className="mt-1"
@@ -528,6 +536,29 @@ export default function AnnouncementManager() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!announcementToDelete} onOpenChange={(open) => { if (!open) setAnnouncementToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Announcement</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{announcementToDelete?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                deleteMutation.mutate(announcementToDelete.id);
+                setAnnouncementToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

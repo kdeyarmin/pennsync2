@@ -45,7 +45,7 @@ export default function VoiceCommandListener({ onCommand, commands = [], context
       if (recognitionRef.current === recognition) {
         try {
           recognition.start();
-        } catch (e) {
+        } catch {
           // Already started
         }
       }

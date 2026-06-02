@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,12 @@ import { Pill, Plus, X, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function MedicationReconciliation({ patientId, onMedicationsUpdated }) {
-  const queryClient = useQueryClient();
   const [medications, setMedications] = useState([]);
   const [newMed, setNewMed] = useState({ name: "", dose: "", frequency: "", route: "" });
   const [showForm, setShowForm] = useState(false);
   const [noChanges, setNoChanges] = useState(false);
 
-  const { data: patient } = useQuery({
+  useQuery({
     queryKey: ['patient', patientId],
     queryFn: () => base44.entities.Patient.filter({ id: patientId }),
     select: (data) => data[0],

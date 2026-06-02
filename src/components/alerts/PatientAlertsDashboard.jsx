@@ -60,14 +60,28 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const [activeTab, setActiveTab] = useState("active");
   const queryClient = useQueryClient();
 
-  // Fetch alerts
+  // Fetch current user FIRST — the alerts useMemo below references currentUser
+  // and isAdmin, which would hit the temporal dead zone (ReferenceError) if
+  // these consts were declared after it.
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Fetch alerts via a SERVER-SCOPED function so the browser only receives
+  // alerts the caller is authorized for (assigned patients, or all for admins).
+  // The favorites filter below is UX-only, no longer an access boundary.
+  // Keep the ['patientAlerts'] key so the app-wide invalidations (workflow
+  // engine, alert analyzers/widgets, risk analyzers) still refresh this view.
   const { data: allAlerts = [], isLoading } = useQuery({
-    queryKey: ['patientAlerts', patientId, showAllPatients],
+    queryKey: ['patientAlerts', patientId],
     queryFn: async () => {
-      if (patientId) {
-        return base44.entities.PatientAlert.filter({ patient_id: patientId }, '-created_date');
-      }
-      return base44.entities.PatientAlert.list('-created_date', 100);
+      const res = await base44.functions.invoke('getScopedPatientAlerts', {
+        patient_id: patientId || undefined,
+      });
+      return res?.data?.alerts || [];
     }
   });
 
@@ -75,7 +89,7 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
   const alerts = React.useMemo(() => {
     if (patientId || isAdmin) return allAlerts;
     if (!currentUser?.favorited_patients) return [];
-    return allAlerts.filter(alert => 
+    return allAlerts.filter(alert =>
       currentUser.favorited_patients.some(fav => fav.id === alert.patient_id)
     );
   }, [allAlerts, patientId, currentUser, isAdmin]);
@@ -85,14 +99,6 @@ export default function PatientAlertsDashboard({ patientId = null, showAllPatien
     queryKey: ['patients'],
     queryFn: () => base44.entities.Patient.list()
   });
-
-  // Fetch current user
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
-  });
-
-  const isAdmin = currentUser?.role === 'admin';
 
   // Fetch clinical events for linking
   const { data: clinicalEvents = [] } = useQuery({

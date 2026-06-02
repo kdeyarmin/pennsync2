@@ -226,7 +226,7 @@ export default function ClinicalEventValidator({ patientId, onValidationComplete
                             {flagged.priority}
                           </Badge>
                           <span className="text-xs font-medium text-gray-500 uppercase">
-                            {flagged.issue_category.replace('_', ' ')}
+                            {(flagged.issue_category || '').replace('_', ' ')}
                           </span>
                         </div>
                         <p className="text-sm font-semibold text-gray-900">{flagged.issue_description}</p>

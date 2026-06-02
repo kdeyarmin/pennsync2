@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,7 @@ import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashb
 import CarePlanProposalReviewer from "../components/carePlan/CarePlanProposalReviewer";
 import PatientTelehealthPanel from "../components/telehealth/PatientTelehealthPanel";
 import CareTeamMessaging from "../components/messaging/CareTeamMessaging";
+import PatientContactActions from "../components/voice/PatientContactActions";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -162,6 +164,7 @@ export default function PatientDetails() {
         page: 'PatientDetails'
       });
     },
+    onError: () => toast.error('Failed to create care plan. Please try again.'),
   });
 
   const createVisitMutation = useMutation({
@@ -191,6 +194,7 @@ export default function PatientDetails() {
         setShowOASISPrompt(true);
       }
     },
+    onError: () => toast.error('Failed to create visit. Please try again.'),
   });
 
   const handleCreateVisit = () => {
@@ -414,13 +418,16 @@ export default function PatientDetails() {
                 incidents={incidents}
               />
             </div>
-            <QuickActionsPanel
-              patient={patient}
-              recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
-              upcomingVisits={visits.filter(v => v.status === 'scheduled')}
-              activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
-              pendingTasks={tasks.filter(t => t.status === 'pending')}
-            />
+            <div className="space-y-6">
+              <PatientContactActions patient={patient} currentUser={currentUser} />
+              <QuickActionsPanel
+                patient={patient}
+                recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
+                upcomingVisits={visits.filter(v => v.status === 'scheduled')}
+                activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
+                pendingTasks={tasks.filter(t => t.status === 'pending')}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -653,7 +660,7 @@ export default function PatientDetails() {
                                     {visit.visit_date && isValid(new Date(visit.visit_date)) ? format(new Date(visit.visit_date), 'MMM d, yyyy') : 'Invalid date'}
                                   </p>
                                   <Badge variant="outline" className="text-xs mt-1">
-                                    {visit.visit_type.replace(/_/g, ' ')}
+                                    {(visit.visit_type || '').replace(/_/g, ' ')}
                                   </Badge>
                                 </div>
                                 <Button
@@ -840,7 +847,7 @@ export default function PatientDetails() {
                               plan.status === 'revised' ? 'bg-yellow-500' :
                               'bg-blue-500'
                             }>
-                              {plan.status.replace('_', ' ')}
+                              {(plan.status || '').replace('_', ' ')}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">{sanitizeInput(plan.goal)}</p>

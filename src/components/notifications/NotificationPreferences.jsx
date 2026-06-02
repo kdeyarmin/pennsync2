@@ -72,7 +72,7 @@ export default function NotificationPreferences({ currentUser }) {
       setSaveMessage("Preferences saved successfully!");
       setTimeout(() => setSaveMessage(""), 3000);
     },
-    onError: (error) => {
+    onError: (_error) => {
       toast.error('Failed to save preferences');
       setSaveMessage("Failed to save preferences. Please try again.");
     }

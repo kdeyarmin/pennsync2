@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -103,7 +104,7 @@ Return a JSON object with this structure:
       
     } catch (error) {
       console.error("Error running QA check:", error);
-      alert("Error running quality check. Please try again.");
+      toast.error("Error running quality check. Please try again.");
     }
     
     setIsChecking(false);

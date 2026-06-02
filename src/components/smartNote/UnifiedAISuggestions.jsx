@@ -384,7 +384,7 @@ function SuggestionCard({ suggestion, isApplied, getPriorityColor, getTypeIcon, 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <Badge variant="outline" className="text-[10px]">
-              {suggestion.category.replace(/_/g, ' ')}
+              {(suggestion.category || '').replace(/_/g, ' ')}
             </Badge>
             <Badge className={`text-[10px] ${
               suggestion.priority === 'high' ? 'bg-red-600' :

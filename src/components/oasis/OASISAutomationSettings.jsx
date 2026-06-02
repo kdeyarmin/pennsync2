@@ -58,7 +58,7 @@ export default function OASISAutomationSettings() {
   });
 
   // Fetch automation rules
-  const { data: rules = [], isLoading } = useQuery({
+  const { data: rules = [] } = useQuery({
     queryKey: ['automationRules'],
     queryFn: () => base44.entities.OASISAutomationRule.list('-priority'),
   });

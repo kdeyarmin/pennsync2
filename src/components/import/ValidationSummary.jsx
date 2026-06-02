@@ -13,16 +13,16 @@ import {
 
 export default function ValidationSummary({ validationErrors, validRecords, totalRows }) {
   // Categorize errors by severity
-  const criticalErrors = validationErrors.flatMap(e => 
-    e.errors?.filter(err => err.includes('required') || err.includes('Invalid') || err.includes('cannot'))
+  const criticalErrors = (validationErrors || []).flatMap(e =>
+    (e.errors || []).filter(err => err.includes('required') || err.includes('Invalid') || err.includes('cannot'))
   ).length;
 
-  const warnings = validationErrors.flatMap(e => 
-    e.errors?.filter(err => err.includes('recommended') || err.includes('unusual') || err.includes('verify'))
+  const warnings = (validationErrors || []).flatMap(e =>
+    (e.errors || []).filter(err => err.includes('recommended') || err.includes('unusual') || err.includes('verify'))
   ).length;
 
-  const infoMessages = validationErrors.flatMap(e => 
-    e.errors?.filter(err => err.includes('minor') || err.includes('ensure'))
+  const infoMessages = (validationErrors || []).flatMap(e =>
+    (e.errors || []).filter(err => err.includes('minor') || err.includes('ensure'))
   ).length;
 
   // Field-level error breakdown

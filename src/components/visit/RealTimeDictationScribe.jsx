@@ -208,7 +208,7 @@ Return only the structured clinical note, no preamble.`;
     try {
       const result = await base44.integrations.Core.InvokeLLM({ prompt, model: "claude_sonnet_4_6" });
       setStructuredNote(result);
-    } catch (err) {
+    } catch {
       setError("Failed to structure note. Please try again.");
     } finally {
       setIsStructuring(false);

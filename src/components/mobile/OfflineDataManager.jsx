@@ -269,9 +269,7 @@ export default function OfflineDataManager() {
               <p className="text-xs text-gray-600">Available offline</p>
             </div>
             <Badge variant="outline">
-              {localStorage.getItem('offline_patients') ? 
-                JSON.parse(localStorage.getItem('offline_patients')).length : 0
-              } patients
+              {(() => { try { const d = localStorage.getItem('offline_patients'); return d ? JSON.parse(d).length : 0; } catch { return 0; } })()} patients
             </Badge>
           </div>
 

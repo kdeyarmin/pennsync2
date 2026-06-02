@@ -125,7 +125,7 @@ export default function UnifiedPatientOverview({
             {patient.secondary_diagnoses?.length > 0 && (
               <div className="p-2 bg-gray-50 rounded border">
                 <p className="text-xs font-semibold text-gray-700 mb-1">Secondary Diagnoses</p>
-                <p className="text-sm text-gray-700">{patient.secondary_diagnoses.join(', ')}</p>
+                <p className="text-sm text-gray-700">{patient.secondary_diagnoses?.join(', ')}</p>
               </div>
             )}
           </TabsContent>

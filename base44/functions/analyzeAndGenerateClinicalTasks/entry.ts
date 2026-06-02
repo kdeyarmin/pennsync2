@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    
+
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -12,11 +12,13 @@ Deno.serve(async (req) => {
     const { patientId, analysisType = 'comprehensive' } = await req.json();
 
     // Fetch comprehensive patient data
+    // Reads are scoped to the authenticated user (tenant/RLS) rather than service role
+    // to prevent reading patients the caller is not authorized to access (IDOR hardening).
     const [patient, visits, carePlans, alerts, recentTasks] = await Promise.all([
-      base44.asServiceRole.entities.Patient.filter({ id: patientId }).then(p => p[0]),
-      base44.asServiceRole.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
-      base44.asServiceRole.entities.CarePlan.filter({ patient_id: patientId, status: 'active' }),
-      base44.asServiceRole.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
+      base44.entities.Patient.filter({ id: patientId }).then(p => p[0]),
+      base44.entities.Visit.filter({ patient_id: patientId }, '-visit_date', 5),
+      base44.entities.CarePlan.filter({ patient_id: patientId, status: 'active' }),
+      base44.entities.PatientAlert.filter({ patient_id: patientId, status: 'active' }),
       base44.asServiceRole.entities.Task.filter({ patient_id: patientId, status: { $in: ['pending', 'in_progress'] } })
     ]);
 
@@ -174,9 +176,9 @@ Generate 3-7 tasks maximum, focusing on most clinically relevant items.`;
 
   } catch (error) {
     console.error('Clinical task analysis error:', error);
-    return Response.json({ 
+    return Response.json({
       error: 'Failed to analyze and generate tasks',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
 });

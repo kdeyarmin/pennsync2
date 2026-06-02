@@ -233,7 +233,7 @@ For each opportunity, calculate:
                           <span className="text-2xl">{getCategoryIcon(opp.category)}</span>
                           <div>
                             <Badge className={getCategoryColor(opp.category)}>
-                              {opp.category.replace(/_/g, ' ')}
+                              {(opp.category || '').replace(/_/g, ' ')}
                             </Badge>
                             <Badge variant="outline" className="ml-2 font-mono text-xs">
                               {opp.m_item_code}

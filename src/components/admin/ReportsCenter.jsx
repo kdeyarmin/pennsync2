@@ -40,7 +40,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
 
   const generatePreview = () => {
     const endDate = todayEastern();
-    const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
+    const startDate = format(subDays(new Date(), parseInt(dateRange, 10)), 'yyyy-MM-dd');
 
     const filteredVisits = visits.filter(v => 
       v.visit_date >= startDate && v.visit_date <= endDate
@@ -78,7 +78,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     
     try {
       const endDate = todayEastern();
-      const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
+      const startDate = format(subDays(new Date(), parseInt(dateRange, 10)), 'yyyy-MM-dd');
 
       if (exportFormat === 'pdf') {
         // Generate PDF using utility
@@ -184,9 +184,9 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                 type: 'table',
                 headers: ['Visit Type', 'Count', 'Revenue/Visit', 'Total Revenue'],
                 rows: finData.visitTypes.map(vt => [
-                  vt.type.replace(/_/g, ' '),
+                  (vt.type || '').replace(/_/g, ' '),
                   vt.count,
-                  `$${Math.round(vt.revenue / vt.count)}`,
+                  `$${vt.count > 0 ? Math.round(vt.revenue / vt.count) : 0}`,
                   `$${vt.revenue}`
                 ])
               },
@@ -317,7 +317,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   // Helper functions for PDF data
   const generateProductivityReportData = (visits, allUsers) => {
     const endDate = todayEastern();
-    const startDate = format(subDays(new Date(), parseInt(dateRange)), 'yyyy-MM-dd');
+    const startDate = format(subDays(new Date(), parseInt(dateRange, 10)), 'yyyy-MM-dd');
     
     // Filter all note enhancements by date range FIRST
     const filteredEnhancements = allNoteEnhancements.filter(nc => {
@@ -347,7 +347,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     const totalTimeSaved = parseFloat((totalTimeSavedMinutes / 60).toFixed(1));
     
     // Generate daily enhancement data for chart
-    const days = parseInt(dateRange);
+    const days = parseInt(dateRange, 10);
     const dailyEnhancements = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
@@ -369,7 +369,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
       visitTypeData[type] = (visitTypeData[type] || 0) + 1;
     });
     const visitTypeChart = Object.entries(visitTypeData).map(([type, count]) => ({
-      type: type.replace(/_/g, ' '),
+      type: (type || '').replace(/_/g, ' '),
       count
     }));
 
@@ -485,7 +485,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     
     Object.entries(visitTypes).forEach(([type, count]) => {
       const revenue = count * (revenuePerType[type] || 160);
-      content += `${type.replace(/_/g, ' ')},${count},$${revenuePerType[type] || 160},$${revenue}\n`;
+      content += `${(type || '').replace(/_/g, ' ')},${count},$${revenuePerType[type] || 160},$${revenue}\n`;
     });
     
     content += `\nTOTAL ESTIMATED REVENUE,$${totalRevenue}\n\n`;
@@ -745,12 +745,12 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
         completed: completed.length,
         completionRate: nurseVisits.length > 0 ? Math.round((completed.length / nurseVisits.length) * 100) : 0,
         docQuality: completed.length > 0 ? Math.round((withCompleteDoc.length / completed.length) * 100) : 0,
-        avgVisitsPerDay: Math.round(nurseVisits.length / parseInt(dateRange))
+        avgVisitsPerDay: Math.round(nurseVisits.length / parseInt(dateRange, 10))
       };
     }).sort((a, b) => b.completionRate - a.completionRate);
   };
 
-  const generateDetailedFinancialData = (filteredVisits, allPatients) => {
+  const generateDetailedFinancialData = (filteredVisits, _allPatients) => {
     const visitTypes = {};
     const revenuePerType = {
       'skilled_nursing': 180,
@@ -783,7 +783,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
   };
 
   const generateTrendAnalysisData = (visitsData, incidentsData) => {
-    const days = parseInt(dateRange);
+    const days = parseInt(dateRange, 10);
     const trends = [];
 
     for (let i = days - 1; i >= 0; i--) {
@@ -847,7 +847,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
     
     data.visitTypes.forEach(vt => {
       const revenuePerVisit = vt.count > 0 ? Math.round(vt.revenue / vt.count) : 0;
-      content += `${vt.type.replace(/_/g, ' ')},${vt.count},$${revenuePerVisit},$${vt.revenue}\n`;
+      content += `${(vt.type || '').replace(/_/g, ' ')},${vt.count},$${revenuePerVisit},$${vt.revenue}\n`;
     });
 
     content += `\nTOTAL REVENUE,$${data.totalRevenue}\n`;
@@ -1152,7 +1152,7 @@ export default function ReportsCenter({ users: allUsers, patients: allPatients, 
                         outerRadius={90}
                         labelLine={true}
                         label={(entry) => {
-                          const name = entry.type.replace(/_/g, ' ');
+                          const name = (entry.type || '').replace(/_/g, ' ');
                           const percent = ((entry.revenue / reportPreview.totalRevenue) * 100).toFixed(0);
                           return `${name} (${percent}%)`;
                         }}

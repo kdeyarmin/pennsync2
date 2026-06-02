@@ -492,7 +492,7 @@ Return JSON:
                     onClick={goToNextSection}
                     className="bg-indigo-600 hover:bg-indigo-700"
                   >
-                    Next: {SOAP_SECTIONS[SOAP_SECTIONS.findIndex(s => s.id === activeSection) + 1]?.label}
+                    Next: {SOAP_SECTIONS[Math.max(0, SOAP_SECTIONS.findIndex(s => s.id === activeSection)) + 1]?.label}
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 )}

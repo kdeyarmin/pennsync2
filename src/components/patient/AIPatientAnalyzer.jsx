@@ -24,9 +24,9 @@ export default function AIPatientAnalyzer({ patient, visits, carePlans, incident
     setIsAnalyzing(true);
     try {
       // Prepare comprehensive patient data
-      const recentVisits = visits.slice(0, 10);
-      const activeCarePlans = carePlans.filter(cp => cp.status === 'active');
-      const recentIncidents = incidents.slice(0, 5);
+      const recentVisits = (visits || []).slice(0, 10);
+      const activeCarePlans = (carePlans || []).filter(cp => cp.status === 'active');
+      const recentIncidents = (incidents || []).slice(0, 5);
 
       const prompt = `Analyze this home health patient's comprehensive medical record and provide clinical insights:
 

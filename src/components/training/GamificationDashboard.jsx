@@ -41,7 +41,8 @@ export default function GamificationDashboard({ userId }) {
     legendary: 'bg-yellow-500'
   };
 
-  const userRank = topPerformers.findIndex(p => p.user_id === userId) + 1;
+  const userRankIdx = topPerformers.findIndex(p => p.user_id === userId);
+  const userRank = userRankIdx >= 0 ? userRankIdx + 1 : null;
 
   return (
     <div className="space-y-6">

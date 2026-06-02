@@ -10,6 +10,16 @@ import { Search, FileText, Download, Trash2, Eye, Calendar, User, Tag, Filter, G
 import { toast } from "sonner";
 import { format } from "date-fns";
 import DocumentAIAnalysis from "./DocumentAIAnalysis";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
@@ -27,6 +37,7 @@ const CATEGORIES = [
 
 const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, getCategoryColor, deleteMutation, showPatientInfo }) => {
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const hasCriticalFlags = doc.ai_analysis?.critical_flags?.some(f => f.severity === 'critical' || f.severity === 'high');
 
   return (
@@ -118,14 +129,30 @@ const DocumentCard = ({ doc, onDocumentClick, getPatientName, getCategoryLabel, 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              if (confirm(`Delete "${doc.title}"?`)) {
-                deleteMutation.mutate(doc.id);
-              }
-            }}
+            aria-label="Delete document"
+            onClick={() => setShowDeleteConfirm(true)}
           >
             <Trash2 className="w-4 h-4 text-red-600" />
           </Button>
+          <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete "{doc.title}"? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={() => deleteMutation.mutate(doc.id)}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         <div className="mt-3 pt-3 border-t text-xs text-gray-500">
@@ -145,7 +172,7 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
 
   const { data: documents = [], isLoading } = useQuery({
     queryKey: patientId ? ['patient-documents', patientId] : ['documents'],
-    queryFn: () => patientId 
+    queryFn: () => patientId
       ? base44.entities.Document.filter({ patient_id: patientId }, '-created_date', 500)
       : base44.entities.Document.list('-created_date', 500),
     initialData: []
@@ -177,9 +204,9 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -256,8 +283,8 @@ export default function DocumentList({ patientId, showPatientInfo = true, onDocu
       ) : (
         <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-2"}>
           {filteredDocuments.map((doc) => (
-            <DocumentCard 
-              key={doc.id} 
+            <DocumentCard
+              key={doc.id}
               doc={doc}
               onDocumentClick={onDocumentClick}
               getPatientName={getPatientName}

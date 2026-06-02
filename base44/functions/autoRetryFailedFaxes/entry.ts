@@ -47,6 +47,12 @@ Deno.serve(async (req) => {
 
       // Attempt the retry via Twilio
       try {
+        if (!fax.document_url) {
+          console.error(`Fax ${fax.id} has no document_url, skipping retry`);
+          skippedCount++;
+          continue;
+        }
+
         const formBody = new URLSearchParams();
         formBody.append('From', fromNumber);
         formBody.append('To', fax.to_number);

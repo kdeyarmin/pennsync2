@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2, Settings } from "lucide-react";
@@ -11,62 +11,82 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
   const [showAddPanel, setShowAddPanel] = useState(false);
   const containerRef = useRef(null);
 
+  useEffect(() => {
+    setFields(initialFields);
+  }, [initialFields]);
+
+  const updateFields = (nextFields) => {
+    setFields(nextFields);
+    onFieldsChange(nextFields);
+  };
+
   const addField = (newField) => {
     const field = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).slice(2, 11),
       ...newField,
-      position: { x: 50, y: 50 },
-      size: { width: 200, height: 30 }
+      position: newField.position || { x: 50, y: 50 },
+      size: newField.size || { width: 200, height: 30 },
     };
+
     const updated = [...fields, field];
-    setFields(updated);
-    onFieldsChange(updated);
+    updateFields(updated);
     setShowAddPanel(false);
     toast.success("Field added - drag to position");
   };
 
   const updateField = (fieldId, updates) => {
-    const updated = fields.map(f => f.id === fieldId ? { ...f, ...updates } : f);
-    setFields(updated);
-    onFieldsChange(updated);
+    updateFields(fields.map((field) => (field.id === fieldId ? { ...field, ...updates } : field)));
   };
 
   const removeField = (fieldId) => {
-    const updated = fields.filter(f => f.id !== fieldId);
-    setFields(updated);
-    onFieldsChange(updated);
+    updateFields(fields.filter((field) => field.id !== fieldId));
     setSelectedFieldId(null);
   };
 
-  const handleDragStart = (e, fieldId) => {
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("fieldId", fieldId);
+  const handleDragStart = (event, fieldId) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("fieldId", fieldId);
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = (e, fieldId) => {
-    e.preventDefault();
-    if (!containerRef.current) return;
-    
+  const handleDrop = (event, fieldId) => {
+    event.preventDefault();
+    if (!containerRef.current) {
+      return;
+    }
+
     const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, e.clientX - rect.left - 100);
-    const y = Math.max(0, e.clientY - rect.top - 15);
-    
+    const x = Math.max(0, event.clientX - rect.left - 100);
+    const y = Math.max(0, event.clientY - rect.top - 15);
+
     updateField(fieldId, {
-      position: { x: Math.round(x), y: Math.round(y) }
+      position: { x: Math.round(x), y: Math.round(y) },
     });
+  };
+
+  const getFieldTypeColor = (type) => {
+    const colorMap = {
+      text: "bg-blue-100",
+      date: "bg-emerald-100",
+      number: "bg-orange-100",
+      select: "bg-indigo-100",
+      checkbox: "bg-yellow-100",
+      signature: "bg-purple-100",
+    };
+
+    return colorMap[type] || "bg-gray-100";
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Visual Field Editor</h3>
-          <p className="text-sm text-gray-600">Drag fields to position on PDF</p>
+          <p className="text-sm text-gray-600">Add fields, then drag them over the PDF where signatures and carried-forward patient data should appear.</p>
         </div>
         <Button onClick={() => setShowAddPanel(!showAddPanel)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
@@ -79,55 +99,67 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Canvas */}
         <div className="lg:col-span-2">
           <div
             ref={containerRef}
-            className="relative w-full bg-gray-100 rounded-lg border-2 border-gray-300 overflow-auto"
-            style={{ minHeight: "600px", backgroundImage: `url(${pdfUrl})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+            className="relative w-full rounded-lg border-2 border-gray-300 overflow-hidden bg-white min-h-[720px]"
             onDragOver={handleDragOver}
           >
-            {fields.map(field => (
-              <div
-                key={field.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, field.id)}
-                onDrop={(e) => handleDrop(e, field.id)}
-                onClick={() => setSelectedFieldId(field.id)}
-                className={`absolute bg-white border-2 rounded cursor-move transition-all ${
-                  selectedFieldId === field.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-400 hover:border-gray-600'
-                }`}
-                style={{
-                  left: `${field.position.x}px`,
-                  top: `${field.position.y}px`,
-                  width: `${field.size.width}px`,
-                  height: `${field.size.height}px`,
-                  minWidth: "80px",
-                  minHeight: "20px"
-                }}
-              >
-                <div className="flex items-center justify-between p-1 h-full">
-                  <span className="text-xs font-medium text-gray-700 truncate px-1">{field.label}</span>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-1 rounded">{field.field_type}</span>
-                </div>
+            {pdfUrl ? (
+              <>
+                <iframe
+                  src={pdfUrl}
+                  title="PDF template preview"
+                  className="absolute inset-0 h-full w-full pointer-events-none bg-white"
+                />
+                <div className="absolute inset-0 bg-white/10" />
+              </>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-gray-500 bg-gray-50">
+                Upload a PDF to place fields.
               </div>
-            ))}
+            )}
+
+            <div className="absolute inset-0">
+              {fields.map((field) => (
+                <div
+                  key={field.id}
+                  draggable
+                  onDragStart={(event) => handleDragStart(event, field.id)}
+                  onDrop={(event) => handleDrop(event, field.id)}
+                  onClick={() => setSelectedFieldId(field.id)}
+                  className={`absolute bg-white/95 border-2 rounded cursor-move transition-all shadow-sm ${
+                    selectedFieldId === field.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-400 hover:border-gray-600'
+                  } ${getFieldTypeColor(field.field_type)}`}
+                  style={{
+                    left: `${field.position?.x || 50}px`,
+                    top: `${field.position?.y || 50}px`,
+                    width: `${field.size?.width || 200}px`,
+                    height: `${field.size?.height || 30}px`,
+                    minWidth: "100px",
+                    minHeight: "28px",
+                  }}
+                >
+                  <div className="flex items-center justify-between p-1 h-full gap-2">
+                    <span className="text-xs font-medium text-gray-800 truncate px-1">{field.label}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-gray-500 bg-white/80 px-1 rounded">{field.field_type}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Fields Panel */}
         <div className="space-y-3">
           <h4 className="font-semibold text-gray-900">Fields ({fields.length})</h4>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-2 max-h-[32rem] overflow-y-auto pr-1">
             {fields.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">No fields added yet</p>
             ) : (
-              fields.map(field => (
+              fields.map((field) => (
                 <Card
                   key={field.id}
-                  className={`p-3 cursor-pointer transition-all ${
-                    selectedFieldId === field.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                  }`}
+                  className={`p-3 cursor-pointer transition-all ${selectedFieldId === field.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
                   onClick={() => setSelectedFieldId(field.id)}
                 >
                   <div className="space-y-2">
@@ -137,8 +169,8 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                         <p className="text-xs text-gray-500">{field.field_type}</p>
                       </div>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={(event) => {
+                          event.stopPropagation();
                           removeField(field.id);
                         }}
                         className="p-1 hover:bg-red-100 rounded text-red-600"
@@ -146,6 +178,12 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
+                    <p className="text-xs text-gray-600">Position: {field.position?.x || 0}, {field.position?.y || 0}</p>
+                    {field.data_source && (
+                      <p className="text-xs text-gray-600 bg-gray-50 p-1 rounded">
+                        Source: {field.data_source}{field.field_path ? ` → ${field.field_path}` : ''}
+                      </p>
+                    )}
                     {field.default_value && (
                       <p className="text-xs text-gray-600 bg-gray-50 p-1 rounded">Default: {field.default_value}</p>
                     )}
@@ -160,10 +198,10 @@ export default function VisualFieldEditor({ pdfUrl, onFieldsChange, initialField
 
           {selectedFieldId && (
             <div className="pt-2 border-t">
-              <p className="text-xs font-semibold text-gray-700 mb-2">Quick Edit</p>
+              <p className="text-xs font-semibold text-gray-700 mb-2">Selected field</p>
               <Button size="sm" variant="outline" className="w-full text-xs">
                 <Settings className="w-3 h-3 mr-2" />
-                Configure Selected
+                Drag on canvas to reposition
               </Button>
             </div>
           )}

@@ -1,13 +1,19 @@
+import { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  CheckCircle2, 
+import {
+  CheckCircle2,
   Clock,
   TrendingUp
 } from "lucide-react";
+import {
+  getDocumentDisplayName,
+  getNormalizedSignatureStatus,
+  isSignatureOverdue,
+} from "@/components/signature/signatureUtils";
 
 export default function RealTimeSignatureTracker({ patientId }) {
   const { data: signatures = [] } = useQuery({
@@ -18,13 +24,18 @@ export default function RealTimeSignatureTracker({ patientId }) {
     enabled: !!patientId
   });
 
+  const normalizedSignatures = useMemo(() => signatures.map((signature) => ({
+    ...signature,
+    normalizedName: getDocumentDisplayName(signature),
+    normalizedStatus: getNormalizedSignatureStatus(signature),
+    isOverdue: isSignatureOverdue(signature),
+  })), [signatures]);
+
   const stats = {
-    total: signatures.length,
-    signed: signatures.filter(s => s.status === 'signed').length,
-    pending: signatures.filter(s => s.status === 'pending').length,
-    overdue: signatures.filter(s => 
-      s.status === 'pending' && s.due_date && new Date(s.due_date) < new Date()
-    ).length
+    total: normalizedSignatures.length,
+    signed: normalizedSignatures.filter((signature) => signature.normalizedStatus === 'signed').length,
+    pending: normalizedSignatures.filter((signature) => signature.normalizedStatus !== 'signed').length,
+    overdue: normalizedSignatures.filter((signature) => signature.isOverdue).length
   };
 
   const completionRate = stats.total > 0 ? (stats.signed / stats.total) * 100 : 0;
@@ -68,30 +79,29 @@ export default function RealTimeSignatureTracker({ patientId }) {
         </div>
 
         {/* Recent Signatures */}
-        {signatures.length > 0 && (
+        {normalizedSignatures.length > 0 && (
           <div className="space-y-2 mt-4">
             <p className="text-sm font-medium text-gray-700">Recent Activity</p>
-            {signatures.slice(0, 3).map(sig => (
+            {normalizedSignatures.slice(0, 3).map((sig) => (
               <div key={sig.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {sig.status === 'signed' ? (
+                  {sig.normalizedStatus === 'signed' ? (
                     <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
                   ) : (
                     <Clock className="w-4 h-4 text-yellow-600 shrink-0" />
                   )}
-                  <span className="text-sm truncate">{sig.document_name}</span>
+                  <span className="text-sm truncate">{sig.normalizedName}</span>
                 </div>
-                <Badge 
+                <Badge
                   className={
-                    sig.status === 'signed' 
-                      ? "bg-green-100 text-green-800" 
-                      : sig.due_date && new Date(sig.due_date) < new Date()
+                    sig.normalizedStatus === 'signed'
+                      ? "bg-green-100 text-green-800"
+                      : sig.isOverdue
                       ? "bg-red-100 text-red-800"
                       : "bg-yellow-100 text-yellow-800"
                   }
                 >
-                  {sig.status === 'signed' ? 'Signed' : 
-                   sig.due_date && new Date(sig.due_date) < new Date() ? 'Overdue' : 'Pending'}
+                  {sig.normalizedStatus === 'signed' ? 'Signed' : sig.isOverdue ? 'Overdue' : 'Pending'}
                 </Badge>
               </div>
             ))}

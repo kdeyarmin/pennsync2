@@ -134,7 +134,7 @@ export default function OASISPDFUploader({
   // Save data to localStorage when it changes
   useEffect(() => {
     if (visitId && extractedData) {
-      localStorage.setItem(`oasis_data_${visitId}`, JSON.stringify(extractedData));
+      try { localStorage.setItem(`oasis_data_${visitId}`, JSON.stringify(extractedData)); } catch {}
     }
   }, [visitId, extractedData]);
 

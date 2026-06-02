@@ -632,7 +632,14 @@ Be specific and reference actual events by date and type.`,
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(EVENT_TYPES).map(([type, config]) => {
+            {(() => {
+              const btnColors = {
+                blue: 'bg-blue-600 hover:bg-blue-700', green: 'bg-green-600 hover:bg-green-700',
+                red: 'bg-red-600 hover:bg-red-700', purple: 'bg-purple-600 hover:bg-purple-700',
+                indigo: 'bg-indigo-600 hover:bg-indigo-700', orange: 'bg-orange-600 hover:bg-orange-700',
+                teal: 'bg-teal-600 hover:bg-teal-700', pink: 'bg-pink-600 hover:bg-pink-700',
+              };
+              return Object.entries(EVENT_TYPES).map(([type, config]) => {
               const Icon = config.icon;
               const isActive = activeFilters.includes(type);
               const count = timelineEvents.filter(e => e.type === type).length;
@@ -643,13 +650,14 @@ Be specific and reference actual events by date and type.`,
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() => toggleFilter(type)}
-                  className={`min-h-[36px] font-semibold ${isActive ? `bg-${config.color}-600 hover:bg-${config.color}-700` : ''}`}
+                  className={`min-h-[36px] font-semibold ${isActive ? btnColors[config.color] || '' : ''}`}
                 >
                   <Icon className="w-4 h-4 mr-2" />
                   {config.label} ({count})
                 </Button>
               );
-            })}
+            });
+            })()}
           </div>
         </CardContent>
       </Card>
@@ -702,13 +710,19 @@ Be specific and reference actual events by date and type.`,
                       return (
                         <div
                           key={event.id}
-                          className={`border-l-4 border-${eventConfig.color}-400 bg-${eventConfig.color}-50 rounded-r p-3 hover:shadow-md transition-shadow cursor-pointer`}
+                          className={`border-l-4 rounded-r p-3 hover:shadow-md transition-shadow cursor-pointer ${
+                            {blue: 'border-blue-400 bg-blue-50', green: 'border-green-400 bg-green-50', red: 'border-red-400 bg-red-50', purple: 'border-purple-400 bg-purple-50', indigo: 'border-indigo-400 bg-indigo-50', orange: 'border-orange-400 bg-orange-50', teal: 'border-teal-400 bg-teal-50', pink: 'border-pink-400 bg-pink-50'}[eventConfig.color] || 'border-gray-400 bg-gray-50'
+                          }`}
                           onClick={() => toggleEventExpand(event.id)}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-start gap-3 flex-1 min-w-0">
-                              <div className={`p-2 rounded-full bg-${eventConfig.color}-100 flex-shrink-0`}>
-                                <Icon className={`w-4 h-4 text-${eventConfig.color}-700`} />
+                              <div className={`p-2 rounded-full flex-shrink-0 ${
+                                {blue: 'bg-blue-100', green: 'bg-green-100', red: 'bg-red-100', purple: 'bg-purple-100', indigo: 'bg-indigo-100', orange: 'bg-orange-100', teal: 'bg-teal-100', pink: 'bg-pink-100'}[eventConfig.color] || 'bg-gray-100'
+                              }`}>
+                                <Icon className={`w-4 h-4 ${
+                                  {blue: 'text-blue-700', green: 'text-green-700', red: 'text-red-700', purple: 'text-purple-700', indigo: 'text-indigo-700', orange: 'text-orange-700', teal: 'text-teal-700', pink: 'text-pink-700'}[eventConfig.color] || 'text-gray-700'
+                                }`} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">

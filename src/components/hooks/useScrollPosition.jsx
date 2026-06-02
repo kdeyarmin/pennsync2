@@ -13,14 +13,15 @@ export function useScrollPosition(key, containerRef) {
     return () => {
       if (containerRef?.current) {
         scrollPositions.current[key] = containerRef.current.scrollTop;
-        sessionStorage.setItem(`scroll_${key}`, containerRef.current.scrollTop.toString());
+        try { sessionStorage.setItem(`scroll_${key}`, containerRef.current.scrollTop.toString()); } catch {}
       }
     };
   }, [key, containerRef]);
 
   // Restore scroll position when mounting
   useEffect(() => {
-    const savedPosition = sessionStorage.getItem(`scroll_${key}`);
+    let savedPosition = null;
+    try { savedPosition = sessionStorage.getItem(`scroll_${key}`); } catch {}
     if (savedPosition && containerRef?.current) {
       const position = parseInt(savedPosition, 10);
       // Use setTimeout to ensure DOM is ready

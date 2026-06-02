@@ -40,11 +40,13 @@ export default function TrainingLibrary({ nurseEmail, moduleType, onStartModule 
   });
 
   const filteredModules = modules.filter(module => {
-    const matchesSearch = module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         module.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm ||
+                         (module.title || '').toLowerCase().includes(search) ||
+                         (module.description || '').toLowerCase().includes(search);
     const matchesCategory = categoryFilter === "all" || module.category === categoryFilter;
     const matchesDifficulty = difficultyFilter === "all" || module.difficulty_level === difficultyFilter;
-    
+
     return matchesSearch && matchesCategory && matchesDifficulty;
   });
 

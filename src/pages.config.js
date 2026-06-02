@@ -156,6 +156,16 @@ import UserGuides from './pages/UserGuides';
 import UserManagement from './pages/UserManagement';
 import UserSettings from './pages/UserSettings';
 import VisitScribe from './pages/VisitScribe';
+import AdminOperations from './pages/AdminOperations';
+import AdminTraining from './pages/AdminTraining';
+import ClinicalChart from './pages/ClinicalChart';
+import ClinicalDocumentation from './pages/ClinicalDocumentation';
+import ClinicalSkillsChecklist from './pages/ClinicalSkillsChecklist';
+import EventReport from './pages/EventReport';
+import Incidents from './pages/Incidents';
+import MyLearning from './pages/MyLearning';
+import ReportsAnalytics from './pages/ReportsAnalytics';
+import ResourceLibrary from './pages/ResourceLibrary';
 
 import __Layout from './Layout.jsx';
 
@@ -270,6 +280,16 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "UserSettings": UserSettings,
     "VisitScribe": VisitScribe,
+    "AdminOperations": AdminOperations,
+    "AdminTraining": AdminTraining,
+    "ClinicalChart": ClinicalChart,
+    "ClinicalDocumentation": ClinicalDocumentation,
+    "ClinicalSkillsChecklist": ClinicalSkillsChecklist,
+    "EventReport": EventReport,
+    "Incidents": Incidents,
+    "MyLearning": MyLearning,
+    "ReportsAnalytics": ReportsAnalytics,
+    "ResourceLibrary": ResourceLibrary,
 
 }
 

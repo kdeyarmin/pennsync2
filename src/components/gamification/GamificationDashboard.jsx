@@ -49,24 +49,26 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
   }, [userEmail]);
 
   const loadUserStats = () => {
-    const stored = localStorage.getItem(`gamification_${userEmail}`);
-    if (stored) {
-      setUserStats(JSON.parse(stored));
-    } else {
-      // Initialize new user
-      const initial = {
-        points: 0,
-        badges: [],
-        streak: 0,
-        lastActivity: null,
-        completedVisits: 0,
-        completedTraining: 0,
-        weeklyPoints: 0,
-        monthlyPoints: 0
-      };
-      localStorage.setItem(`gamification_${userEmail}`, JSON.stringify(initial));
-      setUserStats(initial);
-    }
+    try {
+      const stored = localStorage.getItem(`gamification_${userEmail}`);
+      if (stored) {
+        setUserStats(JSON.parse(stored));
+        return;
+      }
+    } catch {}
+    // Initialize new user
+    const initial = {
+      points: 0,
+      badges: [],
+      streak: 0,
+      lastActivity: null,
+      completedVisits: 0,
+      completedTraining: 0,
+      weeklyPoints: 0,
+      monthlyPoints: 0
+    };
+    try { localStorage.setItem(`gamification_${userEmail}`, JSON.stringify(initial)); } catch {}
+    setUserStats(initial);
   };
 
   const getCurrentLevel = () => {
@@ -279,10 +281,14 @@ export default function GamificationDashboard({ userEmail, compact = false }) {
 
 // Helper function to add points (call from other components)
 export const addGamificationPoints = (userEmail, points, action, badgeId = null) => {
-  const stored = localStorage.getItem(`gamification_${userEmail}`);
+  let stored;
+  try {
+    stored = localStorage.getItem(`gamification_${userEmail}`);
+  } catch { return; }
   if (!stored) return;
-  
-  const stats = JSON.parse(stored);
+
+  let stats;
+  try { stats = JSON.parse(stored); } catch { return; }
   stats.points += points;
   stats.weeklyPoints = (stats.weeklyPoints || 0) + points;
   stats.lastActivity = new Date().toISOString();
@@ -314,6 +320,6 @@ export const addGamificationPoints = (userEmail, points, action, badgeId = null)
     stats.completedTraining = (stats.completedTraining || 0) + 1;
   }
   
-  localStorage.setItem(`gamification_${userEmail}`, JSON.stringify(stats));
+  try { localStorage.setItem(`gamification_${userEmail}`, JSON.stringify(stats)); } catch {}
   return stats;
 };

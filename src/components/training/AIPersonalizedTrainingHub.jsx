@@ -482,7 +482,7 @@ Create a personalized 4-week learning path with:
             {skillGaps.slice(0, 8).map((gap, idx) => (
               <div key={idx} className="border rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold capitalize">{gap.category.replace(/_/g, ' ')}</h4>
+                  <h4 className="font-semibold capitalize">{(gap.category || '').replace(/_/g, ' ')}</h4>
                   <Badge variant="outline">{gap.occurrences} times</Badge>
                 </div>
                 <div className="space-y-1">

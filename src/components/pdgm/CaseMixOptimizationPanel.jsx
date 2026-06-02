@@ -275,7 +275,7 @@ function RecommendationCard({ rec, onApply }) {
               </Badge>
             )}
           </div>
-          <Badge className="text-[10px] capitalize">{rec.category.replace(/_/g, ' ')}</Badge>
+          <Badge className="text-[10px] capitalize">{(rec.category || '').replace(/_/g, ' ')}</Badge>
         </div>
       </div>
 

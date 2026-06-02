@@ -12,10 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  FileText, 
-  CheckCircle2, 
-  Clock, 
+import {
+  FileText,
+  CheckCircle2,
+  Clock,
   XCircle,
   AlertTriangle,
   Search,
@@ -27,6 +27,14 @@ import {
 import { createPageUrl } from "@/utils";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import {
+  getDocumentDisplayName,
+  getNormalizedSignatureStatus,
+  getSignatureDueDate,
+  getSignatureSignedAt,
+  getSignatureStatusLabel,
+  isSignatureOverdue,
+} from "@/components/signature/signatureUtils";
 
 export default function DocumentManagementDashboard() {
   const navigate = useNavigate();
@@ -57,25 +65,33 @@ export default function DocumentManagementDashboard() {
     initialData: []
   });
 
+  const normalizedDocuments = useMemo(() => documentSignatures.map((doc) => ({
+    ...doc,
+    normalizedName: getDocumentDisplayName(doc),
+    normalizedStatus: getNormalizedSignatureStatus(doc),
+    normalizedDueDate: getSignatureDueDate(doc),
+    normalizedSignedAt: getSignatureSignedAt(doc),
+    normalizedStatusLabel: getSignatureStatusLabel(doc),
+    isOverdue: isSignatureOverdue(doc),
+  })), [documentSignatures]);
+
   // Calculate statistics
   const stats = useMemo(() => {
-    const pending = documentSignatures.filter(d => d.status === 'pending').length;
-    const signed = documentSignatures.filter(d => d.status === 'signed').length;
-    const declined = documentSignatures.filter(d => d.status === 'declined').length;
-    const overdue = documentSignatures.filter(d => 
-      d.status === 'pending' && d.due_date && new Date(d.due_date) < new Date()
-    ).length;
+    const pending = normalizedDocuments.filter((doc) => doc.normalizedStatus !== 'signed').length;
+    const signed = normalizedDocuments.filter((doc) => doc.normalizedStatus === 'signed').length;
+    const declined = normalizedDocuments.filter((doc) => doc.normalizedStatus === 'declined').length;
+    const overdue = normalizedDocuments.filter((doc) => doc.isOverdue).length;
 
-    return { pending, signed, declined, overdue, total: documentSignatures.length };
-  }, [documentSignatures]);
+    return { pending, signed, declined, overdue, total: normalizedDocuments.length };
+  }, [normalizedDocuments]);
 
   // Group documents by patient
   const documentsByPatient = useMemo(() => {
     const grouped = {};
-    
-    documentSignatures.forEach(doc => {
+
+    normalizedDocuments.forEach((doc) => {
       if (!grouped[doc.patient_id]) {
-        const patient = patients.find(p => p.id === doc.patient_id);
+        const patient = patients.find((p) => p.id === doc.patient_id);
         grouped[doc.patient_id] = {
           patient_id: doc.patient_id,
           patient_name: patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient',
@@ -86,7 +102,7 @@ export default function DocumentManagementDashboard() {
     });
 
     return Object.values(grouped);
-  }, [documentSignatures, patients]);
+  }, [normalizedDocuments, patients]);
 
   // Filter documents
   const filteredGroups = useMemo(() => {
@@ -94,20 +110,20 @@ export default function DocumentManagementDashboard() {
 
     // Filter by status
     if (statusFilter !== 'all') {
-      groups = groups.map(group => ({
+      groups = groups.map((group) => ({
         ...group,
-        documents: group.documents.filter(d => d.status === statusFilter)
-      })).filter(group => group.documents.length > 0);
+        documents: group.documents.filter((doc) => doc.normalizedStatus === statusFilter)
+      })).filter((group) => group.documents.length > 0);
     }
 
     // Filter by search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      groups = groups.filter(group =>
-        group.patient_name.toLowerCase().includes(query) ||
-        group.documents.some(d => 
-          d.document_name.toLowerCase().includes(query) ||
-          d.document_type.toLowerCase().includes(query)
+      groups = groups.filter((group) =>
+        group.patient_name.toLowerCase().includes(query)
+        || group.documents.some((doc) =>
+          doc.normalizedName.toLowerCase().includes(query)
+          || doc.document_type?.toLowerCase().includes(query)
         )
       );
     }
@@ -118,7 +134,9 @@ export default function DocumentManagementDashboard() {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'signed': return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-      case 'pending': return <Clock className="w-4 h-4 text-yellow-600" />;
+      case 'pending':
+      case 'in_progress':
+        return <Clock className="w-4 h-4 text-yellow-600" />;
       case 'declined': return <XCircle className="w-4 h-4 text-red-600" />;
       default: return <FileText className="w-4 h-4 text-gray-600" />;
     }
@@ -128,18 +146,24 @@ export default function DocumentManagementDashboard() {
     const styles = {
       signed: "bg-green-100 text-green-800",
       pending: "bg-yellow-100 text-yellow-800",
-      declined: "bg-red-100 text-red-800"
+      in_progress: "bg-blue-100 text-blue-800",
+      declined: "bg-red-100 text-red-800",
+      expired: "bg-gray-100 text-gray-700"
     };
-    return <Badge className={styles[status] || ""}>{status}</Badge>;
-  };
-
-  const isOverdue = (doc) => {
-    return doc.status === 'pending' && doc.due_date && new Date(doc.due_date) < new Date();
+    return <Badge className={styles[status] || "bg-gray-100 text-gray-700"}>{getSignatureStatusLabel(status)}</Badge>;
   };
 
   const handleSignDocument = (doc) => {
-    const url = createPageUrl(`SignDocument?pdf_url=${encodeURIComponent(doc.original_pdf_url)}&signature_id=${doc.id}&patient_id=${doc.patient_id}`);
-    navigate(url);
+    const params = new URLSearchParams({
+      signature_id: doc.id,
+      patient_id: doc.patient_id,
+    });
+
+    if (doc.original_pdf_url || doc.document_url) {
+      params.set('pdf_url', doc.original_pdf_url || doc.document_url);
+    }
+
+    navigate(createPageUrl(`SignDocument?${params.toString()}`));
   };
 
   const handleSendReminder = async (doc) => {
@@ -242,8 +266,10 @@ export default function DocumentManagementDashboard() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
                 <SelectItem value="signed">Signed</SelectItem>
                 <SelectItem value="declined">Declined</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -256,7 +282,7 @@ export default function DocumentManagementDashboard() {
           <Card key={group.patient_id}>
             <CardHeader>
               <CardTitle className="text-base sm:text-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <Link 
+                <Link
                   to={createPageUrl(`PatientDetails?id=${group.patient_id}`)}
                   className="hover:text-blue-600 transition-colors break-words"
                 >
@@ -273,12 +299,12 @@ export default function DocumentManagementDashboard() {
                     className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
                   >
                     <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
-                      {getStatusIcon(doc.status)}
+                      {getStatusIcon(doc.normalizedStatus)}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900 break-words">{doc.document_name}</h4>
-                          {getStatusBadge(doc.status)}
-                          {isOverdue(doc) && (
+                          <h4 className="font-medium text-gray-900 break-words">{doc.normalizedName}</h4>
+                          {getStatusBadge(doc.normalizedStatus)}
+                          {doc.isOverdue && (
                             <Badge className="bg-red-100 text-red-700">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               Overdue
@@ -286,14 +312,14 @@ export default function DocumentManagementDashboard() {
                           )}
                         </div>
                         <p className="text-xs sm:text-sm text-gray-600 break-words">
-                          Type: {doc.document_type} 
-                          {doc.due_date && ` • Due: ${new Date(doc.due_date).toLocaleDateString()}`}
-                          {doc.signed_at && ` • Signed: ${new Date(doc.signed_at).toLocaleDateString()}`}
+                          Type: {doc.document_type}
+                          {doc.normalizedDueDate && ` • Due: ${new Date(doc.normalizedDueDate).toLocaleDateString()}`}
+                          {doc.normalizedSignedAt && ` • Signed: ${new Date(doc.normalizedSignedAt).toLocaleDateString()}`}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
-                      {doc.status === 'pending' && (
+                      {doc.normalizedStatus !== 'signed' && (
                         <Button
                           size="sm"
                           onClick={() => handleSignDocument(doc)}
@@ -303,7 +329,7 @@ export default function DocumentManagementDashboard() {
                           <span className="sm:inline hidden">Sign</span>
                         </Button>
                       )}
-                      {doc.status === 'pending' && currentUser?.role === 'admin' && (
+                      {doc.normalizedStatus !== 'signed' && currentUser?.role === 'admin' && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -314,11 +340,11 @@ export default function DocumentManagementDashboard() {
                           <span className="sm:inline hidden">Remind</span>
                         </Button>
                       )}
-                      {doc.signed_pdf_url && (
+                      {(doc.signed_pdf_url || doc.document_url || doc.original_pdf_url) && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(doc.signed_pdf_url, '_blank')}
+                          onClick={() => window.open(doc.signed_pdf_url || doc.document_url || doc.original_pdf_url, '_blank')}
                           className="w-full sm:w-auto"
                         >
                           <Eye className="w-4 h-4 sm:mr-2" />

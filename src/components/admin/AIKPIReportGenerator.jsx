@@ -57,7 +57,7 @@ export default function AIKPIReportGenerator() {
     setIsGenerating(true);
     
     const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeframe));
+    cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeframe, 10));
     
     const recentVisits = visits.filter(v => new Date(v.created_date) >= cutoffDate);
     const recentAudits = complianceAudits.filter(a => new Date(a.created_date) >= cutoffDate);

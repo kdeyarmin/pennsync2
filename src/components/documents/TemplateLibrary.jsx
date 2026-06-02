@@ -39,7 +39,7 @@ export default function TemplateLibrary() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null); // { id, type: 'template' | 'document' }
   const [activeTab, setActiveTab] = useState("templates");
-  
+
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadData, setUploadData] = useState({
     title: '',
@@ -73,6 +73,9 @@ export default function TemplateLibrary() {
     },
     onSuccess: (_, item) => {
       queryClient.invalidateQueries({ queryKey: item.type === 'template' ? ['pdfTemplates'] : ['libraryDocuments'] });
+      if (item.type === 'template') {
+        queryClient.invalidateQueries({ queryKey: ['pdf-templates-active'] });
+      }
       toast.success('Deleted successfully');
       setShowDeleteDialog(false);
       setSelectedItem(null);
@@ -98,6 +101,9 @@ export default function TemplateLibrary() {
     },
     onSuccess: (_, item) => {
       queryClient.invalidateQueries({ queryKey: item.type === 'template' ? ['pdfTemplates'] : ['libraryDocuments'] });
+      if (item.type === 'template') {
+        queryClient.invalidateQueries({ queryKey: ['pdf-templates-active'] });
+      }
       toast.success('Status updated');
     },
     onError: (error) => {
@@ -110,7 +116,7 @@ export default function TemplateLibrary() {
       toast.error("Please provide a title and select a file");
       return;
     }
-    
+
     setIsUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadData.file });
@@ -214,12 +220,16 @@ export default function TemplateLibrary() {
                     {template.description && (
                       <p className="text-sm text-gray-600 line-clamp-2">{template.description}</p>
                     )}
-                    
+
                     <div className="text-xs text-gray-500 space-y-1">
                       <p>Version: {template.version}</p>
+                      <p>{template.is_packet ? `${template.document_count || template.packet_documents?.length || 1} documents in packet` : 'Single document template'}</p>
                       <p>Used {template.usage_count || 0} times</p>
                       {template.signature_fields?.length > 0 && (
                         <p>{template.signature_fields.length} signature field(s)</p>
+                      )}
+                      {template.carry_forward_fields?.length > 0 && (
+                        <p>{template.carry_forward_fields.length} patient carry-forward field(s)</p>
                       )}
                     </div>
 
@@ -291,7 +301,7 @@ export default function TemplateLibrary() {
                     {doc.description && (
                       <p className="text-sm text-gray-600 line-clamp-2">{doc.description}</p>
                     )}
-                    
+
                     <div className="text-xs text-gray-500 space-y-1">
                       <p>Type: {doc.file_type?.toUpperCase()}</p>
                       <p>Added: {new Date(doc.created_date).toLocaleDateString()}</p>
@@ -379,7 +389,7 @@ export default function TemplateLibrary() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Document Title</Label>
-              <Input 
+              <Input
                 value={uploadData.title}
                 onChange={(e) => setUploadData({...uploadData, title: e.target.value})}
                 placeholder="e.g. Employee Handbook"
@@ -387,7 +397,7 @@ export default function TemplateLibrary() {
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <Input 
+              <Input
                 value={uploadData.description}
                 onChange={(e) => setUploadData({...uploadData, description: e.target.value})}
                 placeholder="Brief description of this document"
@@ -410,8 +420,8 @@ export default function TemplateLibrary() {
             </div>
             <div className="space-y-2">
               <Label>File (PDF, DOCX, etc.)</Label>
-              <Input 
-                type="file" 
+              <Input
+                type="file"
                 onChange={(e) => setUploadData({...uploadData, file: e.target.files[0]})}
               />
             </div>

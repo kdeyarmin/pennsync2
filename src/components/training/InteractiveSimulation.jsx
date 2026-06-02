@@ -58,7 +58,7 @@ export default function InteractiveSimulation({ scenario, onComplete }) {
 
     if (currentStep < steps.length - 1) {
       setTimeout(() => {
-        setCurrentStep(currentStep + 1);
+        setCurrentStep(prev => prev + 1);
       }, 2000);
     } else {
       // Calculate final score

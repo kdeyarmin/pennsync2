@@ -83,6 +83,14 @@ const CATEGORY_COLORS = {
   care: 'orange'
 };
 
+const CATEGORY_TEXT_COLORS = {
+  functional: 'text-blue-600',
+  clinical: 'text-green-600',
+  cognitive: 'text-purple-600',
+  medication: 'text-red-600',
+  care: 'text-orange-600'
+};
+
 export default function OASISItemLinker({ 
   linkedItems = [],
   onAddLink,
@@ -258,7 +266,7 @@ export default function OASISItemLinker({
                   key={idx} 
                   className="p-2 bg-gray-50 rounded-lg border flex items-start gap-2"
                 >
-                  <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 text-${CATEGORY_COLORS[link.category]}-600`} />
+                  <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${CATEGORY_TEXT_COLORS[link.category] || 'text-gray-600'}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge variant="outline" className="text-xs font-mono">{link.code}</Badge>

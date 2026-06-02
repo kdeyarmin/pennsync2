@@ -452,7 +452,7 @@ Return JSON:
                   <p className="text-xs text-gray-500">{rule.rule_code}</p>
                 </div>
                 <Badge className={getCategoryColor(rule.rule_category)} variant="outline">
-                  {rule.rule_category.replace(/_/g, ' ')}
+                  {(rule.rule_category || '').replace(/_/g, ' ')}
                 </Badge>
               </div>
             ))}

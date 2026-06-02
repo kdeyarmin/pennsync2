@@ -174,11 +174,11 @@ Format as a complete clinical narrative with clear sections. Do NOT write a fini
   };
 
   return (
-    <Card className={`border-2 border-${template.color}-300`}>
-      <CardHeader className={`pb-3 bg-${template.color}-50 cursor-pointer`} onClick={() => setExpanded(!expanded)}>
+    <Card className={`border-2 ${{blue: 'border-blue-300', purple: 'border-purple-300', green: 'border-green-300', orange: 'border-orange-300', red: 'border-red-300'}[template.color] || 'border-gray-300'}`}>
+      <CardHeader className={`pb-3 cursor-pointer ${{blue: 'bg-blue-50', purple: 'bg-purple-50', green: 'bg-green-50', orange: 'bg-orange-50', red: 'bg-red-50'}[template.color] || 'bg-gray-50'}`} onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Icon className={`w-4 h-4 text-${template.color}-600`} />
+            <Icon className={`w-4 h-4 ${{blue: 'text-blue-600', purple: 'text-purple-600', green: 'text-green-600', orange: 'text-orange-600', red: 'text-red-600'}[template.color] || 'text-gray-600'}`} />
             {template.title} Guidance
           </CardTitle>
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -186,9 +186,9 @@ Format as a complete clinical narrative with clear sections. Do NOT write a fini
       </CardHeader>
       {expanded && (
         <CardContent className="pt-4 space-y-3">
-          <Alert className={`bg-${template.color}-50 border-${template.color}-200`}>
-            <AlertCircle className={`w-4 h-4 text-${template.color}-600`} />
-            <AlertDescription className={`text-xs text-${template.color}-900`}>
+          <Alert className={`${{blue: 'bg-blue-50 border-blue-200', purple: 'bg-purple-50 border-purple-200', green: 'bg-green-50 border-green-200', orange: 'bg-orange-50 border-orange-200', red: 'bg-red-50 border-red-200'}[template.color] || 'bg-gray-50 border-gray-200'}`}>
+            <AlertCircle className={`w-4 h-4 ${{blue: 'text-blue-600', purple: 'text-purple-600', green: 'text-green-600', orange: 'text-orange-600', red: 'text-red-600'}[template.color] || 'text-gray-600'}`} />
+            <AlertDescription className={`text-xs ${{blue: 'text-blue-900', purple: 'text-purple-900', green: 'text-green-900', orange: 'text-orange-900', red: 'text-red-900'}[template.color] || 'text-gray-900'}`}>
               <strong>AI Focus:</strong> {template.aiPromptFocus}
             </AlertDescription>
           </Alert>
@@ -199,7 +199,7 @@ Format as a complete clinical narrative with clear sections. Do NOT write a fini
               <div className="space-y-1">
                 {template.requiredElements.map((element, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-xs">
-                    <CheckCircle2 className={`w-3 h-3 text-${template.color}-600 mt-0.5 flex-shrink-0`} />
+                    <CheckCircle2 className={`w-3 h-3 mt-0.5 flex-shrink-0 ${{blue: 'text-blue-600', purple: 'text-purple-600', green: 'text-green-600', orange: 'text-orange-600', red: 'text-red-600'}[template.color] || 'text-gray-600'}`} />
                     <span className="text-gray-700">{element}</span>
                   </div>
                 ))}
@@ -211,7 +211,7 @@ Format as a complete clinical narrative with clear sections. Do NOT write a fini
             <Button
               onClick={generateAITemplate}
               disabled={isGenerating}
-              className={`w-full bg-${template.color}-600 hover:bg-${template.color}-700`}
+              className={`w-full ${{blue: 'bg-blue-600 hover:bg-blue-700', purple: 'bg-purple-600 hover:bg-purple-700', green: 'bg-green-600 hover:bg-green-700', orange: 'bg-orange-600 hover:bg-orange-700', red: 'bg-red-600 hover:bg-red-700'}[template.color] || 'bg-gray-600 hover:bg-gray-700'}`}
               size="sm"
             >
               {isGenerating ? (

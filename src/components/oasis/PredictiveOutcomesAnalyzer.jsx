@@ -323,7 +323,7 @@ Provide SPECIFIC, ACTIONABLE predictions with clinical reasoning.`,
     setIsPredicting(false);
   };
 
-  const calculateHistoricalTrends = (history, patient) => {
+  const calculateHistoricalTrends = (history, _patient) => {
     if (!history || !history.visits) return null;
 
     const trends = {

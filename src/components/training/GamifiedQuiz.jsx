@@ -28,10 +28,13 @@ export default function GamifiedQuiz({ questions = [], onComplete, title }) {
 
   useEffect(() => {
     if (!questions || questions.length === 0) return;
+    let timer;
     if (!showFeedback && !isComplete && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
+      timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [timeLeft, showFeedback, isComplete, questions]);
 
   // Safety check for questions

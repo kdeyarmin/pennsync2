@@ -48,7 +48,7 @@ export default function AdvancedComplianceRiskScoring({
     if (autoAnalyze && audits.length > 0 && !riskAnalysis) {
       analyzeRisk();
     }
-  }, [autoAnalyze, audits]);
+  }, [autoAnalyze, audits, riskAnalysis]);
 
   const analyzeRisk = async () => {
     setIsAnalyzing(true);

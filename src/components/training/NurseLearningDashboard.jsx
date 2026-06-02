@@ -137,8 +137,8 @@ export default function NurseLearningDashboard({
                     </p>
                     <div className="space-y-2">
                       {deficitAnalysis.recommendations
-                        .find(r => r.category === deficit.category)
-                        ?.suggestedScenarios.slice(0, 2).map((scenarioId, i) => (
+                        ?.find(r => r.category === deficit.category)
+                        ?.suggestedScenarios?.slice(0, 2).map((scenarioId, i) => (
                           <Button
                             key={i}
                             size="sm"
@@ -155,7 +155,7 @@ export default function NurseLearningDashboard({
                         ))}
                       {deficitAnalysis.recommendations
                         .find(r => r.category === deficit.category)
-                        ?.suggestedQuizzes.slice(0, 1).map((quizId, i) => (
+                        ?.suggestedQuizzes?.slice(0, 1).map((quizId, i) => (
                           <Button
                             key={i}
                             size="sm"

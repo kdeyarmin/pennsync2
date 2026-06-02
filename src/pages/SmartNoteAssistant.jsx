@@ -429,7 +429,7 @@ Return ONLY the final note text.`
 
   const proceedToBuild = () => {
     if (analysis) {
-      const updatedFindings = analysis.findings.map(f => {
+      const updatedFindings = (analysis.findings || []).map(f => {
         if (f.needs_clarification && answers[f.id]) {
           return { ...f, needs_clarification: false, suggestion: answers[f.id] };
         }
@@ -444,13 +444,13 @@ Return ONLY the final note text.`
 
   const selectBySeverity = (severity) => {
     if (!analysis) return;
-    const filtered = analysis.findings.filter(f => f.severity === severity).map(f => f.id);
+    const filtered = (analysis.findings || []).filter(f => f.severity === severity).map(f => f.id);
     setSelected(new Set([...selected, ...filtered]));
   };
 
   const calculateTotalRevenueImpact = () => {
     if (!analysis) return 0;
-    const selected_findings = analysis.findings.filter(f => selected.has(f.id));
+    const selected_findings = (analysis.findings || []).filter(f => selected.has(f.id));
     const impacts = selected_findings
       .map(f => {
         const match = f.revenue_impact?.match(/\$?([\d,]+)/);

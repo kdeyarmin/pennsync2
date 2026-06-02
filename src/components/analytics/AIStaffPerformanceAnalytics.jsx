@@ -389,7 +389,7 @@ Return detailed analysis suitable for management dashboard.`,
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Time Range</Label>
-              <Select value={timeRange.toString()} onValueChange={(v) => window.location.reload()}>
+              <Select value={timeRange.toString()} onValueChange={(_v) => window.location.reload()}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

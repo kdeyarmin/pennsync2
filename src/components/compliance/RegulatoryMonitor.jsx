@@ -57,8 +57,10 @@ export default function RegulatoryMonitor({ isAdmin = false }) {
   });
 
   useEffect(() => {
-    const cached = localStorage.getItem('last_regulatory_scan');
-    if (cached) setLastScanDate(new Date(cached));
+    try {
+      const cached = localStorage.getItem('last_regulatory_scan');
+      if (cached) setLastScanDate(new Date(cached));
+    } catch {}
   }, []);
 
   const createUpdateMutation = useMutation({
@@ -162,7 +164,7 @@ Return JSON:
         });
       }
 
-      localStorage.setItem('last_regulatory_scan', new Date().toISOString());
+      try { localStorage.setItem('last_regulatory_scan', new Date().toISOString()); } catch {}
       setLastScanDate(new Date());
 
     } catch (error) {
