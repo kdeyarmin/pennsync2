@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Video, Copy, Calendar } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -28,6 +28,7 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   const [showDocumentation, setShowDocumentation] = useState(false);
   const [participantList, setParticipantList] = useState([]);
   const [newSession, setNewSession] = useState({ visit_type: "routine_followup", scheduled_at: "" });
+  const endingRef = useRef(false);
 
   const { data: sessions = [] } = useQuery({
     queryKey: ["patient-telehealth-sessions", patient?.id],
@@ -60,6 +61,7 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   const pastSessions = useMemo(() => sessions.filter((session) => ["completed", "cancelled"].includes(session.status)), [sessions]);
 
   const startSession = async (session) => {
+    endingRef.current = false;
     const participants = [...new Set([currentUser?.full_name || currentUser?.email, patient?.first_name ? `${patient.first_name} ${patient.last_name}` : patient?.id])].filter(Boolean);
     setParticipantList(participants);
     await updateMutation.mutateAsync({
@@ -70,7 +72,9 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
   };
 
   const endSession = async () => {
-    if (!activeSession) return;
+    // Guard against the End button + Twilio "disconnected" event both firing.
+    if (!activeSession || endingRef.current) return;
+    endingRef.current = true;
     const endedAt = new Date();
     const startedAt = activeSession.started_at ? new Date(activeSession.started_at) : endedAt;
     const duration = Math.max(1, Math.round((endedAt - startedAt) / 60000));
@@ -118,6 +122,7 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
     toast.success("Telehealth visit logged to patient chart");
     setShowDocumentation(false);
     setActiveSession(null);
+    endingRef.current = false;
     queryClient.invalidateQueries({ queryKey: ["patient-telehealth-sessions", patient?.id] });
   };
 
@@ -197,7 +202,7 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
                 <div>
                   <p className="font-semibold text-slate-900">{visitTypes[session.visit_type]?.label || session.visit_type}</p>
                   <p className="text-sm text-slate-500 flex items-center gap-2"><Calendar className="w-3 h-3" />{session.scheduled_at ? new Date(session.scheduled_at).toLocaleString() : 'Now'}</p>
-                  {session.invite_link && <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1 mt-1" onClick={() => { navigator.clipboard.writeText(session.invite_link); toast.success('Invite link copied'); }}><Copy className="w-3 h-3" />Copy patient link</button>}
+                  {session.invite_link && <button type="button" className="text-sm text-indigo-600 underline flex items-center gap-1 mt-1" onClick={() => { navigator.clipboard.writeText(session.invite_link); toast.success('Join link copied'); }}><Copy className="w-3 h-3" />Copy join link</button>}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{session.status}</Badge>

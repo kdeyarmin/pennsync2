@@ -7,15 +7,13 @@ import { VideoOff, Users, Loader2
 import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";
 
-export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange }) {
-  const [room, setRoom] = useState(null);
+export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange, onToggleChat }) {
   const [participants, setParticipants] = useState([]);
   const [status, setStatus] = useState("connecting"); // connecting | connected | error
   const [error, setError] = useState(null);
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(null);
 
   useEffect(() => {
@@ -26,6 +24,8 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   const localVideoRef = useRef(null);
   const roomRef = useRef(null);
   const screenTrackRef = useRef(null);
+  const cameraTrackRef = useRef(null);
+  const endedRef = useRef(false);
 
   const connectToRoom = useCallback(async () => {
     try {
@@ -42,14 +42,18 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       });
 
       roomRef.current = connectedRoom;
-      setRoom(connectedRoom);
+      endedRef.current = false;
       setStatus("connected");
       setSessionStartTime(new Date());
 
-      // Attach local video
+      // Attach local camera video and keep a handle to the camera track so it
+      // can be restored after a screen share ends.
       connectedRoom.localParticipant.videoTracks.forEach(publication => {
-        if (localVideoRef.current && publication.track) {
-          localVideoRef.current.appendChild(publication.track.attach());
+        if (publication.track) {
+          cameraTrackRef.current = publication.track;
+          if (localVideoRef.current) {
+            localVideoRef.current.appendChild(publication.track.attach());
+          }
         }
       });
 
@@ -60,7 +64,10 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       connectedRoom.on("participantDisconnected", p => setParticipants(prev => prev.filter(x => x !== p)));
       connectedRoom.on("disconnected", () => {
         setStatus("disconnected");
-        onDisconnect && onDisconnect();
+        if (!endedRef.current) {
+          endedRef.current = true;
+          onDisconnect && onDisconnect();
+        }
       });
 
     } catch (err) {
@@ -79,51 +86,96 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
 
   const toggleAudio = () => {
     roomRef.current?.localParticipant.audioTracks.forEach(pub => {
-      audioMuted ? pub.track.enable() : pub.track.disable();
+      audioMuted ? pub.track?.enable() : pub.track?.disable();
     });
     setAudioMuted(m => !m);
   };
 
   const toggleVideo = () => {
     roomRef.current?.localParticipant.videoTracks.forEach(pub => {
-      videoMuted ? pub.track.enable() : pub.track.disable();
+      videoMuted ? pub.track?.enable() : pub.track?.disable();
     });
     setVideoMuted(m => !m);
   };
 
   const disconnect = () => {
+    // Stop any active screen share so the capture indicator clears.
     if (screenTrackRef.current) {
-      screenTrackRef.current.stop();
+      try { screenTrackRef.current.stop(); } catch { /* already stopped */ }
+      screenTrackRef.current = null;
     }
-    roomRef.current?.disconnect();
-    onDisconnect && onDisconnect();
+    const activeRoom = roomRef.current;
+    if (activeRoom && activeRoom.state !== "disconnected") {
+      // Let the room's "disconnected" event invoke onDisconnect exactly once.
+      activeRoom.disconnect();
+    } else if (!endedRef.current) {
+      endedRef.current = true;
+      onDisconnect && onDisconnect();
+    }
+  };
+
+  // Twilio's LocalVideoTrack has no replaceTrack(); screen sharing works by
+  // unpublishing the camera track and publishing a screen-capture track, then
+  // restoring the camera when sharing stops.
+  const stopScreenShare = () => {
+    const screenTrack = screenTrackRef.current;
+    if (!screenTrack) return; // already stopped — keep this idempotent
+    screenTrackRef.current = null;
+
+    const localParticipant = roomRef.current?.localParticipant;
+    localParticipant?.unpublishTrack(screenTrack);
+    screenTrack.detach().forEach(el => el.remove());
+    screenTrack.stop();
+
+    const camera = cameraTrackRef.current;
+    if (camera && localParticipant) {
+      localParticipant.publishTrack(camera);
+      if (localVideoRef.current) {
+        localVideoRef.current.appendChild(camera.attach());
+      }
+      videoMuted ? camera.disable() : camera.enable();
+    }
+    setScreenSharing(false);
+  };
+
+  const startScreenShare = async () => {
+    const localParticipant = roomRef.current?.localParticipant;
+    if (!localParticipant) return;
+
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    const screenMediaTrack = screenStream.getVideoTracks()[0];
+    if (!screenMediaTrack) return;
+
+    // Swap the camera out of the published video slot.
+    const camera = cameraTrackRef.current;
+    if (camera) {
+      localParticipant.unpublishTrack(camera);
+      camera.detach().forEach(el => el.remove());
+    }
+
+    const publication = await localParticipant.publishTrack(screenMediaTrack, { name: `screen-${Date.now()}` });
+    const screenTrack = publication.track;
+    screenTrackRef.current = screenTrack;
+    if (localVideoRef.current) {
+      localVideoRef.current.appendChild(screenTrack.attach());
+    }
+
+    // The browser's own "Stop sharing" control ends the underlying track.
+    screenMediaTrack.onended = () => stopScreenShare();
+    setScreenSharing(true);
   };
 
   const toggleScreenShare = async () => {
     try {
       if (screenSharing) {
-        if (screenTrackRef.current) {
-          screenTrackRef.current.stop();
-          screenTrackRef.current = null;
-        }
-        setScreenSharing(false);
+        stopScreenShare();
       } else {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: { cursor: 'always' }
-        });
-        const screenTrack = screenStream.getVideoTracks()[0];
-        screenTrackRef.current = screenTrack;
-        
-        await roomRef.current?.localParticipant.videoTracks[0].track.replaceTrack(screenTrack);
-        setScreenSharing(true);
-
-        screenTrack.onended = () => {
-          setScreenSharing(false);
-          screenTrackRef.current = null;
-        };
+        await startScreenShare();
       }
     } catch (err) {
+      // Most commonly the user dismissed the screen picker — leave the call as-is.
       console.error('Screen share error:', err);
+      setScreenSharing(false);
     }
   };
 
@@ -200,10 +252,11 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       <EnhancedVideoControls
         audioMuted={audioMuted}
         videoMuted={videoMuted}
+        screenSharing={screenSharing}
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
         onDisconnect={disconnect}
-        onToggleChat={() => setShowChat(!showChat)}
+        onToggleChat={onToggleChat}
         onToggleScreenShare={toggleScreenShare}
       />
     </div>

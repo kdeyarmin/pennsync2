@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,9 @@ export default function Telehealth() {
   const [showChat, setShowChat] = useState(false);
   const [showDocumentation, setShowDocumentation] = useState(false);
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const endingRef = useRef(false);
+  const autoJoinedRef = useRef(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
@@ -64,30 +68,36 @@ export default function Telehealth() {
   });
 
   const handleJoin = async (session) => {
+    endingRef.current = false;
     await updateSession.mutateAsync({ id: session.id, data: { status: "active", started_at: new Date().toISOString() } });
     setActiveSession(session);
     setShowDocumentation(false);
   };
 
   const handleDisconnect = async () => {
-    if (activeSession) {
-      const endTime = new Date();
-      const startTime = activeSession.started_at ? new Date(activeSession.started_at) : endTime;
-      const durationMinutes = Math.round((endTime - startTime) / 60000);
-      await updateSession.mutateAsync({
-        id: activeSession.id,
-        data: {
-          status: "completed",
-          ended_at: endTime.toISOString(),
-          duration_minutes: durationMinutes
-        }
-      });
-      setShowDocumentation(true);
-      toast.success("Session ended - Please complete documentation");
-    } else {
-      setActiveSession(null);
+    if (!activeSession) {
       setShowDocumentation(false);
+      return;
     }
+    // The in-room "End session" control, the outer button, and Twilio's own
+    // "disconnected" event can all fire at nearly the same moment. Complete the
+    // session exactly once so we don't double-write the chart or stack toasts.
+    if (endingRef.current) return;
+    endingRef.current = true;
+
+    const endTime = new Date();
+    const startTime = activeSession.started_at ? new Date(activeSession.started_at) : endTime;
+    const durationMinutes = Math.max(1, Math.round((endTime - startTime) / 60000));
+    await updateSession.mutateAsync({
+      id: activeSession.id,
+      data: {
+        status: "completed",
+        ended_at: endTime.toISOString(),
+        duration_minutes: durationMinutes
+      }
+    });
+    setShowDocumentation(true);
+    toast.success("Session ended — please complete documentation");
   };
 
   const handleSaveDocumentation = async (docData) => {
@@ -98,6 +108,7 @@ export default function Telehealth() {
       });
       setActiveSession(null);
       setShowDocumentation(false);
+      endingRef.current = false;
     }
   };
 
@@ -105,6 +116,19 @@ export default function Telehealth() {
     await updateSession.mutateAsync({ id: session.id, data: { status: "cancelled" } });
     toast.success("Session cancelled");
   };
+
+  // Deep link support: /Telehealth?room=<room_name> opens and joins that
+  // session for the authorized staff member who followed an invite/join link.
+  // Sessions are server-scoped, so an unmatched/forbidden room simply no-ops.
+  useEffect(() => {
+    const roomParam = searchParams.get("room");
+    if (!roomParam || autoJoinedRef.current || activeSession || sessions.length === 0) return;
+    const match = sessions.find((s) => s.room_name === roomParam);
+    if (match && (match.status === "scheduled" || match.status === "active")) {
+      autoJoinedRef.current = true;
+      handleJoin(match);
+    }
+  }, [searchParams, sessions, activeSession]);
 
   const upcoming = sessions.filter(s => s.status === "scheduled" || s.status === "active");
   const past = sessions.filter(s => s.status === "completed" || s.status === "cancelled");
@@ -182,6 +206,7 @@ export default function Telehealth() {
                   roomName={activeSession.room_name}
                   identity={currentUser?.full_name || currentUser?.email}
                   onDisconnect={handleDisconnect}
+                  onToggleChat={() => setShowChat((v) => !v)}
                 />
               </CardContent>
             </Card>
@@ -275,17 +300,19 @@ function NewSessionForm({ patients, currentUser, onSubmit, loading }) {
     e.preventDefault();
     const patient = patients.find(p => p.id === form.patient_id);
     const roomName = `session-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const inviteLink = `${window.location.origin}/join-telehealth?room=${roomName}`;
+    const patientName = patient ? `${patient.first_name} ${patient.last_name}` : "Unknown";
+    const inviteLink = `${window.location.origin}/Telehealth?room=${roomName}`;
     onSubmit({
       room_name: roomName,
       patient_id: form.patient_id,
-      patient_name: patient ? `${patient.first_name} ${patient.last_name}` : "Unknown",
+      patient_name: patientName,
       host_email: currentUser?.email,
       host_name: currentUser?.full_name,
       visit_type: form.visit_type,
       scheduled_at: form.scheduled_at || new Date().toISOString(),
       status: "scheduled",
-      invite_link: inviteLink
+      invite_link: inviteLink,
+      participant_list: [currentUser?.full_name || currentUser?.email, patientName].filter(Boolean)
     });
   };
 

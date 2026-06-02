@@ -1,23 +1,16 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Monitor, MessageSquare } from 'lucide-react';
 
 export default function EnhancedVideoControls({
   audioMuted,
   videoMuted,
+  screenSharing = false,
   onToggleAudio,
   onToggleVideo,
   onDisconnect,
   onToggleChat,
   onToggleScreenShare
 }) {
-  const [screenSharing, setScreenSharing] = useState(false);
-
-  const handleScreenShare = () => {
-    onToggleScreenShare?.();
-    setScreenSharing(!screenSharing);
-  };
-
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 p-4 bg-gray-900 rounded-xl">
       <Button
@@ -51,26 +44,28 @@ export default function EnhancedVideoControls({
       <Button
         variant="ghost"
         size="icon"
-        onClick={handleScreenShare}
+        onClick={onToggleScreenShare}
         className={`rounded-full h-12 w-12 transition ${
           screenSharing
             ? 'bg-blue-600 hover:bg-blue-700 text-white'
             : 'bg-gray-700 hover:bg-gray-600 text-white'
         }`}
-        title="Share screen"
+        title={screenSharing ? 'Stop sharing screen' : 'Share screen'}
       >
         <Monitor className="w-5 h-5" />
       </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onToggleChat}
-        className="rounded-full h-12 w-12 bg-gray-700 hover:bg-gray-600 text-white transition"
-        title="Show chat"
-      >
-        <MessageSquare className="w-5 h-5" />
-      </Button>
+      {onToggleChat && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleChat}
+          className="rounded-full h-12 w-12 bg-gray-700 hover:bg-gray-600 text-white transition"
+          title="Show chat"
+        >
+          <MessageSquare className="w-5 h-5" />
+        </Button>
+      )}
 
       <div className="mx-2 w-px h-8 bg-gray-700" />
 
