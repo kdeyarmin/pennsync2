@@ -2,10 +2,9 @@ import { useMemo, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle, Loader2, Calendar, Target } from "lucide-react";
+import { Clock, User, CheckCircle2, FileText, Mic, Send, Home, Heart, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
-import { formatEastern } from "@/components/utils/timezone";
+import { formatEastern, todayEastern } from "@/components/utils/timezone";
 import CareScopeSelector from "@/components/profile/CareScopeSelector";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
 
@@ -52,13 +51,16 @@ export default function Dashboard() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
+      // Refetch all dashboard queries
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['dashboardData'] }),
+        queryClient.refetchQueries({ queryKey: ['todayVisits'] }),
+        queryClient.refetchQueries({ queryKey: ['patients'] }),
+        queryClient.refetchQueries({ queryKey: ['activeCarePlans'] }),
+        queryClient.refetchQueries({ queryKey: ['recentIncidents'] }),
         queryClient.refetchQueries({ queryKey: ['myNoteConversions'] }),
       ]);
-      toast.success('Dashboard refreshed');
-    } catch {
-      toast.error('Some data failed to refresh. Please try again.');
+    } catch (error) {
+      console.error('Refresh failed:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -75,27 +77,40 @@ export default function Dashboard() {
       }
     }, [currentUser?.email]);
 
-  // Core datasets are fetched through a SERVER-SCOPED function so a non-admin's
-  // browser only receives their assigned patients' data (admins: agency-wide).
-  // Kept under a dedicated ['dashboardData'] key to avoid disturbing the shared
-  // ['patients']/['todayVisits']/... cache used across the rest of the app.
-  const { data: dashboardData = {}, isLoading, error: dashboardError } = useQuery({
-    queryKey: ['dashboardData', currentUser?.email],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('getDashboardData', {});
-      return res?.data || {};
-    },
-    enabled: !!currentUser?.email,
-    initialData: {},
-    staleTime: 120000,
-    gcTime: 300000,
+    const { data: visits = [], isLoading, error: visitsError } = useQuery({
+      queryKey: ['todayVisits'],
+      queryFn: async () => {
+        const today = todayEastern();
+        return base44.entities.Visit.filter({ visit_date: today }, '-visit_time');
+      },
+      initialData: [],
+      staleTime: 120000,      // 2 min — visits change occasionally
+      gcTime: 300000,
+    });
+
+  const { data: patients = [], error: patientsError } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => base44.entities.Patient.filter({ status: 'active' }, '-updated_date', 100), // reduced from 200
+    initialData: [],
+    staleTime: 600000,        // 10 min — patient list rarely changes mid-session
+    gcTime: 900000,
   });
-  const visits = dashboardData.visits || [];
-  const patients = dashboardData.patients || [];
-  const carePlans = dashboardData.carePlans || [];
-  const incidents = dashboardData.incidents || [];
-  const visitsError = dashboardError;
-  const patientsError = dashboardError;
+
+  const { data: carePlans = [] } = useQuery({
+    queryKey: ['activeCarePlans'],
+    queryFn: () => base44.entities.CarePlan.filter({ status: 'active' }, '-updated_date', 50),  // reduced from 100
+    initialData: [],
+    staleTime: 600000,
+    gcTime: 900000,
+  });
+
+  const { data: incidents = [] } = useQuery({
+    queryKey: ['recentIncidents'],
+    queryFn: () => base44.entities.Incident.list('-incident_date', 20),  // reduced from 30
+    initialData: [],
+    staleTime: 600000,
+    gcTime: 900000,
+  });
 
   const { data: noteConversions = [] } = useQuery({
     queryKey: ['myNoteConversions', currentUser?.email],
@@ -140,10 +155,10 @@ export default function Dashboard() {
 
   // Banner gradient based on care scope
   const bannerGradient = careScope === "hospice"
-    ? "from-purple-500 via-purple-600 to-purple-700"
+    ? "from-slate-800 via-slate-900 to-slate-950"
     : careScope === "both"
-    ? "from-indigo-500 via-blue-600 to-purple-600"
-    : "from-blue-500 via-blue-600 to-blue-700";
+    ? "from-slate-800 via-indigo-950 to-slate-950"
+    : "from-slate-800 via-blue-950 to-slate-950";
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -157,19 +172,16 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Welcome to Penn Sync!</h1>
           <p className="text-gray-500 mt-1">Let's set up your profile before we get started.</p>
         </div>
-        <CareScopeSelector currentUser={currentUser} onSaved={() => {
-          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-          toast.success('Care scope saved! Loading your dashboard...');
-        }} />
+        <CareScopeSelector currentUser={currentUser} onSaved={() => {}} />
       </div>
     );
   }
 
   return (
     <PullToRefresh onRefresh={handleRefresh} containerRef={containerRef}>
-    <div ref={containerRef} className="max-w-5xl mx-auto">
+    <div ref={containerRef} className="max-w-5xl mx-auto animate-fade-in">
       {hasDataError && (
-        <Card className="mb-4 border-red-300 bg-red-50">
+        <Card className="mb-4 border-red-200 bg-white">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -185,7 +197,7 @@ export default function Dashboard() {
       <ProfileCompletenessAlert user={currentUser} />
 
       {/* Welcome Banner */}
-      <Card className={`mb-4 sm:mb-6 bg-gradient-to-r ${bannerGradient} text-white border-none shadow-lg overflow-hidden`}>
+      <Card className={`mb-4 sm:mb-6 bg-gradient-to-br ${bannerGradient} text-white border-none shadow-xl overflow-hidden rounded-2xl`}>
         <CardContent className="p-4 sm:p-6 md:p-8 relative">
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -208,16 +220,6 @@ export default function Dashboard() {
 
 
 
-      {/* Quick Navigation Hint */}
-      <div className="mb-3 flex items-center justify-center">
-        <button
-          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5"
-        >
-          Press <kbd className="bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-mono">Ctrl+K</kbd> to quickly navigate anywhere
-        </button>
-      </div>
-
       {/* New Features Banner */}
       <NewFeaturesBanner />
 
@@ -225,60 +227,28 @@ export default function Dashboard() {
       <AnnouncementsWidget />
 
       {/* Nurse Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card className="bg-gradient-to-br from-emerald-600 to-emerald-500 border-emerald-500 shadow-md">
-          <CardContent className="p-4 sm:p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card className="modern-card">
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] sm:text-xs text-emerald-100 font-semibold mb-1 uppercase tracking-wide">Today's Visits</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {visits.filter(v => v.status === 'scheduled').length}
-                </p>
-                <p className="text-[10px] sm:text-xs text-emerald-200 mt-0.5">
-                  {visits.filter(v => v.status === 'completed').length} completed
-                </p>
-              </div>
-              <Calendar className="w-9 h-9 sm:w-11 sm:h-11 text-emerald-300 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-violet-600 to-violet-500 border-violet-500 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-violet-100 font-semibold mb-1 uppercase tracking-wide">Active Care Plans</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
-                  {carePlans.length}
-                </p>
-                <p className="text-[10px] sm:text-xs text-violet-200 mt-0.5">
-                  {patients.length} patients
-                </p>
-              </div>
-              <Target className="w-9 h-9 sm:w-11 sm:h-11 text-violet-300 flex-shrink-0 opacity-70" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-slate-700 to-slate-600 border-slate-600 shadow-md">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] sm:text-xs text-slate-300 font-semibold mb-1 uppercase tracking-wide">Note Enhancements</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">
+                <p className="text-xs sm:text-sm text-slate-500 font-semibold mb-2 uppercase tracking-wide">Note Enhancements</p>
+                <p className="text-3xl sm:text-4xl font-bold text-slate-900">
                   {noteConversions.length}
                 </p>
               </div>
-              <FileText className="w-9 h-9 sm:w-11 sm:h-11 text-slate-400 flex-shrink-0 opacity-70" />
+              <FileText className="w-12 h-12 sm:w-14 sm:h-14 text-slate-300 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-700 to-blue-600 border-blue-600 shadow-md">
-          <CardContent className="p-4 sm:p-5">
+        <Card className="modern-card">
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] sm:text-xs text-blue-200 font-semibold mb-1 uppercase tracking-wide">Time Saved</p>
-                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.timeSavedDisplay}</p>
+                <p className="text-xs sm:text-sm text-slate-500 font-semibold mb-2 uppercase tracking-wide">Time Saved</p>
+                <p className="text-3xl sm:text-4xl font-bold text-slate-900">{stats.timeSavedDisplay}</p>
               </div>
-              <Clock className="w-9 h-9 sm:w-11 sm:h-11 text-blue-300 flex-shrink-0 opacity-70" />
+              <Clock className="w-12 h-12 sm:w-14 sm:h-14 text-slate-200 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -287,22 +257,22 @@ export default function Dashboard() {
       {/* Quick Action Buttons */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {[
-          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      bg: "bg-blue-50",   border: "border-blue-200 hover:border-blue-400",   icon: "text-blue-600"   },
-          { page: "SendFax",            label: "Send Fax",          Icon: Send,          bg: "bg-indigo-50", border: "border-indigo-200 hover:border-indigo-400", icon: "text-indigo-600" },
-          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  bg: "bg-green-50",  border: "border-green-200 hover:border-green-400",  icon: "text-green-600"  },
-          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          bg: "bg-purple-50", border: "border-purple-200 hover:border-purple-400", icon: "text-purple-600" },
-          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           bg: "bg-orange-50", border: "border-orange-200 hover:border-orange-400", icon: "text-orange-600" },
-          { page: "Incidents",            label: "Incidents",         Icon: AlertTriangle, bg: "bg-red-50",    border: "border-red-200 hover:border-red-400",      icon: "text-red-600"    },
+          { page: "SmartNoteAssistant", label: "Smart Notes",       Icon: FileText,      iconClass: "text-slate-600 group-hover:text-blue-600"   },
+          { page: "SendFax",            label: "Send Fax",          Icon: Send,          iconClass: "text-slate-600 group-hover:text-indigo-600" },
+          { page: "CarePlanManagement", label: "Care Plans",        Icon: CheckCircle2,  iconClass: "text-slate-600 group-hover:text-emerald-600"  },
+          { page: "PatientEducationHub",label: "Pt. Education",     Icon: User,          iconClass: "text-slate-600 group-hover:text-purple-600" },
+          { page: "VisitScribe",        label: "Visit Scribe",      Icon: Mic,           iconClass: "text-slate-600 group-hover:text-orange-600" },
+          { page: "IncidentReporting",  label: "Incidents",         Icon: AlertTriangle, iconClass: "text-slate-600 group-hover:text-red-600"    },
         ].map((item) => {
           const ItemIcon = item.Icon;
           return (
-            <Link key={item.page} to={`/${item.page}`}>
-              <Card className={`hover:shadow-md transition-all cursor-pointer border-2 ${item.border} ${item.bg} active:scale-95 h-full`}>
-                <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-1.5 min-h-[80px] sm:min-h-[90px]">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white shadow-sm">
-                    <ItemIcon className={`w-5 h-5 ${item.icon}`} />
+            <Link key={item.page} to={`/${item.page}`} className="group">
+              <Card className="card-interactive h-full">
+                <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[90px]">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-sm group-hover:border-slate-200 transition-all group-hover:scale-110">
+                    <ItemIcon className={`w-5 h-5 transition-colors ${item.iconClass}`} />
                   </div>
-                  <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight">{item.label}</h3>
+                  <h3 className="font-semibold text-xs sm:text-sm text-slate-600 group-hover:text-slate-900 transition-colors leading-tight">{item.label}</h3>
                 </CardContent>
               </Card>
             </Link>
@@ -316,10 +286,7 @@ export default function Dashboard() {
           <SmartRouteOptimizer
             visits={visits.filter(v => v.status === 'scheduled')}
             patients={patients}
-            onOptimizedSchedule={() => {
-              toast.success('Route optimized! Your schedule has been updated.');
-              queryClient.invalidateQueries({ queryKey: ['todayVisits'] });
-            }}
+            onOptimizedSchedule={() => {}}
           />
         </div>
       )}
@@ -336,7 +303,7 @@ export default function Dashboard() {
 
 
 
-      <Suspense fallback={<div className="flex items-center justify-center py-12 text-gray-400"><Loader2 className="w-6 h-6 animate-spin mr-2" />Loading...</div>}>
+      <Suspense fallback={null}>
         {/* AI Care Plan Proposals - Nurse Review */}
         <div className="mb-6">
           <CarePlanProposalReviewer compact={true} />

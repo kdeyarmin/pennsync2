@@ -34,12 +34,14 @@ export default function Incidents() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-6 text-white shadow-xl">
-        <div className="flex items-center gap-3 mb-3">
-          <AlertTriangle className="w-8 h-8" />
+      <div className="modern-card border-l-4 border-l-red-500 p-6 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center border border-red-100 flex-shrink-0">
+            <AlertTriangle className="w-6 h-6 text-red-600" />
+          </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Incident Reporting</h1>
-            <p className="text-sm sm:text-base text-red-50">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Incident Reporting</h1>
+            <p className="text-sm sm:text-base text-slate-500 mt-1">
               Capture wound photos, report safety events, and notify clinical admins immediately
             </p>
           </div>

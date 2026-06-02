@@ -1,22 +1,24 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus, FileText
+  Plus
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DocumentManagementDashboard from "@/components/documents/DocumentManagementDashboard";
 import DocumentPackageCreator from "@/components/documents/DocumentPackageCreator";
 import SignatureTracking from "@/components/documents/SignatureTracking";
 import TemplateLibrary from "@/components/documents/TemplateLibrary";
 import PDFTemplateBuilder from "@/components/documents/PDFTemplateBuilder";
-import { getNormalizedSignatureStatus, isSignatureOverdue } from "@/components/signature/signatureUtils";
+import DocumentAnalytics from "@/components/documents/DocumentAnalytics";
 
 export default function DocumentHub() {
   const [activeTab, setActiveTab] = useState("signatures");
   const [showPackageCreator, setShowPackageCreator] = useState(false);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const navigate = useNavigate();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -29,36 +31,28 @@ export default function DocumentHub() {
     initialData: [],
   });
 
-  const normalizedSignatures = useMemo(() => allSignatures.map((signature) => ({
-    ...signature,
-    normalizedStatus: getNormalizedSignatureStatus(signature),
-    isOverdue: isSignatureOverdue(signature),
-  })), [allSignatures]);
-
-  const stats = useMemo(() => ({
-    pending: normalizedSignatures.filter((signature) => signature.normalizedStatus !== 'signed').length,
-    signed: normalizedSignatures.filter((signature) => signature.normalizedStatus === 'signed').length,
-    overdue: normalizedSignatures.filter((signature) => signature.isOverdue).length,
-  }), [normalizedSignatures]);
+  const stats = {
+    pending: allSignatures.filter(s => s.status === 'pending').length,
+    signed: allSignatures.filter(s => s.status === 'signed').length,
+    overdue: allSignatures.filter(s => 
+      s.status === 'pending' && s.due_date && new Date(s.due_date) < new Date()
+    ).length,
+  };
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-      <div className="page-header-gradient bg-gradient-to-r from-slate-700 via-blue-700 to-indigo-800 mb-1">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
-              <FileText className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Document Hub</h1>
-              <p className="text-blue-200 mt-1">Manage signatures, templates, and patient documents</p>
-            </div>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Document Hub</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
+            Manage signatures, templates, and patient documents
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           {activeTab === "signatures" && (
             <>
               <Button 
-                onClick={() => setShowPackageCreator(true)}
+                onClick={() => navigate('/CreateSignatureRequest')}
                 className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -66,10 +60,7 @@ export default function DocumentHub() {
               </Button>
               {currentUser?.role === 'admin' && (
                 <Button 
-                  onClick={() => {
-                    setActiveTab('templates');
-                    setShowTemplateBuilder(true);
-                  }}
+                  onClick={() => setShowTemplateBuilder(true)}
                   variant="outline"
                   className="w-full sm:w-auto min-h-[44px]"
                 >
@@ -81,10 +72,9 @@ export default function DocumentHub() {
           )}
         </div>
       </div>
-      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto p-1">
           <TabsTrigger value="signatures" className="relative min-h-[44px] text-sm">
             Signatures
             {stats.pending > 0 && (
@@ -97,10 +87,13 @@ export default function DocumentHub() {
             Documents
           </TabsTrigger>
           {currentUser?.role === 'admin' && (
-            <TabsTrigger value="templates" className="min-h-[44px] text-sm col-span-2 sm:col-span-1">
-              Templates
+            <TabsTrigger value="library" className="min-h-[44px] text-sm col-span-2 sm:col-span-1">
+              Document Library
             </TabsTrigger>
           )}
+          <TabsTrigger value="analytics" className="min-h-[44px] text-sm col-span-2 sm:col-span-1">
+            Analytics
+          </TabsTrigger>
         </TabsList>
 
         {/* Signatures Tab */}
@@ -118,19 +111,23 @@ export default function DocumentHub() {
           <DocumentManagementDashboard />
         </TabsContent>
 
-        {/* Templates Tab (Admin Only) */}
+        {/* Library Tab (Admin Only) */}
         {currentUser?.role === 'admin' && (
-          <TabsContent value="templates" className="space-y-6">
+          <TabsContent value="library" className="space-y-6">
             <TemplateLibrary />
             
+            <PDFTemplateBuilder
+              open={showTemplateBuilder}
+              onClose={() => setShowTemplateBuilder(false)}
+            />
           </TabsContent>
         )}
-      </Tabs>
 
-      <PDFTemplateBuilder
-        open={showTemplateBuilder}
-        onClose={() => setShowTemplateBuilder(false)}
-      />
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          <DocumentAnalytics />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

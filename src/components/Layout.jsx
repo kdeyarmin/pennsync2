@@ -2,11 +2,10 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { queryClientInstance } from "@/lib/query-client";
 import {
   Home, Users, FileText, ClipboardList, Shield, GraduationCap,
   BarChart3, Settings, Brain, Target, Bell, LogOut,
-  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2, Phone
+  BookOpen, WifiOff, Mail, BookUser, Video, HelpCircle, AlertTriangle, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +22,6 @@ import OfflineSyncService from "@/components/offline/OfflineSyncService";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
-import CommandPalette from "@/components/navigation/CommandPalette";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -33,13 +31,12 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const update = (isDark) => document.documentElement.classList.toggle('dark', isDark);
-    const handler = (e) => update(e.matches);
     update(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    mq.addEventListener('change', e => update(e.matches));
+    return () => mq.removeEventListener('change', e => update(e.matches));
   }, []);
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, error: userError } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
@@ -54,10 +51,7 @@ export default function Layout({ children, currentPageName }) {
     retry: false,
   });
 
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-  }, [currentPageName]);
+  useEffect(() => { window.scrollTo(0, 0); }, [currentPageName]);
 
   const isAdmin = currentUser?.role === 'admin';
   const isApproved = currentUser?.is_approved === true || isAdmin;
@@ -122,14 +116,7 @@ export default function Layout({ children, currentPageName }) {
     initialData: [], refetchInterval: 30000, enabled: !!currentUser?.email,
   });
 
-  const { data: unreadSmsMessages = [] } = useQuery({
-    queryKey: ['unread-sms', currentUser?.email],
-    queryFn: () => base44.entities.SmsMessage.filter({ nurse_email: currentUser?.email, is_read: false }, '-created_date', 50),
-    initialData: [], refetchInterval: 30000, enabled: !!currentUser?.email,
-  });
-
   const unreadMessageCount = messages.filter(m => !m.read_by?.includes(currentUser?.email)).length;
-  const unreadSmsCount = unreadSmsMessages.length;
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
@@ -156,7 +143,6 @@ export default function Layout({ children, currentPageName }) {
       category: "Communication",
       items: [
         { name: "Messages", icon: Mail, page: "Messages", badge: unreadMessageCount },
-        { name: "Phone Center", icon: Phone, page: "PhoneCenter", badge: unreadSmsCount },
         { name: "Fax", icon: BookUser, page: "SendFax" },
         { name: "Providers", icon: Users, page: "PhysicianDirectory" },
         { name: "Telehealth", icon: Video, page: "Telehealth" },
@@ -171,9 +157,7 @@ export default function Layout({ children, currentPageName }) {
     {
       category: "My Learning",
       items: [
-        { name: "Learning Center", icon: GraduationCap, page: "LearningCenter" },
-        { name: "My Courses", icon: BookOpen, page: "MyLearning" },
-        { name: "Skills Checklists", icon: CheckCircle2, page: "ClinicalSkillsChecklist" },
+        { name: "My Training", icon: GraduationCap, page: "MyLearning" },
       ],
     },
     {
@@ -183,7 +167,7 @@ export default function Layout({ children, currentPageName }) {
         { name: "Help", icon: HelpCircle, page: "Help" },
       ],
     },
-  ], [unreadMessageCount, unreadSmsCount]);
+  ], [unreadMessageCount]);
 
   const adminItems = useMemo(() => [
     { category: "Admin", items: [{ name: "Operations Center", icon: BarChart3, page: "AdminOperations" }] },
@@ -223,8 +207,6 @@ export default function Layout({ children, currentPageName }) {
         user_agent: navigator.userAgent,
       });
     } catch {}
-    // HIPAA: purge cached PHI before logging out (shared-device safety).
-    try { queryClientInstance.clear(); } catch { /* no-op */ }
     base44.auth.logout();
 
   }, [currentUser?.email]);
@@ -259,10 +241,6 @@ export default function Layout({ children, currentPageName }) {
   return (
     <>
       <Toaster position="top-right" richColors closeButton />
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:text-blue-700 focus:font-medium">
-        Skip to content
-      </a>
-      <CommandPalette isAdmin={isAdmin} />
       <div className="min-h-screen flex">
         <DesktopSidebar
           collapsed={sidebarCollapsed}
@@ -294,8 +272,8 @@ export default function Layout({ children, currentPageName }) {
           onLogout={handleLogout}
         />
 
-        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-gradient-to-br from-slate-50 via-gray-50/80 to-slate-100 w-0 md:w-auto">
-          <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 animate-fade-in">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-slate-50 w-0 md:w-auto">
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 min-w-0">
             <Breadcrumbs currentPageName={currentPageName} />
             {children}
           </div>

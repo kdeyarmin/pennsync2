@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +54,7 @@ import DocumentList from "../components/documents/DocumentList";
 import VitalSignsTrendDashboard from "../components/patient/VitalSignsTrendDashboard";
 import CarePlanProposalReviewer from "../components/carePlan/CarePlanProposalReviewer";
 import PatientTelehealthPanel from "../components/telehealth/PatientTelehealthPanel";
-import PatientContactActions from "../components/voice/PatientContactActions";
+import CareTeamMessaging from "../components/messaging/CareTeamMessaging";
 
 export default function PatientDetails() {
   const navigate = useNavigate();
@@ -163,7 +162,6 @@ export default function PatientDetails() {
         page: 'PatientDetails'
       });
     },
-    onError: () => toast.error('Failed to create care plan. Please try again.'),
   });
 
   const createVisitMutation = useMutation({
@@ -193,7 +191,6 @@ export default function PatientDetails() {
         setShowOASISPrompt(true);
       }
     },
-    onError: () => toast.error('Failed to create visit. Please try again.'),
   });
 
   const handleCreateVisit = () => {
@@ -377,6 +374,7 @@ export default function PatientDetails() {
               { value: "care",          label: "Care Plans"},
               { value: "telehealth",    label: "Telehealth"},
               { value: "documents",     label: "Docs"      },
+              { value: "messaging",     label: "Messaging" },
             ].map(({ value, label }) => (
               <TabsTrigger key={value} value={value} className="px-3 py-2.5 min-h-[48px] sm:min-h-[40px] min-w-[72px] text-xs sm:text-sm whitespace-nowrap">
                 {label}
@@ -416,16 +414,13 @@ export default function PatientDetails() {
                 incidents={incidents}
               />
             </div>
-            <div className="space-y-6">
-              <PatientContactActions patient={patient} currentUser={currentUser} />
-              <QuickActionsPanel
-                patient={patient}
-                recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
-                upcomingVisits={visits.filter(v => v.status === 'scheduled')}
-                activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
-                pendingTasks={tasks.filter(t => t.status === 'pending')}
-              />
-            </div>
+            <QuickActionsPanel
+              patient={patient}
+              recentVisits={visits.filter(v => v.status === 'completed').slice(0, 5)}
+              upcomingVisits={visits.filter(v => v.status === 'scheduled')}
+              activeCarePlans={carePlans.filter(cp => cp.status === 'active')}
+              pendingTasks={tasks.filter(t => t.status === 'pending')}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -658,13 +653,13 @@ export default function PatientDetails() {
                                     {visit.visit_date && isValid(new Date(visit.visit_date)) ? format(new Date(visit.visit_date), 'MMM d, yyyy') : 'Invalid date'}
                                   </p>
                                   <Badge variant="outline" className="text-xs mt-1">
-                                    {(visit.visit_type || '').replace(/_/g, ' ')}
+                                    {visit.visit_type.replace(/_/g, ' ')}
                                   </Badge>
                                 </div>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => navigate(`${createPageUrl("VisitScribe")}?visitId=${visit.id}`)}
+                                  onClick={() => navigate(`${createPageUrl("DocumentVisit")}?visitId=${visit.id}`)}
                                 >
                                   <ExternalLink className="w-3 h-3 mr-1" />
                                   View
@@ -742,7 +737,7 @@ export default function PatientDetails() {
                 <PredictiveRiskAnalyzer 
                   patientId={patientId} 
                   patientName={`${patient.first_name} ${patient.last_name}`}
-                  onAlertsCreated={(_count) => {
+                  onAlertsCreated={(count) => {
                     queryClient.invalidateQueries({ queryKey: ['patientActiveAlerts', patientId] });
                   }}
                   autoAnalyze={false}
@@ -845,7 +840,7 @@ export default function PatientDetails() {
                               plan.status === 'revised' ? 'bg-yellow-500' :
                               'bg-blue-500'
                             }>
-                              {(plan.status || '').replace('_', ' ')}
+                              {plan.status.replace('_', ' ')}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">{sanitizeInput(plan.goal)}</p>
@@ -919,6 +914,11 @@ export default function PatientDetails() {
               <ProgressReportGenerator patientId={patientId} patient={patient} />
             </TabsContent>
           </Tabs>
+        </TabsContent>
+
+        {/* Messaging Tab */}
+        <TabsContent value="messaging" className="space-y-6">
+          <CareTeamMessaging patientId={patientId} />
         </TabsContent>
       </Tabs>
 
