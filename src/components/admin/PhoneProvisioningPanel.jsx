@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { appParams } from "@/lib/app-params";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,55 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Phone, Save, ShieldCheck, Info } from "lucide-react";
+import {
+  Phone, Save, ShieldCheck, Info, CheckCircle2, AlertTriangle, XCircle,
+  Loader2, Copy, Check, Activity, Webhook,
+} from "lucide-react";
 import { toast } from "sonner";
-import { maskPhone, formatPhoneDisplay } from "@/components/voice/phoneUtils";
+import { maskPhone, formatPhoneDisplay, normalizeE164 } from "@/components/voice/phoneUtils";
+import {
+  evaluateAgencyConfig, summarize, WEBHOOK_FUNCTIONS, functionUrlBase,
+} from "@/components/admin/eightxeightSetup";
+
+const STATUS_META = {
+  ok: { Icon: CheckCircle2, color: "text-green-600", badge: "bg-green-100 text-green-800" },
+  warn: { Icon: AlertTriangle, color: "text-amber-600", badge: "bg-amber-100 text-amber-800" },
+  fail: { Icon: XCircle, color: "text-red-600", badge: "bg-red-100 text-red-800" },
+};
+
+/** One row in a readiness checklist: status icon + label + detail. */
+function CheckRow({ check }) {
+  const meta = STATUS_META[check.status] || STATUS_META.warn;
+  const { Icon } = meta;
+  return (
+    <div className="flex items-start gap-2 py-1.5">
+      <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${meta.color}`} />
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-gray-900">{check.label}</p>
+        <p className="text-xs text-gray-600">{check.detail}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Small copy-to-clipboard button with a transient checkmark. */
+function CopyButton({ value, label }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Couldn't copy to clipboard");
+    }
+  };
+  return (
+    <Button type="button" variant="ghost" size="sm" onClick={copy} className="h-7 px-2" title={`Copy ${label}`}>
+      {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+    </Button>
+  );
+}
 
 /**
  * PhoneProvisioningPanel — admin-only. Assigns 8x8 work numbers + private cell
@@ -87,13 +134,145 @@ export default function PhoneProvisioningPanel() {
     onError: (err) => toast.error(err?.message || "Failed to provision number"),
   });
 
+  // Live 8x8 connection test (backend probe of secrets + SMS API + provisioning).
+  const [liveResult, setLiveResult] = useState(null);
+  const testConnection = useMutation({
+    mutationFn: () => base44.functions.invoke("testEightXEightConnection", {}),
+    onSuccess: (res) => {
+      const data = res?.data || res;
+      setLiveResult(data);
+      const sev = summarize(data?.checks || []).severity;
+      if (sev === "fail") toast.error("Connection test found problems — see the checklist.");
+      else if (sev === "warn") toast("Connection test passed with warnings.");
+      else toast.success("8x8 connection looks healthy.");
+    },
+    onError: (err) => toast.error(err?.message || "Connection test failed"),
+  });
+
+  // Config checklist reflects the live form values so it updates as the admin
+  // edits; the live test below reads the *saved* settings from the backend.
+  const configChecks = useMemo(() => evaluateAgencyConfig(agency), [agency]);
+  const configSummary = useMemo(() => summarize(configChecks), [configChecks]);
+  const liveChecks = liveResult?.checks || [];
+  const urlBase = functionUrlBase(appParams?.serverUrl);
+
   if (!isAdmin) return null;
 
   const setInput = (email, key, value) =>
     setInputs((prev) => ({ ...prev, [email]: { ...prev[email], [key]: value } }));
 
+  // Inline E.164 validity for a provisioning input (null/"" => no error shown).
+  const invalidNumber = (value) => !!value && value.trim() !== "" && !normalizeE164(value);
+
+  const sevMeta = STATUS_META[configSummary.severity] || STATUS_META.ok;
+
   return (
     <div className="space-y-6">
+      {/* Setup & Health — readiness checklist + live connection test */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-indigo-600" />
+              8x8 Setup &amp; Health
+            </span>
+            <Badge className={sevMeta.badge}>
+              {configSummary.ready
+                ? configSummary.warn > 0
+                  ? `Ready · ${configSummary.warn} warning${configSummary.warn > 1 ? "s" : ""}`
+                  : "Ready"
+                : `${configSummary.fail} item${configSummary.fail > 1 ? "s" : ""} need attention`}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            A quick readiness check of your 8x8 configuration. Edit values below and save, then run the
+            live test to confirm your API key, region, and sub-account actually work.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Configuration</p>
+              <div className="divide-y divide-gray-100">
+                {configChecks.map((c) => <CheckRow key={c.id} check={c} />)}
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1">Reflects the values in the form below (save to apply).</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live connection</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => testConnection.mutate()}
+                  disabled={testConnection.isPending}
+                >
+                  {testConnection.isPending
+                    ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Testing…</>
+                    : <><Activity className="w-3.5 h-3.5 mr-1.5" /> Test live connection</>}
+                </Button>
+              </div>
+              {liveChecks.length === 0 ? (
+                <p className="text-sm text-gray-500 py-3">
+                  Run the test to probe backend secrets, reach the 8x8 SMS API, and check nurse provisioning.
+                  Nothing is sent — it's a read-only health check.
+                </p>
+              ) : (
+                <>
+                  <div className="divide-y divide-gray-100">
+                    {liveChecks.map((c) => <CheckRow key={c.id} check={c} />)}
+                  </div>
+                  {liveResult?.stats && (
+                    <p className="text-[11px] text-gray-500 mt-2">
+                      {liveResult.stats.nurses_with_work_number}/{liveResult.stats.total_users} users have a work number ·
+                      {" "}host {liveResult.sms_host} · checked {new Date(liveResult.generated_at).toLocaleTimeString()}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Webhook endpoints to register in 8x8 Connect */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Webhook className="w-5 h-5 text-indigo-600" />
+            8x8 Webhook Endpoints
+          </CardTitle>
+          <CardDescription>
+            Point these 8x8 callbacks at the matching deployed function. All handlers verify the signing
+            secret and fail closed. Copy each function name (and confirm its exact deployed URL in the Base44
+            dashboard) when configuring 8x8 Connect.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {WEBHOOK_FUNCTIONS.map((w) => {
+            const candidateUrl = urlBase ? `${urlBase}/functions/${w.fn}` : null;
+            return (
+              <div key={w.fn} className="p-3 rounded-lg border border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">{w.event}</p>
+                    <p className="text-xs text-gray-500">Configure on: {w.configuredOn}</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <code className="text-xs bg-white border border-gray-200 rounded px-2 py-1 text-indigo-700">{w.fn}</code>
+                    <CopyButton value={candidateUrl || w.fn} label="endpoint" />
+                  </div>
+                </div>
+                {candidateUrl && (
+                  <p className="text-[11px] text-gray-400 mt-1 break-all">Suggested URL: {candidateUrl}</p>
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -239,32 +418,53 @@ export default function PhoneProvisioningPanel() {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <Input
-                  placeholder="Work number +1…"
-                  value={inputs[u.email]?.work || ""}
-                  onChange={(e) => setInput(u.email, "work", e.target.value)}
-                />
-                <Input
-                  placeholder="Personal cell +1…"
-                  value={inputs[u.email]?.cell || ""}
-                  onChange={(e) => setInput(u.email, "cell", e.target.value)}
-                />
-                <Button
-                  variant="outline"
-                  disabled={provision.isPending || (!inputs[u.email]?.work && !inputs[u.email]?.cell)}
-                  onClick={() =>
-                    provision.mutate({
-                      target_user_email: u.email,
-                      work_phone_number: inputs[u.email]?.work || undefined,
-                      personal_cell_e164: inputs[u.email]?.cell || undefined,
-                    })
-                  }
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {u.work_phone_number ? "Update" : "Assign"}
-                </Button>
-              </div>
+              {(() => {
+                const workVal = inputs[u.email]?.work || "";
+                const cellVal = inputs[u.email]?.cell || "";
+                const workInvalid = invalidNumber(workVal);
+                const cellInvalid = invalidNumber(cellVal);
+                const nothingEntered = !workVal && !cellVal;
+                return (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <Input
+                          placeholder="Work number +1…"
+                          value={workVal}
+                          onChange={(e) => setInput(u.email, "work", e.target.value)}
+                          className={workInvalid ? "border-red-400 focus-visible:ring-red-400" : ""}
+                          aria-invalid={workInvalid}
+                        />
+                        {workInvalid && <p className="text-[11px] text-red-600 mt-0.5">Enter a valid phone number.</p>}
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="Personal cell +1…"
+                          value={cellVal}
+                          onChange={(e) => setInput(u.email, "cell", e.target.value)}
+                          className={cellInvalid ? "border-red-400 focus-visible:ring-red-400" : ""}
+                          aria-invalid={cellInvalid}
+                        />
+                        {cellInvalid && <p className="text-[11px] text-red-600 mt-0.5">Enter a valid phone number.</p>}
+                      </div>
+                      <Button
+                        variant="outline"
+                        disabled={provision.isPending || nothingEntered || workInvalid || cellInvalid}
+                        onClick={() =>
+                          provision.mutate({
+                            target_user_email: u.email,
+                            work_phone_number: workVal || undefined,
+                            personal_cell_e164: cellVal || undefined,
+                          })
+                        }
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        {u.work_phone_number ? "Update" : "Assign"}
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           ))}
         </CardContent>

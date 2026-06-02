@@ -38,9 +38,23 @@ No environment variables — an admin sets these in the app:
 | `default_off_duty_template` | Default off-duty message |
 | `sms_messaging_enabled` | Agency-wide SMS kill switch |
 
+### Verify the setup (no test message needed)
+
+Admin → Settings → **8x8 Phone** now shows a **Setup & Health** card:
+
+- A live **configuration checklist** (sub-accounts, region, main office, kill
+  switch, etc.) that updates as you edit the form — fix anything red before going
+  live; amber items are degraded-but-usable.
+- A **Test live connection** button (backed by the `testEightXEightConnection`
+  function) that confirms the backend secrets are present, makes a **read-only**
+  probe of the 8x8 SMS API (so you know the API key + region + sub-account
+  actually authenticate and are reachable), and reports nurse-provisioning
+  coverage. It never sends a text or places a call, and never echoes a secret.
+
 ## 3. Webhook registration
 
-Point these 8x8 callbacks at the deployed Base44 function URLs:
+The same admin panel lists each webhook function with a copy button and a
+suggested URL. Point these 8x8 callbacks at the deployed Base44 function URLs:
 
 | 8x8 event | Function | Configured on |
 |---|---|---|

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, MessageSquare, AlertTriangle } from "lucide-react";
+import { Send, MessageSquare, AlertTriangle, RotateCw } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatPhoneDisplay } from "@/components/voice/phoneUtils";
@@ -20,6 +20,8 @@ import { getQuickReplies } from "@/components/messaging/smsQuickReplies";
 export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumber, patientId, optedOut, onSent }) {
   const [draft, setDraft] = useState("");
 
+  const [resendingId, setResendingId] = useState(null);
+
   const sendMutation = useMutation({
     mutationFn: (body) =>
       base44.functions.invoke("sendSms", { to_number: otherPartyNumber, body, patient_id: patientId || undefined }),
@@ -32,6 +34,24 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
       toast.error(err?.message || "Failed to send message");
     },
   });
+
+  // Resend a previously failed outbound message (re-sends the same body; the
+  // backend creates a fresh SmsMessage row, so the original failure stays in
+  // the thread as a record).
+  const resendMutation = useMutation({
+    mutationFn: (body) =>
+      base44.functions.invoke("sendSms", { to_number: otherPartyNumber, body, patient_id: patientId || undefined }),
+    onSuccess: () => {
+      toast.success("Message resent");
+      onSent?.();
+    },
+    onError: (err) => toast.error(err?.message || "Failed to resend message"),
+    onSettled: () => setResendingId(null),
+  });
+  const handleResend = (msg) => {
+    setResendingId(msg.id);
+    resendMutation.mutate(msg.body);
+  };
 
   const { data: settingsArr = [] } = useQuery({
     queryKey: ["agency-settings"],
@@ -90,6 +110,24 @@ export default function SmsThreadView({ thread, otherPartyLabel, otherPartyNumbe
                   </div>
                 </div>
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.body}</p>
+                {outbound && msg.status === "failed" && !optedOut && (
+                  <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-red-200">
+                    {msg.failure_reason
+                      ? <span className="text-[11px] text-red-700 truncate" title={msg.failure_reason}>{msg.failure_reason}</span>
+                      : <span />}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs text-red-700 hover:text-red-800 hover:bg-red-50"
+                      onClick={() => handleResend(msg)}
+                      disabled={resendMutation.isPending && resendingId === msg.id}
+                    >
+                      <RotateCw className={`w-3 h-3 mr-1 ${resendMutation.isPending && resendingId === msg.id ? "animate-spin" : ""}`} />
+                      Resend
+                    </Button>
+                  </div>
+                )}
               </div>
             );
           })}
