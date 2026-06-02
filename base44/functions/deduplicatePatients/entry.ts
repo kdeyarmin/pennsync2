@@ -39,7 +39,7 @@ const areNicknames = (name1, name2) => {
   if (!n1 || !n2 || n1 === n2) return false;
 
   for (const [formal, nicks] of Object.entries(NICKNAMES)) {
-    if ((n1 === formal && nicks.includes(n2)) || 
+    if ((n1 === formal && nicks.includes(n2)) ||
         (n2 === formal && nicks.includes(n1)) ||
         (nicks.includes(n1) && nicks.includes(n2))) {
       return true;
@@ -85,25 +85,28 @@ const calculateSimilarity = (str1, str2) => {
 const parseDateComponents = (dateStr) => {
   if (!dateStr) return null;
   const cleaned = dateStr.replace(/\D/g, '');
-  
-  // Try YYYYMMDD format
+
+  // Try 8-digit formats (YYYYMMDD or MMDDYYYY)
   if (cleaned.length === 8) {
-    return {
-      year: cleaned.substring(0, 4),
-      month: cleaned.substring(4, 6),
-      day: cleaned.substring(6, 8)
-    };
+    // Check if first 4 digits look like a year (19xx or 20xx)
+    const first4 = parseInt(cleaned.substring(0, 4));
+    if (first4 >= 1900 && first4 <= 2100) {
+      // YYYYMMDD format
+      return {
+        year: cleaned.substring(0, 4),
+        month: cleaned.substring(4, 6),
+        day: cleaned.substring(6, 8)
+      };
+    } else {
+      // MMDDYYYY format
+      return {
+        year: cleaned.substring(4, 8),
+        month: cleaned.substring(0, 2),
+        day: cleaned.substring(2, 4)
+      };
+    }
   }
-  
-  // Try MMDDYYYY format
-  if (cleaned.length === 8) {
-    return {
-      year: cleaned.substring(4, 8),
-      month: cleaned.substring(0, 2),
-      day: cleaned.substring(2, 4)
-    };
-  }
-  
+
   return null;
 };
 
@@ -114,7 +117,7 @@ const calculateMatchScore = (p1, p2) => {
 
   // Normalize names (remove commas and extra spaces)
   const normalizeName = (str) => str?.toLowerCase().replace(/,/g, '').replace(/\s+/g, ' ').trim() || '';
-  
+
   // Name matching with fuzzy logic
   const firstName1 = normalizeName(p1.first_name);
   const firstName2 = normalizeName(p2.first_name);
@@ -122,17 +125,17 @@ const calculateMatchScore = (p1, p2) => {
   const lastName2 = normalizeName(p2.last_name);
   const fullName1 = `${firstName1} ${lastName1}`;
   const fullName2 = `${firstName2} ${lastName2}`;
-  
+
   // Calculate name similarities first
   const firstNameSimilarity = calculateSimilarity(firstName1, firstName2);
   const lastNameSimilarity = calculateSimilarity(lastName1, lastName2);
   const fullNameSimilarity = calculateSimilarity(fullName1, fullName2);
-  
+
   // Exact match
   if (fullName1 === fullName2) {
     score += 40;
     matches.push('name_exact');
-  } 
+  }
   // Nickname matching
   else if (areNicknames(firstName1, firstName2) && lastNameSimilarity >= 95) {
     score += 38;
@@ -150,9 +153,9 @@ const calculateMatchScore = (p1, p2) => {
       score += 22;
       matches.push('name_fuzzy_medium');
     }
-    
+
     // Check individual name components
-    
+
     if (firstNameSimilarity >= 90 && lastNameSimilarity >= 90) {
       score += 30;
       matches.push('name_components_similar');
@@ -163,7 +166,7 @@ const calculateMatchScore = (p1, p2) => {
       score += 15;
       matches.push('name_partial');
     }
-    
+
     // Check for initials vs full name (e.g., "J. Smith" vs "John Smith")
     if (firstName1.length === 1 && firstName2.startsWith(firstName1) && lastNameSimilarity >= 95) {
       score += 25;
@@ -179,7 +182,7 @@ const calculateMatchScore = (p1, p2) => {
     const addr1 = normalizeName(p1.address);
     const addr2 = normalizeName(p2.address);
     const addressSimilarity = calculateSimilarity(addr1, addr2);
-    
+
     if (addressSimilarity === 100) {
       score += 15;
       matches.push('address_exact');
@@ -190,11 +193,11 @@ const calculateMatchScore = (p1, p2) => {
       score += 5;
       matches.push('address_partial');
     }
-    
+
     // Check for partial street/number matches (common data entry variations)
     const addr1Parts = addr1.split(' ').filter(p => p.length > 0);
     const addr2Parts = addr2.split(' ').filter(p => p.length > 0);
-    
+
     // Check if street number matches
     const hasNumber1 = addr1Parts.find(p => /^\d+/.test(p));
     const hasNumber2 = addr2Parts.find(p => /^\d+/.test(p));
@@ -208,7 +211,7 @@ const calculateMatchScore = (p1, p2) => {
   if (p1.date_of_birth && p2.date_of_birth) {
     const dob1Str = p1.date_of_birth.replace(/\D/g, '');
     const dob2Str = p2.date_of_birth.replace(/\D/g, '');
-    
+
     // Exact match
     if (dob1Str === dob2Str) {
       score += 30;
@@ -217,7 +220,7 @@ const calculateMatchScore = (p1, p2) => {
       // Parse date components
       const dob1 = parseDateComponents(p1.date_of_birth);
       const dob2 = parseDateComponents(p2.date_of_birth);
-      
+
       if (dob1 && dob2) {
         // Check for month/day reversal (common data entry error)
         if (dob1.year === dob2.year) {
@@ -258,7 +261,7 @@ const calculateMatchScore = (p1, p2) => {
   if (p1.medical_record_number && p2.medical_record_number) {
     const mrn1 = p1.medical_record_number.toString().trim();
     const mrn2 = p2.medical_record_number.toString().trim();
-    
+
     if (mrn1 === mrn2) {
       score += 30;
       matches.push('mrn_exact');
@@ -276,7 +279,7 @@ const calculateMatchScore = (p1, p2) => {
   if (p1.phone && p2.phone) {
     const phone1 = p1.phone.replace(/\D/g, '');
     const phone2 = p2.phone.replace(/\D/g, '');
-    
+
     if (phone1 === phone2 && phone1.length >= 10) {
       score += 10;
       matches.push('phone_exact');
@@ -296,7 +299,7 @@ const calculateMatchScore = (p1, p2) => {
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
-  
+
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -306,7 +309,7 @@ Deno.serve(async (req) => {
     }
 
     console.log('Starting deduplication...');
-    
+
     // Get all patients with minimal fields for faster processing
     const patients = await base44.asServiceRole.entities.Patient.list();
     console.log(`Loaded ${patients.length} patients in ${Date.now() - startTime}ms`);
@@ -383,7 +386,7 @@ Deno.serve(async (req) => {
             processed.add(unprocessed[i].id);
           }
         }
-        
+
         groupsProcessed++;
       }
 
@@ -410,7 +413,7 @@ Deno.serve(async (req) => {
       }
 
       const batch = duplicateGroups.slice(i, i + batchSize);
-      
+
       for (const group of batch) {
         // Sort by status (active first) then by created_date
         const allInGroup = [group.primary, ...group.duplicates.map(d => d.patient)];
@@ -440,16 +443,16 @@ Deno.serve(async (req) => {
               ]);
 
               await Promise.all([
-                ...visits.map(v => base44.asServiceRole.entities.Visit.delete(v.id).catch(() => {})),
-                ...carePlans.map(cp => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch(() => {})),
-                ...alerts.map(a => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch(() => {})),
-                ...incidents.map(i => base44.asServiceRole.entities.Incident.delete(i.id).catch(() => {})),
-                ...tasks.map(t => base44.asServiceRole.entities.Task.delete(t.id).catch(() => {}))
+                ...visits.map(v => base44.asServiceRole.entities.Visit.delete(v.id).catch(err => console.error(`Failed to delete visit ${v.id}:`, err.message))),
+                ...carePlans.map(cp => base44.asServiceRole.entities.CarePlan.delete(cp.id).catch(err => console.error(`Failed to delete care plan ${cp.id}:`, err.message))),
+                ...alerts.map(a => base44.asServiceRole.entities.PatientAlert.delete(a.id).catch(err => console.error(`Failed to delete alert ${a.id}:`, err.message))),
+                ...incidents.map(i => base44.asServiceRole.entities.Incident.delete(i.id).catch(err => console.error(`Failed to delete incident ${i.id}:`, err.message))),
+                ...tasks.map(t => base44.asServiceRole.entities.Task.delete(t.id).catch(err => console.error(`Failed to delete task ${t.id}:`, err.message)))
               ]);
-              
+
               await base44.asServiceRole.entities.Patient.delete(patient.id);
             });
-            
+
             removedFromGroup.push({
               id: patient.id,
               name: `${patient.first_name} ${patient.last_name}`,
@@ -476,14 +479,14 @@ Deno.serve(async (req) => {
 
     // Calculate confidence levels for results
     const resultsWithConfidence = detailsArray.map(detail => {
-      const avgScore = detail.removed.length > 0 
-        ? detail.removed.reduce((sum, r) => sum + r.match_score, 0) / detail.removed.length 
+      const avgScore = detail.removed.length > 0
+        ? detail.removed.reduce((sum, r) => sum + r.match_score, 0) / detail.removed.length
         : 100;
-      
+
       let confidence = 'High';
       if (avgScore < 70) confidence = 'Medium';
       if (avgScore < 50) confidence = 'Low';
-      
+
       return {
         ...detail,
         confidence,
@@ -500,9 +503,8 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Deduplication error:', error);
-    return Response.json({ 
+    return Response.json({
       error: error.message,
-      stack: error.stack,
       details: 'Check function logs for more information'
     }, { status: 500 });
   }

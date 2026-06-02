@@ -159,7 +159,7 @@ export default function HighRiskPatientsWidget() {
           })}
         </div>
 
-        <Link to={createPageUrl("PatientAlerts")} className="block">
+        <Link to={createPageUrl("Patients")} className="block">
           <Button variant="outline" className="w-full">
             <Shield className="w-4 h-4 mr-2" />
             View All Risk Assessments

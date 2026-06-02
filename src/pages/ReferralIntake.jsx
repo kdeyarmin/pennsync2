@@ -903,36 +903,28 @@ Actions available:
   };
 
   const handleDeleteReferral = async (referralId) => {
-    if (!confirm('Are you sure you want to delete this referral? This action cannot be undone.')) {
-      return;
-    }
-    
     try {
       await base44.entities.Referral.delete(referralId);
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert('Referral deleted successfully');
+      toast.success('Referral deleted successfully');
     } catch (error) {
       console.error('Error deleting referral:', error);
-      alert('Failed to delete referral');
+      toast.error('Failed to delete referral');
     }
   };
 
   const handleRejectReferral = async (referralId) => {
-    if (!confirm('Are you sure you want to reject this referral?')) {
-      return;
-    }
-    
     try {
-      await base44.entities.Referral.update(referralId, { 
+      await base44.entities.Referral.update(referralId, {
         status: 'declined',
         rejection_date: new Date().toISOString(),
         rejected_by: currentUser?.email
       });
       queryClient.invalidateQueries({ queryKey: ['referrals'] });
-      alert('Referral rejected');
+      toast.success('Referral rejected');
     } catch (error) {
       console.error('Error rejecting referral:', error);
-      alert('Failed to reject referral');
+      toast.error('Failed to reject referral');
     }
   };
 
@@ -984,7 +976,7 @@ Actions available:
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error creating new patient:', error);
-      alert('Failed to create new patient');
+      toast.error('Failed to create new patient');
     }
   };
 
@@ -993,6 +985,12 @@ Actions available:
     const priorityMatch = priorityFilter === 'all' || r.priority === priorityFilter;
     return statusMatch && priorityMatch;
   });
+
+  const totalPages = Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE);
+  const paginatedReferrals = filteredReferrals.slice(
+    (currentPage - 1) * REFERRALS_PER_PAGE,
+    currentPage * REFERRALS_PER_PAGE
+  );
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -1142,7 +1140,7 @@ Actions available:
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredReferrals.map((referral) => (
+                  {paginatedReferrals.map((referral) => (
                     <TableRow key={referral.id}>
                       <TableCell className="text-xs sm:text-sm font-medium">
                         {referral.patient_id ? (
@@ -1302,7 +1300,7 @@ Actions available:
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleRejectReferral(referral.id)}
+                              onClick={() => setReferralToReject(referral)}
                               className="text-orange-600 hover:bg-orange-50 min-h-[36px] text-xs flex-1"
                             >
                               <XCircle className="w-4 h-4 mr-1" />
@@ -1311,7 +1309,7 @@ Actions available:
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDeleteReferral(referral.id)}
+                              onClick={() => setReferralToDelete(referral)}
                               className="text-red-600 hover:bg-red-50 min-h-[36px] text-xs flex-1"
                             >
                               <Trash2 className="w-4 h-4 mr-1" />
@@ -1324,6 +1322,17 @@ Actions available:
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <span className="text-sm text-gray-500">
+                Showing {(currentPage - 1) * REFERRALS_PER_PAGE + 1}-{Math.min(currentPage * REFERRALS_PER_PAGE, filteredReferrals.length)} of {filteredReferrals.length}
+              </span>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Previous</Button>
+                <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -1602,7 +1611,7 @@ Actions available:
                   patientId={referrals.find(r => r.id === processingReferralId)?.patient_id}
                   onCarePlansSaved={() => {
                     queryClient.invalidateQueries({ queryKey: ['referrals'] });
-                    alert('Care plans saved successfully!');
+                    toast.success('Care plans saved successfully!');
                   }}
                 />
               )}
@@ -1650,6 +1659,52 @@ Actions available:
           </DialogContent>
         </Dialog>
       )}
+
+      <AlertDialog open={!!referralToDelete} onOpenChange={(open) => { if (!open) setReferralToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Referral</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the referral for {referralToDelete?.patient_name || 'this patient'}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                handleDeleteReferral(referralToDelete.id);
+                setReferralToDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!referralToReject} onOpenChange={(open) => { if (!open) setReferralToReject(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Referral</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject the referral for {referralToReject?.patient_name || 'this patient'}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                handleRejectReferral(referralToReject.id);
+                setReferralToReject(null);
+              }}
+            >
+              Reject
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
