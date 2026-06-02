@@ -308,17 +308,14 @@ export default function PatientDataManagement() {
 
         <TabsContent value="overview" className="m-0">
           <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
-<<<<<<< HEAD
-            <div className="mb-4 sm:mb-6">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">Patient Data Management</h1>
-              <p className="text-xs sm:text-sm md:text-base text-slate-600 hidden sm:block">Comprehensive overview and management of all patients</p>
-            </div>
-=======
-            <PageHeader
+<PageHeader
+              icon={Users}
+              iconColor="bg-blue-600"
+              eyebrow="Administration"
               title="Patient Data Management"
               description="Comprehensive overview and management of all patients"
+              favoritePage="PatientDataManagement"
             />
->>>>>>> origin/main
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">

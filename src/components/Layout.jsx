@@ -3,12 +3,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
-<<<<<<< HEAD
-import { Bell, LogOut } from "lucide-react";
-=======
 import { clearCachedPHI } from "@/lib/phiStorage";
 import { Bell, LogOut, Clock } from "lucide-react";
->>>>>>> origin/main
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -25,15 +21,6 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import SessionTimeoutManager from "@/components/security/SessionTimeoutManager";
 import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 import CommandPalette from "@/components/navigation/CommandPalette";
-import { getPageMeta } from "@/components/navigation/navConfig";
-
-// Build a sidebar item from the shared navConfig manifest so label + icon stay
-// in sync with the command palette and breadcrumbs. `extra` carries the
-// sidebar-only bits (dynamic unread badges, etc.).
-const navItem = (page, extra = {}) => {
-  const meta = getPageMeta(page);
-  return { name: meta.label, icon: meta.icon, page, ...extra };
-};
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -107,7 +94,7 @@ export default function Layout({ children, currentPageName }) {
     initialData: [], refetchInterval: 120000, enabled: !!currentUser?.email && isTimeOffApprover,
   });
   // Exclude the reviewer's own requests — they can't approve those.
-  const pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
+  const _pendingTimeOffCount = pendingTimeOff.filter((r) => r.employee_email !== currentUser?.email).length;
 
   // Fetch charted visits to filter alerts
   const { data: chartedVisits = [] } = useQuery({
@@ -159,8 +146,7 @@ export default function Layout({ children, currentPageName }) {
   const unreadNotificationCount = inAppNotifications.filter(n => !n.is_read).length;
   const totalNotificationCount = unreadMessageCount + activeAlerts.length + pendingTasks.length + unreadNotificationCount;
 
-<<<<<<< HEAD
-  // Badge value map — keys match the `badge` field in nav.manifest entries
+// Badge value map — keys match the `badge` field in nav.manifest entries
   const badgeValues = useMemo(() => ({
     messages: unreadMessageCount,
     sms: unreadSmsCount,
@@ -171,90 +157,6 @@ export default function Layout({ children, currentPageName }) {
   const actionHandlers = useMemo(() => ({
     openNotifications: () => setNotificationCenterOpen(true),
   }), []);
-=======
-  const navCategories = useMemo(() => [
-    { category: "Overview", items: [navItem("Dashboard")] },
-    {
-      category: "Patient Care",
-      items: [
-        navItem("Patients"),
-        navItem("CarePlanManagement"),
-        navItem("SmartOASISAssessment"),
-        navItem("Incidents"),
-      ],
-    },
-    {
-      category: "Documentation",
-      items: [
-        navItem("ClinicalDocumentation"),
-        navItem("DocumentHub"),
-        navItem("ReferralIntake"),
-      ],
-    },
-    {
-      category: "Communication",
-      items: [
-        navItem("Messages", { badge: unreadMessageCount }),
-        navItem("PhoneCenter", { badge: unreadSmsCount }),
-        navItem("SendFax"),
-        navItem("PhysicianDirectory"),
-        navItem("Telehealth"),
-      ],
-    },
-    {
-      category: "Resources",
-      items: [navItem("ResourceLibrary")],
-    },
-    {
-      category: "My Learning",
-      items: [
-        navItem("LearningCenter"),
-        navItem("MyLearning"),
-        navItem("ClinicalSkillsChecklist"),
-      ],
-    },
-    {
-      category: "Workplace",
-      items: [
-        navItem("TimeOff", { badge: pendingTimeOffCount }),
-      ],
-    },
-    {
-      category: "Tools",
-      items: [
-        navItem("UserSettings"),
-        navItem("OfflineMode"),
-        navItem("Help"),
-      ],
-    },
-  ], [unreadMessageCount, unreadSmsCount, pendingTimeOffCount]);
-
-  const adminItems = useMemo(() => [
-    { category: "Admin", items: [navItem("AdminOperations")] },
-    {
-      category: "Manage",
-      items: [
-        navItem("UserManagement"),
-        navItem("AdminTraining"),
-        navItem("ClinicalPathwayManager"),
-      ]
-    },
-    { 
-      category: "Analytics", 
-      items: [
-        navItem("ReportsAnalytics"),
-        navItem("ComplianceCenter"),
-        { name: "Alerts", icon: Bell, page: null, badge: unreadNotificationCount, action: () => setNotificationCenterOpen(true) },
-      ] 
-    },
-    {
-      category: "Configuration",
-      items: [
-        navItem("PatientDataManagement"),
-        navItem("SecurityCompliance"),
-      ]
-    },
->>>>>>> origin/main
 
   // Build nav arrays from manifest, then inject runtime badges/actions
   const navCategories = useMemo(() => {

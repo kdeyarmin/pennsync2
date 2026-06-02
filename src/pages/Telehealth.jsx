@@ -164,32 +164,21 @@ export default function Telehealth() {
   return (
     <div className="w-full space-y-4 sm:space-y-6">
       {/* Header */}
-<<<<<<< HEAD
-      <div className="px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Video className="w-6 h-6 text-blue-600" />
-            Telehealth
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">Secure video visits with patients via Twilio</p>
-        </div>
-        <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-          <Plus className="w-4 h-4" /> New Session
-        </Button>
-=======
-      <div className="px-3 sm:px-4 md:px-6">
+<div className="px-3 sm:px-4 md:px-6">
         <PageHeader
           icon={Video}
+          iconColor="bg-blue-600"
+          eyebrow="Communication"
           title="Telehealth"
           description="Secure video visits with patients via Twilio"
-          className="mb-0 sm:mb-0"
+          favoritePage="Telehealth"
+          className="mb-0"
           actions={
             <Button onClick={() => setShowNewSession(true)} className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
               <Plus className="w-4 h-4" /> New Session
             </Button>
           }
         />
->>>>>>> origin/main
       </div>
 
       {/* Stats */}

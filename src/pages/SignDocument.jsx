@@ -172,11 +172,7 @@ export default function SignDocument() {
             </div>
           ) : signatureRecord.document_content ? (
             <div className="p-4 border rounded-lg bg-slate-50 max-h-96 overflow-auto">
-<<<<<<< HEAD
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: signatureRecord.document_content }} />
-=======
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(signatureRecord.document_content) }} />
->>>>>>> origin/main
+<div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(signatureRecord.document_content) }} />
             </div>
           ) : (
             <Alert>

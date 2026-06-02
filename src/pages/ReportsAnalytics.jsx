@@ -83,25 +83,14 @@ Return JSON with: executive_summary, infection_clusters, readmission_patterns, q
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-<<<<<<< HEAD
-      <div className="mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-indigo-600" />
-            Reports & Analytics
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 mt-2">
-            KPIs, outcomes, performance metrics, and AI-powered population health insights
-          </p>
-        </div>
-      </div>
-=======
-      <PageHeader
+<PageHeader
         icon={BarChart3}
+        iconColor="bg-indigo-600"
+        eyebrow="Analytics"
         title="Reports & Analytics"
         description="KPIs, outcomes, performance metrics, and AI-powered population health insights"
+        favoritePage="ReportsAnalytics"
       />
->>>>>>> origin/main
 
       <Tabs defaultValue="kpi" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">

@@ -48,7 +48,6 @@ import {
 import PageHeader from "@/components/ui/PageHeader";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import PageHeader from "@/components/ui/PageHeader";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1027,21 +1026,12 @@ Actions available:
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <PageHeader
-<<<<<<< HEAD
-        icon={ClipboardList}
+icon={ClipboardList}
         iconColor="bg-blue-600"
         eyebrow="Admissions"
         title="Referral Intake"
         description="Streamlined workflow for processing incoming referrals"
         favoritePage="ReferralIntake"
-        actions={
-          <Button onClick={() => setUploadDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 min-h-[44px]">
-            <Upload className="w-4 h-4 mr-2" />
-            New Referral
-=======
-        icon={FileText}
-        title="Referral Intake"
-        description="Streamlined workflow for processing incoming referrals"
         actions={
           <Button
             onClick={() => setUploadDialogOpen(true)}
@@ -1050,7 +1040,6 @@ Actions available:
             <Upload className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">New Referral</span>
             <span className="sm:hidden">New</span>
->>>>>>> origin/main
           </Button>
         }
       />

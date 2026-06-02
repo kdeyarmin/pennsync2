@@ -10,21 +10,7 @@ import {
   CommandItem,
   CommandSeparator,
 } from "@/components/ui/command";
-<<<<<<< HEAD
 import { buildPaletteEntries, NAV_MANIFEST } from "@/lib/nav.manifest";
-
-// Convert PascalCase page names to human-readable labels
-function formatPageName(name) {
-  return name
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, s => s.toUpperCase())
-    .replace(/O A S I S/g, 'OASIS')
-    .replace(/P D F/g, 'PDF')
-    .replace(/A I /g, 'AI ')
-    .replace(/I C D/g, 'ICD')
-    .trim();
-=======
-import { NAV_PAGES } from "@/components/navigation/navConfig";
 
 const RECENTS_KEY = "pennsync_recent_pages";
 const MAX_RECENTS = 5;
@@ -41,13 +27,14 @@ function readRecents() {
 
 function pushRecent(pageName) {
   try {
-    const next = [pageName, ...readRecents().filter((n) => n !== pageName)].slice(0, MAX_RECENTS);
+    const next = [pageName, ...readRecents().filter((name) => name !== pageName)].slice(0, MAX_RECENTS);
     localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
   } catch {
-    /* ignore storage failures (private mode, quota, etc.) */
+    /* ignore storage failures */
   }
->>>>>>> origin/main
 }
+
+const getCategory = (page) => page.category || "More";
 
 export default function CommandPalette({ isAdmin }) {
   const [open, setOpen] = useState(false);
@@ -55,17 +42,15 @@ export default function CommandPalette({ isAdmin }) {
   const [recents, setRecents] = useState([]);
   const navigate = useNavigate();
 
-  // Cmd/Ctrl+K toggles the palette; a custom `open-command-palette` window event
-  // opens it so the sidebar / header search buttons can trigger it while the
-  // palette stays self-contained (no lifted state needed).
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
+    const handleKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
         setOpen((prev) => !prev);
       }
     };
     const handleOpenEvent = () => setOpen(true);
+
     document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("open-command-palette", handleOpenEvent);
     return () => {
@@ -74,7 +59,6 @@ export default function CommandPalette({ isAdmin }) {
     };
   }, []);
 
-  // Each time the palette opens, refresh recents and reset the query.
   useEffect(() => {
     if (open) {
       setRecents(readRecents());
@@ -82,56 +66,43 @@ export default function CommandPalette({ isAdmin }) {
     }
   }, [open]);
 
-<<<<<<< HEAD
-  const pages = buildPaletteEntries(NAV_MANIFEST, isAdmin);
-  const categories = [...new Set(pages.map(p => p.category).filter(Boolean))];
-=======
-  // The page registry is the shared navConfig manifest (single source of truth).
-  const pages = useMemo(
-    () => NAV_PAGES.filter((p) => (p.category === "Admin" ? isAdmin : true)),
-    [isAdmin],
-  );
+  const pages = useMemo(() => buildPaletteEntries(NAV_MANIFEST, isAdmin), [isAdmin]);
 
   const pageByName = useMemo(() => {
     const map = new Map();
-    pages.forEach((p) => map.set(p.page, p));
+    pages.forEach((page) => map.set(page.page, page));
     return map;
   }, [pages]);
 
-  const handleSelect = useCallback(
-    (pageName) => {
-      setOpen(false);
-      pushRecent(pageName);
-      navigate(`/${pageName}`);
-    },
-    [navigate],
-  );
+  const categories = useMemo(() => [...new Set(pages.map((page) => getCategory(page)))], [pages]);
 
-  const categories = useMemo(() => [...new Set(pages.map((p) => p.category))], [pages]);
+  const handleSelect = useCallback((pageName) => {
+    setOpen(false);
+    pushRecent(pageName);
+    navigate(`/${pageName}`);
+  }, [navigate]);
 
-  // Recents resolve to currently-visible pages and only show when not searching.
   const recentPages = recents.map((name) => pageByName.get(name)).filter(Boolean);
   const showRecents = !search.trim() && recentPages.length > 0;
 
-  const renderItem = (page, prefix = "") => {
+  const renderItem = useCallback((page, prefix = "") => {
     const Icon = page.icon;
     return (
       <CommandItem
         key={`${prefix}${page.page}`}
-        value={`${prefix}${page.label} ${page.keywords.join(" ")}`}
+        value={`${prefix}${page.label} ${(page.keywords ?? []).join(" ")}`}
         onSelect={() => handleSelect(page.page)}
-        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
+        className="flex cursor-pointer items-center gap-3 px-3 py-2.5"
       >
-        <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <Icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
         <span>{page.label}</span>
       </CommandItem>
     );
-  };
->>>>>>> origin/main
+  }, [handleSelect]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="p-0 max-w-lg border shadow-2xl overflow-hidden">
+      <DialogContent className="max-w-lg overflow-hidden border p-0 shadow-2xl">
         <div className="sr-only"><DialogTitle>Quick Navigation</DialogTitle></div>
         <Command className="rounded-lg" loop>
           <CommandInput
@@ -151,44 +122,26 @@ export default function CommandPalette({ isAdmin }) {
               </>
             )}
 
-            {categories.map((category, idx) => (
+            {categories.map((category, index) => (
               <div key={category}>
-                {idx > 0 && <CommandSeparator />}
+                {index > 0 && <CommandSeparator />}
                 <CommandGroup heading={category}>
-<<<<<<< HEAD
                   {pages
-                    .filter(p => p.category === category)
-                    .map((page) => {
-                      const Icon = page.icon;
-                      const displayName = page.label || formatPageName(page.page);
-                      return (
-                        <CommandItem
-                          key={page.page}
-                          value={`${displayName} ${(page.keywords ?? []).join(" ")}`}
-                          onSelect={() => handleSelect(page.page)}
-                          className="flex items-center gap-3 px-3 py-2.5 cursor-pointer"
-                        >
-                          <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span>{displayName}</span>
-                        </CommandItem>
-                      );
-                    })}
-=======
-                  {pages.filter((p) => p.category === category).map((page) => renderItem(page))}
->>>>>>> origin/main
+                    .filter((page) => getCategory(page) === category)
+                    .map((page) => renderItem(page))}
                 </CommandGroup>
               </div>
             ))}
           </CommandList>
-          <div className="border-t px-3 py-2 text-xs text-muted-foreground flex items-center gap-4">
+          <div className="flex items-center gap-4 border-t px-3 py-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <kbd className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono">↑↓</kbd> navigate
+              <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">↑↓</kbd> navigate
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono">↵</kbd> open
+              <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">↵</kbd> open
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono">esc</kbd> close
+              <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">esc</kbd> close
             </span>
           </div>
         </Command>

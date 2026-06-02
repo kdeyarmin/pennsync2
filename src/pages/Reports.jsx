@@ -327,8 +327,7 @@ export default function Reports() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-<<<<<<< HEAD
-        <PageHeader
+<PageHeader
           icon={BarChart3}
           iconColor="bg-blue-600"
           eyebrow="Reporting"
@@ -336,15 +335,6 @@ export default function Reports() {
           description="Comprehensive reporting, KPIs, and automated insights"
           favoritePage="Reports"
         />
-=======
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">Reports & Analytics</h1>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600">Comprehensive reporting, KPIs, and automated insights</p>
-          </div>
-        </div>
->>>>>>> origin/main
 
         {/* Main Tabs */}
         <Tabs defaultValue="advanced" className="w-full">

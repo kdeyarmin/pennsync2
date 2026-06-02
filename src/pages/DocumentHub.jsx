@@ -47,25 +47,13 @@ export default function DocumentHub() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-<<<<<<< HEAD
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Document Hub</h1>
-          <p className="text-sm sm:text-base text-slate-600 mt-1">
-            Manage signatures, templates, and patient documents
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {activeTab === "signatures" && (
-            <>
-              <Button 
-                onClick={() => navigate('/CreateSignatureRequest')}
-                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 min-h-[44px]"
-=======
-      <PageHeader
+<PageHeader
         icon={FileText}
+        iconColor="bg-indigo-600"
+        eyebrow="Documentation"
         title="Document Hub"
         description="Manage signatures, templates, and patient documents"
+        favoritePage="DocumentHub"
         actions={activeTab === "signatures" && (
           <>
             <Button
@@ -80,7 +68,6 @@ export default function DocumentHub() {
                 onClick={() => setShowTemplateBuilder(true)}
                 variant="outline"
                 className="w-full sm:w-auto min-h-[44px]"
->>>>>>> origin/main
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Template

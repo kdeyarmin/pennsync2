@@ -15,7 +15,6 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, subDays, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
-import PageHeader from "@/components/ui/PageHeader";
 import ComplianceReportGenerator from "@/components/compliance/ComplianceReportGenerator";
 import AIComplianceAssistant from "@/components/compliance/AIComplianceAssistant";
 import RegulatoryCompliance from "@/pages/RegulatoryCompliance";
@@ -318,16 +317,11 @@ export default function ComplianceCenter() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       <PageHeader
         icon={Shield}
-<<<<<<< HEAD
-        iconColor="bg-indigo-600"
+iconColor="bg-indigo-600"
         eyebrow="Quality & Compliance"
         title="Compliance Center"
         description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
         favoritePage="ComplianceCenter"
-=======
-        title="Compliance Center"
-        description="Medicare compliance monitoring, real-time alerts, and regulatory tracking"
->>>>>>> origin/main
       />
 
       <Tabs defaultValue="medicare" className="space-y-6">

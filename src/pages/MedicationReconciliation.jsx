@@ -65,11 +65,7 @@ export default function MedicationReconciliation() {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-<<<<<<< HEAD
-            <p className="text-sm text-slate-600">Pending Review</p>
-=======
-            <p className="text-sm text-slate-600">Pending / In Progress</p>
->>>>>>> origin/main
+<p className="text-sm text-slate-600">Pending / In Progress</p>
           </CardContent>
         </Card>
         <Card>

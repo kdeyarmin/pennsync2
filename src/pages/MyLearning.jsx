@@ -27,28 +27,13 @@ export default function MyLearning() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-<<<<<<< HEAD
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <GraduationCap className="w-8 h-8 text-indigo-600" />
-            My Learning
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 mt-2">
-            All your training, courses, transcripts, and continuing education
-          </p>
-        </div>
-        <Link to={createPageUrl('LearningCenter')}>
-          <Button variant="outline" size="sm">
-            Learning Center
-          </Button>
-        </Link>
-      </div>
-=======
-      <PageHeader
+<PageHeader
         icon={GraduationCap}
+        iconColor="bg-indigo-600"
+        eyebrow="Learning"
         title="My Learning"
         description="All your training, courses, transcripts, and continuing education"
+        favoritePage="MyLearning"
         actions={
           <Link to={createPageUrl('LearningCenter')}>
             <Button variant="outline" size="sm">
@@ -57,7 +42,6 @@ export default function MyLearning() {
           </Link>
         }
       />
->>>>>>> origin/main
 
       <Tabs defaultValue="courses" className="space-y-6">
         <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">

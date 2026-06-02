@@ -10,23 +10,14 @@ import EducationLibrary from "@/components/education/EducationLibrary";
 export default function ResourceLibrary() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-<<<<<<< HEAD
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-          <BookOpen className="w-8 h-8 text-indigo-600" />
-          Resource Library
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-2">
-          Clinical templates, Medicare guidelines, and patient education materials
-        </p>
-      </div>
-=======
-      <PageHeader
+<PageHeader
         icon={BookOpen}
+        iconColor="bg-indigo-600"
+        eyebrow="Resources"
         title="Resource Library"
         description="Clinical templates, Medicare guidelines, and patient education materials"
+        favoritePage="ResourceLibrary"
       />
->>>>>>> origin/main
 
       <Tabs defaultValue="clinical" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">

@@ -80,15 +80,10 @@ export default function SmartMedicationReconciliation({ patient }) {
       case 'critical': return 'bg-red-500';
       case 'major':
       case 'high': return 'bg-orange-500';
-<<<<<<< HEAD
-      case 'moderate': return 'bg-yellow-500';
-      case 'low': return 'bg-blue-500';
-=======
       case 'moderate':
       case 'medium': return 'bg-yellow-500';
       case 'low':
       case 'minor': return 'bg-blue-500';
->>>>>>> origin/main
       default: return 'bg-slate-500';
     }
   };
