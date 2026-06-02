@@ -7,7 +7,7 @@ import { VideoOff, Users, Loader2
 import NetworkMonitor from "./NetworkMonitor";
 import EnhancedVideoControls from "./EnhancedVideoControls";
 
-export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange, onToggleChat }) {
+export default function VideoRoom({ roomName, identity, onDisconnect, onParticipantListChange, onToggleChat, joinToken, waitingMessage = "Waiting for patient to join..." }) {
   const [participants, setParticipants] = useState([]);
   const [status, setStatus] = useState("connecting"); // connecting | connected | error
   const [error, setError] = useState(null);
@@ -30,7 +30,11 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
   const connectToRoom = useCallback(async () => {
     try {
       setStatus("connecting");
-      const res = await createTelehealthToken({ room_name: roomName, identity });
+      // Patients authenticate with the per-session capability token from their
+      // invite link; staff authenticate with their app session.
+      const res = await createTelehealthToken(
+        joinToken ? { room_name: roomName, join_token: joinToken } : { room_name: roomName, identity }
+      );
       const { token } = res.data;
 
       const Video = (await import("twilio-video")).default;
@@ -75,7 +79,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
       setError(err.message);
       setStatus("error");
     }
-  }, [roomName, identity, onDisconnect]);
+  }, [roomName, identity, joinToken, onDisconnect]);
 
   useEffect(() => {
     connectToRoom();
@@ -243,7 +247,7 @@ export default function VideoRoom({ roomName, identity, onDisconnect, onParticip
         {participants.length === 0 && (
           <div className="bg-gray-800 rounded-xl aspect-video flex flex-col items-center justify-center gap-2">
             <Users className="w-10 h-10 text-gray-500" />
-            <p className="text-gray-400 text-sm">Waiting for patient to join...</p>
+            <p className="text-gray-400 text-sm">{waitingMessage}</p>
           </div>
         )}
       </div>

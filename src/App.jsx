@@ -27,7 +27,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -73,12 +73,33 @@ const ClinicalChart = lazy(() => import('@/pages/ClinicalChart'));
 const LearningCenter = lazy(() => import('@/pages/LearningCenter'));
 const RegulatoryCompliance = lazy(() => import('@/pages/RegulatoryCompliance'));
 
+// Public (no-login) patient telehealth join page.
+const JoinTelehealth = lazy(() => import('@/pages/JoinTelehealth'));
+
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
+  const location = useLocation();
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+
+  // Public patient join route renders WITHOUT authentication — it is gated by
+  // the per-session capability token in the link, not by an app login. This is
+  // checked before the auth gate below so patients are never bounced to login.
+  if (location.pathname.toLowerCase().startsWith('/join')) {
+    return (
+      <Suspense fallback={
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        </div>
+      }>
+        <Routes>
+          <Route path="/join" element={<JoinTelehealth />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {

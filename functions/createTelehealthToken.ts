@@ -1,26 +1,73 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// Constant-time comparison so the per-session join token can't be recovered
+// via response-timing analysis.
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+// The patient's capability token lives in the session's invite link (?t=...),
+// so guest joins need no extra entity field.
+function extractJoinToken(inviteLink) {
+  if (!inviteLink || typeof inviteLink !== 'string') return '';
+  try {
+    return new URL(inviteLink).searchParams.get('t') || '';
+  } catch {
+    const match = inviteLink.match(/[?&]t=([^&]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { room_name } = await req.json();
+    const { room_name, join_token } = await req.json();
     if (!room_name) return Response.json({ error: 'room_name is required' }, { status: 400 });
 
-    // AUTHORIZATION: only the session host, a listed participant, or an admin
-    // may mint a video grant for this room. Otherwise any authenticated user
-    // could join another patient's live telehealth A/V session (PHI breach).
+    // Service-role lookup so we can authorize the caller before minting any
+    // audio/video grant for this room.
     const sessions = await base44.asServiceRole.entities.TelehealthSession.filter({ room_name }, '-created_date', 1);
     const session = sessions[0];
     if (!session) return Response.json({ error: 'Telehealth session not found' }, { status: 404 });
-    const participants = Array.isArray(session.participant_list) ? session.participant_list : [];
-    const authorized = user.role === 'admin'
-      || session.host_email === user.email
-      || participants.includes(user.email)
-      || (user.full_name && participants.includes(user.full_name));
-    if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+    let participantIdentity;
+
+    if (join_token) {
+      // PATIENT (guest) path. Access is granted by possession of the
+      // high-entropy, per-session token carried in the private invite link — a
+      // capability URL. This is deliberately NOT the old IDOR (where any
+      // authenticated user could join any room by name): the token is
+      // unguessable, scoped to a single session, and stops working once the
+      // visit is completed or cancelled. The identity is taken from the session
+      // (server-controlled) so a guest cannot impersonate the clinician.
+      const expected = extractJoinToken(session.invite_link);
+      if (!expected || !timingSafeEqual(String(join_token), expected)) {
+        return Response.json({ error: 'Invalid or expired join link' }, { status: 403 });
+      }
+      if (session.status !== 'scheduled' && session.status !== 'active') {
+        return Response.json({ error: 'This telehealth visit is no longer open' }, { status: 403 });
+      }
+      participantIdentity = session.patient_name || 'Patient';
+    } else {
+      // STAFF path. Only the authenticated host, a listed participant, or an
+      // admin may mint a grant — otherwise any authenticated user could join
+      // another patient's live A/V session (PHI breach).
+      const user = await base44.auth.me();
+      if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      const participants = Array.isArray(session.participant_list) ? session.participant_list : [];
+      const authorized = user.role === 'admin'
+        || session.host_email === user.email
+        || participants.includes(user.email)
+        || (user.full_name && participants.includes(user.full_name));
+      if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
+      participantIdentity = user.full_name || user.email;
+    }
 
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const apiKey = Deno.env.get('TWILIO_API_KEY');
@@ -29,10 +76,6 @@ Deno.serve(async (req) => {
     if (!accountSid || !apiKey || !apiSecret) {
       return Response.json({ error: 'Twilio credentials not configured' }, { status: 500 });
     }
-
-    // Identity is server-derived from the authenticated user — never trust a
-    // caller-supplied identity (it would allow impersonating another clinician).
-    const participantIdentity = user.full_name || user.email;
 
     // Generate token via Twilio REST API
     const tokenUrl = `https://iam.twilio.com/v1/Accounts/${accountSid}/Tokens`;

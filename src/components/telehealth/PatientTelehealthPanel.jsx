@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SessionDocumentation from "@/components/telehealth/SessionDocumentation";
 import VideoRoom from "@/components/telehealth/VideoRoom";
+import { generateJoinToken, buildPatientJoinLink } from "@/components/telehealth/telehealthUtils";
 import { toast } from "sonner";
 
 const visitTypes = {
@@ -128,7 +129,8 @@ export default function PatientTelehealthPanel({ patient, currentUser }) {
 
   const createSession = async () => {
     const roomName = `telehealth-${patient.id}-${Date.now()}`;
-    const inviteLink = `${window.location.origin}/Telehealth?room=${roomName}`;
+    // Patient-facing capability link: the token is the patient's access grant.
+    const inviteLink = buildPatientJoinLink(window.location.origin, roomName, generateJoinToken());
     await createMutation.mutateAsync({
       room_name: roomName,
       patient_id: patient.id,
