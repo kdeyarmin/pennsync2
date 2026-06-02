@@ -1,0 +1,81 @@
+{
+  "name": "SkillObservation",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User being observed"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "User full name"
+    },
+    "supervisor_id": {
+      "type": "string",
+      "description": "Supervisor email"
+    },
+    "supervisor_name": {
+      "type": "string",
+      "description": "Supervisor full name"
+    },
+    "competency_id": {
+      "type": "string",
+      "description": "Reference to Competency"
+    },
+    "checklist_id": {
+      "type": "string",
+      "description": "Reference to SkillsChecklist"
+    },
+    "checklist_item_id": {
+      "type": "string",
+      "description": "Specific checklist item observed"
+    },
+    "patient_id": {
+      "type": "string",
+      "description": "Associated patient if the observation was completed during care"
+    },
+    "patient_name": {
+      "type": "string",
+      "description": "Associated patient display name"
+    },
+    "observed": {
+      "type": "boolean",
+      "description": "Whether successfully observed"
+    },
+    "met_criteria": {
+      "type": "boolean",
+      "description": "Whether employee met criteria"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Supervisor notes"
+    },
+    "observation_note_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Uploaded observation note files or media"
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Observation timestamp"
+    },
+    "signature_data": {
+      "type": "string",
+      "description": "Supervisor typed signature or signature value"
+    },
+    "observation_number": {
+      "type": "number",
+      "description": "Which observation this is (1, 2, 3...)"
+    }
+  },
+  "required": [
+    "user_id",
+    "supervisor_id",
+    "competency_id",
+    "observed",
+    "observed_at"
+  ]
+}

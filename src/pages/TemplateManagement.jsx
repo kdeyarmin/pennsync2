@@ -135,11 +135,11 @@ export default function TemplateManagement() {
           <div className="text-sm text-slate-600">
             <p className="font-semibold mb-2">Available Placeholders:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>{{patient_name}} - Full name</li>
-              <li>{{patient_first_name}}, {{patient_last_name}}</li>
-              <li>{{patient_date_of_birth}}, {{patient_email}}, {{patient_phone}}</li>
-              <li>{{patient_address}}, {{patient_medical_record_number}}</li>
-              <li>{{date}} (YYYY-MM-DD), {{today}} (formatted)</li>
+              <li>{"{{patient_name}}"} - Full name</li>
+              <li>{"{{patient_first_name}}"}, {"{{patient_last_name}}"}</li>
+              <li>{"{{patient_date_of_birth}}"}, {"{{patient_email}}"}, {"{{patient_phone}}"}</li>
+              <li>{"{{patient_address}}"}, {"{{patient_medical_record_number}}"}</li>
+              <li>{"{{date}}"} (YYYY-MM-DD), {"{{today}}"} (formatted)</li>
             </ul>
           </div>
           <div className="flex gap-2">

@@ -51,7 +51,7 @@ export default function ReferralVolumeReport({ dateRange }) {
         { type: 'heading', text: 'Summary Statistics' },
         { type: 'text', text: `Total Referrals: ${filteredReferrals.length}` },
         { type: 'text', text: `Urgent Priority: ${priorityData[0].count}` },
-        { type: 'text', text: `Ready for Admission: ${statusData[2].count}` },
+        { type: 'text', text: `Ready for Admission: ${filteredReferrals.filter(r => r.status === 'ready_for_admission').length}` },
         { type: 'spacer' },
         { type: 'heading', text: 'Referral Sources' },
         { type: 'table', data: sourceChartData, columns: [

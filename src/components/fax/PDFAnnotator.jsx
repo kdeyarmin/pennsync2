@@ -10,10 +10,9 @@ import {
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import * as pdfjsLib from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-// Bundled worker, version-matched to the installed pdfjs-dist (no CDN dependency)
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+// Use unpkg CDN to reliably load the worker without Vite import issues
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 const TOOLS = {
   PEN: "pen",

@@ -236,17 +236,6 @@ export default function PatientChartRecommendations({ patientId }) {
         {pendingRecs.length > 0 && (
           <div className="flex items-center justify-between pt-3 border-t mt-4">
             <p className="text-sm text-gray-600">{recommendations.length} total recommendations</p>
-            <Button
-              onClick={pushToPatientChart}
-              disabled={selectedRecs.length === 0 || isPushing}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isPushing ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Pushing...</>
-              ) : (
-                <><Send className="w-4 h-4 mr-2" /> Push {selectedRecs.length} to Chart</>
-              )}
-            </Button>
           </div>
         )}
       </CardContent>

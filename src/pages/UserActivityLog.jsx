@@ -30,7 +30,11 @@ import {
   Sparkles,
   Shield,
   CheckCircle2,
-  Bell
+  Bell,
+  UserX,
+  Key,
+  Mail,
+  Send
 } from "lucide-react";
 import { formatEastern } from "../components/utils/timezone";
 

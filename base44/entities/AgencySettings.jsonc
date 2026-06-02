@@ -1,0 +1,57 @@
+{
+  "name": "AgencySettings",
+  "type": "object",
+  "properties": {
+    "office_zip_code": {
+      "type": "string",
+      "description": "Agency office ZIP code for wage index calculation"
+    },
+    "wage_index": {
+      "type": "number",
+      "default": 1.0,
+      "description": "CMS wage index for the agency's geographic area"
+    },
+    "office_name": {
+      "type": "string",
+      "description": "Agency office name"
+    },
+    "office_address": {
+      "type": "string",
+      "description": "Agency office address"
+    },
+    "avg_staff_hourly_rate": {
+      "type": "number",
+      "default": 45,
+      "description": "Average staff hourly rate for cost calculations"
+    },
+    "training_cost_per_hour": {
+      "type": "number",
+      "default": 35,
+      "description": "Training cost per hour"
+    },
+    "documentation_time_per_episode": {
+      "type": "number",
+      "default": 0.5,
+      "description": "Average documentation time per episode in hours"
+    },
+    "audit_staff_hourly_rate": {
+      "type": "number",
+      "default": 50,
+      "description": "Audit staff hourly rate"
+    },
+    "avg_episodes_per_year": {
+      "type": "number",
+      "default": 50,
+      "description": "Average similar episodes per year"
+    }
+  },
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "required": []
+}

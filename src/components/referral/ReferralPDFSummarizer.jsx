@@ -25,6 +25,7 @@ import {
 import AISmartOASISAssistant from "../oasis/AISmartOASISAssistant";
 import AIAdmissionNoteGenerator from "./AIAdmissionNoteGenerator";
 import AICarePlanSuggestionEngine from "./AICarePlanSuggestionEngine";
+import AdmissionPacketCustomizer from "./AdmissionPacketCustomizer";
 import {
   Accordion,
   AccordionContent,

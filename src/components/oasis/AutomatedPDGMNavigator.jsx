@@ -33,10 +33,7 @@ import {
   Settings,
   FileJson,
   FileDown,
-  FileSpreadsheet,
-  BarChart3,
-  ExternalLink
-} from "lucide-react";
+  FileSpreadsheet, BarChart3, ExternalLink, BookOpen } from "lucide-react";
 import PDGMAnalyticsDashboard from "./PDGMAnalyticsDashboard";
 import PDGMScenarioModeler from "./PDGMScenarioModeler";
 import AIGroupAssignmentValidator from "./AIGroupAssignmentValidator";
@@ -2246,18 +2243,17 @@ PREDICT:
 
             {/* AI Group Assignment Validator */}
             <AIGroupAssignmentValidator
-              oasisData={oasisData}
+              oasisData={pdgmData}
               analysisResults={analysisResults}
               pdgmData={pdgmData}
-              patientId={patientId}
+              patientId={pdgmData?.patient_id}
               autoValidate={true}
             />
-
             {/* PDGM Scenario Modeler */}
             <PDGMScenarioModeler
               baselineOasisData={pdgmData}
               baselineNavigationData={navigation}
-              patientId={patientId}
+              patientId={pdgmData?.patient_id}
             />
 
             {/* Re-analyze Button */}

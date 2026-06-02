@@ -1,0 +1,42 @@
+{
+  "name": "OASISScenario",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "description": "Reference to Patient entity (optional for generic scenarios)"
+    },
+    "scenario_name": {
+      "type": "string",
+      "description": "Name of the scenario"
+    },
+    "scenario_data": {
+      "type": "object",
+      "description": "The modified OASIS data for this scenario"
+    },
+    "simulation_result": {
+      "type": "object",
+      "description": "AI-generated simulation results"
+    },
+    "baseline_payment": {
+      "type": "number",
+      "description": "Original payment amount before scenario changes"
+    },
+    "simulated_payment": {
+      "type": "number",
+      "description": "Predicted payment amount with scenario changes"
+    },
+    "payment_difference": {
+      "type": "number",
+      "description": "Difference in payment (simulated - baseline)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this scenario"
+    }
+  },
+  "required": [
+    "scenario_name",
+    "scenario_data"
+  ]
+}

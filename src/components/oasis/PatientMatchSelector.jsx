@@ -325,7 +325,7 @@ export default function PatientMatchSelector({
               variant="ghost"
               size="sm"
               onClick={() => {
-                setSelectedPatientId("");
+                onSelectPatient("");
                 setShowDispute(false);
               }}
               className="text-xs h-7"

@@ -1,0 +1,58 @@
+{
+  "name": "OASISFeedback",
+  "type": "object",
+  "properties": {
+    "oasis_upload_id": {
+      "type": "string",
+      "description": "Reference to OASISUpload entity"
+    },
+    "feedback_type": {
+      "type": "string",
+      "enum": [
+        "incorrect_match",
+        "correct_match",
+        "manual_override"
+      ],
+      "description": "Type of feedback"
+    },
+    "extracted_name": {
+      "type": "string",
+      "description": "Name extracted from OASIS"
+    },
+    "extracted_medicare_id": {
+      "type": "string",
+      "description": "Medicare ID extracted from OASIS"
+    },
+    "extracted_dob": {
+      "type": "string",
+      "description": "DOB extracted from OASIS"
+    },
+    "suggested_patient_id": {
+      "type": "string",
+      "description": "Patient ID suggested by algorithm"
+    },
+    "suggested_confidence": {
+      "type": "number",
+      "description": "Confidence score of suggestion"
+    },
+    "actual_patient_id": {
+      "type": "string",
+      "description": "Actual patient ID selected by user"
+    },
+    "user_notes": {
+      "type": "string",
+      "description": "User's notes about why they changed the match"
+    },
+    "match_factors_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Factors that led to the match"
+    }
+  },
+  "required": [
+    "feedback_type",
+    "extracted_name"
+  ]
+}

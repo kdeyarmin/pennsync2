@@ -14,7 +14,10 @@ import {
   Loader2,
   BookOpen,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  AlertCircle,
+  FileText,
+  Plus
 } from "lucide-react";
 import { retrieveRelevantGuidelines } from "../smartNote/GuidelineContextRetriever";
 

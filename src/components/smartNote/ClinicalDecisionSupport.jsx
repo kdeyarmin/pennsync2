@@ -23,7 +23,9 @@ import {
   Activity,
   Brain,
   Zap,
-  Phone
+  Phone,
+  Clock,
+  Calendar
 } from "lucide-react";
 
 export default function ClinicalDecisionSupport({

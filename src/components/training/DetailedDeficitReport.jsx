@@ -12,7 +12,8 @@ import {
   Brain,
   CheckCircle2,
   ArrowRight,
-  Loader2
+  Loader2,
+  GraduationCap
 } from "lucide-react";
 import { format } from "date-fns";
 import { analyzeNurseDeficits as analyzeNurseDeficitsBackend } from "@/functions/analyzeNurseDeficits";

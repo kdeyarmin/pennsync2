@@ -408,10 +408,12 @@ class OfflineStorage {
       
     } catch (error) {
       console.error('Sync error:', error);
+      const pVisits = this.getPendingVisits().filter(v => !v.synced);
+      const pUpdates = this.getPendingUpdates().filter(u => !u.synced);
       this.updateSyncStatus({
         isSyncing: false,
         lastSyncError: error.message,
-        errorCount: pendingVisits.length + pendingUpdates.length
+        errorCount: pVisits.length + pUpdates.length
       });
     }
 

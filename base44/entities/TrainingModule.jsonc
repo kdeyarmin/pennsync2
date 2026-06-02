@@ -1,0 +1,63 @@
+{
+  "name": "TrainingModule",
+  "type": "object",
+  "properties": {
+    "course_id": {
+      "type": "string",
+      "description": "Reference to TrainingCourse"
+    },
+    "title": {
+      "type": "string",
+      "description": "Module title"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "lesson",
+        "video",
+        "policy",
+        "simulation",
+        "checklist",
+        "attestation"
+      ],
+      "description": "Module type"
+    },
+    "content_json": {
+      "type": "object",
+      "description": "Module content structure"
+    },
+    "order_index": {
+      "type": "number",
+      "description": "Display order"
+    },
+    "estimated_minutes": {
+      "type": "number",
+      "description": "Estimated time for this module"
+    },
+    "is_required": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether module is required"
+    },
+    "attachment_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "External files attached to this lesson/module"
+    },
+    "attachment_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Display names for lesson/module attachments"
+    }
+  },
+  "required": [
+    "course_id",
+    "title",
+    "type",
+    "order_index"
+  ]
+}
