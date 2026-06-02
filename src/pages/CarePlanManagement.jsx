@@ -43,6 +43,16 @@ import CarePlanCanvas from "@/components/carePlan/CarePlanCanvas";
 import InterventionDetailPanel from "@/components/carePlan/InterventionDetailPanel";
 import AICarePlanAnalyzer from "@/components/carePlan/AICarePlanAnalyzer";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function CarePlanManagement() {
   const navigate = useNavigate();
@@ -54,6 +64,7 @@ export default function CarePlanManagement() {
   const [viewMode, setViewMode] = useState("list"); // "list" or "timeline"
   const [activeTab, setActiveTab] = useState("list");
   const [builderPatient, setBuilderPatient] = useState(null);
+  const [planToDelete, setPlanToDelete] = useState(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -176,9 +187,7 @@ export default function CarePlanManagement() {
   };
 
   const handleDelete = (planId) => {
-    if (window.confirm('Are you sure you want to delete this care plan?')) {
-      deleteCarePlanMutation.mutate(planId);
-    }
+    setPlanToDelete(planId);
   };
 
   const handleAcceptRecommendation = async (recommendation) => {
@@ -227,10 +236,10 @@ export default function CarePlanManagement() {
         page: 'CarePlanManagement'
       });
       
-      alert('Care plan created successfully with education materials!');
+      toast.success('Care plan created successfully with education materials!');
     } catch (error) {
       console.error('Error creating care plan:', error);
-      alert('Failed to create care plan. Please try again.');
+      toast.error('Failed to create care plan. Please try again.');
     }
   };
 
@@ -675,7 +684,7 @@ export default function CarePlanManagement() {
                 });
               } catch (error) {
                 console.error('Error creating care plan:', error);
-                alert('Failed to create care plan. Please try again.');
+                toast.error('Failed to create care plan. Please try again.');
               }
             }}
             autoGenerate={true}
@@ -693,7 +702,7 @@ export default function CarePlanManagement() {
               carePlans={carePlans.filter(cp => cp.patient_id === selectedPatient.id)}
               onTasksGenerated={() => {
                 queryClient.invalidateQueries({ queryKey: ['patientEducation'] });
-                alert('Tasks created successfully!');
+                toast.success('Tasks created successfully!');
               }}
             />
           </div>
